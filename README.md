@@ -47,6 +47,11 @@ npm run lint       # ESLint
 Pushing to `main` triggers a GitHub Actions workflow that builds the project and
 publishes it to GitHub Pages automatically — no manual build step required.
 
+## Documentation
+
+For a deep dive into the architecture, data flow, and every module's internals, see
+[docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) (in Italian).
+
 ## License
 
 This is a free, fan-made tool for Forge of Empires. Not affiliated with InnoGames.
