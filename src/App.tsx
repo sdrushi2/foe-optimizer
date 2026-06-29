@@ -44,6 +44,7 @@ import { BuildingModel, type GreatBuilding, type EraStats } from "./models/Build
 import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import ProfileHelpModal from "./components/ProfileHelpModal";
+import AboutModal from "./components/AboutModal";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
 import { t, UI_LANGUAGES, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
@@ -1618,6 +1619,7 @@ export default function App() {
   const [isInventoryDebugOpen, setIsInventoryDebugOpen] = useState(false);
   const [isEfficiencyHelpOpen, setIsEfficiencyHelpOpen] = useState(false);
   const [isProfileHelpOpen, setIsProfileHelpOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isProdSummaryOpen, setIsProdSummaryOpen] = useState(false);
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
@@ -4087,7 +4089,12 @@ export default function App() {
                 FOE OPTIMIZER
               </h1>
               <p className="text-[10px] md:text-[11px] font-bold italic tracking-wide text-slate-400 leading-tight">
-                BY SDRUSHI{totalStorageStr ? <span className="ml-1.5 not-italic font-normal text-slate-400">{totalStorageStr}</span> : null}
+                <button
+                  onClick={() => setIsAboutOpen(true)}
+                  title={t("aboutTitle", uiLang)}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                >BY SDRUSHI</button>
+                {totalStorageStr ? <span className="ml-1.5 not-italic font-normal text-slate-400">{totalStorageStr}</span> : null}
                 <span className="ml-1.5 not-italic font-mono text-[9px] tracking-tighter text-amber-500/80">{__BUILD_VERSION__}</span>
               </p>
             </div>
@@ -5438,6 +5445,13 @@ export default function App() {
       </main>
 
       {/* ── Modale Help Profili & Bacchetta Magica ──────────────────────── */}
+      {/* ── Modale Chi sono · Contatti ───────────────────────────────────── */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+        uiLang={uiLang}
+      />
+
       <ProfileHelpModal
         isOpen={isProfileHelpOpen}
         onClose={() => setIsProfileHelpOpen(false)}

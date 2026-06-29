@@ -1025,7 +1025,7 @@ const UI_STRINGS = {
   },
   profileHelpStep1Intro: {
     it: "Un profilo è come una scheda personale: contiene la città, l'inventario e gli alleati di un giocatore. Puoi crearne quanti vuoi.",
-    en: "A profile is like a personal card: it stores a player's city, inventory, and allies. You can create as many profiles as you like.",
+    en: "A profile is like a personal record: it stores a player's city, inventory, and allies. You can create as many profiles as you like.",
   },
   profileHelpIndependent: {
     it: "Ogni profilo è indipendente; i dati di un profilo non influenzano gli altri.",
@@ -1097,7 +1097,7 @@ const UI_STRINGS = {
   },
   profileHelpUpdateNote: {
     it: (action: string) => `${action} basta ripetere i passi 3 e 4: viene creato un profilo nuovo con i dati aggiornati senza sovrascrivere i profili esistenti.`,
-    en: (action: string) => `${action} simply repeat steps 3 and 4: a new profile is created with the latest data without overwriting existing data.`,
+    en: (action: string) => `${action} simply repeat steps 3 and 4: a new profile is created with the latest data without overwriting existing profiles.`,
   },
   profileHelpUpdateNoteEmphasis: {
     it: "Ogni volta che vuoi aggiornare i dati",
@@ -1113,7 +1113,7 @@ const UI_STRINGS = {
   },
   profileHelpLoadBody: {
     it: "Importa i profili da un file JSON precedentemente salvato e li aggiunge a quelli esistenti senza sovrascrivere i profili esistenti.",
-    en: "Imports profiles from a previously saved JSON file. These will be added to your current list without overwriting existing data.",
+    en: "Imports profiles from a previously saved JSON file. These will be added to your current list without overwriting existing profiles.",
   },
   gotItExclamationButton: {
     it: "Ho capito!",
@@ -1391,7 +1391,7 @@ const UI_STRINGS = {
   },
   diffMassAid: {
     it: "Aiuto di massa",
-    en: "Mass aid",
+    en: "Mass Self-Aid",
   },
   diffOneUpKit: {
     it: "Kit modernizz.",
@@ -1482,6 +1482,31 @@ const UI_STRINGS = {
   fromInventoryLabel: {
     it: "Da inventario:",
     en: "From inventory:",
+  },
+  // ── Modale "Chi sono · Contatti" ─────────────────────────────────────────────────────
+  aboutTitle: {
+    it: "Chi sono · Contatti",
+    en: "About · Contact",
+  },
+  aboutContactLabel: {
+    it: "Trovami su FoE:",
+    en: "Find me on FoE:",
+  },
+  aboutServerItLabel: {
+    it: "Server Italiano",
+    en: "Italian Server",
+  },
+  aboutServerBetaLabel: {
+    it: "Server Beta",
+    en: "Beta Server",
+  },
+  aboutWorldLabel: {
+    it: "Mondo",
+    en: "World",
+  },
+  aboutGithubLabel: {
+    it: "Codice sorgente",
+    en: "Source code",
   },
 } as const;
 
