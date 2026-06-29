@@ -1,0 +1,8 @@
+# foe-optimizer.com – Robots.txt
+# Last updated: 2026-06-24
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://foe-optimizer.com/sitemap.xml

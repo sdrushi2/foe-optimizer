@@ -1,0 +1,24 @@
+﻿id;age;NomeIta;NomeEng
+0;StoneAge;Età della pietra;Stone Age
+1;BronzeAge;Età del bronzo;Bronze Age
+2;IronAge;Età del ferro;Iron Age
+3;EarlyMiddleAge;Alto Medioevo;Early Middle Ages
+4;HighMiddleAge;Pieno Medioevo;High Middle Ages
+5;LateMiddleAge;Basso Medioevo;Late Middle Ages
+6;ColonialAge;Età coloniale;Colonial Age
+7;IndustrialAge;Età industriale;Industrial Age
+8;ProgressiveEra;Età progressista;Progressive Era
+9;ModernEra;Età moderna;Modern Era
+10;PostModernEra;Età postmoderna;Postmodern Era
+11;ContemporaryEra;Età contemporanea;Contemporary Era
+12;TomorrowEra;Domani;Tomorrow Era
+13;FutureEra;Il Futuro;Future Era
+14;ArcticFuture;Futuro artico;Arctic Future
+15;OceanicFuture;Futuro oceanico;Oceanic Future
+16;VirtualFuture;Futuro virtuale;Virtual Future
+17;SpaceAgeMars;Era spaziale di Marte;Space Age Mars
+18;SpaceAgeAsteroidBelt;Era spaziale della Fascia degli asteroidi;Space Age Asteroid Belt
+19;SpaceAgeVenus;Era spaziale di Venere;Space Age Venus
+20;SpaceAgeJupiterMoon;Era spaziale del Satellite di Giove;Space Age Jupiter Moon
+21;SpaceAgeTitan;Era spaziale di Titano;Space Age Titan
+22;SpaceAgeSpaceHub;Hub Spaziale;Space Age Space Hub

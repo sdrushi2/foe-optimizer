@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/* ============================================================
+   MAPPA CITTÀ – hover sui bordi dell'edificio sotto il cursore.
+   Puro CSS (nessun React state/re-render): leggero anche con
+   centinaia di rect nell'SVG. Lo stroke-width fisso (non scalato)
+   resta visibile a ogni livello di zoom della mappa.
+   ============================================================ */
+.city-map-building {
+  cursor: pointer;
+  transition: stroke 0.1s ease-out;
+}
+.city-map-building:hover {
+  stroke: #fbbf24;
+  stroke-width: 2.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 font-sans;
+}
+
+/* Scrollbar custom */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 hover:bg-slate-600 rounded-lg;
+}
+
+/* ============================================================
+   COMPONENTI – Tabella Edifici
+   Classi semantiche per ridurre la ridondanza in App.tsx.
+   Le larghezze delle colonne sono gestite dal <colgroup> con table-fixed, quindi non servono sui singoli <td>.
+   ============================================================ */
+
+@layer components {
+
+  /* ----------------------------------------------------------
+     BASE – tutte le celle del tbody ereditano padding e align
+     ---------------------------------------------------------- */
+  .building-table tbody td {
+    @apply py-1 text-center;
+  }
+
+  /* ----------------------------------------------------------
+     LAYOUT CELLE
+     ---------------------------------------------------------- */
+
+  /* Cella checkbox (prima colonna) */
+  .cell-checkbox {
+    @apply px-2;
+  }
+
+  /* Cella nome edificio: testo a sinistra con troncatura */
+  .building-table tbody td.cell-name,
+  .building-table thead th.cell-name {
+    @apply px-2 text-left truncate;
+    min-width: 200px;
+  }
+
+  /* Padding orizzontale intermedio (es. colonna frammenti alleati) */
+  .cell-px-md {
+    @apply px-1.5;
+  }
+
+  /* Cella EFF: sticky a destra con ombra. Sfondo di default; la tabella
+     edifici lo sovrascrive dinamicamente per stato (disconnesso/GE/inattivo). */
+  .cell-eff {
+    @apply font-black font-mono text-sm px-0
+           sticky right-0 z-10 bg-slate-900/95
+           shadow-[-4px_0_10px_rgba(0,0,0,0.5)];
+  }
+
+  /* Header della colonna EFF: stesso sticky/ombra di .cell-eff, ma con
+     padding da header e z-20 (sopra le celle dati scrollate sotto). */
+  .th-eff {
+    @apply py-0.5 px-0 text-center
+           sticky right-0 z-20 bg-slate-900/95 w-[50px]
+           shadow-[-4px_0_10px_rgba(0,0,0,0.5)];
+  }
+
+  /* ----------------------------------------------------------
+     CELLE NUMERICHE (boost, IQ, Size, Road…)
+     ---------------------------------------------------------- */
+
+  /* Base numerica: monospace, testo piccolo, nessun padding orizzontale.
+     Grigio di default (valore assente/zero); le classi colore sotto
+     (cell-red/cell-blue/cell-white/cell-prod) sovrascrivono quando c'è un dato. */
+  .cell-num {
+    @apply font-mono text-sm px-0 text-slate-600;
+  }
+
+  /* ----------------------------------------------------------
+     INTESTAZIONI COLONNA COMPATTE
+     Le colonne dei bonus militari/IQ e delle produzioni hanno un
+     header compatto (padding minimo, centrato). La larghezza è già
+     fissata dal <col> del colgroup (table-fixed), quindi non va
+     ripetuta qui — verificato che ometterla non cambia nulla a
+     video, comunque manteniamo px-0/pb-0 espliciti invece di
+     lasciarli al padding di default del browser sui <th>.
+     ---------------------------------------------------------- */
+  .th-col {
+    @apply pt-1 pb-0 px-0 text-center;
+  }
+
+  /* ----------------------------------------------------------
+     COLORI DEI VALORI
+     ---------------------------------------------------------- */
+
+  /* Boost rosso (Attacco attaccante) */
+  .cell-red  { @apply text-red-400; }
+
+  /* Boost blu (Attacco difensore) */
+  .cell-blue { @apply text-blue-400; }
+
+  /* Produzioni (FP, beni, truppe, ecc.) quando il valore è > 0 */
+  .cell-prod { @apply text-orange-500; }
+
+  /* Testo bianco/neutro: dimensione edificio, valori Incursioni Quantistiche */
+  .cell-white { @apply text-slate-300; }
+
+  /* ----------------------------------------------------------
+     SEPARATORI DI GRUPPO
+     ---------------------------------------------------------- */
+
+  /* Bordo sinistro per separare le macro sezioni della tabella */
+  .section-divider {
+    border-left: 1px solid theme(colors.slate.800);
+  }
+
+  /* ----------------------------------------------------------
+     CELLE SPECIALI
+     ---------------------------------------------------------- */
+
+  /* Cella icone (❔): testo leggermente più grande */
+  .cell-icons {
+    @apply px-1 text-sm;
+  }
+
+  /* Icona PNG inline standard 16×16 (h-4 w-4). Ricorre in molti punti
+     (badge produzioni, voci consumabili, pulsanti). object-contain evita la
+     deformazione. Le varianti speciali (3.5, 56, !important) restano inline. */
+  .icon-16 {
+    @apply h-4 w-4 object-contain;
+  }
+
+  /* ----------------------------------------------------------
+     BADGE NUMERICI (Strada, Popolazione)
+     Stile condiviso: forma, font, padding, bordo.
+     Solo il colore cambia tramite variante.
+     ---------------------------------------------------------- */
+  .badge-value {
+    @apply inline-block text-xs font-mono
+           px-1 py-0 leading-tight relative -top-px
+           rounded border;
+  }
+  .badge-value-red {
+    @apply bg-red-950 text-red-400 border-red-900;
+  }
+  .badge-value-green {
+    @apply bg-emerald-950 text-emerald-400 border-emerald-900;
+  }
+  .badge-value-purple {
+    @apply bg-violet-950 text-violet-400 border-violet-700;
+  }
+
+}
+
+/* ============================================================
+   UTILITY – Scrollbar invisibile (usata nella navbar mobile)
+   ============================================================ */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.building-floating-scrollbar {
+  scrollbar-color: theme(colors.slate.600) theme(colors.slate.900);
+}
+
+.building-floating-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}

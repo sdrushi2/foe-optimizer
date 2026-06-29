@@ -1,0 +1,12 @@
+# Dipendenze (si rigenerano con npm install / npm ci)
+node_modules/
+
+# Output di build (generato da Vite, pubblicato dalla GitHub Action)
+dist/
+
+# File di sistema/editor comuni
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

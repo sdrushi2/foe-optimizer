@@ -1,0 +1,57 @@
+name: Build e Deploy su GitHub Pages
+
+# Si attiva automaticamente ad ogni push sul branch main.
+# "workflow_dispatch" permette anche di lanciarla a mano dalla tab Actions
+# di GitHub, utile per ri-pubblicare senza dover fare un commit vuoto.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permessi minimi necessari per pubblicare su GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita che due deploy si sovrappongano: se arriva un nuovo push mentre uno
+# precedente è in corso, quello vecchio viene annullato (non ha senso
+# pubblicare una versione superata).
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installa le dipendenze
+        run: npm ci
+
+      - name: Build (npm run build)
+        run: npm run build
+
+      - name: Prepara l'artifact per Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Pubblica su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
