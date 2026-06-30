@@ -22,11 +22,30 @@ const BUILD_VERSION = `v1.${dayOfYear}`;
 // stesso nome cache e il SW non invaliderebbe la cache vecchia (gli utenti
 // resterebbero su una versione obsoleta). Aggiungiamo il timestamp di build.
 const SW_CACHE_VERSION = `v1.${dayOfYear}-${now.getTime()}`;
+const BUILD_DATE = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
 // Plugin: genera dist/sw.js dal template sw-template.js, iniettando la versione
 // di build nel nome della cache. Cosi' ad ogni nuova build la cache vecchia viene
 // invalidata (il SW rileva il nome cache diverso e cancella la precedente).
 // Il template NON sta in public/ apposta, per non essere copiato as-is non-versionato.
+// Plugin: aggiorna <lastmod> in dist/sitemap.xml con la data di build.
+function sitemapPlugin(date: string): Plugin {
+  return {
+    name: "foe-sitemap",
+    apply: "build",
+    closeBundle() {
+      const outPath = path.resolve(__dirname, "dist", "sitemap.xml");
+      if (!fs.existsSync(outPath)) {
+        this.warn("dist/sitemap.xml non trovato: lastmod non aggiornato.");
+        return;
+      }
+      const content = fs.readFileSync(outPath, "utf-8");
+      const updated = content.replace(/<lastmod>[^<]*<\/lastmod>/, `<lastmod>${date}<\/lastmod>`);
+      fs.writeFileSync(outPath, updated, "utf-8");
+    },
+  };
+}
+
 function serviceWorkerPlugin(version: string): Plugin {
   return {
     name: "foe-service-worker",
@@ -54,6 +73,7 @@ export default defineConfig({
     tailwindcss(),
     viteSingleFile(), // meglio come ultimo plugin
     serviceWorkerPlugin(SW_CACHE_VERSION),
+    sitemapPlugin(BUILD_DATE),
   ],
   resolve: {
     alias: {
