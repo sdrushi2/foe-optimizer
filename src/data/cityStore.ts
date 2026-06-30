@@ -79,4 +79,11 @@ export interface CityStore {
   /** Lingua rilevata dal gioco (dal nome del municipio). Default "it" se il
    *  rilevamento non riesce. */
   gameLang:                "it" | "en";
+  /**
+   * Edifici in città che possono essere declassati all'Era del Bronzo
+   * conservando invariate tutte le statistiche militari (att/def) ma con
+   * una popolazione significativamente minore (negativa in entrambe le ere).
+   * Struttura: [entityId, { popCurr, popBronze, statsBronze: EraStats }].
+   */
+  declassableBuildings:    Array<[string, { popCurr: number; popBronze: number; statsBronze: EraStats }]>;
 }

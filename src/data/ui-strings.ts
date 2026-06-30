@@ -259,7 +259,7 @@ const UI_STRINGS = {
   },
   iqProdColumnsTitle: {
     it: "Mostra/nascondi monete/materiali quantistici",
-    en: "Show/hide quantum coins/materials",
+    en: "Show/hide quantum coins/supplies",
   },
   prodColumnsShowTitle: {
     it: "Nascondi Produzioni",
@@ -350,6 +350,14 @@ const UI_STRINGS = {
   prodOneUpKit: {
     it: "Kit modernizzatore",
     en: "One Up Kit",
+  },
+  prodOneDownKit: {
+    it: "Kit epoca precedente",
+    en: "One Down Kit",
+  },
+  prodReversionKit: {
+    it: "Kit di ripristino",
+    en: "Reversion Kit",
   },
   prodRenovationKit: {
     it: "Kit rinnovamento",
@@ -1025,7 +1033,7 @@ const UI_STRINGS = {
   },
   profileHelpStep1Intro: {
     it: "Un profilo è come una scheda personale: contiene la città, l'inventario e gli alleati di un giocatore. Puoi crearne quanti vuoi.",
-    en: "A profile is like a personal record: it stores a player's city, inventory, and allies. You can create as many profiles as you like.",
+    en: "A profile is like a personal save file: it stores a player's city, inventory, and allies. You can create as many profiles as you like.",
   },
   profileHelpIndependent: {
     it: "Ogni profilo è indipendente; i dati di un profilo non influenzano gli altri.",
@@ -1053,7 +1061,7 @@ const UI_STRINGS = {
   },
   profileHelpStep2Intro: {
     it: "La bacchetta magica importa tutti i dati di gioco - città, inventario e alleati storici - con un solo click.",
-    en: "The magic wand imports all your game data - city, inventory, and historical allies - in one single step.",
+    en: "The magic wand imports all your game data - city, inventory, and historical allies - in one step.",
   },
   profileHelpVideoTitle: {
     it: "Tutorial: come importare la città",
@@ -1299,7 +1307,7 @@ const UI_STRINGS = {
   },
   diffIqMaterialsBoost: {
     it: "IQ Materiali %",
-    en: "QI Materials %",
+    en: "QI Supplies %",
   },
   diffIqCoins: {
     it: "IQ Monete",
@@ -1307,7 +1315,7 @@ const UI_STRINGS = {
   },
   diffIqMaterials: {
     it: "IQ Materiali",
-    en: "QI Materials",
+    en: "QI Supplies",
   },
   diffIqGoods: {
     it: "IQ Beni",
@@ -1377,18 +1385,6 @@ const UI_STRINGS = {
     it: "Progetti",
     en: "Blueprints",
   },
-  diffRushSpecial: {
-    it: "Fine prod. speciale",
-    en: "Finish special prod.",
-  },
-  diffRushMaterials: {
-    it: "Fine prod. materiali",
-    en: "Finish materials prod.",
-  },
-  diffRushGoods: {
-    it: "Fine prod. beni",
-    en: "Finish goods prod.",
-  },
   diffMassAid: {
     it: "Aiuto di massa",
     en: "Mass Self-Aid",
@@ -1399,7 +1395,7 @@ const UI_STRINGS = {
   },
   diffRenovationKit: {
     it: "Kit rinnovo",
-    en: "Renovation kit",
+    en: "Renovation Kit",
   },
   diffStoreBuilding: {
     it: "Immagazzina",
@@ -1507,6 +1503,26 @@ const UI_STRINGS = {
   aboutGithubLabel: {
     it: "Codice sorgente",
     en: "Source code",
+  },
+  showOnlyDeclassableTitle: {
+    it: "Mostra solo gli edifici che possono essere declassati senza conseguenze (stesse stat. militari, meno popolazione)",
+    en: "Show only the buildings that can be downgraded without consequences (same military stats, less population)",
+  },
+  declassableBadgeTitle: {
+    it: "Declassabile: a un'era inferiore mantiene le stesse statistiche militari ma richiede meno popolazione",
+    en: "Downgradable: at a lower era, it keeps the same military stats but requires less population",
+  },
+  declassableTooltipHeader: {
+    it: "Edificio declassabile",
+    en: "Downgradable building",
+  },
+  declassablePopGainLabel: {
+    it: "Risparmio",
+    en: "Savings",
+  },
+  declassableKitSection: {
+    it: "Kit necessario",
+    en: "Required kit",
   },
 } as const;
 

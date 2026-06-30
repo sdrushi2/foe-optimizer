@@ -223,9 +223,9 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
     { key: "benib", labelKey: "diffGoodsBoost", icon: icons.iconBeniB, get: sca("benib") },
     { key: "benig", labelKey: "diffTreasuryGoods", icon: icons.iconBeniG, get: sca("benig") },
     { key: "bp", labelKey: "diffBlueprints", icon: icons.iconBP, get: sca("bp") },
-    { key: "fsp", labelKey: "diffRushSpecial", emoji: "⏳", get: sca("fsp") },
-    { key: "tpm", labelKey: "diffRushMaterials", emoji: "🛠", get: sca("tpm") },
-    { key: "tpb", labelKey: "diffRushGoods", emoji: "📦", get: sca("tpb") },
+    { key: "fsp", labelKey: "prodRushSpecial", emoji: "⏳", get: sca("fsp") },
+    { key: "tpm", labelKey: "prodRushMaterials", emoji: "🛠", get: sca("tpm") },
+    { key: "tpb", labelKey: "prodRushGoods", emoji: "📦", get: sca("tpb") },
     { key: "adm", labelKey: "diffMassAid", icon: icons.iconAiuto, get: sca("adm") },
     { key: "mod", labelKey: "diffOneUpKit", icon: icons.iconOneUp, get: sca("mod") },
     { key: "rin", labelKey: "diffRenovationKit", icon: icons.iconRinn, get: sca("rin") },
@@ -786,6 +786,9 @@ interface BuildingRowProps {
   gameDisplayName: string | undefined;
   upgradeBadge: { targets: string[]; kits: Array<{ name: string; count: number }> } | undefined;
   isOutdated: boolean;
+  isDeclassable: boolean;
+  declassablePopData: { popCurr: number; popBronze: number; statsBronze: EraStats } | undefined;
+  setDeclassableTooltip: (v: { x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null) => void;
   minLevel: number;
   allLevelsForEntity: number[] | undefined;
   instanceEraStats: Array<[string, number, EraStats]>;
@@ -813,7 +816,7 @@ const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, currentFilters, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, minLevel, allLevelsForEntity,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentProducers, fragmentSelectionKits,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
@@ -1043,6 +1046,40 @@ const BuildingRow = memo(function BuildingRow({
               onMouseLeave={() => setOutdatedTooltip(null)}
             >
               <svg viewBox="0 0 8 8" width="8" fill="#D35"><path d="M0 0l4 8 4-8H0z"/></svg>
+            </span>
+          );
+        })()}
+        {activeTab === "propria_citta" && (() => {
+          if (b.isGreatBuilding || b.isInactive || b.isMilitary || !b.cityEntityId) return null;
+          if (!isDeclassable) return null;
+          return (
+            <span
+              className="ml-2 inline-block cursor-help"
+              onMouseEnter={(e) => {
+                if (!declassablePopData) return;
+                const r = e.currentTarget.getBoundingClientRect();
+                const bRec = b as unknown as { [k: string]: unknown };
+                const bronzeRec = declassablePopData.statsBronze as unknown as { [k: string]: unknown };
+                const diffs: EraDiffEntry[] = [];
+                for (const f of DIFF_FIELDS) {
+                  const from = f.get(bRec);
+                  const to = f.get(bronzeRec);
+                  if (from !== to) diffs.push({ key: f.key, icon: f.icon ?? "", emoji: f.emoji, labelKey: f.labelKey, from, to });
+                }
+                setDeclassableTooltip({
+                  x: r.left, y: r.bottom,
+                  eraAge: AGES_BY_ID.get(minLevel)?.age ?? "",
+                  diffs,
+                  popSavings: declassablePopData.popBronze - declassablePopData.popCurr,
+                  oneDownKit: specialKits.oneDownKit,
+                  oneDownKitName: specialKits.oneDownKitName,
+                  reversionKit: specialKits.reversionKit,
+                  reversionKitName: specialKits.reversionKitName,
+                });
+              }}
+              onMouseLeave={() => setDeclassableTooltip(null)}
+            >
+              <svg viewBox="0 0 8 8" width="8" fill="#2a6"><path d="M0 0l4 8 4-8H0z"/></svg>
             </span>
           );
         })()}
@@ -1439,6 +1476,19 @@ export default function App() {
     setEraStats(reviveMap<EraStats>(city?.eraStats));
     setEntityLevels(reviveMap<number>(city?.entityLevels));
     setEntityLevelsList(reviveMap<number[]>(city?.entityLevelsList));
+    {
+      const raw = city?.declassableBuildings;
+      try {
+        if (!Array.isArray(raw) || raw.length === 0) { setDeclassableBuildings(new Map()); }
+        else {
+          const first = (raw[0] as [string, unknown]);
+          if (!first || typeof first[1] !== "object" || Array.isArray(first[1]) || first[1] === null)
+            setDeclassableBuildings(new Map());
+          else
+            setDeclassableBuildings(reviveMap<{ popCurr: number; popBronze: number; statsBronze: EraStats }>(raw));
+        }
+      } catch { setDeclassableBuildings(new Map()); }
+    }
     const rawIES = city?.entityInstanceEraStats ?? [];
     setEntityInstanceEraStats(new Map(rawIES.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v])));
     setGameNames(reviveMap<string>(city?.gameNames));
@@ -1447,7 +1497,7 @@ export default function App() {
     setInventoryUnmatched(reviveMap<InventoryEntry>(inv?.inventoryUnmatched));
     setInventorySelectionKits(reviveMap<SelectionKitEntry>(inv?.inventorySelectionKits));
     setInventoryUpgradeKits(reviveMap<UpgradeKitEntry>(inv?.inventoryUpgradeKits));
-    setSpecialKits(inv?.specialKits ?? { oneUpKit: 0, renovationKit: 0, storeBuilding: 0, rushEventBuildings: 0, rushMassSupplies: 0, rushGoodsBuildings: 0, massSelfAidKit: 0 });
+    setSpecialKits(inv?.specialKits ?? { oneUpKit: 0, oneDownKit: 0, reversionKit: 0, renovationKit: 0, storeBuilding: 0, rushEventBuildings: 0, rushMassSupplies: 0, rushGoodsBuildings: 0, massSelfAidKit: 0 });
     setImportedAllies(Array.isArray(allies) ? allies : []);
     setSelectedIds(new Set());
     setSelectedJsonEntry(null);
@@ -1565,6 +1615,8 @@ export default function App() {
   const [showCityMap, setShowCityMap] = useState<boolean>(() => localStorage.getItem(SHOW_CITY_MAP_KEY) === "true");
   // Filtra gli edifici vecchi nella tab Città
   const [showOnlyOutdated, setShowOnlyOutdated] = useState(false);
+  // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
+  const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
   // Filtra nella tab Inventario: mostra solo gli edifici fisicamente già in inventario
   const [showOnlyReadyBuildings, setShowOnlyReadyBuildings] = useState(false);
   const [cityMapCellSize, setCityMapCellSize] = useState(9);
@@ -1594,6 +1646,15 @@ export default function App() {
   // "level" corrisponde all'era dell'edificio (0=StoneAge … 22=SpaceAgeSpaceHub).
   const [entityLevels, setEntityLevels] = useState<Map<string, number>>(() => reviveMap<number>(getInitCity()?.entityLevels));
   const [entityLevelsList, setEntityLevelsList] = useState<Map<string, number[]>>(() => reviveMap<number[]>(getInitCity()?.entityLevelsList));
+  const [declassableBuildings, setDeclassableBuildings] = useState<Map<string, { popCurr: number; popBronze: number; statsBronze: EraStats }>>(() => {
+    const raw = getInitCity()?.declassableBuildings;
+    try {
+      if (!Array.isArray(raw) || raw.length === 0) return new Map();
+      const first = (raw[0] as [string, unknown]);
+      if (!first || typeof first[1] !== "object" || Array.isArray(first[1]) || first[1] === null) return new Map();
+      return reviveMap<{ popCurr: number; popBronze: number; statsBronze: EraStats }>(raw);
+    } catch { return new Map(); }
+  });
   const [entityInstanceEraStats, setEntityInstanceEraStats] = useState<Map<string, Array<[string, number, EraStats]>>>(() => {
     const raw = getInitCity()?.entityInstanceEraStats ?? [];
     return new Map(raw.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v]));
@@ -1612,6 +1673,7 @@ export default function App() {
   // mappa città; scompare all'uscita del mouse in entrambi i casi.
   const [imagePopup, setImagePopup] = useState<{ x: number; y: number; url: string; name: string } | null>(null);
   const [outdatedTooltip, setOutdatedTooltip] = useState<{ x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null>(null);
+  const [declassableTooltip, setDeclassableTooltip] = useState<{ x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null>(null);
   const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; producers: string[]; selectionKits: string[] } | null>(null);
   const [kitProducersTooltip, setKitProducersTooltip] = useState<{ x: number; y: number; producers: Array<{ id: string; name: string }> } | null>(null);
   const [fabTooltip, setFabTooltip] = useState<{ x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null>(null);
@@ -1633,7 +1695,7 @@ export default function App() {
   const [inventoryUpgradeKits, setInventoryUpgradeKits] = useState<Map<string, UpgradeKitEntry>>(() => reviveMap<UpgradeKitEntry>(getInitInv()?.inventoryUpgradeKits));
   const [specialKits, setSpecialKits] = useState<SpecialKits>(() => {
     const s = getInitInv()?.specialKits;
-    return s ?? { oneUpKit: 0, renovationKit: 0, storeBuilding: 0, rushEventBuildings: 0, rushMassSupplies: 0, rushGoodsBuildings: 0, massSelfAidKit: 0 };
+    return s ?? { oneUpKit: 0, oneDownKit: 0, reversionKit: 0, renovationKit: 0, storeBuilding: 0, rushEventBuildings: 0, rushMassSupplies: 0, rushGoodsBuildings: 0, massSelfAidKit: 0 };
   });
 
   const importedCityEntityLookup = useMemo(() => {
@@ -2177,6 +2239,30 @@ export default function App() {
       }
       setEntityInstanceEraStats(entityInstanceEraStats);
 
+      // ── declassableBuildings ─────────────────────────────────────────────
+      // Edifici in città con pop negativa in entrambe le ere (corrente e
+      // BronzeAge) ma con statistiche militari invariate tra le due ere:
+      // declassarli al'Era del Bronzo fa risparmiare popolazione senza perdere boost.
+      const declassableMap = new Map<string, { popCurr: number; popBronze: number; statsBronze: EraStats }>();
+      for (const [entityId] of ids) {
+        if (isMilitaryBuildingId(entityId)) continue;
+        const entityDef = cityEntities[entityId];
+        if (!entityDef) continue;
+        const statsCurr = eraStatsMap.get(entityId) ?? BuildingModel.extractEraStats(entityDef, currentEra || FALLBACK_ERA);
+        const statsBronze = BuildingModel.extractEraStats(entityDef, "BronzeAge");
+        const popCurr = statsCurr.pop;
+        const popBronze = statsBronze.pop;
+        if (!(popCurr < 0 && popBronze < 0 && popCurr !== popBronze)) continue;
+        if (
+          !statsCurr.general.every((v, i) => v === statsBronze.general[i]) ||
+          !statsCurr.gbg.every((v, i) => v === statsBronze.gbg[i]) ||
+          !statsCurr.sped.every((v, i) => v === statsBronze.sped[i]) ||
+          !statsCurr.iq.every((v, i) => v === statsBronze.iq[i])
+        ) continue;
+        declassableMap.set(entityId, { popCurr, popBronze, statsBronze });
+      }
+      setDeclassableBuildings(declassableMap);
+
       writeStoredJson(cityKey, {
         cityEntityIds: Array.from(ids.entries()),
         cityEntityDisconnected: Array.from(disconnected.entries()),
@@ -2194,6 +2280,7 @@ export default function App() {
         entityLevels: Array.from(entityLevels.entries()),
         entityLevelsList: Array.from(entityLevelsList.entries()),
         entityInstanceEraStats: Array.from(entityInstanceEraStats.entries()),
+        declassableBuildings: Array.from(declassableMap.entries()),
         gameNames: Array.from(gameNames.entries()),
         gameLang,
       });
@@ -3256,6 +3343,7 @@ export default function App() {
 
       // 3. Filtered outdated (solo tab Città)
       if (isPropriacitta && showOnlyOutdated && b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)) continue;
+      if (isPropriacitta && showOnlyDeclassable && b.cityEntityId && !declassableBuildings.has(b.cityEntityId)) continue;
 
       // 4. Limited ascended filter
       if (!currentFilters.showLimitedAscended && b.time > 0) continue;
@@ -3316,7 +3404,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, dbViewFull]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, dbViewFull]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -4702,6 +4790,19 @@ export default function App() {
                     <svg viewBox="0 0 8 8" width="8" fill="#D35"><path d="M0 0l4 8 4-8H0z"/></svg>
                   </button>
                 )}
+                {declassableBuildings.size > 0 && (
+                  <button
+                    onClick={() => setShowOnlyDeclassable(v => !v)}
+                    className={`flex items-center justify-center rounded border h-7 w-8 ${
+                      showOnlyDeclassable
+                        ? "border-green-500 bg-green-950/40 text-green-300"
+                        : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                    }`}
+                    title={t("showOnlyDeclassableTitle", uiLang)}
+                  >
+                    <svg viewBox="0 0 8 8" width="8" fill="#2a6"><path d="M0 0l4 8 4-8H0z"/></svg>
+                  </button>
+                )}
                 <button
                   onClick={() => setIsCityUpgradeableOpen(true)}
                   className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
@@ -5185,6 +5286,9 @@ export default function App() {
                           gameDisplayName={gameNames.get(b.cityEntityId)}
                           upgradeBadge={cityUpgradeBadges.get(b.cityEntityId)}
                           isOutdated={outdatedBuildings.has(b.cityEntityId)}
+                          isDeclassable={declassableBuildings.has(b.cityEntityId)}
+                          declassablePopData={declassableBuildings.get(b.cityEntityId)}
+                          setDeclassableTooltip={setDeclassableTooltip}
                           minLevel={entityLevels.get(b.cityEntityId) ?? -1}
                           allLevelsForEntity={entityLevelsList.get(b.cityEntityId)}
                           instanceEraStats={entityInstanceEraStats.get(b.cityEntityId) ?? []}
@@ -5622,7 +5726,7 @@ export default function App() {
                     <div className={`grid ${gridColsClass} gap-x-0.5 gap-y-0.5`}>
                       {cmp.diffs.map((d) => {
                         const up = d.to > d.from;
-                        const useFormatInt = d.key === "pop" || d.key === "fel";
+                        const useFormatInt = ["pop", "fel", "mon", "mat", "iqMon", "iqMat"].includes(d.key);
                         return (
                           <div key={d.key} className="flex items-center gap-1 text-xs font-mono" title={t(d.labelKey, uiLang)}>
                             {d.icon
@@ -5650,13 +5754,13 @@ export default function App() {
             <div className="mt-2.5 space-y-1.5 border-t border-slate-700/60 pt-2">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{t("upgradeKitsAvailable", uiLang)}</p>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 flex items-center gap-1"><img src={iconOneUp} alt="" className="h-3.5 w-3.5 object-contain" /> {oneUpKitName ?? t("prodOneUpKit", uiLang)}</span>
+                <span className="text-slate-300 flex items-center gap-1"><img src={iconOneUp} alt="" className="h-3.5 w-3.5 object-contain" /> {oneUpKitName ?? t("prodOneUpKit", gameLang === "it" ? "it" : "en")}</span>
                 <span className={`font-mono font-bold px-1.5 py-0.5 rounded text-[11px] ${oneUpKit > 0 ? "bg-emerald-900/60 text-emerald-300" : "bg-red-900/40 text-red-400"}`}>
                   {t("inInventoryCount", uiLang, oneUpKit)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 flex items-center gap-1"><img src={iconRinn} alt="" className="h-3.5 w-3.5 object-contain" /> {renovationKitName ?? t("prodRenovationKit", uiLang)}</span>
+                <span className="text-slate-300 flex items-center gap-1"><img src={iconRinn} alt="" className="h-3.5 w-3.5 object-contain" /> {renovationKitName ?? t("prodRenovationKit", gameLang === "it" ? "it" : "en")}</span>
                 <span className={`font-mono font-bold px-1.5 py-0.5 rounded text-[11px] ${renovationKit > 0 ? "bg-emerald-900/60 text-emerald-300" : "bg-red-900/40 text-red-400"}`}>
                   {t("inInventoryCount", uiLang, renovationKit)}
                 </span>
@@ -5728,6 +5832,86 @@ export default function App() {
           </ul>
         </div>
       )}
+
+      {declassableTooltip && (() => {
+        const { eraAge, diffs, popSavings, oneDownKit, oneDownKitName, reversionKit, reversionKitName } = declassableTooltip;
+        const fromEraName = eraAge ? ageName(eraAge, gameLang) : "—";
+        const bronzeEraName = ageName("BronzeAge", gameLang);
+        const cols = diffs.length > 3 ? 2 : 1;
+        const gridColsClass = cols === 2 ? "grid-cols-2" : "grid-cols-1";
+        const minW = cols === 2 ? 340 : 260;
+        return (
+          <div
+            className="pointer-events-none fixed z-[110] rounded-lg border border-emerald-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+            style={(() => {
+              const TOOLTIP_H = 200 + Math.ceil(diffs.length / cols) * 20;
+              const spaceBelow = window.innerHeight - declassableTooltip.y;
+              const showAbove = spaceBelow < TOOLTIP_H + 12;
+              const w = Math.min(window.innerWidth * 0.92, minW);
+              return {
+                width: w,
+                left: Math.min(declassableTooltip.x, window.innerWidth - w - 8),
+                ...(showAbove
+                  ? { bottom: window.innerHeight - declassableTooltip.y + 6 }
+                  : { top: declassableTooltip.y + 6 }),
+              };
+            })()}
+          >
+            {/* Header */}
+            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-400">
+              <svg viewBox="0 0 8 8" width="8" fill="#2a6"><path d="M0 0l4 8 4-8H0z"/></svg>
+              {t("declassableTooltipHeader", uiLang)}
+            </div>
+            {/* Era subtitle */}
+            <p className="mb-2 text-[10px] font-semibold text-slate-400">{fromEraName} → {bronzeEraName}</p>
+            {/* Diffs grid */}
+            {diffs.length > 0 && (
+              <div className="rounded border border-slate-700/40 bg-slate-950/40 px-1.5 py-1 mb-2">
+              <div className={`grid ${gridColsClass} gap-x-0.5 gap-y-0.5`}>
+                {diffs.map((d) => {
+                  const up = d.to > d.from;
+                  const useFormatInt = ["pop", "fel", "mon", "mat", "iqMon", "iqMat"].includes(d.key);
+                  return (
+                    <div key={d.key} className="flex items-center gap-1 text-xs font-mono" title={t(d.labelKey, uiLang)}>
+                      {d.icon
+                        ? <img src={d.icon} alt={t(d.labelKey, uiLang)} className="h-4 w-4 shrink-0 object-contain" />
+                        : <span className="w-4 shrink-0 text-center text-[10px]">{d.emoji}</span>}
+                      <span className="text-slate-400 tabular-nums font-mono">{useFormatInt ? formatInt(d.from) : d.from}</span>
+                      <span className="text-slate-600">→</span>
+                      <span className={`font-bold tabular-nums font-mono ${up ? "text-emerald-400" : "text-red-400"}`}>{useFormatInt ? formatInt(d.to) : d.to}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              </div>
+            )}
+            {/* Pop savings summary */}
+            <div className="flex items-center justify-between border-t border-slate-700/60 pt-1.5 pb-2 text-xs">
+              <span className="text-slate-400 flex items-center gap-1">
+                <img src={iconPop} alt="" className="h-3.5 w-3.5 object-contain" />
+                {t("declassablePopGainLabel", uiLang)}
+              </span>
+              <span className="font-mono font-bold text-emerald-400 tabular-nums">+{formatInt(popSavings)}</span>
+            </div>
+            {/* Kit */}
+            <div className="border-t border-slate-700/60 pt-2">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">{t("declassableKitSection", uiLang)}</p>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-300">{oneDownKitName ?? t("prodOneDownKit", gameLang === "it" ? "it" : "en")}</span>
+                <span className={`font-mono font-bold px-1.5 py-0.5 rounded text-[11px] ${oneDownKit > 0 ? "bg-emerald-900/60 text-emerald-300" : "bg-red-900/40 text-red-400"}`}>
+                  {t("inInventoryCount", uiLang, oneDownKit)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs mt-1">
+                <span className="text-slate-300">{reversionKitName ?? t("prodReversionKit", gameLang === "it" ? "it" : "en")}</span>
+                <span className={`font-mono font-bold px-1.5 py-0.5 rounded text-[11px] ${reversionKit > 0 ? "bg-emerald-900/60 text-emerald-300" : "bg-red-900/40 text-red-400"}`}>
+                  {t("inInventoryCount", uiLang, reversionKit)}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {fragmentTooltip && (
         <div

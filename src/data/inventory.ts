@@ -56,6 +56,8 @@ const CONSUMABLE_KEY_BY_ASSET = new Map<string, ConsumableKey>(
  *  precedente. Se mancanti, i consumer usano un fallback hardcoded. */
 export interface SpecialKits {
   oneUpKit:           number;
+  oneDownKit:         number;
+  reversionKit:       number;
   renovationKit:      number;
   storeBuilding:      number;
   rushEventBuildings: number;
@@ -64,6 +66,8 @@ export interface SpecialKits {
   massSelfAidKit:     number;
   // Nomi localizzati (dalla prima occorrenza in inventario)
   oneUpKitName?:           string;
+  oneDownKitName?:         string;
+  reversionKitName?:       string;
   renovationKitName?:      string;
   storeBuildingName?:      string;
   rushEventBuildingsName?: string;
@@ -104,7 +108,7 @@ export function parseInventory(
   const selectionKits = new Map<string, SelectionKitEntry>();
   const upgradeKits = new Map<string, UpgradeKitEntry>();
   const specialKits: SpecialKits = {
-    oneUpKit: 0, renovationKit: 0, storeBuilding: 0,
+    oneUpKit: 0, oneDownKit: 0, reversionKit: 0, renovationKit: 0, storeBuilding: 0,
     rushEventBuildings: 0, rushMassSupplies: 0, rushGoodsBuildings: 0, massSelfAidKit: 0,
   };
 

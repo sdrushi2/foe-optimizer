@@ -203,6 +203,8 @@ export function fragmentBuildingId(token: string): string {
 
 export const CONSUMABLE_ASSET_NAMES = {
   oneUpKit:              "one_up_kit",
+  oneDownKit:            "one_down_kit",
+  reversionKit:          "reversion_kit",
   renovationKit:         "renovation_kit",
   storeBuilding:         "store_building",
   rushEventBuildings:    "rush_single_event_building_instant",
