@@ -1159,8 +1159,8 @@ W_MultiAge_CUP20C1;Pista Venetoi;Venetoi Track;D_MultiAge_SoccerBonus20Venetoi-a
 W_MultiAge_CUP20D1;Pista Leukoi;Leukoi Track;D_MultiAge_SoccerBonus20Leukoi-0e86debb5;1;;1x4;;;3820;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP20E1;Pista Rousioi;Rousioi Track;D_MultiAge_SoccerBonus20Rousioi-18872cc80;1;;1x4;;;3820;;;;;;;;;;;;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A1;Mulino a vento Genziana - Liv. 1;Gentiana Windmill - Lv. 1;R_MultiAge_SoccerBonus22a-7fb545889;;;4x5;2;9180;13110;;;;;;;;;;;;90800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22A10;Mulino a vento di azalee;Azalea Windmill;9c9810bb4;1;;4x5;;31000;50000;;235;;;;;210;190;;;100;440800;360000;190;190;;;;;210;210;;;;;15;15;;;;;;;;;;;1;;;;;;;;selection_kit_CUP22BCDE
-W_MultiAge_CUP22A11;Mulino con Buganville;Bougainvillea Windmill;b3023b585;1;90;4x5;;65000;100000;;410;;;;;290;260;;;200;891600;830000;380;380;;;;;370;370;;;;;25;25;;;;;;;;;200;8000;1;;;;;;;;selection_kit_CUP22BCDE
+W_MultiAge_CUP22A10;Mulino a vento di azalee;Azalea Windmill;9c9810bb4;1;;4x5;;40000;50000;;200;;;;;180;170;;;100;440800;360000;190;190;;;;;210;210;;;;;10;10;;;;;;;;;;;1;;;;;;;;selection_kit_CUP22BCDE
+W_MultiAge_CUP22A11;Mulino con Buganville;Bougainvillea Windmill;b3023b585;1;90;4x5;;40000;100000;;450;;;;;350;330;;;300;891600;830000;410;410;;;;;420;420;;;;;25;25;;;;;;;;;200;8000;1;;;;;;;;selection_kit_CUP22BCDE
 W_MultiAge_CUP22A2;Mulino a vento Genziana - Liv. 2;Gentiana Windmill - Lv. 2;R_MultiAge_SoccerBonus22b-aaf8082d5;;;4x5;2;9450;14200;;;;;;;;;;;;91700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A3;Mulino a vento Genziana - Liv. 3;Gentiana Windmill - Lv. 3;R_MultiAge_SoccerBonus22c-8005eafaa;;;4x5;2;9720;15290;;;;;;;;;;;;93400;17470;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A4;Mulino a vento Genziana - Liv. 4;Gentiana Windmill - Lv. 4;R_MultiAge_SoccerBonus22d-13332fadf;;;4x5;2;10080;16380;;;;;;;10.5;;;;4;94300;18570;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1170,13 +1170,13 @@ W_MultiAge_CUP22A7;Mulino a vento Genziana - Liv. 7;Gentiana Windmill - Lv. 7;R_
 W_MultiAge_CUP22A8;Mulino a vento Genziana - Liv. 8;Gentiana Windmill - Lv. 8;R_MultiAge_SoccerBonus22h-94c776466;1;;4x5;2;11700;20750;;11;;;;;21.5;;;;6;176300;25120;;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A9;Mulino con Glicine;Wisteria Windmill;R_MultiAge_SoccerBonus22i-77c466d98;1;;4x5;2;12150;21840;;24;;;;;58.5;;;;14;220400;27300;31;35;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22B1;Sentiero fiorito;Flower Path;D_MultiAge_SoccerBonus22flowerpath-35afd1421;1;;4x1;;;3820;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22B2;Sentiero dei fiori;Flower Trail;48126b23c;1;;4x1;;;4000;;;;;;;35;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;
+W_MultiAge_CUP22B2;Sentiero dei fiori;Flower Trail;48126b23c;1;;4x1;;;4000;;;;;;;40;;;;;;;;;;;;;6;6;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22C1;Sentiero tra il grano;Wheat Path;D_MultiAge_SoccerBonus22wheatpath-ca2034ab8;1;;4x1;;;3820;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22C2;Sentiero del Grano;Wheat Trail;839d1316e;1;;4x1;;;4000;;22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;
+W_MultiAge_CUP22C2;Sentiero del Grano;Wheat Trail;839d1316e;1;;4x1;;;4000;;25;;;;;;;;;;;;;;;;;;6;6;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22D1;Sentiero tra gli olivi;Olive Tree Path;D_MultiAge_SoccerBonus22olivepath-e268c3c3b;1;;4x1;;;3820;;;;;;;;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22D2;Sentiero tra gli olivi;Olive Trail;941935790;1;;4x1;;;4000;;;;;;;;;;;;;;22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_CUP22D2;Sentiero tra gli olivi;Olive Trail;941935790;1;;4x1;;;4000;;;;;;;;28;;;;;;11;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22E1;Sentiero roccioso;Rocky Path;D_MultiAge_SoccerBonus22rockypath-b4cb37bb2;1;;4x1;;;3820;;;;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22E2;Sentiero Roccioso;Rocky Trail;fe3ea18e0;1;;4x1;;;4000;;;;;;;;;;;;;;;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_CUP22E2;Sentiero Roccioso;Rocky Trail;fe3ea18e0;1;;4x1;;;4000;;;;;;;;;30;;;;;6;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A1;Resort Egeo - liv. 1;Aegean Resort - Lv. 1;63cc5ef92;;;4x5;;;;0.5;0.5;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A10a;Resort Egeo per coppie;Aegean Couples Resort;cd9b1a7ec;1;;4x5;;;;5;20;;;;;45;15;;;;;;35;44;25;60;;;;;;;;;;;;;;;;;;;;;;3;;;;;;;selection_kit_CUP23BC
 W_MultiAge_CUP23A10b;Resort Egeo con giardino;Aegean Garden Resort;8f1eb6671;1;;4x5;;;;9;22;;;;;30;30;;;;;;40;44;;60;;;;;;;;;;;;;;;;;;;;;;3.25;;;;;;;selection_kit_CUP23BC

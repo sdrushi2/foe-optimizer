@@ -23,7 +23,7 @@
  * standard 4×4, anche `width`/`length` (sono il valore di default e si possono
  * dedurre lato app).
  */
-export const BOOKMARKLET_JS = `javascript:(function(){try{var data={inventory:Object.values(MainParser.Inventory),allies:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o))};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){try{var data={_v:1,inventory:Object.values(MainParser.Inventory),allies:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o)),portraitUrl:typeof ExtPlayerAvatar!=='undefined'&&typeof srcLinks!=='undefined'?srcLinks.GetPortrait(ExtPlayerAvatar):undefined};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 
@@ -158,11 +158,17 @@ export interface RawAlly {
  * vedi {@link validateBookmarkletData}.
  */
 export interface BookmarkletData {
+  /** Versione del bookmarklet. Assente nei payload generati prima dell'introduzione del versionamento. */
+  _v?: number;
   inventory: InventoryItem[];
   allies: Record<string, RawAlly>;
   CityMapData: Record<string, CityMapEntry>;
   CityEntities: Record<string, CityEntityDefinition>;
   UnlockedAreas: UnlockedArea[];
+  /** URL dell'avatar del giocatore, risolto dal CDN di FoE al momento dell'import.
+   *  Presente solo con il bookmarklet aggiornato (versione che cattura ExtPlayerAvatar).
+   *  Assente nei payload importati con bookmarklet vecchi. */
+  portraitUrl?: string;
 }
 
 // ─── Validazione ──────────────────────────────────────────────────────────

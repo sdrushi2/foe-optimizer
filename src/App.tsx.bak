@@ -1502,6 +1502,7 @@ export default function App() {
     setEntityInstanceEraStats(new Map(rawIES.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v])));
     setGameNames(reviveMap<string>(city?.gameNames));
     setGameLang(city?.gameLang === "it" || city?.gameLang === "en" ? city.gameLang : "it");
+    setPortraitUrl(typeof city?.portraitUrl === "string" ? city.portraitUrl : "");
     setInventoryMatched(reviveMap<InventoryEntry>(inv?.inventoryMatched));
     setInventoryUnmatched(reviveMap<InventoryEntry>(inv?.inventoryUnmatched));
     setInventorySelectionKits(reviveMap<SelectionKitEntry>(inv?.inventorySelectionKits));
@@ -1676,6 +1677,7 @@ export default function App() {
     const s = getInitCity()?.gameLang;
     return s === "it" || s === "en" ? s : "it";
   });
+  const [portraitUrl, setPortraitUrl] = useState<string>(() => getInitCity()?.portraitUrl ?? "");
   const [selectedJsonEntry, setSelectedJsonEntry] = useState<DebugJsonEntry | null>(null);
   const [upgradeTooltip, setUpgradeTooltip] = useState<{ x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null>(null);
   // Popup anteprima immagine edificio: posizione + url + nome (alt/titolo).
@@ -2213,6 +2215,7 @@ export default function App() {
       setEraStats(eraStatsMap);
       setGameNames(gameNames);
       setGameLang(gameLang);
+      setPortraitUrl(typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : "");
       setEntityLevels(entityLevels);
       setEntityLevelsList(entityLevelsList);
 
@@ -2293,6 +2296,7 @@ export default function App() {
         declassableBuildings: Array.from(declassableMap.entries()),
         gameNames: Array.from(gameNames.entries()),
         gameLang,
+        portraitUrl: typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : undefined,
       });
       setIsDebugOpen(false);
       bumpStorage();
@@ -4761,6 +4765,13 @@ export default function App() {
           {activeTab === "propria_citta" && cityEntityIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs">
               <>
+                {portraitUrl && (
+                  <img
+                    src={portraitUrl}
+                    alt=""
+                    className="h-7 w-7 object-cover border border-amber-500/40 shrink-0"
+                  />
+                )}
                 {currentEra && (
                   <span
                     className="flex items-center h-7 px-2.5 rounded border border-amber-500/30 bg-amber-500/8 text-amber-400/90 font-semibold cursor-default select-none whitespace-nowrap"
@@ -5035,7 +5046,7 @@ export default function App() {
                     </div>
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-violet-500/20">
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-violet-400">
-                        {t("debugSelectionKits", uiLang)} ({allSelectionKits.length})
+                        {t("debugSelectionKits", uiLang).toUpperCase()} ({allSelectionKits.length})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
                         {(() => {
@@ -5081,7 +5092,7 @@ export default function App() {
                     </div>
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-sky-500/20">
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-sky-400">
-                        {t("debugUpgradeKits", uiLang)} ({inventoryUpgradeKits.size})
+                        {t("debugUpgradeKits", uiLang).toUpperCase()} ({inventoryUpgradeKits.size})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
                         {(() => {
@@ -5456,7 +5467,7 @@ export default function App() {
                                   const r = e.currentTarget.getBoundingClientRect();
                                   const building = processedBuildingsMap.get(entityId);
                                   const bName = gameNames.get(entityId) ?? translateName(entityId, gameLang);
-                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash), name: bName, subtitle: t("allyPlacedTitle", uiLang) });
+                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash ?? "") ?? "", name: bName, subtitle: t("allyPlacedTitle", uiLang) });
                                 }}
                                 onMouseLeave={() => setImagePopup(null)}
                               >🏠</span>

@@ -86,4 +86,10 @@ export interface CityStore {
    * Struttura: [entityId, { popCurr, popBronze, statsBronze: EraStats }].
    */
   declassableBuildings:    Array<[string, { popCurr: number; popBronze: number; statsBronze: EraStats }]>;
+  /** Versione del bookmarklet usato per l'ultimo import (campo `_v` del payload).
+   *  Assente nei profili importati prima dell'introduzione del versionamento. */
+  bookmarkletVersion?:     number;
+  /** URL dell'avatar del giocatore sul CDN di FoE (es. "https://foeit.innogamescdn.com/assets/shared/avatars/portrait_359-xxx.jpg").
+   *  Assente nei profili importati con bookmarklet precedenti alla versione che cattura ExtPlayerAvatar. */
+  portraitUrl?:            string;
 }

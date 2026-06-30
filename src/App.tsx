@@ -1502,6 +1502,7 @@ export default function App() {
     setEntityInstanceEraStats(new Map(rawIES.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v])));
     setGameNames(reviveMap<string>(city?.gameNames));
     setGameLang(city?.gameLang === "it" || city?.gameLang === "en" ? city.gameLang : "it");
+    setPortraitUrl(typeof city?.portraitUrl === "string" ? city.portraitUrl : "");
     setInventoryMatched(reviveMap<InventoryEntry>(inv?.inventoryMatched));
     setInventoryUnmatched(reviveMap<InventoryEntry>(inv?.inventoryUnmatched));
     setInventorySelectionKits(reviveMap<SelectionKitEntry>(inv?.inventorySelectionKits));
@@ -1676,6 +1677,7 @@ export default function App() {
     const s = getInitCity()?.gameLang;
     return s === "it" || s === "en" ? s : "it";
   });
+  const [portraitUrl, setPortraitUrl] = useState<string>(() => getInitCity()?.portraitUrl ?? "");
   const [selectedJsonEntry, setSelectedJsonEntry] = useState<DebugJsonEntry | null>(null);
   const [upgradeTooltip, setUpgradeTooltip] = useState<{ x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null>(null);
   // Popup anteprima immagine edificio: posizione + url + nome (alt/titolo).
@@ -2213,6 +2215,7 @@ export default function App() {
       setEraStats(eraStatsMap);
       setGameNames(gameNames);
       setGameLang(gameLang);
+      setPortraitUrl(typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : "");
       setEntityLevels(entityLevels);
       setEntityLevelsList(entityLevelsList);
 
@@ -2293,6 +2296,8 @@ export default function App() {
         declassableBuildings: Array.from(declassableMap.entries()),
         gameNames: Array.from(gameNames.entries()),
         gameLang,
+        portraitUrl: typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : undefined,
+        bookmarkletVersion: typeof preloadedData._v === "number" ? preloadedData._v : 0,
       });
       setIsDebugOpen(false);
       bumpStorage();
@@ -4347,16 +4352,16 @@ export default function App() {
          <div className="flex flex-wrap items-start gap-4 px-3 pt-2 pb-1">
            <section className="flex flex-wrap items-center gap-1.5 text-xs flex-1">
              <div className="flex w-full items-center gap-1.5 md:w-auto md:contents">
-             <div className="inline-flex shrink-0 overflow-hidden rounded border border-slate-700/60" role="group" title={t("lightFullTitle", uiLang)}>
+             <div className="inline-flex h-7 shrink-0 overflow-hidden rounded border border-slate-700/60" role="group" title={t("lightFullTitle", uiLang)}>
                <button
                  onClick={() => setDbViewFull(false)}
-                 className={`px-2 h-7 text-[11px] font-bold transition-colors ${!dbViewFull ? "bg-amber-500/90 text-slate-950" : "bg-slate-800/40 text-slate-400 hover:text-slate-200"}`}
+                 className={`px-2 h-full text-[11px] font-bold transition-colors ${!dbViewFull ? "bg-amber-500/90 text-slate-950" : "bg-slate-800/40 text-slate-400 hover:bg-amber-500/15 hover:text-amber-300"}`}
                >
                  LIGHT
                </button>
                <button
                  onClick={() => setDbViewFull(true)}
-                 className={`px-2 h-7 text-[11px] font-bold transition-colors border-l border-slate-700/60 ${dbViewFull ? "bg-amber-500/90 text-slate-950" : "bg-slate-800/40 text-slate-400 hover:text-slate-200"}`}
+                 className={`px-2 h-full text-[11px] font-bold transition-colors border-l border-slate-700/60 ${dbViewFull ? "bg-amber-500/90 text-slate-950" : "bg-slate-800/40 text-slate-400 hover:bg-amber-500/15 hover:text-amber-300"}`}
                >
                  FULL
                </button>
@@ -4376,7 +4381,7 @@ export default function App() {
               <button
                 onClick={resetFilters}
                 title={t("resetFiltersTitle", uiLang)}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-700/60 bg-slate-800/40 text-slate-400 hover:bg-slate-700/40 hover:text-amber-400 hover:border-amber-500/40 transition-all"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-700/60 bg-slate-800/40 text-slate-400 hover:bg-red-500/20 hover:text-red-200 hover:border-red-400/60 transition-all"
               >
                 <RotateCcw size={13} />
               </button>
@@ -4761,6 +4766,20 @@ export default function App() {
           {activeTab === "propria_citta" && cityEntityIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs">
               <>
+                {portraitUrl ? (
+                  <img
+                    src={portraitUrl}
+                    alt=""
+                    className="h-7 w-7 rounded object-cover border border-amber-500/40 shrink-0"
+                  />
+                ) : (
+                  <img
+                    src="https://foezz.innogamescdn.com/assets/shared/avatars/portrait_unknown-9d9c1d859.jpg"
+                    alt=""
+                    className="h-7 w-7 rounded object-cover border border-slate-600/60 shrink-0 opacity-50"
+                    title="Avatar non disponibile: stai usando una versione vecchia della bacchetta magica. Aggiorna il bookmarklet e reimporta i dati per vedere il tuo avatar."
+                  />
+                )}
                 {currentEra && (
                   <span
                     className="flex items-center h-7 px-2.5 rounded border border-amber-500/30 bg-amber-500/8 text-amber-400/90 font-semibold cursor-default select-none whitespace-nowrap"
@@ -5456,7 +5475,7 @@ export default function App() {
                                   const r = e.currentTarget.getBoundingClientRect();
                                   const building = processedBuildingsMap.get(entityId);
                                   const bName = gameNames.get(entityId) ?? translateName(entityId, gameLang);
-                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash), name: bName, subtitle: t("allyPlacedTitle", uiLang) });
+                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash ?? "") ?? "", name: bName, subtitle: t("allyPlacedTitle", uiLang) });
                                 }}
                                 onMouseLeave={() => setImagePopup(null)}
                               >🏠</span>
