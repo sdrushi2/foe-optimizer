@@ -5035,7 +5035,7 @@ export default function App() {
                     </div>
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-violet-500/20">
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-violet-400">
-                        {t("debugSelectionKits", uiLang).toUpperCase()} ({allSelectionKits.length})
+                        {t("debugSelectionKits", uiLang)} ({allSelectionKits.length})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
                         {(() => {
@@ -5081,7 +5081,7 @@ export default function App() {
                     </div>
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-sky-500/20">
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-sky-400">
-                        {t("debugUpgradeKits", uiLang).toUpperCase()} ({inventoryUpgradeKits.size})
+                        {t("debugUpgradeKits", uiLang)} ({inventoryUpgradeKits.size})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
                         {(() => {

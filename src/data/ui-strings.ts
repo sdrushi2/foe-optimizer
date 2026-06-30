@@ -1504,6 +1504,14 @@ const UI_STRINGS = {
     it: "Codice sorgente",
     en: "Source code",
   },
+  emptyAllySlotBadgeTitle: {
+    it: "Slot alleato libero",
+    en: "Empty ally slot",
+  },
+  showOnlyEmptyAllySlotTitle: {
+    it: "Mostra solo gli edifici con uno slot alleato libero",
+    en: "Show only buildings with an empty ally slot",
+  },
   showOnlyDeclassableTitle: {
     it: "Mostra solo gli edifici che possono essere declassati senza conseguenze (stesse stat. militari, meno popolazione)",
     en: "Show only the buildings that can be downgraded without consequences (same military stats, less population)",

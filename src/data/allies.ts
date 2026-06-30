@@ -23,6 +23,8 @@ export interface ImportedAlly {
   isPlaced: boolean;
   isFragment: boolean;
   fragmentCount: number;
+  /** entityId dell'edificio in città dove è posizionato l'alleato (da CityMapData). */
+  placedInEntityId?: string;
 }
 
 // Statistiche calcolate di un alleato (incluse le ereditarietà di rarità inferiore)
@@ -104,7 +106,7 @@ export function parseAlliesCsv(csv: string): Ally[] {
   });
 }
 
-export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Record<string, number>): ImportedAlly[] {
+export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Record<string, number>, cityMapData?: Record<string, { cityentity_id?: unknown }>): ImportedAlly[] {
   const allies: ImportedAlly[] = [];
   if (!allyData || typeof allyData !== "object") return allies;
   for (const entry of Object.values(allyData)) {
@@ -112,6 +114,10 @@ export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Reco
     const rarityValue = entry.rarity?.value ?? "";
     const rarity = rarityMap[rarityValue] ?? 0;
     if (!rarity) continue;
+    const rawMapId = "mapEntityId" in entry ? String(entry.mapEntityId) : undefined;
+    const placedInEntityId = rawMapId && cityMapData
+      ? (cityMapData[rawMapId]?.cityentity_id != null ? String(cityMapData[rawMapId].cityentity_id) : undefined)
+      : undefined;
     allies.push({
       jsonId: entry.id ?? 0,
       allyId: String(entry.allyId),
@@ -120,6 +126,7 @@ export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Reco
       isPlaced: "mapEntityId" in entry,
       isFragment: false,
       fragmentCount: 0,
+      placedInEntityId,
     });
   }
   return allies;
