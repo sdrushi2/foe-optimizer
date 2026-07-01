@@ -798,7 +798,8 @@ interface BuildingRowProps {
   handleCityRowClick: (building: ProcessedBuilding) => void;
   toggleSelect: (id: string) => void;
   getPropDisplay: (b: Building, lang: UiLang) => string;
-  setImagePopup: (v: { x: number; y: number; url: string; name: string; subtitle?: string } | null) => void;
+  setImagePopup: (v: { x: number; y: number; url: string; name: string; id?: string; subtitle?: string } | null) => void;
+  scheduleImagePopupClose: () => void;
   setUpgradeTooltip: (v: { x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null) => void;
   setOutdatedTooltip: (v: { x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null) => void;
   setFragmentTooltip: (v: { x: number; y: number; producers: string[]; selectionKits: string[] } | null) => void;
@@ -820,7 +821,7 @@ const BuildingRow = memo(function BuildingRow({
   greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, hasEmptyAllySlot, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentProducers, fragmentSelectionKits,
   handleCityRowClick, toggleSelect, getPropDisplay,
-  setImagePopup, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
+  setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
 }: BuildingRowProps) {
   return (
     <tr
@@ -881,9 +882,9 @@ const BuildingRow = memo(function BuildingRow({
               onMouseEnter={(e) => {
                 if (!imgUrl) return;
                 const r = e.currentTarget.getBoundingClientRect();
-                setImagePopup({ x: r.right, y: r.top, url: imgUrl, name: displayedName });
+                setImagePopup({ x: r.right, y: r.top, url: imgUrl, name: displayedName, id: b.cityEntityId });
               }}
-              onMouseLeave={() => setImagePopup(null)}
+              onMouseLeave={scheduleImagePopupClose}
               title={t("viewOnWikiTitle", uiLang, displayedName, wikiLang.toUpperCase())}
               className="inline-flex items-center justify-center text-[13px] leading-none hover:scale-125 transition-transform"
             >
@@ -1683,7 +1684,45 @@ export default function App() {
   // Popup anteprima immagine edificio: posizione + url + nome (alt/titolo).
   // Attivato dall'hover su 👁️ in tabella e dall'hover sugli edifici in
   // mappa città; scompare all'uscita del mouse in entrambi i casi.
-  const [imagePopup, setImagePopup] = useState<{ x: number; y: number; url: string; name: string; subtitle?: string } | null>(null);
+  const [imagePopup, setImagePopupRaw] = useState<{ x: number; y: number; url: string; name: string; id?: string; subtitle?: string } | null>(null);
+  // Timer di chiusura ritardata del popup immagine: permette al mouse di
+  // attraversare lo spazio tra il trigger (👁️/edificio mappa/🏠) e il
+  // pannello senza chiuderlo, e di restare sul pannello per copiare
+  // nome/ID. Il pannello stesso cancella il timer on-enter e lo richiude
+  // on-leave; vedi invocazioni di scheduleImagePopupClose/cancelImagePopupClose.
+  const imagePopupCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelImagePopupClose = useCallback(() => {
+    if (imagePopupCloseTimer.current !== null) {
+      clearTimeout(imagePopupCloseTimer.current);
+      imagePopupCloseTimer.current = null;
+    }
+  }, []);
+  // Wrapper che cancella sempre un'eventuale chiusura pendente quando si
+  // apre/aggiorna un popup con un valore non-null. Necessario perché
+  // passando velocemente da un trigger 👁️/🏠 all'altro, il mouseEnter del
+  // nuovo trigger può scattare prima che il timer di chiusura schedulato
+  // dal vecchio trigger scada: senza questa cancellazione, quel timer
+  // "vecchio" chiuderebbe comunque (dopo, in ritardo) il popup appena
+  // aperto per il nuovo trigger, anche se il mouse ci sta sopra.
+  const setImagePopup = useCallback((v: { x: number; y: number; url: string; name: string; id?: string; subtitle?: string } | null | ((prev: typeof imagePopup) => typeof imagePopup)) => {
+    if (typeof v === "function") {
+      setImagePopupRaw(prev => {
+        const next = v(prev);
+        if (next !== null) cancelImagePopupClose();
+        return next;
+      });
+      return;
+    }
+    if (v !== null) cancelImagePopupClose();
+    setImagePopupRaw(v);
+  }, [cancelImagePopupClose]);
+  const scheduleImagePopupClose = useCallback(() => {
+    cancelImagePopupClose();
+    imagePopupCloseTimer.current = setTimeout(() => {
+      setImagePopupRaw(null);
+      imagePopupCloseTimer.current = null;
+    }, 150);
+  }, [cancelImagePopupClose]);
   const [outdatedTooltip, setOutdatedTooltip] = useState<{ x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null>(null);
   const [declassableTooltip, setDeclassableTooltip] = useState<{ x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null>(null);
   const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; producers: string[]; selectionKits: string[] } | null>(null);
@@ -5174,6 +5213,7 @@ export default function App() {
               cityMapDragStart={cityMapDragStart}
               setCityMapDragStart={setCityMapDragStart}
               onBuildingHover={(entityId, name, clientX, clientY) => {
+                cancelImagePopupClose();
                 setImagePopup(prev => {
                   // Stesso edificio (mouse che si muove dentro lo stesso
                   // rettangolo): aggiorna solo la posizione, evita di
@@ -5184,10 +5224,10 @@ export default function App() {
                   const b = BUILDING_BY_ID.get(entityId);
                   const url = b ? getImageUrl(b.cityEntityId, b.hash) : null;
                   if (!url) return null;
-                  return { x: clientX + 16, y: clientY, url, name };
+                  return { x: clientX + 16, y: clientY, url, name, id: entityId };
                 });
               }}
-              onBuildingLeave={() => setImagePopup(null)}
+              onBuildingLeave={scheduleImagePopupClose}
               onBuildingClick={handleMapBuildingClick}
               uiLang={uiLang}
             />
@@ -5371,6 +5411,7 @@ export default function App() {
                           toggleSelect={toggleSelect}
                           getPropDisplay={getPropDisplay}
                           setImagePopup={setImagePopup}
+                          scheduleImagePopupClose={scheduleImagePopupClose}
                           setUpgradeTooltip={setUpgradeTooltip}
                           setOutdatedTooltip={setOutdatedTooltip}
                           setFragmentTooltip={setFragmentTooltip}
@@ -5482,9 +5523,9 @@ export default function App() {
                                   const r = e.currentTarget.getBoundingClientRect();
                                   const building = processedBuildingsMap.get(entityId);
                                   const bName = gameNames.get(entityId) ?? translateName(entityId, gameLang);
-                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash ?? "") ?? "", name: bName, subtitle: t("allyPlacedTitle", uiLang) });
+                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash ?? "") ?? "", name: bName, id: entityId, subtitle: t("allyPlacedTitle", uiLang) });
                                 }}
-                                onMouseLeave={() => setImagePopup(null)}
+                                onMouseLeave={scheduleImagePopupClose}
                               >🏠</span>
                             ) : (
                               <span className="ml-1.5 inline-block text-[10px] font-mono font-bold px-1 py-0.5 rounded bg-red-950 text-red-400 border border-red-600" title={t("allyNotPlacedTitle", uiLang)}>{t("allyNotPlacedBadge", uiLang)}</span>
@@ -5741,7 +5782,7 @@ export default function App() {
 
       {imagePopup && (
         <div
-          className="pointer-events-none fixed z-[120] rounded-lg border border-amber-700/50 bg-slate-900 p-2 shadow-2xl shadow-black/60"
+          className="pointer-events-auto fixed z-[120] rounded-lg border border-amber-700/50 bg-slate-900 p-2 shadow-2xl shadow-black/60"
           style={(() => {
             const W = 232; // 224 immagine + 8 padding
             const showLeft = imagePopup.x + W + 8 > window.innerWidth;
@@ -5749,6 +5790,8 @@ export default function App() {
             const top = Math.min(imagePopup.y, window.innerHeight - 260);
             return { left, top: Math.max(8, top) };
           })()}
+          onMouseEnter={cancelImagePopupClose}
+          onMouseLeave={scheduleImagePopupClose}
         >
           {imagePopup.subtitle && (
             <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">{imagePopup.subtitle}</div>
@@ -5759,7 +5802,10 @@ export default function App() {
             className="h-56 w-56 object-contain"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
           />
-          <div className="mt-1 max-w-56 truncate text-center text-[11px] text-slate-300">{imagePopup.name}</div>
+          <div className="mt-1 max-w-56 truncate text-center text-[11px] text-slate-300 select-text">{imagePopup.name}</div>
+          {imagePopup.id && (
+            <div className="max-w-56 truncate text-center text-[10px] font-mono text-slate-500 select-text">{imagePopup.id}</div>
+          )}
         </div>
       )}
       {outdatedTooltip && (() => {
