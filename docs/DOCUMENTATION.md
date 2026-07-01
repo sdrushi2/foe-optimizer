@@ -276,6 +276,7 @@ globali del gioco e raccoglie:
 | `MainParser.CityMapData` | La disposizione della città (quali edifici, dove, a che livello). |
 | `MainParser.CityEntities` | Le definizioni complete delle entità (statistiche per era). |
 | `CityMap.Main.unlockedAreas` | Le aree di città sbloccate (spazio disponibile). |
+| `ExtPlayerAvatar` + `srcLinks` | URL CDN dell'avatar del giocatore (facoltativo: presente solo se le variabili globali esistono nella pagina di gioco). |
 
 Costruisce un oggetto JSON e lo copia negli appunti (con fallback su `execCommand`
 per i browser senza `navigator.clipboard`).
@@ -285,9 +286,10 @@ standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `wid
 `length` (ricostruibili al default 4) e `__class__`.
 
 > **REGOLA CRITICA:** ciò che **non va modificato** è la **struttura dei dati** che il
-> bookmarklet raccoglie ed esporta — l'oggetto `data` con i suoi 5 campi (`inventory`,
-> `allies`, `CityMapData`, `CityEntities`, `UnlockedAreas`) e le loro trasformazioni.
-> Quella è il contratto con `validateBookmarkletData` e con il formato dei profili
+> bookmarklet raccoglie ed esporta — l'oggetto `data` con i suoi 5 campi obbligatori (`inventory`,
+> `allies`, `CityMapData`, `CityEntities`, `UnlockedAreas`) e le loro trasformazioni —
+> più il campo opzionale `portraitUrl` (URL avatar, assente nei bookmarklet precedenti,
+> retrocompatibile). Quella struttura è il contratto con `validateBookmarkletData` e con il formato dei profili
 > salvati: cambiarla romperebbe i bookmarklet già salvati dagli utenti nei preferiti.
 >
 > **Ciò che invece SI PUÒ modificare liberamente** sono le parti che non toccano i dati:
@@ -302,7 +304,10 @@ standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `wid
 
 `bookmarklet.ts` è la **sorgente di verità** dei tipi del payload di gioco:
 
-- `BookmarkletData` — la forma completa del JSON importato.
+- `BookmarkletData` — la forma completa del JSON importato. Include i 5 campi
+  obbligatori più `portraitUrl?: string` — URL avatar del giocatore sul CDN di FoE
+  (es. `"https://foeit.innogamescdn.com/.../portrait_359-xxx.jpg"`). Assente nei
+  profili importati con bookmarklet precedenti all'introduzione del campo.
 - `CityMapEntry` — una entry della mappa città (un edificio piazzato).
 - `CityEntityDefinition` — la definizione di un'entità (con `components`,
   `entity_levels`, `abilities`, ecc.), da cui si estraggono le statistiche.
@@ -450,7 +455,7 @@ e diventano parte del bundle. Sono la base dati immutabile del tool.
 intestazione. Contiene ~2050 edifici. Colonne principali:
 
 ```text
-CityEntityId; NomeIta; NomeEng; Hash; Lin; Time; Size; Road; Pop; Fel;
+CityEntityId; NomeIta; NomeEng; Hash; Lin; Kit; Time; Size; Road; Pop; Fel;
 BP; PF; PFB; FUR; TR; TRNE; Beni; BeniP; BeniS; BeniB; BeniG;
 GenAtk_A; GenDef_A; GenAtk_D; GenDef_D;
 CampiAtk_A; CampiDef_A; CampiAtk_D; CampiDef_D;
@@ -459,6 +464,9 @@ IQAtk_A; IQDef_A; IQAtk_D; IQDef_D;
 IQBeni; IQTruppe; IQAzioni; IQCap; Ally;
 FSP; TPM; TPB; ADM; MOD; RIN; IMM; Fragments
 ```
+
+`Lin` è un flag manuale di riferimento per stabilire gli edifici da includere
+nella visualizzazione `Light` delle tabelle.
 
 Ogni colonna mappa direttamente su un campo di `Building`. I prefissi degli ID
 seguono una convenzione (vedi §11): `R_` residenziali, `P_` produzione/laboratori,
@@ -710,12 +718,14 @@ crea cicli (`ui-strings.ts` non importa nulla). L'`icon` è un emoji, lingua-neu
 
 ### Costanti chiave
 
-**`CONSUMABLE_ASSET_NAMES`** — la mappa dei 7 consumabili dal nome-chiave interno al
+**`CONSUMABLE_ASSET_NAMES`** — la mappa dei 9 consumabili dal nome-chiave interno al
 nome-asset del gioco. È la fonte da cui `inventory.ts` deriva tutto:
 
 ```ts
 {
   oneUpKit:           "one_up_kit",
+  oneDownKit:         "one_down_kit",
+  reversionKit:       "reversion_kit",
   renovationKit:      "renovation_kit",
   storeBuilding:      "store_building",
   rushEventBuildings: "rush_single_event_building_instant",
@@ -1003,8 +1013,11 @@ classificate. Non tocca React né `localStorage`.
   `name`, `inStock`, `rawEntry`. Sono strutturalmente identici ma tenuti come tipi
   distinti per chiarezza di dominio (un selection kit e un upgrade kit sono concetti
   diversi).
-- **`SpecialKits`** — i conteggi dei 7 consumabili, più i loro nomi opzionali (es.
-  `oneUpKit: number`, `oneUpKitName?: string`).
+- **`SpecialKits`** — i conteggi dei 9 consumabili, più i loro nomi opzionali (es.
+  `oneUpKit: number`, `oneUpKitName?: string`). I 9 campi numerici corrispondono
+  esattamente alle chiavi di `CONSUMABLE_ASSET_NAMES`: `oneUpKit`, `oneDownKit`,
+  `reversionKit`, `renovationKit`, `storeBuilding`, `rushEventBuildings`,
+  `rushMassSupplies`, `rushGoodsBuildings`, `massSelfAidKit`.
 - **`ParsedInventory`** — il risultato del parsing: `matched`, `unmatched`,
   `selectionKits`, `upgradeKits`, `specialKits`.
 - **`InventoryStore`** — la forma serializzata in `localStorage`.
@@ -1245,6 +1258,17 @@ Campi principali:
   del giocatore.
 - `gameLang` — la lingua rilevata dal gioco (`"it"` o `"en"`; default `"it"` se il
   rilevamento non riesce).
+- `declassableBuildings` — array di coppie `[entityId, { popCurr, popBronze,
+  statsBronze }]` (serializzato come array per compatibilità JSON; rianimato come
+  `Map<string, …>` in `App.tsx` via `reviveMap`). Contiene gli edifici evento (`W_`)
+  in città privi di bonus rilevanti, per cui la versione Età del Bronzo equivale in
+  output ma costa meno popolazione. Mostrato come badge ▼ in toolbar; attiva il
+  filtro `showOnlyDeclassable`; hover apre tooltip con risparmio pop e kit richiesti.
+- `portraitUrl?` — URL CDN dell'avatar del giocatore (es.
+  `"https://foeit.innogamescdn.com/assets/shared/avatars/portrait_359-xxx.jpg"`).
+  Opzionale: assente nei profili importati con bookmarklet precedenti all'introduzione
+  del campo. In toolbar mostra l'immagine; se assente mostra un avatar segnaposto con
+  tooltip che invita ad aggiornare il bookmarklet.
 
 > **Nota architetturale.** `cityStore.ts` importa `EraStats` e `GreatBuilding` da
 > `models/BuildingModel.ts` — una dipendenza `data/ → models/` che va contro la
@@ -1504,6 +1528,14 @@ chiave della pipeline di trasformazione:
 - `cityBuildings` / `cityUpgradeBadges` — gli edifici della città reale con i loro
   badge.
 
+Stato aggiuntivo caricato da `CityStore` all'import:
+- `declassableBuildings: Map<string, { popCurr, popBronze, statsBronze }>` — calcolato
+  durante l'import; identifica gli edifici evento che conviene portare a Età del Bronzo.
+  Badge ▼ contatore in toolbar; filtro `showOnlyDeclassable`; tooltip hover con risparmio
+  popolazione e kit necessari (`oneDownKit` / `reversionKit`).
+- `portraitUrl: string` — URL avatar, mostrato nella toolbar (fallback: segnaposto con
+  tooltip che invita ad aggiornare il bookmarklet).
+
 `exactBuildingSum` (definito dentro il rendering della tab statistiche) calcola somme
 esatte tenendo conto che le copie di un edificio possono essere in ere diverse.
 
@@ -1660,6 +1692,14 @@ controllo speciale dentro `updateFilter` (`if (key === "showTimeColumn" || key =
 "showProdColumns")`) — un pattern diverso e più vecchio dello stesso problema, non
 unificato con i nuovi `useState` dedicati per scelta (cambiare quello esistente non
 era necessario per questa richiesta).
+
+### 24.3quinquies Ricerca per ID (feature di debug nascosta)
+
+Il campo di ricerca supporta una modalità nascosta: se il testo inizia con `\`,
+la stringa successiva viene cercata nel `cityEntityId` invece che nel nome.
+Es. `\FALL` mostra tutti gli edifici il cui ID contiene `"FALL"`. Non è documentata
+nell'UI (il placeholder resta semplicemente `"Cerca..."` / `"Search..."`): è
+intenzionalmente nascosta, utile in fase di sviluppo/debug.
 
 ### 24.4 Import e gestione errori
 

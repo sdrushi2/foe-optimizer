@@ -3329,7 +3329,10 @@ export default function App() {
   const filteredBuildings = useMemo(() => {
     const sourceBuildings: ProcessedBuilding[] = eraAdjustedSource;
 
-    const deferredSearchLower = deferredSearch.toLowerCase();
+    const isIdSearch = deferredSearch.startsWith("\\");
+    const deferredSearchLower = isIdSearch
+      ? deferredSearch.slice(1).toLowerCase()
+      : deferredSearch.toLowerCase();
     const prodFilterKeys = currentFilters.prodFilter.size > 0 ? [...currentFilters.prodFilter] : null;
 
     // Pre-compute minEff once outside the loop
@@ -3373,8 +3376,12 @@ export default function App() {
       // eraAdjustedSource; `b.searchName` riflette già il nome mostrato.
       const visibleNameForSearch = b.searchName;
 
-      // 2. Search: match only against the name displayed in the Edificio column.
-      if (deferredSearchLower && !visibleNameForSearch.includes(deferredSearchLower)) continue;
+      // 2. Search: per nome (default) o per CityEntityId (prefisso \).
+      if (deferredSearchLower && (
+        isIdSearch
+          ? !b.cityEntityId?.toLowerCase().includes(deferredSearchLower)
+          : !visibleNameForSearch.includes(deferredSearchLower)
+      )) continue;
 
       // 3. Filtered outdated (solo tab Città)
       if (isPropriacitta && showOnlyOutdated && b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)) continue;

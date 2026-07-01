@@ -4,6 +4,12 @@ node_modules/
 # Output di build (generato da Vite, pubblicato dalla GitHub Action)
 dist/
 
+# Documentazione privata della skill (non va in repo)
+docs/SKILL.md
+
+# Script di manutenzione dati (non parte del bundle)
+scripts/
+
 # File di sistema/editor comuni
 .DS_Store
 Thumbs.db
