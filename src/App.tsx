@@ -2563,7 +2563,21 @@ export default function App() {
   // scrivere, i valori intermedi vengono scartati e il filtro scatta una
   // sola volta, alla fine (o durante una pausa nella digitazione).
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const prevSearchTermRef = useRef("");
   useEffect(() => {
+    // Cancellare caratteri (o svuotare la ricerca) allarga il set di
+    // risultati: l'utente si aspetta di vederlo subito, non ha senso
+    // fargli aspettare un debounce pensato per l'opposto (digitare in
+    // avanti, dove il set si restringe e i risultati intermedi sono
+    // sprecati). Applica il ritardo solo quando la stringa si allunga o
+    // resta della stessa lunghezza (sostituzione/selezione+digitazione);
+    // se si accorcia, aggiorna subito.
+    const isShrinking = searchTerm.length < prevSearchTermRef.current.length;
+    prevSearchTermRef.current = searchTerm;
+    if (isShrinking) {
+      setDebouncedSearchTerm(searchTerm);
+      return;
+    }
     const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
     return () => clearTimeout(timer);
   }, [searchTerm]);
