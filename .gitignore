@@ -9,6 +9,7 @@ docs/SKILL.md
 
 # Script di manutenzione dati (non parte del bundle)
 scripts/
+check-all.bat
 
 # File di sistema/editor comuni
 .DS_Store

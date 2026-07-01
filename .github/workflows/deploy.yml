@@ -37,6 +37,16 @@ jobs:
       - name: Installa le dipendenze
         run: npm ci
 
+      # Vite/esbuild non tipizzano in fase di build: senza questo step, un
+      # errore TypeScript non verrebbe rilevato qui e finirebbe comunque in
+      # produzione. tsconfig.json ha già noEmit+strict, quindi "npm run
+      # typecheck" (tsc --noEmit) è il vero gate di correttezza dei tipi.
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Lint (eslint src)
+        run: npm run lint
+
       - name: Build (npm run build)
         run: npm run build
 
