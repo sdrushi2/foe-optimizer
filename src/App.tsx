@@ -1366,6 +1366,15 @@ const BuildingRow = memo(function BuildingRow({
  *  due righe della cella nome sono identiche tra le due tabelle alleati
  *  (posseduti e database); cambia solo cosa segue (frammenti/posizionamento). */
 function AllyRarityName({ id, rarity, lang }: { id: string; rarity: number; lang: Lang }) {
+  // Descrizione dell'abilità speciale (colonne abilityIta/abilityEng del
+  // CSV): vuota per la maggior parte degli alleati, quindi non renderizzata
+  // affatto in quel caso (nessuno spazio/separatore residuo). La lingua di
+  // visualizzazione (gameLang o uiLang a seconda del chiamante) segue lo
+  // stesso criterio del nome: "it" mostra abilityIta, ogni altra lingua
+  // (inclusa "en") ricade su abilityEng, coerente con l'assenza di
+  // traduzioni dedicate per de/es/fr.
+  const ally = ALLIES_BY_ID_RARITY.get(`${id}__${rarity}`);
+  const abilityText = ally ? (lang === "it" ? ally.abilityIta : ally.abilityEng) || "" : "";
   return (
     <>
       <span className={Allies.RARITY_DISPLAY[rarity]?.textColor ?? ""}>
@@ -1374,6 +1383,11 @@ function AllyRarityName({ id, rarity, lang }: { id: string; rarity: number; lang
       <span className={`ml-1.5 inline-block text-[10px] font-mono font-bold px-1 py-0.5 rounded border bg-slate-950/70 text-slate-100 ${Allies.RARITY_DISPLAY[rarity]?.borderColor ?? "border-slate-400"}`}>
         {Allies.rarityName(rarity, lang)}{Allies.RARITY_DISPLAY[rarity]?.stars ?? ""}
       </span>
+      {abilityText && (
+        <span className="ml-2 text-xs italic text-slate-400">
+          {abilityText}
+        </span>
+      )}
     </>
   );
 }

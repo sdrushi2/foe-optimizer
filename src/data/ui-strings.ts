@@ -522,7 +522,7 @@ const UI_STRINGS = {
     en: "Building needlessly connected to a road",
   },
   needlesslyConnectedBadge: {
-    it: (n: number) => n > 1 ? `${n}x CONNESSI INUTILMENTE A STRADA` : "CONNESSO INUTILMENTE A STRADA",
+    it: (n: number) => n > 1 ? `${n}x CONNESSI INUTILMENTE` : "CONNESSO INUTILMENTE",
     en: (n: number) => n > 1 ? `${n}x NEEDLESSLY CONNECTED` : "NEEDLESSLY CONNECTED",
   },
   historicalAllySlotTitle: {

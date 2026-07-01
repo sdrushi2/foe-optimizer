@@ -13,6 +13,11 @@ export interface Ally {
   gbg: [number, number, number, number];
   sped: [number, number, number, number];
   iq: [number, number, number, number];
+  /** Descrizione testuale dell'abilità speciale dell'alleato, per lingua
+   *  (colonne abilityIta/abilityEng del CSV). Vuota per la maggior parte
+   *  degli alleati (solo alcuni hanno un'abilità speciale documentata). */
+  abilityIta: string;
+  abilityEng: string;
 }
 
 export interface ImportedAlly {
@@ -79,6 +84,8 @@ export function parseAlliesCsv(csv: string): Ally[] {
   const idxIQDefA = colIndex("IQDef_A");
   const idxIQAtkD = colIndex("IQAtk_D");
   const idxIQDefD = colIndex("IQDef_D");
+  const idxAbilityIta = colIndex("abilityIta");
+  const idxAbilityEng = colIndex("abilityEng");
 
   // Helper: converte una colonna CSV in numero, restituisce 0 se assente o NaN
   const toNumber = (s: string | undefined) => parseFloat(s || "") || 0;
@@ -106,6 +113,8 @@ export function parseAlliesCsv(csv: string): Ally[] {
       iq: idxIQAtkA >= 0
         ? [toNumber(at(cols, idxIQAtkA)), toNumber(at(cols, idxIQDefA)), toNumber(at(cols, idxIQAtkD)), toNumber(at(cols, idxIQDefD))]
         : [0, 0, 0, 0],
+      abilityIta: (at(cols, idxAbilityIta) || "").trim(),
+      abilityEng: (at(cols, idxAbilityEng) || "").trim(),
     };
   });
 }
