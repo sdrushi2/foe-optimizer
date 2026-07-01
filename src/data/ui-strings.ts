@@ -273,6 +273,10 @@ const UI_STRINGS = {
     it: "Filtra",
     en: "Filter",
   },
+  hideBuildingsLabel: {
+    it: "Nascondi edifici →",
+    en: "Hide buildings →",
+  },
 
   // ── Titoli delle icone produzione (colonne + filtro) ─────────────────
   staleDataWarning: {
@@ -1508,9 +1512,13 @@ const UI_STRINGS = {
     it: "Slot alleato libero",
     en: "Empty ally slot",
   },
-  showOnlyEmptyAllySlotTitle: {
-    it: "Mostra solo gli edifici con uno slot alleato libero",
-    en: "Show only buildings with an empty ally slot",
+  filledAllySlotBadgeTitle: {
+    it: (allyDisplayName: string) => `Alleato: ${allyDisplayName}`,
+    en: (allyDisplayName: string) => `Ally: ${allyDisplayName}`,
+  },
+  showOnlyWithAllySlotTitle: {
+    it: "Mostra solo gli edifici con uno slot alleato",
+    en: "Show only buildings with an ally slot",
   },
   showOnlyDeclassableTitle: {
     it: "Mostra solo gli edifici che possono essere declassati senza conseguenze (stesse stat. militari, meno popolazione)",

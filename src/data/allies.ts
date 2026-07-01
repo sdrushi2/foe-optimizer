@@ -25,6 +25,10 @@ export interface ImportedAlly {
   fragmentCount: number;
   /** entityId dell'edificio in città dove è posizionato l'alleato (da CityMapData). */
   placedInEntityId?: string;
+  /** Id grezzo dell'istanza sulla mappa (chiave in CityMapData/cityMap), NON il
+   *  tipo di edificio: permette di distinguere QUALE copia specifica, tra più
+   *  istanze dello stesso cityEntityId, ospita questo alleato. */
+  placedInMapEntityId?: string;
 }
 
 // Statistiche calcolate di un alleato (incluse le ereditarietà di rarità inferiore)
@@ -127,6 +131,7 @@ export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Reco
       isFragment: false,
       fragmentCount: 0,
       placedInEntityId,
+      placedInMapEntityId: rawMapId,
     });
   }
   return allies;

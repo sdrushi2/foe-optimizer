@@ -66,7 +66,7 @@ import {
   iconIQAtk_D as iconIQAtkD, iconIQDef_D as iconIQDefD,
   iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, iconIQProd,
   iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap, iconFUR, iconBP, iconTR, iconTRNE,
-  iconOneUp, iconImm, iconRinn, iconAiuto, allies_slot_empty,
+  iconOneUp, iconImm, iconRinn, iconAiuto, allies_slot_empty, allies_slot_full,
 } from "./assets/icons";
 
 // I nomi (NomeIta/NomeEng) sono ora colonne dirette di buildings.csv/allies.csv,
@@ -787,7 +787,7 @@ interface BuildingRowProps {
   upgradeBadge: { targets: string[]; kits: Array<{ name: string; count: number }> } | undefined;
   isOutdated: boolean;
   isDeclassable: boolean;
-  hasEmptyAllySlot: boolean;
+  allySlots: Array<{ filled: boolean; allyDisplayName?: string }> | undefined;
   declassablePopData: { popCurr: number; popBronze: number; statsBronze: EraStats } | undefined;
   setDeclassableTooltip: (v: { x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null) => void;
   minLevel: number;
@@ -818,7 +818,7 @@ const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, currentFilters, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, hasEmptyAllySlot, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentProducers, fragmentSelectionKits,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
@@ -1085,14 +1085,25 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && hasEmptyAllySlot && (
+        {activeTab === "propria_citta" && allySlots && allySlots.map((slot, i) => (
           <span
-            className="ml-2 inline-block cursor-help"
-            title={t("emptyAllySlotBadgeTitle", uiLang)}
+            // Le icone non hanno un id stabile proprio (sono slot posizionali
+            // "pieno/vuoto" per copia, non entità con identità); l'ordine è
+            // ricalcolato ad ogni render da allySlotsPerBuilding, quindi
+            // l'indice di posizione è la chiave corretta qui.
+            key={i}
+            className="ml-1 inline-block cursor-help"
+            title={slot.filled
+              ? t("filledAllySlotBadgeTitle", uiLang, slot.allyDisplayName ?? "?")
+              : t("emptyAllySlotBadgeTitle", uiLang)}
           >
-            <img src={allies_slot_empty} alt="" className="h-4 w-4 object-contain inline-block" />
+            <img
+              src={slot.filled ? allies_slot_full : allies_slot_empty}
+              alt=""
+              className="h-4 w-4 object-contain inline-block"
+            />
           </span>
-        )}
+        ))}
         {(() => {
           const producers = fragmentProducers;
           const selectionKits = fragmentSelectionKits;
@@ -1628,7 +1639,7 @@ export default function App() {
   const [showOnlyOutdated, setShowOnlyOutdated] = useState(false);
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
   const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
-  const [showOnlyEmptyAllySlot, setShowOnlyEmptyAllySlot] = useState(false);
+  const [showOnlyWithAllySlot, setShowOnlyWithAllySlot] = useState(false);
   // Filtra nella tab Inventario: mostra solo gli edifici fisicamente già in inventario
   const [showOnlyReadyBuildings, setShowOnlyReadyBuildings] = useState(false);
   const [cityMapCellSize, setCityMapCellSize] = useState(9);
@@ -2084,7 +2095,7 @@ export default function App() {
         }
         bMinX = Math.min(bMinX, x); bMinY = Math.min(bMinY, y);
         bMaxX = Math.max(bMaxX, x + w); bMaxY = Math.max(bMaxY, y + l);
-        mapBuildings.push({ entityId, name: entityName, x, y, w, h: l, type: entryType, isGreatBuilding: isGE, isMilitary, isNeedlessRoad: isNeedless, isInactive: isInactiveBuilding, isSuppliesProducer });
+        mapBuildings.push({ entityId, mapEntityId: key, name: entityName, x, y, w, h: l, type: entryType, isGreatBuilding: isGE, isMilitary, isNeedlessRoad: isNeedless, isInactive: isInactiveBuilding, isSuppliesProducer });
       }
 
       const unlockedCells = new Set<string>();
@@ -2568,25 +2579,88 @@ export default function App() {
     return set;
   }, [importedAllies]);
 
-  // Set di entityId in città con slot alleato ma almeno un'istanza senza alleato.
-  const emptyAllySlotBuildings = useMemo(() => {
-    if (!cityEntityIds.size) return new Set<string>();
-    const placedByEntity = new Map<string, number>();
+
+  // Per ogni cityEntityId con slot alleato (b.ally > 0) e presente in città,
+  // un array con uno slot PER COPIA posseduta: { filled, allyDisplayName }.
+  // Pieni prima (con nome alleato risolto per il tooltip), poi vuoti — vedi
+  // badge 🖼️ allies_slot_full/allies_slot_empty in BuildingRow.
+  // Match per istanza specifica via mapEntityId (cityMapBuildings <->
+  // placedInMapEntityId dell'alleato), NON solo per tipo: così, con più copie
+  // dello stesso edificio, ogni icona riflette la copia reale a cui è
+  // associata. Se per qualche istanza manca il dato di mappa (dovrebbe
+  // essere raro, mappa e alleati vengono dalla stessa importazione), si
+  // ricade su un conteggio aggregato: N icone coerenti col totale posseduto,
+  // le prime "piazzati" come piene (senza garanzia di quale copia esatta),
+  // il resto vuote — non si perde mai la riga, solo l'attribuzione precisa.
+  const allySlotsPerBuilding = useMemo(() => {
+    const result = new Map<string, Array<{ filled: boolean; allyDisplayName?: string }>>();
+    if (!cityEntityIds.size) return result;
+
+    // mapEntityId (istanza) -> alleato piazzato lì, se presente.
+    const allyByMapEntityId = new Map<string, Allies.ImportedAlly>();
     for (const a of importedAllies) {
-      if (a.isPlaced && a.placedInEntityId) {
-        placedByEntity.set(a.placedInEntityId, (placedByEntity.get(a.placedInEntityId) ?? 0) + 1);
+      if (a.isPlaced && a.placedInMapEntityId) {
+        allyByMapEntityId.set(a.placedInMapEntityId, a);
       }
     }
-    const result = new Set<string>();
+    // cityEntityId (tipo) -> lista di mapEntityId (istanze reali sulla mappa).
+    const instancesByEntity = new Map<string, string[]>();
+    for (const mb of cityMapBuildings) {
+      if (!mb.entityId) continue;
+      const list = instancesByEntity.get(mb.entityId);
+      if (list) list.push(mb.mapEntityId);
+      else instancesByEntity.set(mb.entityId, [mb.mapEntityId]);
+    }
+    // Conteggio aggregato di alleati piazzati per tipo (fallback quando le
+    // istanze mappa non coprono tutte le copie possedute).
+    const placedCountByEntity = new Map<string, number>();
+    for (const a of importedAllies) {
+      if (a.isPlaced && a.placedInEntityId) {
+        placedCountByEntity.set(a.placedInEntityId, (placedCountByEntity.get(a.placedInEntityId) ?? 0) + 1);
+      }
+    }
+
     for (const b of BUILDINGS_FROM_CSV) {
       if (b.ally <= 0 || !b.cityEntityId) continue;
-      const instances = cityEntityIds.get(b.cityEntityId) ?? 0;
-      if (instances <= 0) continue;
-      const placed = placedByEntity.get(b.cityEntityId) ?? 0;
-      if (placed < instances) result.add(b.cityEntityId);
+      const totalInstances = cityEntityIds.get(b.cityEntityId) ?? 0;
+      if (totalInstances <= 0) continue;
+
+      const mapInstances = instancesByEntity.get(b.cityEntityId) ?? [];
+      const slots: Array<{ filled: boolean; allyDisplayName?: string }> = [];
+
+      if (mapInstances.length >= totalInstances) {
+        // Caso normale: un'istanza mappa per copia, match esatto per-istanza.
+        for (const mapEntityId of mapInstances) {
+          const ally = allyByMapEntityId.get(mapEntityId);
+          slots.push(ally
+            ? { filled: true, allyDisplayName: allyName(ally.allyId, gameLang) }
+            : { filled: false });
+        }
+      } else {
+        // Fallback aggregato: mancano dati di mappa per qualche copia.
+        const placedTotal = placedCountByEntity.get(b.cityEntityId) ?? 0;
+        // Nomi noti degli alleati piazzati su QUESTO tipo (da mapInstances,
+        // se ce ne sono alcune) per non perdere l'informazione se disponibile.
+        const knownNames = mapInstances
+          .map(id => allyByMapEntityId.get(id))
+          .filter((a): a is Allies.ImportedAlly => !!a)
+          .map(a => allyName(a.allyId, gameLang));
+        for (let i = 0; i < totalInstances; i++) {
+          if (i < placedTotal) {
+            slots.push({ filled: true, allyDisplayName: knownNames[i] });
+          } else {
+            slots.push({ filled: false });
+          }
+        }
+      }
+
+      // Pieni prima, poi vuoti (ordine deciso, non necessariamente quello
+      // fisico sulla mappa).
+      slots.sort((s1, s2) => (s2.filled ? 1 : 0) - (s1.filled ? 1 : 0));
+      result.set(b.cityEntityId, slots);
     }
     return result;
-  }, [cityEntityIds, importedAllies]);
+  }, [cityEntityIds, cityMapBuildings, importedAllies, gameLang]);
 
   const unplacedAllyLookup = useMemo(() => {
     const set = new Set<string>();
@@ -3425,7 +3499,7 @@ export default function App() {
       // 3. Filtered outdated (solo tab Città)
       if (isPropriacitta && showOnlyOutdated && b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)) continue;
       if (isPropriacitta && showOnlyDeclassable && b.cityEntityId && !declassableBuildings.has(b.cityEntityId)) continue;
-      if (isPropriacitta && showOnlyEmptyAllySlot && b.cityEntityId && !emptyAllySlotBuildings.has(b.cityEntityId)) continue;
+      if (isPropriacitta && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
 
       // 4. Limited ascended filter
       if (!currentFilters.showLimitedAscended && b.time > 0) continue;
@@ -3486,7 +3560,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyEmptyAllySlot, emptyAllySlotBuildings, dbViewFull]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, dbViewFull]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -4901,19 +4975,17 @@ export default function App() {
                     <svg viewBox="0 0 8 8" width="8" fill="#2a6"><path d="M0 0l4 8 4-8H0z"/></svg>
                   </button>
                 )}
-                {emptyAllySlotBuildings.size > 0 && (
-                  <button
-                    onClick={() => setShowOnlyEmptyAllySlot(v => !v)}
-                    className={`flex items-center justify-center rounded border h-7 w-8 ${
-                      showOnlyEmptyAllySlot
-                        ? "border-amber-500 bg-amber-950/40 text-amber-300"
-                        : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
-                    }`}
-                    title={t("showOnlyEmptyAllySlotTitle", uiLang)}
-                  >
-                    <img src={allies_slot_empty} alt="" className="h-4 w-4 object-contain" />
-                  </button>
-                )}
+                <button
+                  onClick={() => setShowOnlyWithAllySlot(v => !v)}
+                  className={`flex items-center justify-center rounded border h-7 w-8 ${
+                    showOnlyWithAllySlot
+                      ? "border-amber-500 bg-amber-950/40 text-amber-300"
+                      : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                  }`}
+                  title={t("showOnlyWithAllySlotTitle", uiLang)}
+                >
+                  <img src={allies_slot_full} alt="" className="h-5 w-5 object-contain" />
+                </button>
                 <button
                   onClick={() => setIsCityUpgradeableOpen(true)}
                   className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
@@ -4922,6 +4994,7 @@ export default function App() {
                 </button>
                 {renderProdSummary()}
 
+                <span className="text-xs font-semibold text-slate-300 uppercase whitespace-nowrap">{t("hideBuildingsLabel", uiLang)}</span>
                 <button
                   onClick={() => updateFilter("showIncursionBuildings", !currentFilters.showIncursionBuildings)}
                   className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xs ${
@@ -5399,7 +5472,7 @@ export default function App() {
                           upgradeBadge={cityUpgradeBadges.get(b.cityEntityId)}
                           isOutdated={outdatedBuildings.has(b.cityEntityId)}
                           isDeclassable={declassableBuildings.has(b.cityEntityId)}
-                          hasEmptyAllySlot={emptyAllySlotBuildings.has(b.cityEntityId)}
+                          allySlots={allySlotsPerBuilding.get(b.cityEntityId)}
                           declassablePopData={declassableBuildings.get(b.cityEntityId)}
                           setDeclassableTooltip={setDeclassableTooltip}
                           minLevel={entityLevels.get(b.cityEntityId) ?? -1}

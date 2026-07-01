@@ -4,6 +4,10 @@
 
 export interface CityMapBuilding {
   entityId: string;
+  /** Id grezzo dell'istanza sulla mappa (chiave in CityMapData), distinto da
+   *  entityId (che è il tipo di edificio, uguale per più copie). Permette di
+   *  associare una specifica copia al proprio alleato piazzato. */
+  mapEntityId: string;
   name: string;
   x: number;
   y: number;
