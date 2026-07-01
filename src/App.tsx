@@ -2552,7 +2552,22 @@ export default function App() {
   }, [generalDefense, spedizioniEnabled, spedizioniAttack]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const deferredSearch = useDeferredValue(searchTerm);
+  // Debounce esplicito (oltre a useDeferredValue) sul valore usato per il
+  // filtro pesante: con ~2000 edifici, digitando velocemente una parola
+  // (es. "Azalea") ogni lettera intermedia ("a", "az", "aza", ...) farebbe
+  // comunque scattare un ricalcolo/re-render della tabella filtrata non
+  // appena React trova un momento libero — percepito come "scatti" o lag
+  // durante la digitazione, anche se l'input in sé resta reattivo. Il
+  // debounce ritarda l'aggiornamento del valore effettivo di filtro di
+  // qualche centinaio di ms dall'ultima battuta: se l'utente continua a
+  // scrivere, i valori intermedi vengono scartati e il filtro scatta una
+  // sola volta, alla fine (o durante una pausa nella digitazione).
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+  const deferredSearch = useDeferredValue(debouncedSearchTerm);
   const [globalAllyLevel, setGlobalAllyLevel] = useState<number>(100);
 
   // Alleati importati dal gioco
