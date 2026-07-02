@@ -64,7 +64,7 @@ export default function AboutModal({ isOpen, onClose, uiLang }: AboutModalProps)
                 <img
                   src={AVATAR_IT}
                   alt="Sdrushi -- server italiano"
-                  className="w-16 h-16 rounded-full border-2 border-amber-500/50 object-cover"
+                  className="w-16 h-16 rounded border-2 border-amber-500/50 object-cover"
                 />
                 <div>
                   <p className="font-bold text-slate-100">Sdrushi</p>
@@ -81,7 +81,7 @@ export default function AboutModal({ isOpen, onClose, uiLang }: AboutModalProps)
                 <img
                   src={AVATAR_BETA}
                   alt="Sdrushi -- server beta"
-                  className="w-16 h-16 rounded-full border-2 border-blue-500/40 object-cover"
+                  className="w-16 h-16 rounded border-2 border-blue-500/40 object-cover"
                 />
                 <div>
                   <p className="font-bold text-slate-100">Sdrushi</p>

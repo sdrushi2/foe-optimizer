@@ -20,6 +20,7 @@ export const SIGMA_KEY = `foe_global_sigma_enabled_${V}`;
 export const POP_COLUMN_KEY = `foe_global_show_pop_column_${V}`;
 export const FEL_COLUMN_KEY = `foe_global_show_fel_column_${V}`;
 export const IQ_PROD_COLUMNS_KEY = `foe_global_show_iq_prod_columns_${V}`;
+export const PROD_COLUMNS_KEY = `foe_global_show_prod_columns_${V}`;
 export const SHOW_CITY_MAP_KEY = `foe_global_show_city_map_${V}`;
 // Vista database tab Info: "light" (solo edifici principali, Lin=1) o "full".
 export const DB_VIEW_KEY = `foe_global_db_view_${V}`;

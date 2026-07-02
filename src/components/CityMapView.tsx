@@ -159,8 +159,8 @@ export default function CityMapView({
   const viewHeight = isIsometric ? (hasRealBounds ? (realMaxY - realMinY) + CELL * 1.5 : (transformedMaxY - transformedMinY)) : (transformedMaxY - transformedMinY + 2);
 
   return (
-    <div className="px-3 pb-4">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div>
+      <div className="flex flex-col lg:flex-row gap-3">
         <div className="lg:w-64 shrink-0 space-y-4">
           {/* Riquadro VISTA MAPPA */}
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">

@@ -29,7 +29,7 @@ import type { CityStore } from "./data/cityStore";
 import { BOOKMARKLET_JS, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -691,7 +691,6 @@ type TabFilters = {
   showGreatBuildings: boolean;
   showLimitedAscended: boolean;
   showTimeColumn: boolean;
-  showProdColumns: boolean;
   prodFilter: Set<string>;
   prodFilterMode: "AND" | "OR";
   minEff: string;
@@ -775,6 +774,7 @@ interface BuildingRowProps {
   showPopColumn: boolean;
   showFelColumn: boolean;
   showIqProdColumns: boolean;
+  showProdColumns: boolean;
   specialKits: SpecialKits;
   DIFF_FIELDS: DiffField[];
   isSelected: boolean;
@@ -816,7 +816,7 @@ interface BuildingRowProps {
  *  codice + lookup nelle Map fatti dal genitore invece che qui dentro. */
 const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, currentFilters, showSigmaColumns, spedizioniEnabled,
-  showPopColumn, showFelColumn, showIqProdColumns,
+  showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
   greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentProducers, fragmentSelectionKits,
@@ -1293,7 +1293,7 @@ const BuildingRow = memo(function BuildingRow({
       <StaleFieldCell value={b.iqCap} uiLang={uiLang}>
         {formatProdK(b.iqCap)}
       </StaleFieldCell>
-      {currentFilters.showProdColumns && (
+      {showProdColumns && (
         <>
           <StaleFieldCell value={b.mon} className={`cell-num section-divider${b.mon > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.mon)}
@@ -2445,6 +2445,15 @@ export default function App() {
   const [showPopColumn, setShowPopColumn] = useState<boolean>(() => localStorage.getItem(POP_COLUMN_KEY) === "true");
   const [showFelColumn, setShowFelColumn] = useState<boolean>(() => localStorage.getItem(FEL_COLUMN_KEY) === "true");
   const [showIqProdColumns, setShowIqProdColumns] = useState<boolean>(() => localStorage.getItem(IQ_PROD_COLUMNS_KEY) === "true");
+  // Toggle "Produzioni" (mostra/nasconde le colonne Mon/Mat + le altre
+  // produzioni): globale come Sigma/Pop/Fel, non per-tab. Prima era dentro
+  // TabFilters (showProdColumns), quindi (a) veniva azzerato da
+  // resetFilters() insieme ai filtri veri e propri, e (b) non sopravviveva
+  // al reload. I filtri sulle produzioni associati (prodFilter,
+  // prodFilterMode) restano invece dentro TabFilters/DEFAULT_FILTERS: solo
+  // la visibilità del pannello è resa globale e persistente, non la
+  // selezione dei filtri al suo interno.
+  const [showProdColumns, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
   // Vista database tab Info: false = LIGHT (solo edifici principali Lin=1,
   // default), true = FULL (tutti, inclusi livelli intermedi/varianti).
   const [dbViewFull, setDbViewFull] = useState<boolean>(() => localStorage.getItem(DB_VIEW_KEY) === "full");
@@ -2478,7 +2487,6 @@ export default function App() {
     showGreatBuildings: true,
     showLimitedAscended: true,
     showTimeColumn: true,
-    showProdColumns: false,
     prodFilter: new Set(),
     prodFilterMode: "OR",
     minEff: "",
@@ -2500,8 +2508,10 @@ export default function App() {
   );
 
   const updateFilter = <K extends keyof TabFilters>(key: K, value: TabFilters[K]) => {
-    // ⏱ e 📦 sono globali: si sincronizzano su tutte le tab contemporaneamente.
-    if (key === "showTimeColumn" || key === "showProdColumns") {
+    // ⏱ è globale: si sincronizza su tutte le tab contemporaneamente.
+    // 📦 (showProdColumns) è ora un useState globale indipendente (vedi
+    // sopra), non passa più da qui.
+    if (key === "showTimeColumn") {
       setTabFilters(prev => ({
         database:      { ...prev.database,      [key]: value },
         alleati:       { ...prev.alleati,        [key]: value },
@@ -2894,8 +2904,9 @@ export default function App() {
     localStorage.setItem(POP_COLUMN_KEY, showPopColumn.toString());
     localStorage.setItem(FEL_COLUMN_KEY, showFelColumn.toString());
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
+    localStorage.setItem(PROD_COLUMNS_KEY, showProdColumns.toString());
     localStorage.setItem(DB_VIEW_KEY, dbViewFull ? "full" : "light");
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, dbViewFull]);
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, dbViewFull]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -3686,7 +3697,7 @@ export default function App() {
   }, [
     activeTab,
     filteredBuildings.length,
-    currentFilters.showProdColumns,
+    showProdColumns,
     showPopColumn,
     showFelColumn,
     currentFilters.showTimeColumn,
@@ -3888,9 +3899,9 @@ export default function App() {
     const fel = showFelColumn ? 76 : 0;
     const milCols = showSigmaColumns ? 4 : (spedizioniEnabled ? 12 : 8); // gen+gbg+(sped)
     const iq = (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
-    const prod = currentFilters.showProdColumns ? 20 * 36 : 0; // Mon+Mat + le 18 colonne esistenti
+    const prod = showProdColumns ? 20 * 36 : 0; // Mon+Mat + le 18 colonne esistenti
     return base + time + pop + fel + milCols * 42 + iq + prod;
-  }, [currentFilters, showSigmaColumns, spedizioniEnabled, showPopColumn, showFelColumn, showIqProdColumns]);
+  }, [currentFilters, showSigmaColumns, spedizioniEnabled, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
 
   // minWidth dedicato per le tabelle alleati: colonne nome+LV1+EFF+GEN+CAMPI+SPED,
   // niente colonne edificio (size/road/pop/fel/IQ/produzioni) che non esistono qui.
@@ -4512,7 +4523,7 @@ export default function App() {
       </header>
 
       {(activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario") && (
-         <div className="flex flex-wrap items-start gap-4 px-3 pt-2 pb-1">
+         <div className="flex flex-wrap items-start px-2 pt-2 pb-1">
            <section className="flex flex-wrap items-center gap-1.5 text-xs flex-1">
              <div className="flex w-full items-center gap-1.5 md:w-auto md:contents">
              <div className="inline-flex h-7 shrink-0 overflow-hidden rounded border border-slate-700/60" role="group" title={t("lightFullTitle", uiLang)}>
@@ -4725,18 +4736,18 @@ export default function App() {
              </button>
 
               <button
-                  onClick={() => updateFilter("showProdColumns", !currentFilters.showProdColumns)}
+                  onClick={() => setShowProdColumns(v => !v)}
                   className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-[19px] leading-none ${
-                    currentFilters.showProdColumns
+                    showProdColumns
                       ? "border-orange-500/50 bg-orange-500/15 text-orange-300 shadow-sm"
                       : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
                   }`}
-                  title={currentFilters.showProdColumns ? t("prodColumnsShowTitle", uiLang) : t("prodColumnsHideTitle", uiLang)}
+                  title={showProdColumns ? t("prodColumnsShowTitle", uiLang) : t("prodColumnsHideTitle", uiLang)}
                 >
                   📦
                 </button>
 
-              {currentFilters.showProdColumns && (
+              {showProdColumns && (
                 <>
                   <span className="text-[10px] font-semibold text-slate-400 uppercase whitespace-nowrap">{t("filterLabel", uiLang)}</span>
                   {([
@@ -4800,7 +4811,7 @@ export default function App() {
        )}
 
       {activeTab === "alleati" && (
-         <section className="flex flex-wrap items-center gap-1.5 px-3 pt-2 pb-1 text-xs">
+         <section className="flex flex-wrap items-center gap-1.5 px-2 pt-2 pb-1 text-xs">
            <div className="relative flex h-7 min-w-0 items-center rounded border border-slate-700/60 bg-slate-800/40 px-2.5 md:w-[130px] hover:border-slate-600 transition-colors">
              <Search size={13} className="absolute left-2.5 text-slate-500 shrink-0" />
              <input
@@ -4922,7 +4933,7 @@ export default function App() {
         </section>
       )}
 
-      <main className="flex-1 px-3 pt-1 pb-4 flex flex-col gap-4">
+      <main className="flex-1 px-2 pt-1 pb-4 flex flex-col gap-4">
 
         <section className="flex-1 flex flex-col gap-2">
           
@@ -5378,7 +5389,7 @@ export default function App() {
                        {showIqProdColumns && Array.from({ length: 4 }).map((_, i) => <col key={`iq-mm-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
                        <col className="w-[42px]" />
-                       {currentFilters.showProdColumns && Array.from({ length: 20 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
+                       {showProdColumns && Array.from({ length: 20 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
                     </colgroup>
                     <thead>
                       <tr className="bg-slate-900/80 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
@@ -5412,7 +5423,7 @@ export default function App() {
                         </th>
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center section-divider text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
-                        {currentFilters.showProdColumns && (
+                        {showProdColumns && (
                           <th className="text-center section-divider text-orange-400/80" colSpan={20}>{t("groupProductions", uiLang)}</th>
                         )}
                       </tr>
@@ -5462,7 +5473,7 @@ export default function App() {
                         <SortableHeader label={<TableHeaderIcon src={iconIQTruppe} alt={t("iqUnits", uiLang)} />} sortKey="iq_truppe" onClick={() => handleSort("iq_truppe")} active={sortBy === "iq_truppe"} order={sortOrder} className="th-col" title={t("iqUnits", uiLang)} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQAzioni} alt={t("iqActions", uiLang)} />} sortKey="iq_azioni" onClick={() => handleSort("iq_azioni")} active={sortBy === "iq_azioni"} order={sortOrder} className="th-col" title={t("iqActions", uiLang)} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQCap} alt={t("iqCap", uiLang)} />} sortKey="iq_cap" onClick={() => handleSort("iq_cap")} active={sortBy === "iq_cap"} order={sortOrder} className="th-col" title={t("iqCap", uiLang)} />
-                        {currentFilters.showProdColumns && (
+                        {showProdColumns && (
                           <>
                             <SortableHeader label={<TableHeaderIcon src={iconMon} alt={t("prodCoins", uiLang)} />} sortKey="mon" onClick={() => handleSort("mon")} active={sortBy === "mon"} order={sortOrder} className="th-col section-divider" title={t("prodCoins", uiLang)} />
                             <SortableHeader label={<TableHeaderIcon src={iconMat} alt={t("prodMaterials", uiLang)} />} sortKey="mat" onClick={() => handleSort("mat")} active={sortBy === "mat"} order={sortOrder} className="th-col" title={t("prodMaterials", uiLang)} />
@@ -5503,6 +5514,7 @@ export default function App() {
                           showPopColumn={showPopColumn}
                           showFelColumn={showFelColumn}
                           showIqProdColumns={showIqProdColumns}
+                          showProdColumns={showProdColumns}
                           specialKits={specialKits}
                           DIFF_FIELDS={DIFF_FIELDS}
                           isSelected={selectedIds.has(b.id)}
@@ -5537,7 +5549,7 @@ export default function App() {
  
                       {filteredBuildings.length === 0 && (
                         <tr>
-                          <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (currentFilters.showProdColumns ? 20 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                          <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 20 : 0)} className="text-center py-12 text-slate-400 font-semibold">
                             Nessun edificio trovato.
                           </td>
                         </tr>
