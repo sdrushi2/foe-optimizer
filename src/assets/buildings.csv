@@ -1159,8 +1159,8 @@ W_MultiAge_CUP20C1;Pista Venetoi;Venetoi Track;D_MultiAge_SoccerBonus20Venetoi-a
 W_MultiAge_CUP20D1;Pista Leukoi;Leukoi Track;D_MultiAge_SoccerBonus20Leukoi-0e86debb5;1;;1x4;;;3820;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP20E1;Pista Rousioi;Rousioi Track;D_MultiAge_SoccerBonus20Rousioi-18872cc80;1;;1x4;;;3820;;;;;;;;;;;;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A1;Mulino a vento Genziana - Liv. 1;Gentiana Windmill - Lv. 1;R_MultiAge_SoccerBonus22a-7fb545889;;;4x5;2;9180;13110;;;;;;;;;;;;90800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22A10;Mulino a vento di azalee;Azalea Windmill;9c9810bb4;1;;4x5;;40000;50000;;200;;;;;180;170;;;100;440800;360000;190;190;;;;;210;210;;;;;10;10;;;;;;;;;;;1;;;;;;;;selection_kit_CUP22BCDE
-W_MultiAge_CUP22A11;Mulino con Buganville;Bougainvillea Windmill;b3023b585;1;90;4x5;;40000;100000;;450;;;;;350;330;;;300;891600;830000;410;410;;;;;420;420;;;;;25;25;;;;;;;;;200;8000;1;;;;;;;;selection_kit_CUP22BCDE
+W_MultiAge_CUP22A10;Mulino a vento di azalee;Azalea Windmill;9c9810bb4;1;;4x5;;40000;50000;;200;;;;;180;170;;;100;440800;360000;190;190;;;;;210;210;;;;;10;10;;;;;;;;;;;1;;;;;;;;selection_kit_gentiana_windmill_farmland
+W_MultiAge_CUP22A11;Mulino con Buganville;Bougainvillea Windmill;b3023b585;1;90;4x5;;40000;100000;;450;;;;;350;330;;;300;891600;830000;410;410;;;;;420;420;;;;;25;25;;;;;;;;;200;8000;1;;;;;;;;selection_kit_gentiana_windmill_farmland
 W_MultiAge_CUP22A2;Mulino a vento Genziana - Liv. 2;Gentiana Windmill - Lv. 2;R_MultiAge_SoccerBonus22b-aaf8082d5;;;4x5;2;9450;14200;;;;;;;;;;;;91700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A3;Mulino a vento Genziana - Liv. 3;Gentiana Windmill - Lv. 3;R_MultiAge_SoccerBonus22c-8005eafaa;;;4x5;2;9720;15290;;;;;;;;;;;;93400;17470;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A4;Mulino a vento Genziana - Liv. 4;Gentiana Windmill - Lv. 4;R_MultiAge_SoccerBonus22d-13332fadf;;;4x5;2;10080;16380;;;;;;;10.5;;;;4;94300;18570;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
