@@ -887,6 +887,14 @@ const UI_STRINGS = {
     it: "Mostra edifici che producono frammenti di Auto-aiuto di massa",
     en: "Show buildings that produce Mass Self-Aid fragments",
   },
+  hideStoreBuildingBuildingsTitle: {
+    it: "Nascondi edifici che producono frammenti di Immagazzina edificio",
+    en: "Hide buildings that produce Store Building fragments",
+  },
+  showStoreBuildingBuildingsTitle: {
+    it: "Mostra edifici che producono frammenti di Immagazzina edificio",
+    en: "Show buildings that produce Store Building fragments",
+  },
   hideGreatBuildingsTitle: {
     it: "Nascondi Grandi Edifici",
     en: "Hide Great Buildings",

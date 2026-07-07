@@ -688,6 +688,7 @@ type TabFilters = {
   showIncursionBuildings: boolean;
   showAllyBuildings: boolean;
   showMassAidBuildings: boolean;
+  showStoreBuildingBuildings: boolean;
   showGreatBuildings: boolean;
   showLimitedAscended: boolean;
   showTimeColumn: boolean;
@@ -2484,6 +2485,7 @@ export default function App() {
     showIncursionBuildings: true,
     showAllyBuildings: true,
     showMassAidBuildings: true,
+    showStoreBuildingBuildings: true,
     showGreatBuildings: true,
     showLimitedAscended: true,
     showTimeColumn: true,
@@ -3563,6 +3565,7 @@ export default function App() {
       if (!currentFilters.showIncursionBuildings && hasIQ) continue;
       if (!currentFilters.showAllyBuildings && b.ally > 0) continue;
       if (!currentFilters.showMassAidBuildings && b.adm > 0) continue;
+      if (!currentFilters.showStoreBuildingBuildings && b.imm > 0) continue;
       if (!currentFilters.showGreatBuildings && b.isGreatBuilding) continue;
 
       // 6. Advanced filters
@@ -5081,6 +5084,17 @@ export default function App() {
                   title={currentFilters.showMassAidBuildings ? t("hideMassAidBuildingsTitle", uiLang) : t("showMassAidBuildingsTitle", uiLang)}
                 >
                   <img src={iconAiuto} alt={t("prodMassAid", uiLang)} className="icon-16" />
+                </button>
+                <button
+                  onClick={() => updateFilter("showStoreBuildingBuildings", !currentFilters.showStoreBuildingBuildings)}
+                  className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xs ${
+                    currentFilters.showStoreBuildingBuildings
+                      ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm"
+                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  }`}
+                  title={currentFilters.showStoreBuildingBuildings ? t("hideStoreBuildingBuildingsTitle", uiLang) : t("showStoreBuildingBuildingsTitle", uiLang)}
+                >
+                  <img src={iconImm} alt={t("prodStoreBuilding", uiLang)} className="icon-16" />
                 </button>
                 <button
                   onClick={() => updateFilter("showGreatBuildings", !currentFilters.showGreatBuildings)}
