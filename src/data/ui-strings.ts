@@ -73,6 +73,14 @@ const UI_STRINGS = {
     it: "Alleati",
     en: "Allies",
   },
+  tabHelp: {
+    it: "Guida",
+    en: "Help",
+  },
+  tabHelpTitle: {
+    it: "Apri la guida (in una nuova scheda)",
+    en: "Open the guide (in a new tab)",
+  },
 
   // ── Switch vista LIGHT/FULL ───────────────────────────────────────────
   lightFullTitle: {

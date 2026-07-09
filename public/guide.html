@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoE Optimizer Guide – How to Use the Tool</title>
+    <meta name="description" content="A complete guide to FoE Optimizer: how to import your city, read your efficiency score, use the inventory optimizer, and manage profiles, allies and filters.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="color-scheme" content="dark light">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="canonical" href="https://foe-optimizer.com/guide.html">
+
+    <meta property="og:title" content="FoE Optimizer Guide">
+    <meta property="og:description" content="How to import your city, understand efficiency, and use the inventory optimizer, explained without the jargon.">
+    <meta property="og:url" content="https://foe-optimizer.com/guide.html">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://foe-optimizer.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --bg-deep: #020617;
+        --panel: #1e293b;
+        --panel-2: #172033;
+        --border: #334155;
+        --text: #e2e8f0;
+        --text-dim: #94a3b8;
+        --text-faint: #64748b;
+        --amber: #fbbf24;
+        --amber-dim: #d97706;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 50% -10%, var(--panel) 0%, var(--bg) 45%, var(--bg-deep) 100%);
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--amber);
+      }
+
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+
+      /* ── Header ─────────────────────────────────────────────── */
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 800;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .brand .swords {
+        font-size: 1.3rem;
+      }
+
+      .back-link {
+        text-decoration: none;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .back-link:hover {
+        border-color: var(--amber-dim);
+        color: var(--amber);
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .lang-switch {
+        text-decoration: none;
+        color: var(--text-faint);
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 4px 2px;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .lang-switch.active {
+        color: var(--amber);
+        border-color: var(--amber);
+      }
+
+      .lang-switch:not(.active):hover {
+        color: var(--text);
+      }
+
+      .lang-sep {
+        color: var(--text-faint);
+        font-size: 0.8rem;
+      }
+
+      .hero {
+        margin: 28px 0 40px;
+      }
+
+      .hero h1 {
+        font-size: clamp(1.8rem, 5vw, 2.6rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0 0 10px;
+        color: var(--amber);
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        color: var(--text-dim);
+        max-width: 640px;
+        margin: 0;
+      }
+
+      /* ── Table of contents ─────────────────────────────────────────────── */
+
+      .toc {
+        background: rgba(30, 41, 59, 0.55);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 48px;
+      }
+
+      .toc h2 {
+        margin: 0 0 12px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-faint);
+        font-weight: 700;
+      }
+
+      .toc ol {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 6px 24px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .toc a:hover {
+        color: var(--amber);
+      }
+
+      /* ── Sections ────────────────────────────────────────────── */
+
+      section {
+        margin-bottom: 56px;
+        scroll-margin-top: 20px;
+      }
+
+      section h2 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--amber);
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      section > .lede {
+        color: var(--text-dim);
+        font-size: 1.02rem;
+        margin: 0 0 24px;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin: 28px 0 10px;
+      }
+
+      p {
+        margin: 0 0 14px;
+        color: #d4dbe6;
+      }
+
+      strong {
+        color: var(--text);
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.45);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin: 16px 0;
+      }
+
+      .card-amber {
+        border-color: rgba(251, 191, 36, 0.35);
+        background: rgba(251, 191, 36, 0.06);
+      }
+
+      .steps {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+      }
+
+      .steps > li {
+        counter-increment: step;
+        position: relative;
+        padding: 4px 0 20px 40px;
+        border-left: 2px solid var(--border);
+        margin-left: 14px;
+      }
+
+      .steps > li:last-child {
+        border-left-color: transparent;
+        padding-bottom: 0;
+      }
+
+      .steps > li::before {
+        content: counter(step);
+        position: absolute;
+        left: -15px;
+        top: 0;
+        width: 28px;
+        height: 28px;
+        background: var(--amber);
+        color: #1a1a2e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+      }
+
+      .steps h4 {
+        margin: 0 0 4px;
+        font-size: 1.02rem;
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .steps p {
+        margin: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 0.93rem;
+      }
+
+      th, td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--text-faint);
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+      }
+
+      td.k {
+        white-space: nowrap;
+        font-weight: 700;
+        color: var(--amber);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(251, 191, 36, 0.12);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        color: var(--amber);
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .tabgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+
+      .tabcard {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+      }
+
+      .tabcard .emoji {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      .tabcard h4 {
+        margin: 0 0 6px;
+        color: var(--amber);
+        font-size: 1.02rem;
+      }
+
+      .tabcard p {
+        margin: 0;
+        font-size: 0.92rem;
+        color: var(--text-dim);
+      }
+
+      .callout {
+        border-left: 3px solid var(--amber);
+        background: rgba(251, 191, 36, 0.07);
+        padding: 12px 18px;
+        border-radius: 0 10px 10px 0;
+        margin: 18px 0;
+        font-size: 0.95rem;
+      }
+
+      .callout strong {
+        color: var(--amber);
+      }
+
+      .formula {
+        font-family: "SF Mono", Consolas, Menlo, monospace;
+        background: var(--bg-deep);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        color: var(--amber);
+        font-size: 0.95rem;
+        margin: 16px 0;
+        overflow-x: auto;
+      }
+
+      kbd {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 2px 7px;
+        font-size: 0.85em;
+        font-family: inherit;
+        color: var(--text);
+      }
+
+      hr.sep {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 56px 0;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--text-faint);
+        font-size: 0.85rem;
+        margin-top: 60px;
+      }
+
+      footer a {
+        color: var(--text-dim);
+      }
+
+      .top-of-page {
+        display: block;
+        text-align: right;
+        margin-top: -30px;
+        margin-bottom: 20px;
+      }
+
+      .top-of-page a {
+        font-size: 0.82rem;
+        color: var(--text-faint);
+        text-decoration: none;
+      }
+
+      .top-of-page a:hover {
+        color: var(--amber);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <div class="top">
+        <a class="brand" href="/">
+          <span class="swords">⚔️</span>
+          FOE OPTIMIZER
+        </a>
+        <div class="top-actions">
+          <a class="lang-switch" href="/guida.html">🇮🇹 Italiano</a>
+          <span class="lang-sep">/</span>
+          <span class="lang-switch active">🇬🇧 English</span>
+          <a class="back-link" href="/">← Back to the tool</a>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1>The (almost) definitive guide to FoE Optimizer</h1>
+        <p>If you got lost among icons, columns and buttons the first time you opened the tool, you're in the right place. Here we explain everything calmly, without assuming you already know anything.</p>
+      </div>
+
+      <nav class="toc">
+        <h2>In this guide</h2>
+        <ol>
+          <li><a href="#overview">1. What we're talking about</a></li>
+          <li><a href="#profiles">2. Profiles and importing your data</a></li>
+          <li><a href="#tab-database">3. Database tab</a></li>
+          <li><a href="#tab-city">4. City tab</a></li>
+          <li><a href="#tab-inventory">5. Inventory tab (the optimizer)</a></li>
+          <li><a href="#tab-allies">6. Allies tab</a></li>
+          <li><a href="#efficiency">7. Efficiency and weights</a></li>
+          <li><a href="#filters">8. Filters, search and toolbar</a></li>
+          <li><a href="#faq">9. Frequently asked questions</a></li>
+        </ol>
+      </nav>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="overview">
+        <h2>🏰 1. What we're talking about</h2>
+        <p class="lede">Three minutes to understand what this tool does before diving into the details.</p>
+
+        <p>FoE Optimizer is a Swiss army knife for Forge of Empires. It basically does four things:</p>
+
+        <div class="tabgrid">
+          <div class="tabcard">
+            <span class="emoji">📚</span>
+            <h4>Browse the database</h4>
+            <p>Every building in the game, with real stats, even without importing anything.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🏙️</span>
+            <h4>Analyze your city</h4>
+            <p>Import your real city and see what every building you own actually earns you.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🧰</span>
+            <h4>Optimize your inventory</h4>
+            <p>Find out exactly what you can build with the kits sitting in your warehouse. It's the tool's most unique feature.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🤝</span>
+            <h4>Manage your allies</h4>
+            <p>Levels, rarity, inherited bonuses and fragments, all calculated for you.</p>
+          </div>
+        </div>
+
+        <p>Everything runs <strong>inside your browser</strong>: there's no server anywhere receiving your data, no account to create, nothing to install. Close the tab and reopen it — your data is still there, saved on your own device.</p>
+
+        <div class="callout">
+          <strong>One tip before you start:</strong> if you've never imported your city, the Database tab works great "empty" too — you can already browse the full building catalog. But most of the tool's value kicks in once you import your real data, so the next section is the one not to skip.
+        </div>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="profiles">
+        <h2>🧙 2. Profiles and importing your data</h2>
+        <p class="lede">How to bring your real city into the tool, and how to stay organized if you play on multiple worlds.</p>
+
+        <h3>What's a profile</h3>
+        <p>A <strong>profile</strong> is simply a card that groups together the city, inventory and allies of one account. If you play on multiple worlds (say, a "live" one and a "beta" one), or you have multiple accounts, you can keep them as separate profiles that never mix.</p>
+
+        <ul>
+          <li>You can create as many as you want.</li>
+          <li>Each profile is completely independent: editing or deleting one never touches the others.</li>
+          <li><strong>Double-click</strong> a profile's name to rename it (e.g. "Live" or "Beta").</li>
+          <li><strong>Single click</strong> to switch between profiles.</li>
+          <li>The <strong>×</strong> next to the name deletes that profile (and all its data).</li>
+        </ul>
+
+        <h3>The magic wand 🪄</h3>
+        <p>It's the only way to bring your real data into the tool, and it's essentially a special browser bookmark that, when clicked while you're inside Forge of Empires, reads your game data and brings it in here. Here are all the steps:</p>
+
+        <ol class="steps">
+          <li>
+            <h4>Install FoE Helper in your browser</h4>
+            <p>It's a free extension that reads Forge of Empires data while you play. If you don't have it yet, search for it in your browser's extension store.</p>
+          </li>
+          <li>
+            <h4>Drag the wand into your bookmarks bar</h4>
+            <p>Press and hold the wand button 🪄 (at the top of the tool) and drag it up into your browser's bookmarks bar. This creates a special bookmark you can rename however you like.</p>
+          </li>
+          <li>
+            <h4>Go into the game and click that bookmark</h4>
+            <p>With Forge of Empires open in the browser and FoE Helper active, click the bookmark you just created. It silently copies all your game data to your computer's clipboard — you won't see anything happen, that's normal.</p>
+          </li>
+          <li>
+            <h4>Come back here and click the wand</h4>
+            <p>The tool reads the clipboard, automatically creates a new profile, and imports city, inventory and allies all together. Any profiles you already had are never touched.</p>
+          </li>
+        </ol>
+
+        <div class="callout">
+          <strong>Want to update your data later?</strong> Just repeat steps 3 and 4: a new profile is created with the fresh data, without deleting the old one. If you only want to keep the latest, delete the old profile manually.
+        </div>
+
+        <h3>Saving and loading profiles (backups)</h3>
+        <table>
+          <thead><tr><th>Button</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="k">SAVE</td><td>Exports all your profiles into a JSON file. Useful as a backup, or to move your data to another device (e.g. from PC to tablet).</td></tr>
+            <tr><td class="k">LOAD</td><td>Imports profiles from a previously saved file. They're added to your existing ones, without overwriting anything.</td></tr>
+          </tbody>
+        </table>
+
+        <p>Since everything only lives in your browser, saving a backup every now and then (especially before switching browsers or devices, or clearing your cache) is a good habit.</p>
+      </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to top</a></span>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-database">
+        <h2>📚 3. Database tab</h2>
+        <p class="lede">The full game catalog: over two thousand buildings, browsable without importing anything.</p>
+
+        <p>This is the tab you see the moment you open the tool, even with an empty profile. It contains <strong>every building in Forge of Empires</strong> — more than 2000 — with their "reference" stats (calculated at the game's final era, the Space Age Space Hub, for a fair comparison).</p>
+
+        <p>It's useful for:</p>
+        <ul>
+          <li>Looking up a specific building and immediately seeing what it earns.</li>
+          <li>Comparing similar variants (e.g. different levels of the same event building) before deciding which one to build.</li>
+          <li>Getting a general feel for things even before importing your own city.</li>
+        </ul>
+
+        <p>The <span class="pill">LIGHT / FULL</span> button at the top left changes how much of the database you see: <strong>LIGHT</strong> shows only the game's "main" buildings (the classic ones, without variants or intermediate levels), <strong>FULL</strong> shows everything, variants included. If the sheer number of rows feels overwhelming, start with LIGHT.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-city">
+        <h2>🏙️ 4. City tab</h2>
+        <p class="lede">Your real city, with real numbers — not the theoretical ones from the database.</p>
+
+        <p>Once you've imported your city with the magic wand, this tab shows <strong>exactly the buildings you own</strong>, with stats calculated at your current era (not the final one like in the Database). If you have a building still stuck in the Iron Age, you'll see that era's numbers, not the "endgame" ones.</p>
+
+        <p>Compared to the Database, here you'll find a bit more information:</p>
+
+        <table>
+          <thead><tr><th>What you see</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Disconnected buildings</td><td>A badge flags buildings not connected to the road — they aren't producing the way they should.</td></tr>
+            <tr><td class="k">Unnecessary road</td><td>The opposite: buildings connected to the road that actually don't need to be (you're "wasting" connections).</td></tr>
+            <tr><td class="k">Upgrade badge</td><td>If you already own the necessary kits (visible in the Inventory tab), an icon flags which buildings you can level up right away.</td></tr>
+            <tr><td class="k">Ally slot</td><td>An icon for each copy of the building that can host an ally, filled if occupied (with a tooltip showing the ally's name) or empty if free.</td></tr>
+          </tbody>
+        </table>
+
+        <p>There's also a <strong>map view</strong> 🗺️ showing the actual layout of your city, handy for getting a visual overview or exporting an image to share.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-inventory">
+        <h2>🧰 5. Inventory tab — the optimizer</h2>
+        <p class="lede">The reason this tool exists in the first place: what you can <em>actually</em> build with what you have.</p>
+
+        <p>Anyone who's played Forge of Empires for a while knows the problem: your inventory fills up with selection kits, upgrade kits, fragments, and it becomes impossible to tell at a glance <strong>what you can actually pull out of all that stuff</strong>. This tab solves exactly that.</p>
+
+        <p>You import your inventory (again with the magic wand) and the tool calculates, building family by building family, the maximum you can build with the kits you own — level by level, also showing you which specific kits it would use.</p>
+
+        <h3>How kits work, in short</h3>
+        <p>If you've never dug into the mechanic, here's the essentials:</p>
+
+        <ul>
+          <li><strong>Selection kit:</strong> gives you a building of your choice among a few options. They come in different tiers — normal, silver, gold, platinum — and the higher ones offer more choice.</li>
+          <li><strong>Upgrade kit:</strong> levels up a building you already built by <strong>one level</strong>. Consumable, single-use: if you need 4 levels, you need 4 kits.</li>
+          <li><strong>Shrink kit:</strong> reduces a building's footprint. Doesn't count as an upgrade.</li>
+        </ul>
+
+        <div class="callout">
+          <strong>One detail worth keeping in mind:</strong> an upgrade kit alone doesn't "create" anything out of nothing — you need to already have the base building to level up (obtained via a selection kit, or already owned). The tool accounts for this automatically.
+        </div>
+
+        <h3>"Wildcard" (epic) kits</h3>
+        <p>Some selection kits — the epic ones — offer options that touch <strong>many different families</strong> of buildings at once. The tool shows you that kit's potential for each of the families it touches: if you see the same epic kit show up in twelve different spots, that's not a counting error — it means you <em>could</em> use it for any one of those twelve families, but you'll have to pick just one when you actually spend it in-game.</p>
+
+        <h3>What you see in the table</h3>
+        <p>For each buildable family, the tool distinguishes two types of rows:</p>
+        <ul>
+          <li><strong>Buildable from scratch</strong> — buildings you could pull out starting from a selection kit, with the maximum reachable level.</li>
+          <li><strong>Already owned, upgradable</strong> — buildings you already have in inventory (not yet built in your city) and up to which level you could take them with the upgrade kits you have.</li>
+        </ul>
+
+        <p>The <span class="pill">Ready buildings only</span> button filters the view to show only what you already physically have in inventory, handy if you want to focus on what to place right now instead of what you might get in the future.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-allies">
+        <h2>🤝 6. Allies tab</h2>
+        <p class="lede">Your allies, their real bonuses, and the fragments you're still collecting.</p>
+
+        <p>Once you import your allies, you'll see the ones you own, their level, rarity, and calculated bonuses — including <strong>inheritance</strong>: a higher-rarity ally automatically inherits the bonuses of lower-rarity versions of the same ally, and the tool adds them all up for you without you having to do the math by hand.</p>
+
+        <p>You'll also find <strong>fragments</strong>: ally pieces that, once you collect enough of them, turn into a full ally. Useful for seeing how close you are to completing the ones you're still working on.</p>
+
+        <p>The <span class="pill">Owned only</span> button hides the rest of the allies catalog and shows only the ones you actually have, while <span class="pill">Show full database</span> does the opposite — handy if you also want to see allies you don't have yet, to get a sense of what to aim for.</p>
+      </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to top</a></span>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="efficiency">
+        <h2>⚖️ 7. Efficiency and weights</h2>
+        <p class="lede">The number you see next to every building (EFF) and what it actually means.</p>
+
+        <p>Every building (and ally) gets an <strong>efficiency score</strong>: basically, how much it "earns" for every space cell it occupies in your city. The higher it is, the more that building gives you relative to the space you dedicate to it. The formula, in plain terms:</p>
+
+        <div class="formula">Efficiency = (sum of weighted bonuses) ÷ (occupied space + roads)</div>
+
+        <p>The bonuses factored into the calculation are the general ones, the Guild Battlegrounds ones and — if you enable them — the Guild Expedition ones. The exact same mechanism applies to both buildings (Database, City, Inventory tabs) and allies (Allies tab): the weights you adjust in the toolbar apply to both at once.</p>
+
+        <h3>The weights you can adjust</h3>
+        <table>
+          <thead><tr><th>Weight</th><th>What it controls</th></tr></thead>
+          <tbody>
+            <tr><td class="k">⚔️ Atk</td><td>Fixed at 1.0. It's the reference point everything else is calibrated against.</td></tr>
+            <tr><td class="k">🛡️ Def</td><td>How much defensive bonuses count relative to offensive ones. Default 0.8: defense weighs a bit less than attack.</td></tr>
+            <tr><td class="k">🔰 BG</td><td>The box showing the Attack/Defense weights actually used in the calculation, after subtracting the share reserved for Expeditions. Not editable directly: it updates automatically based on the other controls.</td></tr>
+            <tr><td class="k">⚡ GE</td><td>Toggle + slider to also include Guild Expeditions in the calculation. At 0.20 (default), 20% of the weight goes to Expeditions and 80% stays with Battlegrounds.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Filtering by efficiency threshold</h3>
+        <p>In the <strong>EFF</strong> column header of the table you can type a minimum value: typing, say, 80, will show only buildings (or allies) with efficiency above 80, calculated with the current weights. Great for cutting through the noise and seeing only what's actually worth keeping.</p>
+
+        <div class="callout">
+          <strong>There's no single "correct" efficiency</strong> — it depends on what matters most to you at that point in the game. If you're chasing Guild Battlegrounds, mentally weigh those buildings higher; if Expeditions are your focus, turn on the GE slider. The number changes, your judgment stays yours.
+        </div>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="filters">
+        <h2>🔍 8. Filters, search and toolbar</h2>
+        <p class="lede">A map of the most-used buttons, so you don't have to guess what each icon does.</p>
+
+        <h3>Search</h3>
+        <p>The <strong>Search...</strong> box filters by name as you type. If you've typed something and want to start fresh, the ✕ next to the box clears everything in one click. If you delete letters by hand, the search updates instantly, with no delay.</p>
+
+        <h3>Main filters</h3>
+        <table>
+          <thead><tr><th>Filter</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Category</td><td>Narrows the view to a specific type: Quantum Incursion buildings, ones with ally slots, settlements, Battlegrounds prizes, QI prizes.</td></tr>
+            <tr><td class="k">Event</td><td>Shows only buildings tied to a specific in-game event (handy when deciding what to keep from an event that just ended).</td></tr>
+            <tr><td class="k">AND / OR</td><td>Decides how multiple active filters combine: AND requires all of them at once, OR needs just one.</td></tr>
+            <tr><td class="k">min EFF</td><td>Minimum efficiency threshold (see section 7).</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Columns you can show/hide</h3>
+        <p>Several icons in the toolbar toggle groups of columns on or off, keeping the table readable by showing only what you need at that moment: Population, Happiness, Production, Quantum Incursion coins/goods, and the <strong>Σ (Sigma)</strong> columns that automatically add up General+Battlegrounds (and General+Expeditions, if enabled) so you don't have to do the math in your head.</p>
+
+        <h3>Selection and export</h3>
+        <p>The checkboxes to the left of each row let you select multiple buildings; the <strong>Export</strong> button at the top downloads the selected rows as CSV (or all of them, if nothing is selected) — handy if you want to analyze the data elsewhere, like in a spreadsheet.</p>
+
+        <div class="callout">
+          <strong>Note:</strong> your selection resets every time you switch tabs. That's not a bug: each tab means something different for the same IDs, so keeping a selection "across" tabs would cause more confusion than it's worth.
+        </div>
+      </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to top</a></span>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="faq">
+        <h2>❓ 9. Frequently asked questions</h2>
+
+        <div class="card">
+          <h3 style="margin-top:0">Is my data safe? Can anyone else see it?</h3>
+          <p>No. Everything stays in your browser (localStorage). There's no server receiving or storing your game data: if you clear the site's data from your browser, or export it manually with SAVE, you're the only one with a copy.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Why do some buildings show an "unknown" badge or missing data?</h3>
+          <p>The game keeps introducing new buildings (especially during events). The database is updated regularly, but a brand-new building might not be mapped yet — in that case the tool still builds a card using the real data it can read from your imported city, even if it's not yet in the general catalog.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Can I use it from my phone?</h3>
+          <p>Yes, the site is responsive and can even be "installed" as an app on your home screen (both Android and iPhone) for easier access. Keep in mind that importing via the magic wand requires a desktop browser with the FoE Helper extension: on mobile you can still browse data already imported from a saved/loaded profile.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Is the tool free?</h3>
+          <p>Yes, completely. No account, no subscription, no usage limit.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">I have a question this guide doesn't cover.</h3>
+          <p>Feel free to write to <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a> — I'll reply as soon as I can.</p>
+        </div>
+      </section>
+
+      <footer>
+        <p><a href="/">← Back to FoE Optimizer</a></p>
+        <p>Forge of Empires is a trademark of InnoGames. FoE Optimizer is an independent project, not affiliated with InnoGames.</p>
+      </footer>
+
+    </div>
+  </body>
+</html>
