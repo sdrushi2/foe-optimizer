@@ -86,18 +86,26 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Navigazioni (richiesta del documento HTML): STALE-WHILE-REVALIDATE.
+  // Navigazioni (richiesta di un documento HTML): STALE-WHILE-REVALIDATE.
   // Serviamo subito la cache (istantaneo), e in parallelo aggiorniamo la cache
   // con la versione di rete per la prossima volta.
+  //
+  // IMPORTANTE: la chiave di cache usata e' l'URL RICHIESTO (request), non
+  // sempre "/". L'app e' single-file quindi la root "/" resta il caso
+  // principale, ma il sito ha anche pagine statiche indipendenti fuori dal
+  // bundle (es. /guida.html, /guide.html): usare sempre "/" come chiave
+  // faceva si' che navigare verso una di queste pagine mostrasse comunque
+  // l'ultima pagina cachata sotto "/", finche' un refresh non "sbloccava"
+  // l'aggiornamento di quella chiave specifica.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match("/");
+        const cached = await cache.match(request);
         const networkFetch = fetch(request)
           .then((response) => {
             if (response && response.ok) {
-              cache.put("/", response.clone());
+              cache.put(request, response.clone());
             }
             return response;
           })
@@ -105,7 +113,7 @@ self.addEventListener("fetch", (event) => {
 
         // Se abbiamo una copia in cache, la serviamo SUBITO (network in background).
         // Altrimenti (prima visita) aspettiamo la rete.
-        return cached || (await networkFetch) || cache.match("/");
+        return cached || (await networkFetch) || cache.match(request);
       })()
     );
     return;
