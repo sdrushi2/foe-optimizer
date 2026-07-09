@@ -4526,8 +4526,6 @@ export default function App() {
 
            <a
              href={uiLang === "it" ? "/guida.html" : "/guide.html"}
-             target="_blank"
-             rel="noopener noreferrer"
              title={t("tabHelpTitle", uiLang)}
              className="flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 text-slate-400 hover:text-slate-300 border border-slate-500"
            >

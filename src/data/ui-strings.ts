@@ -78,8 +78,8 @@ const UI_STRINGS = {
     en: "Help",
   },
   tabHelpTitle: {
-    it: "Apri la guida (in una nuova scheda)",
-    en: "Open the guide (in a new tab)",
+    it: "Apri la guida",
+    en: "Open the guide",
   },
 
   // ── Switch vista LIGHT/FULL ───────────────────────────────────────────
