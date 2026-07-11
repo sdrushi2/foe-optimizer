@@ -40,7 +40,7 @@ export default function ProfileHelpModal({ isOpen, onClose, uiLang }: ProfileHel
           <h2 className="text-base font-bold text-amber-400 flex items-center gap-2">
             <UserCog size={18} /> {t("profileHelpModalTitle", uiLang)}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-100 transition-colors">
+          <button onClick={onClose} aria-label={t("closeAriaLabel", uiLang)} className="text-slate-400 hover:text-slate-100 transition-colors">
             <XIcon size={18} />
           </button>
         </div>

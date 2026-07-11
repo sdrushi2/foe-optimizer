@@ -228,7 +228,13 @@ export function parseBuildingsCsv(csv: string): Building[] {
   // prima che esista NomeDeu) viene semplicemente ignorata, zero costo extra.
   const availableLangs = LANGUAGES.filter(l => columnIndex(l.csvColumn) >= 0);
 
-  return rows.slice(1).map((parts, index) => {
+  // Il callback è tipizzato esplicitamente `: Building` (e il return NON usa
+  // `as Building`): così tsc verifica strutturalmente il letterale e segnala
+  // QUI un eventuale campo mancante quando si aggiunge un campo a Building —
+  // questo è il punto 1 della checklist "nuovo campo" e un cast lo
+  // nasconderebbe silenziosamente (tutti gli edifici uscirebbero con il campo
+  // undefined, come i profili "stale" ma per l'intero catalogo).
+  return rows.slice(1).map((parts, index): Building => {
     const cityEntityId = (parts[0] || "").trim();
     const size = getText(parts, "Size", "1x1");
     // Calcolo area una tantum
@@ -324,6 +330,6 @@ export function parseBuildingsCsv(csv: string): Building[] {
       isMilitary: isMilitaryBuildingId(cityEntityId),
       isGoods: isGoodsFactoryId(cityEntityId),
       isFallback: false,
-    } as Building;
+    };
   });
 }

@@ -142,6 +142,20 @@ function allyName(id: string, lang: Lang = "it"): string {
 const errMessage = (err: unknown, fallback = "unknown error"): string =>
   err instanceof Error ? err.message : (typeof err === "string" ? err : fallback);
 
+/** Revive difensivo di declassableBuildings dal CityStore serializzato:
+ *  valida la forma della prima entry (deve essere [string, oggetto]) prima
+ *  di fidarsi dell'intero array — profili salvati da versioni precedenti
+ *  potrebbero avere una forma diversa. Usato sia dall'initializer dello
+ *  useState sia da loadProfileData (stessa logica, un solo punto). */
+function reviveDeclassableMap(raw: unknown): Map<string, { popCurr: number; popBronze: number; statsBronze: EraStats }> {
+  try {
+    if (!Array.isArray(raw) || raw.length === 0) return new Map();
+    const first = raw[0] as [string, unknown];
+    if (!first || typeof first[1] !== "object" || Array.isArray(first[1]) || first[1] === null) return new Map();
+    return reviveMap<{ popCurr: number; popBronze: number; statsBronze: EraStats }>(raw as Array<[string, { popCurr: number; popBronze: number; statsBronze: EraStats }]>);
+  } catch { return new Map(); }
+}
+
 // Lingua di default della GUI quando l'utente non ha mai scelto esplicitamente
 // (nessuna chiave in localStorage): italiano se il browser è in italiano
 // (qualsiasi variante, es. "it-IT"), altrimenti inglese. Solo it/en sono
@@ -1513,19 +1527,7 @@ export default function App() {
     setEraStats(reviveMap<EraStats>(city?.eraStats));
     setEntityLevels(reviveMap<number>(city?.entityLevels));
     setEntityLevelsList(reviveMap<number[]>(city?.entityLevelsList));
-    {
-      const raw = city?.declassableBuildings;
-      try {
-        if (!Array.isArray(raw) || raw.length === 0) { setDeclassableBuildings(new Map()); }
-        else {
-          const first = (raw[0] as [string, unknown]);
-          if (!first || typeof first[1] !== "object" || Array.isArray(first[1]) || first[1] === null)
-            setDeclassableBuildings(new Map());
-          else
-            setDeclassableBuildings(reviveMap<{ popCurr: number; popBronze: number; statsBronze: EraStats }>(raw));
-        }
-      } catch { setDeclassableBuildings(new Map()); }
-    }
+    setDeclassableBuildings(reviveDeclassableMap(city?.declassableBuildings));
     const rawIES = city?.entityInstanceEraStats ?? [];
     setEntityInstanceEraStats(new Map(rawIES.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v])));
     setGameNames(reviveMap<string>(city?.gameNames));
@@ -1685,15 +1687,9 @@ export default function App() {
   // "level" corrisponde all'era dell'edificio (0=StoneAge … 22=SpaceAgeSpaceHub).
   const [entityLevels, setEntityLevels] = useState<Map<string, number>>(() => reviveMap<number>(getInitCity()?.entityLevels));
   const [entityLevelsList, setEntityLevelsList] = useState<Map<string, number[]>>(() => reviveMap<number[]>(getInitCity()?.entityLevelsList));
-  const [declassableBuildings, setDeclassableBuildings] = useState<Map<string, { popCurr: number; popBronze: number; statsBronze: EraStats }>>(() => {
-    const raw = getInitCity()?.declassableBuildings;
-    try {
-      if (!Array.isArray(raw) || raw.length === 0) return new Map();
-      const first = (raw[0] as [string, unknown]);
-      if (!first || typeof first[1] !== "object" || Array.isArray(first[1]) || first[1] === null) return new Map();
-      return reviveMap<{ popCurr: number; popBronze: number; statsBronze: EraStats }>(raw);
-    } catch { return new Map(); }
-  });
+  const [declassableBuildings, setDeclassableBuildings] = useState<Map<string, { popCurr: number; popBronze: number; statsBronze: EraStats }>>(
+    () => reviveDeclassableMap(getInitCity()?.declassableBuildings)
+  );
   const [entityInstanceEraStats, setEntityInstanceEraStats] = useState<Map<string, Array<[string, number, EraStats]>>>(() => {
     const raw = getInitCity()?.entityInstanceEraStats ?? [];
     return new Map(raw.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v]));
@@ -1883,7 +1879,10 @@ export default function App() {
           throw new Error(t("importInvalidFile", uiLang));
         }
 
-        const { ok, failedKeys, mergedProfiles } = mergeImportedProfiles(sessionData.storage);
+        const { ok, failedKeys, mergedProfiles } = mergeImportedProfiles(
+          sessionData.storage,
+          (n) => t("defaultProfileName", uiLang, n),
+        );
         const restoredActiveId = getActiveProfileId(mergedProfiles);
         setProfiles(mergedProfiles);
         setActiveProfileId(restoredActiveId);
@@ -2991,7 +2990,7 @@ export default function App() {
         try { localStorage.removeItem(profileStorageKey(id, slot)); } catch { /* ignorato: pulizia best-effort */ }
       });
       // Ripristina il profilo precedente
-      setActiveProfileId(previousProfileId ?? null);
+      setActiveProfileId(previousProfileId);
       if (previousProfileId) {
         localStorage.setItem(ACTIVE_PROFILE_KEY, previousProfileId);
         loadProfileData(previousProfileId);
@@ -4964,7 +4963,7 @@ export default function App() {
                     src="https://foezz.innogamescdn.com/assets/shared/avatars/portrait_unknown-9d9c1d859.jpg"
                     alt=""
                     className="h-7 w-7 rounded object-cover border border-slate-600/60 shrink-0 opacity-50"
-                    title="Avatar non disponibile: stai usando una versione vecchia della bacchetta magica. Aggiorna il bookmarklet e reimporta i dati per vedere il tuo avatar."
+                    title={t("avatarOutdatedTitle", uiLang)}
                   />
                 )}
                 {currentEra && (
@@ -5183,7 +5182,7 @@ export default function App() {
                 onClick={() => setIsInventoryDebugOpen(open => !open)}
                 className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
               >
-                Debug
+                {t("debugLabel")}
               </button>
               <button
                 onClick={() => {
@@ -5421,7 +5420,7 @@ export default function App() {
                           <button
                             onClick={exportSelectedAsCsv}
                             disabled={selectedIds.size === 0}
-                            title={selectedIds.size === 0 ? "Seleziona almeno un edificio" : `Esporta ${selectedIds.size} edifici in CSV`}
+                            title={selectedIds.size === 0 ? t("exportSelectFirstTitle", uiLang) : t("exportSelectedCsvTitle", uiLang, selectedIds.size)}
                             className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] font-bold text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <Download size={11} />
@@ -5430,7 +5429,7 @@ export default function App() {
                           </button>
                         </th>
                         <th className="py-2 px-2 text-center font-normal text-xs text-slate-400 italic">
-                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size : activeTab === "inventario" ? processedInventoryKitBuildings.length : processedBuildings.length}</span>{activeTab === "propria_citta" && totalCityEntityInstances > cityEntityIds.size}
+                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size : activeTab === "inventario" ? processedInventoryKitBuildings.length : processedBuildings.length}</span>
                         </th>
                         <th className="py-2 px-0 border-l border-slate-800" colSpan={4 + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
@@ -5574,7 +5573,7 @@ export default function App() {
                       {filteredBuildings.length === 0 && (
                         <tr>
                           <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 20 : 0)} className="text-center py-12 text-slate-400 font-semibold">
-                            Nessun edificio trovato.
+                            {t("noBuildingsFound", uiLang)}
                           </td>
                         </tr>
                       )}
@@ -5798,7 +5797,7 @@ export default function App() {
                     {filteredAllies.length === 0 && (
                       <tr>
                         <td colSpan={(spedizioniEnabled ? 19 : 15) - (showSigmaColumns ? 4 : 0)} className="text-center py-12 text-slate-400 font-semibold">
-                          Nessun alleato trovato con questa ricerca.
+                          {t("noAlliesFound", uiLang)}
                         </td>
                       </tr>
                     )}
@@ -5920,7 +5919,7 @@ export default function App() {
                 onClick={() => setSelectedJsonEntry(null)}
                 className="text-slate-400 hover:text-white"
               >
-                Chiudi
+                {t("closeAriaLabel", uiLang)}
               </button>
             </div>
             <div className="flex-1 overflow-auto p-6">
@@ -6276,7 +6275,7 @@ export default function App() {
           )}
           {fabTooltip.choices && fabTooltip.choices.length > 1 && (
             <div className="mb-2 pb-1.5 border-b border-slate-800">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-violet-300 mb-0.5">Scelta:</div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-violet-300 mb-0.5">{t("fabChoiceLabel", uiLang)}</div>
               <ul className="space-y-0.5 text-xs text-slate-200">
                 {fabTooltip.choices.map((id, i) => (
                   <li key={i} className="flex items-start gap-1">

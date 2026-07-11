@@ -2,7 +2,9 @@
  * Algoritmo di ottimizzazione inventario — traduce la logica di inventario.html
  * (www.gemboy.it/foe/inventario.txt) in TypeScript puro.
  *
- * Input:  kit.json (buildingUpgrades + selectionKits) + inventario.csv
+ * Input:  kit.json (buildingUpgrades + selectionKits) + l'inventario importato
+ *         dal bookmarklet (le mappe invUpg/invSel/invBld costruite da App.tsx;
+ *         l'inventario.csv era l'input della versione standalone storica).
  * Output: per ogni "famiglia" (root building), la lista di edifici costruibili
  *         con quantità, livello, e dettaglio dei kit necessari.
  *
@@ -934,6 +936,16 @@ function buildInvRows(
 
 // ── Funzione principale ────────────────────────────────────────────────────
 
+/**
+ * ⚠️ CONTRATTO DI MUTAZIONE: `invUpg` viene CONSUMATA (mutata in place) durante
+ * l'ottimizzazione — buildInvRows decrementa le quantità dei kit di upgrade man
+ * mano che vengono applicati agli edifici in inventario, e il consumo si
+ * propaga tra famiglie successive nello stesso giro. `invSel` e `invBld` sono
+ * invece solo lette. Il chiamante deve quindi passare Map COSTRUITE FRESCHE ad
+ * ogni chiamata (come fa il useMemo `familyResults` in App.tsx), mai una Map
+ * condivisa con lo stato React o riusata tra chiamate: riusarla produrrebbe
+ * risultati diversi al secondo giro con lo stesso inventario.
+ */
 export function computeAllFamilies(
   invUpg: Map<string, number>,
   invSel: Map<string, number>,

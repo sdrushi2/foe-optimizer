@@ -44,7 +44,7 @@ type ConsumableKey = keyof typeof CONSUMABLE_ASSET_NAMES;
 
 /** Mappa inversa itemAssetName → chiave conteggio, costruita una volta dal
  *  modulo. Permette di gestire tutti i consumabili con un singolo lookup
- *  invece di sette confronti di uguaglianza. */
+ *  invece di una catena di confronti di uguaglianza (uno per consumabile). */
 const CONSUMABLE_KEY_BY_ASSET = new Map<string, ConsumableKey>(
   (Object.entries(CONSUMABLE_ASSET_NAMES) as Array<[ConsumableKey, string]>)
     .map(([key, asset]) => [asset, key]),
@@ -119,8 +119,8 @@ export function parseInventory(
     // Il nome viene salvato alla prima occorrenza (lingua del client).
     // Approccio table-driven: la chiave di CONSUMABLE_ASSET_NAMES coincide
     // con il campo conteggio di SpecialKits, e il campo nome è "{chiave}Name"
-    // — quindi un solo blocco gestisce tutti e 7 i consumabili senza ripetere
-    // (e tenere sincronizzati a mano) sette if accoppiati per posizione.
+    // — quindi un solo blocco gestisce TUTTI i consumabili senza ripetere
+    // (e tenere sincronizzati a mano) un if per ciascuno.
     const assetName = item.itemAssetName ? String(item.itemAssetName) : "";
     const consumableKey = assetName ? CONSUMABLE_KEY_BY_ASSET.get(assetName) : undefined;
     if (consumableKey) {

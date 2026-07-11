@@ -1540,10 +1540,6 @@ const UI_STRINGS = {
     it: "Mostra solo gli edifici che possono essere declassati senza conseguenze (stesse stat. militari, meno popolazione)",
     en: "Show only the buildings that can be downgraded without consequences (same military stats, less population)",
   },
-  declassableBadgeTitle: {
-    it: "Declassabile: a un'era inferiore mantiene le stesse statistiche militari ma richiede meno popolazione",
-    en: "Downgradable: at a lower era, it keeps the same military stats but requires less population",
-  },
   declassableTooltipHeader: {
     it: "Edificio declassabile",
     en: "Downgradable building",
@@ -1555,6 +1551,39 @@ const UI_STRINGS = {
   declassableKitSection: {
     it: "Kit necessario",
     en: "Required kit",
+  },
+
+  // ── Tabella edifici: export e placeholder ────────────────────────────
+  exportSelectFirstTitle: {
+    it: "Seleziona almeno un edificio",
+    en: "Select at least one building",
+  },
+  exportSelectedCsvTitle: {
+    it: (n: number) => `Esporta ${n} edifici in CSV`,
+    en: (n: number) => `Export ${n} buildings to CSV`,
+  },
+  noBuildingsFound: {
+    it: "Nessun edificio trovato.",
+    en: "No buildings found.",
+  },
+  noAlliesFound: {
+    it: "Nessun alleato trovato con questa ricerca.",
+    en: "No allies found for this search.",
+  },
+  fabChoiceLabel: {
+    it: "Scelta:",
+    en: "Choice:",
+  },
+  avatarOutdatedTitle: {
+    it: "Avatar non disponibile: stai usando una versione vecchia della bacchetta magica. Aggiorna il bookmarklet e reimporta i dati per vedere il tuo avatar.",
+    en: "Avatar not available: you are using an old version of the magic wand. Update the bookmarklet and re-import your data to see your avatar.",
+  },
+
+  // ── Avviso aggiornamento service worker (vedi src/registerSW.ts) ─────
+  // Solo informativo: il reload è automatico, nessun pulsante di conferma.
+  swUpdateAvailable: {
+    it: "Nuova versione disponibile — aggiornamento in corso…",
+    en: "New version available — updating…",
   },
 } as const;
 

@@ -166,7 +166,9 @@ export class BuildingModel {
   /** Verifica se un edificio richiede strada */
   static requiresRoad(cityEntity: CityEntityDefinition | undefined): boolean {
     if (!cityEntity) return false;
-    if (String(cityEntity.id || "").startsWith("X_")) return true;
+    // I Grandi Edifici richiedono sempre strada. Il riconoscimento del
+    // prefisso vive SOLO in buildingClassification (isGreatBuildingId).
+    if (isGreatBuildingId(String(cityEntity.id || ""))) return true;
     if (cityEntity.components?.AllAge?.streetConnectionRequirement) return true;
     if (cityEntity.requirements?.street_connection_level) return true;
     return false;
@@ -979,6 +981,14 @@ export class BuildingModel {
       fsp: stats.fsp, tpm: stats.tpm, tpb: stats.tpb, adm: stats.adm, mod: stats.mod, rin: stats.rin, imm: stats.imm,
       cityEntityId: entityId,
       isGreatBuilding: isGreatBuildingId(entityId),
+      // isInactive resta false DELIBERATAMENTE, senza chiamare
+      // isInactiveBuildingId(entityId): questo factory crea fallback solo per
+      // entità ASSENTI dal CSV, mentre gli edifici "inattivi" (W_*Decoration)
+      // sono per definizione edifici normali del catalogo, censiti nel CSV con
+      // le loro statistiche — quindi non passano mai di qui. Se un giorno Inno
+      // producesse un W_*Decoration non ancora nel CSV, apparirebbe come
+      // fallback normale (senza il colore viola "inattivo") finché il CSV non
+      // viene aggiornato: degradazione accettabile, non un bug.
       isInactive: false,
       // isFallback resta false: i dati produzione sono completi (estratti da
       // CityEntities), quindi le celle non devono mostrare "?". isUnresolved

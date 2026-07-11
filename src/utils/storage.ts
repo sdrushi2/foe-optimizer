@@ -59,7 +59,7 @@ export function readStoredJson<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeStoredJson(key: string, value: unknown) {
+export function writeStoredJson(key: string, value: unknown): boolean {
   try {
     const json = JSON.stringify(value);
     if (isCompressedKey(key)) {
@@ -68,12 +68,17 @@ export function writeStoredJson(key: string, value: unknown) {
     } else {
       localStorage.setItem(key, json);
     }
+    return true;
   } catch (err) {
-    // Non rilanciamo (il chiamante non sempre può gestirlo), ma logghiamo:
-    // tipicamente QuotaExceededError quando il localStorage è pieno. Senza
-    // questo log, un salvataggio fallito è del tutto invisibile in debug.
+    // Non rilanciamo (il chiamante non sempre può gestirlo), ma logghiamo e
+    // restituiamo false: tipicamente QuotaExceededError quando il localStorage
+    // è pieno. I chiamanti che devono reagire a un salvataggio fallito (es.
+    // mergeImportedProfiles con failedKeys) controllano il valore di ritorno;
+    // gli altri possono ignorarlo. Senza il log, un salvataggio fallito
+    // sarebbe del tutto invisibile in debug.
     // Messaggio in inglese: diagnostica interna, non testo per l'utente.
     console.warn(`[FOE] writeStoredJson failed for key "${key}":`, err);
+    return false;
   }
 }
 
@@ -166,7 +171,16 @@ export function collectFoeLocalStorage(): Record<string, string> {
   return snapshot;
 }
 
-export function mergeImportedProfiles(snapshot: Record<string, string>): { ok: boolean; failedKeys: string[]; mergedProfiles: Profile[] } {
+/**
+ * @param fallbackProfileName nome per i profili importati senza nome, dato il
+ *        numero progressivo. storage.ts non ha accesso a uiLang/t(), quindi il
+ *        chiamante (App.tsx) passa la versione localizzata (defaultProfileName);
+ *        il default "Profilo N" resta solo come rete di sicurezza.
+ */
+export function mergeImportedProfiles(
+  snapshot: Record<string, string>,
+  fallbackProfileName: (n: number) => string = (n) => `Profilo ${n}`,
+): { ok: boolean; failedKeys: string[]; mergedProfiles: Profile[] } {
   // Il file potrebbe essere stato esportato da una versione di storage diversa
   // (suffisso _vN differente). Cerchiamo la chiave profili in QUALSIASI versione
   // presente nello snapshot, non solo in quella corrente, per non rifiutare a
@@ -207,7 +221,7 @@ export function mergeImportedProfiles(snapshot: Record<string, string>): { ok: b
     while (usedIds.has(id)) id = makeFallbackId(index);
     usedIds.add(id);
     idMap.set(index, id);
-    return { id, name: profile.name || `Profilo ${currentProfiles.length + index + 1}` };
+    return { id, name: profile.name || fallbackProfileName(currentProfiles.length + index + 1) };
   });
 
   const failedKeys: string[] = [];
@@ -257,9 +271,10 @@ export function mergeImportedProfiles(snapshot: Record<string, string>): { ok: b
   });
 
   const mergedProfiles = [...currentProfiles, ...nextProfiles];
-  try {
-    writeStoredJson(PROFILES_KEY, mergedProfiles);
-  } catch {
+  // writeStoredJson non lancia mai: cattura internamente e restituisce false
+  // (un try/catch qui sarebbe un ramo morto e la scrittura fallita della
+  // lista profili passerebbe inosservata con ok=true).
+  if (!writeStoredJson(PROFILES_KEY, mergedProfiles)) {
     failedKeys.push(PROFILES_KEY);
   }
 
