@@ -469,6 +469,7 @@ const SortableHeader = memo(function SortableHeader({
   className = "",
   title,
   sortKey,
+  noGap = false,
 }: {
   label: React.ReactNode;
   onClick: (() => void) | null;
@@ -477,6 +478,11 @@ const SortableHeader = memo(function SortableHeader({
   className?: string;
   title?: string;
   sortKey?: string;
+  /** Rimuove il gap-1 tra icona e freccia di ordinamento. Usato SOLO dalle
+   *  colonne della sezione Produzioni (20 colonne strette da 36px, dove il
+   *  gap sommato su tutta la sezione la allarga inutilmente); le altre
+   *  colonne mantengono il gap di default. */
+  noGap?: boolean;
 }) {
   const clickable = onClick !== null;
   return (
@@ -486,7 +492,7 @@ const SortableHeader = memo(function SortableHeader({
       data-sort-key={sortKey}
       className={`${className} ${clickable ? "cursor-pointer select-none hover:text-amber-400 transition-colors" : ""} ${active ? "!text-amber-400" : ""}`}
     >
-      <span className="inline-flex items-center gap-1">
+      <span className={`inline-flex items-center${noGap ? "" : " gap-1"}`}>
         {label}
         {clickable && (
           <span className="text-[9px] opacity-70">
@@ -5498,26 +5504,26 @@ export default function App() {
                         <SortableHeader label={<TableHeaderIcon src={iconIQCap} alt={t("iqCap", uiLang)} />} sortKey="iq_cap" onClick={() => handleSort("iq_cap")} active={sortBy === "iq_cap"} order={sortOrder} className="th-col" title={t("iqCap", uiLang)} />
                         {showProdColumns && (
                           <>
-                            <SortableHeader label={<TableHeaderIcon src={iconMon} alt={t("prodCoins", uiLang)} />} sortKey="mon" onClick={() => handleSort("mon")} active={sortBy === "mon"} order={sortOrder} className="th-col section-divider" title={t("prodCoins", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconMat} alt={t("prodMaterials", uiLang)} />} sortKey="mat" onClick={() => handleSort("mat")} active={sortBy === "mat"} order={sortOrder} className="th-col" title={t("prodMaterials", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconFP} alt={t("prodForgePoints", uiLang)} />} sortKey="fp" onClick={() => handleSort("fp")} active={sortBy === "fp"} order={sortOrder} className="th-col" title={t("prodForgePoints", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} />} sortKey="fpb" onClick={() => handleSort("fpb")} active={sortBy === "fpb"} order={sortOrder} className="th-col" title={t("prodForgePointsBoost", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconFUR} alt={t("prodRogues", uiLang)} />} sortKey="fur" onClick={() => handleSort("fur")} active={sortBy === "fur"} order={sortOrder} className="th-col" title={t("prodRogues", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => handleSort("beni")} active={sortBy === "beni"} order={sortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
-                            <SortableHeader label="⏳" sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col text-sm" title={t("prodRushSpecial", uiLang)} />
-                            <SortableHeader label="🛠" sortKey="tpm" onClick={() => handleSort("tpm")} active={sortBy === "tpm"} order={sortOrder} className="th-col text-sm" title={t("prodRushMaterials", uiLang)} />
-                            <SortableHeader label="📦" sortKey="tpb" onClick={() => handleSort("tpb")} active={sortBy === "tpb"} order={sortOrder} className="th-col text-sm" title={t("prodRushGoods", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconAiuto} alt={t("prodMassAid", uiLang)} />} sortKey="adm" onClick={() => handleSort("adm")} active={sortBy === "adm"} order={sortOrder} className="th-col text-sm" title={t("prodMassAid", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconOneUp} alt={t("prodOneUpKit", uiLang)} />} sortKey="mod" onClick={() => handleSort("mod")} active={sortBy === "mod"} order={sortOrder} className="th-col text-sm" title={t("prodOneUpKit", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconRinn} alt={t("prodRenovationKit", uiLang)} />} sortKey="rin" onClick={() => handleSort("rin")} active={sortBy === "rin"} order={sortOrder} className="th-col text-sm" title={t("prodRenovationKit", uiLang)} />
-                            <SortableHeader label={<TableHeaderIcon src={iconImm} alt={t("prodStoreBuilding", uiLang)} />} sortKey="imm" onClick={() => handleSort("imm")} active={sortBy === "imm"} order={sortOrder} className="th-col text-sm" title={t("prodStoreBuilding", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconMon} alt={t("prodCoins", uiLang)} />} sortKey="mon" onClick={() => handleSort("mon")} active={sortBy === "mon"} order={sortOrder} className="th-col section-divider" title={t("prodCoins", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconMat} alt={t("prodMaterials", uiLang)} />} sortKey="mat" onClick={() => handleSort("mat")} active={sortBy === "mat"} order={sortOrder} className="th-col" title={t("prodMaterials", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconFP} alt={t("prodForgePoints", uiLang)} />} sortKey="fp" onClick={() => handleSort("fp")} active={sortBy === "fp"} order={sortOrder} className="th-col" title={t("prodForgePoints", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} />} sortKey="fpb" onClick={() => handleSort("fpb")} active={sortBy === "fpb"} order={sortOrder} className="th-col" title={t("prodForgePointsBoost", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconFUR} alt={t("prodRogues", uiLang)} />} sortKey="fur" onClick={() => handleSort("fur")} active={sortBy === "fur"} order={sortOrder} className="th-col" title={t("prodRogues", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => handleSort("beni")} active={sortBy === "beni"} order={sortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
+                            <SortableHeader noGap label="⏳" sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col text-sm" title={t("prodRushSpecial", uiLang)} />
+                            <SortableHeader noGap label="🛠" sortKey="tpm" onClick={() => handleSort("tpm")} active={sortBy === "tpm"} order={sortOrder} className="th-col text-sm" title={t("prodRushMaterials", uiLang)} />
+                            <SortableHeader noGap label="📦" sortKey="tpb" onClick={() => handleSort("tpb")} active={sortBy === "tpb"} order={sortOrder} className="th-col text-sm" title={t("prodRushGoods", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconAiuto} alt={t("prodMassAid", uiLang)} />} sortKey="adm" onClick={() => handleSort("adm")} active={sortBy === "adm"} order={sortOrder} className="th-col text-sm" title={t("prodMassAid", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconOneUp} alt={t("prodOneUpKit", uiLang)} />} sortKey="mod" onClick={() => handleSort("mod")} active={sortBy === "mod"} order={sortOrder} className="th-col text-sm" title={t("prodOneUpKit", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconRinn} alt={t("prodRenovationKit", uiLang)} />} sortKey="rin" onClick={() => handleSort("rin")} active={sortBy === "rin"} order={sortOrder} className="th-col text-sm" title={t("prodRenovationKit", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconImm} alt={t("prodStoreBuilding", uiLang)} />} sortKey="imm" onClick={() => handleSort("imm")} active={sortBy === "imm"} order={sortOrder} className="th-col text-sm" title={t("prodStoreBuilding", uiLang)} />
                           </>
                         )}
                       </tr>
