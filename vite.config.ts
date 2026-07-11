@@ -40,7 +40,7 @@ function sitemapPlugin(date: string): Plugin {
         return;
       }
       const content = fs.readFileSync(outPath, "utf-8");
-      const updated = content.replace(/<lastmod>[^<]*<\/lastmod>/, `<lastmod>${date}<\/lastmod>`);
+      const updated = content.replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${date}<\/lastmod>`);
       fs.writeFileSync(outPath, updated, "utf-8");
     },
   };
