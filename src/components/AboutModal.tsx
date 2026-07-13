@@ -1,10 +1,11 @@
-import { X as XIcon, Info, AtSign } from "lucide-react";
+import { X as XIcon, Info, AtSign, ShieldCheck } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
 
 const AVATAR_IT   = "https://foeit.innogamescdn.com/assets/shared/avatars/portrait_359-bfd78cf37.jpg";
 const AVATAR_BETA = "https://foezz.innogamescdn.com/assets/shared/avatars/portrait_847-c8fad0549.jpg";
 const GITHUB_URL  = "https://github.com/sdrushi2/foe-optimizer";
 const EMAIL_ADDR  = "info@foe-optimizer.com";
+const PRIVACY_URL = `${GITHUB_URL}/blob/main/PRIVACY.md`;
 
 /** Logo GitHub (SVG inline -- non disponibile in questa versione di lucide-react) */
 function GithubIcon({ size = 20, className = "" }: { size?: number; className?: string }) {
@@ -115,6 +116,15 @@ export default function AboutModal({ isOpen, onClose, uiLang }: AboutModalProps)
                 <p className="font-bold text-slate-100 text-sm truncate">sdrushi2/foe-optimizer</p>
                 <p className="text-xs text-slate-500 truncate">{GITHUB_URL}</p>
               </div>
+            </a>
+            <a
+              href={PRIVACY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 flex items-center gap-3 bg-slate-950/60 rounded-xl p-3 border border-slate-800 hover:border-slate-600 hover:bg-slate-800/60 transition-all group"
+            >
+              <ShieldCheck size={18} className="text-slate-400 group-hover:text-slate-100 shrink-0 transition-colors" />
+              <span className="text-sm text-slate-300 group-hover:text-slate-100 transition-colors">{t("aboutPrivacyLabel", uiLang)}</span>
             </a>
           </section>
 

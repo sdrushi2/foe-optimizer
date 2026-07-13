@@ -52,6 +52,11 @@ publishes it to GitHub Pages automatically — no manual build step required.
 For a deep dive into the architecture, data flow, and every module's internals, see
 [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) (in Italian).
 
+## Privacy
+
+FoE Optimizer has zero backend: everything runs client-side, your data never leaves
+your browser. See [PRIVACY.md](PRIVACY.md) for the full policy (Italian/English).
+
 ## License
 
 This is a free, fan-made tool for Forge of Empires. Not affiliated with InnoGames.

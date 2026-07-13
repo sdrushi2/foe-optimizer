@@ -1524,6 +1524,10 @@ const UI_STRINGS = {
     it: "Codice sorgente",
     en: "Source code",
   },
+  aboutPrivacyLabel: {
+    it: "Informativa sulla privacy",
+    en: "Privacy policy",
+  },
   emptyAllySlotBadgeTitle: {
     it: "Slot alleato libero",
     en: "Empty ally slot",
