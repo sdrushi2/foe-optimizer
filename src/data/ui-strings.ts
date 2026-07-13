@@ -1440,8 +1440,8 @@ const UI_STRINGS = {
     en: "Invalid data: the clipboard content is not valid JSON.",
   },
   clipboardPermissionDeniedAlert: {
-    it: "Permesso clipboard negato. Clicca sulla pagina e riprova.",
-    en: "Clipboard permission denied. Click on the page and try again.",
+    it: "Import fallito: il browser ha negato a questo sito il permesso di leggere gli appunti. Alcuni browser (es. Vivaldi, Brave) lo bloccano di default. Prova a: 1) ricaricare la pagina e riprovare; 2) controllare le autorizzazioni del sito nelle impostazioni del browser (di solito in Impostazioni > Privacy/Sicurezza > Autorizzazioni sito, voce \"Appunti\") e abilitare manualmente l'accesso per foe-optimizer.com; 3) ricaricare e riprovare.",
+    en: "Import failed: your browser denied this site permission to read the clipboard. Some browsers (e.g. Vivaldi, Brave) block it by default. Try: 1) reloading the page and trying again; 2) checking the site's permissions in your browser settings (usually under Settings > Privacy/Security > Site permissions, \"Clipboard\") and manually allowing access for foe-optimizer.com; 3) reload and retry.",
   },
   clipboardReadErrorAlert: {
     it: "Dati non validi: impossibile leggere la clipboard.",
