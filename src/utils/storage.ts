@@ -28,6 +28,11 @@ export const DB_VIEW_KEY = `foe_global_db_view_${V}`;
 // Diversa da gameLang: quella è rilevata dal payload importato, questa è una
 // scelta esplicita dell'utente, indipendente dal profilo attivo.
 export const UI_LANG_KEY = `foe_global_ui_lang_${V}`;
+// Chiave generica per gli annunci one-off dismissibili in home (es. avviso su
+// un cambiamento di FoE Helper che rompe i bookmarklet vecchi). Il valore
+// salvato è un array di ID di annuncio già chiusi dall'utente: più annunci nel
+// tempo condividono questa singola chiave, invece di una dedicata per ciascuno.
+export const DISMISSED_ANNOUNCEMENTS_KEY = `foe_global_dismissed_announcements_${V}`;
 
 export function profileStorageKey(profileId: string, slot: "city" | "inventory" | "allies"): string {
   return `foe_p_${profileId}_${slot}_${V}`;

@@ -11,11 +11,33 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Versione corrente del formato payload prodotto dal bookmarklet (campo `_v`).
+ *
+ * Unica fonte di verità: è interpolata direttamente dentro {@link BOOKMARKLET_JS}
+ * (niente numero duplicato da tenere sincronizzato a mano) ed è quella con cui
+ * l'app confronta il `_v` di un payload importato per capire se il bookmarklet
+ * usato è più vecchio dell'attuale (vedi `handleWandClick` in App.tsx).
+ *
+ * Da incrementare ogni volta che cambia in modo non retrocompatibile il modo in
+ * cui il bookmarklet legge i dati dal gioco (es. FoE Helper che ristruttura un
+ * oggetto globale) — non per semplici modifiche cosmetiche del payload.
+ *
+ * v2 (luglio 2026): FoE Helper ha spostato gli alleati da `MainParser.Allies`
+ * a un oggetto globale a sé stante `Allies`. Il bookmarklet prova prima il
+ * nuovo percorso e ripiega sul vecchio se assente (vedi `allies:` sotto), così
+ * funziona sia con FoE Helper aggiornato sia con versioni precedenti — ma il
+ * bump di versione resta comunque utile per intercettare, in futuro, chi sta
+ * ancora usando lo script v1 salvato nei preferiti.
+ */
+export const CURRENT_BOOKMARKLET_VERSION = 2;
+
+/**
  * Codice JavaScript del bookmarklet "bacchetta magica".
  *
  * L'utente lo trascina nella barra dei preferiti del browser; clickandolo
  * mentre Forge of Empires è aperto, raccoglie i 5 oggetti globali del gioco
- * (`MainParser.Inventory`, `MainParser.Allies.allyList`, `MainParser.CityMapData`,
+ * (`MainParser.Inventory`, `Allies.allyList` — con fallback su
+ * `MainParser.Allies.allyList` per FoE Helper non aggiornato — `MainParser.CityMapData`,
  * `MainParser.CityEntities`, `CityMap.Main.unlockedAreas`), li serializza in
  * JSON con la forma {@link BookmarkletData} e li copia negli appunti.
  *
@@ -23,7 +45,7 @@
  * standard 4×4, anche `width`/`length` (sono il valore di default e si possono
  * dedurre lato app).
  */
-export const BOOKMARKLET_JS = `javascript:(function(){try{var data={_v:1,inventory:Object.values(MainParser.Inventory),allies:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o)),portraitUrl:typeof ExtPlayerAvatar!=='undefined'&&typeof srcLinks!=='undefined'?srcLinks.GetPortrait(ExtPlayerAvatar):undefined};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){try{var data={_v:${CURRENT_BOOKMARKLET_VERSION},inventory:Object.values(MainParser.Inventory),allies:typeof Allies!=='undefined'?Allies.allyList:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o)),portraitUrl:typeof ExtPlayerAvatar!=='undefined'&&typeof srcLinks!=='undefined'?srcLinks.GetPortrait(ExtPlayerAvatar):undefined};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 

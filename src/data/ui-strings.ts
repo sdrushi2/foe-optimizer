@@ -1432,12 +1432,12 @@ const UI_STRINGS = {
     en: (msg: string) => `Error during export: ${msg}`,
   },
   clipboardEmptyAlert: {
-    it: "Dati non validi: la clipboard è vuota.",
-    en: "Invalid data: the clipboard is empty.",
+    it: "Dati non validi: la clipboard è vuota. Se hai appena cliccato la bacchetta magica e hai visto un errore JavaScript sulla pagina del gioco, il tuo bookmarklet è una versione precedente: trascinane uno nuovo dai pulsanti profilo qui sopra, poi riprova.",
+    en: "Invalid data: the clipboard is empty. If you just clicked the magic wand and saw a JavaScript error on the game page, your bookmarklet is an older version: drag a new one from the profile buttons above, then try again.",
   },
   clipboardNotJsonAlert: {
-    it: "Dati non validi: il contenuto della clipboard non è JSON valido.",
-    en: "Invalid data: the clipboard content is not valid JSON.",
+    it: "Dati non validi: il contenuto della clipboard non è JSON valido. Se hai appena cliccato la bacchetta magica e hai visto un errore JavaScript sulla pagina del gioco, il tuo bookmarklet è una versione precedente: trascinane uno nuovo dai pulsanti profilo qui sopra, poi riprova.",
+    en: "Invalid data: the clipboard content is not valid JSON. If you just clicked the magic wand and saw a JavaScript error on the game page, your bookmarklet is an older version: drag a new one from the profile buttons above, then try again.",
   },
   clipboardPermissionDeniedAlert: {
     it: "Import fallito: il browser ha negato a questo sito il permesso di leggere gli appunti. Alcuni browser (es. Vivaldi, Brave) lo bloccano di default. Prova a: 1) ricaricare la pagina e riprovare; 2) controllare le autorizzazioni del sito nelle impostazioni del browser (di solito in Impostazioni > Privacy/Sicurezza > Autorizzazioni sito, voce \"Appunti\") e abilitare manualmente l'accesso per foe-optimizer.com; 3) ricaricare e riprovare.",
@@ -1458,6 +1458,18 @@ const UI_STRINGS = {
   importErrorAlert: {
     it: (detail: string) => `Errore durante l'importazione dei dati. Il profilo non è stato creato.\n\nDettaglio: ${detail}`,
     en: (detail: string) => `Error while importing data. The profile was not created.\n\nDetail: ${detail}`,
+  },
+  bookmarkletOutdatedAlert: {
+    it: "Import riuscito, ma il bookmarklet che hai usato è una versione precedente: alcuni dati potrebbero mancare o non essere aggiornati. Trascina di nuovo la bacchetta magica nella barra dei preferiti per aggiornarla, poi riprova l'import.",
+    en: "Import successful, but the bookmarklet you used is an older version: some data may be missing or outdated. Drag the magic wand to your bookmarks bar again to update it, then try importing again.",
+  },
+  bookmarkletAnnouncementTitle: {
+    it: "FoE Helper ha aggiornato la gestione degli alleati",
+    en: "FoE Helper updated how allies are handled",
+  },
+  bookmarkletAnnouncementBody: {
+    it: "Se dopo aver cliccato la bacchetta magica 🪄 sul gioco vedi un errore JavaScript (es. su \"allyList\"), il tuo bookmarklet è una versione precedente: trascinane uno nuovo dai pulsanti profilo qui sopra.",
+    en: "If clicking the magic wand 🪄 on the game shows a JavaScript error (e.g. about \"allyList\"), your bookmarklet is an older version: drag a new one from the profile buttons above.",
   },
 
   // ── Modale "Aggiornamento richiesto" (dati salvati obsoleti) ─────────

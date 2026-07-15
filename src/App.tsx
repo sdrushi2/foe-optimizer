@@ -27,15 +27,21 @@ import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, t
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { BOOKMARKLET_JS, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY, DISMISSED_ANNOUNCEMENTS_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
   isStorageOutdated
 } from "./utils/storage";
+
+// ID dell'annuncio dismissibile per il cambio di FoE Helper (Allies spostato
+// fuori da MainParser, luglio 2026, vedi CURRENT_BOOKMARKLET_VERSION in
+// data/bookmarklet.ts). ID stabile: non cambiare per non far ricomparire
+// l'annuncio a chi l'ha già chiuso.
+const BOOKMARKLET_V2_ANNOUNCEMENT_ID = "bookmarklet-v2-allies-2026-07";
 import buildingsCsv from "./assets/buildings.csv?raw";
 import alliesCsv from "./assets/allies.csv?raw";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
@@ -1766,6 +1772,17 @@ export default function App() {
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
 
+  // Annunci one-off dismissibili (vedi DISMISSED_ANNOUNCEMENTS_KEY). Array di
+  // ID già chiusi dall'utente; lazy init da localStorage come le altre chiavi.
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>(
+    () => readStoredJson(DISMISSED_ANNOUNCEMENTS_KEY, [] as string[])
+  );
+  const dismissAnnouncement = (id: string) => {
+    const updated = [...dismissedAnnouncements, id];
+    setDismissedAnnouncements(updated);
+    writeStoredJson(DISMISSED_ANNOUNCEMENTS_KEY, updated);
+  };
+
   const [storageVersion, setStorageVersion] = useState(0);
   const bumpStorage = () => setStorageVersion(v => v + 1);
 
@@ -2981,6 +2998,14 @@ export default function App() {
     // 3) Importa nel nuovo profilo nell'ordine: città → alleati → inventario.
     try {
       await handleImportAll(data, id);
+      // Import riuscito: se il bookmarklet usato è più vecchio di quello
+      // attuale (_v assente = versione "pre-versionamento", trattata come 0),
+      // avvisiamo che alcuni dati potrebbero mancare/essere sbagliati e che
+      // conviene aggiornare il bookmarklet trascinandolo di nuovo.
+      const usedVersion = typeof data._v === "number" ? data._v : 0;
+      if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
+        alert(t("bookmarkletOutdatedAlert", uiLang));
+      }
     } catch (err) {
       // L'import ha fallito DOPO che il profilo era già stato creato: può
       // capitare in caso di dati parziali che superano la validazione iniziale
@@ -4539,6 +4564,23 @@ export default function App() {
           </a>
         </nav>
       </header>
+
+      {!dismissedAnnouncements.includes(BOOKMARKLET_V2_ANNOUNCEMENT_ID) && (
+        <div className="mx-2 mt-2 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200">
+          <Info size={16} className="mt-0.5 shrink-0 text-amber-400" />
+          <div className="flex-1 leading-relaxed">
+            <p className="font-bold text-amber-300">{t("bookmarkletAnnouncementTitle", uiLang)}</p>
+            <p className="mt-0.5">{t("bookmarkletAnnouncementBody", uiLang)}</p>
+          </div>
+          <button
+            onClick={() => dismissAnnouncement(BOOKMARKLET_V2_ANNOUNCEMENT_ID)}
+            aria-label={t("closeAriaLabel", uiLang)}
+            className="shrink-0 text-amber-400/70 hover:text-amber-200 transition-colors"
+          >
+            <XIcon size={14} />
+          </button>
+        </div>
+      )}
 
       {(activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario") && (
          <div className="flex flex-wrap items-start px-2 pt-2 pb-1">
