@@ -1595,6 +1595,15 @@ const UI_STRINGS = {
     en: "Avatar not available: you are using an old version of the magic wand. Update the bookmarklet and re-import your data to see your avatar.",
   },
 
+  // ── Header gruppo Produzioni, tab Città ──────────────────────────────
+  // Chiarisce che i valori delle righe si riferiscono all'era corrente del
+  // giocatore (anche per le copie di ere precedenti — comportamento voluto,
+  // il dettaglio per-era sta nel tooltip del triangolo "obsoleto").
+  prodValuesOfEra: {
+    it: (era: string) => `valori di ${era}`,
+    en: (era: string) => `${era} values`,
+  },
+
   // ── Avviso aggiornamento service worker (vedi src/registerSW.ts) ─────
   // Solo informativo: il reload è automatico, nessun pulsante di conferma.
   swUpdateAvailable: {

@@ -3172,10 +3172,10 @@ export default function App() {
   );
 
   // ── Override ERA CORRENTE per Città e Inventario ──────────────────────────
-  // Sostituisce i valori di attacco/difesa (general, gbg, sped, iq) e IQ
-  // (iqBeni, iqAzioni, iqCap) con quelli reali dell'era corrente estratti da
-  // CityEntities all'import. Le produzioni restano quelle del CSV (non sono
-  // gestite via CityEntities); per gli edifici non nel CSV restano i "?".
+  // Sostituisce TUTTI i valori (boost militari/IQ, pop/fel e ogni produzione:
+  // FP, beni, monete, materiali, reward speciali...) con quelli reali dell'era
+  // corrente del giocatore, estratti da CityEntities all'import. I dettagli
+  // sono nel commento dentro la funzione.
   const applyEraStats = useCallback(function <T extends Building>(b: T): T {
     if (eraStats.size === 0 || !b.cityEntityId) return b;
     // GE e fallback hanno già i valori corretti (dai dati di gioco). Le
@@ -3475,12 +3475,6 @@ export default function App() {
     });
     return out;
   }, [entityLevels, currentEraId]);
-
-  // ── Override ERA CORRENTE per Città e Inventario ──────────────────────────
-  // Sostituisce i valori di attacco/difesa (general, gbg, sped, iq) e IQ
-  // (iqBeni, iqAzioni, iqCap) con quelli reali dell'era corrente estratti da
-  // CityEntities all'import. Le produzioni restano quelle del CSV (non sono
-  // gestite via CityEntities); per gli edifici non nel CSV restano i "?".
 
   // Sorgente base per la tab attiva. Separata dal filtro così l'override era
   // (sotto) non dipende da activeTab in modo opaco.
@@ -5495,7 +5489,18 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center section-divider text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
-                          <th className="text-center section-divider text-orange-400/80" colSpan={20}>{t("groupProductions", uiLang)}</th>
+                          <th className="text-center section-divider text-orange-400/80" colSpan={20}>
+                            {t("groupProductions", uiLang)}
+                            {/* Solo tab Città: i valori delle righe sono riferiti all'era
+                                corrente del giocatore (vedi applyEraStats), anche per le
+                                copie di ere precedenti — esplicitarlo evita di scambiare
+                                il valore "alla tua era" per quello reale della copia. */}
+                            {activeTab === "propria_citta" && currentEra && (
+                              <span className="ml-1.5 font-normal normal-case text-orange-300/70">
+                                ({t("prodValuesOfEra", uiLang, ageName(currentEra, gameLang))})
+                              </span>
+                            )}
+                          </th>
                         )}
                       </tr>
                       <tr className="bg-slate-900/60 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
