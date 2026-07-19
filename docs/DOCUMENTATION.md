@@ -20,6 +20,7 @@
 6. [Il bookmarklet (bacchetta magica)](#6-il-bookmarklet-bacchetta-magica)
 7. [Modello dati centrale: `Building`](#7-modello-dati-centrale-building)
 8. [I file di dati statici (`assets/`)](#8-i-file-di-dati-statici-assets)
+   - 8bis. [La pipeline dati esterna: RECUPERO DATI](#8bis-la-pipeline-dati-esterna-dfoerecupero-dati)
 9. [Sistema multilingua](#9-sistema-multilingua)
 10. [Le ere del gioco (`ages.ts`)](#10-le-ere-del-gioco-agests)
 11. [Classificazione degli edifici (`buildingClassification.ts`)](#11-classificazione-degli-edifici-buildingclassificationts)
@@ -37,6 +38,7 @@
 23. [Eventi (filtro per evento)](#23-eventi-filtro-per-evento)
 24. [Orchestrazione: `App.tsx`](#24-orchestrazione-apptsx)
 25. [Configurazione di build](#25-configurazione-di-build)
+    - 25bis. [PWA, service worker, cache e deploy](#25bis-pwa-service-worker-cache-e-deploy)
 26. [Invarianti e principi da non violare](#26-invarianti-e-principi-da-non-violare)
 27. [Glossario dei termini FoE](#27-glossario-dei-termini-foe)
 
@@ -188,13 +190,25 @@ src/
 │   └── storage.ts             # Persistenza localStorage + versioning + profili
 │
 ├── components/
-│   └── CityMapView.tsx        # Componente mappa città (UI, fuori ambito)
+│   ├── AboutModal.tsx         # Modale info/crediti (con link a PRIVACY.md)
+│   ├── CityMapView.tsx        # Componente mappa città (UI, fuori ambito)
+│   ├── EfficiencyHelpModal.tsx # Modale di aiuto sull'efficienza
+│   └── ProfileHelpModal.tsx   # Modale di aiuto sui profili
 │
 ├── App.tsx                    # Orchestrazione: stato, wiring, rendering
 ├── main.tsx                   # Entry point (monta App, inizializza ages)
+├── registerSW.ts              # Registrazione service worker + avviso update (§25bis)
 ├── index.css                  # Stili globali (UI)
 └── vite-env.d.ts              # Dichiarazioni tipi Vite
 ```
+
+Fuori da `src/`, nel repo: `public/` (file statici serviti alla radice, fuori dal
+bundle: manifest e icone PWA, `guida.html`/`guide.html` — la guida online IT/EN —
+`404.html`, `.well-known/security.txt`, `sitemap.xml`, `robots.txt`, `CNAME`, tutorial
+jpg/mp4), `sw-template.js` (template del service worker, §25bis), `PRIVACY.md`
+(informativa privacy, linkata da AboutModal), `docs/` (questa documentazione e la
+skill), `.github/workflows/deploy.yml` (CI con gate typecheck+lint, §25) e
+`check-all.bat` (catena di controllo locale pre-commit, **gitignored**, §25).
 
 ### Le tre "cartelle logiche" e la loro gerarchia di dipendenze
 
@@ -272,7 +286,7 @@ globali del gioco e raccoglie:
 | Sorgente nel gioco | Cosa contiene |
 |---|---|
 | `MainParser.Inventory` | Tutti gli item dell'inventario (edifici, kit, frammenti, consumabili). |
-| `MainParser.Allies.allyList` | Gli alleati posseduti dal giocatore. |
+| `Allies.allyList` (fallback: `MainParser.Allies.allyList`) | Gli alleati posseduti dal giocatore. Da luglio 2026 FoE Helper espone `Allies` come oggetto globale a sé stante; il bookmarklet prova prima il nuovo percorso e ripiega sul vecchio per le versioni non aggiornate. |
 | `MainParser.CityMapData` | La disposizione della città (quali edifici, dove, a che livello). |
 | `MainParser.CityEntities` | Le definizioni complete delle entità (statistiche per era). |
 | `CityMap.Main.unlockedAreas` | Le aree di città sbloccate (spazio disponibile). |
@@ -284,6 +298,22 @@ per i browser senza `navigator.clipboard`).
 **Ottimizzazione delle aree:** per ridurre la dimensione del payload, le aree sbloccate
 standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `width`,
 `length` (ricostruibili al default 4) e `__class__`.
+
+**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`).** Il payload include
+un campo `_v` la cui versione corrente è la costante esportata
+`CURRENT_BOOKMARKLET_VERSION`, **interpolata** direttamente dentro `BOOKMARKLET_JS`
+(nessun numero duplicato da tenere sincronizzato a mano). All'import, `handleWandClick`
+in App.tsx confronta il `_v` del payload con la versione corrente (`_v` assente =
+versione pre-versionamento, trattata come 0): se è inferiore, mostra un alert
+(`bookmarkletOutdatedAlert`) che invita a ri-trascinare il bookmarklet aggiornato. Si
+incrementa quando cambia il MODO in cui il bookmarklet legge i dati dal gioco (es. FoE
+Helper che ristruttura un oggetto globale), non per modifiche cosmetiche. v2 (luglio
+2026): lo spostamento di `Allies` fuori da `MainParser` descritto sopra — la lettura
+è cambiata (con fallback, quindi retrocompatibile), la struttura del payload no.
+Contestualmente, in home è stato mostrato un **annuncio one-off dismissibile**
+(`BOOKMARKLET_V2_ANNOUNCEMENT_ID = "bookmarklet-v2-allies-2026-07"`, persistito in
+`DISMISSED_ANNOUNCEMENTS_KEY`, vedi §21): l'ID di un annuncio già pubblicato non va
+mai cambiato, o riapparirebbe a chi l'ha chiuso.
 
 > **REGOLA CRITICA:** ciò che **non va modificato** è la **struttura dei dati** che il
 > bookmarklet raccoglie ed esporta — l'oggetto `data` con i suoi 5 campi obbligatori (`inventory`,
@@ -483,8 +513,13 @@ Formato a punto e virgola. Colonne:
 Id; NomeIta; NomeEng; Rarity; MaxLevel; Val1;
 GenAtk_A; GenDef_A; GenAtk_D; GenDef_D;
 CampiAtk_A; CampiDef_A; CampiAtk_D; CampiDef_D;
-SpedAtk_A; SpedDef_A; SpedAtk_D; SpedDef_D
+SpedAtk_A; SpedDef_A; SpedAtk_D; SpedDef_D;
+abilityIta; abilityEng
 ```
+
+`abilityIta`/`abilityEng` sono la descrizione testuale dell'abilità speciale
+dell'alleato, per lingua; vuote per la maggior parte degli alleati (solo alcuni hanno
+un'abilità speciale documentata).
 
 La colonna `Rarity` è **numerica** (1–5), lingua-neutra:
 
@@ -507,9 +542,19 @@ sono per la visualizzazione.
 ### 8.4 `events.csv` — mappatura eventi → edifici
 
 Formato: `NomeEvento;token1,token2,...`. Ogni riga associa un evento del gioco a una
-lista di **token** (frammenti di ID edificio). Serve al filtro "mostra solo gli
-edifici di questo evento". Righe speciali tipo `[ EVENTI 2026 ]` fungono da
-intestazione-gruppo per un anno. Vedi §23.
+lista di **token**. Serve al filtro "mostra solo gli edifici di questo evento". Righe
+speciali tipo `[ EVENTI 2026 ]` fungono da intestazione-gruppo per un anno.
+
+Due tipi di token (gestiti da `buildingMatchesEvent` in App.tsx):
+
+- **sottostringa** (es. `D24A1`): match con `includes`, case-insensitive;
+- **`=` + ID intero** (es. `=A_MULTIAGE_BONUS1`): match **esatto** — è il fallback
+  usato quando nessuna sottostringa è esclusiva dell'evento, e il match esatto evita
+  i falsi positivi sui prefissi (`BONUS1` non deve matchare `BONUS10`). I token senza
+  `=` degli events.csv precedenti restano validi (semantica substring invariata).
+
+Il file è generato da `events.py` nella pipeline RECUPERO DATI (§8bis), lanciato
+manualmente ~1 volta al mese; l'output va copiato a mano in `src/assets`. Vedi §23.
 
 ### 8.5 `kit.json` — catene di upgrade e selection kit
 
@@ -532,6 +577,74 @@ Gli `shrink_kit_` sono kit di rimpicciolimento (non aggiornano). Gli
 Contiene icone PNG codificate come data URI (stringhe base64), usate nelle tabelle
 (es. icone per consumabili, frecce di aggiornamento). Essendo inline, non richiedono
 richieste di rete e funzionano offline.
+
+---
+
+## 8bis. La pipeline dati esterna: `D:\FOE\RECUPERO DATI`
+
+I file di `assets/` **non si scrivono a mano**: li genera una pipeline Python che vive
+in `D:\FOE\RECUPERO DATI`, una cartella **fuori dal repo** dell'app (per lavorarci va
+condivisa a parte). Questa sezione documenta la pipeline quanto basta per non violarne
+i contratti dal lato app.
+
+### 8bis.1 Le fonti
+
+Con FoE Helper attivo, il gioco espone oggetti globali "lessicali" (dichiarati
+`let`/`const`, quindi visibili in console ma NON proprietà di `window`): `MainParser`
+(~70 MB, il database principale), `Allies` (da luglio 2026 **staccato** da
+`MainParser` come oggetto a sé stante, stessa struttura interna con `meta`/`allyList`)
+e `CityMap`. Un **bookmarklet dedicato dell'utente** (diverso dalla bacchetta magica
+dell'app) scarica da ogni server i dump come file di testo:
+
+- dal server **beta inglese** (`zz1.forgeofempires.com`): `MainParser.txt`,
+  `Allies.txt` e il manifest **`ForgeHX-*.js`** (nome che cambia a ogni release del
+  gioco; contiene il FileList con gli **hash immagine** di ~50k asset, da cui la
+  colonna `Hash` di buildings.csv e quindi le immagini degli edifici);
+- dal server **italiano** (`it6`): `MainParser_ita.txt` e `Allies_ita.txt` (solo per
+  i nomi ITA; niente ForgeHX).
+
+### 8bis.2 L'orchestratore: `VAI2.bat` / `vai2.py`
+
+Il flusso normale dell'utente è: bookmarklet su zz1 → bookmarklet su it6 → doppio
+click su `VAI2.bat`. Lo script: pesca i file più recenti da `C:\Users\Sdrushi\Downloads`
+(rifiuta file più vecchi di 24h per non riusare download del giro prima; gestisce i
+nomi duplicati di Chrome tipo `MainParser (1).txt`), li sposta in RECUPERO DATI
+eliminando i ForgeHX obsoleti, esegue la pipeline con i suoi gate, copia i tre output
+(`buildings.csv`, `allies.csv`, `kit.json`) in `src/assets/` del progetto e li
+archivia in `assets\`, e infine fa **commit+push dei soli file dati, solo se git vede
+differenze reali** — il push innesca la GitHub Action di deploy. `VAI.bat` è il
+vecchio flusso manuale, destinato all'eliminazione: non investirci.
+
+### 8bis.3 Gli script
+
+Tutti gli script hanno **gate**: si fermano con errore invece di produrre output
+vuoti o parziali (es. `allies.py` esce con errore se trova 0 alleati, invece di
+scrivere un CSV vuoto che sembrerebbe un run riuscito).
+
+- **`buildings.py`** — genera `buildings.csv` da MainParser + ForgeHX (nome storico:
+  `city_entities_to_csv.py`, ancora citato così nei commenti di `BuildingModel.ts`).
+  Il parser del FileList usa una scansione a graffe bilanciate (robusta
+  all'annidamento), la stessa tecnica di `getIcons.py`.
+- **`allies.py`** — genera `allies.csv` da `Allies.txt`/`Allies_ita.txt`. Il parsing
+  tollera tre formati (nuovo `{"Allies":{...}}`, vecchio `MainParser.Allies`, oggetto
+  bare — così funziona anche sui file d'archivio) e recupera gli alleati completi
+  anche da file troncati.
+- **`linnun.py`**, **`lin_inject.py`**, **`confronta_buildings.py`** — modello
+  predittivo per la colonna `Lin` (db di training protetto `lin_training.db`); i nomi
+  alleati arrivano dagli stessi file Allies.
+- **`parse_kit.py`** — genera `kit.json`.
+- **`events.py`** — genera `events.csv` (token `=` inclusi, vedi §8.4 e §23). Fuori
+  dai flussi automatici: lo lancia l'utente manualmente ~1 volta al mese, e richiede
+  un `buildings_linnun_raw.csv` fresco (cioè un run VAI2 recente); l'output va copiato
+  a mano in `src/assets`.
+- **`getIcons.py`** — estrae le icone.
+
+### 8bis.4 Il vincolo di coerenza con l'app
+
+`extractMonMat` in `BuildingModel.ts` (§13) è la **traduzione fedele riga-per-riga**
+dell'algoritmo Mon/Mat di `buildings.py`: il CSV statico e la città importata devono
+restare coerenti *per costruzione*. Se si modifica l'algoritmo su un lato, va
+modificato anche l'altro — non basta rigenerare il CSV.
 
 ---
 
@@ -889,10 +1002,11 @@ di `guild_raids_goods_start`→`IQBeni`, target sempre `"all"`).
 A differenza delle altre funzioni di estrazione (scritte direttamente in TypeScript
 seguendo i pattern del modulo), `extractMonMat` è una **traduzione fedele, riga per
 riga**, di una funzione Python equivalente (`extract_mon_mat`) che vive in uno script
-esterno al progetto: `city_entities_to_csv.py`. Quello script genera `buildings.csv`
-partendo da un dump offline del gioco (`MainParser.txt`); questa funzione TypeScript fa
-lo stesso lavoro sui dati live del bookmarklet (`CityEntityDefinition`), per le città
-importate. Le due fonti (CSV statico, sempre fissato all'era `SpaceAgeSpaceHub`, e città
+esterno al progetto: `buildings.py` nella pipeline RECUPERO DATI (§8bis; nome storico
+`city_entities_to_csv.py`, ancora citato così nei commenti di `BuildingModel.ts`).
+Quello script genera `buildings.csv` partendo da un dump offline del gioco
+(`MainParser.txt`); questa funzione TypeScript fa lo stesso lavoro sui dati live del
+bookmarklet (`CityEntityDefinition`), per le città importate. Le due fonti (CSV statico, sempre fissato all'era `SpaceAgeSpaceHub`, e città
 importata, sull'era reale del giocatore) devono restare coerenti per costruzione: se
 l'algoritmo Python cambia, va aggiornata anche questa funzione, e viceversa.
 
@@ -943,11 +1057,16 @@ statistiche.
 ### 14.1 Tipi
 
 - **`Ally`** — un alleato dal catalogo (`allies.csv`): `id`, `names` (multilingua),
-  `rarity` (1–5), `maxLevel`, `val1` (valore base), e i 4 blocchi di bonus
-  (general/gbg/sped/iq).
+  `rarity` (1–5), `maxLevel`, `val1` (valore base), i 4 blocchi di bonus
+  (general/gbg/sped/iq) e `abilityIta`/`abilityEng` (descrizione dell'abilità
+  speciale, vuota per la maggior parte degli alleati).
 - **`ImportedAlly`** — un alleato posseduto dal giocatore: `jsonId`, `allyId`,
   `rarity`, `level`, `isPlaced` (se è piazzato in città), `isFragment` (se è solo un
-  frammento, non ancora un alleato intero), `fragmentCount`.
+  frammento, non ancora un alleato intero), `fragmentCount`, e
+  `placedInMapEntityId?` — l'id grezzo dell'**istanza** sulla mappa (chiave in
+  CityMapData) che ospita l'alleato: distingue QUALE copia specifica, tra più istanze
+  dello stesso `cityEntityId`, e alimenta il filtro alleati per slot in App.tsx (la
+  controparte lato mappa è `mapEntityId` in `CityMapBuilding`, §17).
 - **`ComputedAllyStats`** — le statistiche calcolate (con ereditarietà): i 4 blocchi
   `computedGeneral/Gbg/Sped/Iq`.
 
@@ -1182,8 +1301,19 @@ scelta esclusiva (può usarlo una volta sola, per una famiglia). La conservazion
 
 ### 16.7 L'output e `buildInvRows`
 
-`computeAllFamilies(invUpg, invSel, invBld)` è la funzione pubblica. Restituisce un
-array di `FamilyResult`, uno per famiglia toccata. Ogni risultato distingue:
+`computeAllFamilies(invUpg, invSel, invBld)` è la funzione pubblica.
+
+> ⚠️ **Contratto di mutazione:** `invUpg` viene **CONSUMATA** (mutata in place) durante
+> l'ottimizzazione — `buildInvRows` decrementa le quantità dei kit di upgrade man mano
+> che vengono applicati agli edifici in inventario, e il consumo si propaga tra
+> famiglie successive nello stesso giro. `invSel` e `invBld` sono invece solo lette.
+> Il chiamante deve quindi passare Map **costruite fresche** ad ogni chiamata (come fa
+> il `useMemo` `familyResults` in App.tsx), mai una Map condivisa con lo stato React o
+> riusata tra chiamate: riusarla produrrebbe risultati diversi al secondo giro con lo
+> stesso inventario.
+
+Restituisce un array di `FamilyResult`, uno per famiglia toccata. Ogni risultato
+distingue:
 
 - **`output`** — edifici **costruibili da zero** usando i kit (es. da selection kit che
   forniscono la base). Ogni riga ha livello, quantità, gli ID degli edifici prodotti,
@@ -1216,6 +1346,10 @@ Un modulo di **soli tipi** (nessuna logica) per la visualizzazione della mappa c
   i flag `isGreatBuilding`, `isMilitary`, `isNeedlessRoad` (strada inutile),
   `isInactive`, `isSuppliesProducer` (produttore di materiali). Questi flag sono
   obbligatori (sempre valorizzati alla costruzione, che avviene in un solo punto).
+  Include anche `mapEntityId` — l'id grezzo dell'**istanza** sulla mappa (chiave in
+  CityMapData), distinto da `entityId` (che è il tipo di edificio, uguale per più
+  copie): permette di associare una specifica copia al proprio alleato piazzato
+  (`placedInMapEntityId` in §14).
 - **`CityMapBounds`** — i confini della griglia: `minX`, `minY`, `maxX`, `maxY`. Usati
   per dimensionare e posizionare la mappa.
 
@@ -1378,7 +1512,12 @@ foe_p_<profileId>_allies_v2
 ```
 
 Più altre chiavi globali per le impostazioni: difesa, spedizioni
-(abilitate/attacco), sigma, mappa aperta, vista database.
+(abilitate/attacco), sigma, colonne pop/fel/IQ-prod/produzioni, mappa aperta, vista
+database, lingua UI, e `DISMISSED_ANNOUNCEMENTS_KEY` — chiave **unica** per gli
+annunci one-off dismissibili in home: il valore è un array di ID di annuncio già
+chiusi dall'utente (più annunci nel tempo condividono questa singola chiave; es.
+`bookmarklet-v2-allies-2026-07`, vedi §6.1). L'ID di un annuncio già pubblicato non
+va mai cambiato, o riapparirebbe a chi l'ha chiuso.
 
 **Rotazione versione:** incrementare `STORAGE_FORMAT_VERSION` invalida automaticamente
 tutte le chiavi delle versioni precedenti. I dati vecchi non vengono più letti e
@@ -1398,8 +1537,11 @@ salvataggio. Le chiavi globali (piccole) non vengono compresse.
 
 - **`readStoredJson(key, fallback)`** — legge, decomprime se necessario, fa il parse
   JSON. Restituisce il fallback su qualsiasi errore (chiave assente, JSON corrotto).
-- **`writeStoredJson(key, value)`** — serializza, comprime se necessario, salva. Non
-  rilancia in caso di errore (tipicamente quota piena), ma logga un warning.
+- **`writeStoredJson(key, value)`** — serializza, comprime se necessario, salva.
+  Ritorna **`boolean`**: non rilancia in caso di errore (tipicamente quota piena), ma
+  logga un warning e restituisce `false`. I chiamanti che devono reagire a un
+  salvataggio fallito (es. `mergeImportedProfiles` con `failedKeys`) controllano il
+  valore di ritorno; gli altri possono ignorarlo.
 
 ### 21.3 Rianimazione di strutture
 
@@ -1419,8 +1561,11 @@ salvataggio. Le chiavi globali (piccole) non vengono compresse.
 
 - **`collectFoeLocalStorage()`** — raccoglie tutte le chiavi `foe_` in uno snapshot
   (per l'export su file JSON).
-- **`mergeImportedProfiles(snapshot)`** — importa profili da uno snapshot, fondendoli
-  con quelli esistenti (vedi §22).
+- **`mergeImportedProfiles(snapshot, fallbackProfileName?)`** — importa profili da uno
+  snapshot, fondendoli con quelli esistenti (vedi §22). Il secondo parametro dà il
+  nome ai profili importati senza nome: storage.ts non ha accesso a `uiLang`/`t()`,
+  quindi il chiamante (App.tsx) passa la versione localizzata (`defaultProfileName`);
+  il default `"Profilo N"` resta solo come rete di sicurezza.
 
 ---
 
@@ -1472,8 +1617,11 @@ corrente e raccolgono tutti i token di quella riga (così si può filtrare per "
 edifici del 2026").
 
 `buildingMatchesEvent(cityEntityId, event)` verifica se un edificio appartiene a un
-evento: controlla se l'ID dell'edificio contiene uno dei token dell'evento
-(case-insensitive). Permette all'utente di filtrare la tabella per mostrare solo gli
+evento, gestendo i **due tipi di token** (vedi §8.4): un token che inizia con `=` è un
+confronto **esatto** con l'ID intero (fallback anti-falsi-positivi: `BONUS1` non deve
+matchare `BONUS10`), un token senza `=` è un match `includes` case-insensitive come in
+passato (retrocompatibile con gli events.csv precedenti). Permette all'utente di
+filtrare la tabella per mostrare solo gli
 edifici di un certo evento.
 
 ---
@@ -1538,6 +1686,37 @@ Stato aggiuntivo caricato da `CityStore` all'import:
 
 `exactBuildingSum` (definito dentro il rendering della tab statistiche) calcola somme
 esatte tenendo conto che le copie di un edificio possono essere in ere diverse.
+
+**Semantica dell'override era (`applyEraStats`) — comportamento voluto.** Nelle tab
+Città e Inventario l'override è **totale**: boost militari/IQ, pop, fel e ogni
+produzione vengono sostituiti con i valori dell'**era corrente del giocatore**, anche
+per le copie di ere precedenti. La riga è quindi il *potenziale alla propria era*; la
+precisione per-copia vive nel triangolino "obsoleto" (tooltip col confronto era
+vecchia → corrente) e nel riepilogo PROD+STAT (somme esatte per era via
+`entityInstanceEraStats`). Per esplicitarlo, l'header di gruppo "📦 PRODUZIONI" nella
+sola tab Città mostra "(valori di <era>)" (`prodValuesOfEra` +
+`ageName(currentEra, gameLang)`). Non "correggere" la riga per mostrare l'era reale
+della copia: la decisione è stata presa consapevolmente con l'utente (luglio 2026).
+
+**Altre aggiunte recenti da conoscere (luglio 2026):**
+
+- **Ricerca con debounce** — `setDebouncedSearchTerm` + `prevSearchTermRef`: il
+  filtro testo non rielabora la tabella a ogni tasto.
+- **Filtro "Store building"** — `showStoreBuildingBuildings` in `TabFilters`
+  (default `true`): se disattivato, esclude gli edifici con `imm > 0`.
+- **Filtro alleati per slot** — usa `mapEntityId` (§17) / `placedInMapEntityId`
+  (§14) per associare ogni copia specifica al proprio alleato.
+- **Pulsante Help** — nella barra tab, apre `/guida.html` o `/guide.html` (guida
+  online in `public/`, fuori bundle) secondo `uiLang`.
+- **Annunci one-off dismissibili** — `dismissedAnnouncements`/`dismissAnnouncement`,
+  persistiti in `DISMISSED_ANNOUNCEMENTS_KEY` (§21.1); esempio reale in §6.1.
+- **Avviso bookmarklet obsoleto** — all'import, se `_v` del payload <
+  `CURRENT_BOOKMARKLET_VERSION` (§6.1), alert `bookmarkletOutdatedAlert`.
+- **Popup immagine con chiusura ritardata** — timer
+  `scheduleImagePopupClose`/`cancelImagePopupClose`: il mouse può attraversare lo
+  spazio tra trigger e pannello (e copiare nome/ID) senza che il popup si chiuda.
+- **`SortableHeader` con prop `noGap`** — rimuove il gap icona/freccia SOLO nelle 20
+  colonne strette della sezione Produzioni.
 
 ### 24.3bis `BuildingRow`: la riga della tabella principale, estratta e memoizzata
 
@@ -1759,13 +1938,35 @@ Il ciclo di lavoro per ogni modifica:
 
 Il bundle attuale è circa 1 MB (≈ 296 KB gzippato).
 
+### CI e controlli locali
+
+La GitHub Action di deploy (`.github/workflows/deploy.yml`) esegue **Typecheck
+(`tsc --noEmit`) e Lint come gate** prima della build: Vite/esbuild non tipizzano in
+fase di build, quindi senza questi step un errore TypeScript finirebbe in produzione.
+
+In locale l'utente usa **`check-all.bat`** (root del repo, **gitignored**): la catena
+completa pre-commit — `npm ci` (non `npm install`: riproduce esattamente il lockfile
+come fa la CI) → report **informativi non bloccanti** (npm outdated, ncu, npm audit,
+knip — knip può fallire per limiti di memoria dell'ambiente senza che sia un problema
+del codice) → gate **bloccanti** (madge per i cicli di import, typecheck, lint, build).
+
+### Dipendenze pinnate deliberatamente
+
+- **`typescript` resta sulla 6.x**: `typescript-eslint` dichiara peer dependency
+  `typescript >=4.8.4 <6.1.0` — aggiornare a TS 7.x romperebbe il linting type-aware.
+  Rivalutare solo quando typescript-eslint pubblicherà il supporto esplicito alla 7.x.
+- **`pako` resta sulla 2.x** (major 3 non adottata).
+
+Le altre dipendenze si aggiornano normalmente ai minor/patch (verificando poi il ciclo
+di build completo).
+
 ### Configurazione ESLint
 
 `eslint.config.js` (flat config) usa `@eslint/js`, `typescript-eslint`,
 `eslint-plugin-react-hooks` e `eslint-plugin-security`. Regole chiave:
 `react-hooks/rules-of-hooks` (error), `exhaustive-deps` (warn), `eqeqeq` (error),
 `no-explicit-any` (warn). La regola `security/detect-object-injection` è disattivata
-(genera falsi positivi su accessi `obj[key]` legittimi). Esistono **3 warning di
+(genera falsi positivi su accessi `obj[key]` legittimi). Esistono **2 warning di
 sicurezza preesistenti** (su regex con argomenti non-letterali in `BuildingModel.ts` e
 `format.ts`) che sono **falsi positivi accettati**: gli input sono sempre stringhe
 controllate, non input utente.
@@ -1793,8 +1994,12 @@ ripeterli.
 - **`sw-template.js`** (root, NON in `public/`) — il template del service worker.
 - **`src/registerSW.ts`** — registra il SW (no-op in dev) e gestisce l'avviso di update.
 - **`vite.config.ts`** — il plugin che genera `dist/sw.js` dal template.
-- Icone: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon.png`/`.ico`,
-  `og-image.png`. Tutte alla radice del dominio, fuori dal bundle.
+- Icone: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` (+ varianti
+  `-precomposed` e `-120x120`), `favicon.png`/`.ico`, `og-image.png`. Tutte alla radice
+  del dominio, fuori dal bundle.
+- Altre pagine statiche fuori bundle (in `public/`): `guida.html`/`guide.html` (guida
+  online IT/EN, aperta dal pulsante Help), `404.html`, `.well-known/security.txt`,
+  `sitemap.xml`, `robots.txt`, tutorial jpg/mp4.
 
 ### Icone: `purpose: "any"`, non `"any maskable"`
 
@@ -1811,12 +2016,24 @@ nessun file aggiuntivo da creare. Non reintrodurre `"any maskable"` per "complet
 - **Visite successive:** l'app viene servita ISTANTANEAMENTE dalla cache; in background si
   controlla se c'è una versione nuova.
 - **Offline:** l'app funziona comunque (è tutto client-side).
-- **Update:** quando il nuovo SW è installato (e c'è già un controller attivo),
-  `registerSW.ts` mostra un toast non invasivo "Nuova versione disponibile / Ricarica". Al
-  click, manda `SKIP_WAITING` al SW e ricarica una volta (gestito via `controllerchange`).
+- **Update (flusso attuale, senza pulsanti):** il SW chiama **`skipWaiting()` da solo
+  all'install**; `registerSW.ts` mostra solo un avviso informativo bilingue (chiave
+  `swUpdateAvailable`; la lingua la legge direttamente da `UI_LANG_KEY`, perché il
+  modulo vive fuori da React) e, al `controllerchange`, **ricarica automaticamente**
+  dopo ~1,2s — il ritardo lascia il tempo di leggere l'avviso, che altrimenti il
+  refresh sembrerebbe un glitch. Il vecchio toast con pulsanti "Ricarica"/"Ignora" e
+  il messaggio `SKIP_WAITING` non esistono più: non reintrodurli.
 
 Il SW intercetta solo GET same-origin; POST e richieste cross-origin (es. eventuali
 chiamate esterne) passano direttamente in rete.
+
+> ⚠️ **Chiave di cache delle navigazioni = URL richiesto, non `/` fisso.** L'app è
+> single-file e la root `/` resta il caso principale, ma il sito ha pagine statiche
+> indipendenti fuori dal bundle (`/guida.html`, `/guide.html`): quando la chiave era
+> fissa a `/`, navigare verso una di queste pagine serviva l'ultima pagina cachata
+> sotto `/` (cioè l'app al posto della guida) finché un refresh non aggiornava quella
+> chiave. Il SW ora usa `cache.match(request)`/`cache.put(request, ...)`. Non
+> "semplificare" tornando alla chiave fissa.
 
 ### ⚠️ Trappola 1: la versione cache deve cambiare a OGNI build
 
@@ -1885,7 +2102,10 @@ Queste sono le regole d'oro per modificare il progetto in sicurezza:
 2. **Non modificare la struttura dati di `BOOKMARKLET_JS`** (l'oggetto `data` e i suoi 5
    campi): è il contratto di import, cambiarla rompe i bookmarklet già salvati. I
    dettagli non-dato (es. messaggi di `alert()`) si possono invece modificare — la
-   struttura resta valida e i vecchi bookmarklet continuano a funzionare. Vedi §6.1.
+   struttura resta valida e i vecchi bookmarklet continuano a funzionare. Quando è il
+   GIOCO/FoE Helper a cambiare, il pattern corretto è: lettura col fallback sul vecchio
+   percorso + bump di `CURRENT_BOOKMARKLET_VERSION` (esempio reale v2 in §6.1) — mai
+   una rottura secca del contratto. Vedi §6.1.
 
 3. **Una sola sorgente di verità.** I tipi del payload stanno solo in `bookmarklet.ts`,
    le lingue solo in `languages.ts`, i pattern ID e i nomi consumabili solo in
@@ -1917,8 +2137,16 @@ Queste sono le regole d'oro per modificare il progetto in sicurezza:
     prima di essere accettata. Le ottimizzazioni di performance non devono mai cambiare
     il risultato.
 
-11. **Non "correggere" i 3 warning ESLint di sicurezza preesistenti.** Sono falsi
-    positivi su regex con input controllati.
+11. **Non "correggere" i 2 warning ESLint di sicurezza preesistenti.** Sono falsi
+    positivi su regex con input controllati (`BuildingModel.ts` e `format.ts`).
+
+12. **`computeAllFamilies` consuma `invUpg`.** Passare sempre Map costruite fresche
+    (vedi §16.7): riusare una Map tra chiamate produce risultati diversi al secondo
+    giro con lo stesso inventario.
+
+13. **Tab Città = valori all'era del giocatore.** L'override totale di `applyEraStats`
+    (anche per le copie di ere precedenti) è un comportamento deciso consapevolmente,
+    esplicitato dall'header "(valori di <era>)" — non è un bug da correggere (§24.3).
 
 ---
 
