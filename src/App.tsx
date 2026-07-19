@@ -459,10 +459,21 @@ const EVENTS_LIST: EventEntry[] = (() => {
   return entries;
 })();
 
+// Due tipi di token in events.csv (generati da events.py in RECUPERO DATI):
+//  - sottostringa (es. "D24A1"): match con includes, case-insensitive;
+//  - "=" + ID intero (es. "=A_MULTIAGE_BONUS1"): match ESATTO — è il fallback
+//    usato quando nessuna sottostringa è esclusiva dell'evento, e il match
+//    esatto evita i falsi positivi sui prefissi (BONUS1 non deve matchare
+//    BONUS10). I token senza "=" degli events.csv precedenti restano validi
+//    (semantica substring invariata).
 const buildingMatchesEvent = (cityEntityId: string, event: EventEntry | null | undefined): boolean => {
   if (!event || event.tokens.length === 0) return false;
   const idUpper = cityEntityId.toUpperCase();
-  return event.tokens.some((token) => idUpper.includes(token.toUpperCase()));
+  return event.tokens.some((token) =>
+    token.startsWith("=")
+      ? idUpper === token.slice(1).toUpperCase()
+      : idUpper.includes(token.toUpperCase())
+  );
 };
 
 // --- HELPER COMPONENTS ---
