@@ -7,6 +7,11 @@
 > Questo documento descrive **l'architettura, i dati e tutta la logica** del tool.
 > L'interfaccia grafica (layout, stili, componenti visivi) è deliberatamente **fuori
 > ambito**: qui si documenta il "motore", non la presentazione.
+>
+> ⚠️ **REGOLA DI MANUTENZIONE**: questo file e `docs/SKILL.md` vanno tenuti SEMPRE
+> allineati al codice — ogni modifica al progetto o alla pipeline che tocca un
+> comportamento qui descritto va riflessa nello stesso giro di lavoro. Quando cambia
+> `docs/SKILL.md`, la skill installata va ricaricata dalle impostazioni.
 
 ---
 
@@ -295,6 +300,14 @@ globali del gioco e raccoglie:
 Costruisce un oggetto JSON e lo copia negli appunti (con fallback su `execCommand`
 per i browser senza `navigator.clipboard`).
 
+**Guard "FoE Helper è cambiato".** Prima di costruire il payload, lo script verifica
+che ALMENO uno dei due percorsi alleati esista (`Allies` globale o legacy
+`MainParser.Allies`): se mancano entrambi, si ferma con un alert chiaro che invita a
+riscaricare la bacchetta dal sito, invece di lasciar esplodere un TypeError criptico
+("Cannot read properties of undefined"). Lezione del passaggio v1→v2: gli utenti con
+lo script vecchio nei preferiti vedono solo l'errore del LORO script, quindi il
+messaggio utile va predisposto PRIMA della prossima rottura, non dopo.
+
 **Ottimizzazione delle aree:** per ridurre la dimensione del payload, le aree sbloccate
 standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `width`,
 `length` (ricostruibili al default 4) e `__class__`.
@@ -569,8 +582,17 @@ manualmente ~1 volta al mese; l'output va copiato a mano in `src/assets`. Vedi �
   lista di ID che quel kit di selezione può produrre. Ci sono ~407 selection kit.
 
 I prefissi dei kit indicano il "tier": `golden_`, `silver_`, `platinum_`, oppure base.
-Gli `shrink_kit_` sono kit di rimpicciolimento (non aggiornano). Gli
-`selection_kit_epic_` sono kit jolly che offrono opzioni di molte famiglie diverse.
+Il tier va riconosciuto SOLO dal prefisso (così fa `kitTier` in inventory.ts): ~31
+kit hanno token silver/gold altrove nell'id perché fanno parte del NOME
+dell'edificio (`upgrade_kit_golden_crops` = Golden Crops) o di una variante di
+livello degli insediamenti (`..._statue_gold`) — un match sul token ovunque li
+scambierebbe per kit di tier.
+Gli `shrink_kit_` sono kit di rimpicciolimento: riducono le dimensioni dell'edificio
+conservandone la produzione, quindi ne aumentano l'efficienza — sono **kit di
+aggiornamento a tutti gli effetti** (decisione di dominio, luglio 2026) e le loro 4
+catene stanno in `buildingUpgrades` come le altre (una è a 2 step:
+Expedition16 → Small → 24Tiny). Gli `selection_kit_epic_` sono kit jolly che offrono
+opzioni di molte famiglie diverse.
 
 ### 8.6 `icons.ts` — icone inline
 
@@ -667,8 +689,14 @@ Definisce:
 attuali hanno solo `NomeIta` e `NomeEng`, quindi solo `it` ed `en` hanno dati reali.
 Lingue come `de`/`es`/`fr` possono essere dichiarate in `LANGUAGES` ma, finché non
 hanno una colonna nel CSV, restano semplicemente assenti dalle mappe e cadono sul
-fallback inglese. Aggiungere una lingua richiede **una riga** in `LANGUAGES` più la
-colonna `Nome*` nei CSV. Nessun'altra modifica.
+fallback inglese. Lato **app**, aggiungere una lingua richiede una riga in
+`LANGUAGES` e nessun'altra modifica di codice; ma la ricetta COMPLETA coinvolge la
+colonna `Nome*` in **tutti e tre** i CSV che leggono `LANGUAGES` — `buildings.csv`,
+`allies.csv` e `ages.csv` (quest'ultimo editato a mano; gli altri due li genera la
+pipeline di RECUPERO DATI, che a sua volta richiede un `MainParser_<lingua>.txt` dal
+server corrispondente e l'estensione di `buildings.py`/`allies.py`, più
+`parse_kit.py` per i nomi dei kit in `kit.json`). La lingua della GUI (`UiLang`,
+solo it/en) è un concetto separato con la sua ricetta (§9 di ui-strings).
 
 **Perché `Lang` ha 5 valori e non 2.** Il tipo `Lang` (`it|en|de|es|fr`) è "largo" per
 DUE motivi distinti, non solo per i nomi CSV futuri:
@@ -700,7 +728,15 @@ Espone quattro funzioni (più un re-export di `Lang` da `languages.ts`, importat
 - `translateName(id, lang)` — traduce un ID nella lingua richiesta. Catena di
   fallback: lingua richiesta → inglese → ID grezzo.
 - `getItalianMap()` — restituisce la mappa italiana completa, per accessi bulk O(1).
-  Usata per ottenere il nome italiano "grezzo" di fallback degli edifici.
+  Usata per ottenere il nome italiano "grezzo" di fallback degli edifici. ⚠️ È la
+  mappa INTERNA viva (niente copia difensiva): sola lettura per contratto — l'unico
+  consumer (`ITALIAN_NAMES` in App.tsx) fa solo `get`/`has`.
+
+`initTranslations` VALIDA fail-fast la disgiunzione degli id: edifici e alleati
+condividono la stessa mappa per lingua, e una collisione (oggi strutturalmente
+impossibile: edifici `W_*`/`X_*`, alleati in snake_case minuscolo) farebbe vincere
+silenziosamente il nome dell'alleato, inserito per ultimo. Stesso schema delle
+validazioni al load di ages/allies/buildings.
 - `hasTranslation(id, lang)` — `true` se esiste una traduzione **diretta** (non di
   fallback) per quell'ID in quella lingua. Usata in tab database per evidenziare in
   **corsivo** i nomi che ricadono sul fallback inglese (es. un edificio nuovo non
@@ -748,15 +784,27 @@ Parsa `ages.csv` (una volta, all'avvio, perché importato per primo in `main.tsx
 costruisce le strutture per lavorare con le ere.
 
 ### Tipo `Age`
-- `id` — numero progressivo (0–22).
+- `id` — numero progressivo (0–22). ⚠️ INVARIANTE CRITICA: coincide col `level`
+  grezzo che il gioco assegna alle istanze in CityMapData — App.tsx fa
+  `AGES_BY_ID.get(level)` per tutta la logica obsoleti/declassabili e le
+  statistiche per-era. Non modificare la numerazione.
 - `age` — codice inglese (es. `"SpaceAgeSpaceHub"`).
 - `names` — mappa lingua→nome localizzato.
+
+### Validazione fail-fast al load
+Al caricamento del modulo (quindi al boot dell'app) vengono validati: id contigui
+0..n-1 (che implica anche nessun duplicato, essendo l'array ordinato) e codici era
+unici. I consumatori CONTANO su questa forma: `BuildingModel` ricava l'era
+precedente con `id-1` (classificazione TR/TRNE) e il tooltip "se aggiorni" fa
+aritmetica sulle differenze di id. Un CSV corrotto fa fallire il boot con un
+errore diagnostico, non degradare in silenzio.
 
 ### Strutture esportate
 - `FALLBACK_ERA` — il codice dell'era massima (id più alto). Usato ovunque serva
   un'era di default (es. per i fallback quando l'era reale non è nota).
-- `AGES_BY_ID` — mappa `id → Age`. Lookup per id (robusto anche se gli id non fossero
-  contigui, a differenza di un accesso per indice di array).
+- `AGES_BY_ID` — mappa `id → Age`. Lookup per id, più esplicito dell'accesso per
+  indice di array; la contiguità NON è un'ipotesi da cui difendersi ma
+  un'invariante validata (vedi sopra).
 - `AGE_BY_CODE` — mappa `codice → Age`. Evita ricerche lineari sparse nel codice.
 - `ageName(ageCode, lang)` — nome localizzato di un'era, con fallback a inglese e poi
   al codice grezzo.
@@ -820,9 +868,12 @@ crea cicli (`ui-strings.ts` non importa nulla). L'`icon` è un emoji, lingua-neu
 ### Classificazione dei kit
 - `isAscendedUpgradeKit(kitId)` — kit di aggiornamento "asceso"
   (`upgrade_kit_ascended_`).
-- `isShrinkKit(kitId)` — kit di rimpicciolimento (`shrink_kit_`). Questi **non** sono
-  kit di aggiornamento e vanno esclusi dalla lista upgrade. Il pattern dell'ID è
-  lingua-neutro (a differenza del nome localizzato "Kit di restringimento").
+- NOTA STORICA: esisteva un helper `isShrinkKit(kitId)` (`shrink_kit_`) usato da
+  `parseInventory` per ESCLUDERE gli shrink kit dall'inventario, sull'assunto che
+  "restringere non è aggiornare". L'esclusione è stata rimossa (luglio 2026: gli
+  shrink sono upgrade a tutti gli effetti — riducono le dimensioni conservando la
+  produzione) e l'helper con essa, rimasto senza consumatori. Il pattern
+  lingua-neutro, se mai servisse di nuovo, è `kitId.startsWith("shrink_kit_")`.
 
 ### Frammenti
 - `isFragmentBuildingToken(token)` / `isFragmentKitToken(token)` — riconoscono i token
@@ -867,9 +918,13 @@ e `roadFromSize` sono helper interni del modulo (più la costante `IMAGE_BASE_UR
 Funzioni:
 
 ### `parseCsvNumber(value)`
-Converte una stringa numerica del CSV in `number`, gestendo robustamente:
-- la virgola come separatore decimale (formato italiano): `"1,5"` → `1.5`;
-- i separatori delle migliaia: `"1.234,5"` → `1234.5`;
+Converte una stringa numerica del CSV in `number`. Il formato REALE del CSV è il
+**punto decimale** (`"0.5"` — è la pipeline Python a scriverlo così; verificato:
+807 decimali col punto, zero con la virgola); la gestione della virgola è una
+**tolleranza deliberata**, non il formato atteso:
+- virgola come separatore decimale: `"1,5"` → `1.5` (caso "CSV risalvato con
+  Excel in italiano", che converte i decimali in virgole);
+- separatori delle migliaia: `"1.234,5"` → `1234.5` (nessuna fonte li scrive);
 - valori negativi, spazi, e stringhe non numeriche (→ `0`).
 
 ### `parseCsvRows(csvText)`
@@ -880,7 +935,16 @@ Un parser CSV completo che gestisce correttamente:
 - terminatori di riga sia `\n` sia `\r\n` (CRLF).
 
 ### `parseBuildingsCsv(csv)`
-Trasforma l'intero CSV in un array di `Building` già pronti. Per ogni riga:
+Trasforma l'intero CSV in un array di `Building` già pronti. Il callback del `.map()`
+è tipizzato `(parts, index): Building` e il return NON usa `as Building`: il cast
+(rimosso) disattivava il controllo strutturale di tsc sui campi mancanti proprio nel
+punto 1 della checklist "nuovo campo" — con la tipizzazione esplicita, aggiungendo un
+campo a `Building` tsc segnala anche questo punto, insieme a `createBaseBuilding` e
+`placeholderBuilding`. Non reintrodurre il cast. Valida inoltre **fail-fast i
+`cityEntityId` duplicati** (stesso schema di ages.ts/allies.ts): un duplicato
+produrrebbe due righe in tab Database ma un last-wins silenzioso in
+`BUILDING_BY_ID`/`CSV_ENTITY_IDS_SET`/traduzioni — e siccome la pipeline non può
+generarli, segnala un CSV corrotto. Per ogni riga:
 - legge i nomi nelle lingue disponibili (colonne `Nome*`) costruendo `names`;
 - calcola `area` da `size` una volta sola;
 - calcola `road` con `roadFromSize(size)` **solo se** la colonna `Road` del CSV è > 0
@@ -1057,9 +1121,15 @@ statistiche.
 ### 14.1 Tipi
 
 - **`Ally`** — un alleato dal catalogo (`allies.csv`): `id`, `names` (multilingua),
-  `rarity` (1–5), `maxLevel`, `val1` (valore base), i 4 blocchi di bonus
-  (general/gbg/sped/iq) e `abilityIta`/`abilityEng` (descrizione dell'abilità
-  speciale, vuota per la maggior parte degli alleati).
+  `rarity` (1–5), `maxLevel` (oggi sempre 100 e non letto da nessun consumer, TENUTO
+  deliberatamente perché Inno potrebbe variarlo), `val1` (valore base), i 4 blocchi
+  di bonus (general/gbg/sped/iq) e `abilityIta`/`abilityEng` (descrizione
+  dell'abilità speciale, vuota per la maggior parte degli alleati; CONTRATTO con la
+  pipeline: il rendering mostra abilityIta senza fallback su abilityEng, perché è
+  allies.py a garantire che l'italiana sia valorizzata quando esiste l'inglese).
+  `parseAlliesCsv` valida fail-fast le righe duplicate `id+rarity`: un duplicato
+  vincerebbe silenziosamente l'ultimo in `ALLIES_BY_ID_RARITY` ma verrebbe sommato
+  DUE volte nell'ereditarietà, gonfiando le statistiche.
 - **`ImportedAlly`** — un alleato posseduto dal giocatore: `jsonId`, `allyId`,
   `rarity`, `level`, `isPlaced` (se è piazzato in città), `isFragment` (se è solo un
   frammento, non ancora un alleato intero), `fragmentCount`, e
@@ -1076,12 +1146,16 @@ statistiche.
   lingue disponibili e la rarità numerica.
 - **`parseAllyData(allyData, rarityMap)`** — parsa gli alleati posseduti dal payload di
   gioco. Usa `rarityMap` (`RARITY_FROM_GAME`) per convertire le rarità da stringa a
-  numero.
+  numero. `mapEntityId` nel payload è un NUMERO (tipo `string | number` in `RawAlly`):
+  è qui che viene convertito con `String()` nella chiave — stringa — di CityMapData;
+  il guard è `!= null` (non `"in"`), così un ipotetico `mapEntityId: null` non produce
+  `"null"` né un `isPlaced` spurio.
 - **`parseAllyFragments(inventoryItems, rarityMap)`** — estrae gli alleati presenti
-  come **frammenti** nell'inventario (non ancora alleati interi). Calcola un `jsonId`
-  deterministico (hash dalla chiave `allyId__rarity`), usato come chiave React stabile
-  per evitare re-render spuri; non è un identificatore univoco crittografico (collisioni
-  teoriche irrilevanti per questo uso). Scarta i frammenti con `inStock <= 0`.
+  come **frammenti** nell'inventario (non ancora alleati interi). `jsonId` è fisso a 0:
+  il campo è richiesto dal tipo ma per i frammenti non è letto da nulla — la chiave
+  React in tabella è `frag-${id}-${rarity}` (in passato qui c'era un hash della chiave
+  `allyId__rarity`, rimasto orfano quando la key è cambiata e quindi rimosso). Scarta i
+  frammenti con `inStock <= 0`.
 
 ### 14.3 Calcolo delle statistiche
 
@@ -1153,9 +1227,12 @@ Itera gli item dell'inventario e li classifica. La logica procede per tipo:
    non viene confuso con un consumabile.
 2. **Selection kit** (`__class__ === "SelectionKitPayload"`): aggiunti alla mappa
    `selectionKits` con la loro quantità.
-3. **Upgrade kit** (`__class__ === "UpgradeKitPayload"`): aggiunti a `upgradeKits`. Gli
-   **shrink kit** (riconosciuti via `isShrinkKit(kitId)`, pattern ID lingua-neutro)
-   vengono **esclusi** perché non sono kit di aggiornamento edificio.
+3. **Upgrade kit** (`__class__ === "UpgradeKitPayload"`): aggiunti a `upgradeKits`,
+   **shrink kit INCLUSI** (sono upgrade a tutti gli effetti: riducono le dimensioni
+   conservando la produzione → più efficienza; in passato erano esclusi con un filtro
+   `isShrinkKit`, rimosso — vedi nota storica in inventory.ts e §11). Grazie
+   all'inclusione l'ottimizzatore li usa nelle fabbricazioni e il modal "Edifici
+   aggiornabili" li conta davvero (prima risultavano sempre ×0).
 4. **Edifici** (`__class__ === "BuildingItemPayload"`): smistati in `matched` (se l'id
    è nel CSV) o `unmatched` (se no). I due insiemi sono **disgiunti per costruzione**.
 
@@ -1357,6 +1434,15 @@ Un modulo di **soli tipi** (nessuna logica) per la visualizzazione della mappa c
 mappa, ma non le decine di statistiche di gioco. Sono due viste diverse dello stesso
 dominio, deliberatamente separate.
 
+⚠️ **Contratto di persistenza.** `CityMapBuilding[]` viene serializzato COSÌ COM'È nei
+profili (`CityStore.cityMapBuildings`) e ripristinato grezzo, senza revive né
+migrazione (solo un `Array.isArray` in App.tsx). Aggiungere un campo è sicuro: nei
+profili vecchi arriva `undefined` — falsy per i booleani (degradazione dolce, es.
+niente colore dedicato finché non si re-importa), e per `mapEntityId` fa scattare il
+fallback aggregato di `allySlotsPerBuilding` (§24). Rinominare un campo o cambiarne
+il tipo invece rompe silenziosamente i profili salvati: valutare
+`STORAGE_FORMAT_VERSION` (§21).
+
 ---
 
 ## 18. Lo store serializzato della città (`cityStore.ts`)
@@ -1367,6 +1453,14 @@ Un modulo di **soli tipi**. Descrive la forma di `CityStore`, l'oggetto che vien
 serializzato in `localStorage` quando si importa una città. Poiché `Map` e `Set` non
 sono serializzabili direttamente in JSON, i campi-mappa sono memorizzati come array di
 coppie `[chiave, valore]` (rianimati con `reviveMap` al caricamento).
+
+⚠️ **Contratto di scrittura ed evoluzione.** `writeStoredJson` accetta `unknown`,
+quindi il letterale di scrittura in `handleImportCityMap` è verificato con
+`satisfies CityStore` (e quello dell'inventario con `satisfies InventoryStore`): senza,
+un campo dimenticato o con typo compilerebbe e persisterebbe profili incompleti in
+silenzio — mantenere il `satisfies` quando si aggiunge un campo. Aggiungere campi è
+sicuro per i profili vecchi (i reader fanno revive con default: campo assente → Map/Set
+vuoto); rinominare o cambiare tipo li rompe → valutare `STORAGE_FORMAT_VERSION` (§21).
 
 Campi principali:
 

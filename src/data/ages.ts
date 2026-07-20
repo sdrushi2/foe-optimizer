@@ -6,6 +6,14 @@ import { LANGUAGES, FALLBACK_LANG, type Lang } from "./languages";
  *  (es. "NomeIta" -> names.it, "NomeEng" -> names.en). L'inglese è
  *  garantito presente (fallback al codice `age` se la colonna manca). */
 export interface Age {
+  /** Id numerico dell'era (0=StoneAge ... n-1=era massima).
+   *  ⚠️ INVARIANTE CRITICA, non modificare la numerazione: coincide con il
+   *  `level` grezzo che il gioco assegna alle istanze in CityMapData —
+   *  App.tsx fa AGES_BY_ID.get(level) per tutta la logica edifici
+   *  obsoleti/declassabili e per le statistiche per-era. Se gli id del CSV
+   *  divergessero dalla numerazione interna di Inno, quella logica si
+   *  romperebbe in modo silenzioso. La contiguità 0..n-1 è validata al
+   *  load (vedi sotto). */
   id: number;
   age: string; // codice inglese, es. "SpaceAgeSpaceHub"
   names: Partial<Record<Lang, string>>;
@@ -27,8 +35,12 @@ function parseAgesCsv(csvText: string): Age[] {
   const colIndex = (name: string) => header.indexOf(name.toLowerCase());
   const idCol = colIndex("id");
   const ageCol = colIndex("age");
-  // Quali lingue di LANGUAGES hanno davvero una colonna in questo CSV.
-  const availableLangs = LANGUAGES.filter(l => colIndex(l.csvColumn) >= 0);
+  // Quali lingue di LANGUAGES hanno davvero una colonna in questo CSV, con
+  // l'indice di colonna precomputato una volta (stesso pattern di allies.ts):
+  // evita di rifare indexOf sull'header per ogni riga × lingua nel loop sotto.
+  const availableLangs = LANGUAGES
+    .map(l => ({ code: l.code, idx: colIndex(l.csvColumn) }))
+    .filter(l => l.idx >= 0);
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -41,7 +53,7 @@ function parseAgesCsv(csvText: string): Age[] {
 
     const names: Partial<Record<Lang, string>> = {};
     for (const lang of availableLangs) {
-      const value = parts[colIndex(lang.csvColumn)]?.trim();
+      const value = parts[lang.idx]?.trim();
       if (value) names[lang.code] = value;
     }
     // L'inglese è garantito: se la colonna manca o è vuota, usa il codice era.
@@ -59,8 +71,21 @@ function parseAgesCsv(csvText: string): Age[] {
  *  le ere in ordine (es. un selettore "scegli era"), esportarla di nuovo. */
 const AGES: Age[] = parseAgesCsv(agesCsv).sort((a, b) => a.id - b.id); // ID sono 0,1,2...22
 
-// Fail fast se il dataset è corrotto (errore interno, non testo per l'utente)
+// Fail fast se il dataset è corrotto (errore interno, non testo per l'utente).
 if (AGES.length === 0) throw new Error("ages.csv is empty or failed to parse");
+// Id contigui 0..n-1 (quindi anche niente duplicati: l'array è ordinato per
+// id, un doppione farebbe fallire il confronto con la posizione): i
+// consumatori CONTANO su questa forma — BuildingModel ricava l'era precedente
+// con id-1, il tooltip "se aggiorni" fa aritmetica sulle differenze di id, e
+// AGES_BY_ID.get(level) usa il level di gioco come id (vedi commento su Age).
+// Senza questo check, un duplicato vincerebbe silenziosamente l'ultimo nelle
+// due Map qui sotto e un buco nella numerazione romperebbe i calcoli a valle.
+AGES.forEach((a, i) => {
+  if (a.id !== i) throw new Error(`ages.csv: ids must be contiguous 0..n-1 (found id ${a.id} at position ${i})`);
+});
+if (new Set(AGES.map(a => a.age)).size !== AGES.length) {
+  throw new Error("ages.csv: duplicate era codes");
+}
 
 /** Era massima: quella con l'id più alto presente nel CSV. */
 const MAX_AGE: Age = AGES[AGES.length - 1];
@@ -68,10 +93,12 @@ const MAX_AGE: Age = AGES[AGES.length - 1];
 /** FALLBACK ERA: codice dell'era massima, usato ovunque serva un'era di default. */
 export const FALLBACK_ERA: string = MAX_AGE.age;
 
-/** Mappa id era -> Age. Lookup per id (non per posizione nell'array):
- *  robusto anche se gli id non fossero contigui o l'array non fosse
- *  ordinato (AGES[lvl] assumerebbe indice === id, fragile a modifiche di
- *  ages.csv). */
+/** Mappa id era -> Age. Lookup per id invece di AGES[lvl] diretto: più
+ *  esplicito e indipendente dall'ordinamento dell'array. NOTA: la contiguità
+ *  0..n-1 degli id NON è un'ipotesi da cui questo modulo si difende — è una
+ *  INVARIANTE validata al load (vedi sopra), perché i consumatori fanno
+ *  aritmetica sugli id (id-1 per l'era precedente, differenze per "quante
+ *  ere indietro"). */
 export const AGES_BY_ID: Map<number, Age> = new Map(
   AGES.map(a => [a.id, a])
 );

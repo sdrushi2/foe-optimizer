@@ -1,5 +1,5 @@
 import type { InventoryItem } from "./bookmarklet";
-import { CONSUMABLE_ASSET_NAMES, isShrinkKit } from "./buildingClassification";
+import { CONSUMABLE_ASSET_NAMES } from "./buildingClassification";
 
 export interface InventoryEntry {
   cityEntityId: string;
@@ -28,7 +28,13 @@ export interface UpgradeKitEntry {
  *  - silver_selection_kit_X   → "silver"
  *  - golden_selection_kit_X   → "gold"
  *  - platinum_selection_kit_X → "platinum"
- *  Unico punto del codice che conosce questi prefissi. */
+ *  Unico punto del codice che conosce questi prefissi.
+ *  ⚠️ Il match è SOLO sul prefisso, DELIBERATAMENTE: ~31 kit hanno token
+ *  silver/gold nel resto dell'id perché fanno parte del NOME dell'edificio
+ *  ("upgrade_kit_golden_crops" = Golden Crops) o di una variante di livello
+ *  degli insediamenti ("..._statue_gold") — un match sul token ovunque li
+ *  classificherebbe erroneamente come kit di tier. Quei kit vanno sotto
+ *  "normal" (usato solo per il raggruppamento nel pannello Debug). */
 type KitTier = "platinum" | "gold" | "silver" | "normal";
 
 export function kitTier(kitId: string): KitTier {
@@ -98,6 +104,13 @@ export interface InventoryStore {
  *
  * Non tocca stato React né localStorage: riceve gli item grezzi e restituisce
  * le quattro mappe che App.tsx userà per aggiornare stato e persistenza.
+ *
+ * Tutto ciò che non rientra nelle quattro categorie (consumabili, selection
+ * kit, upgrade kit, edifici) viene IGNORATO deliberatamente: i frammenti di
+ * ALLEATO sono estratti a parte da parseAllyFragments (allies.ts) sugli
+ * stessi item; i frammenti di edificio/kit non sono item interi e non
+ * partecipano all'ottimizzatore (il loro ruolo è nella colonna Fragments del
+ * CSV, lato produttori); boost, blueprint, chest ecc. non interessano al tool.
  */
 export function parseInventory(
   items: InventoryItem[],
@@ -151,11 +164,16 @@ export function parseInventory(
 
     if (item.item?.__class__ === "UpgradeKitPayload" && item.item?.upgradeItemId) {
       const kitId = String(item.item.upgradeItemId);
-      // Gli shrink kit (kit di rimpicciolimento) non sono kit di aggiornamento
-      // edificio: si escludono. Il filtro usa il pattern dell'id (lingua-neutro),
-      // non il nome localizzato — così funziona anche importando una città in
-      // inglese o in qualsiasi altra lingua.
-      if (isShrinkKit(kitId)) continue;
+      // NOTA STORICA: qui gli shrink kit (shrink_kit_*) venivano esclusi con
+      // un filtro dedicato, sull'assunto che "restringere non è aggiornare".
+      // L'esclusione è stata RIMOSSA deliberatamente: gli shrink kit sono
+      // paragonabili agli upgrade kit (riducono le dimensioni dell'edificio
+      // conservandone la produzione, quindi ne aumentano l'efficienza), le
+      // loro catene sono già in kit.json/buildingUpgrades, e due selection
+      // kit (spoils_of_war, diplomatic_gifts) li offrono tra le opzioni —
+      // quindi l'ottimizzatore poteva già pagare uno step shrink con quei
+      // selection kit: escludere solo gli shrink posseduti direttamente era
+      // un'asimmetria, non una protezione.
       // Coerenza con consumabili/edifici: scarta stock <= 0 (vedi blocco
       // selection kit sopra per il razionale).
       const qty = Number(item.inStock ?? 1);

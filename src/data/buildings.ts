@@ -89,13 +89,17 @@ export interface Building {
 // Funzioni di utilità per il parsing del CSV
 function parseCsvNumber(value: string): number {
   if (!value) return 0;
-  // Il CSV usa la virgola come separatore decimale (es. "1,5") e NON usa
-  // separatori delle migliaia. Se in futuro i dati contenessero migliaia
-  // (es. "1.234,5" all'italiana o "1,234.5" all'inglese), questa logica
-  // andrebbe rivista: qui assumiamo al massimo un separatore decimale.
+  // Formato REALE del CSV: decimali col PUNTO (es. "0.5", "1.75") — è la
+  // pipeline Python di RECUPERO DATI a scriverli così — e NESSUN separatore
+  // delle migliaia. Il ramo virgola qui sotto NON descrive il formato
+  // atteso: è una TOLLERANZA deliberata per il caso concreto "CSV aperto e
+  // risalvato con Excel in italiano", che converte i decimali in virgole
+  // ("0,5"). Verificato empiricamente sul CSV corrente: 807 decimali col
+  // punto, zero con la virgola.
   let cleaned = value.trim();
-  // Normalizza la virgola decimale in punto. Sostituiamo solo l'ultima
-  // occorrenza per non corrompere eventuali separatori delle migliaia.
+  // Normalizza l'eventuale virgola decimale in punto. Sostituiamo solo
+  // l'ultima occorrenza per non corrompere eventuali separatori delle
+  // migliaia (che comunque nessuna delle due fonti scrive).
   const lastComma = cleaned.lastIndexOf(",");
   if (lastComma >= 0) {
     cleaned = cleaned.slice(0, lastComma).replace(/[.,]/g, "") + "." + cleaned.slice(lastComma + 1);
@@ -147,7 +151,9 @@ function parseCsvRows(csvText: string): string[][] {
   }
   if (currentRow.length > 0 || currentField !== "") {
     currentRow.push(currentField);
-    rows.push(currentRow);
+    // Stesso filtro applicato alle righe intermedie: una coda di soli ";"
+    // in un file senza newline terminale non deve produrre una riga fantasma.
+    if (currentRow.some(f => f.trim() !== "")) rows.push(currentRow);
   }
   return rows;
 }
@@ -234,7 +240,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
   // questo è il punto 1 della checklist "nuovo campo" e un cast lo
   // nasconderebbe silenziosamente (tutti gli edifici uscirebbero con il campo
   // undefined, come i profili "stale" ma per l'intero catalogo).
-  return rows.slice(1).map((parts, index): Building => {
+  const buildings = rows.slice(1).map((parts, index): Building => {
     const cityEntityId = (parts[0] || "").trim();
     const size = getText(parts, "Size", "1x1");
     // Calcolo area una tantum
@@ -332,4 +338,19 @@ export function parseBuildingsCsv(csv: string): Building[] {
       isFallback: false,
     };
   });
+
+  // Fail fast su cityEntityId duplicati (stesso schema di ages.ts/allies.ts):
+  // un duplicato produrrebbe due righe visibili in tab Database ma un
+  // last-wins SILENZIOSO in BUILDING_BY_ID, CSV_ENTITY_IDS_SET e nelle mappe
+  // di traduzione. La pipeline non può generarli (le chiavi di CityEntities
+  // sono uniche), quindi un duplicato segnala un CSV corrotto/editato a mano.
+  // Errore in inglese: diagnostica interna, non testo per l'utente.
+  const seen = new Set<string>();
+  for (const b of buildings) {
+    if (!b.cityEntityId) continue;
+    if (seen.has(b.cityEntityId)) throw new Error(`buildings.csv: duplicate CityEntityId ${b.cityEntityId}`);
+    seen.add(b.cityEntityId);
+  }
+
+  return buildings;
 }

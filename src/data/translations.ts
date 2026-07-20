@@ -32,6 +32,21 @@ let CACHE: Map<Lang, Map<string, string>> | null = null;
  * (dopo aver parsato i due CSV).
  */
 export function initTranslations(buildings: Building[], allies: Ally[]): void {
+  // Fail fast se un id alleato coincidesse con un cityEntityId (stesso schema
+  // delle validazioni in ages/allies/buildings): la mappa unica per lingua si
+  // regge sulla DISGIUNZIONE dei due spazi di id — una collisione farebbe
+  // vincere silenziosamente il nome dell'alleato (inserito per ultimo). Oggi
+  // è strutturalmente impossibile (edifici "W_*"/"X_*" ecc., alleati in
+  // snake_case minuscolo): il check trasforma l'assunzione, finora solo
+  // dichiarata nel commento di testa, in invariante verificata al boot.
+  // Errore in inglese: diagnostica interna, non testo per l'utente.
+  const buildingIds = new Set(buildings.map(b => b.cityEntityId));
+  for (const a of allies) {
+    if (buildingIds.has(a.id)) {
+      throw new Error(`translations: ally id collides with a building id: ${a.id}`);
+    }
+  }
+
   const byLang = new Map<Lang, Map<string, string>>();
   for (const lang of LANGUAGES) {
     const map = new Map<string, string>();
@@ -78,7 +93,11 @@ export function translateName(id: string, lang: Lang): string {
   return id;
 }
 
-/** Esponi la mappa italiana per i chiamanti che vogliono un accesso O(1) bulk. */
+/** Esponi la mappa italiana per i chiamanti che vogliono un accesso O(1) bulk.
+ *  ⚠️ Restituisce la mappa INTERNA viva (niente copia difensiva, per non
+ *  duplicare ~2000 entry a ogni chiamata): il chiamante deve trattarla come
+ *  SOLA LETTURA — l'unico consumer (ITALIAN_NAMES in App.tsx) fa solo
+ *  get/has. Se in futuro servisse mutarla, farne una copia lato chiamante. */
 export function getItalianMap(): Map<string, string> {
   return ensure().get("it") ?? new Map();
 }

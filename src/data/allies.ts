@@ -7,6 +7,10 @@ export interface Ally {
    *  languages.ts). L'inglese è garantito presente (fallback all'id). */
   names: Partial<Record<Lang, string>>;
   rarity: number;
+  /** Livello massimo dal CSV. Oggi è sempre 100 e NESSUN consumer lo legge
+   *  (i maxLevel visibili in App.tsx sono dei Grandi Edifici): tenuto
+   *  deliberatamente perché Inno potrebbe variarlo in futuro — non è una
+   *  dimenticanza. */
   maxLevel: number;
   val1: number;
   general: [number, number, number, number];
@@ -15,7 +19,12 @@ export interface Ally {
   iq: [number, number, number, number];
   /** Descrizione testuale dell'abilità speciale dell'alleato, per lingua
    *  (colonne abilityIta/abilityEng del CSV). Vuota per la maggior parte
-   *  degli alleati (solo alcuni hanno un'abilità speciale documentata). */
+   *  degli alleati (solo alcuni hanno un'abilità speciale documentata).
+   *  CONTRATTO CON LA PIPELINE: il rendering (AllyRarityName in App.tsx)
+   *  mostra abilityIta per lingua "it" SENZA fallback su abilityEng — regge
+   *  perché è allies.py (RECUPERO DATI) a garantire che abilityIta sia
+   *  sempre valorizzata quando esiste l'inglese (fallback fatto lato
+   *  pipeline). Se si tocca quella logica, questo è il punto che si rompe. */
   abilityIta: string;
   abilityEng: string;
 }
@@ -91,7 +100,10 @@ export function parseAlliesCsv(csv: string): Ally[] {
   const toNumber = (s: string | undefined) => parseFloat(s || "") || 0;
   const at = (cols: string[], idx: number) => (idx >= 0 ? cols[idx] : undefined);
 
-  return rows.map((line) => {
+  // Callback tipizzato `: Ally` (stesso pattern di parseBuildingsCsv): senza,
+  // l'assegnazione alla const perderebbe la tipizzazione contestuale e le
+  // quadruple diventerebbero number[] invece di [number, number, number, number].
+  const allies = rows.map((line): Ally => {
     const cols = line.split(";");
     const id = at(cols, idxId) || "";
     const names: Partial<Record<Lang, string>> = {};
@@ -117,6 +129,20 @@ export function parseAlliesCsv(csv: string): Ally[] {
       abilityEng: (at(cols, idxAbilityEng) || "").trim(),
     };
   });
+
+  // Fail fast su righe duplicate id+rarity (stesso schema di ages.ts): un
+  // duplicato vincerebbe silenziosamente l'ultimo in ALLIES_BY_ID_RARITY ma
+  // verrebbe sommato DUE volte nell'ereditarietà (INHERITED_ALLIES_MAP
+  // raccoglie tutte le righe con rarity <= r), gonfiando le statistiche
+  // senza alcun segnale visibile. Errore in inglese: diagnostica interna.
+  const seen = new Set<string>();
+  for (const a of allies) {
+    const k = `${a.id}__${a.rarity}`;
+    if (seen.has(k)) throw new Error(`allies.csv: duplicate row for ${k}`);
+    seen.add(k);
+  }
+
+  return allies;
 }
 
 export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Record<string, number>, cityMapData?: Record<string, { cityentity_id?: unknown }>): ImportedAlly[] {
@@ -127,7 +153,11 @@ export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Reco
     const rarityValue = entry.rarity?.value ?? "";
     const rarity = rarityMap[rarityValue] ?? 0;
     if (!rarity) continue;
-    const rawMapId = "mapEntityId" in entry ? String(entry.mapEntityId) : undefined;
+    // `!= null` (non `"mapEntityId" in entry`): un ipotetico mapEntityId: null
+    // nel payload produrrebbe String(null) === "null" e un isPlaced spurio.
+    // Nei dati reali il campo è un numero; String() lo converte alla chiave
+    // stringa di CityMapData (le chiavi degli oggetti JSON sono stringhe).
+    const rawMapId = entry.mapEntityId != null ? String(entry.mapEntityId) : undefined;
     const placedInEntityId = rawMapId && cityMapData
       ? (cityMapData[rawMapId]?.cityentity_id != null ? String(cityMapData[rawMapId].cityentity_id) : undefined)
       : undefined;
@@ -136,7 +166,7 @@ export function parseAllyData(allyData: Record<string, RawAlly>, rarityMap: Reco
       allyId: String(entry.allyId),
       rarity,
       level: entry.level ?? 0,
-      isPlaced: "mapEntityId" in entry,
+      isPlaced: rawMapId !== undefined,
       isFragment: false,
       fragmentCount: 0,
       placedInEntityId,
@@ -172,11 +202,13 @@ export function parseAllyFragments(inventoryItems: InventoryItem[], rarityMap: R
     }
   }
   
-  // Hash deterministico della chiave "allyId__rarity": serve solo come jsonId stabile
-  // per la key di React (evita re-render spuri). Non è un identificatore univoco
-  // crittografico: collisioni teoricamente possibili ma irrilevanti per questo uso.
-  return [...fragmentMap].map(([key, frag]) => ({
-    jsonId: key.split('').reduce((acc, char, i) => acc + char.charCodeAt(0) * (i + 1), 0),
+  // jsonId fisso a 0: il campo è richiesto dal tipo ImportedAlly ma per i
+  // frammenti non è letto da nulla — la key di React in tabella è
+  // `frag-${id}-${rarity}` (App.tsx), non jsonId. (In passato qui c'era un
+  // hash della chiave allyId__rarity, rimasto orfano quando la key è
+  // cambiata; nei profili salvati il vecchio valore è inerte.)
+  return [...fragmentMap.values()].map((frag) => ({
+    jsonId: 0,
     allyId: frag.allyId,
     rarity: frag.rarity,
     level: 0,

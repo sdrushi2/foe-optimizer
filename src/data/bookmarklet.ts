@@ -44,8 +44,18 @@ export const CURRENT_BOOKMARKLET_VERSION = 2;
  * Le aree sbloccate vengono compresse rimuovendo `__class__` e, per le aree
  * standard 4×4, anche `width`/`length` (sono il valore di default e si possono
  * dedurre lato app).
+ *
+ * GUARD "FoE Helper è cambiato": se NESSUNO dei due percorsi alleati esiste
+ * (né il globale `Allies` né il legacy `MainParser.Allies`), lo script si
+ * ferma con un alert chiaro che invita a riscaricare la bacchetta dal sito,
+ * invece di lasciar esplodere un TypeError criptico ("Cannot read properties
+ * of undefined"). Lezione imparata col passaggio v1→v2: gli utenti con lo
+ * script vecchio nei preferiti vedono solo l'errore del loro script, quindi
+ * il messaggio va reso utile PRIMA della prossima rottura, non dopo.
+ * Alert in inglese come gli altri messaggi del bookmarklet (il bookmarklet
+ * non conosce la lingua della GUI).
  */
-export const BOOKMARKLET_JS = `javascript:(function(){try{var data={_v:${CURRENT_BOOKMARKLET_VERSION},inventory:Object.values(MainParser.Inventory),allies:typeof Allies!=='undefined'?Allies.allyList:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o)),portraitUrl:typeof ExtPlayerAvatar!=='undefined'&&typeof srcLinks!=='undefined'?srcLinks.GetPortrait(ExtPlayerAvatar):undefined};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){try{if(typeof Allies==='undefined'&&!MainParser.Allies){alert('FoE Helper has changed: please get the updated magic wand from foe-optimizer.com');return;}var data={_v:${CURRENT_BOOKMARKLET_VERSION},inventory:Object.values(MainParser.Inventory),allies:typeof Allies!=='undefined'?Allies.allyList:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o)),portraitUrl:typeof ExtPlayerAvatar!=='undefined'&&typeof srcLinks!=='undefined'?srcLinks.GetPortrait(ExtPlayerAvatar):undefined};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 
@@ -162,14 +172,20 @@ export interface InventoryItem {
   [key: string]: unknown;
 }
 
-/** Una entry di `MainParser.Allies.allyList`: alleato posseduto dal giocatore. */
+/** Una entry di `Allies.allyList` (FoE Helper attuale; in passato viveva in
+ *  `MainParser.Allies.allyList`, percorso ancora letto in fallback dal
+ *  bookmarklet): alleato posseduto dal giocatore. */
 export interface RawAlly {
   __class__?: string;
   id?: number;
   allyId?: string;
   level?: number;
   rarity?: { value?: string };
-  mapEntityId?: string;
+  /** Id dell'istanza edificio sulla mappa che ospita l'alleato. Nel payload
+   *  reale è un NUMERO: è parseAllyData a convertirlo con String() nella
+   *  chiave (stringa) di CityMapData. Union tipizzata onestamente — il tipo
+   *  `string` da solo mentirebbe sul dato che arriva davvero dal gioco. */
+  mapEntityId?: string | number;
   [key: string]: unknown;
 }
 

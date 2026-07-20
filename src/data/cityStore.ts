@@ -17,6 +17,17 @@ import type { EraStats, GreatBuilding } from "../models/BuildingModel";
  * documentata: il file cityStore.ts è un descrittore di forma
  * persistente, non un processore di dati, quindi la violazione della
  * convenzione "data/ non dipende da models/" è localizzata e accettabile.
+ *
+ * ⚠️ CONTRATTO DI EVOLUZIONE (stesso schema di CityMapBuilding in cityMap.ts):
+ *  - la SCRITTURA è verificata strutturalmente: il letterale in
+ *    handleImportCityMap (App.tsx) usa `satisfies CityStore` — un campo
+ *    dimenticato non compila. Mantenere quel `satisfies` quando si aggiunge
+ *    un campo qui.
+ *  - AGGIUNGERE un campo è sicuro per i profili vecchi: il reader
+ *    (loadProfileData/useState initializer) fa revive con default per ogni
+ *    campo, quindi un campo assente diventa Map/Set vuoto o default — mai un
+ *    crash. RINOMINARE o cambiare il tipo di un campo invece li rompe:
+ *    valutare STORAGE_FORMAT_VERSION (storage.ts, invariante #8).
  */
 export interface CityStore {
   /** entityId → numero di istanze in città (id grezzo dal payload, come da CityMapData) */

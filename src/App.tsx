@@ -2397,7 +2397,11 @@ export default function App() {
         gameLang,
         portraitUrl: typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : undefined,
         bookmarkletVersion: typeof preloadedData._v === "number" ? preloadedData._v : 0,
-      });
+        // `satisfies CityStore`: writeStoredJson accetta `unknown`, quindi senza
+        // questa verifica strutturale un campo dimenticato o con typo
+        // compilerebbe e persisterebbe profili incompleti in silenzio (il
+        // reader farebbe revive di un campo assente → dati persi al reload).
+      } satisfies CityStore);
       setIsDebugOpen(false);
       bumpStorage();
     } catch (err) {
@@ -2443,7 +2447,9 @@ export default function App() {
       inventorySelectionKits: Array.from(selectionKits.entries()),
       inventoryUpgradeKits: Array.from(upgradeKits.entries()),
       specialKits: parsedSpecialKits,
-    });
+      // Verifica strutturale: stesso razionale del `satisfies CityStore`
+      // nella scrittura della città (writeStoredJson accetta `unknown`).
+    } satisfies InventoryStore);
     setIsInventoryDebugOpen(false);
 
     // Estrai i frammenti di alleati che sono dentro l'inventario (richiede inventory già parsato)

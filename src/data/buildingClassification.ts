@@ -162,19 +162,21 @@ export function getSettlementInfo(id: string): SettlementInfo | null {
 //   golden_selection_kit_X   (kit di selezione oro)
 //   platinum_selection_kit_X (kit di selezione platino)
 //   upgrade_kit_ascended_X   (kit di aggiornamento asceso)
+//   shrink_kit_X             (kit di rimpicciolimento)
 // Se Inno cambia questi prefissi, si tocca SOLO qui.
+//
+// NOTA sugli shrink kit: sono trattati come normali kit di aggiornamento
+// (riducono le dimensioni dell'edificio conservandone la produzione, quindi
+// ne aumentano l'efficienza; le loro catene stanno in kit.json come tutte le
+// altre). In passato esisteva qui un helper isShrinkKit usato da
+// parseInventory per ESCLUDERLI dall'inventario: l'esclusione è stata rimossa
+// (vedi la nota storica in inventory.ts) e con essa l'helper, rimasto senza
+// consumatori. Se in futuro servisse distinguerli di nuovo, il pattern
+// lingua-neutro è `kitId.startsWith("shrink_kit_")`.
 
 /** True se il kit_id corrisponde a un kit di aggiornamento asceso. */
 export function isAscendedUpgradeKit(kitId: string): boolean {
   return kitId.startsWith("upgrade_kit_ascended_");
-}
-
-/** True se il kit_id corrisponde a un kit di rimpicciolimento ("shrink kit").
- *  Questi NON sono kit di aggiornamento edificio e vanno esclusi dalla lista
- *  upgrade. Il pattern dell'id è lingua-neutro (a differenza del nome
- *  localizzato "Kit di restringimento"/"Shrink kit"). */
-export function isShrinkKit(kitId: string): boolean {
-  return kitId.startsWith("shrink_kit_");
 }
 
 // ── Regole su pattern di token frammenti ─────────────────────────────────────

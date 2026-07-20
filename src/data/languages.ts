@@ -5,12 +5,20 @@
  * translations.ts (che costruisce le mappe id->nome) devono poterlo
  * importare senza creare un ciclo tra loro.
  *
- * Per aggiungere una lingua (es. tedesco): aggiungere una riga a LANGUAGES
- * qui sotto, poi aggiungere la colonna corrispondente (es. "NomeDeu") sia in
- * buildings.csv sia in allies.csv. Nessun'altra modifica di codice è
- * necessaria: il parsing e le mappe di traduzione la raccolgono in automatico.
- * Se la colonna non è ancora presente nel CSV, la lingua resta semplicemente
- * assente dalle mappe (fallback sull'inglese, poi sull'id grezzo).
+ * Per aggiungere una lingua (es. tedesco), la ricetta COMPLETA è:
+ *  1. una riga in LANGUAGES qui sotto (il codice è già in Lang);
+ *  2. la colonna corrispondente (es. "NomeDeu") in TUTTI E TRE i CSV che
+ *     leggono LANGUAGES: buildings.csv, allies.csv e ages.csv. Attenzione:
+ *     ages.csv si edita a mano (23 righe), ma le colonne di buildings/allies
+ *     le genera la PIPELINE di RECUPERO DATI — servono un MainParser_deu.txt
+ *     dal server tedesco e l'estensione di buildings.py/allies.py (e di
+ *     parse_kit.py per i nomi dei kit in kit.json);
+ *  3. nessun'altra modifica di codice lato app: parser e mappe di traduzione
+ *     raccolgono la colonna in automatico.
+ * Finché la colonna manca da un CSV, quella lingua resta semplicemente
+ * assente dalle sue mappe (fallback sull'inglese, poi sull'id grezzo).
+ * Nota: la lingua della GUI (UiLang in ui-strings.ts, solo it/en) è un
+ * concetto SEPARATO e ha la sua ricetta — vedi UI_LANGUAGES.
  */
 
 /** Codici lingua candidati. Estendere qui per aggiungerne di nuovi. */
