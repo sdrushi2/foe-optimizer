@@ -1412,6 +1412,50 @@ decine di millisecondi anche su inventari molto grandi.
 
 ---
 
+### 16.x Limiti noti del modello e proprietà validate (audit luglio 2026)
+
+Audit empirico completo sull'ottimizzatore reale con kit.json corrente:
+
+**Proprietà VALIDATE** (property-test): conservazione dei kit per-famiglia e
+determinismo su 200 inventari casuali (0 violazioni); "un upgrade kit da solo non
+crea mai nulla" su tutti i 457 kit; inventario massimale (282 famiglie) elaborato in
+~26ms. Assunzioni strutturali verificate sui dati: nessuna catena inerte (<2 step),
+nessun ciclo nel grafo delle catene (`buildMegaChain` non ha guardia anti-ciclo: se
+mai servisse, va aggiunta in parse_kit.py lato pipeline, non nell'ottimizzatore),
+nessun edificio che apre una catena ed è insieme step intermedio di un'altra.
+
+**Famiglie sintetiche per opzioni "standalone"** (luglio 2026). I selection kit che
+offrono edifici fuori da ogni catena (26 nel censimento: set decorativi, kit-scelta
+di pezzi evento come `selection_kit_ANNI24CD`) sono gestiti da un blocco dedicato in
+`computeAllFamilies`: per ogni kit posseduto con opzioni standalone
+(`SK_STANDALONE_OPTIONS`, indice costruito in `initKitData`) viene emessa una
+famiglia sintetica con `root` = id del kit, nome = nome del kit, e un unico output
+`{ level: 1, qty: <copie del kit>, ids: <tutte le opzioni standalone>, is_max: true,
+kitsUsed: [kitId × qty] }`. Il consumer in App crea una riga per opzione con la
+quantità piena (3 kit → 3 Arboreti E 3 Dirigibili) — stessa convenzione "potenziale
+per famiglia/opzione" dei kit epici; il tooltip "Scelta:" elenca le alternative via
+`_fabChoices`. Le opzioni in-catena dello stesso kit continuano dal ramo normale (un
+kit misto compare in entrambi). Validato con differenziale su 300 inventari casuali:
+famiglie preesistenti byte-identiche, famiglie extra tutte e sole quelle sintetiche
+attese. Nota: le opzioni con prefisso `L_` sono escluse da buildings.csv → la riga si
+appoggia al fallback CityEntities (creato all'import via `addChainFrom(opt)`) o al
+placeholder UNKNOWN.
+
+**Selection kit ancora "muti"** — 14 su 418, in due categorie:
+
+1. **Offrono solo upgrade kit** (7, es. `selection_kit_epic_ASC24`): corretto per
+   costruzione (gli upgrade non creano; il kit funziona in combinazione con
+   l'edificio base posseduto).
+2. **Offrono un edificio a livello intermedio della catena** (7, es.
+   `selection_kit_celtic_trees`/`_celtic_altars`, `selection_kit_FALL24CE`,
+   `selection_kit_golden_legend_a`): in `optimizeFamily` l'insieme R delle risorse
+   rilevanti contiene solo i kit della catena e gli edifici BASE (`levels[0]`) —
+   un'opzione che è un edificio mid-chain non matcha mai, la cap risulta vuota e il
+   kit è inutilizzabile. Supportarli = estendere R a tutti i livelli + creazione a
+   livelli intermedi: feature da progettare con test differenziali (invariante #6).
+
+---
+
 ## 17. I tipi della mappa città (`cityMap.ts`)
 
 **File:** `src/data/cityMap.ts`

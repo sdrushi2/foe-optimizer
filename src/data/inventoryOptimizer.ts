@@ -111,6 +111,13 @@ let SK_BLDS_BY_BLD: Map<string, string[]> | null = null;
 // per raccogliere SOLO i selection kit rilevanti per la famiglia corrente invece
 // di scorrere l'intero inventario per ogni famiglia (vedi skInfos).
 let SK_BY_OPTION: Map<string, string[]> | null = null;
+// selection kit → opzioni "STANDALONE": edifici che non compaiono in NESSUNA
+// catena di kit.json (né upgrade kit né livelli). Per questi non esiste una
+// famiglia-catena, quindi computeAllFamilies emette una famiglia SINTETICA a
+// livello singolo per il kit (vedi il blocco dedicato lì). Senza questo indice,
+// 26 selection kit reali (set decorativi, kit-scelta di pezzi evento come
+// selection_kit_ANNI24CD) risultavano completamente invisibili in tab Inventario.
+let SK_STANDALONE_OPTIONS: Map<string, string[]> | null = null;
 // Cache dei nomi di famiglia (root → nome), calcolati una volta sola.
 let FAMILY_NAME_CACHE: Map<string, string> | null = null;
 
@@ -189,7 +196,11 @@ export function initKitData(kit: KitDataRaw, lang: Lang = "it"): void {
   // Selection kit → root toccati, e indice base-building → selection kit.
   SK_BLDS_BY_BLD = new Map();
   SK_BY_OPTION = new Map();
+  SK_STANDALONE_OPTIONS = new Map();
   for (const [sk_id, skd] of Object.entries(SK)) {
+    // Opzioni fuori da ogni catena: alimentano le famiglie sintetiche.
+    const standalone = (skd.options ?? []).filter(o => !BU_IDS!.has(o) && !ALL_BLDS!.has(o));
+    if (standalone.length > 0) SK_STANDALONE_OPTIONS.set(sk_id, standalone);
     for (const o of skd.options ?? []) {
       // Indice resourceId → selection kit (per il filtro mirato in optimizeFamily).
       let byOpt = SK_BY_OPTION.get(o);
@@ -951,7 +962,7 @@ export function computeAllFamilies(
   invSel: Map<string, number>,
   invBld: Map<string, number> = new Map(),
 ): FamilyResult[] {
-  if (!TRUE_ROOTS || !BLD_TO_ROOT || !KIT_TO_ROOTS) throw new Error("initKitData not called");
+  if (!TRUE_ROOTS || !BLD_TO_ROOT || !KIT_TO_ROOTS || !SK_STANDALONE_OPTIONS) throw new Error("initKitData not called");
 
   // ── Early-exit: ottimizza SOLO le famiglie effettivamente toccate ──────────
   // dall'inventario, invece di scorrere tutti i TRUE_ROOTS (centinaia).
@@ -975,6 +986,37 @@ export function computeAllFamilies(
   for (const root of touchedRoots) {
     const res = optimizeFamily(root, invUpg, invSel, invBld);
     if (res) results.push(res);
+  }
+
+  // ── Famiglie SINTETICHE per le opzioni "standalone" dei selection kit ──────
+  // Un selection kit può offrire edifici che non appartengono a NESSUNA catena
+  // (es. selection_kit_ANNI24CD → Arboreto dei Fiori / Dirigibile Etereo): per
+  // loro non esiste una famiglia-catena e il ramo sopra non li mostrerebbe mai.
+  // Qui si emette una famiglia per KIT posseduto, con un unico output a
+  // livello 1 (is_max: un edificio senza catena è già al massimo) e TUTTE le
+  // opzioni in `ids`: il consumer (App) crea una riga per opzione con la
+  // quantità piena — stessa convenzione "potenziale per famiglia/opzione" dei
+  // kit epici (3 kit → 3 Arboreti E 3 Dirigibili mostrati; l'utente sa che
+  // ogni copia del kit produce UNA sola delle opzioni). `root` = id del kit:
+  // non collide mai con i root-edificio delle famiglie vere. Le opzioni
+  // in-catena dello stesso kit continuano a passare dal ramo normale (un kit
+  // misto compare in entrambi i posti, come gli epici).
+  for (const [sk_id, qty] of invSel) {
+    if (qty <= 0) continue;
+    const standalone = SK_STANDALONE_OPTIONS.get(sk_id);
+    if (!standalone) continue;
+    results.push({
+      root: sk_id,
+      name: kitDisplayName(SK![sk_id]?.names, KIT_LANG) || sk_id,
+      output: [{
+        level: 1,
+        qty,
+        ids: [...standalone],
+        is_max: true,
+        kitsUsed: new Array(qty).fill(sk_id) as string[],
+      }],
+      invRows: [],
+    });
   }
 
   // Ordinamento: livello massimo desc, poi quantità totale desc.
