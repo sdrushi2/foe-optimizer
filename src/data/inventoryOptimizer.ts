@@ -1,6 +1,5 @@
 /**
- * Algoritmo di ottimizzazione inventario — traduce la logica di inventario.html
- * (www.gemboy.it/foe/inventario.txt) in TypeScript puro.
+ * Algoritmo di ottimizzazione inventario
  *
  * Input:  kit.json (buildingUpgrades + selectionKits) + l'inventario importato
  *         dal bookmarklet (le mappe invUpg/invSel/invBld costruite da App.tsx;
@@ -567,11 +566,14 @@ function optimizeFamily(
   }
 
   // ── Alias di compatibilità per la salita principale ───────────────────
-  // kit.json a volte referenzia, nelle `options` di un selection kit, un id
-  // di upgrade kit che non corrisponde esattamente alla chiave reale in
-  // buildingUpgrades (es. "upgrade_kit_chocolatery" invece della chiave reale
-  // "upgrade_kit_W_MultiAge_WIN22A" — probabile refuso/alias residuo nei dati
-  // generati). Per convenzione FoE, un VERO selection kit "di famiglia" di
+  // NOTA STORICA (luglio 2026): la causa a monte di questo blocco è stata
+  // trovata e CORRETTA in parse_kit.py — esportava `itemAssetName` (il nome
+  // dell'ASSET grafico, che Inno riusa tra item diversi: 23 casi reali, es.
+  // "upgrade_kit_chocolatery" come asset del vero upgrade_kit_W_MultiAge_WIN22A,
+  // o l'asset dei kit GR25C sui kit "legend") invece dell'id reale
+  // (`upgradeItemId`/`cityEntityId`). Il kit.json rigenerato non contiene più
+  // quegli alias. Questo blocco resta come DIFESA IN PROFONDITÀ contro futuri
+  // dati anomali: per convenzione FoE, un VERO selection kit "di famiglia" di
   // livello 0 offre {edificio base, salita regolare principale} — quindi se
   // esiste un livello 0 ma nessuna cap referenzia letteralmente `path[0].kit_id`
   // (la salita regolare principale), lo assegniamo comunque al livello 0.

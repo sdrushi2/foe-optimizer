@@ -654,7 +654,14 @@ scrivere un CSV vuoto che sembrerebbe un run riuscito).
 - **`linnun.py`**, **`lin_inject.py`**, **`confronta_buildings.py`** — modello
   predittivo per la colonna `Lin` (db di training protetto `lin_training.db`); i nomi
   alleati arrivano dagli stessi file Allies.
-- **`parse_kit.py`** — genera `kit.json`.
+- **`parse_kit.py`** — genera `kit.json`. ⚠️ Le `options` dei selection kit usano
+  l'ID REALE dell'item (`upgradeItemId` per i kit, `cityEntityId` per gli edifici),
+  NON `itemAssetName`: l'asset grafico è riusato da Inno tra item diversi e usarlo
+  produceva 23 opzioni sbagliate su 20 kit (es. i kit "legend" che sembravano
+  offrire kit Lunara/GR25C, o `upgrade_kit_chocolatery` al posto del vero
+  `upgrade_kit_W_MultiAge_WIN22A` — era la causa a monte dell'"alias di
+  compatibilità" in inventoryOptimizer.ts, oggi mantenuto solo come difesa). Bug
+  corretto a luglio 2026: non regredire a `itemAssetName`.
 - **`events.py`** — genera `events.csv` (token `=` inclusi, vedi §8.4 e §23). Fuori
   dai flussi automatici: lo lancia l'utente manualmente ~1 volta al mese, e richiede
   un `buildings_linnun_raw.csv` fresco (cioè un run VAI2 recente); l'output va copiato
@@ -1441,18 +1448,25 @@ attese. Nota: le opzioni con prefisso `L_` sono escluse da buildings.csv → la 
 appoggia al fallback CityEntities (creato all'import via `addChainFrom(opt)`) o al
 placeholder UNKNOWN.
 
-**Selection kit ancora "muti"** — 14 su 418, in due categorie:
+**Limite residuo: opzioni "edificio mid-chain"**: in `optimizeFamily` l'insieme R
+delle risorse rilevanti contiene solo i kit della catena e gli edifici BASE
+(`levels[0]`) — un'opzione che è un edificio a livello intermedio non matcha mai,
+la cap risulta vuota e l'opzione resta invisibile. Colpiti:
+`selection_kit_celtic_trees`/`_celtic_altars` e `selection_kit_FALL24CE`/`_FALL24DF`
+(muti del tutto), più la sola opzione-STATUA dei tre kit "legend"
+(`silver_legend_a`/`golden_legend_a`/`golden_legend_b`) — la cui opzione-kit, dopo
+il fix di parse_kit.py (id reale al posto di itemAssetName, vedi §8bis), punta
+correttamente alla catena delle statue e FUNZIONA (validato: statua base + kit →
+statua livello 2). Supportare le opzioni mid-chain = estendere R a tutti i livelli
++ creazione a livelli intermedi: feature da progettare con test differenziali
+(invariante #6).
 
-1. **Offrono solo upgrade kit** (7, es. `selection_kit_epic_ASC24`): corretto per
-   costruzione (gli upgrade non creano; il kit funziona in combinazione con
-   l'edificio base posseduto).
-2. **Offrono un edificio a livello intermedio della catena** (7, es.
-   `selection_kit_celtic_trees`/`_celtic_altars`, `selection_kit_FALL24CE`,
-   `selection_kit_golden_legend_a`): in `optimizeFamily` l'insieme R delle risorse
-   rilevanti contiene solo i kit della catena e gli edifici BASE (`levels[0]`) —
-   un'opzione che è un edificio mid-chain non matcha mai, la cap risulta vuota e il
-   kit è inutilizzabile. Supportarli = estendere R a tutti i livelli + creazione a
-   livelli intermedi: feature da progettare con test differenziali (invariante #6).
+Nota sul criterio di misura dell'audit: il test "kit posseduto da solo → zero
+output" segnala come silenziosi anche 7 kit che offrono SOLO upgrade kit (es.
+`selection_kit_epic_ASC24`/`_ASC25`, i tre `serpent_chain_*`, i due
+`*_selection_kit_GR25C`). NON è un problema: è il comportamento corretto per
+costruzione (gli upgrade non creano) e in combinazione con l'edificio base quei kit
+funzionano e compaiono regolarmente nell'inventario.
 
 ---
 
