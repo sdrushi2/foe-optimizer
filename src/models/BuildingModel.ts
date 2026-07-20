@@ -365,6 +365,34 @@ export class BuildingModel {
       }
     }
 
+    // 3bis. entity_levels: era_goods (vecchio stile) solo se l'opzione 24h la
+    // produce (via available_products). Traduzione fedele del blocco omonimo di
+    // _extract_goods_stats in buildings.py: senza questo ramo, 13 edifici reali
+    // (produttivi P_* di eventi storici, es. P_MultiAge_CarnivalBonus18)
+    // mostravano beni = 0 in tab Città mentre il CSV (generato dal Python)
+    // diceva correttamente 10 — divergenza trovata dal test di coerenza
+    // TS↔Python sull'intero MainParser. NON gated su `found`, come nel Python.
+    {
+      const option24h = BuildingModel.asArr(cityEntity.available_products)
+        .map(BuildingModel.asObj)
+        .find(p => BuildingModel.num(p.production_time) === 86400);
+      if (option24h) {
+        const optResources = BuildingModel.asObj(BuildingModel.asObj(option24h.product).resources);
+        for (const resKey of ["era_goods", "random_good_of_age", "all_goods_of_age"]) {
+          if (!(resKey in optResources)) continue;
+          for (const lvl of BuildingModel.asArr(cityEntity.entity_levels).map(BuildingModel.asObj)) {
+            if (BuildingModel.str(lvl.era) !== era) continue;
+            for (const pv of BuildingModel.asArr(lvl.production_values).map(BuildingModel.asObj)) {
+              if (BuildingModel.str(pv.type) === resKey) {
+                totals.beni += BuildingModel.num(pv.value);
+                found = true;
+              }
+            }
+          }
+        }
+      }
+    }
+
     // 4. abilities AddResources* (all_goods_of_age del giocatore) se non trovato
     if (!found) {
       for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
@@ -381,6 +409,34 @@ export class BuildingModel {
             }
           }
           if (eraFound) break;
+        }
+      }
+    }
+
+    // 4bis. RandomChestRewardAbility: beni con drop chance (valore atteso), se
+    // ancora non trovato. Traduzione fedele del ramo omonimo di buildings.py
+    // (id "goods#random#CurrentEra#N", chance in percentuale): nessun caso
+    // divergente osservato nel test di coerenza, portato per fedeltà — le due
+    // implementazioni devono restare gemelle riga per riga.
+    if (!found) {
+      outer:
+      for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
+        if (BuildingModel.str(ability.__class__) !== "RandomChestRewardAbility") continue;
+        const rewards = BuildingModel.asObj(ability.rewards);
+        for (const eraKey of [era, "AllAge"]) {
+          const eraRewards = BuildingModel.asObj(rewards[eraKey]);
+          if (!Object.keys(eraRewards).length) continue;
+          for (const pr of BuildingModel.asArr(eraRewards.possible_rewards).map(BuildingModel.asObj)) {
+            const rid = BuildingModel.str(BuildingModel.asObj(pr.reward).id);
+            if (rid.startsWith("goods#random#CurrentEra#")) {
+              const amount = parseInt(rid.split("#").pop() ?? "0", 10);
+              if (Number.isFinite(amount)) {
+                totals.beni += (BuildingModel.num(pr.drop_chance) / 100) * amount;
+                found = true;
+              }
+            }
+          }
+          if (found) break outer;
         }
       }
     }

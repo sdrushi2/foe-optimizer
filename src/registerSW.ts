@@ -89,9 +89,17 @@ export function registerServiceWorker(): void {
     // servire la nuova versione. Il piccolo ritardo lascia visibile l'avviso
     // (che nel frattempo viene mostrato anche qui, nel caso il controllerchange
     // arrivi prima dello statechange "installed").
+    //
+    // hadController: alla PRIMA visita in assoluto non esiste ancora un
+    // controller; il SW appena installato chiama clients.claim() e il
+    // controllerchange scatta comunque (null → SW). In quel caso NON è un
+    // aggiornamento — la pagina è già fresca dalla rete — e senza questo guard
+    // il nuovo visitatore vedrebbe l'avviso "nuova versione" e un reload
+    // spurio alla sua prima apertura del sito.
+    const hadController = !!navigator.serviceWorker.controller;
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
+      if (!hadController || refreshing) return;
       refreshing = true;
       showUpdateNotice();
       setTimeout(() => window.location.reload(), 1200);

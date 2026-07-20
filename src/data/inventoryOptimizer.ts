@@ -117,6 +117,18 @@ let SK_BY_OPTION: Map<string, string[]> | null = null;
 // 26 selection kit reali (set decorativi, kit-scelta di pezzi evento come
 // selection_kit_ANNI24CD) risultavano completamente invisibili in tab Inventario.
 let SK_STANDALONE_OPTIONS: Map<string, string[]> | null = null;
+// selection kit → opzioni "edificio al livello FINALE di una catena": edifici
+// che sono l'ultimo step di una catena e da cui NESSUNA catena prosegue (es.
+// selection_kit_celtic_trees → "Salice del druido Liv.2", livello 2 di 2;
+// i FALL24CE/DF → versioni "Migliori" già al massimo). In gioco questi kit
+// significano "ottieni l'edificio già al massimo": si materializzano come
+// unità is_max nella stessa famiglia sintetica per-kit, senza pagare step e
+// senza toccare il loop di upgrade. Il `level` è quello assoluto nella
+// famiglia (calcolato risalendo le catene). Un'opzione a livello INTERMEDIO
+// (da cui una catena prosegue, es. le statue dei kit "legend") resta esclusa:
+// supportarla richiederebbe l'interazione con il loop di upgrade (limite
+// documentato in SKILL/DOCUMENTATION).
+let SK_FINAL_OPTIONS: Map<string, Array<{ id: string; level: number }>> | null = null;
 // Cache dei nomi di famiglia (root → nome), calcolati una volta sola.
 let FAMILY_NAME_CACHE: Map<string, string> | null = null;
 
@@ -192,14 +204,48 @@ export function initKitData(kit: KitDataRaw, lang: Lang = "it"): void {
     }
   }
 
+  // Livello assoluto di un edificio nella sua famiglia: 1 + transizioni dalla
+  // base, risalendo all'indietro le catene che terminano in lui (memoizzato).
+  // Il grafo delle catene è aciclico (assunzione già alla base di
+  // buildMegaChain, validata empiricamente); la base provvisoria a 1 nel memo
+  // fa comunque da guardia difensiva contro un ipotetico ciclo futuro.
+  const depthMemo = new Map<string, number>();
+  const depthOf = (id: string): number => {
+    const cached = depthMemo.get(id);
+    if (cached !== undefined) return cached;
+    depthMemo.set(id, 1);
+    let best = 1;
+    for (const kd of Object.values(BU!)) {
+      const last = kd.steps[kd.steps.length - 1];
+      const lasts = Array.isArray(last) ? last : [last];
+      if (!lasts.includes(id)) continue;
+      const first = kd.steps[0];
+      const firsts = Array.isArray(first) ? first : [first];
+      for (const f of firsts) {
+        const d = depthOf(f) + kd.steps.length - 1;
+        if (d > best) best = d;
+      }
+    }
+    depthMemo.set(id, best);
+    return best;
+  };
+
   // Selection kit → root toccati, e indice base-building → selection kit.
   SK_BLDS_BY_BLD = new Map();
   SK_BY_OPTION = new Map();
   SK_STANDALONE_OPTIONS = new Map();
+  SK_FINAL_OPTIONS = new Map();
   for (const [sk_id, skd] of Object.entries(SK)) {
     // Opzioni fuori da ogni catena: alimentano le famiglie sintetiche.
     const standalone = (skd.options ?? []).filter(o => !BU_IDS!.has(o) && !ALL_BLDS!.has(o));
     if (standalone.length > 0) SK_STANDALONE_OPTIONS.set(sk_id, standalone);
+    // Opzioni "edificio al livello finale": ultimo step di una catena, nessuna
+    // prosecuzione. FIRST/LAST_TO_CHAINS sono già costruiti a questo punto.
+    const finals = (skd.options ?? [])
+      .filter(o => !BU_IDS!.has(o) && ALL_BLDS!.has(o)
+        && LAST_TO_CHAINS!.has(o) && !FIRST_TO_CHAINS!.has(o))
+      .map(o => ({ id: o, level: depthOf(o) }));
+    if (finals.length > 0) SK_FINAL_OPTIONS.set(sk_id, finals);
     for (const o of skd.options ?? []) {
       // Indice resourceId → selection kit (per il filtro mirato in optimizeFamily).
       let byOpt = SK_BY_OPTION.get(o);
@@ -964,7 +1010,7 @@ export function computeAllFamilies(
   invSel: Map<string, number>,
   invBld: Map<string, number> = new Map(),
 ): FamilyResult[] {
-  if (!TRUE_ROOTS || !BLD_TO_ROOT || !KIT_TO_ROOTS || !SK_STANDALONE_OPTIONS) throw new Error("initKitData not called");
+  if (!TRUE_ROOTS || !BLD_TO_ROOT || !KIT_TO_ROOTS || !SK_STANDALONE_OPTIONS || !SK_FINAL_OPTIONS) throw new Error("initKitData not called");
 
   // ── Early-exit: ottimizza SOLO le famiglie effettivamente toccate ──────────
   // dall'inventario, invece di scorrere tutti i TRUE_ROOTS (centinaia).
@@ -990,33 +1036,52 @@ export function computeAllFamilies(
     if (res) results.push(res);
   }
 
-  // ── Famiglie SINTETICHE per le opzioni "standalone" dei selection kit ──────
-  // Un selection kit può offrire edifici che non appartengono a NESSUNA catena
-  // (es. selection_kit_ANNI24CD → Arboreto dei Fiori / Dirigibile Etereo): per
-  // loro non esiste una famiglia-catena e il ramo sopra non li mostrerebbe mai.
-  // Qui si emette una famiglia per KIT posseduto, con un unico output a
-  // livello 1 (is_max: un edificio senza catena è già al massimo) e TUTTE le
-  // opzioni in `ids`: il consumer (App) crea una riga per opzione con la
-  // quantità piena — stessa convenzione "potenziale per famiglia/opzione" dei
-  // kit epici (3 kit → 3 Arboreti E 3 Dirigibili mostrati; l'utente sa che
-  // ogni copia del kit produce UNA sola delle opzioni). `root` = id del kit:
-  // non collide mai con i root-edificio delle famiglie vere. Le opzioni
-  // in-catena dello stesso kit continuano a passare dal ramo normale (un kit
-  // misto compare in entrambi i posti, come gli epici).
+  // ── Famiglie SINTETICHE per le opzioni "standalone" e "livello finale" ─────
+  // Due tipi di opzione che il ramo delle famiglie-catena non può mostrare:
+  //  - STANDALONE: edifici fuori da ogni catena (es. selection_kit_ANNI24CD →
+  //    Arboreto dei Fiori / Dirigibile Etereo) → gruppo a livello 1;
+  //  - LIVELLO FINALE: edifici che sono l'ultimo step di una catena, senza
+  //    prosecuzione (es. celtic_trees → Salice Liv.2, FALL24CE → Funghi
+  //    "Migliori") → gruppi al loro livello assoluto, già is_max, senza
+  //    pagamento di step (in gioco il kit dà l'edificio già al massimo).
+  // Si emette UNA famiglia per KIT posseduto (root = id del kit: non collide
+  // mai con i root-edificio), con un output per gruppo di livello e TUTTE le
+  // opzioni del gruppo in `ids`: il consumer (App) crea una riga per opzione
+  // con la quantità piena — stessa convenzione "potenziale per famiglia/
+  // opzione" dei kit epici (3 kit → 3 Salici E 3 Pietre mostrati; ogni copia
+  // del kit produce UNA sola opzione). Con più gruppi, ogni gruppo riporta
+  // kitsUsed = kit×qty: è la stessa convenzione di potenziale, NON un
+  // conteggio di consumo cumulativo. Le opzioni in-catena non-finali dello
+  // stesso kit continuano a passare dal ramo normale (kit misto → entrambi).
   for (const [sk_id, qty] of invSel) {
     if (qty <= 0) continue;
     const standalone = SK_STANDALONE_OPTIONS.get(sk_id);
-    if (!standalone) continue;
+    const finals = SK_FINAL_OPTIONS.get(sk_id);
+    if (!standalone && !finals) continue;
+    const output: FreshUnit[] = [];
+    if (standalone) {
+      output.push({
+        level: 1, qty, ids: [...standalone], is_max: true,
+        kitsUsed: new Array(qty).fill(sk_id) as string[],
+      });
+    }
+    if (finals) {
+      const byLevel = new Map<number, string[]>();
+      for (const f of finals) {
+        const arr = byLevel.get(f.level);
+        if (arr) arr.push(f.id); else byLevel.set(f.level, [f.id]);
+      }
+      for (const [level, ids] of [...byLevel.entries()].sort((a, b) => b[0] - a[0])) {
+        output.push({
+          level, qty, ids, is_max: true,
+          kitsUsed: new Array(qty).fill(sk_id) as string[],
+        });
+      }
+    }
     results.push({
       root: sk_id,
       name: kitDisplayName(SK![sk_id]?.names, KIT_LANG) || sk_id,
-      output: [{
-        level: 1,
-        qty,
-        ids: [...standalone],
-        is_max: true,
-        kitsUsed: new Array(qty).fill(sk_id) as string[],
-      }],
+      output,
       invRows: [],
     });
   }

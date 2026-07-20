@@ -18,7 +18,11 @@ export function isStaleField(value: unknown): boolean {
   return value === undefined || value === null || (typeof value === "number" && Number.isNaN(value));
 }
 
-/** Formatta numeri interi con il separatore delle migliaia (punto) */
+/** Formatta numeri interi con il separatore delle migliaia (punto).
+ *  La regex genera un warning `security/detect-unsafe-regex` di eslint: è uno
+ *  dei 2 FALSI POSITIVI ACCETTATI del progetto (l'input è sempre una stringa
+ *  di sole cifre prodotta da toString su un numero, lunghezza limitata —
+ *  nessun input utente, nessun rischio ReDoS). Non "correggerlo". */
 export function formatInt(value: number): string {
   if (value === 0) return "0";
   const abs = Math.trunc(Math.abs(value)).toString();

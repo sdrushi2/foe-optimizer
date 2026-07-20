@@ -972,6 +972,17 @@ Inno (`IMAGE_BASE_URL`). Restituisce `null` se non c'è hash o l'id non ha under
 
 ## 13. Il modello di dominio (`BuildingModel.ts`)
 
+> **Coerenza TS↔Python validata (luglio 2026).** Tutti gli estrattori di questo
+> modulo sono traduzioni fedeli riga-per-riga degli algoritmi di `buildings.py`
+> (RECUPERO DATI). La coerenza è stata VALIDATA eseguendo `extractEraStats`
+> sull'intero MainParser reale e confrontando 2046 edifici × 35 campi a SpaceHub
+> col CSV: valori identici (esclusi i MANUAL_OVERRIDES del Python). Il test ha
+> scovato e fatto correggere una divergenza reale: mancava in `extractGoods` il
+> ramo `entity_levels`/`era_goods` (13 edifici produttivi `P_*` di eventi storici
+> mostravano beni=0 in tab Città); aggiunto anche il ramo
+> `RandomChestRewardAbility`-beni per fedeltà completa. Qualsiasi modifica agli
+> estrattori (di qua o di là) va validata rieseguendo quel confronto.
+
 **File:** `src/models/BuildingModel.ts`
 
 Questo è il file più complesso del progetto dopo l'ottimizzatore. Il suo compito:
@@ -1431,35 +1442,46 @@ nessun ciclo nel grafo delle catene (`buildMegaChain` non ha guardia anti-ciclo:
 mai servisse, va aggiunta in parse_kit.py lato pipeline, non nell'ottimizzatore),
 nessun edificio che apre una catena ed è insieme step intermedio di un'altra.
 
-**Famiglie sintetiche per opzioni "standalone"** (luglio 2026). I selection kit che
-offrono edifici fuori da ogni catena (26 nel censimento: set decorativi, kit-scelta
-di pezzi evento come `selection_kit_ANNI24CD`) sono gestiti da un blocco dedicato in
-`computeAllFamilies`: per ogni kit posseduto con opzioni standalone
-(`SK_STANDALONE_OPTIONS`, indice costruito in `initKitData`) viene emessa una
-famiglia sintetica con `root` = id del kit, nome = nome del kit, e un unico output
-`{ level: 1, qty: <copie del kit>, ids: <tutte le opzioni standalone>, is_max: true,
-kitsUsed: [kitId × qty] }`. Il consumer in App crea una riga per opzione con la
-quantità piena (3 kit → 3 Arboreti E 3 Dirigibili) — stessa convenzione "potenziale
-per famiglia/opzione" dei kit epici; il tooltip "Scelta:" elenca le alternative via
-`_fabChoices`. Le opzioni in-catena dello stesso kit continuano dal ramo normale (un
-kit misto compare in entrambi). Validato con differenziale su 300 inventari casuali:
-famiglie preesistenti byte-identiche, famiglie extra tutte e sole quelle sintetiche
-attese. Nota: le opzioni con prefisso `L_` sono escluse da buildings.csv → la riga si
-appoggia al fallback CityEntities (creato all'import via `addChainFrom(opt)`) o al
-placeholder UNKNOWN.
+**Famiglie sintetiche per opzioni "standalone" e "livello finale"** (luglio 2026).
+Due tipi di opzione dei selection kit non sono rappresentabili nel ramo delle
+famiglie-catena, e vengono gestiti da un blocco dedicato in `computeAllFamilies`
+che emette UNA famiglia sintetica per kit posseduto (`root` = id del kit, nome =
+nome del kit):
 
-**Limite residuo: opzioni "edificio mid-chain"**: in `optimizeFamily` l'insieme R
-delle risorse rilevanti contiene solo i kit della catena e gli edifici BASE
-(`levels[0]`) — un'opzione che è un edificio a livello intermedio non matcha mai,
-la cap risulta vuota e l'opzione resta invisibile. Colpiti:
-`selection_kit_celtic_trees`/`_celtic_altars` e `selection_kit_FALL24CE`/`_FALL24DF`
-(muti del tutto), più la sola opzione-STATUA dei tre kit "legend"
-(`silver_legend_a`/`golden_legend_a`/`golden_legend_b`) — la cui opzione-kit, dopo
-il fix di parse_kit.py (id reale al posto di itemAssetName, vedi §8bis), punta
-correttamente alla catena delle statue e FUNZIONA (validato: statua base + kit →
-statua livello 2). Supportare le opzioni mid-chain = estendere R a tutti i livelli
-+ creazione a livelli intermedi: feature da progettare con test differenziali
-(invariante #6).
+- **standalone** (`SK_STANDALONE_OPTIONS`): edifici fuori da ogni catena (26 kit
+  nel censimento: set decorativi, kit-scelta di pezzi evento come
+  `selection_kit_ANNI24CD`) → un gruppo `{ level: 1, is_max: true }`;
+- **livello finale** (`SK_FINAL_OPTIONS`): edifici che sono l'ULTIMO step di una
+  catena e da cui nessuna catena prosegue (`LAST_TO_CHAINS` sì, `FIRST_TO_CHAINS`
+  no — es. `celtic_trees` → Salice Liv.2, `FALL24CE/DF` → versioni "Migliori", le
+  statue dei golden legend A3/B2) → gruppi al loro livello assoluto (calcolato da
+  `depthOf`, risalita memoizzata delle catene), `is_max: true`, senza pagamento di
+  step: in gioco il kit dà l'edificio già al massimo.
+
+Ogni gruppo ha `qty` = copie del kit e `kitsUsed = [kitId × qty]`. Il consumer in
+App crea una riga per opzione con la quantità piena (3 kit → 3 Salici E 3 Pietre) —
+stessa convenzione "potenziale per famiglia/opzione" dei kit epici; il tooltip
+"Scelta:" elenca le alternative via `_fabChoices`. Con più gruppi nello stesso kit,
+kitsUsed per gruppo è potenziale, NON consumo cumulativo: le famiglie sintetiche
+sono esenti dalla proprietà di conservazione per-famiglia (che vale per le famiglie
+reali). Le opzioni in-catena non-finali dello stesso kit continuano dal ramo
+normale (un kit misto compare in entrambi). Validato con differenziale su 300
+inventari casuali: famiglie preesistenti byte-identiche, famiglie extra tutte e
+sole quelle sintetiche attese. Nota: le opzioni con prefisso `L_` sono escluse da
+buildings.csv → la riga si appoggia al fallback CityEntities (creato all'import via
+`addChainFrom(opt)`) o al placeholder UNKNOWN.
+
+**Limite residuo: opzioni "edificio a livello INTERMEDIO"** (livello da cui una
+catena PROSEGUE): in `optimizeFamily` l'insieme R contiene solo kit + edifici BASE,
+quindi l'opzione non matcha mai (cap vuota), e le famiglie sintetiche la escludono
+deliberatamente (materializzarla richiederebbe l'interazione col loop di upgrade —
+l'unità creata a livello k potrebbe poi salire con altri kit). Unico caso reale:
+l'opzione-statua `M_AllAge_LSO25A2` di `selection_kit_silver_legend_a` (da A2
+prosegue la catena golden); le statue dei golden legend (A3/B2) sono livelli FINALI
+e funzionano via famiglia sintetica, e l'opzione-kit di tutti e tre i legend
+funziona nel ramo normale dopo il fix di parse_kit.py (§8bis). Censimento: 8 kit
+senza output solo-run = 7 "solo upgrade kit" (corretti per costruzione) +
+silver_legend_a.
 
 Nota sul criterio di misura dell'audit: il test "kit posseduto da solo → zero
 output" segnala come silenziosi anche 7 kit che offrono SOLO upgrade kit (es.
@@ -2175,6 +2197,11 @@ nessun file aggiuntivo da creare. Non reintrodurre `"any maskable"` per "complet
   dopo ~1,2s — il ritardo lascia il tempo di leggere l'avviso, che altrimenti il
   refresh sembrerebbe un glitch. Il vecchio toast con pulsanti "Ricarica"/"Ignora" e
   il messaggio `SKIP_WAITING` non esistono più: non reintrodurli.
+  **Guard `hadController`:** alla prima visita in assoluto non esiste ancora un
+  controller, ma `clients.claim()` fa scattare comunque il `controllerchange`
+  (null → SW). Il flag `hadController` (catturato al `load`) distingue i due casi:
+  senza di esso un visitatore nuovo vedrebbe l'avviso "nuova versione" e un reload
+  spurio alla prima apertura. Non rimuoverlo.
 
 Il SW intercetta solo GET same-origin; POST e richieste cross-origin (es. eventuali
 chiamate esterne) passano direttamente in rete.
