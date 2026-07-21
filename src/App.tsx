@@ -4815,10 +4815,20 @@ export default function App() {
               <Swords size={22} strokeWidth={2.5} />
             </div>
             <div className="flex flex-col justify-center min-w-0">
-              <h1 className="text-lg md:text-xl font-black uppercase text-transparent bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text leading-tight tracking-wide">
+              {/* text-base (non text-lg) sotto md: a 18px+uppercase+tracking-wide
+                  "FOE OPTIMIZER" non ci stava su una riga nella larghezza stretta
+                  del contenitore mobile (dopo logo+gap, prima dei pulsanti export/
+                  import) e andava a capo su due righe, raddoppiando l'altezza
+                  dell'header — verticale su telefono, segnalato dall'utente
+                  (screenshot: "FOE" / "OPTIMIZER" spezzato). whitespace-nowrap
+                  impedisce comunque il wrap: se anche a 16px non bastasse lo
+                  spazio, il titolo trabocca visivamente invece di spezzarsi (il
+                  min-w-0 sul contenitore permette comunque lo shrink di questo
+                  blocco rispetto ai fratelli flex). */}
+              <h1 className="text-base md:text-xl font-black uppercase text-transparent bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text leading-tight tracking-wide whitespace-nowrap">
                 FOE OPTIMIZER
               </h1>
-              <p className="text-[10px] md:text-[11px] font-bold italic tracking-wide text-slate-400 leading-tight">
+              <p className="text-[10px] md:text-[11px] font-bold italic tracking-wide text-slate-400 leading-tight whitespace-nowrap">
                 <button
                   onClick={() => setIsAboutOpen(true)}
                   title={t("aboutTitle", uiLang)}
