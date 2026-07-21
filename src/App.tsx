@@ -3893,6 +3893,29 @@ export default function App() {
     showIqProdColumns,
   ]);
 
+  // Verticale su mobile: niente sticky sulla colonna nome anche se lo
+  // scroll orizzontale servirebbe — in verticale lo spazio è già così
+  // stretto che il blocco fisso (checkbox+occhio+nome, ~260px) copre gran
+  // parte dello schermo e lascia vedere pochissime colonne dati (segnalato
+  // dall'utente: "in verticale non si vede praticamente niente"). Rilevato
+  // via aspect ratio (viewport più alto che largo), non un breakpoint in
+  // px: un telefono ruotato in landscape ha innerWidth grande ma resta lo
+  // stesso schermo piccolo — l'aspect ratio è invariante rispetto alla
+  // rotazione fisica, un breakpoint px no. matchMedia + listener "change"
+  // invece di un resize handler dedicato: il browser notifica solo quando
+  // il valore booleano cambia davvero (nessun throttling da gestire a
+  // mano, a differenza del ResizeObserver sopra che legge px esatti).
+  const [isPortraitNarrow, setIsPortraitNarrow] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(orientation: portrait)").matches
+  );
+  useEffect(() => {
+    const mql = window.matchMedia("(orientation: portrait)");
+    const update = () => setIsPortraitNarrow(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+
   useEffect(() => {
     const wrapper = buildingTableWrapperRef.current;
     if (!wrapper) {
@@ -4122,8 +4145,10 @@ export default function App() {
   // (260px): è l'unico modo per evitare il bug di sovrapposizione/bordo
   // instabile risolto in precedenza (vedi note su .has-sticky-name in
   // index.css) — un ibrido "sticky ma elastica" non è possibile in modo
-  // affidabile con table-fixed + border-collapse.
-  const buildingTableNeedsScroll = buildingTableScrollMetrics.scrollWidth > buildingTableScrollMetrics.clientWidth;
+  // affidabile con table-fixed + border-collapse. ECCEZIONE: mai sticky in
+  // verticale su mobile (isPortraitNarrow sotto), anche se lo scroll
+  // servirebbe — vedi commento su isPortraitNarrow.
+  const buildingTableNeedsScroll = buildingTableScrollMetrics.scrollWidth > buildingTableScrollMetrics.clientWidth && !isPortraitNarrow;
 
   // minWidth dedicato per le tabelle alleati: colonne nome+LV1+EFF+GEN+CAMPI+SPED,
   // niente colonne edificio (size/road/pop/fel/IQ/produzioni) che non esistono qui.
