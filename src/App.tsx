@@ -4825,7 +4825,7 @@ export default function App() {
                   spazio, il titolo trabocca visivamente invece di spezzarsi (il
                   min-w-0 sul contenitore permette comunque lo shrink di questo
                   blocco rispetto ai fratelli flex). */}
-              <h1 className="text-base md:text-xl font-black uppercase text-transparent bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text leading-tight tracking-wide whitespace-nowrap">
+              <h1 className="text-base md:text-xl font-black uppercase text-transparent bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text leading-tight tracking-normal md:tracking-wide whitespace-nowrap">
                 FOE OPTIMIZER
               </h1>
               <p className="text-[10px] md:text-[11px] font-bold italic tracking-wide text-slate-400 leading-tight whitespace-nowrap">
@@ -4834,7 +4834,12 @@ export default function App() {
                   title={t("aboutTitle", uiLang)}
                   className="hover:text-amber-400 transition-colors cursor-pointer"
                 >BY SDRUSHI</button>
-                {totalStorageStr ? <span className="ml-1.5 not-italic font-normal text-slate-400">{totalStorageStr}</span> : null}
+                {/* Dimensione storage nascosta sotto md: su mobile la riga
+                    "BY SDRUSHI 1 KB v1.202" è già stretta, e lo storage è
+                    l'informazione meno utile delle tre in quello spazio —
+                    richiesto dall'utente per liberare posto nell'header
+                    verticale su telefono. Resta visibile su desktop. */}
+                {totalStorageStr ? <span className="ml-1.5 hidden md:inline not-italic font-normal text-slate-400">{totalStorageStr}</span> : null}
                 <span className="ml-1.5 not-italic font-mono text-[9px] tracking-tighter text-amber-500/80">{__BUILD_VERSION__}</span>
               </p>
             </div>
