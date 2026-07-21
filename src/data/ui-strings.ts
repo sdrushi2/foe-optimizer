@@ -492,8 +492,8 @@ const UI_STRINGS = {
     en: "Building size",
   },
   colRoad: {
-    it: "Strada richiesta",
-    en: "Road required",
+    it: "Fabbisogno stradale",
+    en: "Road requirement",
   },
   colPop: {
     it: "Popolazione fornita/sottratta",
@@ -694,6 +694,40 @@ const UI_STRINGS = {
   dailyQuantityLabel: {
     it: "Quantità giornaliera",
     en: "Daily quantity",
+  },
+
+  // ── Pannello efficienza strade (tab Città) ──────────────────────────
+  roadEfficiencyTitle: {
+    it: "Efficienza strade",
+    en: "Road efficiency",
+  },
+  roadEfficiencyFormula: {
+    it: "Efficienza = Fabbisogno Stradale Edifici Collegati ÷ Area Totale delle Strade × 100",
+    en: "Efficiency = Connected Buildings Road Requirement ÷ Total Road Area × 100",
+  },
+  roadEfficiencyConnectedArea: {
+    it: "Fabbisogno stradale edifici collegati",
+    en: "Connected buildings road requirement",
+  },
+  roadEfficiencyRoadArea: {
+    it: "Area totale delle strade",
+    en: "Total road area",
+  },
+  roadEfficiencyResult: {
+    it: "Efficienza strade",
+    en: "Road efficiency",
+  },
+  roadEfficiencyDisconnectedWarning: {
+    it: "In città ci sono edifici scollegati dalla strada.\nSe venissero collegati, senza costruire altre strade, l'efficienza cambierebbe:",
+    en: "There are buildings disconnected from the road network.\nIf they were connected, without building any more roads, efficiency would change to:",
+  },
+  roadEfficiencyDisconnectedArea: {
+    it: "Fabbisogno stradale edifici scollegati (potenziale)",
+    en: "Disconnected buildings road requirement (potential)",
+  },
+  roadEfficiencyHypothetical: {
+    it: "Efficienza se tutti collegati",
+    en: "Efficiency if all connected",
   },
   statRowGlobal: {
     it: "Globale",

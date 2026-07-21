@@ -55,7 +55,7 @@ import AboutModal from "./components/AboutModal";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
 import { t, UI_LANGUAGES, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
-import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId,
+import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilitaryCampBuildingId,
   isBattlegroundsPrizeId, isQuantumIncursionsPrizeId, getSettlementInfo,
   isAscendedUpgradeKit,
   isFragmentBuildingToken, isFragmentKitToken, fragmentBuildingId,
@@ -288,6 +288,17 @@ const getPropDisplay = (b: Building, lang: UiLang): string => {
 // è a livello modulo.
 const EMPTY_ERA_GROUPS: Array<[string, number, EraStats]> = [];
 const EMPTY_FRAGMENTS: FragmentProduced[] = [];
+
+// Fabbisogno stradale del municipio (min(larghezza,lunghezza)/2): il municipio
+// è SEMPRE 7×6 in ogni era del gioco (confermato dall'utente — non può
+// variare: la mappa città è già disegnata/collegata attorno a quella tile
+// fissa, un cambio di dimensione all'avanzamento di era romperebbe la
+// disposizione di tutti gli altri edifici). Costante invece di ricalcolarla
+// da CityEntities a ogni import: il municipio ha prefisso "H_" (fuori da
+// ALLOWED_PREFIXES, mai in cityEntityIds/cityBuildings) ma richiede sempre
+// strada — va sommato a parte nel calcolo dell'efficienza strade
+// (renderRoadSummary). Vedi anche BuildingModel.computeRoad per la formula.
+const TOWNHALL_ROAD = 3; // min(7,6)/2
 
 // ────────────────────────────────────────────────────────────────
 // KIT DI AGGIORNAMENTO / SELEZIONE (kit.json)
@@ -1908,6 +1919,7 @@ export default function App() {
   const [isProfileHelpOpen, setIsProfileHelpOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isProdSummaryOpen, setIsProdSummaryOpen] = useState(false);
+  const [isRoadSummaryOpen, setIsRoadSummaryOpen] = useState(false);
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
 
@@ -2108,8 +2120,9 @@ export default function App() {
 
       // Rilevamento lingua del gioco: guarda il nome del municipio in CityEntities.
       const townhallEntityId = currentEra ? `H_${currentEra}_Townhall` : null;
-      if (townhallEntityId && cityEntities[townhallEntityId]?.name) {
-        const thName = String(cityEntities[townhallEntityId].name).toLowerCase();
+      const townhallCityEntity = townhallEntityId ? cityEntities[townhallEntityId] : undefined;
+      if (townhallCityEntity?.name) {
+        const thName = String(townhallCityEntity.name).toLowerCase();
         if (thName.includes("municipio")) {
           gameLang = "it";
         } else {
@@ -4186,6 +4199,176 @@ export default function App() {
     };
   }, [cityEntityIds, inventoryCsvLike, uiLang]);
 
+  const renderRoadSummary = () => {
+    if (cityEntityIds.size === 0) return null;
+
+    // Efficienza strade — formula REALE del gioco (reverse-engineered a
+    // luglio 2026 confrontando con l'efficienza mostrata in-game, non
+    // documentata ufficialmente da Inno). La formula visualizzata
+    // "Area Edifici Collegati / (Area Totale Strade × 4) × 100" ha un
+    // numeratore che NON è l'area fisica (larghezza×lunghezza) degli
+    // edifici: è la somma del loro FABBISOGNO STRADALE (b.road =
+    // min(larghezza,lunghezza)/2) moltiplicato per 4. Il ×4 si elide col
+    // ×4 del denominatore, quindi la formula si riduce a:
+    //   Efficienza = Σ(road degli edifici collegati) / Area Totale Strade × 100
+    // Prova decisiva: scollegando un GE 7×5 (road=2.5) O un edificio
+    // normale 5×6 (road=2.5, area 30≠35) l'efficienza cala ESATTAMENTE
+    // uguale nei due casi — impossibile se il peso fosse l'area fisica
+    // (35 vs 30), ma coerente se il peso è road (identico, 2.5, per
+    // entrambi). Verificato al centesimo esatto su un caso reale:
+    // Σroad(13 edifici normali)=66,5 + Σroad(12 GE)=25 + Σroad(militare
+    // fallback)=1 + road(municipio)=3 → totale 95,5; ×4=382 = numeratore
+    // atteso, con area strade=74 → 382/(74×4)×100=129,05% (confermato
+    // dal gioco). Include quindi: edifici normali (cityBuildings +
+    // cityFallbacksForRoad, stesso trattamento di cityFallbacks in
+    // renderProdSummary), i Grandi Edifici (processedGreatBuildings, via
+    // BuildingModel.fromGreatBuilding → road = getRoadForGreatBuildingSize)
+    // e il municipio (TOWNHALL_ROAD, costante fissa: prefisso "H_" fuori da
+    // ALLOWED_PREFIXES quindi mai in cityEntityIds, ma dimensione 7×6
+    // invariante in ogni era — vedi il commento sulla costante). Solo le copie
+    // EFFETTIVAMENTE collegate contribuiscono (cityEntityIds -
+    // cityEntityDisconnected per gli edifici normali; rawEntry.connected
+    // per i GE, che hanno sempre una sola istanza).
+    // Area totale delle strade: tessere REALI piazzate in città
+    // (type === "street" in cityMapBuildings, ciascuna 1x1 o 2x2 — MAI
+    // frazionaria), sommando le aree w×h di quelle tessere.
+    // ESCLUSIONI dal numeratore (edifici che richiedono strada per
+    // funzionare ma NON contano nell'efficienza mostrata dal gioco):
+    // veri accampamenti militari (isMilitaryCampBuildingId). Verificato
+    // empiricamente due volte in game su una seconda città (scollegando E
+    // poi eliminando del tutto un accampamento vero): l'efficienza mostrata
+    // da FoE Helper non cambia in nessuno dei due casi.
+    // ⚠️ Ipotesi SCARTATA (luglio 2026): si era creduto che anche gli edifici
+    // "Culture" (__class__ === "CityEntityCultureBuilding", es. Algae
+    // Airship) non contassero — un residuo di 2,70 punti percentuale nel
+    // confronto con FoE Helper sembrava spiegato esattamente da 4×Algae
+    // Airship (road 1,5 cad. = 6,0). Un secondo confronto più preciso sulla
+    // STESSA città (103,27% calcolato escludendo Algae Airship vs 108,88%
+    // reale di FoE Helper) ha mostrato che il numero REALE combacia solo
+    // includendo Algae Airship normalmente: l'ipotesi era sbagliata, il gap
+    // dei 2,70 punti nel test precedente aveva un'altra causa (non ancora
+    // identificata). Gli edifici Culture contano quindi normalmente, come
+    // qualunque altro edificio con road > 0. Non reintrodurre l'esclusione
+    // basata su __class__ senza nuove prove dirette.
+    const cityFallbacksForRoad = Array.from(fallbackBuildings.values()).filter(b => cityEntityIds.has(b.cityEntityId));
+    let connectedRoadNeed = 0;
+    let disconnectedRoadNeed = 0;
+    for (const b of [...cityBuildings, ...cityFallbacksForRoad]) {
+      if (b.road <= 0) continue;
+      // Gli ACCAMPAMENTI militari veri (es. M_OceanicFuture_Military2) non
+      // contribuiscono al fabbisogno stradale — verificato empiricamente
+      // scollegandone uno in game: l'efficienza reale non cambia. Gli
+      // edifici-premio con prefisso "M_" ma non accampamenti (es. Tana dei
+      // furfanti = M_AllAge_EasterBonus1Small) continuano a contare
+      // normalmente. Vedi isMilitaryCampBuildingId.
+      if (isMilitaryCampBuildingId(b.cityEntityId)) continue;
+      const total = cityEntityIds.get(b.cityEntityId) ?? 0;
+      const disconnectedCount = cityEntityDisconnected.get(b.cityEntityId) ?? 0;
+      const connectedCount = Math.max(0, total - disconnectedCount);
+      connectedRoadNeed += b.road * connectedCount;
+      disconnectedRoadNeed += b.road * disconnectedCount;
+    }
+    for (const gb of processedGreatBuildings) {
+      if (gb.road <= 0) continue;
+      // Come per gli edifici normali: il campo "connected" nel payload grezzo
+      // NON è booleano/0-1 sempre presente — quando un GE è SCOLLEGATO il
+      // campo è del tutto ASSENTE (mai "connected": 0), quando è collegato
+      // vale 1. Il default va quindi verso "assente = scollegato" (?? 0),
+      // NON verso "assente = collegato" come si pensava in origine (bug
+      // scoperto luglio 2026: scollegando in game TUTTE le 15 GE di una
+      // città, il default ?? 1 le contava comunque come collegate, dando
+      // un'efficienza di 35,38% invece del 2,83% reale mostrato da FoE
+      // Helper — confermato con export raw MainParser.txt prima/dopo aver
+      // ricollegato 3 GE: "connected" assente quando scollegata, "connected":
+      // 1 quando collegata, mai "connected": 0).
+      const isConnected = Number(greatBuildingsJson.get(gb.cityEntityId)?.rawEntry?.connected ?? 0) >= 1;
+      if (isConnected) connectedRoadNeed += gb.road;
+      else disconnectedRoadNeed += gb.road;
+    }
+    // Il municipio richiede sempre strada e non ha un flag "connected"
+    // separato tracciato dall'app (è sempre il punto di partenza della
+    // rete stradale in FoE): contato sempre come collegato.
+    connectedRoadNeed += TOWNHALL_ROAD;
+    const roadArea = cityMapBuildings.reduce((sum, mb) => sum + (mb.type === "street" ? mb.w * mb.h : 0), 0);
+    const efficiency = roadArea > 0 ? (connectedRoadNeed / roadArea) * 100 : 0;
+    const hasDisconnected = disconnectedRoadNeed > 0;
+    // Efficienza ipotetica: gli edifici scollegati diventano collegati SENZA
+    // costruire altre strade → area strade invariata, fabbisogno aumenta.
+    const hypotheticalEfficiency = hasDisconnected && roadArea > 0
+      ? ((connectedRoadNeed + disconnectedRoadNeed) / roadArea) * 100
+      : efficiency;
+    // Efficienza sempre a 2 decimali, ma se dopo l'arrotondamento sono ",00"
+    // vanno omessi (mostra l'intero secco): formatDecimal decide "intero o
+    // no" PRIMA di arrotondare, quindi un valore come 99,995 arrotonderebbe
+    // a "100,00" invece di "100" — si arrotonda qui prima di delegare.
+    const formatEfficiency = (value: number): string => formatDecimal(Math.round(value * 100) / 100, 2);
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => {
+            // Chiude PROD+STAT se aperto: i due pannelli sono entrambi
+            // absolute left-0 rispetto al proprio bottone e, essendo
+            // affiancati nella toolbar, si sovrappongono se aperti insieme.
+            // Un solo pannello alla volta evita la sovrapposizione senza
+            // dover gestire posizionamenti dinamici più complessi.
+            setIsProdSummaryOpen(false);
+            setIsRoadSummaryOpen(v => !v);
+          }}
+          className={`flex items-center justify-center rounded border h-7 w-8 ${
+            isRoadSummaryOpen
+              ? "border-amber-500 bg-amber-950/40 text-amber-300"
+              : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+          }`}
+          title={t("roadEfficiencyTitle", uiLang)}
+        >
+          <img src={iconRoad} alt="" className="h-6 w-6 object-contain" />
+        </button>
+        {isRoadSummaryOpen && (
+          <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-max min-w-[420px] rounded border border-slate-800 bg-slate-950 p-2 shadow-2xl space-y-2 text-xs">
+            <div className="font-bold text-slate-200 uppercase tracking-wide">{t("roadEfficiencyTitle", uiLang)}</div>
+            <div className="rounded border border-slate-800 bg-slate-900/60 px-2 py-1.5 text-slate-400 italic">
+              {t("roadEfficiencyFormula", uiLang)}
+            </div>
+            <table className="w-full">
+              <tbody>
+                <tr className="border-b border-slate-800/50">
+                  <td className="py-1 px-1 text-slate-300">{t("roadEfficiencyConnectedArea", uiLang)}</td>
+                  <td className="py-1 px-1 text-right font-mono text-slate-200">{formatDecimal(connectedRoadNeed, 2)}</td>
+                </tr>
+                <tr className="border-b border-slate-800/50">
+                  <td className="py-1 px-1 text-slate-300">{t("roadEfficiencyRoadArea", uiLang)}</td>
+                  <td className="py-1 px-1 text-right font-mono text-slate-200">{formatDecimal(roadArea, 2)}</td>
+                </tr>
+                <tr className="bg-amber-950/30">
+                  <td className="py-1.5 px-1 font-bold text-amber-300">{t("roadEfficiencyResult", uiLang)}</td>
+                  <td className="py-1.5 px-1 text-right font-mono font-bold text-amber-300">{formatEfficiency(efficiency)}%</td>
+                </tr>
+              </tbody>
+            </table>
+            {hasDisconnected && (
+              <div className="border-t border-slate-800 pt-1.5 space-y-1.5">
+                <div className="whitespace-pre-line text-red-300">{t("roadEfficiencyDisconnectedWarning", uiLang)}</div>
+                <table className="w-full">
+                  <tbody>
+                    <tr className="border-b border-slate-800/50">
+                      <td className="py-1 px-1 text-slate-300">{t("roadEfficiencyDisconnectedArea", uiLang)}</td>
+                      <td className="py-1 px-1 text-right font-mono text-slate-200">{formatDecimal(disconnectedRoadNeed, 2)}</td>
+                    </tr>
+                    <tr className="bg-emerald-950/30">
+                      <td className="py-1.5 px-1 font-bold text-emerald-300">{t("roadEfficiencyHypothetical", uiLang)}</td>
+                      <td className="py-1.5 px-1 text-right font-mono font-bold text-emerald-300">{formatEfficiency(hypotheticalEfficiency)}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderProdSummary = () => {
     if (cityEntityIds.size === 0) return null;
 
@@ -4257,10 +4440,23 @@ export default function App() {
     ];
 
     return (
-      <div className="relative h-7 border border-slate-700 rounded text-[11px] shrink-0 w-auto">
+      <div className={`relative h-7 border rounded text-[11px] shrink-0 w-auto ${
+        isProdSummaryOpen ? "border-amber-500 bg-amber-950/40" : "border-slate-700"
+      }`}>
         <button
-          onClick={() => setIsProdSummaryOpen(v => !v)}
-          className="h-full px-2.5 font-bold text-orange-400 uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:text-orange-300 hover:bg-slate-800/60 transition-colors"
+          onClick={() => {
+            // Chiude il pannello efficienza strade se aperto: entrambi i
+            // pannelli sono absolute left-0 rispetto al proprio bottone e,
+            // essendo affiancati nella toolbar, si sovrappongono se aperti
+            // insieme. Un solo pannello alla volta evita la sovrapposizione.
+            setIsRoadSummaryOpen(false);
+            setIsProdSummaryOpen(v => !v);
+          }}
+          className={`h-full px-2.5 font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+            isProdSummaryOpen
+              ? "text-amber-300"
+              : "text-orange-400 hover:text-orange-300 hover:bg-slate-800/60"
+          }`}
         >
           PROD + STAT
         </button>
@@ -5244,7 +5440,7 @@ export default function App() {
                   }`}
                   title={t("showOnlyWithFragmentsTitle", uiLang)}
                 >
-                  <img src={iconFragment} alt="" className="icon-16" />
+                  <img src={iconFragment} alt="" className="h-5 w-5 object-contain" />
                 </button>
                 <button
                   onClick={() => setIsCityUpgradeableOpen(true)}
@@ -5252,6 +5448,7 @@ export default function App() {
                 >
                   {t("upgradableBuildingsButton", uiLang)}
                 </button>
+                {renderRoadSummary()}
                 {renderProdSummary()}
 
                 <span className="text-xs font-semibold text-slate-300 uppercase whitespace-nowrap">{t("hideBuildingsLabel", uiLang)}</span>
@@ -5436,7 +5633,7 @@ export default function App() {
                 }`}
                 title={t("showOnlyWithFragmentsTitle", uiLang)}
               >
-                <img src={iconFragment} alt="" className="icon-16" />
+                <img src={iconFragment} alt="" className="h-5 w-5 object-contain" />
               </button>
               <button
                 onClick={() => setShowOnlyReadyBuildings(v => !v)}

@@ -54,6 +54,26 @@ export function isMilitaryBuildingId(id: string): boolean {
   return id.startsWith("M_");
 }
 
+/** Un CityEntityId rappresenta un ACCAMPAMENTO militare vero (es.
+ *  "M_OceanicFuture_Military2") — non un edificio-premio che per motivi
+ *  storici del gioco usa comunque il prefisso "M_" (es. "Tana dei
+ *  furfanti" = M_AllAge_EasterBonus1Small, un premio evento pasquale,
+ *  o le statue M_AllAge_LSO25*). Distinzione reale scoperta a luglio 2026
+ *  confrontando due città: gli accampamenti veri NON contribuiscono al
+ *  fabbisogno stradale nel calcolo di efficienza strade (verificato
+ *  empiricamente scollegando in game un M_OceanicFuture_Military2 4×6:
+ *  l'efficienza mostrata da FoE Helper non cambia), mentre un edificio
+ *  premio con prefisso "M_" come la Tana dei furfanti conta regolarmente
+ *  (necessario per tornare all'efficienza esatta su un'altra città).
+ *  Approccio conservativo: riconosce POSITIVAMENTE solo "Military" nell'id
+ *  (pattern usato da Inno per tutti gli accampamenti standard), invece di
+ *  elencare tutte le eccezioni — nuovi edifici premio con prefisso "M_"
+ *  continuano a contare normalmente per costruzione. Vedi renderRoadSummary
+ *  in App.tsx per l'unico punto d'uso. */
+export function isMilitaryCampBuildingId(id: string): boolean {
+  return isMilitaryBuildingId(id) && id.includes("Military");
+}
+
 /** Un CityEntityId rappresenta un edificio attualmente "inattivo" (un
  *  edificio normale, censito nel CSV, che il gioco ha declassato a puro
  *  ornamento dopo la fine di un evento a tempo) se inizia con "W_" e
