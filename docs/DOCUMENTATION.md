@@ -625,17 +625,21 @@ dell'app) scarica da ogni server i dump come file di testo:
 - dal server **italiano** (`it6`): `MainParser_ita.txt` e `Allies_ita.txt` (solo per
   i nomi ITA; niente ForgeHX).
 
-### 8bis.2 L'orchestratore: `VAI2.bat` / `vai2.py`
+### 8bis.2 L'orchestratore: `AGGIORNA_DATI.bat` / `aggiorna_dati.py`
 
 Il flusso normale dell'utente è: bookmarklet su zz1 → bookmarklet su it6 → doppio
-click su `VAI2.bat`. Lo script: pesca i file più recenti da `C:\Users\Sdrushi\Downloads`
-(rifiuta file più vecchi di 24h per non riusare download del giro prima; gestisce i
-nomi duplicati di Chrome tipo `MainParser (1).txt`), li sposta in RECUPERO DATI
-eliminando i ForgeHX obsoleti, esegue la pipeline con i suoi gate, copia i tre output
-(`buildings.csv`, `allies.csv`, `kit.json`) in `src/assets/` del progetto e li
-archivia in `assets\`, e infine fa **commit+push dei soli file dati, solo se git vede
-differenze reali** — il push innesca la GitHub Action di deploy. `VAI.bat` è il
-vecchio flusso manuale, destinato all'eliminazione: non investirci.
+click su `AGGIORNA_DATI.bat` (rinominato da `VAI2.bat`/`vai2.py` — il vecchio
+`VAI.bat`, flusso manuale senza git, è stato eliminato: non serve più). Lo script:
+pesca i file più recenti da `C:\Users\Sdrushi\Downloads` (rifiuta file più vecchi di
+24h per non riusare download del giro prima; gestisce i nomi duplicati di Chrome tipo
+`MainParser (1).txt`), li sposta in RECUPERO DATI eliminando i ForgeHX obsoleti,
+esegue la pipeline con i suoi gate, copia i tre output (`buildings.csv`,
+`allies.csv`, `kit.json`) in `src/assets/` del progetto e li archivia in `assets\`,
+e infine — **solo se git vede differenze reali** nei tre file dati — fa git add +
+commit e **chiede conferma interattiva (`s/N`) prima del push** (mostrando il
+`git status --porcelain` delle differenze): se l'utente non conferma, il commit
+locale resta ma non c'è push, quindi la GitHub Action di deploy non parte. Se
+conferma, il push innesca la GitHub Action di deploy.
 
 ### 8bis.3 Gli script
 
@@ -664,8 +668,8 @@ scrivere un CSV vuoto che sembrerebbe un run riuscito).
   corretto a luglio 2026: non regredire a `itemAssetName`.
 - **`events.py`** — genera `events.csv` (token `=` inclusi, vedi §8.4 e §23). Fuori
   dai flussi automatici: lo lancia l'utente manualmente ~1 volta al mese, e richiede
-  un `buildings_linnun_raw.csv` fresco (cioè un run VAI2 recente); l'output va copiato
-  a mano in `src/assets`.
+  un `buildings_linnun_raw.csv` fresco (cioè un run recente di `aggiorna_dati.py`);
+  l'output va copiato a mano in `src/assets`.
 - **`getIcons.py`** — estrae le icone.
 
 ### 8bis.4 Il vincolo di coerenza con l'app

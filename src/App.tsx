@@ -5319,10 +5319,13 @@ export default function App() {
                         {t("debugMatchedBuildings", uiLang).toUpperCase()} ({matchedCityEntityIds.length})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
-                        {matchedCityEntityIds.length === 0 ? "-" : matchedCityEntityIds.map((id, i) => (
+                        {matchedCityEntityIds.length === 0 ? "-" : matchedCityEntityIds
+                          .map((id) => ({ id, name: displayName(id, id, gameLang) }))
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map(({ id, name }, i) => (
                           <div key={id} className={i > 0 ? "mt-0.5" : ""}>
                             <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: matchedJson.get(id) })} className="text-left hover:underline text-slate-300">
-                              {displayName(id, id, gameLang)}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-emerald-400" />
+                              {name}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-emerald-400" />
                             </button>
                           </div>
                         ))}
@@ -5333,10 +5336,13 @@ export default function App() {
                         {t("debugGreatBuildings", uiLang).toUpperCase()} ({greatBuildingIds.length})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
-                        {greatBuildingsJson.size === 0 ? "-" : Array.from(greatBuildingsJson.values()).map((gb, i) => (
+                        {greatBuildingsJson.size === 0 ? "-" : Array.from(greatBuildingsJson.values())
+                          .map((gb) => ({ gb, name: displayName(gb.entityId, gb.entityId, gameLang) }))
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map(({ gb, name }, i) => (
                           <div key={gb.entityId} className={i > 0 ? "mt-1" : ""}>
                             <button onClick={() => setSelectedJsonEntry({ title: gb.entityId, rawEntry: gb.rawEntry })} className="text-left hover:underline text-slate-300">
-                              {displayName(gb.entityId, gb.entityId, gameLang)} - Lv. {gb.level}/{gb.maxLevel}
+                              {name} - Lv. {gb.level}/{gb.maxLevel}
                             </button>
                           </div>
                         ))}
@@ -5347,10 +5353,13 @@ export default function App() {
                         {t("debugUnmatchedBuildings", uiLang).toUpperCase()} ({unmatchedCityEntityIds.length})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
-                        {unmatchedCityEntityIds.length === 0 ? "-" : unmatchedCityEntityIds.map((id, i) => (
+                        {unmatchedCityEntityIds.length === 0 ? "-" : unmatchedCityEntityIds
+                          .map((id) => ({ id, name: displayName(id, fallbackBuildings.get(id)?.name ?? id, gameLang) }))
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map(({ id, name }, i) => (
                           <div key={id} className={i > 0 ? "mt-0.5" : ""}>
                             <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: unmatchedJson.get(id) })} className="text-left hover:underline text-slate-300">
-                              {displayName(id, fallbackBuildings.get(id)?.name ?? id, gameLang)}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-red-400" />
+                              {name}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-red-400" />
                             </button>
                           </div>
                         ))}
