@@ -845,9 +845,11 @@ const UI_STRINGS = {
   },
 
   // ── Tooltip "Frammenti / Kit prodotti da" ─────────────────────────────
+  // Niente emoji 🧩 nel testo: il chiamante antepone iconFragment (icona
+  // ufficiale Inno) come <img>, coerente col badge in tabella.
   fragmentsProducedByTitle: {
-    it: "🧩 Frammenti prodotti da:",
-    en: "🧩 Fragments produced by:",
+    it: "Frammenti prodotti da:",
+    en: "Fragments produced by:",
   },
   inCityBadge: {
     it: "CITTÀ",
@@ -927,13 +929,14 @@ const UI_STRINGS = {
     it: "Alleati posseduti",
     en: "Owned allies",
   },
-  buildingsThatProduceIt: {
-    it: "🧩 Edifici che lo producono:",
-    en: "🧩 Buildings that produce it:",
+  // Niente emoji 🧩: il chiamante antepone iconFragment come <img>.
+  fragmentsProducedTitle: {
+    it: "Produce frammenti di:",
+    en: "Produces fragments of:",
   },
-  selectionKitsThatProduceIt: {
-    it: "Kit di sel. che lo producono:",
-    en: "Selection kits that produce it:",
+  selectionKitOptionsTitle: {
+    it: "Opzioni del kit di selezione:",
+    en: "Selection kit options:",
   },
   requiredKits: {
     it: "Kit necessari:",
@@ -1551,6 +1554,10 @@ const UI_STRINGS = {
   showOnlyWithAllySlotTitle: {
     it: "Mostra solo gli edifici con uno slot alleato",
     en: "Show only buildings with an ally slot",
+  },
+  showOnlyWithFragmentsTitle: {
+    it: "Mostra solo gli edifici che producono frammenti di edifici o di kit di selezione/aggiornamento",
+    en: "Show only buildings that produce fragments of buildings or selection/upgrade kits",
   },
   showOnlyDeclassableTitle: {
     it: "Mostra solo gli edifici che possono essere declassati senza conseguenze (stesse stat. militari, meno popolazione)",

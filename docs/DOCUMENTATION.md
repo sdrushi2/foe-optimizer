@@ -1923,17 +1923,66 @@ identità ad ogni `setState` che le ricrea, es. `setSelectedIds(new Set(...))`).
 - `greatBuildingInfo`, `gameDisplayName`, `upgradeBadge`, `minLevel`,
   `allLevelsForEntity`, `instanceEraStats` — letture puntuali (`.get(b.cityEntityId)`)
   fatte dal genitore, non Map intere
-- `fragmentProducers`, `fragmentSelectionKits` — letture puntuali dalle costanti
-  modulo-level `FRAGMENT_BUILDING_PRODUCERS`/`SELECTION_KITS_BY_UPGRADE` (queste
-  ultime sono costanti immutabili, quindi sarebbero comunque stabili come prop, ma si
-  passa il valore puntuale per coerenza con lo stesso pattern)
+- `fragmentsProduced` — lettura puntuale dalla costante modulo-level
+  `FRAGMENTS_PRODUCED` (cityEntityId → lista di ciò di cui l'edificio PRODUCE
+  frammenti: edifici e/o kit, dalla colonna Fragments del CSV). Alimenta il
+  badge (icona `iconFragment`, asset ufficiale Inno — non più l'emoji 🧩,
+  sostituita a luglio 2026 per coerenza visiva col resto delle icone di
+  gioco); il tooltip elenca i prodotti (nomi risolti con displayName/kitName
+  in uiLang) e ripete la stessa icona nel titolo. ⚠️ Semantica cambiata a luglio 2026: prima il badge mostrava chi
+  produce frammenti DI quell'edificio / quali selection kit lo producono —
+  informazione già coperta dalla modale Edifici Aggiornabili, quindi
+  ribaltata. La vecchia mappa inversa `FRAGMENT_BUILDING_PRODUCERS` è stata
+  rimossa; `FRAGMENT_KIT_PRODUCERS` (kit → edifici produttori) resta e serve
+  la modale Edifici Aggiornabili.
+
+  **⚠️ Tecnica anti-allargamento-riga per icone `<img>` inline nel testo
+  (bug reale corretto, luglio 2026):** sostituire un'emoji con un'icona PNG
+  in mezzo a testo di tabella allarga l'altezza della riga di 1-3px, anche
+  con `vertical-align`/`line-height` tarati a mano sull'img o sullo span che
+  la contiene. Causa reale (misurata empiricamente con
+  `getBoundingClientRect` in un browser vero, non a intuito — i primi 3
+  tentativi con `align-top`/`align-middle`/`leading-[0]` sull'uno o l'altro
+  elemento NON hanno funzionato): un'immagine `position:absolute` non
+  contribuisce mai al flusso, ma lo SPAN-ancora (`position:relative`) che la
+  contiene sì, se ha un'altezza propria — è il box dello span stesso a
+  "spingere" il line-height, indipendentemente da come è allineata l'img al
+  suo interno. **Soluzione:** lo span-ancora deve essere alto solo 1px
+  (`h-px`, larghezza reale mantenuta per l'hitbox orizzontale del tooltip),
+  con `vertical-align: top` (non `middle`: con uno span 1px, "middle" lo
+  centra sull'x-height del testo spingendo l'icona fuori dalla cella);
+  l'`<img>` dentro è `absolute inset-0` con le dimensioni reali (`h-4 w-4`)
+  e un eventuale offset verticale voluto va con `top-[Npx]` sull'IMG, non
+  sullo span. Pattern verificato a 0.00px di differenza (badge 🧩→
+  `iconFragment` in `BuildingRow`, cella `.cell-name`): riusarlo per
+  qualunque icona PNG futura inserita in mezzo a testo di tabella, non
+  reintrodurre `align-middle`/`leading-[0]` su span 16×16 pensando che
+  bastino.
 
 Le callback (`handleCityRowClick`, `toggleSelect`, `setImagePopup`,
 `setUpgradeTooltip`, `setOutdatedTooltip`, `setFragmentTooltip`, `setFabTooltip`,
-`getPropDisplay`) restano funzioni passate come prop: alcune sono già stabili
-(`useCallback`), altre no — un'ulteriore ottimizzazione futura potrebbe
-`useCallback`-izzarle tutte nel genitore, ma non è stata necessaria per il guadagno
-osservato finora.
+`getPropDisplay`) restano funzioni passate come prop e sono **tutte a identità
+stabile**: i setter di `useState` lo sono per contratto React, le altre sono
+`useCallback` o (come `getPropDisplay`, pura) costanti modulo-level.
+
+**⚠️ La trappola dei fallback `?? []` (bug reale trovato e corretto, luglio
+2026).** Basta UNA prop a identità instabile per vanificare l'intera `memo()`:
+la shallow-compare fallisce e la riga si ri-renderizza comunque. Il call-site
+aveva tre fallback `?? []` inline (`instanceEraStats` e le due prop frammenti
+di allora) che creavano un array NUOVO ad ogni render per ogni riga senza dati
+(la maggioranza), più `getPropDisplay` definita nel corpo di `App` (ricreata
+ad ogni render): risultato, ogni `setState` di `App` — aprire un tooltip,
+l'hover su 👁️, un modal — ri-renderizzava TUTTE le righe, come se
+l'estrazione non esistesse. Fix: `getPropDisplay` spostata a livello modulo e
+fallback sostituiti da costanti modulo-level (oggi `EMPTY_ERA_GROUPS` /
+`EMPTY_FRAGMENTS`). Validato empiricamente montando l'App instrumentata
+(jsdom + contatore di render in `BuildingRow`, tab Database con 822 righe):
+prima del fix l'apertura del modal About ri-renderizzava 822 righe (e il mount
+iniziale le renderizzava due volte, 1644, per il setState delle metriche di
+scroll al primo paint); dopo il fix, 822 render al mount e **0** re-render.
+Regola operativa: nel call-site di `<BuildingRow>` niente letterali inline
+(`?? []`, `?? {}`, arrow function) — solo lookup, primitivi, costanti modulo o
+funzioni stabili.
 
 **Tipi spostati a livello di modulo.** Per poter scrivere la firma di
 `BuildingRowProps` fuori da `App`, i tipi `ProcessedBuilding`, `InventoryRowBuilding`

@@ -73,7 +73,7 @@ import {
   iconIQAtk_D as iconIQAtkD, iconIQDef_D as iconIQDefD,
   iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, iconIQProd,
   iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap, iconFUR, iconBP, iconTR, iconTRNE,
-  iconOneUp, iconImm, iconRinn, iconAiuto, allies_slot_empty, allies_slot_full,
+  iconOneUp, iconImm, iconRinn, iconAiuto, iconFragment, allies_slot_empty, allies_slot_full,
 } from "./assets/icons";
 
 // I nomi (NomeIta/NomeEng) sono ora colonne dirette di buildings.csv/allies.csv,
@@ -90,31 +90,39 @@ initTranslations(BUILDINGS_FROM_CSV, ALLIES_FROM_CSV);
 const ITALIAN_NAMES = getItalianMap();
 
 // ────────────────────────────────────────────────────────────────
-// FRAMMENTI EDIFICIO: mappa inversa target -> elenco edifici produttori
-// Costruita in un singolo passaggio (O(N·F)) dopo aver caricato tutti gli
-// edifici dal CSV. Considera solo i frammenti di tipo "building".
+// FRAMMENTI (colonna Fragments del CSV), costruiti in un singolo passaggio:
+// - FRAGMENTS_PRODUCED: cityEntityId -> lista di ciò di cui l'edificio PRODUCE
+//   frammenti. Token "building_<id>" = un edificio (es. building_W_MultiAge_WIN22B1);
+//   ogni altro token è l'id di un kit così com'è (selection/upgrade, inclusi i
+//   tier silver_/golden_, es. selection_kit_WIN23EF + silver_upgrade_kit_WIN23A).
+//   Alimenta il badge 🧩 in tabella, che mostra la lista completa dei prodotti.
+//   (La vecchia mappa inversa "chi produce frammenti di questo edificio" è
+//   stata rimossa insieme al vecchio significato del badge: quell'informazione
+//   vive già nella modale Edifici Aggiornabili.)
+// - FRAGMENT_KIT_PRODUCERS: mappa inversa kit -> edifici produttori, usata
+//   dalla modale Edifici Aggiornabili ("frammenti prodotti da").
 // ────────────────────────────────────────────────────────────────
-const FRAGMENT_BUILDING_PRODUCERS = new Map<string, string[]>();
-// Mappa frammenti kit (selection/upgrade) -> elenco edifici che li producono
+type FragmentProduced = { kind: "building" | "kit"; id: string };
+const FRAGMENTS_PRODUCED = new Map<string, FragmentProduced[]>();
 const FRAGMENT_KIT_PRODUCERS = new Map<string, string[]>();
 for (const b of BUILDINGS_FROM_CSV) {
   if (!b.fragments) continue;
+  const produced: FragmentProduced[] = [];
   for (const token of b.fragments.split("|")) {
     const frag = token.trim();
     if (!frag) continue;
     if (isFragmentBuildingToken(frag)) {
       // "building_W_MultiAge_WIN22B1" -> "W_MultiAge_WIN22B1"
-      const targetId = fragmentBuildingId(frag);
-      const arr = FRAGMENT_BUILDING_PRODUCERS.get(targetId);
-      if (arr) arr.push(b.cityEntityId);
-      else FRAGMENT_BUILDING_PRODUCERS.set(targetId, [b.cityEntityId]);
+      produced.push({ kind: "building", id: fragmentBuildingId(frag) });
     } else if (isFragmentKitToken(frag)) {
       // L'id del kit coincide col token (es. "selection_kit_FELL25BC", "upgrade_kit_ascended_ARCH19A")
+      produced.push({ kind: "kit", id: frag });
       const arr = FRAGMENT_KIT_PRODUCERS.get(frag);
       if (arr) arr.push(b.cityEntityId);
       else FRAGMENT_KIT_PRODUCERS.set(frag, [b.cityEntityId]);
     }
   }
+  if (produced.length > 0) FRAGMENTS_PRODUCED.set(b.cityEntityId, produced);
 }
 
 // Pre-compute inherited-ally chains once at module load (avoids O(n²) per-render filtering)
@@ -262,6 +270,25 @@ const displayName = (cityEntityId: string, fallback: string, lang: Lang = "it") 
   return translated === cityEntityId ? (fallback !== cityEntityId ? fallback : cityEntityId) : translated;
 };
 
+// Etichetta della colonna ⏱ (edifici a tempo limitato/ascesi): "Ng" con
+// suffisso localizzato. A LIVELLO MODULO, non dentro App: è pura e viene
+// passata come prop a BuildingRow (memoizzato) — definita nel corpo di App
+// verrebbe ricreata ad ogni render, cambiando identità e rompendo la
+// shallow-compare di memo() per TUTTE le righe (invariante #11).
+const getPropDisplay = (b: Building, lang: UiLang): string => {
+  if (b.time > 0) return `${b.time}${t("daySuffix", lang)}`;
+  return "";
+};
+
+// Fallback STABILI per le prop-array di BuildingRow. Un `?? []` inline nel
+// call-site creerebbe un NUOVO array ad ogni render di App per ogni riga
+// senza dati (la maggioranza), rompendo la shallow-compare di memo()
+// (invariante #11): ogni setState di App (tooltip, popup immagine, modal)
+// ri-renderizzerebbe tutte le righe. Stessa ragione per cui getPropDisplay
+// è a livello modulo.
+const EMPTY_ERA_GROUPS: Array<[string, number, EraStats]> = [];
+const EMPTY_FRAGMENTS: FragmentProduced[] = [];
+
 // ────────────────────────────────────────────────────────────────
 // KIT DI AGGIORNAMENTO / SELEZIONE (kit.json)
 // ────────────────────────────────────────────────────────────────
@@ -291,6 +318,28 @@ for (const [selKitId, entry] of Object.entries(KIT_RAW.selectionKits)) {
     if (arr) arr.push(selKitId);
     else SELECTION_KITS_BY_UPGRADE.set(produced, [selKitId]);
   }
+}
+
+/** Nome leggibile di un'opzione di selection kit: l'id può essere un edificio
+ *  base o un upgrade kit — sono scelte ALTERNATIVE distinte nel gioco (es.
+ *  selection_kit_GR25D offre "W_MultiAge_GR25D1" (l'edificio livello 1) *o*
+ *  "upgrade_kit_GR25D" (il kit di aggiornamento), come mostra la finestra di
+ *  scelta in gioco) — mai un altro selection kit (non annidati in kit.json).
+ *  Se è un upgrade kit, mostra il SUO nome (kitName, quello vero mostrato in
+ *  gioco), non l'edificio a cui porta: risolvere la catena fondeva le due
+ *  opzioni in una sola etichetta, perdendo la distinzione reale del kit. */
+function selectionOptionDisplayName(optionId: string, lang: Lang): string {
+  if (KIT_RAW.buildingUpgrades[optionId]) return kitName(optionId, lang);
+  return displayName(optionId, ITALIAN_NAMES.get(optionId) ?? optionId, lang);
+}
+
+/** Elenco leggibile di TUTTE le opzioni scelte da un selection kit (kit.json).
+ *  Usato dal tooltip 🧩 per mostrare cosa si può ottenere da un kit di
+ *  selezione, dato che il solo nome del kit spesso non lo chiarisce. */
+function selectionKitOptionNames(selKitId: string, lang: Lang): string[] {
+  const entry = KIT_RAW.selectionKits[selKitId];
+  if (!entry) return [];
+  return (entry.options ?? []).map((optionId) => selectionOptionDisplayName(optionId, lang));
 }
 
 // Lookup: buildingId -> elenco opzioni di upgrade { kit richiesto, edifici target }
@@ -659,6 +708,49 @@ function DebugQtyBadge({ qty, colorClass }: { qty: number; colorClass: string })
   return <span className={colorClass}> ×{qty}</span>;
 }
 
+/** Elenco kit del pannello Debug inventario, raggruppato per tier
+ *  (Platino/Oro/Argento/Normale). Il blocco era duplicato identico nei due
+ *  riquadri Selection/Upgrade kit — fattorizzato qui: tra i due cambia solo
+ *  la sorgente e il colore del badge quantità. "-" se la lista è vuota,
+ *  come i riquadri Matched/Unmatched. */
+function DebugKitsByTier({ kits, qtyColorClass, uiLang, onSelect }: {
+  kits: Array<{ kitId: string; name: string; inStock: number; rawEntry?: unknown }>;
+  qtyColorClass: string;
+  uiLang: UiLang;
+  onSelect: (title: string, rawEntry: unknown) => void;
+}) {
+  if (kits.length === 0) return <>-</>;
+  const categorized = kits.map(e => ({ ...e, tier: kitTier(e.kitId) }));
+  const TIERS = [
+    { tier: "platinum", labelKey: "tierPlatinum", color: "text-cyan-300" },
+    { tier: "gold",     labelKey: "tierGold",     color: "text-amber-300" },
+    { tier: "silver",   labelKey: "tierSilver",   color: "text-slate-300" },
+    { tier: "normal",   labelKey: "tierNormal",   color: "text-violet-300" },
+  ] as const;
+  return (
+    <>
+      {TIERS.map(({ tier, labelKey, color }) => {
+        const items = categorized.filter(e => e.tier === tier).sort((a, b) => a.name.localeCompare(b.name));
+        if (items.length === 0) return null;
+        return (
+          <div key={tier} className="mb-2">
+            <div className={`mb-1 text-[11px] font-bold uppercase tracking-wide border-b border-slate-800/50 ${color}`}>
+              {t(labelKey, uiLang).toUpperCase()}
+            </div>
+            {items.map(e => (
+              <div key={e.kitId} className="mt-0.5">
+                <button onClick={() => onSelect(e.kitId, e.rawEntry)} className="text-left hover:underline text-slate-300">
+                  {e.name}<DebugQtyBadge qty={e.inStock} colorClass={qtyColorClass} />
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
   if (!src) {
     return <span title={alt || undefined} className="text-[11px] font-bold uppercase">{alt}</span>;
@@ -832,8 +924,7 @@ interface BuildingRowProps {
   minLevel: number;
   allLevelsForEntity: number[] | undefined;
   instanceEraStats: Array<[string, number, EraStats]>;
-  fragmentProducers: string[];
-  fragmentSelectionKits: string[];
+  fragmentsProduced: FragmentProduced[];
   handleCityRowClick: (building: ProcessedBuilding) => void;
   toggleSelect: (id: string) => void;
   getPropDisplay: (b: Building, lang: UiLang) => string;
@@ -841,7 +932,7 @@ interface BuildingRowProps {
   scheduleImagePopupClose: () => void;
   setUpgradeTooltip: (v: { x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null) => void;
   setOutdatedTooltip: (v: { x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null) => void;
-  setFragmentTooltip: (v: { x: number; y: number; producers: string[]; selectionKits: string[] } | null) => void;
+  setFragmentTooltip: (v: { x: number; y: number; produced: Array<{ name: string; options?: string[] }> } | null) => void;
   setFabTooltip: (v: { x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null) => void;
 }
 
@@ -858,7 +949,7 @@ const BuildingRow = memo(function BuildingRow({
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
   greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
-  instanceEraStats, fragmentProducers, fragmentSelectionKits,
+  instanceEraStats, fragmentsProduced,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
 }: BuildingRowProps) {
@@ -1144,25 +1235,58 @@ const BuildingRow = memo(function BuildingRow({
           </span>
         ))}
         {(() => {
-          const producers = fragmentProducers;
-          const selectionKits = fragmentSelectionKits;
-          if (producers.length === 0 && selectionKits.length === 0) return null;
+          // Icona frammenti (iconFragment, ufficiale Inno) = questo edificio
+          // PRODUCE frammenti (colonna Fragments del CSV): il tooltip elenca
+          // di cosa (edifici e/o kit, anche più di uno). Per i kit di
+          // SELEZIONE (non gli upgrade kit: quelli producono un solo
+          // edificio, già chiaro dal nome) aggiunge anche le opzioni scelte
+          // dal kit — il nome del kit da solo spesso non lo chiarisce.
+          if (fragmentsProduced.length === 0) return null;
           return (
             <span
-              className="ml-1.5 inline-block text-xs cursor-help"
-              title=""
+              className="ml-1.5 inline-block cursor-help relative w-4 h-px align-top"
               onMouseEnter={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 setFragmentTooltip({
                   x: r.left,
                   y: r.bottom,
-                  producers: producers.map((id) => displayName(id, ITALIAN_NAMES.get(id) ?? id, uiLang)),
-                  selectionKits,
+                  produced: fragmentsProduced.map((f) => ({
+                    name: f.kind === "building"
+                      ? displayName(f.id, ITALIAN_NAMES.get(f.id) ?? f.id, uiLang)
+                      : kitName(f.id, uiLang),
+                    options: f.kind === "kit" && KIT_RAW.selectionKits[f.id]
+                      ? selectionKitOptionNames(f.id, uiLang)
+                      : undefined,
+                  })),
                 });
               }}
               onMouseLeave={() => setFragmentTooltip(null)}
             >
-              🧩
+              {/* L'immagine è `position:absolute` DENTRO uno span-ancora
+                  ALTO 1px (`h-px`, non 16px): un'immagine assolutizzata non
+                  contribuisce MAI all'altezza della riga, ma lo SPAN che la
+                  contiene sì se ha un'altezza propria — misurato
+                  empiricamente (browser reale, getBoundingClientRect) che
+                  uno span 16×16 (anche con align-top/middle sull'IMG)
+                  allarga comunque la riga di 1-3px: è il BOX DELLO SPAN
+                  stesso a "spingere" il line-height, non l'allineamento
+                  dell'img al suo interno. Riducendo lo span a un'ancora di
+                  altezza minima (1px, larghezza 16px per l'hitbox
+                  orizzontale) e lasciando che sia l'img absolute a portare
+                  le dimensioni/posizione reali (inset-0 + top-[3px] per lo
+                  spostamento voluto), la riga torna esattamente all'altezza
+                  di quando qui c'era l'emoji 🧩 — verificato: 0.00px di
+                  differenza, contro 1.38px con lo span 16×16.
+                  `align-top` sullo SPAN (non "middle"): con uno span 1px,
+                  "middle" lo centra sull'x-height del testo spostando
+                  l'intera ancora (e quindi l'img) troppo in basso
+                  (verificato: icona che sporge fuori dalla cella); "top"
+                  allinea l'ancora al bordo superiore della riga, dando un
+                  punto di riferimento stabile da cui il `top-[3px]`
+                  sull'img sposta esattamente come atteso (verificato: 7.5px
+                  sopra / 1.5px sotto, contro il 4.5/4.5 simmetrico senza
+                  offset — coerente col +3px voluto). */}
+              <img src={iconFragment} alt="" className="absolute inset-0 top-[3px] h-4 w-4 object-contain" />
             </span>
           );
         })()}
@@ -1681,6 +1805,10 @@ export default function App() {
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
   const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
   const [showOnlyWithAllySlot, setShowOnlyWithAllySlot] = useState(false);
+  // Filtra nella tab Città: mostra solo gli edifici che PRODUCONO frammenti
+  // (stesso meccanismo del filtro slot alleati sopra, stessa fonte dati del
+  // badge iconFragment: FRAGMENTS_PRODUCED).
+  const [showOnlyWithFragments, setShowOnlyWithFragments] = useState(false);
   // Filtra nella tab Inventario: mostra solo gli edifici fisicamente già in inventario
   const [showOnlyReadyBuildings, setShowOnlyReadyBuildings] = useState(false);
   const [cityMapCellSize, setCityMapCellSize] = useState(9);
@@ -1771,7 +1899,7 @@ export default function App() {
   }, [cancelImagePopupClose]);
   const [outdatedTooltip, setOutdatedTooltip] = useState<{ x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null>(null);
   const [declassableTooltip, setDeclassableTooltip] = useState<{ x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null>(null);
-  const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; producers: string[]; selectionKits: string[] } | null>(null);
+  const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; produced: Array<{ name: string; options?: string[] }> } | null>(null);
   const [kitProducersTooltip, setKitProducersTooltip] = useState<{ x: number; y: number; producers: Array<{ id: string; name: string }> } | null>(null);
   const [fabTooltip, setFabTooltip] = useState<{ x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null>(null);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
@@ -1854,11 +1982,9 @@ export default function App() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    const fileName = title === "city"
-      ? "city.csv"
-      : title === "inventory" || title === "all-inventory"
-        ? "inventory.csv"
-        : `${title}-list.csv`;
+    // Chiamata solo con "city" (lista città) o "all-inventory" (lista
+    // inventario completo): due soli nomi file, niente rami morti.
+    const fileName = title === "city" ? "city.csv" : "inventory.csv";
     link.href = url;
     link.download = fileName;
     document.body.appendChild(link);
@@ -2601,11 +2727,6 @@ export default function App() {
 
 
 
-  const getPropDisplay = (b: Building, lang: UiLang): string => {
-    if (b.time > 0) return `${b.time}${t("daySuffix", lang)}`;
-    return "";
-  };
-
   const weights: Weights = useMemo(() => {
     const def = generalDefense;
     const spdAtk = spedizioniEnabled ? spedizioniAttack : 0;
@@ -2855,10 +2976,10 @@ export default function App() {
 
       {spedizioniEnabled && !showSigmaColumns && (
         <>
-          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />} sortKey="sped_atk_a" onClick={() => handleSort("sped_atk_a")} active={sortBy === "sped_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", `${t("sectionGe", uiLang)} A`)} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />} sortKey="sped_atk_a" onClick={() => handleSort("sped_atk_a")} active={sortBy === "sped_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />
           <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_a" onClick={() => handleSort("sped_def_a")} active={sortBy === "sped_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />
           <SortableHeader label={<TableHeaderIcon src={iconSpedAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />} sortKey="sped_atk_d" onClick={() => handleSort("sped_atk_d")} active={sortBy === "sped_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => handleSort("sped_def_d")} active={sortBy === "sped_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => handleSort("sped_def_d")} active={sortBy === "sped_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />
         </>
       )}
       {spedizioniEnabled && showSigmaColumns && (
@@ -3597,7 +3718,10 @@ export default function App() {
       // 3. Filtered outdated (solo tab Città)
       if (isPropriacitta && showOnlyOutdated && b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)) continue;
       if (isPropriacitta && showOnlyDeclassable && b.cityEntityId && !declassableBuildings.has(b.cityEntityId)) continue;
-      if (isPropriacitta && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
+      // Filtri slot alleati / frammenti: disponibili anche in tab Inventario
+      // (pulsanti presenti in entrambe le barre), non solo in Città.
+      if ((isPropriacitta || isInventario) && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
+      if ((isPropriacitta || isInventario) && showOnlyWithFragments && b.cityEntityId && !FRAGMENTS_PRODUCED.has(b.cityEntityId)) continue;
 
       // 4. Limited ascended filter
       if (!currentFilters.showLimitedAscended && b.time > 0) continue;
@@ -3659,7 +3783,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, dbViewFull]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, showOnlyWithFragments, dbViewFull]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -5112,6 +5236,17 @@ export default function App() {
                   <img src={allies_slot_full} alt="" className="h-5 w-5 object-contain" />
                 </button>
                 <button
+                  onClick={() => setShowOnlyWithFragments(v => !v)}
+                  className={`flex items-center justify-center rounded border h-7 w-8 ${
+                    showOnlyWithFragments
+                      ? "border-blue-500 bg-blue-950/40 text-blue-300"
+                      : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                  }`}
+                  title={t("showOnlyWithFragmentsTitle", uiLang)}
+                >
+                  <img src={iconFragment} alt="" className="icon-16" />
+                </button>
+                <button
                   onClick={() => setIsCityUpgradeableOpen(true)}
                   className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
                 >
@@ -5229,6 +5364,20 @@ export default function App() {
 
           {activeTab === "inventario" && inventoryMatched.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs">
+              {portraitUrl ? (
+                <img
+                  src={portraitUrl}
+                  alt=""
+                  className="h-7 w-7 rounded object-cover border border-amber-500/40 shrink-0"
+                />
+              ) : (
+                <img
+                  src="https://foezz.innogamescdn.com/assets/shared/avatars/portrait_unknown-9d9c1d859.jpg"
+                  alt=""
+                  className="h-7 w-7 rounded object-cover border border-slate-600/60 shrink-0 opacity-50"
+                  title={t("avatarOutdatedTitle", uiLang)}
+                />
+              )}
               {currentEra && (
                 <span
                   className="flex items-center h-7 px-2.5 rounded border border-amber-500/30 bg-amber-500/8 text-amber-400/90 font-semibold cursor-default select-none whitespace-nowrap"
@@ -5257,6 +5406,28 @@ export default function App() {
                 title={t("downloadInventoryListTitle", uiLang)}
               >
                 <Download size={13} />
+              </button>
+              <button
+                onClick={() => setShowOnlyWithAllySlot(v => !v)}
+                className={`flex items-center justify-center rounded border h-7 w-8 ${
+                  showOnlyWithAllySlot
+                    ? "border-amber-500 bg-amber-950/40 text-amber-300"
+                    : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                }`}
+                title={t("showOnlyWithAllySlotTitle", uiLang)}
+              >
+                <img src={allies_slot_full} alt="" className="h-5 w-5 object-contain" />
+              </button>
+              <button
+                onClick={() => setShowOnlyWithFragments(v => !v)}
+                className={`flex items-center justify-center rounded border h-7 w-8 ${
+                  showOnlyWithFragments
+                    ? "border-blue-500 bg-blue-950/40 text-blue-300"
+                    : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                }`}
+                title={t("showOnlyWithFragmentsTitle", uiLang)}
+              >
+                <img src={iconFragment} alt="" className="icon-16" />
               </button>
               <button
                 onClick={() => setShowOnlyReadyBuildings(v => !v)}
@@ -5312,45 +5483,12 @@ export default function App() {
                         {t("debugSelectionKits", uiLang).toUpperCase()} ({allSelectionKits.length})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
-                        {(() => {
-                          if (allSelectionKits.length === 0) return "-";
-                          const categorized = allSelectionKits.map(e => ({ ...e, simplified: e.name, tier: kitTier(e.kitId) }));
-                          const platino = categorized.filter(e => e.tier === "platinum").sort((a, b) => a.simplified.localeCompare(b.simplified));
-                          const oro = categorized.filter(e => e.tier === "gold").sort((a, b) => a.simplified.localeCompare(b.simplified));
-                          const argento = categorized.filter(e => e.tier === "silver").sort((a, b) => a.simplified.localeCompare(b.simplified));
-                          const normali = categorized.filter(e => e.tier === "normal").sort((a, b) => a.simplified.localeCompare(b.simplified));
-
-                          const categoryColor = (tier: string) => {
-                            if (tier === "platinum") return "text-cyan-300";
-                            if (tier === "gold") return "text-amber-300";
-                            if (tier === "silver") return "text-slate-300";
-                            return "text-violet-300";
-                          };
-
-                          const renderGroup = (tier: string, label: string, items: typeof categorized) => (
-                            items.length > 0 && (
-                              <div className="mb-2">
-                                <div className={`mb-1 text-[11px] font-bold uppercase tracking-wide border-b border-slate-800/50 ${categoryColor(tier)}`}>{label}</div>
-                                {items.map(e => (
-                                  <div key={e.kitId} className="mt-0.5">
-                                    <button onClick={() => setSelectedJsonEntry({ title: e.kitId, rawEntry: e.rawEntry })} className="text-left hover:underline text-slate-300">
-                                      {e.simplified}<DebugQtyBadge qty={e.inStock} colorClass="text-violet-400" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )
-                          );
-
-                          return (
-                            <>
-                              {renderGroup("platinum", t("tierPlatinum", uiLang).toUpperCase(), platino)}
-                              {renderGroup("gold", t("tierGold", uiLang).toUpperCase(), oro)}
-                              {renderGroup("silver", t("tierSilver", uiLang).toUpperCase(), argento)}
-                              {renderGroup("normal", t("tierNormal", uiLang).toUpperCase(), normali)}
-                            </>
-                          );
-                        })()}
+                        <DebugKitsByTier
+                          kits={allSelectionKits}
+                          qtyColorClass="text-violet-400"
+                          uiLang={uiLang}
+                          onSelect={(title, rawEntry) => setSelectedJsonEntry({ title, rawEntry })}
+                        />
                       </div>
                     </div>
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-sky-500/20">
@@ -5358,45 +5496,12 @@ export default function App() {
                         {t("debugUpgradeKits", uiLang).toUpperCase()} ({inventoryUpgradeKits.size})
                       </span>
                       <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
-                        {(() => {
-                          if (inventoryUpgradeKits.size === 0) return "-";
-                          const categorized = Array.from(inventoryUpgradeKits.values()).map(e => ({ ...e, simplified: e.name, tier: kitTier(e.kitId) }));
-                          const platino = categorized.filter(e => e.tier === "platinum").sort((a, b) => a.simplified.localeCompare(b.simplified));
-                          const oro = categorized.filter(e => e.tier === "gold").sort((a, b) => a.simplified.localeCompare(b.simplified));
-                          const argento = categorized.filter(e => e.tier === "silver").sort((a, b) => a.simplified.localeCompare(b.simplified));
-                          const normali = categorized.filter(e => e.tier === "normal").sort((a, b) => a.simplified.localeCompare(b.simplified));
-
-                          const categoryColor = (tier: string) => {
-                            if (tier === "platinum") return "text-cyan-300";
-                            if (tier === "gold") return "text-amber-300";
-                            if (tier === "silver") return "text-slate-300";
-                            return "text-violet-300";
-                          };
-
-                          const renderGroup = (tier: string, label: string, items: typeof categorized) => (
-                            items.length > 0 && (
-                              <div className="mb-2">
-                                <div className={`mb-1 text-[11px] font-bold uppercase tracking-wide border-b border-slate-800/50 ${categoryColor(tier)}`}>{label}</div>
-                                {items.map(e => (
-                                  <div key={e.kitId} className="mt-0.5">
-                                    <button onClick={() => setSelectedJsonEntry({ title: e.kitId, rawEntry: e.rawEntry })} className="text-left hover:underline text-slate-300">
-                                      {e.simplified}<DebugQtyBadge qty={e.inStock} colorClass="text-sky-400" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )
-                          );
-
-                          return (
-                            <>
-                              {renderGroup("platinum", t("tierPlatinum", uiLang).toUpperCase(), platino)}
-                              {renderGroup("gold", t("tierGold", uiLang).toUpperCase(), oro)}
-                              {renderGroup("silver", t("tierSilver", uiLang).toUpperCase(), argento)}
-                              {renderGroup("normal", t("tierNormal", uiLang).toUpperCase(), normali)}
-                            </>
-                          );
-                        })()}
+                        <DebugKitsByTier
+                          kits={Array.from(inventoryUpgradeKits.values())}
+                          qtyColorClass="text-sky-400"
+                          uiLang={uiLang}
+                          onSelect={(title, rawEntry) => setSelectedJsonEntry({ title, rawEntry })}
+                        />
                       </div>
                     </div>
                   </div>
@@ -5488,7 +5593,7 @@ export default function App() {
                           </button>
                         </th>
                         <th className="py-2 px-2 text-center font-normal text-xs text-slate-400 italic">
-                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size : activeTab === "inventario" ? processedInventoryKitBuildings.length : processedBuildings.length}</span>
+                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : processedBuildings.length}</span>
                         </th>
                         <th className="py-2 px-0 border-l border-slate-800" colSpan={4 + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
@@ -5625,9 +5730,8 @@ export default function App() {
                           setDeclassableTooltip={setDeclassableTooltip}
                           minLevel={entityLevels.get(b.cityEntityId) ?? -1}
                           allLevelsForEntity={entityLevelsList.get(b.cityEntityId)}
-                          instanceEraStats={entityInstanceEraStats.get(b.cityEntityId) ?? []}
-                          fragmentProducers={FRAGMENT_BUILDING_PRODUCERS.get(b.cityEntityId) ?? []}
-                          fragmentSelectionKits={SELECTION_KITS_BY_UPGRADE.get(b.cityEntityId) ?? []}
+                          instanceEraStats={entityInstanceEraStats.get(b.cityEntityId) ?? EMPTY_ERA_GROUPS}
+                          fragmentsProduced={FRAGMENTS_PRODUCED.get(b.cityEntityId) ?? EMPTY_FRAGMENTS}
                           handleCityRowClick={handleCityRowClick}
                           toggleSelect={toggleSelect}
                           getPropDisplay={getPropDisplay}
@@ -5866,7 +5970,8 @@ export default function App() {
                     
                     {filteredAllies.length === 0 && (
                       <tr>
-                        <td colSpan={(spedizioniEnabled ? 19 : 15) - (showSigmaColumns ? 4 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                        {/* nome+lv1+eff (3) + militari effettive: 4 con Σ, 8 senza, +4 se Spedizioni */}
+                        <td colSpan={3 + (showSigmaColumns ? 4 : 8) + (spedizioniEnabled ? 4 : 0)} className="text-center py-12 text-slate-400 font-semibold">
                           {t("noAlliesFound", uiLang)}
                         </td>
                       </tr>
@@ -6064,7 +6169,7 @@ export default function App() {
             })()}
           >
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-red-400">
-              <span> </span> {outdatedCopies.length} {outdatedCopies.length === 1 ? t("oldBuildingSingular", uiLang) : t("oldBuildingPlural", uiLang)}
+              {outdatedCopies.length} {outdatedCopies.length === 1 ? t("oldBuildingSingular", uiLang) : t("oldBuildingPlural", uiLang)}
             </div>
             {eraComparisons.length > 0 && (
               <div className="mt-1 space-y-1.5">
@@ -6270,53 +6375,50 @@ export default function App() {
 
       {fragmentTooltip && (
         <div
-          className="pointer-events-none fixed z-[110] max-h-[70vh] w-72 overflow-y-auto rounded-lg border border-emerald-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+          className="pointer-events-none fixed z-[110] max-h-[70vh] w-80 overflow-y-auto rounded-lg border border-emerald-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
           style={(() => {
             const TOOLTIP_H = window.innerHeight * 0.7;
             const spaceBelow = window.innerHeight - fragmentTooltip.y;
             const showAbove = spaceBelow < TOOLTIP_H + 12;
             return {
-              left: Math.min(fragmentTooltip.x, window.innerWidth - 296),
+              left: Math.min(fragmentTooltip.x, window.innerWidth - 304),
               ...(showAbove
                 ? { bottom: window.innerHeight - fragmentTooltip.y + 6 }
                 : { top: fragmentTooltip.y + 6 }),
             };
           })()}
         >
-          {fragmentTooltip.producers.length > 0 && (
-            <>
-              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
-                {t("buildingsThatProduceIt", uiLang)}
-              </div>
-              <ul className="space-y-0.5 text-xs text-slate-200">
-                {fragmentTooltip.producers.map((name, i) => (
-                  <li key={i} className="flex items-start gap-1.5">
-                    <span className="text-emerald-400">•</span>
-                    <span className="flex-1">{name}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {fragmentTooltip.selectionKits.length > 0 && (
-            <>
-              <div className={`mb-1.5 text-[11px] font-bold uppercase tracking-wide text-sky-300 ${fragmentTooltip.producers.length > 0 ? "mt-2.5 border-t border-slate-800 pt-2" : ""}`}>
-                {t("selectionKitsThatProduceIt", uiLang)}
-              </div>
-              <ul className="space-y-0.5 text-xs text-slate-200">
-                {fragmentTooltip.selectionKits.map((kitId, i) => {
-                  const inv = inventoryCsvLike.get(kitId);
-                  return (
-                    <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-sky-400">•</span>
-                      <span className="flex-1">{kitName(kitId, gameLang)}</span>
-                      {inv && <span className="shrink-0 rounded bg-sky-900/60 px-1 font-mono font-bold text-sky-200">×{inv.qty}</span>}
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
+          <div className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
+            <img src={iconFragment} alt="" className="icon-16" />
+            {t("fragmentsProducedTitle", uiLang)}
+          </div>
+          <ul className="space-y-1.5 text-xs text-slate-200">
+            {fragmentTooltip.produced.map((item, i) => (
+              <li key={i}>
+                <div className="flex items-start gap-1.5">
+                  <span className="text-emerald-400">•</span>
+                  <span className="flex-1">{item.name}</span>
+                </div>
+                {/* Selection kit: mostra anche cosa si può scegliere (il nome
+                    del kit spesso non lo chiarisce) — kit.json come sorgente. */}
+                {item.options && item.options.length > 0 && (
+                  <div className="ml-4 mt-1 rounded border border-violet-800/40 bg-violet-950/20 px-2 py-1">
+                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-300">
+                      {t("selectionKitOptionsTitle", uiLang)}
+                    </div>
+                    <ul className="space-y-0.5">
+                      {item.options.map((opt, j) => (
+                        <li key={j} className="flex items-start gap-1">
+                          <span className="text-violet-400">•</span>
+                          <span className="flex-1 text-slate-300">{opt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -6392,7 +6494,8 @@ export default function App() {
             };
           })()}
         >
-          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
+          <div className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
+            <img src={iconFragment} alt="" className="icon-16" />
             {t("fragmentsProducedByTitle", uiLang)}
           </div>
           <ul className="space-y-1 text-xs text-slate-200">
