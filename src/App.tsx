@@ -970,7 +970,7 @@ const BuildingRow = memo(function BuildingRow({
       onClick={() => handleCityRowClick(b)}
       className={`${
         activeTab === "propria_citta" && isHighlighted && !b.isFallback
-          ? "outline outline-1 outline-amber-400 bg-amber-500/10 relative z-10"
+          ? "outline outline-1 outline-amber-400 row-highlighted relative z-10"
           : (() => {
               const cat = b.isGreatBuilding ? "great"
                 : b.isMilitary ? "military"
@@ -1003,7 +1003,7 @@ const BuildingRow = memo(function BuildingRow({
           className="accent-amber-500 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-slate-900 focus:ring-offset-slate-950 cursor-pointer h-3 w-3 relative -top-[-1px]"
         />
       </td>
-      <td>
+      <td className="cell-eye">
         {(() => {
           const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
           // La wiki FoE ha un sottodominio per ogni lingua del gioco: la
@@ -1363,7 +1363,7 @@ const BuildingRow = memo(function BuildingRow({
          })()}
       </td>
       {currentFilters.showTimeColumn && (
-        <td className="section-divider">
+        <td>
           {(() => {
             const propDisplay = getPropDisplay(b, uiLang);
             if (!propDisplay) return null;
@@ -1375,7 +1375,7 @@ const BuildingRow = memo(function BuildingRow({
           })()}
         </td>
       )}
-      <td className={`cell-icons ${currentFilters.showTimeColumn ? "" : "section-divider"}`}>
+      <td className="cell-icons">
         <div className="flex flex-col items-center justify-center gap-0.5">
           {b.ally > 0 && (
             <span title={t("historicalAllySlotTitle", uiLang)}>⭐</span>
@@ -3884,6 +3884,13 @@ export default function App() {
     showFelColumn,
     currentFilters.showTimeColumn,
     spedizioniEnabled,
+    // Anche questi due cambiano il numero di colonne (e quindi scrollWidth):
+    // il ResizeObserver sul <table> coprirebbe comunque il cambio di
+    // larghezza, ma tenerli allineati agli altri toggle di colonne evita
+    // di dipendere solo dall'observer (e da buildingTableNeedsScroll deriva
+    // lo sticky: meglio due segnali che uno).
+    showSigmaColumns,
+    showIqProdColumns,
   ]);
 
   useEffect(() => {
@@ -4074,16 +4081,49 @@ export default function App() {
     iconOneUp, iconImm, iconRinn, iconAiuto,
   }), []);
 
+  // ⚠️ INVARIANTE: questo valore deve essere la somma ESATTA delle larghezze
+  // del <colgroup> della tabella principale (con 260 per la colonna nome, il
+  // suo valore in modalità sticky — scelto per far stare interi quasi tutti
+  // i nomi, es. "Mercato Eterno - Orizzonte Galattico" = 243px; il massimo
+  // assoluto del database è ~331px ma riguarda una manciata di nomi). Non "circa": con table-fixed, se minWidth
+  // supera la somma delle <col>, il browser RIDISTRIBUISCE l'eccesso su tutte
+  // le colonne (proporzionalmente), e le posizioni/larghezze reali divergono
+  // dai px del colgroup. Le celle sticky sono pinnate a left 0/32/60 e width
+  // 260 ESATTI: con colonne "gonfiate" dalla ridistribuzione, la posizione
+  // naturale (a scrollLeft 0) non coincide più con quella pinnata → al primo
+  // scroll le colonne occhio e nome saltavano ~1px a sinistra e la colonna
+  // nome si restringeva di ~1px (bug segnalato luglio 2026; causato da un
+  // +50 stale nel base — residuo della colonna ⏱ diventata condizionale — e
+  // dal caso sigma+spedizioni che contava 4 colonne invece di 8).
+  // Sottostimare invece è innocuo (la tabella si allarga comunque alla somma
+  // delle col), ma tenere la somma esatta protegge anche il breakpoint
+  // buildingTableNeedsScroll da falsi positivi. Quando si tocca il colgroup
+  // (vedi invariante #12 in docs/SKILL.md), aggiornare anche qui.
   const tableMinWidth = useMemo(() => {
-    const base = 32 + 28 + 200 + 32 + 50 + 48 + 44 + 50; // checkbox+wiki+nome+road+size+pop+fel+eff
+    const base = 32 + 28 + 260 + 32 + 50 + 48 + 44; // checkbox+occhio+nome+❔+eff+size+road
     const time = currentFilters.showTimeColumn ? 50 : 0;
-    const pop = showPopColumn ? 76 : 0;
-    const fel = showFelColumn ? 76 : 0;
-    const milCols = showSigmaColumns ? 4 : (spedizioniEnabled ? 12 : 8); // gen+gbg+(sped)
+    const pop = showPopColumn ? 66 : 0;
+    const fel = showFelColumn ? 66 : 0;
+    const milCols = showSigmaColumns ? (spedizioniEnabled ? 8 : 4) : (spedizioniEnabled ? 12 : 8); // gen+gbg+(sped) | sig-gc+(sig-gs)
     const iq = (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
     const prod = showProdColumns ? 20 * 36 : 0; // Mon+Mat + le 18 colonne esistenti
     return base + time + pop + fel + milCols * 42 + iq + prod;
   }, [currentFilters, showSigmaColumns, spedizioniEnabled, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
+
+  // Sticky solo quando serve DAVVERO lo scroll orizzontale (scrollWidth >
+  // clientWidth, stesso confronto già usato per la scrollbar flottante
+  // sotto): con poche colonne visualizzate e finestra ampia, la tabella
+  // può stare tutta nel contenitore senza scroll — in quel caso vogliamo
+  // che la colonna nome torni ELASTICA (riempie lo spazio libero, com'era
+  // prima di introdurre lo sticky) invece di restare fissa a 260px con
+  // tutto lo spazio in eccesso distribuito sulle altre colonne strette
+  // (comportamento segnalato come "dilatato", non voluto). Se invece lo
+  // scroll è necessario, la colonna nome resta sticky e a larghezza FISSA
+  // (260px): è l'unico modo per evitare il bug di sovrapposizione/bordo
+  // instabile risolto in precedenza (vedi note su .has-sticky-name in
+  // index.css) — un ibrido "sticky ma elastica" non è possibile in modo
+  // affidabile con table-fixed + border-collapse.
+  const buildingTableNeedsScroll = buildingTableScrollMetrics.scrollWidth > buildingTableScrollMetrics.clientWidth;
 
   // minWidth dedicato per le tabelle alleati: colonne nome+LV1+EFF+GEN+CAMPI+SPED,
   // niente colonne edificio (size/road/pop/fel/IQ/produzioni) che non esistono qui.
@@ -5761,18 +5801,18 @@ export default function App() {
                   onScroll={() => syncBuildingTableScroll("table")}
                   className="overflow-x-auto"
                 >
-                  <table className="building-table w-full table-fixed text-left border-collapse" style={{ minWidth: tableMinWidth }}>
+                  <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}`} style={{ minWidth: tableMinWidth }}>
                     <colgroup>
                       <col className="w-[32px]" />
                       <col className="w-[28px]" />
-                      <col className="w-full min-w-[240px]" />
+                      <col className={buildingTableNeedsScroll ? "w-[260px]" : "w-full min-w-[260px]"} />
                       {currentFilters.showTimeColumn && <col className="w-[50px]" />}
                       <col className="w-[32px]" />
                       <col className="w-[50px]" />
                       <col className="w-[48px]" />
                       <col className="w-[44px]" />
-                      {showPopColumn && <col className="w-[76px]" />}
-                      {showFelColumn && <col className="w-[76px]" />}
+                      {showPopColumn && <col className="w-[66px]" />}
+                      {showFelColumn && <col className="w-[66px]" />}
                        {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
                        {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
                        {showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`sig-gc-${i}`} className="w-[42px]" />)}
@@ -5785,8 +5825,11 @@ export default function App() {
                        {showProdColumns && Array.from({ length: 20 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
                     </colgroup>
                     <thead>
-                      <tr className="bg-slate-900/80 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <th className="py-1 px-2 text-center" colSpan={2}>
+                      <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                        {/* Sticky + sfondo opaco vivono in index.css (th-export-summary /
+                            th-name-summary, scoped sotto .has-sticky-name): niente più stili
+                            inline condizionali qui. */}
+                        <th className="th-export-summary py-1 px-2 text-center" colSpan={2}>
                           <button
                             onClick={exportSelectedAsCsv}
                             disabled={selectedIds.size === 0}
@@ -5798,10 +5841,10 @@ export default function App() {
                             {selectedIds.size > 0 && <span className="ml-0.5 text-amber-400">({selectedIds.size})</span>}
                           </button>
                         </th>
-                        <th className="py-2 px-2 text-center font-normal text-xs text-slate-400 italic">
+                        <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
                           {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : processedBuildings.length}</span>
                         </th>
-                        <th className="py-2 px-0 border-l border-slate-800" colSpan={4 + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
+                        <th className="py-2 px-0" colSpan={4 + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
                             <div style={{ minWidth: `calc(${currentFilters.showTimeColumn ? '50px' : '0px'} + 32px)` }} />
                             <input
@@ -5831,8 +5874,8 @@ export default function App() {
                           </th>
                         )}
                       </tr>
-                      <tr className="bg-slate-900/60 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <th className="py-0.5 px-1 w-[32px] text-center">
+                      <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                        <th className="cell-checkbox py-0.5 px-1 w-[32px] text-center">
                           <input
                             type="checkbox"
                             checked={filteredBuildings.length > 0 && filteredBuildings.every(b => selectedIds.has(b.id))}
@@ -5842,21 +5885,30 @@ export default function App() {
                             className="accent-amber-500 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-slate-900 focus:ring-offset-slate-950 cursor-pointer h-3 w-3 relative -top-[-1px]"
                           />
                         </th>
-                        <th className="py-0.5 px-1 text-center w-[28px]"></th>
-                        <SortableHeader label={t("colBuilding", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
+                        <th className="cell-eye py-0.5 px-1 text-center w-[28px]"></th>
+                        {/* className STATICA, senza larghezze condizionali: la larghezza della
+                            colonna nome è già interamente governata dal <col> del colgroup
+                            (table-fixed) in entrambi i rami. La versione precedente cambiava
+                            classe (w-[240px] ↔ w-full min-w-[240px]) insieme al toggle dello
+                            sticky: questo th era l'UNICA cella sticky con attributo class
+                            mutevole nella transizione, e il doppio invalidamento (classe
+                            propria + classe della tabella) nello stesso frame in cui il layer
+                            compositato sticky viene smontato faceva a volte saltare il
+                            repaint dello sfondo su Chrome (solo questo th, a caso). */}
+                        <SortableHeader label={t("colBuilding", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="cell-name py-0.5 px-2 text-left" />
                         
                         {currentFilters.showTimeColumn && (
-                          <th className="py-0.5 px-1 text-center text-amber-400/80 border-l border-slate-800 w-[50px] text-xl">⏱</th>
+                          <th className="py-0.5 px-1 text-center text-amber-400/80 w-[50px] text-xl">⏱</th>
                         )}
-                        <th className={`py-0.5 px-1 text-center w-[32px] ${currentFilters.showTimeColumn ? "" : "border-l border-slate-800"}`}>❔</th>
+                        <th className="py-0.5 px-1 text-center w-[32px]">❔</th>
                         <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />
-                        <SortableHeader label={<TableHeaderIcon src={iconSize} alt={t("colSize", uiLang)} />} sortKey="size" onClick={() => handleSort("size")} active={sortBy === "size"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[48px]" title={t("colSize", uiLang)} />
+                        <SortableHeader label={<TableHeaderIcon src={iconSize} alt={t("colSize", uiLang)} />} sortKey="size" onClick={() => handleSort("size")} active={sortBy === "size"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[48px] section-divider" title={t("colSize", uiLang)} />
                         <SortableHeader label={<TableHeaderIcon src={iconRoad} alt={t("colRoad", uiLang)} />} sortKey="road" onClick={() => handleSort("road")} active={sortBy === "road"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[44px]" title={t("colRoad", uiLang)} />
                         {showPopColumn && (
-                          <SortableHeader label={<TableHeaderIcon src={iconPop} alt={t("colPop", uiLang)} />} sortKey="pop" onClick={() => handleSort("pop")} active={sortBy === "pop"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[76px]" title={t("colPop", uiLang)} />
+                          <SortableHeader label={<TableHeaderIcon src={iconPop} alt={t("colPop", uiLang)} />} sortKey="pop" onClick={() => handleSort("pop")} active={sortBy === "pop"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[66px]" title={t("colPop", uiLang)} />
                         )}
                         {showFelColumn && (
-                          <SortableHeader label={<TableHeaderIcon src={iconFel} alt={t("colFel", uiLang)} />} sortKey="fel" onClick={() => handleSort("fel")} active={sortBy === "fel"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[76px]" title={t("colFel", uiLang)} />
+                          <SortableHeader label={<TableHeaderIcon src={iconFel} alt={t("colFel", uiLang)} />} sortKey="fel" onClick={() => handleSort("fel")} active={sortBy === "fel"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[66px]" title={t("colFel", uiLang)} />
                         )}
                         
                         {renderMilitaryHeaders()}
@@ -5995,7 +6047,7 @@ export default function App() {
                       {spedizioniEnabled && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
                     </colgroup>
                     <thead>
-                      <tr className="bg-slate-900/80 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                      <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                         <th className="py-2 px-2 text-center cursor-pointer hover:text-slate-300 transition-colors" colSpan={4} onClick={() => setIsMyAlliesTableOpen(v => !v)}>
                           {(() => {
                             const placed = processedImportedAllies.filter(a => a.isPlaced).length;
@@ -6018,7 +6070,7 @@ export default function App() {
                         </th>
                         {renderMilitaryGroupHeaders()}
                       </tr>
-                      <tr className="bg-slate-900/60 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                      <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                         <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
                         <SortableHeader label="Lvl" sortKey="ally_level" onClick={() => handleSort("ally_level")} active={sortBy === "ally_level"} order={sortOrder} className="py-0.5 px-1 text-center w-[64px]" title={t("allyLevelTitle", uiLang)} />
                         <th className="py-0.5 px-1 text-center w-[50px]" title={t("ally1stLevelValueTitle", uiLang)}>lv1</th>
@@ -6106,7 +6158,7 @@ export default function App() {
                     {spedizioniEnabled && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
                   </colgroup>
                   <thead>
-                    <tr className="bg-slate-900/80 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                    <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                       <th className="py-2 px-2 text-center" colSpan={3}>
                         <div className="flex items-center justify-center gap-3">
                           <span className="text-slate-400 uppercase tracking-wider">{t("calcEfficiencyAtLevel", uiLang)}</span>
@@ -6136,7 +6188,7 @@ export default function App() {
                       </th>
                       {renderMilitaryGroupHeaders()}
                     </tr>
-                    <tr className="bg-slate-900/60 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                    <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                       <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
                       <th className="py-0.5 px-1 text-center w-[50px]" title={t("ally1stLevelValueTitle", uiLang)}>lv1</th>
                       <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />

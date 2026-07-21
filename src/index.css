@@ -61,20 +61,258 @@ body {
     @apply py-1 text-center;
   }
 
+  /* Variabili di composizione per gli sfondi OPACHI della tabella.
+     Storicamente le righe header erano bg-slate-900/80 e /60
+     (semi-trasparenti) sopra il contenitore bg-slate-900/20 sopra la
+     pagina slate-950. Questi color-mix NIDIFICATI in srgb (lo spazio in
+     cui il browser fa l'alpha compositing) precompongono quegli stessi
+     strati in colori singoli e OPACHI, identici al pixel a quello che
+     l'occhio vedeva: --bt-ambient-solid = contenitore /20 su slate-950;
+     le due righe header = slate-900 al 80%/60% sopra quell'ambiente.
+     Se in futuro cambiano le opacità di righe header o contenitore,
+     aggiornare qui.
+     ⚠️ Niente background-image/gradient sulle celle sticky: una versione
+     intermedia replicava la pila come linear-gradient impilati —
+     matematicamente equivalente, ma su Chrome i layer gradient delle
+     celle sticky (compositate) a volte NON venivano ridipinti dopo
+     raffiche di toggle colonne (re-layout massicci): il background-color
+     restava e i gradient sparivano → celle quasi nere ("scompare lo
+     sfondo del th EDIFICIO", segnalato luglio 2026, intermittente e non
+     riproducibile a comando). Un background-color singolo non ha layer da
+     perdere. */
+  .building-table {
+    --bt-ambient-solid: color-mix(in srgb, theme(colors.slate.900) 20%, theme(colors.slate.950));
+    --bt-header-row1-solid: color-mix(in srgb, theme(colors.slate.900) 80%, var(--bt-ambient-solid));
+    --bt-header-row2-solid: color-mix(in srgb, theme(colors.slate.900) 60%, var(--bt-ambient-solid));
+  }
+
+  /* Righe dell'header (riga 1 = titoli sezione/Export, riga 2 = colonne).
+     OPACHE per costruzione: prima erano bg-slate-900/80 e /60
+     (semi-trasparenti) e le celle sticky dovevano replicare la pila di
+     strati per conto loro (due strategie diverse thead/tbody, e una serie
+     di bug: ghosting, tono diverso, gradient persi nel repaint — vedi
+     storia in docs/SKILL.md). Con le righe header opache (stesso colore
+     precomposto, identico al pixel: niente scorre mai VERTICALMENTE sotto
+     l'header, quindi la trasparenza non serviva a nulla) le celle sticky
+     usano `background-color: inherit` OVUNQUE, un'unica strategia
+     uniforme thead+tbody. Bonus anti-glitch: anche se Chrome saltasse un
+     repaint nella transizione sticky↔elastico, i pixel "stantii" della
+     cella sticky hanno lo STESSO colore di quelli corretti (inherit dello
+     stesso colore opaco della riga): un eventuale glitch è invisibile per
+     costruzione. Usate da TUTTE le tabelle (principale e Alleati). */
+  .bt-thead-row1 {
+    background-color: var(--bt-header-row1-solid);
+  }
+  .bt-thead-row2 {
+    background-color: var(--bt-header-row2-solid);
+  }
+
+  /* Colori di categoria riga OPACHI per goods/inactive/fallback (usati da
+     BUILDING_ROW_COLORS in buildingClassification.ts — great/military/normal
+     hanno già colori opachi e restano definiti là come utility Tailwind).
+     Prima erano utility semi-trasparenti (bg-sky-950/40, bg-violet-950/30,
+     bg-slate-800/60): visivamente identiche a queste, ma le celle sticky
+     (background-color: inherit) ereditavano la semi-trasparenza e il testo
+     delle colonne scrollate filtrava sotto il blocco sticky (ghosting
+     verificato dal vivo su una riga "Non attivo", luglio 2026 — stessa
+     famiglia del bug dell'header, vedi sopra). color-mix(in srgb, TINTA n%,
+     var(--bt-ambient-solid)) riproduce ESATTAMENTE il composito che il
+     browser calcolava con l'alpha: nessuna differenza visiva, ma opaco.
+     ⚠️ INVARIANTE: ogni colore di riga della tabella principale deve essere
+     OPACO (le celle sticky lo ereditano); una nuova categoria
+     semi-trasparente reintrodurrebbe il ghosting. */
+  .row-goods {
+    background-color: color-mix(in srgb, theme(colors.sky.950) 40%, var(--bt-ambient-solid));
+  }
+  .row-goods:hover {
+    background-color: color-mix(in srgb, theme(colors.sky.950) 60%, var(--bt-ambient-solid));
+  }
+  .row-inactive {
+    background-color: color-mix(in srgb, theme(colors.violet.950) 30%, var(--bt-ambient-solid));
+  }
+  .row-inactive:hover {
+    background-color: color-mix(in srgb, theme(colors.violet.950) 50%, var(--bt-ambient-solid));
+  }
+  .row-fallback {
+    background-color: color-mix(in srgb, theme(colors.slate.800) 60%, var(--bt-ambient-solid));
+  }
+  .row-fallback:hover {
+    background-color: color-mix(in srgb, theme(colors.slate.800) 80%, var(--bt-ambient-solid));
+  }
+  /* Anche "normal" vive qui per lo STESSO motivo, ma solo per l'hover: il
+     colore a riposo (slate-950) era già opaco, l'hover però era
+     bg-slate-900/40 (semi-trasparente) — bastava passare il mouse su una
+     riga normale in modalità sticky per far riapparire il ghosting. */
+  .row-normal {
+    background-color: theme(colors.slate.950);
+  }
+  .row-normal:hover {
+    background-color: color-mix(in srgb, theme(colors.slate.900) 40%, var(--bt-ambient-solid));
+  }
+  /* Riga selezionata/evidenziata nella tab Città (sostituisce il colore di
+     categoria; era bg-amber-500/10, semi-trasparente — stesso ghosting). */
+  .row-highlighted {
+    background-color: color-mix(in srgb, theme(colors.amber.500) 10%, var(--bt-ambient-solid));
+  }
+
   /* ----------------------------------------------------------
      LAYOUT CELLE
      ---------------------------------------------------------- */
 
-  /* Cella checkbox (prima colonna) */
+  /* Cella checkbox (prima colonna). SOLO padding di base qui: lo sticky
+     vive sotto .has-sticky-name (vedi sotto), applicato al <table> SOLO
+     quando la tabella eccede il contenitore e serve davvero scroll
+     orizzontale (buildingTableNeedsScroll in App.tsx, confronto
+     scrollWidth > clientWidth). Con poche colonne visualizzate e finestra
+     ampia la tabella sta tutta senza scroll: in quel caso NON vogliamo lo
+     sticky (altrimenti la colonna nome, elastica in quel ramo, andrebbe in
+     conflitto con position:sticky) — comportamento segnalato dall'utente:
+     con poche colonne preferisce il nome grande/elastico e le altre
+     colonne compatte, non tutte dilatate per riempire lo spazio. */
   .cell-checkbox {
     @apply px-2;
   }
 
-  /* Cella nome edificio: testo a sinistra con troncatura */
+  /* Cella occhio (👁️, link wiki): seconda colonna. Nessuno stile di base:
+     la classe esiste come aggancio per le varianti sticky qui sotto (e per
+     leggibilità del markup). */
+
+  /* Varianti STICKY di checkbox/occhio: SOLO sotto .has-sticky-name (quindi
+     solo quando serve scroll). z-index + sfondo OPACO (altrimenti le celle
+     scorrevoli sottostanti si vedrebbero in trasparenza) + box-shadow per
+     indicare il confine. left cumulativo secondo le larghezze del colgroup
+     (checkbox 32px, occhio 28px): 0 / 32px / 60px.
+     Strategia di sfondo UNICA per tbody e thead: background-color: inherit
+     (propaga il colore della <tr>). Funziona perché OGNI riga della
+     tabella ha un colore OPACO per invariante — le righe dati via
+     BUILDING_ROW_COLORS (vedi .row-* sopra e il commento in
+     buildingClassification.ts), le righe header via .bt-thead-row1/row2
+     (vedi sopra). In più background-image: inherit propaga l'overlay
+     "disconnesso" (strisce rosse diagonali, ROW_DISCONNECTED_OVERLAY): è
+     un background-image sulla <tr> che background-color da solo non porta
+     con sé — senza, le strisce sparivano sotto il blocco sticky. Per le
+     righe senza overlay (tutte le altre, header compreso) inherit vale
+     none: innocuo. (Il pattern riparte dall'origine di ogni cella, quindi
+     la fase delle strisce può saltare di qualche px ai confini
+     checkbox/occhio/nome: impercettibile, meglio delle strisce assenti.)
+     Le varianti thead sotto alzano SOLO lo z-index (sopra le celle sticky
+     del tbody): lo sfondo è lo stesso inherit della variante generica. */
+  .has-sticky-name .cell-checkbox {
+    @apply sticky left-0 z-10;
+    background-color: inherit;
+    background-image: inherit;
+  }
+  .has-sticky-name.building-table thead th.cell-checkbox {
+    @apply z-20;
+  }
+  .has-sticky-name .cell-eye {
+    @apply sticky z-10;
+    left: 32px;
+    background-color: inherit;
+    background-image: inherit;
+  }
+  .has-sticky-name.building-table thead th.cell-eye {
+    @apply z-20;
+  }
+
+  /* Cella nome edificio: testo a sinistra con troncatura. Nessuna larghezza
+     qui: le larghezze (fissa 260px in modalità sticky, elastica min 260
+     altrimenti) vivono nei <colgroup> delle singole tabelle (tabella
+     principale e tabelle Alleati), con table-fixed. */
   .building-table tbody td.cell-name,
   .building-table thead th.cell-name {
     @apply px-2 text-left truncate;
-    min-width: 200px;
+  }
+
+  /* Variante sticky della cella nome: SOLO per la tabella principale
+     edifici (Database/Città/Inventario), che ha checkbox+occhio prima del
+     nome (vedi .has-sticky-name sul <table>). Le tabelle Alleati usano
+     .cell-name "semplice" sopra: essendo il nome la LORO prima colonna, uno
+     sticky con left:60px lascerebbe un vuoto a sinistra (l'offset presume
+     le colonne checkbox/occhio che lì non esistono). Terza (e ultima)
+     colonna sticky del blocco fisso: shadow a destra per marcare
+     visivamente dove finisce il blocco fisso e inizia lo scroll dati.
+     ⚠️ width FISSA (260px, non w-full/elastica come nella variante non
+     sticky sopra): con w-full su una tabella table-fixed più larga del
+     viewport, il browser calcola per questa colonna una larghezza pari a
+     TUTTO lo spazio libero residuo (spesso centinaia di px oltre la parte
+     visibile), e una cella sticky con quella larghezza reale si estende
+     ben oltre il bordo visivo atteso, sovrapponendosi alle colonne che
+     scorrono sotto (bug corretto luglio 2026 — per la stessa ragione il
+     colgroup della tabella principale usa <col className="w-[260px]">
+     QUANDO lo sticky è attivo; nel ramo elastico senza scroll resta
+     "w-full min-w-[260px]", vedi buildingTableNeedsScroll in App.tsx). */
+  /* Separatore verticale sulla colonna nome: prima il separatore tra
+     "nome" e la colonna successiva (⏱ se visibile, altrimenti ❔) era un
+     border-left su QUELLA colonna (currentFilters.showTimeColumn
+     condizionale, vedi App.tsx). Con .cell-name ora sticky, quella colonna
+     scorre SOTTO di essa: il suo border-left esiste ancora nel DOM ma
+     finisce visivamente coperto dal box della cella sticky sopra (bug
+     segnalato luglio 2026 — "il separatore sparisce"). Il separatore va
+     quindi disegnato sul lato della colonna STICKY (sempre sopra, mai
+     coperta), non su quello della colonna che scorre.
+     ⚠️ box-shadow INSET, non border-right: la tabella ha border-collapse
+     (vedi <table className="... border-collapse">), che fonde i bordi tra
+     celle adiacenti secondo regole di priorità del browser — in
+     combinazione con `position: sticky` un border-right qui risultava
+     invisibile (verificato dal vivo: nessun separatore, nonostante il
+     border fosse presente nel CSS). box-shadow non è soggetto alle regole
+     di collapse dei border e resta sempre visibile. Stesso spessore/colore
+     di `.section-divider` (1px, slate-800) ma come inset così la linea
+     resta DENTRO i confini della cella. */
+  /* Separatore verticale a destra della colonna nome, SEMPRE presente —
+     anche nel ramo elastico senza sticky. Prima viveva solo sotto
+     .has-sticky-name, quindi con poche colonne/finestra ampia (sticky
+     disattivato da buildingTableNeedsScroll) spariva (bug segnalato
+     luglio 2026). Scoped su .has-name-divider — classe FISSA della sola
+     tabella principale edifici — e non sulla base .cell-name: le tabelle
+     Alleati usano .cell-name ma non hanno mai avuto il separatore.
+     Le varianti sticky sotto lo RIDICHIARANO insieme alla drop-shadow
+     (stessa specificità: vincono perché vengono dopo). */
+  .has-name-divider tbody td.cell-name,
+  .has-name-divider thead th.cell-name,
+  .has-name-divider thead th.th-name-summary {
+    box-shadow: inset -1px 0 0 0 theme(colors.slate.800);
+  }
+
+  .has-sticky-name tbody td.cell-name {
+    @apply sticky z-10;
+    left: 60px;
+    width: 260px;
+    background-color: inherit;
+    background-image: inherit;
+    box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
+  }
+  .has-sticky-name thead th.cell-name {
+    @apply sticky z-20;
+    left: 60px;
+    width: 260px;
+    background-color: inherit;
+    box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
+  }
+
+  /* Riga 1 dell'header (bg-slate-900/80): th "Export" (colSpan checkbox+
+     occhio) e th "EDIFICI VISUALIZZATI" (colonna nome). Prima erano
+     stilate inline in App.tsx con backgroundColor:"inherit" (trasparenti,
+     stesso bug delle celle sopra) — ora tutto vive qui, scoped: sticky e
+     sfondo opaco SOLO sotto .has-sticky-name, separatore della th nome
+     anche nel ramo elastico (regola .has-name-divider sopra). */
+  /* z-30 (sopra il z-20 della th nome accanto): il pulsante Export è più
+     largo dei 60px del suo colSpan (checkbox+occhio) e sborda a destra —
+     con z uguale la th nome (opaca, successiva nel DOM) lo coprirebbe
+     troncandolo ("Expo"). Con z-30 il pulsante sborda SOPRA la th nome,
+     che essendo opaca e sticky fa comunque da scudo verso i dati
+     scrollati: nessun rischio di ghosting. */
+  .has-sticky-name thead th.th-export-summary {
+    @apply sticky left-0 z-30;
+    background-color: inherit;
+  }
+  .has-sticky-name thead th.th-name-summary {
+    @apply sticky z-20;
+    left: 60px;
+    width: 260px;
+    background-color: inherit;
+    box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
   }
 
   /* Padding orizzontale intermedio (es. colonna frammenti alleati) */
@@ -82,20 +320,21 @@ body {
     @apply px-1.5;
   }
 
-  /* Cella EFF: sticky a destra con ombra. Sfondo di default; la tabella
-     edifici lo sovrascrive dinamicamente per stato (disconnesso/GE/inattivo). */
+  /* Cella EFF. Era sticky a destra (pensato per mobile) — rimosso su
+     richiesta esplicita dell'utente (luglio 2026): non serve più, e la sua
+     rimozione ha anche eliminato un secondo bug collaterale, lo sfondo
+     fisso bg-slate-900/95 che spegneva la colorazione per categoria della
+     riga (vedi nota su .cell-checkbox/.cell-eye/.cell-name più sopra per
+     lo stesso problema sul lato sinistro). Se in futuro serve di nuovo lo
+     sticky, riusare quel pattern (background-color: inherit, non un
+     colore fisso). */
   .cell-eff {
-    @apply font-black font-mono text-sm px-0
-           sticky right-0 z-10 bg-slate-900/95
-           shadow-[-4px_0_10px_rgba(0,0,0,0.5)];
+    @apply font-black font-mono text-sm px-0;
   }
 
-  /* Header della colonna EFF: stesso sticky/ombra di .cell-eff, ma con
-     padding da header e z-20 (sopra le celle dati scrollate sotto). */
+  /* Header della colonna EFF. */
   .th-eff {
-    @apply py-0.5 px-0 text-center
-           sticky right-0 z-20 bg-slate-900/95 w-[50px]
-           shadow-[-4px_0_10px_rgba(0,0,0,0.5)];
+    @apply py-0.5 px-0 text-center w-[50px];
   }
 
   /* ----------------------------------------------------------

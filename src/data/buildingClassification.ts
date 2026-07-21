@@ -102,12 +102,25 @@ export const BUILDING_ROW_COLORS: Record<
   "great" | "military" | "goods" | "inactive" | "fallback" | "normal",
   string
 > = {
+  // ⚠️ INVARIANTE: ogni colore di riga deve essere OPACO, anche negli stati
+  // hover. Le colonne sticky a sinistra (.cell-checkbox/.cell-eye/.cell-name
+  // sotto .has-sticky-name, vedi index.css) usano `background-color: inherit`
+  // per riflettere il colore di categoria della riga: un colore
+  // semi-trasparente ereditato lascia filtrare il testo delle colonne che
+  // scorrono sotto (ghosting — bug scoperto due volte a luglio 2026: prima su
+  // "normal" senza colore di base, poi su goods/inactive/fallback e
+  // sull'hover di normal, che usavano utility /NN semi-trasparenti).
+  // great/military sono utility Tailwind opache (hex pieno + hover con filtro
+  // brightness, che non tocca l'alpha); le altre categorie usano le classi
+  // .row-* definite in index.css, che replicano ESATTAMENTE i vecchi colori
+  // semi-trasparenti come compositi opachi via color-mix(in srgb, …) sopra
+  // l'ambiente (--bt-ambient-solid).
   great:    "bg-[#191900] hover:brightness-125",
   military: "bg-[#190F05] hover:brightness-125",
-  goods:    "bg-sky-950/40 hover:bg-sky-950/60",
-  inactive: "bg-violet-950/30 hover:bg-violet-950/50",
-  fallback: "bg-slate-800/60 hover:bg-slate-800/80",
-  normal:   "hover:bg-slate-900/40",
+  goods:    "row-goods",
+  inactive: "row-inactive",
+  fallback: "row-fallback",
+  normal:   "row-normal",
 };
 
 /**

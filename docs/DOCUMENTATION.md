@@ -915,7 +915,15 @@ nome-asset del gioco. È la fonte da cui `inventory.ts` deriva tutto:
 rinomina rarità, si tocca solo qui.
 
 **`BUILDING_ROW_COLORS`** / **`ROW_DISCONNECTED_OVERLAY`** — costanti di colore per le
-righe della tabella (presentazione, ma centralizzate qui).
+righe della tabella (presentazione, ma centralizzate qui). ⚠️ Invariante: ogni colore
+di riga (hover inclusi) deve essere OPACO — le celle sticky della tabella principale
+lo ereditano con `background-color: inherit` e un colore semi-trasparente lascia
+filtrare il testo delle colonne scrollate (ghosting). Le categorie
+goods/inactive/fallback/normal usano le classi `.row-*` di `index.css` (composito
+opaco `color-mix(in srgb, …)` sull'ambiente, visivamente identico alle vecchie
+utility `/NN`); great/military restano utility Tailwind opache. L'overlay
+"disconnesso" è un `background-image` sulla `<tr>`, propagato alle celle sticky con
+`background-image: inherit` (vedi `index.css`).
 
 ---
 
