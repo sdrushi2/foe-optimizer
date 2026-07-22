@@ -4788,8 +4788,9 @@ export default function App() {
       </button>
       <button
         onClick={deleteAllProfiles}
-        className="flex items-center justify-center w-7 h-7 rounded border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 hover:border-red-400/60 transition-all shrink-0"
-        title={t("deleteAllProfiles", uiLang)}
+        disabled={profiles.length === 0}
+        className="flex items-center justify-center w-7 h-7 rounded border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 hover:border-red-400/60 transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500/10 disabled:hover:text-red-300 disabled:hover:border-red-500/30"
+        title={profiles.length === 0 ? t("deleteAllNoProfiles", uiLang) : t("deleteAllProfiles", uiLang)}
       >
         <Trash2 size={13} />
       </button>

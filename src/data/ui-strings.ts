@@ -55,6 +55,10 @@ const UI_STRINGS = {
     it: "Elimina tutti i profili",
     en: "Delete all profiles",
   },
+  deleteAllNoProfiles: {
+    it: "Nessun profilo da eliminare",
+    en: "No profiles to delete",
+  },
   profileHelpTitle: {
     it: "Guida ai profili e all'importazione della città",
     en: "Guide to profiles and city import",
