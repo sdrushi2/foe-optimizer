@@ -289,6 +289,18 @@ const UI_STRINGS = {
     it: "Nascondi edifici →",
     en: "Hide buildings →",
   },
+  showInventoryInCityButton: {
+    it: "MOSTRA ANCHE INVENTARIO",
+    en: "SHOW INVENTORY TOO",
+  },
+  showInventoryInCityTitle: {
+    it: "Aggiunge alla tabella anche gli edifici disponibili in Inventario (stesso elenco della tab Inventario), evidenziati con uno sfondo verde. Non sono istanze piazzate: filtri e badge specifici della città (obsoleto, declassabile, disconnesso, slot alleato) non si applicano a queste righe.",
+    en: "Adds the buildings available in Inventory to the table too (same list as the Inventory tab), highlighted with a green background. These are not placed instances: city-specific filters and badges (outdated, declassable, disconnected, ally slot) don't apply to these rows.",
+  },
+  hideInventoryInCityTitle: {
+    it: "Nasconde di nuovo gli edifici da Inventario",
+    en: "Hide the Inventory buildings again",
+  },
 
   // ── Titoli delle icone produzione (colonne + filtro) ─────────────────
   staleDataWarning: {

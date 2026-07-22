@@ -2115,6 +2115,99 @@ Es. `\FALL` mostra tutti gli edifici il cui ID contiene `"FALL"`. Non è documen
 nell'UI (il placeholder resta semplicemente `"Cerca..."` / `"Search..."`): è
 intenzionalmente nascosta, utile in fase di sviluppo/debug.
 
+### 24.3sexies Ordinamento indipendente per tab (`SortScope`, luglio 2026)
+
+Fino a luglio 2026 l'ordinamento (colonna + direzione) era un unico stato
+globale (`sortCriteria: SortCriterion[]`) condiviso da tutte le viste
+tabellari: ordinare per una colonna in una tab cambiava l'ordinamento mostrato
+anche nelle altre tab. È stato reso **indipendente per ciascuna delle 5 viste
+ordinabili**:
+
+- **`type SortScope = "database" | "propria_citta" | "inventario" |
+  "alleati_own" | "alleati_db"`.** Non coincide con `TabType` (4 valori): le
+  due tabelle Alleati (posseduti e database) condividono lo stesso
+  `TabType "alleati"` ma sono tabelle distinte con ordinamento proprio, quindi
+  servono due scope separati.
+- **Stato**: `sortCriteriaByScope: Record<SortScope, SortCriterion[]>`
+  sostituisce il vecchio `sortCriteria` singolo. `resetFilters` azzera tutti e
+  5 gli scope a `[{ key: "eff", order: "desc" }]`.
+- **`makeHandleSort = (scope: SortScope) => (key: SortKey) => {...}`**
+  sostituisce il vecchio `handleSort` unico: è una factory che produce
+  l'handler per lo scope specifico.
+- **Shortcut derivati** per i call-site: per la tabella edifici principale
+  (`sortCriteria`/`sortBy`/`sortOrder`/`handleSort`, scoped dinamicamente
+  sull'`activeTab` corrente) e uno per ciascuna tabella Alleati
+  (`sortCriteriaAlleatiOwn`/`...AlleatiDb`).
+- **`renderMilitaryHeaders`** è passato da closure senza parametri a
+  `renderMilitaryHeaders(scope: SortScope)`, che calcola `activeSortBy`/
+  `activeSortOrder`/`onSort` in base allo scope ricevuto. I 3 call-site
+  (tabella principale + le 2 tabelle Alleati) passano lo scope corretto.
+- I due `useMemo` che applicano l'ordinamento (`filteredBuildings` per la
+  tabella principale, `filteredAllies` per gli alleati database,
+  `processedImportedAllies` per gli alleati posseduti) leggono ciascuno il
+  proprio scope invece del vecchio `sortCriteria` condiviso, e lo includono
+  nelle rispettive dependency array.
+
+Se in futuro si aggiunge una sesta vista ordinabile: nuovo valore di
+`SortScope`, nuova entry in `sortCriteriaByScope`, e proprio scope passato a
+`renderMilitaryHeaders`/equivalente. Non riusare uno scope esistente.
+
+### 24.3septies Merge Città+Inventario: "MOSTRA ANCHE INVENTARIO" (luglio 2026)
+
+Nella tab Città, un pulsante toggle (stile identico al pulsante "PROD + STAT",
+ma in tonalità verde/emerald invece di ambra/ocra) permette di aggiungere alla
+tabella Città anche tutte le righe della tabella Inventario, come se fossero
+un'unica lista. Le due tabelle condividono esattamente le stesse colonne: il
+merge è quindi una semplice concatenazione di righe già elaborate, non
+richiede logica di rendering aggiuntiva.
+
+- **Stato**: `showInventoryInCity: boolean`, persistito con lo stesso pattern
+  di altre preferenze filtro (es. `showOnlyWithAllySlot`).
+- **Flag di riga**: `ProcessedBuilding._isMergedInventory?: boolean`. Marca le
+  righe iniettate dall'Inventario. Assente (o `false`) per le normali istanze
+  di città.
+- **Iniezione**: nel `useMemo` `filterSourceBuildings`, quando
+  `activeTab === "propria_citta" && showInventoryInCity`, le righe
+  dell'Inventario (stesso `eraAdjustedSource` della tab Inventario) vengono
+  concatenate a quelle della città, marcate `_isMergedInventory: true`. Il
+  contatore "EDIFICI VISUALIZZATI" riflette il denominatore aggiornato.
+- **Distinzione visiva: SOLO colore di riga, MAI un badge** — vincolo esplicito
+  dell'utente ("il pulsante deve aggiungere informazione, non nasconderla").
+  Nuova categoria `"mergedInventory"` in `BUILDING_ROW_COLORS`
+  (`buildingClassification.ts`) → classe `.row-merged-inventory` in
+  `index.css`, costruita con lo stesso pattern `color-mix` opaco delle altre
+  categorie (§24.3bis più sopra spiega perché un colore di riga NON
+  semi-trasparente è un'invariante, non una scelta estetica: lo sticky delle
+  prime colonne dipende da un `background-color` reale sulla `<tr>`). Questa
+  categoria ha priorità sulle altre (great building/militare/beni/inattivo/
+  fallback/normale) nella logica di selezione colore di `BuildingRow`.
+- **Tutti i badge propri dell'Inventario restano visibili sulle righe merged**
+  (KIT, INV+KIT, frammenti, quantità...). ⚠️ Bug reale corretto: quei badge in
+  `BuildingRow` erano condizionati a `activeTab === "inventario"` in 3 punti
+  (nome colorato per item "solo INV" senza kit associato; badge UNKNOWN per
+  item non risolti nel catalogo; il blocco principale
+  KIT/INV_UPGRADED/FAB/quantità). Con il merge attivo l'`activeTab` reale è
+  `"propria_citta"`, quindi quel blocco non veniva mai eseguito per nessuna
+  riga — le righe merged comparivano col colore giusto ma senza badge. Esteso
+  a `(activeTab === "inventario" || b._isMergedInventory)` in tutti e 3 i
+  punti. **Non individuato da `tsc`/`vite build`**, solo da verifica dal vivo
+  nel browser: qualunque modifica futura a questi 3 blocchi va riverificata
+  visivamente con il merge attivo, non solo con `npm run build` verde.
+- **Le righe merged non sono istanze piazzate in città**: azioni e filtri
+  città-specifici sono disattivati quando `b._isMergedInventory === true`:
+  `handleCityRowClick` fa early-return (niente selezione/evidenziazione riga
+  al click); badge disconnesso-da-strada, badge "ricollegamento inutile",
+  badge upgrade disponibile, triangolo obsoleto, triangolo declassabile, icone
+  slot alleato sono tutti soppressi per queste righe (sia dentro `BuildingRow`
+  sia, come doppia sicurezza, nel `.map()` del chiamante che neutralizza le
+  prop corrispondenti prima di passarle). I filtri toolbar
+  `showOnlyOutdated`/`showOnlyDeclassable` escludono esplicitamente le righe
+  merged quando attivi (in `App.tsx`: `if (isPropriacitta && showOnlyOutdated
+  && (b._isMergedInventory || (b.cityEntityId && !outdatedBuildings.has(...))))
+  continue;`, stesso pattern per `showOnlyDeclassable`) — non avrebbe senso
+  segnalarle come obsolete/declassabili, non essendo istanze reali. Selezione
+  (checkbox) ed export restano invece disponibili anche sulle righe merged.
+
 ### 24.4 Import e gestione errori
 
 Le tre funzioni async (`handleImportCityMap`, `handleImportAll`, `handleWandClick`)

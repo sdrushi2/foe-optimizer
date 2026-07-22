@@ -846,6 +846,16 @@ type ProcessedBuilding = Building & {
   searchName: string;
   isFromKit?: boolean;
   kitCount?: number;
+  /** true SOLO per le righe iniettate nella tab Città dal toggle "Mostra
+   *  anche Inventario" (vedi showInventoryInCity in App). Non sono istanze
+   *  reali piazzate in città: nessuna azione/filtro Città-specifico
+   *  (selezione, obsoleti, declassabili, disconnessi, slot alleato,
+   *  evidenziazione) deve applicarsi a queste righe, anche se il loro
+   *  cityEntityId coincide per caso con un'istanza reale in città. Il colore
+   *  di riga (categoria "mergedInventory" in BUILDING_ROW_COLORS) le
+   *  distingue visivamente; i badge KIT/INV/🧩 restano quelli già calcolati
+   *  da processedInventoryKitBuildings (_invBadge), non toccati da questo flag. */
+  _isMergedInventory?: boolean;
 };
 
 /** ProcessedBuilding con i campi extra usati solo nella tab Inventario
@@ -972,13 +982,14 @@ const BuildingRow = memo(function BuildingRow({
         activeTab === "propria_citta" && isHighlighted && !b.isFallback
           ? "outline outline-1 outline-amber-400 row-highlighted relative z-10"
           : (() => {
-              const cat = b.isGreatBuilding ? "great"
+              const cat = b._isMergedInventory ? "mergedInventory"
+                : b.isGreatBuilding ? "great"
                 : b.isMilitary ? "military"
                 : b.isGoods ? "goods"
                 : b.isInactive ? "inactive"
                 : b.isFallback ? "fallback"
                 : "normal";
-              const disconnected = activeTab === "propria_citta" && (disconnectedCount) > 0;
+              const disconnected = activeTab === "propria_citta" && !b._isMergedInventory && (disconnectedCount) > 0;
               const notInCsv = b.cityEntityId && !CSV_ENTITY_IDS_SET.has(b.cityEntityId);
               return BUILDING_ROW_COLORS[cat]
                 + (disconnected ? " " + ROW_DISCONNECTED_OVERLAY : "")
@@ -1070,7 +1081,7 @@ const BuildingRow = memo(function BuildingRow({
               </span>
             );
           }
-          const isInventarioInv = activeTab === "inventario" && (b as InventoryRowBuilding)._invBadge === "INV";
+          const isInventarioInv = (activeTab === "inventario" || b._isMergedInventory) && (b as InventoryRowBuilding)._invBadge === "INV";
           return (
             <span className={hasIt ? (isInventarioInv ? "text-emerald-400 font-semibold" : "") : (isInventarioInv ? "text-emerald-400 font-semibold italic" : "italic")}>
               {displayNameText}
@@ -1082,12 +1093,12 @@ const BuildingRow = memo(function BuildingRow({
             {t("greatBuildingBadge", uiLang)}
           </span>
         )}
-        {activeTab === "inventario" && b.isUnresolved && (
+        {(activeTab === "inventario" || b._isMergedInventory) && b.isUnresolved && (
           <span className="ml-1.5 inline-block text-[11px] font-mono font-bold px-1 rounded bg-red-950/60 text-red-400 border border-red-900 relative -top-[1px] cursor-help" title={t("unresolvedValuesTitle", uiLang)}>
             UNKNOWN
           </span>
         )}
-        {activeTab === "propria_citta" && (() => {
+        {activeTab === "propria_citta" && !b._isMergedInventory && (() => {
           if (b.isGreatBuilding) return null;
           const count = importedCount;
           if (count <= 1) return null;
@@ -1097,7 +1108,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && (() => {
+        {activeTab === "propria_citta" && !b._isMergedInventory && (() => {
           if (!b.cityEntityId) return null;
           const disconnCount = disconnectedCount;
           if (disconnCount <= 0) return null;
@@ -1107,7 +1118,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && (() => {
+        {activeTab === "propria_citta" && !b._isMergedInventory && (() => {
           if (b.isGreatBuilding || b.isInactive) return null;
           if (!b.cityEntityId) return null;
           if (needlessCount <= 0) return null;
@@ -1117,7 +1128,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && (() => {
+        {activeTab === "propria_citta" && !b._isMergedInventory && (() => {
           if (b.isGreatBuilding || b.isInactive) return null;
           const badge = upgradeBadge;
           if (!badge) return null;
@@ -1134,7 +1145,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && (() => {
+        {activeTab === "propria_citta" && !b._isMergedInventory && (() => {
           if (b.isGreatBuilding || b.isInactive || b.isMilitary || !b.cityEntityId) return null;
           if (!isOutdated) return null;
           const minLvl = minLevel;
@@ -1192,7 +1203,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && (() => {
+        {activeTab === "propria_citta" && !b._isMergedInventory && (() => {
           if (b.isGreatBuilding || b.isInactive || b.isMilitary || !b.cityEntityId) return null;
           if (!isDeclassable) return null;
           return (
@@ -1226,7 +1237,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "propria_citta" && allySlots && allySlots.map((slot, i) => (
+        {activeTab === "propria_citta" && !b._isMergedInventory && allySlots && allySlots.map((slot, i) => (
           <span
             // Le icone non hanno un id stabile proprio (sono slot posizionali
             // "pieno/vuoto" per copia, non entità con identità); l'ordine è
@@ -1301,7 +1312,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-        {activeTab === "inventario" && (() => {
+        {(activeTab === "inventario" || b._isMergedInventory) && (() => {
           const ib = b as InventoryRowBuilding;
           const badge = ib._invBadge;
           const qty = b.kitCount ?? 1;
@@ -1393,7 +1404,7 @@ const BuildingRow = memo(function BuildingRow({
         </div>
       </td>
       <td className={`cell-eff ${
-        activeTab === "propria_citta" && (disconnectedCount) > 0
+        activeTab === "propria_citta" && !b._isMergedInventory && (disconnectedCount) > 0
           ? b.isGreatBuilding
             ? "bg-[#351605]"
             : "bg-[#2d0a0a]"
@@ -1821,6 +1832,13 @@ export default function App() {
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
   const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
   const [showOnlyWithAllySlot, setShowOnlyWithAllySlot] = useState(false);
+  // Merge Città+Inventario: quando attivo, la tabella Città mostra anche le
+  // righe dell'ottimizzatore inventario (stesso identico set che si vede in
+  // tab Inventario), marcate con ProcessedBuilding._isMergedInventory per
+  // colore riga diverso e per disattivare azioni/filtri Città-specifici su
+  // di esse (vedi filterSourceBuildings/handleCityRowClick più sotto). Non
+  // persistito, stesso pattern di showOnlyOutdated/showOnlyDeclassable.
+  const [showInventoryInCity, setShowInventoryInCity] = useState(false);
   // Filtra nella tab Città: mostra solo gli edifici che PRODUCONO frammenti
   // (stesso meccanismo del filtro slot alleati sopra, stessa fonte dati del
   // badge iconFragment: FRAGMENTS_PRODUCED).
@@ -3309,6 +3327,10 @@ export default function App() {
   const handleCityRowClick = useCallback((building: ProcessedBuilding) => {
     if (activeTab !== "propria_citta") return;
     if (!building.cityEntityId) return;
+    // Righe iniettate dal toggle "Mostra anche Inventario": non sono
+    // istanze reali piazzate in città, il click di selezione (usato per il
+    // confronto era) non ha senso su di esse.
+    if (building._isMergedInventory) return;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(building.id)) next.delete(building.id);
@@ -3688,12 +3710,24 @@ export default function App() {
   // Sorgente base per la tab attiva. Separata dal filtro così l'override era
   // (sotto) non dipende da activeTab in modo opaco.
   const filterSourceBuildings = useMemo<ProcessedBuilding[]>(() => {
-    if (activeTab === "propria_citta") return allProcessedBuildings;
+    if (activeTab === "propria_citta") {
+      if (!showInventoryInCity) return allProcessedBuildings;
+      // Merge Città+Inventario: stesso identico set di righe già calcolato
+      // per la tab Inventario (nessun secondo giro dell'ottimizzatore — le
+      // Map processedInventoryKitBuildings/processedInventoryRawBuildings
+      // sono già dei useMemo indipendenti da activeTab, quindi qui si
+      // riusa il risultato già pronto), marcate _isMergedInventory perché
+      // il resto della pipeline (filtri, click, colore riga) le tratti
+      // diversamente dalle istanze reali in città.
+      const inventorySource = showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings;
+      const mergedInventory = inventorySource.map(b => ({ ...b, _isMergedInventory: true as const }));
+      return [...allProcessedBuildings, ...mergedInventory];
+    }
     if (activeTab === "inventario") {
       return showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings;
     }
     return processedBuildings;
-  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings]);
+  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity]);
 
   // Applica UNA VOLTA l'override era corrente (stats + nome + efficienza) per le
   // tab Città/Inventario, indipendentemente dalla ricerca. Prima questo lavoro
@@ -3767,7 +3801,12 @@ export default function App() {
 
       // 1. Tab-specific membership check
       if (isPropriacitta) {
-        if (!b.isGreatBuilding) {
+        // Le righe iniettate dal toggle "Mostra anche Inventario" non sono
+        // istanze piazzate: saltano il check di appartenenza alla città
+        // (altrimenti verrebbero escluse qui, prima ancora di arrivare ai
+        // filtri sotto — sono già pre-filtrate dall'optimizer, stesso
+        // ramo "else if (isInventario)" qui sotto).
+        if (!b._isMergedInventory && !b.isGreatBuilding) {
           if (!b.cityEntityId || !importedCityEntityLookup.has(b.cityEntityId)) continue;
         }
       } else if (isInventario) {
@@ -3786,9 +3825,13 @@ export default function App() {
           : !visibleNameForSearch.includes(deferredSearchLower)
       )) continue;
 
-      // 3. Filtered outdated (solo tab Città)
-      if (isPropriacitta && showOnlyOutdated && b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)) continue;
-      if (isPropriacitta && showOnlyDeclassable && b.cityEntityId && !declassableBuildings.has(b.cityEntityId)) continue;
+      // 3. Filtered outdated (solo tab Città). Le righe merged da Inventario
+      // non sono istanze piazzate: non hanno un'era da confrontare, quindi
+      // vengono escluse quando uno di questi due filtri è attivo (un match
+      // per cityEntityId condiviso con un'istanza reale sarebbe comunque
+      // fuorviante, non un'informazione utile sulla riga merged stessa).
+      if (isPropriacitta && showOnlyOutdated && (b._isMergedInventory || (b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)))) continue;
+      if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
       // Filtri slot alleati / frammenti: disponibili anche in tab Inventario
       // (pulsanti presenti in entrambe le barre), non solo in Città.
       if ((isPropriacitta || isInventario) && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
@@ -5612,6 +5655,21 @@ export default function App() {
                 >
                   {t("greatBuildingBadge", uiLang)}
                 </button>
+                {/* Merge Città+Inventario: stesso stile del bottone PROD + STAT
+                    (renderProdSummary), ma tinta verde/emerald invece di
+                    amber/orange per non confondersi con quel pannello — e per
+                    restare in tema con .row-merged-inventory (sfondo riga). */}
+                <button
+                  onClick={() => setShowInventoryInCity(v => !v)}
+                  className={`h-7 px-2.5 rounded border font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                    showInventoryInCity
+                      ? "border-emerald-500 bg-emerald-950/40 text-emerald-300"
+                      : "border-slate-700 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800/60"
+                  }`}
+                  title={showInventoryInCity ? t("hideInventoryInCityTitle", uiLang) : t("showInventoryInCityTitle", uiLang)}
+                >
+                  {t("showInventoryInCityButton", uiLang)}
+                </button>
               </>
               {isDebugOpen && (
                 <div className="w-full mt-2">
@@ -5903,7 +5961,7 @@ export default function App() {
                           </button>
                         </th>
                         <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
-                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : processedBuildings.length}</span>
+                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : processedBuildings.length}</span>
                         </th>
                         <th className="py-2 px-0" colSpan={4 + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
@@ -6035,17 +6093,21 @@ export default function App() {
                           specialKits={specialKits}
                           DIFF_FIELDS={DIFF_FIELDS}
                           isSelected={selectedIds.has(b.id)}
-                          isHighlighted={highlightedCityEntityIds.has(b.cityEntityId)}
-                          disconnectedCount={cityEntityDisconnected.get(b.cityEntityId) ?? 0}
-                          needlessCount={cityEntityNeedlessCount.get(b.cityEntityId) ?? 0}
-                          importedCount={importedCityEntityLookup.get(b.cityEntityId) ?? 0}
+                          // Righe merged da Inventario (b._isMergedInventory): valori neutri
+                          // per le props Città-specifiche, così anche un'eventuale guardia
+                          // dimenticata in BuildingRow non mostra dati fuorvianti presi da
+                          // un'istanza reale che condivide per caso lo stesso cityEntityId.
+                          isHighlighted={!b._isMergedInventory && highlightedCityEntityIds.has(b.cityEntityId)}
+                          disconnectedCount={b._isMergedInventory ? 0 : cityEntityDisconnected.get(b.cityEntityId) ?? 0}
+                          needlessCount={b._isMergedInventory ? 0 : cityEntityNeedlessCount.get(b.cityEntityId) ?? 0}
+                          importedCount={b._isMergedInventory ? 0 : importedCityEntityLookup.get(b.cityEntityId) ?? 0}
                           greatBuildingInfo={greatBuildingsJson.get(b.cityEntityId)}
                           gameDisplayName={gameNames.get(b.cityEntityId)}
-                          upgradeBadge={cityUpgradeBadges.get(b.cityEntityId)}
-                          isOutdated={outdatedBuildings.has(b.cityEntityId)}
-                          isDeclassable={declassableBuildings.has(b.cityEntityId)}
-                          allySlots={allySlotsPerBuilding.get(b.cityEntityId)}
-                          declassablePopData={declassableBuildings.get(b.cityEntityId)}
+                          upgradeBadge={b._isMergedInventory ? undefined : cityUpgradeBadges.get(b.cityEntityId)}
+                          isOutdated={!b._isMergedInventory && outdatedBuildings.has(b.cityEntityId)}
+                          isDeclassable={!b._isMergedInventory && declassableBuildings.has(b.cityEntityId)}
+                          allySlots={b._isMergedInventory ? undefined : allySlotsPerBuilding.get(b.cityEntityId)}
+                          declassablePopData={b._isMergedInventory ? undefined : declassableBuildings.get(b.cityEntityId)}
                           setDeclassableTooltip={setDeclassableTooltip}
                           minLevel={entityLevels.get(b.cityEntityId) ?? -1}
                           allLevelsForEntity={entityLevelsList.get(b.cityEntityId)}

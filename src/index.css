@@ -154,6 +154,18 @@ body {
   .row-highlighted {
     background-color: color-mix(in srgb, theme(colors.amber.500) 10%, var(--bt-ambient-solid));
   }
+  /* Righe iniettate in tab Città dal toggle "Mostra anche Inventario"
+     (App.tsx, ProcessedBuilding._isMergedInventory / BUILDING_ROW_COLORS
+     categoria "mergedInventory"): stesso pattern color-mix opaco delle
+     altre categorie, tinta verde per restare in tema col pulsante verde
+     che attiva il merge. Priorità massima sulla classificazione normale
+     (great/military/goods/...), applicata PRIMA in App.tsx. */
+  .row-merged-inventory {
+    background-color: color-mix(in srgb, theme(colors.emerald.950) 55%, var(--bt-ambient-solid));
+  }
+  .row-merged-inventory:hover {
+    background-color: color-mix(in srgb, theme(colors.emerald.950) 75%, var(--bt-ambient-solid));
+  }
 
   /* ----------------------------------------------------------
      LAYOUT CELLE

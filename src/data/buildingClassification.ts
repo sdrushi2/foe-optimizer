@@ -99,7 +99,7 @@ export function isGoodsFactoryId(id: string): boolean {
  * rimpiazzare il colore della categoria.
  */
 export const BUILDING_ROW_COLORS: Record<
-  "great" | "military" | "goods" | "inactive" | "fallback" | "normal",
+  "great" | "military" | "goods" | "inactive" | "fallback" | "normal" | "mergedInventory",
   string
 > = {
   // ⚠️ INVARIANTE: ogni colore di riga deve essere OPACO, anche negli stati
@@ -121,6 +121,14 @@ export const BUILDING_ROW_COLORS: Record<
   inactive: "row-inactive",
   fallback: "row-fallback",
   normal:   "row-normal",
+  // Righe iniettate in tab Città dal toggle "Mostra anche Inventario"
+  // (App.tsx, ProcessedBuilding._isMergedInventory): categoria PRIORITARIA
+  // su tutte le altre (great/military/goods/...), per distinguere sempre a
+  // colpo d'occhio "questo non è un edificio piazzato" indipendentemente
+  // dal tipo di edificio sottostante. Verde/emerald per restare in tema con
+  // il pulsante che attiva il merge. Stesso pattern .row-* delle altre
+  // categorie non-opache: vedi .row-merged-inventory in index.css.
+  mergedInventory: "row-merged-inventory",
 };
 
 /**
