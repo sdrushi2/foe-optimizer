@@ -1577,6 +1577,11 @@ type SortKey =
   | "iq_mon_b" | "iq_mat_b" | "iq_mon" | "iq_mat" | "iq_atk_a" | "iq_def_a" | "iq_atk_d" | "iq_def_d" | "iq_beni" | "iq_truppe" | "iq_azioni" | "iq_cap"
   | "mon" | "mat" | "fp" | "fpb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
 type SortCriterion = { key: SortKey; order: "asc" | "desc" };
+// Ambito di ordinamento indipendente: le 3 viste della tabella edifici
+// (Database/Città/Inventario, distinte da TabType) più le 2 tabelle Alleati
+// (posseduti e database), che condividono la stessa TabType "alleati" ma
+// sono due <table> distinte nello stesso schermo — non riducibili a TabType.
+type SortScope = "database" | "propria_citta" | "inventario" | "alleati_own" | "alleati_db";
 
 // ── Comparatore alleati condiviso ─────────────────────────────────────────
 // Forma minima dei dati che il sort degli alleati legge. Usata sia da
@@ -2728,7 +2733,13 @@ export default function App() {
     setAllyRarityFilters({
       1: true, 2: true, 3: true, 4: true, 5: true,
     });
-    setSortCriteria([{ key: "eff", order: "desc" }]);
+    setSortCriteriaByScope({
+      database: [{ key: "eff", order: "desc" }],
+      propria_citta: [{ key: "eff", order: "desc" }],
+      inventario: [{ key: "eff", order: "desc" }],
+      alleati_own: [{ key: "eff", order: "desc" }],
+      alleati_db: [{ key: "eff", order: "desc" }],
+    });
     setManualSortTabs({
       database: false,
       alleati: false,
@@ -2913,36 +2924,76 @@ export default function App() {
     return { set, countMap };
   }, [importedAllies]);
 
-  const [sortCriteria, setSortCriteria] = useState<SortCriterion[]>([
-    { key: "eff", order: "desc" },
-  ]);
+  // Criteri di ordinamento INDIPENDENTI per ambito (SortScope): prima era un
+  // unico array condiviso da tutte e 5 le tabelle (edifici Database/Città/
+  // Inventario + Alleati posseduti/database), quindi ordinare una tabella
+  // per una colonna qualunque si propagava a tutte le altre. Ogni scope ha
+  // ora il proprio array, inizializzato a "Eff" decrescente come prima.
+  const DEFAULT_SORT_CRITERIA: SortCriterion[] = [{ key: "eff", order: "desc" }];
+  const [sortCriteriaByScope, setSortCriteriaByScope] = useState<Record<SortScope, SortCriterion[]>>({
+    database: [...DEFAULT_SORT_CRITERIA],
+    propria_citta: [...DEFAULT_SORT_CRITERIA],
+    inventario: [...DEFAULT_SORT_CRITERIA],
+    alleati_own: [...DEFAULT_SORT_CRITERIA],
+    alleati_db: [...DEFAULT_SORT_CRITERIA],
+  });
   const [manualSortTabs, setManualSortTabs] = useState<Record<TabType, boolean>>({
     database: false,
     alleati: false,
     propria_citta: false,
     inventario: false,
   });
-  const sortBy = sortCriteria[0]?.key ?? "eff";
-  const sortOrder = sortCriteria[0]?.order ?? "desc";
 
-  const handleSort = (key: SortKey) => {
-    setManualSortTabs((previous) => ({ ...previous, [activeTab]: true }));
-    setSortCriteria((previous) => {
+  // handleSort ora richiede lo scope esplicito: le due tabelle Alleati
+  // vivono sotto la stessa TabType "alleati" ma sono scope diversi, quindi
+  // activeTab da solo non basta a distinguerle (a differenza delle 3 viste
+  // della tabella edifici, dove scope coincide con TabType).
+  const makeHandleSort = (scope: SortScope) => (key: SortKey) => {
+    if (scope === "database" || scope === "propria_citta" || scope === "inventario") {
+      setManualSortTabs((previous) => ({ ...previous, [scope]: true }));
+    }
+    setSortCriteriaByScope((previousByScope) => {
+      const previous = previousByScope[scope];
       const existingIndex = previous.findIndex((criterion) => criterion.key === key);
 
+      let next: SortCriterion[];
       if (existingIndex === 0) {
         const current = previous[0];
-        return [
+        next = [
           { key, order: current.order === "desc" ? "asc" : "desc" },
           ...previous.slice(1),
         ];
+      } else {
+        const previousOrder = existingIndex > -1 ? previous[existingIndex].order : "desc";
+        const remaining = previous.filter((criterion) => criterion.key !== key);
+        next = [{ key, order: previousOrder }, ...remaining];
       }
-
-      const previousOrder = existingIndex > -1 ? previous[existingIndex].order : "desc";
-      const remaining = previous.filter((criterion) => criterion.key !== key);
-      return [{ key, order: previousOrder }, ...remaining];
+      return { ...previousByScope, [scope]: next };
     });
   };
+
+  // Scorciatoie per la tabella edifici (scope coincide con activeTab).
+  const sortCriteria = sortCriteriaByScope[
+    activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario" ? activeTab : "database"
+  ];
+  const sortBy = sortCriteria[0]?.key ?? "eff";
+  const sortOrder = sortCriteria[0]?.order ?? "desc";
+  const handleSort = makeHandleSort(
+    activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario" ? activeTab : "database"
+  );
+
+  // Scorciatoie dedicate alle due tabelle Alleati (usate negli header
+  // inline di quelle due <table>, non tramite renderMilitaryHeaders che è
+  // invece parametrizzata esplicitamente con lo scope).
+  const sortCriteriaAlleatiOwn = sortCriteriaByScope.alleati_own;
+  const sortByAlleatiOwn = sortCriteriaAlleatiOwn[0]?.key ?? "eff";
+  const sortOrderAlleatiOwn = sortCriteriaAlleatiOwn[0]?.order ?? "desc";
+  const handleSortAlleatiOwn = makeHandleSort("alleati_own");
+
+  const sortCriteriaAlleatiDb = sortCriteriaByScope.alleati_db;
+  const sortByAlleatiDb = sortCriteriaAlleatiDb[0]?.key ?? "eff";
+  const sortOrderAlleatiDb = sortCriteriaAlleatiDb[0]?.order ?? "desc";
+  const handleSortAlleatiDb = makeHandleSort("alleati_db");
 
   // Riga dei titoli di gruppo (⚔️ Generali / 🔰 Campi / ⚡ Spedizioni) sopra le
   // colonne icona: stesso blocco identico nelle 3 tabelle, un livello sopra
@@ -2956,56 +3007,63 @@ export default function App() {
   );
 
   // Header delle colonne Generale/Campi/Spedizioni: identico nelle 3 tabelle
-  // (edifici, alleati posseduti, database alleati). Dipende solo da state già
-  // nello scope di App (sortBy/sortOrder/showSigmaColumns/spedizioniEnabled),
-  // quindi è una funzione interna senza props — non un componente a parte.
-  const renderMilitaryHeaders = () => (
+  // (edifici, alleati posseduti, database alleati), ma ognuna ha il proprio
+  // SortScope indipendente — quindi la funzione ora richiede lo scope
+  // esplicito invece di leggere sortBy/sortOrder/handleSort dallo scope
+  // chiuso di App (che oggi rappresentano solo la tabella edifici).
+  const renderMilitaryHeaders = (scope: SortScope) => {
+    const criteria = sortCriteriaByScope[scope];
+    const activeSortBy = criteria[0]?.key ?? "eff";
+    const activeSortOrder = criteria[0]?.order ?? "desc";
+    const onSort = makeHandleSort(scope);
+    return (
     <>
       {!showSigmaColumns && (
         <>
-          <SortableHeader label={<TableHeaderIcon src={iconGenAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGeneral", uiLang))} />} sortKey="gen_atk_a" onClick={() => handleSort("gen_atk_a")} active={sortBy === "gen_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGeneral", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconGenDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGeneral", uiLang))} />} sortKey="gen_def_a" onClick={() => handleSort("gen_def_a")} active={sortBy === "gen_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGeneral", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconGenAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGeneral", uiLang))} />} sortKey="gen_atk_d" onClick={() => handleSort("gen_atk_d")} active={sortBy === "gen_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGeneral", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconGenDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGeneral", uiLang))} />} sortKey="gen_def_d" onClick={() => handleSort("gen_def_d")} active={sortBy === "gen_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGeneral", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconGenAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGeneral", uiLang))} />} sortKey="gen_atk_a" onClick={() => onSort("gen_atk_a")} active={activeSortBy === "gen_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGeneral", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconGenDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGeneral", uiLang))} />} sortKey="gen_def_a" onClick={() => onSort("gen_def_a")} active={activeSortBy === "gen_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGeneral", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconGenAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGeneral", uiLang))} />} sortKey="gen_atk_d" onClick={() => onSort("gen_atk_d")} active={activeSortBy === "gen_atk_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGeneral", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconGenDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGeneral", uiLang))} />} sortKey="gen_def_d" onClick={() => onSort("gen_def_d")} active={activeSortBy === "gen_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGeneral", uiLang))} />
         </>
       )}
 
       {showSigmaColumns ? (
         <>
           {/* Σ Gen + Campi/GBG: icone Campi (rosse/blu) */}
-          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_atk_a" onClick={() => handleSort("sig_gen_campi_atk_a")} active={sortBy === "sig_gen_campi_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGbg", uiLang), true)} />
-          <SortableHeader label={<TableHeaderIcon src={iconCampiDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_def_a" onClick={() => handleSort("sig_gen_campi_def_a")} active={sortBy === "sig_gen_campi_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGenPlusGbg", uiLang), true)} />
-          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_atk_d" onClick={() => handleSort("sig_gen_campi_atk_d")} active={sortBy === "sig_gen_campi_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGbg", uiLang), true)} />
-          <SortableHeader label={<TableHeaderIcon src={iconCampiDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_def_d" onClick={() => handleSort("sig_gen_campi_def_d")} active={sortBy === "sig_gen_campi_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGbg", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_atk_a" onClick={() => onSort("sig_gen_campi_atk_a")} active={activeSortBy === "sig_gen_campi_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGbg", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_def_a" onClick={() => onSort("sig_gen_campi_def_a")} active={activeSortBy === "sig_gen_campi_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGenPlusGbg", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_atk_d" onClick={() => onSort("sig_gen_campi_atk_d")} active={activeSortBy === "sig_gen_campi_atk_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGbg", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGbg", uiLang), true)} />} sortKey="sig_gen_campi_def_d" onClick={() => onSort("sig_gen_campi_def_d")} active={activeSortBy === "sig_gen_campi_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGbg", uiLang), true)} />
         </>
       ) : (
         <>
-          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGbg", uiLang))} />} sortKey="gbg_atk_a" onClick={() => handleSort("gbg_atk_a")} active={sortBy === "gbg_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGbg", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconCampiDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGbg", uiLang))} />} sortKey="gbg_def_a" onClick={() => handleSort("gbg_def_a")} active={sortBy === "gbg_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGbg", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGbg", uiLang))} />} sortKey="gbg_atk_d" onClick={() => handleSort("gbg_atk_d")} active={sortBy === "gbg_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGbg", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconCampiDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGbg", uiLang))} />} sortKey="gbg_def_d" onClick={() => handleSort("gbg_def_d")} active={sortBy === "gbg_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGbg", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGbg", uiLang))} />} sortKey="gbg_atk_a" onClick={() => onSort("gbg_atk_a")} active={activeSortBy === "gbg_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGbg", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGbg", uiLang))} />} sortKey="gbg_def_a" onClick={() => onSort("gbg_def_a")} active={activeSortBy === "gbg_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGbg", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGbg", uiLang))} />} sortKey="gbg_atk_d" onClick={() => onSort("gbg_atk_d")} active={activeSortBy === "gbg_atk_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGbg", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconCampiDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGbg", uiLang))} />} sortKey="gbg_def_d" onClick={() => onSort("gbg_def_d")} active={activeSortBy === "gbg_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGbg", uiLang))} />
         </>
       )}
 
       {spedizioniEnabled && !showSigmaColumns && (
         <>
-          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />} sortKey="sped_atk_a" onClick={() => handleSort("sped_atk_a")} active={sortBy === "sped_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_a" onClick={() => handleSort("sped_def_a")} active={sortBy === "sped_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />} sortKey="sped_atk_d" onClick={() => handleSort("sped_atk_d")} active={sortBy === "sped_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => handleSort("sped_def_d")} active={sortBy === "sped_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />} sortKey="sped_atk_a" onClick={() => onSort("sped_atk_a")} active={activeSortBy === "sped_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_a" onClick={() => onSort("sped_def_a")} active={activeSortBy === "sped_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />} sortKey="sped_atk_d" onClick={() => onSort("sped_atk_d")} active={activeSortBy === "sped_atk_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => onSort("sped_def_d")} active={activeSortBy === "sped_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />
         </>
       )}
       {spedizioniEnabled && showSigmaColumns && (
         <>
           {/* Σ Gen + Sped/GE: icone Spedizioni (rosse/blu) */}
-          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_atk_a" onClick={() => handleSort("sig_gen_sped_atk_a")} active={sortBy === "sig_gen_sped_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGe", uiLang), true)} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_def_a" onClick={() => handleSort("sig_gen_sped_def_a")} active={sortBy === "sig_gen_sped_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGenPlusGe", uiLang), true)} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_atk_d" onClick={() => handleSort("sig_gen_sped_atk_d")} active={sortBy === "sig_gen_sped_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGe", uiLang), true)} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_def_d" onClick={() => handleSort("sig_gen_sped_def_d")} active={sortBy === "sig_gen_sped_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGe", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_atk_a" onClick={() => onSort("sig_gen_sped_atk_a")} active={activeSortBy === "sig_gen_sped_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGe", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_def_a" onClick={() => onSort("sig_gen_sped_def_a")} active={activeSortBy === "sig_gen_sped_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGenPlusGe", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_atk_d" onClick={() => onSort("sig_gen_sped_atk_d")} active={activeSortBy === "sig_gen_sped_atk_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGenPlusGe", uiLang), true)} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_def_d" onClick={() => onSort("sig_gen_sped_def_d")} active={activeSortBy === "sig_gen_sped_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGenPlusGe", uiLang), true)} />
         </>
       )}
     </>
-  );
+    );
+  };
 
   const getSortValue = (b: Building & { currentEff: number }, key: SortKey): number | string => {
     switch (key) {
@@ -3990,10 +4048,10 @@ export default function App() {
       return n;
     };
 
-    result.sort((a, b) => compareAllies(a, b, sortCriteria, getName));
+    result.sort((a, b) => compareAllies(a, b, sortCriteriaAlleatiDb, getName));
 
     return result;
-  }, [deferredSearch, sortCriteria, weights, globalAllyLevel, allyRarityFilters, showOnlyOwnedAllies, ownedAllyLookup, gameLang]);
+  }, [deferredSearch, sortCriteriaAlleatiDb, weights, globalAllyLevel, allyRarityFilters, showOnlyOwnedAllies, ownedAllyLookup, gameLang]);
 
 
 
@@ -4075,7 +4133,7 @@ export default function App() {
     };
 
     result.sort((a, b) => {
-      const primary = compareAllies(a, b, sortCriteria, getName);
+      const primary = compareAllies(a, b, sortCriteriaAlleatiOwn, getName);
       if (primary !== 0) return primary;
       // Criterio secondario: ordina per rarità (Comune → … → Leggendario)
       const rankA = a.rarity;
@@ -4084,7 +4142,7 @@ export default function App() {
     });
 
     return result;
-  }, [importedAllies, deferredSearch, sortCriteria, weights, allyRarityFilters, gameLang]);
+  }, [importedAllies, deferredSearch, sortCriteriaAlleatiOwn, weights, allyRarityFilters, gameLang]);
 
   // Larghezza minima della tabella edifici in base alle colonne attive.
   // Con table-fixed il browser può comprimere le colonne sotto il loro min-w
@@ -5914,7 +5972,7 @@ export default function App() {
                           <SortableHeader label={<TableHeaderIcon src={iconFel} alt={t("colFel", uiLang)} />} sortKey="fel" onClick={() => handleSort("fel")} active={sortBy === "fel"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[66px]" title={t("colFel", uiLang)} />
                         )}
                         
-                        {renderMilitaryHeaders()}
+                        {renderMilitaryHeaders(activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario" ? activeTab : "database")}
 
                         <SortableHeader label={<TableHeaderIcon src={iconIQAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionQi", uiLang))} />} sortKey="iq_atk_a" onClick={() => handleSort("iq_atk_a")} active={sortBy === "iq_atk_a"} order={sortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionQi", uiLang))} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQDefA} alt={boostTitle(uiLang, "def", "red", t("sectionQi", uiLang))} />} sortKey="iq_def_a" onClick={() => handleSort("iq_def_a")} active={sortBy === "iq_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionQi", uiLang))} />
@@ -6074,11 +6132,11 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                       </tr>
                       <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
-                        <SortableHeader label="Lvl" sortKey="ally_level" onClick={() => handleSort("ally_level")} active={sortBy === "ally_level"} order={sortOrder} className="py-0.5 px-1 text-center w-[64px]" title={t("allyLevelTitle", uiLang)} />
+                        <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiOwn("name")} active={sortByAlleatiOwn === "name"} order={sortOrderAlleatiOwn} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
+                        <SortableHeader label="Lvl" sortKey="ally_level" onClick={() => handleSortAlleatiOwn("ally_level")} active={sortByAlleatiOwn === "ally_level"} order={sortOrderAlleatiOwn} className="py-0.5 px-1 text-center w-[64px]" title={t("allyLevelTitle", uiLang)} />
                         <th className="py-0.5 px-1 text-center w-[50px]" title={t("ally1stLevelValueTitle", uiLang)}>lv1</th>
-                        <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />
-                        {renderMilitaryHeaders()}
+                        <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSortAlleatiOwn("eff")} active={sortByAlleatiOwn === "eff"} order={sortOrderAlleatiOwn} className="th-eff" />
+                        {renderMilitaryHeaders("alleati_own")}
                       </tr>
                     </thead>
                     {isMyAlliesTableOpen && (
@@ -6192,11 +6250,11 @@ export default function App() {
                       {renderMilitaryGroupHeaders()}
                     </tr>
                     <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                      <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
+                      <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiDb("name")} active={sortByAlleatiDb === "name"} order={sortOrderAlleatiDb} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
                       <th className="py-0.5 px-1 text-center w-[50px]" title={t("ally1stLevelValueTitle", uiLang)}>lv1</th>
-                      <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />
-                      
-                        {renderMilitaryHeaders()}
+                      <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSortAlleatiDb("eff")} active={sortByAlleatiDb === "eff"} order={sortOrderAlleatiDb} className="th-eff" />
+
+                        {renderMilitaryHeaders("alleati_db")}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
