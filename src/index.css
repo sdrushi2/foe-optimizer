@@ -422,6 +422,63 @@ body {
     @apply bg-violet-950 text-violet-400 border-violet-700;
   }
 
+  /* ----------------------------------------------------------
+     PULSANTI TOGGLE QUADRATI (barra filtri/colonne tabella)
+     Scheletro condiviso da ~13 pulsanti icona 28×28 nella toolbar
+     (Sigma, Tempo, Popolazione, Felicità, IQ, Produzioni, filtri riga
+     Città/Inventario). Copre solo la parte IDENTICA in ogni istanza:
+     forma/dimensione/transizione + stato "inattivo" (sempre uguale).
+     Lo stato "attivo" (colore diverso per ciascun pulsante) e le
+     classi tipografiche opzionali (dimensione/peso del simbolo interno)
+     restano nel template literal locale in App.tsx, aggiunte DOPO
+     questa classe così vincono in caso di conflitto. */
+  .toggle-icon-btn {
+    @apply flex h-7 w-7 items-center justify-center rounded border transition-all
+           border-slate-700/50 bg-slate-700/20 text-slate-400
+           hover:border-slate-600 hover:bg-slate-700/40;
+  }
+
+  /* Variante 28×32 (h-7 w-8): stessi pulsanti ma per i filtri "mostra
+     solo" (obsoleti, declassabili, slot alleato, frammenti) in tab
+     Città/Inventario. Anche qui solo lo scheletro comune; i colori
+     dello stato attivo restano locali. */
+  .toggle-icon-btn-wide {
+    @apply flex items-center justify-center rounded border h-7 w-8
+           border-slate-700 bg-slate-950/40 hover:bg-slate-800/60;
+  }
+
+  /* ----------------------------------------------------------
+     OVERLAY MODALE A SCHERMO INTERO
+     Sfondo scuro sfocato dietro ai modali (Import Sessione, Debug
+     JSON, Edifici Aggiornabili). Il contenuto del modale resta
+     definito localmente in App.tsx.
+     ---------------------------------------------------------- */
+  .modal-overlay {
+    @apply fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm;
+  }
+
+  /* ----------------------------------------------------------
+     TOOLTIP FISSO POSIZIONATO DINAMICAMENTE
+     Popup upgrade/declassabile/frammenti/fabbricabile/produttori-kit:
+     stessa base grafica, solo il colore del bordo e le dimensioni
+     max-w/max-h/w cambiano da un tooltip all'altro (restano locali).
+     ---------------------------------------------------------- */
+  .fixed-tooltip {
+    @apply pointer-events-none fixed z-[110] rounded-lg bg-slate-900 p-3 text-left shadow-2xl shadow-black/60;
+  }
+
+  /* ----------------------------------------------------------
+     PANNELLO DEBUG (liste matched/GE/unmatched/kit in tab Città e
+     Inventario). Contenitore, lista scrollabile e voce cliccabile:
+     solo il colore del bordo/titolo cambia da un pannello all'altro.
+     ---------------------------------------------------------- */
+  .debug-panel-list {
+    @apply max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300;
+  }
+  .debug-panel-entry {
+    @apply text-left hover:underline text-slate-300;
+  }
+
 }
 
 /* ============================================================

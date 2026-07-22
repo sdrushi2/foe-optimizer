@@ -750,7 +750,7 @@ function DebugKitsByTier({ kits, qtyColorClass, uiLang, onSelect }: {
             </div>
             {items.map(e => (
               <div key={e.kitId} className="mt-0.5">
-                <button onClick={() => onSelect(e.kitId, e.rawEntry)} className="text-left hover:underline text-slate-300">
+                <button onClick={() => onSelect(e.kitId, e.rawEntry)} className="debug-panel-entry">
                   {e.name}<DebugQtyBadge qty={e.inStock} colorClass={qtyColorClass} />
                 </button>
               </div>
@@ -4380,10 +4380,8 @@ export default function App() {
             setIsProdSummaryOpen(false);
             setIsRoadSummaryOpen(v => !v);
           }}
-          className={`flex items-center justify-center rounded border h-7 w-8 ${
-            isRoadSummaryOpen
-              ? "border-amber-500 bg-amber-950/40 text-amber-300"
-              : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+          className={`toggle-icon-btn-wide ${
+            isRoadSummaryOpen ? "border-amber-500 bg-amber-950/40 text-amber-300" : ""
           }`}
           title={t("roadEfficiencyTitle", uiLang)}
         >
@@ -5107,10 +5105,8 @@ export default function App() {
           {/* Pulsante Sigma - mostra colonne somma Gen+Campi (e Gen+Sped se SPED acceso) */}
           <button
             onClick={() => setShowSigmaColumns(v => !v)}
-            className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-base font-bold leading-none ${
-              showSigmaColumns
-                ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm"
-                : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+            className={`toggle-icon-btn text-base font-bold leading-none ${
+              showSigmaColumns ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm" : ""
             }`}
             title={showSigmaColumns ? t("sigmaShowTitle", uiLang) : t("sigmaHideTitle", uiLang)}
           >
@@ -5158,10 +5154,8 @@ export default function App() {
                  updateFilter("showTimeColumn", newVal);
                  updateFilter("showLimitedAscended", newVal);
                }}
-               className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xl leading-none ${
-                 currentFilters.showTimeColumn
-                   ? "border-violet-500/50 bg-violet-500/15 text-violet-300 shadow-sm"
-                   : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+               className={`toggle-icon-btn text-xl leading-none ${
+                 currentFilters.showTimeColumn ? "border-violet-500/50 bg-violet-500/15 text-violet-300 shadow-sm" : ""
                }`}
                title={currentFilters.showTimeColumn ? t("timeColumnShowTitle", uiLang) : t("timeColumnHideTitle", uiLang)}
              >
@@ -5171,10 +5165,8 @@ export default function App() {
              {/* Popolazione Toggle */}
              <button
                onClick={() => setShowPopColumn(v => !v)}
-               className={`flex h-7 w-7 items-center justify-center rounded border transition-all ${
-                 showPopColumn
-                   ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm"
-                   : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+               className={`toggle-icon-btn ${
+                 showPopColumn ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm" : ""
                }`}
                title={showPopColumn ? t("popColumnShowTitle", uiLang) : t("popColumnHideTitle", uiLang)}
              >
@@ -5184,10 +5176,8 @@ export default function App() {
              {/* Felicità Toggle */}
              <button
                onClick={() => setShowFelColumn(v => !v)}
-               className={`flex h-7 w-7 items-center justify-center rounded border transition-all ${
-                 showFelColumn
-                   ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm"
-                   : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+               className={`toggle-icon-btn ${
+                 showFelColumn ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm" : ""
                }`}
                title={showFelColumn ? t("felColumnShowTitle", uiLang) : t("felColumnHideTitle", uiLang)}
              >
@@ -5197,10 +5187,8 @@ export default function App() {
              {/* IQ Monete/Materiali Toggle: globale, off di default, colori Sigma */}
              <button
                onClick={() => setShowIqProdColumns(v => !v)}
-               className={`flex h-7 w-7 items-center justify-center rounded border transition-all ${
-                 showIqProdColumns
-                   ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm"
-                   : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+               className={`toggle-icon-btn ${
+                 showIqProdColumns ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm" : ""
                }`}
                title={t("iqProdColumnsTitle", uiLang)}
              >
@@ -5209,10 +5197,8 @@ export default function App() {
 
               <button
                   onClick={() => setShowProdColumns(v => !v)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-[19px] leading-none ${
-                    showProdColumns
-                      ? "border-orange-500/50 bg-orange-500/15 text-orange-300 shadow-sm"
-                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  className={`toggle-icon-btn text-[19px] leading-none ${
+                    showProdColumns ? "border-orange-500/50 bg-orange-500/15 text-orange-300 shadow-sm" : ""
                   }`}
                   title={showProdColumns ? t("prodColumnsShowTitle", uiLang) : t("prodColumnsHideTitle", uiLang)}
                 >
@@ -5344,10 +5330,8 @@ export default function App() {
           {/* Pulsante Sigma - mostra colonne somma Gen+Campi (e Gen+Sped se SPED acceso) */}
           <button
             onClick={() => setShowSigmaColumns(v => !v)}
-            className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-base font-bold leading-none ${
-              showSigmaColumns
-                ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm"
-                : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+            className={`toggle-icon-btn text-base font-bold leading-none ${
+              showSigmaColumns ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm" : ""
             }`}
             title={showSigmaColumns ? t("sigmaShowTitle", uiLang) : t("sigmaHideTitle", uiLang)}
           >
@@ -5478,10 +5462,8 @@ export default function App() {
                 {outdatedBuildings.size > 0 && (
                   <button
                     onClick={() => setShowOnlyOutdated(v => !v)}
-                    className={`flex items-center justify-center rounded border h-7 w-8 ${
-                      showOnlyOutdated
-                        ? "border-red-500 bg-red-950/40 text-red-300"
-                        : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                    className={`toggle-icon-btn-wide ${
+                      showOnlyOutdated ? "border-red-500 bg-red-950/40 text-red-300" : ""
                     }`}
                     title={t("showOnlyOldBuildingsTitle", uiLang)}
                   >
@@ -5491,10 +5473,8 @@ export default function App() {
                 {declassableBuildings.size > 0 && (
                   <button
                     onClick={() => setShowOnlyDeclassable(v => !v)}
-                    className={`flex items-center justify-center rounded border h-7 w-8 ${
-                      showOnlyDeclassable
-                        ? "border-green-500 bg-green-950/40 text-green-300"
-                        : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                    className={`toggle-icon-btn-wide ${
+                      showOnlyDeclassable ? "border-green-500 bg-green-950/40 text-green-300" : ""
                     }`}
                     title={t("showOnlyDeclassableTitle", uiLang)}
                   >
@@ -5503,10 +5483,8 @@ export default function App() {
                 )}
                 <button
                   onClick={() => setShowOnlyWithAllySlot(v => !v)}
-                  className={`flex items-center justify-center rounded border h-7 w-8 ${
-                    showOnlyWithAllySlot
-                      ? "border-amber-500 bg-amber-950/40 text-amber-300"
-                      : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                  className={`toggle-icon-btn-wide ${
+                    showOnlyWithAllySlot ? "border-amber-500 bg-amber-950/40 text-amber-300" : ""
                   }`}
                   title={t("showOnlyWithAllySlotTitle", uiLang)}
                 >
@@ -5514,10 +5492,8 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => setShowOnlyWithFragments(v => !v)}
-                  className={`flex items-center justify-center rounded border h-7 w-8 ${
-                    showOnlyWithFragments
-                      ? "border-blue-500 bg-blue-950/40 text-blue-300"
-                      : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                  className={`toggle-icon-btn-wide ${
+                    showOnlyWithFragments ? "border-blue-500 bg-blue-950/40 text-blue-300" : ""
                   }`}
                   title={t("showOnlyWithFragmentsTitle", uiLang)}
                 >
@@ -5535,10 +5511,8 @@ export default function App() {
                 <span className="text-xs font-semibold text-slate-300 uppercase whitespace-nowrap">{t("hideBuildingsLabel", uiLang)}</span>
                 <button
                   onClick={() => updateFilter("showIncursionBuildings", !currentFilters.showIncursionBuildings)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xs ${
-                    currentFilters.showIncursionBuildings
-                      ? "border-blue-500/50 bg-blue-500/15 text-blue-300 shadow-sm"
-                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  className={`toggle-icon-btn text-xs ${
+                    currentFilters.showIncursionBuildings ? "border-blue-500/50 bg-blue-500/15 text-blue-300 shadow-sm" : ""
                   }`}
                   title={currentFilters.showIncursionBuildings ? t("showQiUsefulTitle", uiLang) : t("hideQiUsefulTitle", uiLang)}
                 >
@@ -5546,10 +5520,8 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => updateFilter("showAllyBuildings", !currentFilters.showAllyBuildings)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xs ${
-                    currentFilters.showAllyBuildings
-                      ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm"
-                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  className={`toggle-icon-btn text-xs ${
+                    currentFilters.showAllyBuildings ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm" : ""
                   }`}
                   title={currentFilters.showAllyBuildings ? t("hideHistoricalAllyBuildingsTitle", uiLang) : t("showHistoricalAllyBuildingsTitle", uiLang)}
                 >
@@ -5557,10 +5529,8 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => updateFilter("showMassAidBuildings", !currentFilters.showMassAidBuildings)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xs ${
-                    currentFilters.showMassAidBuildings
-                      ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm"
-                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  className={`toggle-icon-btn text-xs ${
+                    currentFilters.showMassAidBuildings ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm" : ""
                   }`}
                   title={currentFilters.showMassAidBuildings ? t("hideMassAidBuildingsTitle", uiLang) : t("showMassAidBuildingsTitle", uiLang)}
                 >
@@ -5568,10 +5538,8 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => updateFilter("showStoreBuildingBuildings", !currentFilters.showStoreBuildingBuildings)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border transition-all text-xs ${
-                    currentFilters.showStoreBuildingBuildings
-                      ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm"
-                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  className={`toggle-icon-btn text-xs ${
+                    currentFilters.showStoreBuildingBuildings ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm" : ""
                   }`}
                   title={currentFilters.showStoreBuildingBuildings ? t("hideStoreBuildingBuildingsTitle", uiLang) : t("showStoreBuildingBuildingsTitle", uiLang)}
                 >
@@ -5579,10 +5547,8 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => updateFilter("showGreatBuildings", !currentFilters.showGreatBuildings)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border text-xs font-bold transition-all ${
-                    currentFilters.showGreatBuildings
-                      ? "border-amber-500/50 bg-amber-500/15 text-amber-300 shadow-sm"
-                      : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:bg-slate-700/40"
+                  className={`toggle-icon-btn text-xs font-bold ${
+                    currentFilters.showGreatBuildings ? "border-amber-500/50 bg-amber-500/15 text-amber-300 shadow-sm" : ""
                   }`}
                   title={currentFilters.showGreatBuildings ? t("hideGreatBuildingsTitle", uiLang) : t("showGreatBuildingsTitle", uiLang)}
                 >
@@ -5596,13 +5562,13 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-emerald-400">
                         {t("debugMatchedBuildings", uiLang).toUpperCase()} ({matchedCityEntityIds.length})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         {matchedCityEntityIds.length === 0 ? "-" : matchedCityEntityIds
                           .map((id) => ({ id, name: displayName(id, id, gameLang) }))
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map(({ id, name }, i) => (
                           <div key={id} className={i > 0 ? "mt-0.5" : ""}>
-                            <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: matchedJson.get(id) })} className="text-left hover:underline text-slate-300">
+                            <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: matchedJson.get(id) })} className="debug-panel-entry">
                               {name}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-emerald-400" />
                             </button>
                           </div>
@@ -5613,13 +5579,13 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-amber-400">
                         {t("debugGreatBuildings", uiLang).toUpperCase()} ({greatBuildingIds.length})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         {greatBuildingsJson.size === 0 ? "-" : Array.from(greatBuildingsJson.values())
                           .map((gb) => ({ gb, name: displayName(gb.entityId, gb.entityId, gameLang) }))
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map(({ gb, name }, i) => (
                           <div key={gb.entityId} className={i > 0 ? "mt-1" : ""}>
-                            <button onClick={() => setSelectedJsonEntry({ title: gb.entityId, rawEntry: gb.rawEntry })} className="text-left hover:underline text-slate-300">
+                            <button onClick={() => setSelectedJsonEntry({ title: gb.entityId, rawEntry: gb.rawEntry })} className="debug-panel-entry">
                               {name} - Lv. {gb.level}/{gb.maxLevel}
                             </button>
                           </div>
@@ -5630,13 +5596,13 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-red-400">
                         {t("debugUnmatchedBuildings", uiLang).toUpperCase()} ({unmatchedCityEntityIds.length})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         {unmatchedCityEntityIds.length === 0 ? "-" : unmatchedCityEntityIds
                           .map((id) => ({ id, name: displayName(id, fallbackBuildings.get(id)?.name ?? id, gameLang) }))
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map(({ id, name }, i) => (
                           <div key={id} className={i > 0 ? "mt-0.5" : ""}>
-                            <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: unmatchedJson.get(id) })} className="text-left hover:underline text-slate-300">
+                            <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: unmatchedJson.get(id) })} className="debug-panel-entry">
                               {name}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-red-400" />
                             </button>
                           </div>
@@ -5696,10 +5662,8 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowOnlyWithAllySlot(v => !v)}
-                className={`flex items-center justify-center rounded border h-7 w-8 ${
-                  showOnlyWithAllySlot
-                    ? "border-amber-500 bg-amber-950/40 text-amber-300"
-                    : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                className={`toggle-icon-btn-wide ${
+                  showOnlyWithAllySlot ? "border-amber-500 bg-amber-950/40 text-amber-300" : ""
                 }`}
                 title={t("showOnlyWithAllySlotTitle", uiLang)}
               >
@@ -5707,10 +5671,8 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowOnlyWithFragments(v => !v)}
-                className={`flex items-center justify-center rounded border h-7 w-8 ${
-                  showOnlyWithFragments
-                    ? "border-blue-500 bg-blue-950/40 text-blue-300"
-                    : "border-slate-700 bg-slate-950/40 hover:bg-slate-800/60"
+                className={`toggle-icon-btn-wide ${
+                  showOnlyWithFragments ? "border-blue-500 bg-blue-950/40 text-blue-300" : ""
                 }`}
                 title={t("showOnlyWithFragmentsTitle", uiLang)}
               >
@@ -5737,12 +5699,12 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-emerald-400">
                         {t("debugMatchedBuildings", uiLang).toUpperCase()} ({inventoryMatched.size})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         {Array.from(inventoryMatched.values())
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map((e, i) => (
                           <div key={e.cityEntityId} className={i > 0 ? "mt-0.5" : ""}>
-                            <button onClick={() => setSelectedJsonEntry({ title: e.cityEntityId, rawEntry: { cityEntityId: e.cityEntityId, name: e.name, inStock: e.inStock, ...(e.rawEntry ?? {}) } })} className="text-left hover:underline text-slate-300">
+                            <button onClick={() => setSelectedJsonEntry({ title: e.cityEntityId, rawEntry: { cityEntityId: e.cityEntityId, name: e.name, inStock: e.inStock, ...(e.rawEntry ?? {}) } })} className="debug-panel-entry">
                               {e.name}<DebugQtyBadge qty={e.inStock} colorClass="text-emerald-400" />
                             </button>
                           </div>
@@ -5753,12 +5715,12 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-red-400">
                         {t("debugUnmatchedBuildings", uiLang).toUpperCase()} ({inventoryUnmatched.size})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         {inventoryUnmatched.size === 0 ? "-" : Array.from(inventoryUnmatched.values())
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map((e, i) => (
                           <div key={e.cityEntityId} className={i > 0 ? "mt-0.5" : ""}>
-                            <button onClick={() => setSelectedJsonEntry({ title: e.cityEntityId, rawEntry: { cityEntityId: e.cityEntityId, name: e.name, inStock: e.inStock, ...(e.rawEntry ?? {}) } })} className="text-left hover:underline text-slate-300">
+                            <button onClick={() => setSelectedJsonEntry({ title: e.cityEntityId, rawEntry: { cityEntityId: e.cityEntityId, name: e.name, inStock: e.inStock, ...(e.rawEntry ?? {}) } })} className="debug-panel-entry">
                               {e.name}<DebugQtyBadge qty={e.inStock} colorClass="text-red-400" />
                             </button>
                           </div>
@@ -5769,7 +5731,7 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-violet-400">
                         {t("debugSelectionKits", uiLang).toUpperCase()} ({allSelectionKits.length})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         <DebugKitsByTier
                           kits={allSelectionKits}
                           qtyColorClass="text-violet-400"
@@ -5782,7 +5744,7 @@ export default function App() {
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-sky-400">
                         {t("debugUpgradeKits", uiLang).toUpperCase()} ({inventoryUpgradeKits.size})
                       </span>
-                      <div className="max-h-60 overflow-y-auto px-3 pb-2 text-xs font-mono text-slate-300">
+                      <div className="debug-panel-list">
                         <DebugKitsByTier
                           kits={Array.from(inventoryUpgradeKits.values())}
                           qtyColorClass="text-sky-400"
@@ -6316,7 +6278,7 @@ export default function App() {
       {/* ── Modale Import Sessione ────────────────────────────────────────── */}
       {isImportModalOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+          className="modal-overlay"
           onClick={() => setIsImportModalOpen(false)}
         >
           <div
@@ -6383,7 +6345,7 @@ export default function App() {
       />
 
       {selectedJsonEntry && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+        <div className="modal-overlay">
           <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
               <h3 className="font-bold text-amber-400 uppercase tracking-wide">
@@ -6450,7 +6412,7 @@ export default function App() {
         const gridColsClass = diffCols === 1 ? "grid-cols-1" : diffCols === 2 ? "grid-cols-2" : diffCols === 3 ? "grid-cols-3" : "grid-cols-4";
         return (
           <div
-            className="pointer-events-none fixed z-[110] max-h-[80vh] overflow-y-auto rounded-lg border border-red-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+            className="fixed-tooltip max-h-[80vh] overflow-y-auto border border-red-700/60"
             style={(() => {
               // Le righe di diff sono su diffCols colonne.
               const diffRows = eraComparisons.reduce((s, c) => s + Math.ceil(c.diffs.length / diffCols) + 1, 0);
@@ -6558,7 +6520,7 @@ export default function App() {
 
       {upgradeTooltip && (
         <div
-          className="pointer-events-none fixed z-[110] w-64 rounded-lg border border-sky-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+          className="fixed-tooltip w-64 border border-sky-700/60"
           style={(() => {
             const TOOLTIP_H = 160;
             const spaceBelow = window.innerHeight - upgradeTooltip.y;
@@ -6601,7 +6563,7 @@ export default function App() {
         const minW = cols === 2 ? 340 : 260;
         return (
           <div
-            className="pointer-events-none fixed z-[110] rounded-lg border border-emerald-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+            className="fixed-tooltip border border-emerald-700/60"
             style={(() => {
               const TOOLTIP_H = 200 + Math.ceil(diffs.length / cols) * 20;
               const spaceBelow = window.innerHeight - declassableTooltip.y;
@@ -6674,7 +6636,7 @@ export default function App() {
 
       {fragmentTooltip && (
         <div
-          className="pointer-events-none fixed z-[110] max-h-[70vh] w-80 overflow-y-auto rounded-lg border border-emerald-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+          className="fixed-tooltip max-h-[70vh] w-80 overflow-y-auto border border-emerald-700/60"
           style={(() => {
             const TOOLTIP_H = window.innerHeight * 0.7;
             const spaceBelow = window.innerHeight - fragmentTooltip.y;
@@ -6723,7 +6685,7 @@ export default function App() {
 
       {fabTooltip && (
         <div
-          className="pointer-events-none fixed z-[110] max-w-xs overflow-y-auto rounded-lg border border-amber-700/50 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+          className="fixed-tooltip max-w-xs overflow-y-auto border border-amber-700/50"
           style={(() => {
             const TOOLTIP_H = 220;
             const spaceBelow = window.innerHeight - fabTooltip.y;
@@ -6780,7 +6742,7 @@ export default function App() {
 
       {kitProducersTooltip && (
         <div
-          className="pointer-events-none fixed z-[110] max-h-[70vh] w-72 overflow-y-auto rounded-lg border border-emerald-700/60 bg-slate-900 p-3 text-left shadow-2xl shadow-black/60"
+          className="fixed-tooltip max-h-[70vh] w-72 overflow-y-auto border border-emerald-700/60"
           style={(() => {
             const TOOLTIP_H = window.innerHeight * 0.7;
             const spaceBelow = window.innerHeight - kitProducersTooltip.y;
@@ -6816,7 +6778,7 @@ export default function App() {
 
       {isCityUpgradeableOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+          className="modal-overlay"
           onClick={() => setIsCityUpgradeableOpen(false)}
         >
           <div
