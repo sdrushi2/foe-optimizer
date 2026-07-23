@@ -372,20 +372,37 @@ export class BuildingModel {
     // mostravano beni = 0 in tab Città mentre il CSV (generato dal Python)
     // diceva correttamente 10 — divergenza trovata dal test di coerenza
     // TS↔Python sull'intero MainParser. NON gated su `found`, come nel Python.
+    // ⚠️ Due formati per l'elemento di available_products (luglio 2026, vedi
+    // buildings.py per i dettagli): "vecchio stile" con un prodotto singolo diretto
+    // in `product` (oggetto con `resources`), e "nuovo stile" osservato su 44 Grandi
+    // Edifici classici (Colosseo, Oracolo di Delfi, ecc.), dove il wrapper ha invece
+    // `products` (lista di prodotti, ciascuno col proprio `product.resources`
+    // annidato). Si raccolgono le risorse candidate da ENTRAMBI i formati — oggi
+    // nessuno dei 44 GE produce beni-era da questo campo, ma senza questa estensione
+    // un'eventuale futura opzione beni-era sotto il nuovo schema andrebbe persa
+    // silenziosamente, esattamente come nel gemello Python.
     {
       const option24h = BuildingModel.asArr(cityEntity.available_products)
         .map(BuildingModel.asObj)
         .find(p => BuildingModel.num(p.production_time) === 86400);
       if (option24h) {
-        const optResources = BuildingModel.asObj(BuildingModel.asObj(option24h.product).resources);
-        for (const resKey of ["era_goods", "random_good_of_age", "all_goods_of_age"]) {
-          if (!(resKey in optResources)) continue;
-          for (const lvl of BuildingModel.asArr(cityEntity.entity_levels).map(BuildingModel.asObj)) {
-            if (BuildingModel.str(lvl.era) !== era) continue;
-            for (const pv of BuildingModel.asArr(lvl.production_values).map(BuildingModel.asObj)) {
-              if (BuildingModel.str(pv.type) === resKey) {
-                totals.beni += BuildingModel.num(pv.value);
-                found = true;
+        const candidateResources: Record<string, unknown>[] = [];
+        if ("product" in option24h) {
+          candidateResources.push(BuildingModel.asObj(BuildingModel.asObj(option24h.product).resources));
+        }
+        for (const subProduct of BuildingModel.asArr(option24h.products).map(BuildingModel.asObj)) {
+          candidateResources.push(BuildingModel.asObj(BuildingModel.asObj(subProduct.product).resources));
+        }
+        for (const optResources of candidateResources) {
+          for (const resKey of ["era_goods", "random_good_of_age", "all_goods_of_age"]) {
+            if (!(resKey in optResources)) continue;
+            for (const lvl of BuildingModel.asArr(cityEntity.entity_levels).map(BuildingModel.asObj)) {
+              if (BuildingModel.str(lvl.era) !== era) continue;
+              for (const pv of BuildingModel.asArr(lvl.production_values).map(BuildingModel.asObj)) {
+                if (BuildingModel.str(pv.type) === resKey) {
+                  totals.beni += BuildingModel.num(pv.value);
+                  found = true;
+                }
               }
             }
           }
@@ -558,6 +575,55 @@ export class BuildingModel {
     }
 
     return { fp: foundPf ? pf : 0, fpb, benig };
+  }
+
+  /**
+   * Beni (+benip/benis) e fp dagli edifici "bonus per adiacenza di set"
+   * (luglio 2026, es. Piazza Set, Harvest Farm, Butterfly Sanctuary, Horror
+   * Circus — prefisso "L_", `type: "random_production"`). Traduzione fedele
+   * di _extract_set_adjacency_bonus() in buildings.py: la produzione di
+   * questi edifici NON vive in available_products/entity_levels come per gli
+   * edifici normali — è dichiarata in abilities[].__class__ ==
+   * "BonusOnSetAdjacencyAbility", come una lista di bonuses[] (uno per
+   * livello di adiacenza raggiunto in game, 1..N vicini dello stesso set),
+   * ciascuno con un revenue per era.
+   *
+   * Convenzione dell'app (come nel CSV): si sommano i bonus di TUTTI i
+   * livelli, non solo l'ultimo — a differenza degli edifici a produzione
+   * oraria dove si prende la sola opzione da 24h.
+   *
+   * I bonus in "medals" (Medaglie) sono ignorati deliberatamente: risorsa
+   * che il CSV/l'app non gestiscono, per scelta esplicita (non una svista).
+   */
+  private static extractSetAdjacencyBonus(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; fp: number } {
+    let beni = 0, benip = 0, benis = 0, fp = 0;
+    for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
+      if (BuildingModel.str(ability.__class__) !== "BonusOnSetAdjacencyAbility") continue;
+      for (const bonus of BuildingModel.asArr(ability.bonuses).map(BuildingModel.asObj)) {
+        const revenue = bonus.revenue;
+        if (!revenue || typeof revenue !== "object" || Array.isArray(revenue)) continue; // osservato anche come lista vuota []
+        const revenueObj = BuildingModel.asObj(revenue);
+        for (const eraKey of [era, "AllAge"]) {
+          const res = BuildingModel.asObj(revenueObj[eraKey]);
+          const resources = BuildingModel.asObj(res.resources);
+          const sp = BuildingModel.num(resources.strategy_points);
+          if (sp) fp += sp;
+          for (const key of GOODS_KEYS.beni) {
+            const v = BuildingModel.num(resources[key]);
+            if (v) beni += v;
+          }
+          for (const key of GOODS_KEYS.benip) {
+            const v = BuildingModel.num(resources[key]);
+            if (v) benip += v;
+          }
+          for (const key of GOODS_KEYS.benis) {
+            const v = BuildingModel.num(resources[key]);
+            if (v) benis += v;
+          }
+        }
+      }
+    }
+    return { beni, benip, benis, fp };
   }
 
   /** Monete (mon) e materiali (mat) prodotti giornalmente per l'era data.
@@ -987,6 +1053,12 @@ export class BuildingModel {
     const monMat = BuildingModel.extractMonMat(cityEntity, era);
     const bp = BuildingModel.extractBlueprints(cityEntity, era);
     const fur = BuildingModel.extractRogues(cityEntity, era);
+    // Edifici "bonus per adiacenza di set" (L_*, es. Piazza/Harvest Farm/
+    // Butterfly Sanctuary/Horror Circus): sommare il bonus di TUTTI i
+    // livelli di adiacenza a Beni/BeniP/BeniS/FP già calcolati sopra (che
+    // per questi edifici sono 0 perché non hanno available_products/
+    // entity_levels normali). Vedi extractSetAdjacencyBonus().
+    const adjBonus = BuildingModel.extractSetAdjacencyBonus(cityEntity, era);
     // Era precedente (per la classificazione TR vs TRNE): era con id
     // immediatamente inferiore. Se `era` non è in AGES o è la prima (id 0),
     // prevEra resta "" e buildPrevNextEraKeys non troverà nulla (ok).
@@ -996,8 +1068,8 @@ export class BuildingModel {
 
     return {
       pop, fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
-      bp, fp: prod.fp, fpb: prod.fpb, fur, tr, trne,
-      beni: goods.beni, benip: goods.benip, benis: goods.benis, benib: goods.benib, benig: prod.benig,
+      bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, fur, tr, trne,
+      beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benib: goods.benib, benig: prod.benig,
       mon: monMat.mon, mat: monMat.mat,
       fsp: BuildingModel.extractReward(cityEntity, era, "fsp"),
       tpm: BuildingModel.extractReward(cityEntity, era, "tpm"),
