@@ -143,22 +143,22 @@ king_arthur;Re Artù;King Arthur;1;100;5;;;;1;;;;;;;;;;
 king_arthur;Re Artù;King Arthur;2;100;10;;;1;;;;;;;;;;;
 king_arthur;Re Artù;King Arthur;3;100;6;;;;;;;;;;;;;;
 king_arthur;Re Artù;King Arthur;4;100;15;;;;;;;1;1;;;;;;
-king_arthur;Re Artù;King Arthur;5;100;0.42;;;;;;;;;;;;;42%→75% Contatto! su 200 unità pesanti (Campi);42%→75% Contact! on 200 heavy units (GvG)
+king_arthur;Re Artù;King Arthur;5;100;0.42;;;;;;;;;;;;;42%→75% Contatto! su 200 unità pesanti (Campi);42%→75% Contact! on 200 heavy units (Guild Battlegrounds)
 merlin;Merlino;Merlin;1;100;5;;;;;;;1;1;;;;;;
 merlin;Merlino;Merlin;2;100;10;;;;;1;1;;;;;;;;
 merlin;Merlino;Merlin;3;100;6;;;;;;;;;;;;;;
 merlin;Merlino;Merlin;4;100;15;;;;;1;1;1;1;;;;;;
-merlin;Merlino;Merlin;5;100;0.42;;;;;;;;;;;;;42%→75% Volando su 200 unità a distanza (Campi);42%→75% Flying on 200 ranged units (GvG)
+merlin;Merlino;Merlin;5;100;0.42;;;;;;;;;;;;;42%→75% Volando su 200 unità a distanza (Campi);42%→75% Flying on 200 ranged units (Guild Battlegrounds)
 morgan_le_fay;Morgana;Morgan le Fay;1;100;5;1;;;;;;;;;;;;;
 morgan_le_fay;Morgana;Morgan le Fay;2;100;10;;1;;;;;;;;;;;;
 morgan_le_fay;Morgana;Morgan le Fay;3;100;6;;;;;;;;;;;;;;
 morgan_le_fay;Morgana;Morgan le Fay;4;100;15;;;;;1;1;;;;;;;;
-morgan_le_fay;Morgana;Morgan le Fay;5;100;0.17;;;;;;;;;;;;;17%→50% MIRV su 200 artiglieria (Campi);17%→50% MIRV on 200 artillery (GvG)
+morgan_le_fay;Morgana;Morgan le Fay;5;100;0.17;;;;;;;;;;;;;17%→50% MIRV su 200 artiglieria (Campi);17%→50% MIRV on 200 artillery (Guild Battlegrounds)
 louis_pasteur;Louis Pasteur;Louis Pasteur;1;100;5;;;;;1;;;;;;;;;
 louis_pasteur;Louis Pasteur;Louis Pasteur;2;100;10;;;;;;1;;;;;;;;
 louis_pasteur;Louis Pasteur;Louis Pasteur;3;100;6;;;;;;;;;;;;;;
 louis_pasteur;Louis Pasteur;Louis Pasteur;4;100;15;;;;;;;1;;;;;;;
-louis_pasteur;Louis Pasteur;Louis Pasteur;5;100;0.17;;;;;;;;;;;;;17%→50% Armatura Reattiva su 75 unità a distanza (Campi);17%→50% Reactive Armor on 75 ranged units (GvG)
+louis_pasteur;Louis Pasteur;Louis Pasteur;5;100;0.17;;;;;;;;;;;;;17%→50% Armatura Reattiva su 75 unità a distanza (Campi);17%→50% Reactive Armor on 75 ranged units (Guild Battlegrounds)
 florence_nightingale;Florence Nightingale;Florence Nightingale;1;100;5;;;;1;;;;;;;;;;
 florence_nightingale;Florence Nightingale;Florence Nightingale;2;100;10;;;;;;;1;;;;;;;
 florence_nightingale;Florence Nightingale;Florence Nightingale;3;100;6;;;;;;;;;;;;;;
@@ -168,9 +168,9 @@ miyamoto_musashi;Miyamoto Musashi;Miyamoto Musashi;1;100;5;;;;;1;;;;;;;;;
 miyamoto_musashi;Miyamoto Musashi;Miyamoto Musashi;2;100;10;1;;;;;;;;;;;;;
 miyamoto_musashi;Miyamoto Musashi;Miyamoto Musashi;3;100;6;;;;;;;;;;;;;;
 miyamoto_musashi;Miyamoto Musashi;Miyamoto Musashi;4;100;15;;;;;1;1;;;;;;;;
-miyamoto_musashi;Miyamoto Musashi;Miyamoto Musashi;5;100;0.17;;;;;;;;;;;;;17%→50% Close Quarters su 10 unità leggere (Campi);17%→50% Close Quarters on 10 light units (GvG)
+miyamoto_musashi;Miyamoto Musashi;Miyamoto Musashi;5;100;0.17;;;;;;;;;;;;;17%→50% Close Quarters su 10 unità leggere (Campi);17%→50% Close Quarters on 10 light units (Guild Battlegrounds)
 nakano_takeko;Nakano Takeko;Nakano Takeko;1;100;5;;;;1;;;;;;;;;;
 nakano_takeko;Nakano Takeko;Nakano Takeko;2;100;10;;;1;;;;;;;;;;;
 nakano_takeko;Nakano Takeko;Nakano Takeko;3;100;6;;;;;;;;;;;;;;
 nakano_takeko;Nakano Takeko;Nakano Takeko;4;100;15;;;;;;;;;;;1;1;;
-nakano_takeko;Nakano Takeko;Nakano Takeko;5;100;0.12;;;;;;;;;;;;;12%→45% Dug in su 25 artiglieria;12%→45% Dug in on 25 artillery
+nakano_takeko;Nakano Takeko;Nakano Takeko;5;100;0.12;;;;;;;;;;;;;12%→45% Dug in su 25 artiglieria (Spedizioni);12%→45% Dug in on 25 artillery (Guild Expeditions)
