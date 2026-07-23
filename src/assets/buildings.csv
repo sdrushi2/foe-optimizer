@@ -1210,6 +1210,9 @@ W_MultiAge_FALL16A6;Fabbrica di succo fiorente;Flourishing Cider Mill;P_MultiAge
 W_MultiAge_FALL16A7;Fabbrica di Succo Vintage;Vintage Cider Mill;055e2386c;;;3x6;1.5;-1320;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A8;Fabbrica di Succo Patrimonio;Heritage Cider Mill;daa0098c3;1;;3x5;1.5;-1390;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A9;Fabbrica di succo Nobile;Noble Cider Mill;784df1cdb;1;;3x4;1.5;-1460;;;20;;;;;;;;;;;;;;;;;;;;;;75;75;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL21A10;;Golden Crops Harvest;9eebf5493;1;;6x4;2;75500;60000;;100;;;;;100;;;;;400000;300000;100;100;100;100;;;;;;;;;;;;;;;;;;;;;1;;;;;1;;;
+W_MultiAge_FALL21A11;;Golden Crops Feast;6325fb544;1;;6x4;;82500;70000;;150;;;;;130;;;;;450000;400000;130;130;130;130;;;;;;;;;;;;;;;;;;;;;1;;;;;2;;;
+W_MultiAge_FALL21A12;;Ascended Golden Crops Feast;7db9338f0;1;90;6x4;;82500;160000;;400;;;;;400;;;;;900000;800000;320;320;320;320;;;;;;;;;25;25;25;25;;;;;;;200;8000;1;;;;;5;;;
 W_MultiAge_FALL22A1;Frantoio per olio di semi di girasole - Liv. 1;Sunflower Oil Press - Lv. 1;R_MultiAge_FallBonus22a-1e65b4d17;;;6x4;2;12939;14390;;;;;;;;;;;;115900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A10;Frantoio per olio di semi di girasole vivace;Vibrant Sunflower Oil Press;R_MultiAge_FallBonus22j-9d149b5de;1;;6x4;2;22643;39250;;29;;;8;;82;;;;;263500;52320;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A11;Frantoio per Olio di semi di Girasole Incontaminato;Pristine Sunflower Oil Press;R_MultiAge_FallBonus22k-6070c9eeb;1;;6x4;2;26955;45780;;35;;;10;;100;;;;;316100;65400;107;109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1278,6 +1281,23 @@ W_MultiAge_FALL25E2;Pergolato di Azalee Asceso;Ascended Azalea Arbor;0d899065a;1
 W_MultiAge_FALL25F1;Stagno Amberbill;Amberbill Pond;1e09d3523;1;;3x2;;-12000;12000;;;;;;;60;;;;;;150000;;;;;;;;60;;50;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25F2;Stagno Amberbill Asceso;Ascended Amberbill Pond;4e3203212;1;30;3x2;;-12000;12000;;;;;;;130;;;;;;175000;;;;;;;;120;;120;;;;;20;;;0.04;;20000;20;;;;;;;;;;;;
 W_MultiAge_FALL25G1;Labirinto di Maizespire;Maizespire Labyrinth;d6000b2f1;1;;5x5;;;;;250;;;;;150;150;150;;;;;;;;;175;175;175;175;175;175;175;175;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_FALL25A
+W_MultiAge_FALL26A1;;Momiji Stop - Lv. 1;4c1b2281a;;;4x6;2;;;;19;;;;;25;12;;;;;;;;50;50;72;72;72;72;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A10;;Momiji Terminal;6984d377c;1;;4x6;2;;;20;360;;10;10;10.15;390;250;;;;;;;;240;240;290;290;290;290;;;;;;;;;;;;;;;;;1;;;;;;;;selection_kit_FALL26BC
+W_MultiAge_FALL26A2;;Momiji Stop - Lv. 2;;;;4x6;2;;;;42;;;;;60;36;;;;;;;;60;60;86;86;86;86;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A3;;Momiji Stop - Lv. 3;;;;4x6;2;;;;65;;;;;95;60;;;;;;;;70;70;100;100;100;100;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A4;;Momiji Stop - Lv. 4;;;;4x6;2;;;;88;;;;;130;84;;;;;;;;80;80;114;114;114;114;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A5;;Momiji Stop - Lv. 5;0f3c962a4;;;4x6;2;;;;111;;0.75;0.8;1.05;165;108;;;;;;;;90;90;128;128;128;128;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A6;;Momiji Stop - Lv. 6;;;;4x6;2;;;;134;;1.5;1.6;1.75;200;132;;;;;;;;100;100;142;142;142;142;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A7;;Momiji Stop - Lv. 7;;;;4x6;2;;;;157;;2.25;2.4;2.45;235;156;;;;;;;;110;110;156;156;156;156;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26A8;;Momiji Stop - Lv. 8;7dc73bdd8;1;;4x6;2;;;10;180;;3;3.2;3.15;270;180;;;;;;;;120;120;170;170;170;170;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL26BC|silver_upgrade_kit_FALL26A
+W_MultiAge_FALL26A9;;Momiji Station;ed0a60d38;1;;4x6;2;;;15;260;;6;6;6.3;330;210;;;;;;;;170;170;220;220;220;220;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL26A|selection_kit_FALL26BC
+W_MultiAge_FALL26B1;;Koyo Treat;d191d8895;1;;4x2;;-30000;;;90;;;;;;;;;;;150000;;;;;100;100;;;80;80;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26B2;;Ascended Koyo Treat;68a222745;1;30;4x2;;-30000;;;240;;;;;;;;;;;310000;;;;;220;220;;;190;190;;;25;25;25;25;0.04;;;;;5;;;;;;;;;;;
+W_MultiAge_FALL26C1;;Kinoko Stage;fac49523b;1;;2x3;;-35000;;;;;;;;55;;45;;;;;60;60;60;60;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FALL26C2;;Ascended Kinoko Stage;606f0bc93;1;30;2x3;;-35000;;;;;;;;180;;155;;;;;120;120;120;120;;;;;;;;;;;25;;;0.04;;;10;;;;;;;;;;;;
+W_MultiAge_FALL26D1;;Mizube Lodge;60a077718;1;;6x4;;;;;450;;;;;400;270;;;;;;;;350;350;550;550;550;550;;;;;25;25;25;25;;;;;;;;;1;;;;;;;;golden_selection_kit_FALL26A
+W_MultiAge_FALL26E1;;Ramen Nook - Lv. 1;c89dc128a;1;;4x4;;-75000;;;190;0.02;;;;;;;;;;;210;210;;;190;190;;;150;150;150;150;;;;;;;;;;;;;1;3;;;;;;;
+W_MultiAge_FALL26E2;;Ramen Nook - Lv. 2;3ed493352;1;;4x4;;-75000;;;240;0.04;;;;;;;;;;;290;290;;;260;260;;;230;230;230;230;;;;;;;;;;;;;1;6;;;;;;;upgrade_kit_ascended_FALL21A
 W_MultiAge_FELL22A1;Taverna degli eroi - Liv. 1;Heroes Tavern - Lv. 1;R_MultiAge_HeroBonus22a-7e6ce64d5;;;5x4;2;9990;15180;;;;;;;;;;;;154300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A10;Taverna degli eroi - Liv. 10;Heroes Tavern - Lv. 10;R_MultiAge_HeroBonus22j-b8050c1c0;1;;5x4;2;16200;24030;;11;;;;;;;;;;299700;;22;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A11;Loggia leggendaria;Legendary Lodge;R_MultiAge_HeroBonus22k-cc7752668;1;;5x4;2;17100;25120;;15;;;;;55;;;;;308500;;25;31;25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

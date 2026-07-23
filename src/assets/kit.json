@@ -5287,6 +5287,93 @@
         "W_MultiAge_GR26H1",
         "W_MultiAge_GR26H2"
       ]
+    },
+    "upgrade_kit_FALL26A": {
+      "names": {
+        "en": "Momiji Stop Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FALL26A1",
+        "W_MultiAge_FALL26A2",
+        "W_MultiAge_FALL26A3",
+        "W_MultiAge_FALL26A4",
+        "W_MultiAge_FALL26A5",
+        "W_MultiAge_FALL26A6",
+        "W_MultiAge_FALL26A7",
+        "W_MultiAge_FALL26A8"
+      ]
+    },
+    "silver_upgrade_kit_FALL26A": {
+      "names": {
+        "en": "Momiji Station Silver Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FALL26A8",
+        "W_MultiAge_FALL26A9"
+      ]
+    },
+    "golden_upgrade_kit_FALL26A": {
+      "names": {
+        "en": "Momiji Terminal Golden Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FALL26A9",
+        "W_MultiAge_FALL26A10"
+      ]
+    },
+    "upgrade_kit_ascended_FALL26B": {
+      "names": {
+        "en": "Ascended Koyo Treat Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FALL26B1",
+        "W_MultiAge_FALL26B2"
+      ]
+    },
+    "upgrade_kit_ascended_FALL26C": {
+      "names": {
+        "en": "Ascended Kinoko Stage Upgrade Kit "
+      },
+      "steps": [
+        "W_MultiAge_FALL26C1",
+        "W_MultiAge_FALL26C2"
+      ]
+    },
+    "upgrade_kit_FALL26E": {
+      "names": {
+        "en": "Ramen Nook Upgrade Kit "
+      },
+      "steps": [
+        "W_MultiAge_FALL26E1",
+        "W_MultiAge_FALL26E2"
+      ]
+    },
+    "golden_upgrade_kit_FALL21A": {
+      "names": {
+        "en": "Golden Crops Harvest Golden Upgrade Kit "
+      },
+      "steps": [
+        "W_MultiAge_FallBonus21i",
+        "W_MultiAge_FALL21A10"
+      ]
+    },
+    "platinum_upgrade_kit_FALL21A": {
+      "names": {
+        "en": "Golden Crops Feast Platinum Upgrade Kit "
+      },
+      "steps": [
+        "W_MultiAge_FALL21A10",
+        "W_MultiAge_FALL21A11"
+      ]
+    },
+    "upgrade_kit_ascended_FALL21A": {
+      "names": {
+        "en": "Ascended Golden Crops Feast Upgrade Kit "
+      },
+      "steps": [
+        "W_MultiAge_FALL21A11",
+        "W_MultiAge_FALL21A12"
+      ]
     }
   },
   "selectionKits": {
@@ -10577,6 +10664,119 @@
         "upgrade_kit_GR26E",
         "W_MultiAge_GR26F1",
         "upgrade_kit_GR26F"
+      ]
+    },
+    "selection_kit_FALL26A": {
+      "names": {
+        "en": "Momiji Stop Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FALL26A1",
+        "upgrade_kit_FALL26A"
+      ]
+    },
+    "silver_selection_kit_FALL26A": {
+      "names": {
+        "en": "Momiji Station Silver Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FALL26A1",
+        "upgrade_kit_FALL26A",
+        "silver_upgrade_kit_FALL26A"
+      ]
+    },
+    "golden_selection_kit_FALL26A": {
+      "names": {
+        "en": "Momiji Terminal Golden Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FALL26A1",
+        "upgrade_kit_FALL26A",
+        "silver_upgrade_kit_FALL26A",
+        "golden_upgrade_kit_FALL26A"
+      ]
+    },
+    "golden_selection_kit_FALL21A": {
+      "names": {
+        "en": "Golden Crops Harvest Golden Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FallBonus21a",
+        "upgrade_kit_golden_crops",
+        "golden_upgrade_kit_FALL21A"
+      ]
+    },
+    "platinum_selection_kit_FALL21A": {
+      "names": {
+        "en": "Golden Crops Feast Platinum Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FallBonus21a",
+        "upgrade_kit_golden_crops",
+        "golden_upgrade_kit_FALL21A",
+        "platinum_upgrade_kit_FALL21A"
+      ]
+    },
+    "selection_kit_FALL26BC": {
+      "names": {
+        "en": "Koyo Retreat Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FALL26B1",
+        "W_MultiAge_FALL26C1"
+      ]
+    },
+    "selection_kit_FALL26E": {
+      "names": {
+        "en": "Ramen Nook Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FALL26E1",
+        "upgrade_kit_FALL26E"
+      ]
+    },
+    "selection_kit_epic_FALL26": {
+      "names": {
+        "en": "Epic Fall 2026 Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FALL25A1",
+        "upgrade_kit_FALL25A",
+        "W_MultiAge_FALL25B1",
+        "W_MultiAge_FALL25C1",
+        "W_MultiAge_FALL24A1",
+        "upgrade_kit_FALL24A",
+        "W_MultiAge_FALL24B1",
+        "W_MultiAge_FALL24C1",
+        "upgrade_kit_FALL23C",
+        "upgrade_kit_FALL23D",
+        "upgrade_kit_FALL23E",
+        "upgrade_kit_FALL23F",
+        "W_MultiAge_FALL23A1",
+        "upgrade_kit_FALL23A",
+        "W_MultiAge_FALL23C1",
+        "W_MultiAge_FALL23D1",
+        "W_MultiAge_FALL23E1",
+        "W_MultiAge_FALL23F1",
+        "W_MultiAge_FALL22A1",
+        "upgrade_kit_sunflower_oil_press",
+        "W_MultiAge_FallBonus22donkey",
+        "W_MultiAge_FallBonus21a",
+        "upgrade_kit_golden_crops",
+        "R_MultiAge_FallBonus20a",
+        "upgrade_kit_harvest_barn",
+        "R_MultiAge_FallBonus20e",
+        "D_MultiAge_FallBonus20a",
+        "L_AllAge_FallBonus20a",
+        "L_AllAge_FallBonus20b",
+        "D_MultiAge_FallBonus20b",
+        "A_MultiAge_FallBonus20",
+        "R_MultiAge_FallBonus19a",
+        "upgrade_kit_september_cottage",
+        "R_MultiAge_FallBonus18a",
+        "upgrade_kit_mill_of_fall",
+        "W_MultiAge_FALL16A1",
+        "upgrade_kit_cider_mill"
       ]
     }
   }
