@@ -1005,11 +1005,19 @@ const BuildingRow = memo(function BuildingRow({
           // "troppo" e non richiesto (bug segnalato luglio 2026).
           ? "row-highlighted relative z-10"
           : (() => {
+              // isInactive scoped a propria_citta: segnala un'istanza
+              // PIAZZATA in città che è scaduta ("Non attivo") — utile lì
+              // per capire a colpo d'occhio quali edifici vanno sostituiti.
+              // In tab Database (dove b.isInactive marca semplicemente la
+              // VARIANTE "Non attivo" del building nel catalogo, non
+              // un'istanza reale del giocatore) evidenziarla non serve e
+              // confondeva con lo stile "errore/urgente" — bug segnalato
+              // luglio 2026.
               const cat = b._isMergedInventory ? "mergedInventory"
                 : b.isGreatBuilding ? "great"
                 : b.isMilitary ? "military"
                 : b.isGoods ? "goods"
-                : b.isInactive ? "inactive"
+                : (b.isInactive && activeTab === "propria_citta") ? "inactive"
                 : b.isFallback ? "fallback"
                 : "normal";
               const disconnected = activeTab === "propria_citta" && !b._isMergedInventory && (disconnectedCount) > 0;
@@ -1167,7 +1175,10 @@ const BuildingRow = memo(function BuildingRow({
                 </>
               );
             }
-            if (b.isInactive) {
+            // Testo rosso scoped a propria_citta, stessa ragione dello
+            // sfondo riga sopra: in tab Database b.isInactive marca solo
+            // la variante di catalogo, non un'istanza scaduta reale.
+            if (b.isInactive && activeTab === "propria_citta") {
               return (
                 <span className={hasIt ? "font-bold text-red-400" : "font-bold text-red-400 italic"}>
                   {displayNameText}
@@ -1529,7 +1540,9 @@ const BuildingRow = memo(function BuildingRow({
             : "bg-[#2d0a0a]"
           : b.isGreatBuilding
           ? "bg-[#191900]"
-          : b.isInactive
+          // isInactive scoped a propria_citta: stessa ragione della cella
+          // nome/riga più sopra, niente evidenziazione in tab Database.
+          : (b.isInactive && activeTab === "propria_citta")
           ? "bg-[#2d0a0a]"
           : ""
       }`}>
