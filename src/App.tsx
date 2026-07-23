@@ -188,6 +188,20 @@ const detectBrowserUiLang = (): UiLang => {
 // Una voce di differenza tra l'era vecchia e quella corrente di un edificio.
 type EraDiffEntry = { key: string; icon: string; emoji?: string; labelKey: UiKey; from: number; to: number };
 
+// Campi con valori potenzialmente molto larghi (5-6+ cifre: pop/fel/mon/mat)
+// che nel popup "edificio vecchio" occupano sempre una riga intera
+// (col-span-full) invece di condividere una colonna stretta con gli altri
+// campi — condivisa tra il calcolo della larghezza del popup e il rendering
+// della griglia, altrimenti la larghezza veniva calcolata sul conteggio
+// totale dei campi invece che sul massimo di colonne davvero affiancate
+// (bug segnalato luglio 2026: popup troppo largo su "Mercantile
+// Waystation"). "fel" incluso insieme a pop/mon/mat (non solo per la
+// larghezza dei suoi valori, che restano contenuti, ma per lasciare le
+// colonne strette libere ai campi realmente compatti come "beni" — bug
+// segnalato luglio 2026 su "Capy's Winter Holiday Spa", dove fel occupava
+// la 4a colonna della riga militare al posto di beni).
+const isWideDiffKey = (key: string): boolean => key === "pop" || key === "fel" || key === "mon" || key === "mat";
+
 // Definizione dei campi confrontabili: come leggerli da EraStats (vecchia era) e
 // da un Building (era corrente, già popolato da applyEraStats). I boost sono
 // array di 4 [Atk_A, Def_A, Atk_D, Def_D]. Icone immagine o emoji per i reward.
@@ -208,8 +222,11 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
   };
   const sca = (field: string) => (s: { [k: string]: unknown }) => Number(s[field]) || 0;
   return [
-    { key: "pop", labelKey: "diffPopulation", icon: icons.iconPop, get: sca("pop") },
-    { key: "fel", labelKey: "diffHappiness", icon: icons.iconFel, get: sca("fel") },
+    // Statistiche militari PRIMA di tutto il resto (richiesto luglio 2026):
+    // nel popup "edificio vecchio" le variazioni di attacco/difesa contano
+    // più delle risorse per decidere se aggiornare, quindi vengono mostrate
+    // per prime. L'ordine qui è quello con cui viene popolato cmp.diffs
+    // (itera DIFF_FIELDS filtrando solo i campi effettivamente cambiati).
     // Boost generali (esercito) — indici 0..3
     { key: "general0", labelKey: "diffGenAtkAtk", icon: icons.iconGenAtkA, get: arr("general", 0) },
     { key: "general1", labelKey: "diffGenDefAtk", icon: icons.iconGenDefA, get: arr("general", 1) },
@@ -238,7 +255,9 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
     { key: "iqTruppe", labelKey: "diffIqUnits", icon: icons.iconIQTruppe, get: sca("iqTruppe") },
     { key: "iqAzioni", labelKey: "diffIqActions", icon: icons.iconIQAzioni, get: sca("iqAzioni") },
     { key: "iqCap", labelKey: "diffIqCapacity", icon: icons.iconIQCap, get: sca("iqCap") },
-    // Produzioni
+    // Popolazione/felicità e produzioni: dopo tutte le statistiche militari.
+    { key: "pop", labelKey: "diffPopulation", icon: icons.iconPop, get: sca("pop") },
+    { key: "fel", labelKey: "diffHappiness", icon: icons.iconFel, get: sca("fel") },
     { key: "mon", labelKey: "diffCoins", icon: icons.iconMon, get: sca("mon") },
     { key: "mat", labelKey: "diffMaterials", icon: icons.iconMat, get: sca("mat") },
     { key: "fp", labelKey: "diffForgePoints", icon: icons.iconFP, get: sca("fp") },
@@ -1173,8 +1192,14 @@ const BuildingRow = memo(function BuildingRow({
           if (b.isGreatBuilding) return null;
           const count = importedCount;
           if (count <= 1) return null;
+          // mr-1 SOLO se seguono slot alleati (stessa condizione con cui
+          // vengono renderizzati più sotto): quel margine serve a dare
+          // respiro prima della prima stellina, ma se il badge ×N è
+          // l'ultimo elemento della cella lascia solo spazio vuoto inutile
+          // prima del bordo — bug segnalato luglio 2026.
+          const hasAllySlots = activeTab === "propria_citta" && !b._isMergedInventory && !!allySlots && allySlots.length > 0;
           return (
-            <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-900">
+            <span className={`ml-1.5 ${hasAllySlots ? "mr-1" : ""} inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-900`}>
               ×{count}
             </span>
           );
@@ -1315,7 +1340,15 @@ const BuildingRow = memo(function BuildingRow({
             // ricalcolato ad ogni render da allySlotsPerBuilding, quindi
             // l'indice di posizione è la chiave corretta qui.
             key={i}
-            className="ml-1 inline-block flex-shrink-0 cursor-help"
+            // Il primo slot ha bisogno di più margine (ml-1.5, come prima
+            // della riduzione generale) SOLO quando non è preceduto dal
+            // badge quantità (×N, stessa condizione con cui viene generato
+            // più sopra: isGreatBuilding→null, count<=1→null) — quel badge
+            // ha già un mr-1 proprio che dà spazio a sufficienza. Senza
+            // badge quantità in mezzo, ml-0.5 lasciava il primo slot troppo
+            // attaccato al nome (bug segnalato luglio 2026 su "Piazza
+            // Yukitomo"). Gli slot successivi restano sempre ml-0.5.
+            className={`${i === 0 && (b.isGreatBuilding || importedCount <= 1) ? "ml-1.5" : "ml-0.5"} inline-block flex-shrink-0 cursor-help`}
             title={slot.filled
               ? t("filledAllySlotBadgeTitle", uiLang, slot.allyDisplayName ?? "?")
               : t("emptyAllySlotBadgeTitle", uiLang)}
@@ -1323,7 +1356,18 @@ const BuildingRow = memo(function BuildingRow({
             <img
               src={slot.filled ? allies_slot_full : allies_slot_empty}
               alt=""
-              className="h-4 w-4 object-contain inline-block"
+              // align-middle (non inline-block "nudo"): un'immagine
+              // inline-block resta ancorata al baseline del testo, che la fa
+              // apparire un po' più in basso del centro verticale reale
+              // della riga (percepibile ora che .cell-name è flex
+              // items-center, vedi index.css) — bug segnalato luglio 2026
+              // sulle icone slot alleati (span.ml-1...cursor-help).
+              // -translate-y-[1px]: rifinitura residua, l'icona restava
+              // ~3-4px più in basso del centro reale della riga anche con
+              // align-middle — misurato via getBoundingClientRect e
+              // corretto a occhio (bug segnalato luglio 2026, seconda
+              // passata).
+              className="h-4 w-4 object-contain inline-block align-middle -translate-y-[1px]"
             />
           </span>
         ))}
@@ -1337,7 +1381,7 @@ const BuildingRow = memo(function BuildingRow({
           if (fragmentsProduced.length === 0) return null;
           return (
             <span
-              className="ml-1.5 inline-block flex-shrink-0 self-start cursor-help relative w-4 h-px align-top"
+              className="ml-1 inline-block flex-shrink-0 self-start cursor-help relative w-4 h-px align-top"
               onMouseEnter={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 setFragmentTooltip({
@@ -6604,7 +6648,13 @@ export default function App() {
         // Colonne della griglia diff: non serve riservare 4 colonne larghe se il
         // blocco con più differenze ne ha solo 1, 2 o 3. Il popup si restringe
         // di conseguenza invece di apparire sproporzionato per pochi valori.
-        const maxDiffs = eraComparisons.reduce((m, c) => Math.max(m, c.diffs.length), 0);
+        // ⚠️ Conta solo i campi "stretti" (non isWideDiffKey, vedi sotto): i
+        // campi pop/mon/mat vanno sempre a riga intera (col-span-full) quindi
+        // non contribuiscono al numero di colonne affiancate — contarli qui
+        // faceva calcolare un popup più largo del necessario (es. 4 colonne
+        // anche quando solo 2 campi stavano davvero fianco a fianco, bug
+        // segnalato luglio 2026 su "Mercantile Waystation").
+        const maxDiffs = eraComparisons.reduce((m, c) => Math.max(m, c.diffs.filter(d => !isWideDiffKey(d.key)).length), 0);
         const diffCols = Math.max(1, Math.min(4, maxDiffs));
         const colWidthPx = 110; // larghezza stimata per colonna (icona + due numeri)
         // Minimo alto a sufficienza da non far andare a capo titoli/testi (es.
@@ -6646,11 +6696,35 @@ export default function App() {
                       {" "}<span className="text-slate-400">({currentEraId - cmp.eraId === 1 ? t("eraDiffSingular", uiLang) : t("eraDiffPlural", uiLang, currentEraId - cmp.eraId)})</span>
                     </p>
                     <div className={`grid ${gridColsClass} gap-x-0.5 gap-y-0.5`}>
-                      {cmp.diffs.map((d) => {
+                      {/* Riordina SOLO per la visualizzazione (non tocca
+                          cmp.diffs altrove, es. nel calcolo di goodsInvolved):
+                          tutti i campi "stretti" prima, quelli "larghi"
+                          (col-span-full: pop/mon/mat) dopo. Con CSS Grid
+                          auto-placement, un col-span-full incontrato IN MEZZO
+                          a campi stretti chiude subito la riga corrente anche
+                          se non è piena — es. attacco+difesa+incursioni (3
+                          stretti, 4a colonna libera) seguiti da pop
+                          (col-span-full) sprecavano quella 4a colonna e
+                          spingevano il campo stretto successivo (fel) su una
+                          riga a parte invece che affiancato — bug segnalato
+                          luglio 2026 su "Capy's Winter Holiday Spa". Mettendo
+                          tutti gli stretti in sequenza PRIMA di qualsiasi
+                          largo, il grid li raggruppa naturalmente riempiendo
+                          ogni riga prima di passare ai col-span-full. */}
+                      {[...cmp.diffs].sort((a, b) => Number(isWideDiffKey(a.key)) - Number(isWideDiffKey(b.key))).map((d) => {
                         const up = d.to > d.from;
                         const useFormatInt = ["pop", "fel", "mon", "mat", "iqMon", "iqMat"].includes(d.key);
+                        // isWideDiffKey (definita fuori dal componente): Pop/
+                        // Mon/Mat possono arrivare a 5-6+ cifre (es. "106.290
+                        // → 235.290", "15.890 → 27.890") — condividendo una
+                        // colonna stretta (~110px, stimata per numeri corti
+                        // come attacco/difesa) con le altre celle della
+                        // griglia, il testo veniva troncato/coperto dalla
+                        // colonna successiva o sbordava dal popup (bug
+                        // segnalato luglio 2026 su "Mercantile Waystation").
+                        // col-span-full: riga propria a piena larghezza.
                         return (
-                          <div key={d.key} className="flex items-center gap-1 text-xs font-mono" title={t(d.labelKey, uiLang)}>
+                          <div key={d.key} className={`flex items-center gap-1 text-xs font-mono ${isWideDiffKey(d.key) ? "col-span-full" : ""}`} title={t(d.labelKey, uiLang)}>
                             {d.icon
                               ? <img src={d.icon} alt={t(d.labelKey, uiLang)} className="h-4 w-4 shrink-0 object-contain" />
                               : <span className="w-4 shrink-0 text-center">{d.emoji}</span>}
