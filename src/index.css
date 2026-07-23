@@ -193,7 +193,7 @@ body {
      solo quando serve scroll). z-index + sfondo OPACO (altrimenti le celle
      scorrevoli sottostanti si vedrebbero in trasparenza) + box-shadow per
      indicare il confine. left cumulativo secondo le larghezze del colgroup
-     (checkbox 32px, occhio 28px): 0 / 32px / 60px.
+     (checkbox 32px, occhio 14px): 0 / 32px / 46px.
      Strategia di sfondo UNICA per tbody e thead: background-color: inherit
      (propaga il colore della <tr>). Funziona perché OGNI riga della
      tabella ha un colore OPACO per invariante — le righe dati via
@@ -230,17 +230,46 @@ body {
   /* Cella nome edificio: testo a sinistra con troncatura. Nessuna larghezza
      qui: le larghezze (fissa 260px in modalità sticky, elastica min 260
      altrimenti) vivono nei <colgroup> delle singole tabelle (tabella
-     principale e tabelle Alleati), con table-fixed. */
+     principale e tabelle Alleati), con table-fixed. Base condivisa (usata
+     anche dalle tabelle Alleati, che NON hanno .has-name-divider): resta
+     `truncate` semplice sul <td>, perché lì il contenuto extra (es. barra
+     progresso frammenti) è un <div> di BLOCCO sotto il badge, non un
+     fratello inline da tenere visibile — un layout flex romperebbe
+     quello stacking verticale. */
   .building-table tbody td.cell-name,
   .building-table thead th.cell-name {
     @apply px-2 text-left truncate;
+  }
+
+  /* Variante flex: SOLO <td> del body della tabella principale edifici
+     (.has-name-divider, sempre presente su di essa, mai sulle tabelle
+     Alleati — vedi App.tsx). NON sul <th> dell'header: quello contiene solo
+     il testo "EDIFICIO" dentro un unico <span> (SortableHeader, già
+     inline-flex per suo conto) — renderlo flex a sua volta creava un doppio
+     livello flex che lasciava il contenuto (e quindi lo sfondo sticky) più
+     stretto della cella reale, con una "cella dentro la cella" visibile:
+     due sfondi diversi affiancati e il separatore verticale che non
+     arrivava fino in fondo (bug segnalato luglio 2026).
+     ⚠️ flex, non più `truncate` diretto sul <td>: prima `truncate` (overflow
+     hidden + ellipsis) era sull'intera cella, quindi con un nome lungo che
+     da solo saturava i 260px, i badge successivi nel flusso (es. 🧩
+     frammenti, che va SEMPRE dopo il testo) finivano oltre il bordo e
+     venivano tagliati via insieme all'ellissi — bug segnalato luglio 2026
+     su "Centro di Riabilitazione Elefanti - Livello 9". Con la cella come
+     flex row, solo lo <span> del testo nome (in App.tsx, min-w-0 shrink
+     truncate) si tronca; i badge fratelli restano flex-shrink-0 e quindi
+     sempre visibili, spingendo l'ellissi del nome più a sinistra se serve
+     spazio. Ridichiara `truncate` → `overflow:visible` implicito via flex:
+     l'overflow ora vive sullo <span> interno, non più sul <td>. */
+  .has-name-divider tbody td.cell-name {
+    @apply flex items-center overflow-visible whitespace-normal;
   }
 
   /* Variante sticky della cella nome: SOLO per la tabella principale
      edifici (Database/Città/Inventario), che ha checkbox+occhio prima del
      nome (vedi .has-sticky-name sul <table>). Le tabelle Alleati usano
      .cell-name "semplice" sopra: essendo il nome la LORO prima colonna, uno
-     sticky con left:60px lascerebbe un vuoto a sinistra (l'offset presume
+     sticky con left:46px lascerebbe un vuoto a sinistra (l'offset presume
      le colonne checkbox/occhio che lì non esistono). Terza (e ultima)
      colonna sticky del blocco fisso: shadow a destra per marcare
      visivamente dove finisce il blocco fisso e inizia lo scroll dati.
@@ -289,7 +318,7 @@ body {
 
   .has-sticky-name tbody td.cell-name {
     @apply sticky z-10;
-    left: 60px;
+    left: 46px;
     width: 260px;
     background-color: inherit;
     background-image: inherit;
@@ -297,7 +326,7 @@ body {
   }
   .has-sticky-name thead th.cell-name {
     @apply sticky z-20;
-    left: 60px;
+    left: 46px;
     width: 260px;
     background-color: inherit;
     box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
@@ -310,7 +339,7 @@ body {
      sfondo opaco SOLO sotto .has-sticky-name, separatore della th nome
      anche nel ramo elastico (regola .has-name-divider sopra). */
   /* z-30 (sopra il z-20 della th nome accanto): il pulsante Export è più
-     largo dei 60px del suo colSpan (checkbox+occhio) e sborda a destra —
+     largo dei 46px del suo colSpan (checkbox+occhio) e sborda a destra —
      con z uguale la th nome (opaca, successiva nel DOM) lo coprirebbe
      troncandolo ("Expo"). Con z-30 il pulsante sborda SOPRA la th nome,
      che essendo opaca e sticky fa comunque da scudo verso i dati
@@ -321,7 +350,7 @@ body {
   }
   .has-sticky-name thead th.th-name-summary {
     @apply sticky z-20;
-    left: 60px;
+    left: 46px;
     width: 260px;
     background-color: inherit;
     box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);

@@ -975,6 +975,13 @@ const UI_STRINGS = {
     it: (name: string, lang: string) => `Vedi ${name} su FoE Wiki (${lang})`,
     en: (name: string, lang: string) => `View ${name} on FoE Wiki (${lang})`,
   },
+  // Placeholder nel popup immagine (👁️/? in cella nome) quando manca
+  // l'hash: alcuni livelli intermedi di set a gradazione riusano lo sprite
+  // di un livello precedente e non hanno un hash proprio nel CSV.
+  noImageAvailable: {
+    it: "Nessuna immagine disponibile",
+    en: "No image available",
+  },
   ownedAlliesCount: {
     it: "Alleati posseduti",
     en: "Owned allies",

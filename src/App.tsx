@@ -1020,81 +1020,152 @@ const BuildingRow = memo(function BuildingRow({
           // La wiki FoE ha un sottodominio per ogni lingua del gioco: la
           // lingua corrente si usa direttamente, nessun collasso necessario.
           const wikiLang: Lang = isGameTab ? gameLang : uiLang;
-          const showWikiLink = isGameTab || ITALIAN_NAMES.has(b.cityEntityId);
+          const hasItName = isGameTab || ITALIAN_NAMES.has(b.cityEntityId);
           const displayedName = isGameTab
             ? (gameDisplayName ?? b.name)
             : displayName(b.cityEntityId, b.name, uiLang);
-          if (!showWikiLink) return null;
           const imgUrl = getImageUrl(b.cityEntityId, b.hash);
+          // Niente `if (!imgUrl) return`: molti livelli intermedi di set a
+          // gradazione (es. "Momiji Stop - Lv. 6") riusano lo sprite di un
+          // livello precedente e nel MainParser non hanno un hash immagine
+          // proprio — buildings.py lascia quindi il campo Hash vuoto in CSV
+          // per quell'entry (verificato: solo Lv. 1/5/8 di quel set hanno
+          // hash, i livelli 2-4/6-7 no). Aprire comunque il popup (senza
+          // immagine, vedi imagePopup più sotto) permette di leggere almeno
+          // il CityEntityId anche per quei livelli — bug segnalato luglio
+          // 2026 ("Lv. 6 non ha né immagine né ID"). */
+          const showImagePopup = (e: { currentTarget: HTMLElement }) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setImagePopup({ x: r.right, y: r.top, url: imgUrl ?? "", name: displayedName, id: b.cityEntityId });
+          };
+          if (hasItName) {
+            return (
+              <a
+                href={BuildingModel.wikiUrl(displayedName, wikiLang)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={showImagePopup}
+                onMouseLeave={scheduleImagePopupClose}
+                title={t("viewOnWikiTitle", uiLang, displayedName, wikiLang.toUpperCase())}
+                className="inline-flex items-center justify-center text-[13px] leading-none hover:scale-125 transition-transform -translate-x-[3px]"
+              >
+                👁️
+              </a>
+            );
+          }
+          // Nessuna traduzione nota per la lingua GUI corrente (edifici
+          // nuovi non ancora tradotti, tab Database): niente link wiki
+          // affidabile da costruire, ma l'ID/immagine restano comunque
+          // utili per controllo "da debug" (richiesto dall'utente luglio
+          // 2026) — "?" al posto di 👁️ per segnalare visivamente che qui
+          // non c'è un link cliccabile, solo l'hover informativo con lo
+          // stesso popup. Nessun title/tooltip: è volutamente "silenzioso",
+          // il popup all'hover è già autoesplicativo (luglio 2026).
           return (
-            <a
-              href={BuildingModel.wikiUrl(displayedName, wikiLang)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onMouseEnter={(e) => {
-                if (!imgUrl) return;
-                const r = e.currentTarget.getBoundingClientRect();
-                setImagePopup({ x: r.right, y: r.top, url: imgUrl, name: displayedName, id: b.cityEntityId });
-              }}
+            <span
+              onMouseEnter={showImagePopup}
               onMouseLeave={scheduleImagePopupClose}
-              title={t("viewOnWikiTitle", uiLang, displayedName, wikiLang.toUpperCase())}
-              className="inline-flex items-center justify-center text-[13px] leading-none hover:scale-125 transition-transform"
+              className="inline-flex items-center justify-center text-[11px] font-bold text-slate-500 hover:text-slate-300 cursor-help leading-none transition-colors -translate-x-[3px]"
             >
-              👁️
-            </a>
-          );
-        })()}
-      </td>
-      <td className={`cell-name ${b.isGreatBuilding ? "text-slate-100" : ""}`}>
-        {(() => {
-          const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
-          // Tab gioco: nome originale del gioco (gameNames) > traduzione
-          // localizzata nella lingua del profilo > fallback CSV.
-          // Tab database: traduzione nella lingua scelta per la GUI.
-          const displayNameText = isGameTab
-            ? (gameDisplayName ?? displayName(b.cityEntityId, b.name, gameLang))
-            : displayName(b.cityEntityId, b.name, uiLang);
-          // Evidenzia in italic i nomi non tradotti: se siamo in game-tab
-          // la traduzione manca se anche la lingua del profilo non la
-          // possiede; in tab database la traduzione manca se non esiste
-          // una entry diretta per uiLang (si ricade sul fallback inglese).
-          const hasIt = isGameTab
-            ? (gameDisplayName !== undefined) || ITALIAN_NAMES.has(b.cityEntityId)
-            : hasTranslation(b.cityEntityId, uiLang);
-          if (b.isGreatBuilding) {
-            return (
-              <>
-                <span className={hasIt ? "font-bold" : "font-bold italic"}>
-                  {displayNameText}
-                </span>
-                {(() => {
-                  const gb = greatBuildingInfo;
-                  return gb ? <span className="font-normal text-slate-400"> - Lv. {gb.level}/{gb.maxLevel}</span> : null;
-                })()}
-              </>
-            );
-          }
-          if (b.isInactive) {
-            return (
-              <span className={hasIt ? "font-bold text-red-400" : "font-bold text-red-400 italic"}>
-                {displayNameText}
-              </span>
-            );
-          }
-          const isInventarioInv = (activeTab === "inventario" || b._isMergedInventory) && (b as InventoryRowBuilding)._invBadge === "INV";
-          return (
-            <span className={hasIt ? (isInventarioInv ? "text-emerald-400 font-semibold" : "") : (isInventarioInv ? "text-emerald-400 font-semibold italic" : "italic")}>
-              {displayNameText}
+              ?
             </span>
           );
         })()}
+      </td>
+      <td
+        className={`cell-name ${b.isGreatBuilding ? "text-slate-100" : ""}`}
+        // Tooltip col nome completo: la cella (nome + eventuali badge inline,
+        // es. 🧩 frammenti) è troncata con ellissi (.cell-name usa
+        // `truncate`, vedi index.css) quando il CONTENUTO TOTALE eccede i
+        // 260px fissi della colonna — non solo quando il nome da solo è
+        // lungo. Senza questo title, un nome che sta interamente in 260px ma
+        // che con un badge accanto supera quella soglia veniva comunque
+        // troncato senza modo di leggerlo per intero (bug segnalato
+        // dall'utente su "Palazzo della Luce Liquida - Livello 2" + badge
+        // frammenti). Ricalcola lo stesso displayNameText usato più sotto:
+        // duplicazione minima, ma evita di sollevare lo stato fuori dalla IIFE.
+        // Per le Grandi Opere include anche " - Lv. X/Y" (stessa stringa del
+        // ramo isGreatBuilding più sotto): è spesso proprio quella parte,
+        // non il nome, a restare tagliata dal truncate — bug segnalato
+        // luglio 2026 su "Cancello di Saturno VI IDRA - Lv. 100/100".
+        title={(() => {
+          const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
+          const nameText = isGameTab
+            ? (gameDisplayName ?? displayName(b.cityEntityId, b.name, gameLang))
+            : displayName(b.cityEntityId, b.name, uiLang);
+          if (b.isGreatBuilding && greatBuildingInfo) {
+            return `${nameText} - Lv. ${greatBuildingInfo.level}/${greatBuildingInfo.maxLevel}`;
+          }
+          return nameText;
+        })()}
+      >
+        {/* Wrapper truncabile SOLO sul testo nome: .cell-name (index.css) è ora
+            un flex row, non più un blocco con `truncate` diretto — così i
+            badge fratelli dopo questo span (es. 🧩 frammenti) restano
+            flex-shrink-0 e non vengono mai tagliati via insieme all'ellissi
+            quando il nome da solo satura i 260px della colonna (bug
+            segnalato luglio 2026 su "Centro di Riabilitazione Elefanti -
+            Livello 9"). `min-w-0` è necessario perché un figlio flex di
+            default non si restringe sotto il proprio content-width.
+            ⚠️ NIENTE `flex-1` (flex-grow): con nomi corti tipo "Trincea
+            Bellica - Livello 2" uno span flex-1 si espande comunque a
+            riempire tutto lo spazio libero della cella, spingendo i badge
+            fratelli (es. GE, 🧩) fino al bordo destro invece di lasciarli
+            subito dopo il testo — bug segnalato luglio 2026. Solo `shrink`
+            (senza grow, flex-basis auto di default): lo span parte dalla
+            sua larghezza naturale e si comprime SOLO quando testo+badge
+            insieme non ci stanno nei 260px. */}
+        <span className="truncate min-w-0 shrink">
+          {(() => {
+            const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
+            // Tab gioco: nome originale del gioco (gameNames) > traduzione
+            // localizzata nella lingua del profilo > fallback CSV.
+            // Tab database: traduzione nella lingua scelta per la GUI.
+            const displayNameText = isGameTab
+              ? (gameDisplayName ?? displayName(b.cityEntityId, b.name, gameLang))
+              : displayName(b.cityEntityId, b.name, uiLang);
+            // Evidenzia in italic i nomi non tradotti: se siamo in game-tab
+            // la traduzione manca se anche la lingua del profilo non la
+            // possiede; in tab database la traduzione manca se non esiste
+            // una entry diretta per uiLang (si ricade sul fallback inglese).
+            const hasIt = isGameTab
+              ? (gameDisplayName !== undefined) || ITALIAN_NAMES.has(b.cityEntityId)
+              : hasTranslation(b.cityEntityId, uiLang);
+            if (b.isGreatBuilding) {
+              return (
+                <>
+                  <span className={hasIt ? "font-bold" : "font-bold italic"}>
+                    {displayNameText}
+                  </span>
+                  {(() => {
+                    const gb = greatBuildingInfo;
+                    return gb ? <span className="font-normal text-slate-400"> - Lv. {gb.level}/{gb.maxLevel}</span> : null;
+                  })()}
+                </>
+              );
+            }
+            if (b.isInactive) {
+              return (
+                <span className={hasIt ? "font-bold text-red-400" : "font-bold text-red-400 italic"}>
+                  {displayNameText}
+                </span>
+              );
+            }
+            const isInventarioInv = (activeTab === "inventario" || b._isMergedInventory) && (b as InventoryRowBuilding)._invBadge === "INV";
+            return (
+              <span className={hasIt ? (isInventarioInv ? "text-emerald-400 font-semibold" : "") : (isInventarioInv ? "text-emerald-400 font-semibold italic" : "italic")}>
+                {displayNameText}
+              </span>
+            );
+          })()}
+        </span>
         {b.isGreatBuilding && (
-          <span className="ml-1.5 inline-block text-xs font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 relative -top-[1px]">
+          <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 relative -top-[1px]">
             {t("greatBuildingBadge", uiLang)}
           </span>
         )}
         {(activeTab === "inventario" || b._isMergedInventory) && b.isUnresolved && (
-          <span className="ml-1.5 inline-block text-[11px] font-mono font-bold px-1 rounded bg-red-950/60 text-red-400 border border-red-900 relative -top-[1px] cursor-help" title={t("unresolvedValuesTitle", uiLang)}>
+          <span className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-red-950/60 text-red-400 border border-red-900 relative -top-[1px] cursor-help" title={t("unresolvedValuesTitle", uiLang)}>
             UNKNOWN
           </span>
         )}
@@ -1103,7 +1174,7 @@ const BuildingRow = memo(function BuildingRow({
           const count = importedCount;
           if (count <= 1) return null;
           return (
-            <span className="ml-1.5 inline-block text-xs font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-900">
+            <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-900">
               ×{count}
             </span>
           );
@@ -1113,7 +1184,7 @@ const BuildingRow = memo(function BuildingRow({
           const disconnCount = disconnectedCount;
           if (disconnCount <= 0) return null;
           return (
-            <span className="ml-1.5 inline-block text-[10px] font-mono font-bold px-1 rounded bg-red-950 text-red-400 border border-red-600 relative -top-[2px]" title={t("disconnectedFromRoadTitle", uiLang)}>
+            <span className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-red-950 text-red-400 border border-red-600 relative -top-[2px]" title={t("disconnectedFromRoadTitle", uiLang)}>
               {t("disconnectedFromRoadBadge", uiLang)}
             </span>
           );
@@ -1123,7 +1194,7 @@ const BuildingRow = memo(function BuildingRow({
           if (!b.cityEntityId) return null;
           if (needlessCount <= 0) return null;
           return (
-            <span className="ml-1.5 inline-block text-[10px] font-mono font-bold px-1 rounded bg-amber-950 text-amber-400 border border-amber-600 relative -top-[2px]" title={t("needlesslyConnectedTitle", uiLang)}>
+            <span className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-amber-950 text-amber-400 border border-amber-600 relative -top-[2px]" title={t("needlesslyConnectedTitle", uiLang)}>
               {t("needlesslyConnectedBadge", uiLang, needlessCount)}
             </span>
           );
@@ -1134,7 +1205,7 @@ const BuildingRow = memo(function BuildingRow({
           if (!badge) return null;
           return (
             <span
-              className="ml-1.5 inline-block text-[10px] font-mono font-bold px-1 rounded bg-sky-950 text-sky-300 border border-sky-700 cursor-help relative -top-[1px]"
+              className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-sky-950 text-sky-300 border border-sky-700 cursor-help relative -top-[1px]"
               onMouseEnter={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 setUpgradeTooltip({ x: r.left, y: r.bottom, targets: badge.targets, kits: badge.kits });
@@ -1151,7 +1222,7 @@ const BuildingRow = memo(function BuildingRow({
           const minLvl = minLevel;
           return (
             <span
-              className="ml-2 inline-block cursor-help "
+              className="ml-2 inline-block flex-shrink-0 cursor-help "
               onMouseEnter={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 // Confronto "se aggiorni": per ogni era obsoleta in cui possiedo
@@ -1208,7 +1279,7 @@ const BuildingRow = memo(function BuildingRow({
           if (!isDeclassable) return null;
           return (
             <span
-              className="ml-2 inline-block cursor-help"
+              className="ml-2 inline-block flex-shrink-0 cursor-help"
               onMouseEnter={(e) => {
                 if (!declassablePopData) return;
                 const r = e.currentTarget.getBoundingClientRect();
@@ -1244,7 +1315,7 @@ const BuildingRow = memo(function BuildingRow({
             // ricalcolato ad ogni render da allySlotsPerBuilding, quindi
             // l'indice di posizione è la chiave corretta qui.
             key={i}
-            className="ml-1 inline-block cursor-help"
+            className="ml-1 inline-block flex-shrink-0 cursor-help"
             title={slot.filled
               ? t("filledAllySlotBadgeTitle", uiLang, slot.allyDisplayName ?? "?")
               : t("emptyAllySlotBadgeTitle", uiLang)}
@@ -1266,7 +1337,7 @@ const BuildingRow = memo(function BuildingRow({
           if (fragmentsProduced.length === 0) return null;
           return (
             <span
-              className="ml-1.5 inline-block cursor-help relative w-4 h-px align-top"
+              className="ml-1.5 inline-block flex-shrink-0 self-start cursor-help relative w-4 h-px align-top"
               onMouseEnter={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 setFragmentTooltip({
@@ -1323,7 +1394,7 @@ const BuildingRow = memo(function BuildingRow({
 
           // Badge quantità: mostra solo se qty > 1
           const qtyBadge = qty > 1 ? (
-            <span className="ml-1.5 inline-block text-xs font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-900">
+            <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-900">
               ×{qty}
             </span>
           ) : null;
@@ -1338,7 +1409,7 @@ const BuildingRow = memo(function BuildingRow({
              return (
                <>{qtyBadge}
                   <span
-                    className="ml-1.5 inline-block text-[11px] font-mono font-bold px-1 rounded bg-sky-950/60 text-sky-300 border border-sky-800 relative -top-[1px] cursor-help"
+                    className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-sky-950/60 text-sky-300 border border-sky-800 relative -top-[1px] cursor-help"
                     onMouseEnter={(e) => {
                       const r = e.currentTarget.getBoundingClientRect();
                       setFabTooltip({ x: r.left, y: r.bottom, kitsUsed, sourceId, sourceLv, choices });
@@ -1356,7 +1427,7 @@ const BuildingRow = memo(function BuildingRow({
               return (
                 <>{qtyBadge}
                   <span
-                    className="ml-1.5 inline-block text-[11px] font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 relative -top-[1px] cursor-help"
+                    className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 relative -top-[1px] cursor-help"
                     onMouseEnter={(e) => {
                       const r = e.currentTarget.getBoundingClientRect();
                       setFabTooltip({ x: r.left, y: r.bottom, kitsUsed, choices });
@@ -4212,7 +4283,7 @@ export default function App() {
   // assoluto del database è ~331px ma riguarda una manciata di nomi). Non "circa": con table-fixed, se minWidth
   // supera la somma delle <col>, il browser RIDISTRIBUISCE l'eccesso su tutte
   // le colonne (proporzionalmente), e le posizioni/larghezze reali divergono
-  // dai px del colgroup. Le celle sticky sono pinnate a left 0/32/60 e width
+  // dai px del colgroup. Le celle sticky sono pinnate a left 0/32/46 e width
   // 260 ESATTI: con colonne "gonfiate" dalla ridistribuzione, la posizione
   // naturale (a scrollLeft 0) non coincide più con quella pinnata → al primo
   // scroll le colonne occhio e nome saltavano ~1px a sinistra e la colonna
@@ -4224,7 +4295,7 @@ export default function App() {
   // buildingTableNeedsScroll da falsi positivi. Quando si tocca il colgroup
   // (vedi invariante #12 in docs/SKILL.md), aggiornare anche qui.
   const tableMinWidth = useMemo(() => {
-    const base = 32 + 28 + 260 + 32 + 50 + 48 + 44; // checkbox+occhio+nome+❔+eff+size+road
+    const base = 32 + 14 + 260 + 32 + 50 + 48 + 44; // checkbox+occhio+nome+❔+eff+size+road
     const time = currentFilters.showTimeColumn ? 50 : 0;
     const pop = showPopColumn ? 66 : 0;
     const fel = showFelColumn ? 66 : 0;
@@ -5923,7 +5994,7 @@ export default function App() {
                   <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}`} style={{ minWidth: tableMinWidth }}>
                     <colgroup>
                       <col className="w-[32px]" />
-                      <col className="w-[28px]" />
+                      <col className="w-[14px]" />
                       <col className={buildingTableNeedsScroll ? "w-[260px]" : "w-full min-w-[260px]"} />
                       {currentFilters.showTimeColumn && <col className="w-[50px]" />}
                       <col className="w-[32px]" />
@@ -6004,7 +6075,7 @@ export default function App() {
                             className="accent-amber-500 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-slate-900 focus:ring-offset-slate-950 cursor-pointer h-3 w-3 relative -top-[-1px]"
                           />
                         </th>
-                        <th className="cell-eye py-0.5 px-1 text-center w-[28px]"></th>
+                        <th className="cell-eye py-0.5 px-1 text-center w-[14px]"></th>
                         {/* className STATICA, senza larghezze condizionali: la larghezza della
                             colonna nome è già interamente governata dal <col> del colgroup
                             (table-fixed) in entrambi i rami. La versione precedente cambiava
@@ -6503,12 +6574,22 @@ export default function App() {
           {imagePopup.subtitle && (
             <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400">{imagePopup.subtitle}</div>
           )}
-          <img
-            src={imagePopup.url}
-            alt={imagePopup.name}
-            className="h-56 w-56 object-contain"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-          />
+          {imagePopup.url ? (
+            <img
+              src={imagePopup.url}
+              alt={imagePopup.name}
+              className="h-56 w-56 object-contain"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            // Nessun hash immagine per questo livello (vedi showImagePopup
+            // in App.tsx): niente <img src=""> — un placeholder testuale al
+            // posto dello sprite mancante, il popup resta comunque utile
+            // per leggere l'ID qui sotto (bug segnalato luglio 2026).
+            <div className="flex h-56 w-56 items-center justify-center text-[11px] text-slate-600 italic">
+              {t("noImageAvailable", uiLang)}
+            </div>
+          )}
           <div className="mt-1 max-w-56 truncate text-center text-[11px] text-slate-300 select-text">{imagePopup.name}</div>
           {imagePopup.id && (
             <div className="max-w-56 truncate text-center text-[10px] font-mono text-slate-500 select-text">{imagePopup.id}</div>
