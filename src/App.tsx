@@ -999,7 +999,11 @@ const BuildingRow = memo(function BuildingRow({
       onClick={() => handleCityRowClick(b)}
       className={`${
         activeTab === "propria_citta" && isHighlighted && !b.isFallback
-          ? "outline outline-1 outline-amber-400 row-highlighted relative z-10"
+          // Niente outline: la riga selezionata (click riga o edificio in
+          // mappa) deve cambiare SOLO lo sfondo (row-highlighted, vedi
+          // index.css), non il bordo — il bordo giallo era percepito come
+          // "troppo" e non richiesto (bug segnalato luglio 2026).
+          ? "row-highlighted relative z-10"
           : (() => {
               const cat = b._isMergedInventory ? "mergedInventory"
                 : b.isGreatBuilding ? "great"
@@ -2880,6 +2884,11 @@ export default function App() {
       inventario: false,
     });
     setSearchTerm("");
+    // Svuota anche selectedIds: le righe evidenziate in tab Città
+    // (row-highlighted) derivano da selectedIds tramite
+    // highlightedCityEntityIds — senza questo, il reset filtri lasciava le
+    // righe cliccate ancora evidenziate (bug segnalato luglio 2026).
+    setSelectedIds(new Set());
   };
 
 
