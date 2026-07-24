@@ -6085,16 +6085,15 @@ export default function App() {
                         {/* Sticky + sfondo opaco vivono in index.css (th-export-summary /
                             th-name-summary, scoped sotto .has-sticky-name): niente più stili
                             inline condizionali qui. */}
-                        <th className="th-export-summary py-1 px-2 text-center" colSpan={2}>
+                        <th className="th-export-summary py-1 px-1 text-center" colSpan={2}>
                           <button
                             onClick={exportSelectedAsCsv}
                             disabled={selectedIds.size === 0}
                             title={selectedIds.size === 0 ? t("exportSelectFirstTitle", uiLang) : t("exportSelectedCsvTitle", uiLang, selectedIds.size)}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] font-bold text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-950/60 px-1.5 py-1 text-[11px] font-bold text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <Download size={11} />
                             Export
-                            {selectedIds.size > 0 && <span className="ml-0.5 text-amber-400">({selectedIds.size})</span>}
                           </button>
                         </th>
                         <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
