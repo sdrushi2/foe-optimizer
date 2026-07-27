@@ -1180,9 +1180,9 @@ W_MultiAge_FALL16A6;Fabbrica di succo fiorente;Flourishing Cider Mill;P_MultiAge
 W_MultiAge_FALL16A7;Fabbrica di Succo Vintage;Vintage Cider Mill;055e2386c;;;3x6;1.5;-1320;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A8;Fabbrica di Succo Patrimonio;Heritage Cider Mill;daa0098c3;1;;3x5;1.5;-1390;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A9;Fabbrica di succo Nobile;Noble Cider Mill;784df1cdb;1;;3x4;1.5;-1460;;;20;;;;;;;;;;;;;;;;;;;;;;75;75;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL21A10;;Golden Crops Harvest;9eebf5493;1;;6x4;2;75500;60000;;100;;;;;100;;;;;400000;300000;100;100;100;100;;;;;;;;;;;;;;;;;;;;;1;;;;;1;;;
-W_MultiAge_FALL21A11;;Golden Crops Feast;6325fb544;1;;6x4;;82500;70000;;150;;;;;130;;;;;450000;400000;130;130;130;130;;;;;;;;;;;;;;;;;;;;;1;;;;;2;;;
-W_MultiAge_FALL21A12;;Ascended Golden Crops Feast;7db9338f0;1;90;6x4;;82500;160000;;400;;;;;400;;;;;900000;800000;320;320;320;320;;;;;;;;;25;25;25;25;;;;;;;200;8000;1;;;;;5;;;
+W_MultiAge_FALL21A10;;Golden Crops Harvest;9eebf5493;1;;6x4;2;75500;60000;;100;;;;;100;;;;120;400000;300000;100;100;100;100;;;;;;;;;;;;;;;;;;;;;1;;;;;1;;;
+W_MultiAge_FALL21A11;;Golden Crops Feast;6325fb544;1;;6x4;;82500;70000;;150;;;;;130;;;;150;450000;400000;130;130;130;130;;;;;;;;;;;;;;;;;;;;;1;;;;;2;;;
+W_MultiAge_FALL21A12;;Ascended Golden Crops Feast;7db9338f0;1;90;6x4;;82500;160000;;400;;;;;400;;;;300;900000;800000;320;320;320;320;;;;;;;;;25;25;25;25;;;;;;;200;8000;1;;;;;5;;;
 W_MultiAge_FALL22A1;Frantoio per olio di semi di girasole - Liv. 1;Sunflower Oil Press - Lv. 1;R_MultiAge_FallBonus22a-1e65b4d17;;;6x4;2;12939;14390;;;;;;;;;;;;115900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A10;Frantoio per olio di semi di girasole vivace;Vibrant Sunflower Oil Press;R_MultiAge_FallBonus22j-9d149b5de;1;;6x4;2;22643;39250;;29;;;8;;82;;;;;263500;52320;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A11;Frantoio per Olio di semi di Girasole Incontaminato;Pristine Sunflower Oil Press;R_MultiAge_FallBonus22k-6070c9eeb;1;;6x4;2;26955;45780;;35;;;10;;100;;;;;316100;65400;107;109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

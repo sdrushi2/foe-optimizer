@@ -1219,6 +1219,31 @@ durate diverse da 24h, scelta dell'opzione a tempo massimo, `random`+`dropChance
 `genericReward` via lookup, entrambi i fallback `entity_levels`, fallback su `AllAge`,
 nessuna produzione, `AddResourcesWhenMotivatedAbility`) — tutti passano sui dati reali.
 
+**Esempio recente di questa coerenza gemella (luglio 2026): fix BeniG in
+`extractProduction`.** `extractProduction` (funzione privata di `BuildingModel`, non
+`extractMonMat` — estrae PF/PFB/BeniG, non Mon/Mat) leggeva `BeniG` (beni di gilda)
+SOLO dalla chiave `all_goods_of_age` dentro `guildResources.resources`, in 4 punti
+distinti (produzione diretta, produzione `"random"` con `dropChance`,
+`AddResourcesToGuildTreasuryAbility`, chain bonuses productions). Bug scoperto
+dall'utente su `W_MultiAge_FALL21A10` ("Golden Crops Harvest"): `BeniG` risultava vuoto
+nonostante il gioco mostri un bonus di gilda reale. Causa: 3 edifici della famiglia
+"Golden Crops" (`W_MultiAge_FALL21A10/11/12`) usano invece la chiave
+`random_good_of_age` per lo stesso concetto — verificato su MainParser: 5602
+occorrenze di `guildResources` con `all_goods_of_age` nelle vicinanze, contro solo 132
+con `random_good_of_age`, tutte riconducibili a questi 3 id (non un problema diffuso).
+Corretto lo stesso identico bug in ENTRAMBI i lati (`_extract_production_stats()` in
+`buildings.py`, `extractProduction()` in TS), stessi 4 punti in ciascun file,
+aggiungendo `random_good_of_age` come fallback quando `all_goods_of_age` è assente —
+stessa convenzione già in uso per il campo `Beni` normale (`GOODS_KEYS["Beni"]` in
+Python, l'array `beni: [...]` in `BuildingModel.ts`, che trattano da tempo le due
+chiavi come sinonimi per quel campo). Il fallback 1b (edifici vecchio stile con
+`entity_levels`, che usa il campo `type` letterale `"all_goods_of_age"` — pattern
+strutturalmente diverso, non una chiave dentro `guildResources.resources`) è stato
+lasciato invariato su entrambi i lati: nessuna prova che i 3 Golden Crops (edifici
+moderni con `components`) lo attraversino. Validato: diff mirato sulla sola colonna
+`BeniG` tra CSV vecchio e nuovo mostra ESATTAMENTE 3 righe cambiate (120/150/300 per i
+tre livelli base/feast/ascended), zero altri edifici o campi toccati.
+
 > **Nota anti-regressione.** Il calcolo di area e dimensione esiste in **due** posti con
 > scopi diversi e non vanno duplicati "per comodità": `getCityEntitySize` /
 > `areaFromCityEntity`-style derivano le dimensioni dal componente `CityEntity` (usato

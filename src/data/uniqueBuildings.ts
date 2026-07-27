@@ -13,7 +13,7 @@ import uniqueCsv from "../assets/unique.csv?raw";
  * Vite `?raw` (compatibile con vite-plugin-singlefile, niente fetch a
  * runtime) + parsing module-level una tantum, non un useState/useMemo.
  */
-export const UNIQUE_BUILDING_IDS: Set<string> = new Set(
+const UNIQUE_BUILDING_IDS: Set<string> = new Set(
   uniqueCsv
     .split(/\r?\n/)
     .map((line) => line.trim())

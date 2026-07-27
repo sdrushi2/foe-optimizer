@@ -490,7 +490,14 @@ export class BuildingModel {
         for (const p of BuildingModel.asArr(option.products).map(BuildingModel.asObj)) {
           const sp = BuildingModel.asObj(BuildingModel.asObj(p.playerResources).resources).strategy_points;
           if (sp != null) { pf += BuildingModel.num(sp); foundPf = true; }
-          const ag = BuildingModel.asObj(BuildingModel.asObj(p.guildResources).resources).all_goods_of_age;
+          // BeniG diretto in guildResources. Chiave normalmente "all_goods_of_age",
+          // ma un piccolo numero di edifici (es. famiglia W_MultiAge_FALL21A10/11/12
+          // "Golden Crops") usa invece "random_good_of_age" per lo stesso concetto —
+          // stesso bug/fix gemello di buildings.py (_extract_production_stats),
+          // scoperto luglio 2026 su FALL21A10 (BeniG mancante nonostante il gioco lo
+          // mostri). "all_goods_of_age" resta il caso dominante, va provato per primo.
+          const grRes = BuildingModel.asObj(p.guildResources).resources;
+          const ag = BuildingModel.asObj(grRes).all_goods_of_age ?? BuildingModel.asObj(grRes).random_good_of_age;
           if (ag != null) benig += BuildingModel.num(ag);
           if (BuildingModel.str(p.type) === "random") {
             for (const entry of BuildingModel.asArr(p.products).map(BuildingModel.asObj)) {
@@ -498,7 +505,8 @@ export class BuildingModel {
               const drop = BuildingModel.num(entry.dropChance);
               const spR = BuildingModel.asObj(BuildingModel.asObj(prod.playerResources).resources).strategy_points;
               if (spR != null) { pf += BuildingModel.num(spR) * drop; foundPf = true; }
-              const agR = BuildingModel.asObj(BuildingModel.asObj(prod.guildResources).resources).all_goods_of_age;
+              const grResR = BuildingModel.asObj(prod.guildResources).resources;
+              const agR = BuildingModel.asObj(grResR).all_goods_of_age ?? BuildingModel.asObj(grResR).random_good_of_age;
               if (agR != null) benig += BuildingModel.num(agR) * drop;
             }
           }
@@ -532,7 +540,8 @@ export class BuildingModel {
         }
         if (cls === "AddResourcesToGuildTreasuryAbility" && benig === 0) {
           for (const eraKey of [era, "AllAge"]) {
-            const ag = BuildingModel.asObj(BuildingModel.asObj(addRes[eraKey]).resources).all_goods_of_age;
+            const eraRes = BuildingModel.asObj(addRes[eraKey]).resources;
+            const ag = BuildingModel.asObj(eraRes).all_goods_of_age ?? BuildingModel.asObj(eraRes).random_good_of_age;
             if (ag) { benig = BuildingModel.num(ag); break; }
           }
         }
@@ -560,7 +569,8 @@ export class BuildingModel {
       for (const p of BuildingModel.asArr(bonus.productions).map(BuildingModel.asObj)) {
         const sp = BuildingModel.asObj(BuildingModel.asObj(p.playerResources).resources).strategy_points;
         if (sp != null) { pf += BuildingModel.num(sp); foundPf = true; }
-        const ag = BuildingModel.asObj(BuildingModel.asObj(p.guildResources).resources).all_goods_of_age;
+        const grResChain = BuildingModel.asObj(p.guildResources).resources;
+        const ag = BuildingModel.asObj(grResChain).all_goods_of_age ?? BuildingModel.asObj(grResChain).random_good_of_age;
         if (ag != null) benig += BuildingModel.num(ag);
       }
     }
