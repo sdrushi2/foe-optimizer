@@ -6117,21 +6117,34 @@ export default function App() {
                         {showProdColumns && (
                           <th className="text-center section-divider text-orange-400/80" colSpan={20}>
                             {t("groupProductions", uiLang)}
-                            {/* Database: il CSV statico è sempre fissato all'era MASSIMA
-                                disponibile (BOOST_ERA/FALLBACK_ERA) — esplicitarlo evita
-                                di scambiare quei valori per quelli dell'era del giocatore.
-                                Inventario NON riceve questa dicitura per ora, pur venendo
-                                anch'esso in maggioranza dal CSV statico (resolveInventoryBase
-                                usa processedBuildingsMap come prima scelta): scelta esplicita
-                                dell'utente, non generalizzare senza chiedere. Città: i valori
-                                sono invece riferiti all'era corrente del giocatore (vedi
-                                applyEraStats), anche per le copie di ere precedenti. */}
+                            {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
+                                salta applyEraStats (isGameTab è falso), quindi i valori sono
+                                SEMPRE quelli del CSV statico all'era MASSIMA (BOOST_ERA/
+                                FALLBACK_ERA) — esplicitarlo evita di scambiarli per quelli
+                                dell'era del giocatore.
+                                Città E Inventario: eraAdjustedSource applica applyEraStats a
+                                ENTRAMBE (isGameTab = "propria_citta" || "inventario"). In
+                                teoria l'override per riga dipende da eraStats.has(cityEntityId)
+                                (vedi quella Map in App.tsx: costruita da TUTTI gli entityId di
+                                cityEntities con isInCity||isInCsv||isInventoryChain — isInCsv
+                                da solo è già vero per la stragrande maggioranza degli edifici
+                                del gioco), quindi in pratica l'override scatta per quasi ogni
+                                riga indipendentemente dal possesso reale. Verificato dal vivo
+                                (luglio 2026) con un badge diagnostico temporaneo su
+                                eraStats.has(cityEntityId) per ogni riga di Inventario: ZERO
+                                righe mancavano l'override su un profilo reale con inventario
+                                pieno — da qui la decisione di mostrare la dicitura anche in
+                                Inventario. Il caso "riga rimasta a FALLBACK_ERA" resta
+                                teoricamente possibile (un cityEntityId assente sia dal CSV sia
+                                da cityEntities) ma è un'eccezione più unica che rara, non la
+                                norma: non usare più "Inventario ha valori misti" come premessa
+                                di design altrove nel codice. */}
                             {activeTab === "database" && (
                               <span className="ml-1.5 font-normal normal-case text-orange-300/70">
-                                ({t("prodValuesOfEra", uiLang, ageName(FALLBACK_ERA, gameLang))})
+                                ({t("prodValuesOfEra", uiLang, ageName(FALLBACK_ERA, uiLang))})
                               </span>
                             )}
-                            {activeTab === "propria_citta" && currentEra && (
+                            {(activeTab === "propria_citta" || activeTab === "inventario") && currentEra && (
                               <span className="ml-1.5 font-normal normal-case text-orange-300/70">
                                 ({t("prodValuesOfEra", uiLang, ageName(currentEra, gameLang))})
                               </span>

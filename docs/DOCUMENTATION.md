@@ -1964,8 +1964,8 @@ Stato aggiuntivo caricato da `CityStore` all'import:
 `exactBuildingSum` (definito dentro il rendering della tab statistiche) calcola somme
 esatte tenendo conto che le copie di un edificio possono essere in ere diverse.
 
-**Semantica dell'override era (`applyEraStats`) — comportamento voluto.** Nella tab
-Città l'override è **totale**: boost militari/IQ, pop, fel e ogni produzione vengono
+**Semantica dell'override era (`applyEraStats`) — comportamento voluto.** L'override è
+**totale** quando scatta: boost militari/IQ, pop, fel e ogni produzione vengono
 sostituiti con i valori dell'**era corrente del giocatore**, anche per le copie di ere
 precedenti. La riga è quindi il *potenziale alla propria era*; la precisione per-copia
 vive nel triangolino "obsoleto" (tooltip col confronto era vecchia → corrente) e nel
@@ -1975,18 +1975,47 @@ esplicitarlo, l'header di gruppo "📦 PRODUZIONI" nella tab Città mostra "(val
 l'era del municipio del giocatore). Non "correggere" la riga per mostrare l'era reale
 della copia: la decisione è stata presa consapevolmente con l'utente (luglio 2026).
 
-⚠️ **Nota di precisione (luglio 2026): questo override NON si applica alla tab
-Inventario.** `resolveInventoryBase` (App.tsx) usa `processedBuildingsMap` — cioè il
-CSV statico, sempre fissato a `FALLBACK_ERA` (l'era massima disponibile) — come prima
-scelta per ogni riga; solo gli id ASSENTI dal CSV (tipicamente militari/GE presi da
-`fallbackBuildings`, cioè `CityEntities` della città importata) ricevono valori
-all'era corrente del giocatore. Quindi la maggioranza delle righe in Inventario mostra
-valori all'era massima, non all'era del giocatore — stessa situazione della tab
-Database. Per coerenza, l'header di gruppo "📦 PRODUZIONI" mostra "(valori di <era
-massima>)" anche in tab **Database** (stessa dicitura di Città, `prodValuesOfEra` +
-`ageName(FALLBACK_ERA, gameLang)`), ma **non** ancora in tab Inventario: scelta
-esplicita dell'utente di non generalizzare automaticamente, da rivalutare se richiesto
-in futuro.
+⚠️ **Precisazione importante (luglio 2026): `applyEraStats` è applicato ANCHE in tab
+Inventario, non solo in Città.** `eraAdjustedSource` (App.tsx) decide se saltare
+l'override con `isGameTab = activeTab === "propria_citta" || activeTab === "inventario"`
+— quindi l'unica tab dove l'override è garantito assente è **Database**. In Inventario
+(righe INV/FAB/KIT) e nelle righe merged da Inventario in Città (`_isMergedInventory`,
+`mergedInventory = inventorySource.map(b => ({ ...b, _isMergedInventory: true }))`,
+uno spread puro senza guardie), il valore di partenza viene comunque preso da
+`resolveInventoryBase` (CSV/`processedBuildingsMap` in prima battuta, `fallbackBuildings`
+come fallback per gli id assenti dal CSV — vedi §13bis) ma **`applyEraStats` viene poi
+applicato sopra, indiscriminatamente**. In teoria la discriminante per riga è **se
+`eraStats` (Map costruita dalla città importata) ha un'entry per quel `cityEntityId`**:
+se sì, il valore CSV viene sovrascritto con `currentEra` — anche per righe
+"potenziali" (badge KIT/FAB), perché `applyEraStats` guarda solo `cityEntityId`, non il
+tipo di riga; se non c'è un'entry, il valore CSV resta a `FALLBACK_ERA` intatto.
+
+**Ma in pratica questo override scatta per QUASI OGNI riga, indipendentemente dal
+possesso reale** — `eraStats` (App.tsx, dove viene popolata) include un'entry per ogni
+`entityId` con `isInCity || isInCsv || isInventoryChain` (più dati validi in
+`cityEntities`), e **`isInCsv` da sola è già vera per la stragrande maggioranza degli
+edifici del gioco** (quasi tutto `buildings.csv`, ~2100 id): non serve possedere
+l'edificio in quella città perché scatti l'override, basta che l'id esista nel CSV e
+abbia dati nel dizionario di gioco scaricato (`cityEntities`, l'intero MainParser, non
+solo la città del giocatore). Verificato dal vivo (luglio 2026) con un badge
+diagnostico temporaneo (`⚠️` accanto al nome quando `eraStats.has(cityEntityId)` è
+`false` in una tab di gioco) su un profilo reale con inventario pieno: **zero righe**
+mostravano il badge su tutta la tab Inventario — cioè nessuna riga era rimasta al
+CSV/FALLBACK_ERA. Il caso "riga rimasta a FALLBACK_ERA" resta teoricamente possibile
+(un `cityEntityId` assente sia dal CSV sia da `cityEntities`) ma è un'eccezione più
+unica che rara, non la norma.
+
+Per questo motivo l'header "📦 PRODUZIONI" mostra "(valori di <era>)" in **tutte e tre
+le tab** (`prodValuesOfEra`): Database con `ageName(FALLBACK_ERA, uiLang)` (l'unica
+tab senza override, sempre CSV puro — nome dell'era in `uiLang`, non `gameLang`,
+coerente col resto della tab Database dove i nomi edificio seguono la lingua della GUI
+e non quella del profilo importato; corretto luglio 2026, era rimasto `gameLang` per
+copia-incolla dalla versione Città), Città e Inventario entrambe con
+`ageName(currentEra, gameLang)` (l'era del municipio del giocatore, lingua del
+profilo/gioco importato) — condizione `(activeTab === "propria_citta" ||
+activeTab === "inventario") && currentEra`. **Non riprendere l'idea di "Inventario ha
+valori misti riga per riga"** come premessa di design altrove nel codice: era
+un'ipotesi plausibile in teoria, smentita dalla verifica empirica.
 
 **Altre aggiunte recenti da conoscere (luglio 2026):**
 
