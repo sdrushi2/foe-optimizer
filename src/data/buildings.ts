@@ -1,5 +1,6 @@
 import { LANGUAGES, type Lang } from "./languages";
 import { isGreatBuildingId, isMilitaryBuildingId, isInactiveBuildingId, isGoodsFactoryId } from "./buildingClassification";
+import { isUniqueBuildingId } from "./uniqueBuildings";
 
 export interface Building {
   id: string;
@@ -83,6 +84,11 @@ export interface Building {
    *  UNKNOWN. Distinto da isFallback (che vale anche per building da CityEntities
    *  la cui struttura produzione non è ancora estratta). */
   isUnresolved?: boolean;
+  /** True se l'edificio è nell'elenco "unique.csv" della pipeline esterna:
+   *  non ottenibile da nessun kit di selezione/aggiornamento posseduto (es.
+   *  i premi diretti di lega oro/argento degli eventi). Vedi
+   *  data/uniqueBuildings.ts per la fonte e i dettagli. */
+  unique?: boolean;
   fragments: string;
 }
 
@@ -335,6 +341,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
       isInactive: isInactiveBuildingId(cityEntityId),
       isMilitary: isMilitaryBuildingId(cityEntityId),
       isGoods: isGoodsFactoryId(cityEntityId),
+      unique: isUniqueBuildingId(cityEntityId),
       isFallback: false,
     };
   });

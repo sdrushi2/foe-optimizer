@@ -241,6 +241,13 @@ body {
     @apply px-2 text-left truncate;
   }
 
+  /* Edifici "unici" (Building.unique, vedi data/uniqueBuildings.ts): SOLO in
+     tab Database, per ora (className condizionale applicata in App.tsx solo
+     quando activeTab === "database"). Colora solo il testo del nome, oro. */
+  .building-table tbody td.cell-name.unique {
+    color: gold;
+  }
+
   /* Variante flex: SOLO <td> del body della tabella principale edifici
      (.has-name-divider, sempre presente su di essa, mai sulle tabelle
      Alleati — vedi App.tsx). NON sul <th> dell'header: quello contiene solo

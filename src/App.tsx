@@ -1104,7 +1104,7 @@ const BuildingRow = memo(function BuildingRow({
         })()}
       </td>
       <td
-        className={`cell-name ${b.isGreatBuilding ? "text-slate-100" : ""}`}
+        className={`cell-name${activeTab === "database" && b.unique ? " unique" : ""} ${b.isGreatBuilding ? "text-slate-100" : ""}`}
         // Tooltip col nome completo: la cella (nome + eventuali badge inline,
         // es. 🧩 frammenti) è troncata con ellissi (.cell-name usa
         // `truncate`, vedi index.css) quando il CONTENUTO TOTALE eccede i
