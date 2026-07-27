@@ -1646,6 +1646,18 @@ const UI_STRINGS = {
     it: "Nessun edificio trovato.",
     en: "No buildings found.",
   },
+  noCityImportedYet: {
+    it: "Nessuna città importata. Usa la bacchetta magica in alto a sinistra",
+    en: "No city imported yet. Use the magic wand in the top left",
+  },
+  noInventoryImportedYet: {
+    it: "Nessun inventario importato. Usa la bacchetta magica in alto a sinistra",
+    en: "No inventory imported yet. Use the magic wand in the top left",
+  },
+  noImportedYetSuffix: {
+    it: "per importare i tuoi dati da Forge of Empires.",
+    en: "to import your data from Forge of Empires.",
+  },
   noAlliesFound: {
     it: "Nessun alleato trovato con questa ricerca.",
     en: "No allies found for this search.",

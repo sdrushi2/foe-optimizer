@@ -6284,13 +6284,49 @@ export default function App() {
                         />
                       ))}
  
-                      {filteredBuildings.length === 0 && (
-                        <tr>
-                          <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 20 : 0)} className="text-center py-12 text-slate-400 font-semibold">
-                            {t("noBuildingsFound", uiLang)}
-                          </td>
-                        </tr>
-                      )}
+                      {filteredBuildings.length === 0 && (() => {
+                        // Messaggio dedicato quando la tab è vuota per MANCANZA DI IMPORT
+                        // (nessun profilo caricato), non per filtri troppo stringenti: il
+                        // generico "Nessun edificio trovato" non guida un utente nuovo verso
+                        // l'azione giusta (usare la bacchetta magica). Scoped a Città/Inventario
+                        // — in Database filteredBuildings vuoto è sempre un caso di filtri.
+                        const noCityImported = activeTab === "propria_citta" && cityEntityIds.size === 0;
+                        const noInventoryImported = activeTab === "inventario" &&
+                          inventoryMatched.size === 0 && inventoryUnmatched.size === 0 &&
+                          inventorySelectionKits.size === 0 && inventoryUpgradeKits.size === 0;
+                        const showWandCta = noCityImported || noInventoryImported;
+                        const emptyMessagePrefix = noCityImported
+                          ? t("noCityImportedYet", uiLang)
+                          : noInventoryImported
+                          ? t("noInventoryImportedYet", uiLang)
+                          : t("noBuildingsFound", uiLang);
+                        return (
+                          <tr>
+                            <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 20 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                              <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
+                                <span>{emptyMessagePrefix}</span>
+                                {/* SOLO riferimento visivo al pulsante reale della toolbar
+                                    (stesso stile/icona), NON cliccabile, incorporato nel
+                                    flusso della frase ("...in alto a sinistra [icona] per
+                                    importare..."): un secondo elemento interattivo in mezzo
+                                    alla tabella, con lo stesso drag&drop del bookmarklet,
+                                    risultava confuso ("sembra un secondo pulsante ufficiale")
+                                    — l'utente ha chiesto di lasciare solo l'indicazione visiva,
+                                    senza duplicare l'azione (luglio 2026). */}
+                                {showWandCta && (
+                                  <span
+                                    className="relative inline-flex items-center justify-center w-7 h-7 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 shrink-0"
+                                    aria-hidden="true"
+                                  >
+                                    <Wand2 size={13} />
+                                  </span>
+                                )}
+                                {showWandCta && <span>{t("noImportedYetSuffix", uiLang)}</span>}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })()}
                     </tbody>
                   </table>
                 </div>

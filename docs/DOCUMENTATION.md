@@ -2019,6 +2019,39 @@ un'ipotesi plausibile in teoria, smentita dalla verifica empirica.
 
 **Altre aggiunte recenti da conoscere (luglio 2026):**
 
+- **Messaggio placeholder dedicato per Città/Inventario senza profilo importato**
+  — il vecchio placeholder di riga vuota (`filteredBuildings.length === 0`) mostrava
+  sempre il generico `noBuildingsFound` ("Nessun edificio trovato"), lo stesso testo
+  sia per "hai importato ma i filtri escludono tutto" sia per "non hai importato
+  nulla" — quest'ultimo caso è comune per un utente nuovo che clicca Città/Inventario
+  prima di usare la bacchetta magica, e il messaggio generico non lo guidava
+  verso l'azione giusta. Distinzione fatta con una IIFE nel punto del placeholder:
+  `noCityImported = activeTab === "propria_citta" && cityEntityIds.size === 0`;
+  `noInventoryImported = activeTab === "inventario" && inventoryMatched.size === 0 &&
+  inventoryUnmatched.size === 0 && inventorySelectionKits.size === 0 &&
+  inventoryUpgradeKits.size === 0` (stessa condizione di `hasData` in
+  `familyResults`, riscritta qui perché quella è interna a un altro `useMemo`).
+  Se una delle due è vera, il testo è composto da TRE chiavi in `ui-strings.ts`
+  concatenate nel JSX su una `<div>` flex-wrap (mai una stringa unica, per poter
+  incorporare l'icona in mezzo alla frase): `noCityImportedYet`/
+  `noInventoryImportedYet` ("Usa la bacchetta magica in alto a sinistra") + il
+  **riferimento visivo NON cliccabile** (icona `Wand2`, stesso stile emerald del
+  pulsante reale in toolbar, ma uno `<span aria-hidden>` senza `onClick`/
+  `draggable` — resa non interattiva su richiesta esplicita dell'utente: un
+  secondo elemento cliccabile con lo stesso drag&drop del bookmarklet in mezzo
+  alla tabella risultava confuso, letto come "un secondo pulsante ufficiale"
+  invece che un rimando visivo al primo) + `noImportedYetSuffix` ("per importare
+  i tuoi dati da Forge of Empires."), risultando nella frase completa "Usa la
+  bacchetta magica in alto a sinistra [icona] per importare i tuoi dati da Forge
+  of Empires." (luglio 2026, iterata più volte sul testo esatto). Altrimenti resta
+  `noBuildingsFound` come prima. Scoped a
+  Città/Inventario: in Database una tabella vuota è sempre un caso di filtri, mai
+  di "dati mancanti" (il CSV è sempre presente). Decisione di design collegata:
+  le tab Città/Inventario restano SEMPRE visibili nella barra anche senza alcun
+  profilo caricato (non nascoste), per non far percepire l'app come "solo un
+  database" a un utente nuovo — l'ottimizzatore/import è la funzione distintiva
+  del tool; il problema reale era il messaggio vuoto non informativo, non la
+  visibilità delle tab.
 - **Ricerca con debounce** — `setDebouncedSearchTerm` + `prevSearchTermRef`: il
   filtro testo non rielabora la tabella a ogni tasto.
 - **Filtro "Store building"** — `showStoreBuildingBuildings` in `TabFilters`
