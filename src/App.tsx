@@ -6117,10 +6117,20 @@ export default function App() {
                         {showProdColumns && (
                           <th className="text-center section-divider text-orange-400/80" colSpan={20}>
                             {t("groupProductions", uiLang)}
-                            {/* Solo tab Città: i valori delle righe sono riferiti all'era
-                                corrente del giocatore (vedi applyEraStats), anche per le
-                                copie di ere precedenti — esplicitarlo evita di scambiare
-                                il valore "alla tua era" per quello reale della copia. */}
+                            {/* Database: il CSV statico è sempre fissato all'era MASSIMA
+                                disponibile (BOOST_ERA/FALLBACK_ERA) — esplicitarlo evita
+                                di scambiare quei valori per quelli dell'era del giocatore.
+                                Inventario NON riceve questa dicitura per ora, pur venendo
+                                anch'esso in maggioranza dal CSV statico (resolveInventoryBase
+                                usa processedBuildingsMap come prima scelta): scelta esplicita
+                                dell'utente, non generalizzare senza chiedere. Città: i valori
+                                sono invece riferiti all'era corrente del giocatore (vedi
+                                applyEraStats), anche per le copie di ere precedenti. */}
+                            {activeTab === "database" && (
+                              <span className="ml-1.5 font-normal normal-case text-orange-300/70">
+                                ({t("prodValuesOfEra", uiLang, ageName(FALLBACK_ERA, gameLang))})
+                              </span>
+                            )}
                             {activeTab === "propria_citta" && currentEra && (
                               <span className="ml-1.5 font-normal normal-case text-orange-300/70">
                                 ({t("prodValuesOfEra", uiLang, ageName(currentEra, gameLang))})

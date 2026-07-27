@@ -685,7 +685,10 @@ scrivere un CSV vuoto che sembrerebbe un run riuscito).
 - **`buildings.py`** — genera `buildings.csv` da MainParser + ForgeHX (nome storico:
   `city_entities_to_csv.py`, ancora citato così nei commenti di `BuildingModel.ts`).
   Il parser del FileList usa una scansione a graffe bilanciate (robusta
-  all'annidamento), la stessa tecnica di `getIcons.py`.
+  all'annidamento), la stessa tecnica di `getIcons.py`. `BOOST_ERA`/`PREV_ERA`
+  (l'era corrente/precedente usate per estrarre boost/statistiche/blueprint,
+  ~30 punti nel file) sono lette dinamicamente da `ages.db` invece di essere
+  due stringhe hardcoded — vedi §8bis.5.
 - **`allies.py`** — genera `allies.csv` da `Allies.txt`/`Allies_ita.txt`. Il parsing
   tollera tre formati (nuovo `{"Allies":{...}}`, vecchio `MainParser.Allies`, oggetto
   bare — così funziona anche sui file d'archivio) e recupera gli alleati completi
@@ -713,6 +716,50 @@ scrivere un CSV vuoto che sembrerebbe un run riuscito).
 dell'algoritmo Mon/Mat di `buildings.py`: il CSV statico e la città importata devono
 restare coerenti *per costruzione*. Se si modifica l'algoritmo su un lato, va
 modificato anche l'altro — non basta rigenerare il CSV.
+
+### 8bis.5 Supporto a nuove ere: `ages.db` (luglio 2026)
+
+Quando FoE rilascia una nuova era di gioco (es. ipotetica "Stellar Age
+Discovery"), l'app TypeScript la supporta **senza alcuna modifica di
+codice**: basta aggiungere una riga a `src/assets/ages.csv` (§7, §10) — il
+parsing in `data/ages.ts` è già completamente dinamico (nessuna era è mai
+elencata esplicitamente in un array/union type/switch nel frontend).
+
+L'unico punto che richiedeva un aggiornamento manuale era la pipeline Python:
+`buildings.py` aveva due costanti hardcoded, `BOOST_ERA = "SpaceAgeSpaceHub"`
+e `PREV_ERA = "SpaceAgeTitan"`, usate in ~30 punti per estrarre boost
+militari/IQ, statistiche e blueprint "dell'era corrente" dal `MainParser`
+(oltre a una regex `SpaceAgeSpaceHub(\d+)` per un reward id "higher age
+chest"). Senza aggiornarle a ogni nuova era, lo script avrebbe continuato a
+leggere silenziosamente i dati dalla vecchia era (ormai penultima),
+producendo un `buildings.csv` con statistiche stagnanti per tutti gli
+edifici multi-era.
+
+**Risolto rendendo `BOOST_ERA`/`PREV_ERA` derivate da un file esterno,
+`ages.db`** (in RECUPERO DATI, fuori dal repo dell'app): stesso identico
+formato/contenuto di `src/assets/ages.csv` (`id;age;NomeIta;NomeEng`),
+rinominato apposta in `.db` per non essere cancellato per errore insieme
+agli altri `.csv` temporanei della pipeline (§8bis.3). All'avvio,
+`_load_boost_and_prev_era()` legge `ages.db`, ordina per `id` e restituisce
+`(era_con_id_più_alto, era_precedente)` — fail-fast (`SystemExit`) se il
+file manca o contiene meno di 2 righe, per non produrre silenziosamente un
+CSV con dati sbagliati. La regex `SpaceAgeSpaceHub(\d+)` diventa
+`re.escape(BOOST_ERA) + r"(\d+)"`, costruita a runtime.
+
+**Lato TypeScript**, lo stesso pattern hardcoded esisteva in
+`BuildingModel.bpFromRewardId` (§13): una regex `/SpaceAgeSpaceHub(\d+)/`
+per lo stesso reward id "higher age chest". Qui non serve leggere un file
+a parte: `FALLBACK_ERA` (`data/ages.ts`, §10) è già per definizione "il
+codice dell'era con l'id più alto in `ages.csv`" — la regex è quindi
+costruita con `new RegExp(\`${FALLBACK_ERA}(\\d+)\`)`, riusando un valore
+già importato nel modulo.
+
+**Nota per chi aggiunge una nuova era in futuro**: `ages.db` (Python) e
+`ages.csv` (TypeScript) restano DUE file fisicamente distinti — vivono in
+due repo separati (pipeline dati esterna vs. app) — e vanno editati
+entrambi a mano, con lo stesso id/nome era, esattamente come già avviene
+per buildings.csv/allies.csv/kit.json quando cambia qualcosa lato dati. Non
+esiste un meccanismo che li tenga sincronizzati automaticamente.
 
 ---
 
@@ -1141,9 +1188,12 @@ esterno al progetto: `buildings.py` nella pipeline RECUPERO DATI (§8bis; nome s
 `city_entities_to_csv.py`, ancora citato così nei commenti di `BuildingModel.ts`).
 Quello script genera `buildings.csv` partendo da un dump offline del gioco
 (`MainParser.txt`); questa funzione TypeScript fa lo stesso lavoro sui dati live del
-bookmarklet (`CityEntityDefinition`), per le città importate. Le due fonti (CSV statico, sempre fissato all'era `SpaceAgeSpaceHub`, e città
-importata, sull'era reale del giocatore) devono restare coerenti per costruzione: se
-l'algoritmo Python cambia, va aggiornata anche questa funzione, e viceversa.
+bookmarklet (`CityEntityDefinition`), per le città importate. Le due fonti (CSV
+statico, sempre fissato all'era MASSIMA disponibile — `BOOST_ERA`/`FALLBACK_ERA`,
+derivata dinamicamente da `ages.db`/`ages.csv`, non più una stringa hardcoded,
+vedi §8bis.5 — e città importata, sull'era reale del giocatore) devono restare
+coerenti per costruzione: se l'algoritmo Python cambia, va aggiornata anche
+questa funzione, e viceversa.
 
 L'algoritmo, in tre passi (eseguiti in ordine, fermandosi al primo che produce un dato):
 
@@ -1914,16 +1964,29 @@ Stato aggiuntivo caricato da `CityStore` all'import:
 `exactBuildingSum` (definito dentro il rendering della tab statistiche) calcola somme
 esatte tenendo conto che le copie di un edificio possono essere in ere diverse.
 
-**Semantica dell'override era (`applyEraStats`) — comportamento voluto.** Nelle tab
-Città e Inventario l'override è **totale**: boost militari/IQ, pop, fel e ogni
-produzione vengono sostituiti con i valori dell'**era corrente del giocatore**, anche
-per le copie di ere precedenti. La riga è quindi il *potenziale alla propria era*; la
-precisione per-copia vive nel triangolino "obsoleto" (tooltip col confronto era
-vecchia → corrente) e nel riepilogo PROD+STAT (somme esatte per era via
-`entityInstanceEraStats`). Per esplicitarlo, l'header di gruppo "📦 PRODUZIONI" nella
-sola tab Città mostra "(valori di <era>)" (`prodValuesOfEra` +
-`ageName(currentEra, gameLang)`). Non "correggere" la riga per mostrare l'era reale
+**Semantica dell'override era (`applyEraStats`) — comportamento voluto.** Nella tab
+Città l'override è **totale**: boost militari/IQ, pop, fel e ogni produzione vengono
+sostituiti con i valori dell'**era corrente del giocatore**, anche per le copie di ere
+precedenti. La riga è quindi il *potenziale alla propria era*; la precisione per-copia
+vive nel triangolino "obsoleto" (tooltip col confronto era vecchia → corrente) e nel
+riepilogo PROD+STAT (somme esatte per era via `entityInstanceEraStats`). Per
+esplicitarlo, l'header di gruppo "📦 PRODUZIONI" nella tab Città mostra "(valori di
+<era>)" (`prodValuesOfEra` + `ageName(currentEra, gameLang)`, dove `currentEra` è
+l'era del municipio del giocatore). Non "correggere" la riga per mostrare l'era reale
 della copia: la decisione è stata presa consapevolmente con l'utente (luglio 2026).
+
+⚠️ **Nota di precisione (luglio 2026): questo override NON si applica alla tab
+Inventario.** `resolveInventoryBase` (App.tsx) usa `processedBuildingsMap` — cioè il
+CSV statico, sempre fissato a `FALLBACK_ERA` (l'era massima disponibile) — come prima
+scelta per ogni riga; solo gli id ASSENTI dal CSV (tipicamente militari/GE presi da
+`fallbackBuildings`, cioè `CityEntities` della città importata) ricevono valori
+all'era corrente del giocatore. Quindi la maggioranza delle righe in Inventario mostra
+valori all'era massima, non all'era del giocatore — stessa situazione della tab
+Database. Per coerenza, l'header di gruppo "📦 PRODUZIONI" mostra "(valori di <era
+massima>)" anche in tab **Database** (stessa dicitura di Città, `prodValuesOfEra` +
+`ageName(FALLBACK_ERA, gameLang)`), ma **non** ancora in tab Inventario: scelta
+esplicita dell'utente di non generalizzare automaticamente, da rivalutare se richiesto
+in futuro.
 
 **Altre aggiunte recenti da conoscere (luglio 2026):**
 

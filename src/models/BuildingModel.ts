@@ -725,7 +725,13 @@ export class BuildingModel {
     if (rtype === "blueprint") return BuildingModel.num(rv.amount);
     if (BP_BOX_AMOUNTS[rid] !== undefined) return BP_BOX_AMOUNTS[rid];
     if (rtype === "chest" && rid.includes("higher_age")) {
-      const m = rid.match(/SpaceAgeSpaceHub(\d+)/);
+      // FALLBACK_ERA (data/ages.ts) è l'era con l'id più alto in ages.csv:
+      // il gioco genera questo reward id incorporando il codice dell'era
+      // corrente (es. "...SpaceAgeSpaceHub12..."), quindi va ricavato
+      // dinamicamente invece di un codice era hardcoded — altrimenti
+      // smetterebbe di matchare non appena esce una nuova era (gemello
+      // Python: BOOST_ERA in RECUPERO DATI/buildings.py, stessa logica).
+      const m = rid.match(new RegExp(`${FALLBACK_ERA}(\\d+)`));
       return m ? parseInt(m[1], 10) : 0;
     }
     return 0;
