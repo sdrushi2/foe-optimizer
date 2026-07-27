@@ -569,6 +569,41 @@ Due tipi di token (gestiti da `buildingMatchesEvent` in App.tsx):
 Il file è generato da `events.py` nella pipeline RECUPERO DATI (§8bis), lanciato
 manualmente ~1 volta al mese; l'output va copiato a mano in `src/assets`. Vedi §23.
 
+### 8.4bis `unique.csv` — edifici non ottenibili da kit (luglio 2026)
+
+Formato minimale: un `cityEntityId` per riga, senza intestazione, senza altre
+colonne. Elenca gli edifici `W_MultiAge_*` che NON sono ottenibili tramite
+nessun kit di selezione o di aggiornamento posseduto — tipicamente i premi
+diretti di lega oro/argento degli eventi, che quindi l'ottimizzatore
+dell'inventario (§16) non può mai "costruire" a partire da un kit, perché non
+sono il risultato di un assemblaggio.
+
+Caricato da `data/uniqueBuildings.ts` con lo stesso pattern `?raw` di
+`events.csv` → `EVENTS_LIST` (import statico Vite, `Set<string>` costruito una
+tantum a livello di modulo — niente `fetch`/`useState`), che espone
+`isUniqueBuildingId(id)`. `buildings.ts` la usa per valorizzare
+`Building.unique` al parsing (§7, §12), stesso punto/stile dei flag di
+classificazione (`isGreatBuilding`/`isMilitary`/`isGoods`/`isInactive`).
+
+Generato da `unique.py` nella pipeline RECUPERO DATI (§8bis), step
+`PIPELINE_INFO` **non bloccante** di `aggiorna_dati.py`, eseguito DOPO
+`parse_kit.py` perché legge sia `MainParser.txt` sia `kit.json`: confronta
+ogni `building_id` del `MainParser` con `buildingUpgrades.steps` e
+`selectionKits.options` di `kit.json` — se non compare in nessuno dei due,
+l'edificio è "unico". Include una whitelist esplicita di 8 eccezioni note
+(entrambi i livelli di 4 building set — CARE25E, FALL23B, HIS26F, ANNI26E —
+dove sia il livello 1 sia il livello 2 sono premi di lega distinti, non un
+building normale semplicemente potenziato da un kit qualsiasi; il pattern
+dati che li caratterizza non è generalizzabile in automatico, perché è lo
+stesso schema di ~180 building set del gioco che *sono* costruiti da kit
+normalmente — vedi i commenti in testa a `unique.py` per il dettaglio).
+
+**Uso visivo attuale, SOLO in tab Database** (§24.3bis): il `<td
+className="cell-name">` di `BuildingRow` riceve la classe aggiuntiva
+`unique` quando `activeTab === "database" && b.unique`, e
+`.building-table tbody td.cell-name.unique { color: gold; }` (`index.css`)
+colora il testo del nome in oro. Non applicato a Città/Inventario/Alleati.
+
 ### 8.5 `kit.json` — catene di upgrade e selection kit
 
 È il file che alimenta l'ottimizzatore (§16). Ha due sezioni:
@@ -972,7 +1007,13 @@ generarli, segnala un CSV corrotto. Per ogni riga:
 - legge `Mon`/`Mat` (colonne subito dopo `BeniG` nel CSV, ma mostrate nella TABELLA
   all'inizio della sezione Produzioni — posizione CSV e posizione UI sono scelte
   indipendenti) e `IQmonB`/`IQmatB`/`IQmon`/`IQmat` (colonne subito dopo `IQDef_D`
-  nel CSV, mostrate all'inizio della sezione IQ in tabella).
+  nel CSV, mostrate all'inizio della sezione IQ in tabella);
+- assegna `unique: isUniqueBuildingId(cityEntityId)` (luglio 2026), stesso punto/
+  stile dei flag di classificazione sopra, ma NON derivato da una colonna del CSV
+  edifici: `isUniqueBuildingId` (in `data/uniqueBuildings.ts`) consulta un
+  `Set<string>` costruito da un file esterno separato, `assets/unique.csv` (un
+  `cityEntityId` per riga, senza intestazione) — vedi §8 per la fonte e §24.3bis
+  per l'uso visivo in tabella.
 
 ### `getImageUrl(id, hash)`
 Costruisce l'URL dell'immagine dell'edificio dai due formati di hash possibili. Se
@@ -1903,6 +1944,11 @@ della copia: la decisione è stata presa consapevolmente con l'utente (luglio 20
   spazio tra trigger e pannello (e copiare nome/ID) senza che il popup si chiuda.
 - **`SortableHeader` con prop `noGap`** — rimuove il gap icona/freccia SOLO nelle 20
   colonne strette della sezione Produzioni.
+- **Nome edificio "unico" colorato oro, SOLO in tab Database** (luglio 2026) — il
+  `<td className="cell-name">` riceve la classe aggiuntiva `unique` quando
+  `activeTab === "database" && b.unique` (`Building.unique`, §7/§8.4bis/§12);
+  `.building-table tbody td.cell-name.unique { color: gold; }` in `index.css`
+  colora solo il testo. Non applicato a Città/Inventario/Alleati.
 
 ### 24.3bis `BuildingRow`: la riga della tabella principale, estratta e memoizzata
 
