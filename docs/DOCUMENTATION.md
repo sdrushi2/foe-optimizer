@@ -1169,7 +1169,37 @@ di `guild_raids_goods_start`→`IQBeni`, target sempre `"all"`).
 
 - `extractPlayerEraFromCityMap(cityMap)` — trova l'era corrente del giocatore leggendo
   l'era del municipio (sempre presente, id=1, con id `H_{era}_Townhall`).
-- `computeRoad(cityEntity)` / `requiresRoad(...)` — fabbisogno stradale.
+- `computeRoad(cityEntity)` / `requiresRoad(...)` / `requiredRoadLevel(...)` —
+  fabbisogno stradale. `requiredRoadLevel` (luglio 2026) è la funzione di
+  riferimento: restituisce 0 (nessuna strada), 1 (strada a una corsia, tile
+  1×1) o 2 (strada a due corsie, tile 2×2), leggendo il valore NUMERICO reale
+  di `components.AllAge.streetConnectionRequirement.requiredLevel` o
+  `requirements.street_connection_level` (fallback stile vecchio) — non solo
+  la loro presenza. I Grandi Edifici restituiscono sempre 1 (regola di
+  dominio fissa, non letta dal JSON — deciso con l'utente di non
+  differenziare 1/2 corsie per i GE). `requiresRoad` resta un wrapper
+  booleano (`requiredRoadLevel(...) > 0`) per i call-site che si
+  preoccupano solo del fabbisogno in tile (es. `computeRoad`), non del
+  livello esatto. **Bug corretto (luglio 2026, segnalato dall'utente): il
+  badge "NON CONNESSO A STRADA" in App.tsx ignorava il livello richiesto.**
+  Sia `CityMapEntry.connected` (dato della città reale) sia
+  `requiredLevel`/`street_connection_level` (dato dell'edificio) sono
+  livelli numerici (1 o 2), non booleani: un edificio che richiede 2 corsie
+  ma è collegato solo a una strada a 1 corsia è SCOLLEGATO secondo il
+  gioco, anche se `connected` vale "1" (connesso, ma al livello sbagliato).
+  Il vecchio calcolo di `cityEntityDisconnected` (App.tsx, import città)
+  confrontava solo `Number(entry.connected ?? 0) >= 1` contro un
+  `requiresRoad` booleano, trattando qualunque connessione come
+  sufficiente — ignorando il caso. Verificato su MainParser: solo 2
+  building su ~2100 richiedono livello 2
+  (`W_SpaceAgeJupiterMoon_Residential1`/`Workshop1`), quasi tutti gli altri
+  con requisito esplicito richiedono livello 1 — bug raro ma reale, non un
+  caso limite trascurabile. Corretto confrontando `connectedLevel <
+  requiredRoadLevel` invece di un semplice booleano. **`buildings.py` non
+  necessita dello stesso fix**: `requires_road()`/`calc_road()` calcolano
+  solo il fabbisogno stradale in tile per il CSV statico — nessun concetto
+  di "connesso in una città reale" esiste lato Python, il fabbisogno non
+  dipende dal livello di corsie richiesto.
 - `getCityEntitySize(...)` — dimensioni `[width, length]`. **Nota:** nel JSON del gioco
   x/y risultano invertiti rispetto alla convenzione della tabella, quindi la stringa
   size prodotta è `"LxW"` (lunghezza × larghezza).

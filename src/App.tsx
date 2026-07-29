@@ -1194,12 +1194,12 @@ const BuildingRow = memo(function BuildingRow({
           })()}
         </span>
         {b.isGreatBuilding && (
-          <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 relative -top-[1px]">
+          <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40">
             {t("greatBuildingBadge", uiLang)}
           </span>
         )}
         {(activeTab === "inventario" || b._isMergedInventory) && b.isUnresolved && (
-          <span className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-red-950/60 text-red-400 border border-red-900 relative -top-[1px] cursor-help" title={t("unresolvedValuesTitle", uiLang)}>
+          <span className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-red-950/60 text-red-400 border border-red-900 cursor-help" title={t("unresolvedValuesTitle", uiLang)}>
             UNKNOWN
           </span>
         )}
@@ -1224,7 +1224,7 @@ const BuildingRow = memo(function BuildingRow({
           const disconnCount = disconnectedCount;
           if (disconnCount <= 0) return null;
           return (
-            <span className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-red-950 text-red-400 border border-red-600 relative -top-[2px]" title={t("disconnectedFromRoadTitle", uiLang)}>
+            <span className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-red-950 text-red-400 border border-red-600" title={t("disconnectedFromRoadTitle", uiLang)}>
               {t("disconnectedFromRoadBadge", uiLang)}
             </span>
           );
@@ -1234,7 +1234,7 @@ const BuildingRow = memo(function BuildingRow({
           if (!b.cityEntityId) return null;
           if (needlessCount <= 0) return null;
           return (
-            <span className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-amber-950 text-amber-400 border border-amber-600 relative -top-[2px]" title={t("needlesslyConnectedTitle", uiLang)}>
+            <span className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-amber-950 text-amber-400 border border-amber-600" title={t("needlesslyConnectedTitle", uiLang)}>
               {t("needlesslyConnectedBadge", uiLang, needlessCount)}
             </span>
           );
@@ -1245,7 +1245,7 @@ const BuildingRow = memo(function BuildingRow({
           if (!badge) return null;
           return (
             <span
-              className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-sky-950 text-sky-300 border border-sky-700 cursor-help relative -top-[1px]"
+              className="ml-1.5 inline-block flex-shrink-0 text-[10px] font-mono font-bold px-1 rounded bg-sky-950 text-sky-300 border border-sky-700 cursor-help"
               onMouseEnter={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 setUpgradeTooltip({ x: r.left, y: r.bottom, targets: badge.targets, kits: badge.kits });
@@ -1468,7 +1468,7 @@ const BuildingRow = memo(function BuildingRow({
              return (
                <>{qtyBadge}
                   <span
-                    className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-sky-950/60 text-sky-300 border border-sky-800 relative -top-[1px] cursor-help"
+                    className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-sky-950/60 text-sky-300 border border-sky-800 cursor-help"
                     onMouseEnter={(e) => {
                       const r = e.currentTarget.getBoundingClientRect();
                       setFabTooltip({ x: r.left, y: r.bottom, kitsUsed, sourceId, sourceLv, choices });
@@ -1486,7 +1486,7 @@ const BuildingRow = memo(function BuildingRow({
               return (
                 <>{qtyBadge}
                   <span
-                    className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 relative -top-[1px] cursor-help"
+                    className="ml-1.5 inline-block flex-shrink-0 text-[11px] font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40 cursor-help"
                     onMouseEnter={(e) => {
                       const r = e.currentTarget.getBoundingClientRect();
                       setFabTooltip({ x: r.left, y: r.bottom, kitsUsed, choices });
@@ -2376,18 +2376,27 @@ export default function App() {
           }
         }
 
-        const isConnected = Number(entry.connected ?? 0) >= 1;
+        const connectedLevel = Number(entry.connected ?? 0);
         const isMissingFromCsv = !CSV_ENTITY_IDS_SET.has(id);
 
         if (!isMissingFromCsv && !matched.has(id)) {
           matched.set(id, entry);
         }
 
-        // L'edificio richiede strada se lo dice CityEntities (logica unificata con il fallback)
+        // L'edificio richiede un LIVELLO di strada (0 = nessuna, 1 = una
+        // corsia, 2 = due corsie — vedi BuildingModel.requiredRoadLevel).
+        // È scollegato non solo se connectedLevel è 0, ma anche se è
+        // collegato a una corsia MA ne richiede due: nel gioco un edificio
+        // che richiede 2 corsie non è considerato connesso se la strada
+        // adiacente è a 1 corsia sola (bug corretto luglio 2026 — prima si
+        // trattava "connesso a qualunque livello" come sempre sufficiente,
+        // ignorando il caso raro ma reale del livello 2). Viceversa un
+        // edificio che richiede 1 corsia ed è collegato a una strada a 2
+        // corsie resta correttamente connesso (connectedLevel 2 >= 1).
         const cityEntityForId = cityEntities?.[id];
-        const needsRoad = BuildingModel.requiresRoad(cityEntityForId);
+        const requiredRoadLevel = BuildingModel.requiredRoadLevel(cityEntityForId);
 
-        if (needsRoad && !isConnected) {
+        if (requiredRoadLevel > 0 && connectedLevel < requiredRoadLevel) {
           disconnected.set(id, (disconnected.get(id) ?? 0) + 1);
         }
 

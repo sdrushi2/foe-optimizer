@@ -163,15 +163,46 @@ export class BuildingModel {
     return [width, length];
   }
 
-  /** Verifica se un edificio richiede strada */
+  /**
+   * Livello di strada richiesto da un edificio: 0 = nessuna strada
+   * necessaria, 1 = strada a una corsia (tile 1×1), 2 = strada a due
+   * corsie (tile 2×2). Nel gioco un edificio è considerato CONNESSO solo
+   * se il livello della strada a cui è collegato è >= al livello
+   * richiesto — un edificio che richiede 2 corsie ma è collegato solo a
+   * una strada a 1 corsia risulta scollegato (verificato luglio 2026 su
+   * dati reali: solo 2 edifici nell'intero MainParser richiedono livello
+   * 2, es. W_SpaceAgeJupiterMoon_Residential1/Workshop1 — quasi tutti gli
+   * altri edifici con requiredLevel esplicito hanno valore 1).
+   * `streetConnectionRequirement.requiredLevel` (stile nuovo,
+   * components.AllAge) e `requirements.street_connection_level` (stile
+   * più vecchio) sono letti entrambi come numero reale, non solo come
+   * flag di presenza — bug corretto luglio 2026: prima la sola presenza
+   * del campo bastava a considerare l'edificio "richiede strada",
+   * ignorando SE richiedesse 1 o 2 corsie.
+   * I Grandi Edifici richiedono sempre strada a livello 1 (regola fissa
+   * di dominio, non letta dal JSON — il riconoscimento del prefisso vive
+   * SOLO in buildingClassification/isGreatBuildingId; deciso con l'utente
+   * di non differenziare 1/2 corsie per i GE).
+   */
+  static requiredRoadLevel(cityEntity: CityEntityDefinition | undefined): number {
+    if (!cityEntity) return 0;
+    if (isGreatBuildingId(String(cityEntity.id || ""))) return 1;
+    const scr = BuildingModel.asObj(cityEntity.components?.AllAge?.streetConnectionRequirement);
+    if (Object.keys(scr).length > 0) {
+      const lvl = BuildingModel.num(scr.requiredLevel);
+      return lvl > 0 ? lvl : 1;
+    }
+    const reqLevel = cityEntity.requirements?.street_connection_level;
+    if (reqLevel != null) {
+      const lvl = BuildingModel.num(reqLevel);
+      return lvl > 0 ? lvl : 1;
+    }
+    return 0;
+  }
+
+  /** Verifica se un edificio richiede strada (qualunque livello). */
   static requiresRoad(cityEntity: CityEntityDefinition | undefined): boolean {
-    if (!cityEntity) return false;
-    // I Grandi Edifici richiedono sempre strada. Il riconoscimento del
-    // prefisso vive SOLO in buildingClassification (isGreatBuildingId).
-    if (isGreatBuildingId(String(cityEntity.id || ""))) return true;
-    if (cityEntity.components?.AllAge?.streetConnectionRequirement) return true;
-    if (cityEntity.requirements?.street_connection_level) return true;
-    return false;
+    return BuildingModel.requiredRoadLevel(cityEntity) > 0;
   }
 
   /** Calcola il fabbisogno stradale */
