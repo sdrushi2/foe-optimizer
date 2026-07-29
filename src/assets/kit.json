@@ -5213,7 +5213,7 @@
     "platinum_upgrade_kit_CUP22A": {
       "names": {
         "en": "Azalea Windmill Platinum Upgrade Kit ",
-        "it": "Kit Aggiornamento Mulino con Azalee"
+        "it": "Kit di aggiornamento Platino Mulino a vento di azalee"
       },
       "steps": [
         "W_MultiAge_CUP22A9",
@@ -5272,7 +5272,8 @@
     },
     "upgrade_kit_GR26G": {
       "names": {
-        "en": "Neo Bus Upgrade Kit"
+        "en": "Neo Bus Upgrade Kit",
+        "it": "Kit di Aggiornamento Neo Bus"
       },
       "steps": [
         "W_MultiAge_GR26G1",
@@ -5281,7 +5282,8 @@
     },
     "upgrade_kit_GR26H": {
       "names": {
-        "en": "Neo Glider Upgrade Kit"
+        "en": "Neo Glider Upgrade Kit",
+        "it": "Kit di aggiornamento Neo Aliante"
       },
       "steps": [
         "W_MultiAge_GR26H1",
@@ -10627,7 +10629,8 @@
     },
     "selection_kit_GR26G": {
       "names": {
-        "en": "Neo Bus Selection Kit"
+        "en": "Neo Bus Selection Kit",
+        "it": "Kit di selezione Neo Bus"
       },
       "options": [
         "W_MultiAge_GR26G1",
@@ -10636,7 +10639,8 @@
     },
     "selection_kit_GR26H": {
       "names": {
-        "en": "Neo Glider Selection Kit"
+        "en": "Neo Glider Selection Kit",
+        "it": "Kit di selezione Neo Aliante"
       },
       "options": [
         "W_MultiAge_GR26H1",
@@ -10645,7 +10649,8 @@
     },
     "selection_kit_epic_GR26_MA_4": {
       "names": {
-        "en": "QI 2026 Middle Ages Epic Selection Kit 4"
+        "en": "QI 2026 Middle Ages Epic Selection Kit 4",
+        "it": "Kit Selezione Epico 4 IQ Medioevo 2026"
       },
       "options": [
         "W_MultiAge_GR25I1",
