@@ -1517,7 +1517,7 @@ const BuildingRow = memo(function BuildingRow({
         </td>
       )}
       <td className="cell-icons">
-        <div className="flex flex-col items-center justify-center gap-0.5">
+        <div className="flex flex-row flex-nowrap items-center justify-center gap-0.5">
           {b.ally > 0 && (
             <span title={t("historicalAllySlotTitle", uiLang)}>⭐</span>
           )}
