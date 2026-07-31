@@ -1820,6 +1820,7 @@ export default function App() {
     setCityMapBounds(city?.cityMapBounds ?? null);
     setCityMapGrid(reviveSet(city?.cityMapGrid));
     setCityMapUnlockedCells(reviveSet(city?.cityMapUnlockedCells));
+    setCityMapUnlockedAreas(city?.cityMapUnlockedAreas ?? []);
     setGreatBuildingsJson(reviveMap<GreatBuilding>(city?.greatBuildingsJson));
     setMatchedJson(reviveMap<CityMapEntry>(city?.matchedJson));
     setUnmatchedJson(reviveMap<CityMapEntry>(city?.unmatchedJson));
@@ -1958,6 +1959,10 @@ export default function App() {
   const [cityMapBounds, setCityMapBounds] = useState<CityMapBounds | null>(() => getInitCity()?.cityMapBounds ?? null);
   const [cityMapGrid, setCityMapGrid] = useState<Set<string>>(() => reviveSet(getInitCity()?.cityMapGrid));
   const [cityMapUnlockedCells, setCityMapUnlockedCells] = useState<Set<string>>(() => reviveSet(getInitCity()?.cityMapUnlockedCells));
+  // Aree sbloccate ORIGINALI (rettangoli grezzi, non le celle già espanse):
+  // solo per l'export JSON della mappa (CityMapView) — vedi commento su
+  // CityStore.cityMapUnlockedAreas per il perché di questo campo separato.
+  const [cityMapUnlockedAreas, setCityMapUnlockedAreas] = useState<UnlockedArea[]>(() => getInitCity()?.cityMapUnlockedAreas ?? []);
   const [showCityMap, setShowCityMap] = useState<boolean>(() => localStorage.getItem(SHOW_CITY_MAP_KEY) === "true");
   // Filtra gli edifici vecchi nella tab Città
   const [showOnlyOutdated, setShowOnlyOutdated] = useState(false);
@@ -2440,6 +2445,12 @@ export default function App() {
         const isNeedless = needlessRoadKeys.has(key);
         const isInactiveBuilding = isInactiveBuildingId(entityId);
         const isSuppliesProducer = suppliesProducerIds.has(entityId);
+        // roadLevel: solo per edifici "veri" (entityId presente in CityEntities).
+        // Le strade stesse (type "street") e il municipio (prefisso "H_", che
+        // non ha una entry propria in requiredRoadLevel) non hanno un livello
+        // di RICHIESTA di strada — restano a 0, coerente col fatto che l'export
+        // JSON tratta le strade in una sezione a parte (vedi CityMapView).
+        const roadLevel = BuildingModel.requiredRoadLevel(entity);
         for (let dx = 0; dx < w; dx++) {
           for (let dy = 0; dy < l; dy++) {
             occupiedCells.add(`${x + dx},${y + dy}`);
@@ -2447,7 +2458,7 @@ export default function App() {
         }
         bMinX = Math.min(bMinX, x); bMinY = Math.min(bMinY, y);
         bMaxX = Math.max(bMaxX, x + w); bMaxY = Math.max(bMaxY, y + l);
-        mapBuildings.push({ entityId, mapEntityId: key, name: entityName, x, y, w, h: l, type: entryType, isGreatBuilding: isGE, isMilitary, isNeedlessRoad: isNeedless, isInactive: isInactiveBuilding, isSuppliesProducer });
+        mapBuildings.push({ entityId, mapEntityId: key, name: entityName, x, y, w, h: l, type: entryType, isGreatBuilding: isGE, isMilitary, isNeedlessRoad: isNeedless, isInactive: isInactiveBuilding, isSuppliesProducer, roadLevel });
       }
 
       const unlockedCells = new Set<string>();
@@ -2475,6 +2486,7 @@ export default function App() {
       setCityMapBounds(nextCityMapBounds);
       setCityMapGrid(occupiedCells);
       setCityMapUnlockedCells(unlockedCells);
+      setCityMapUnlockedAreas(unlockedAreas);
 
       setCityEntityIds(ids);
       setCityEntityDisconnected(disconnected);
@@ -2686,6 +2698,7 @@ export default function App() {
         cityMapBounds: nextCityMapBounds,
         cityMapGrid: Array.from(occupiedCells),
         cityMapUnlockedCells: Array.from(unlockedCells),
+        cityMapUnlockedAreas: unlockedAreas,
         greatBuildingsJson: Array.from(gbs.entries()),
         matchedJson: Array.from(matched.entries()),
         unmatchedJson: Array.from(unmatched.entries()),
@@ -6027,6 +6040,7 @@ export default function App() {
               cityMapBuildings={cityMapBuildings}
               cityMapBounds={cityMapBounds}
               cityMapUnlockedCells={cityMapUnlockedCells}
+              cityMapUnlockedAreas={cityMapUnlockedAreas}
               cityMapGrid={cityMapGrid}
               highlightedCityEntityIds={highlightedCityEntityIds}
               cityMapView={cityMapView}

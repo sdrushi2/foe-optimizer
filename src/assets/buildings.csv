@@ -1384,6 +1384,10 @@ W_MultiAge_GBG26E1;Deposito Officina a vapore - Lv. 1;Steamworks Depot - Lv. 1;6
 W_MultiAge_GBG26E2;Deposito Officina a vapore - Liv. 2;Steamworks Depot - Lv. 2;445653d50;1;;6x4;;;;;343;;;250;;580;;;;2520;;;504;504;504;504;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG26F1;Obice ferroviario - Liv. 1;Rail Howitzer - Lv. 1;0b81211fc;1;;3x2;1;;;;66;;;36;;;;;;480;;;84;84;84;84;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG26F2;Obice ferroviario - Liv. 2;Rail Howitzer - Lv. 2;f9a953f28;1;;3x2;;;;;86;;;54;;;;;;660;;;105;105;105;105;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_GBG26G1;;Steelport Warship - Lv. 1;391ea12bc;1;;5x5;;24813;;;195;;;;;;;;;1500;;;263;263;526;526;;;;;390;390;390;390;;;;;;;;;;;;;1;;;;;;;;
+W_MultiAge_GBG26G2;;Steelport Warship - Lv. 2;7cfaf4350;1;;5x5;;37219;;;260;;;;;;;;;1875;;;350;350;700;700;;;;;520;520;520;520;;;;;;;;;;;;;1;;;;;;;;
+W_MultiAge_GBG26H1;;Steelport Silo - Lv. 1;ea6aa6b78;1;;3x4;1.5;;;;;;;;;152;284;;;660;;;116;116;116;116;;;;;172;172;172;172;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_GBG26H2;;Steelport Silo - Lv. 2;bfc3c5980;1;;3x4;;;;;;;;;;228;361;;;990;;;173;173;173;173;;;;;173;173;173;173;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBGWatchtower2023A;Torre dei Campioni - Liv. 1;Tower of Champions - Lv. 1;f7f55d3b6;1;;4x4;;;;;18;;;;;;;;;100;;;;;;;52;52;52;52;108;108;108;108;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBGWatchtower2023B;Torre dei Campioni - Liv. 2;Tower of Champions - Lv. 2;167a0c83c;1;;4x4;;;;;40;;;;;;;;;400;;;;;;;83;83;83;83;162;162;162;162;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBGWatchtower2023C1;Torre Reale dei Campioni - Lv. 1;Royal Tower of Champions - Lv. 1;a1770f95c;1;;4x4;;;;;18;;;;;;;;;100;;;;;;;73;73;73;73;40;40;40;40;;;;;;;;;;;;;;;;;;;;;building_guild_arena

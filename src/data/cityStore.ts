@@ -1,5 +1,5 @@
 import type { Building } from "./buildings";
-import type { CityMapEntry } from "./bookmarklet";
+import type { CityMapEntry, UnlockedArea } from "./bookmarklet";
 import type { CityMapBuilding, CityMapBounds } from "./cityMap";
 import type { EraStats, GreatBuilding } from "../models/BuildingModel";
 
@@ -44,6 +44,16 @@ export interface CityStore {
   cityMapGrid:             string[];
   /** Celle sbloccate dalle UnlockedAreas (formato "x,y") */
   cityMapUnlockedCells:    string[];
+  /**
+   * Aree sbloccate ORIGINALI (rettangoli x/y/width?/length?), grezze dal
+   * payload — DISTINTE da cityMapUnlockedCells (che sono le stesse aree già
+   * espanse in singole celle, usate per il rendering della mappa). Questo
+   * campo esiste SOLO per l'export JSON della mappa (CityMapView), che vuole
+   * mostrare i rettangoli originali del gioco invece di migliaia di celle
+   * sciolte. Opzionale: assente nei profili importati prima di luglio 2026,
+   * quando questo campo è stato introdotto — l'export JSON gestisce
+   * l'assenza mostrando un array vuoto, non un crash. */
+  cityMapUnlockedAreas?:   UnlockedArea[];
   /** Grandi Edifici presenti in città (entityId → GB) */
   greatBuildingsJson:      Array<[string, GreatBuilding]>;
   /** Edifici in città che matchano il CSV */

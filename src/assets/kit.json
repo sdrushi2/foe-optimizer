@@ -5376,6 +5376,24 @@
         "W_MultiAge_FALL21A11",
         "W_MultiAge_FALL21A12"
       ]
+    },
+    "upgrade_kit_GBG26G": {
+      "names": {
+        "en": "Steelport Warship Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_GBG26G1",
+        "W_MultiAge_GBG26G2"
+      ]
+    },
+    "upgrade_kit_GBG26H": {
+      "names": {
+        "en": "Steelport Silo Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_GBG26H1",
+        "W_MultiAge_GBG26H2"
+      ]
     }
   },
   "selectionKits": {
@@ -10782,6 +10800,24 @@
         "upgrade_kit_mill_of_fall",
         "W_MultiAge_FALL16A1",
         "upgrade_kit_cider_mill"
+      ]
+    },
+    "selection_kit_GBG26G": {
+      "names": {
+        "en": "Steelport Warship Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_GBG26G1",
+        "upgrade_kit_GBG26G"
+      ]
+    },
+    "selection_kit_GBG26H": {
+      "names": {
+        "en": "Steelport Silo Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_GBG26H1",
+        "upgrade_kit_GBG26H"
       ]
     }
   }

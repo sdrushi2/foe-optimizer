@@ -34,6 +34,10 @@ export interface CityMapBuilding {
    *  dopo la fine di un evento a tempo); non è una decorazione vera. */
   isInactive: boolean;
   isSuppliesProducer: boolean;
+  /** Livello di strada richiesto (0/1/2, vedi BuildingModel.requiredRoadLevel)
+   *  — usato SOLO per l'export JSON della mappa (§ pulsante JSON in
+   *  CityMapView), non per il rendering SVG/PNG (che non lo mostra). */
+  roadLevel: number;
 }
 
 export interface CityMapBounds {

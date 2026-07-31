@@ -1,5 +1,6 @@
 import { RotateCcw, Download } from "lucide-react";
 import type { CityMapBuilding, CityMapBounds } from "../data/cityMap";
+import type { UnlockedArea } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
 
 export type CityMapDragState = {
@@ -14,6 +15,13 @@ interface CityMapViewProps {
   cityMapBuildings: CityMapBuilding[];
   cityMapBounds: CityMapBounds | null;
   cityMapUnlockedCells: Set<string>;
+  /** Aree sbloccate ORIGINALI (rettangoli x/y/width?/length?), grezze dal
+   *  payload — usate SOLO dall'export JSON (mostra i rettangoli reali del
+   *  gioco invece delle singole celle di cityMapUnlockedCells, usate invece
+   *  per il rendering). Può essere vuoto sui profili salvati prima
+   *  dell'introduzione di questo campo (luglio 2026): l'export gestisce
+   *  l'array vuoto senza errori, semplicemente non mostra espansioni. */
+  cityMapUnlockedAreas: UnlockedArea[];
   cityMapGrid: Set<string>;
   highlightedCityEntityIds: Set<string>;
   cityMapView: "vertical" | "isometric";
@@ -37,6 +45,7 @@ export default function CityMapView({
   cityMapBuildings,
   cityMapBounds,
   cityMapUnlockedCells,
+  cityMapUnlockedAreas,
   cityMapGrid,
   highlightedCityEntityIds,
   cityMapView,
@@ -216,7 +225,11 @@ export default function CityMapView({
                 </button>
               </div>
 
-              <div className="flex gap-2">
+              {/* gap-1.5/px-2 invece di gap-2/px-3: con 3 pulsanti (SVG/PNG/
+                  JSON, prima erano solo 2) nel riquadro a larghezza fissa
+                  (lg:w-64) il padding largo li faceva andare a capo — ridotto
+                  per farli stare sulla stessa riga senza flex-wrap. */}
+              <div className="flex gap-1.5">
                 <button
                   onClick={() => {
                     const svgEl = document.querySelector<SVGSVGElement>(".city-map-svg");
@@ -233,7 +246,7 @@ export default function CityMapView({
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                   }}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >
                   <Download size={13} /> SVG
                 </button>
@@ -279,9 +292,72 @@ export default function CityMapView({
                     };
                     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
                   }}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >
                   <Download size={13} /> PNG
+                </button>
+                <button
+                  onClick={() => {
+                    // Elenco edifici visualizzati (esclude le tessere strada,
+                    // raggruppate a parte in "roads"): stesso set di
+                    // cityMapBuildings già filtrato/mostrato sulla mappa SVG,
+                    // così l'export riflette esattamente ciò che si vede
+                    // (inclusi eventuali filtri highlightedCityEntityIds a
+                    // monte — cityMapBuildings arriva già pronto da App.tsx).
+                    const buildings = cityMapBuildings
+                      .filter((b) => b.type !== "street")
+                      .map((b) => ({
+                        id: b.mapEntityId,
+                        cityentity_id: b.entityId,
+                        name: b.name,
+                        width: b.w,
+                        length: b.h,
+                        x: b.x,
+                        y: b.y,
+                        // ?? 0: roadLevel è undefined nei profili salvati PRIMA
+                        // dell'introduzione di questo campo (vedi contratto di
+                        // persistenza in cityMap.ts) — senza fallback l'export
+                        // conterrebbe "road_requirement": undefined, JSON non
+                        // valido per quella chiave.
+                        road_requirement: b.roadLevel ?? 0,
+                      }));
+                    // Tessere strada: single = 1×1 (area 1), two_lane = 2×2
+                    // (area 4) — le uniche due dimensioni di strada nel gioco.
+                    const roadTiles = cityMapBuildings.filter((b) => b.type === "street");
+                    const roads = {
+                      single: roadTiles.filter((b) => b.w * b.h === 1).length,
+                      two_lane: roadTiles.filter((b) => b.w * b.h === 4).length,
+                    };
+                    // Espansioni sbloccate: rettangoli ORIGINALI dal payload
+                    // (x/y/width?/length?), non le singole celle già espanse
+                    // (cityMapUnlockedCells, usate invece per il rendering).
+                    // width/length inclusi solo se presenti nel dato originale
+                    // (il default implicito è 4×4, stesso comportamento del
+                    // parsing in App.tsx) — evita di scrivere valori ridondanti
+                    // quando l'area è quella standard.
+                    const unlockedAreas = cityMapUnlockedAreas.map((a) => {
+                      const area: { x: number; y: number; width?: number; length?: number } = {
+                        x: Number(a.x ?? 0),
+                        y: Number(a.y ?? 0),
+                      };
+                      if (a.width != null) area.width = Number(a.width);
+                      if (a.length != null) area.length = Number(a.length);
+                      return area;
+                    });
+                    const json = JSON.stringify({ buildings, roads, unlocked_areas: unlockedAreas }, null, 2);
+                    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `foe-map-${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
+                >
+                  <Download size={13} /> JSON
                 </button>
               </div>
             </div>

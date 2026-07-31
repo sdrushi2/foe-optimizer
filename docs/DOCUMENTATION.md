@@ -388,7 +388,7 @@ livello UI traduce.
 >    rivolti allo sviluppatore (es. `"initKitData not called"`, `"[FOE] PNG export
 >    failed"`, il fail-fast di `ages.ts`). Non sono testo per l'utente finale, quindi non
 >    passano per `t()`.
-> 2. *Nomi dei file scaricati* — es. `foe-map-YYYY-MM-DD.svg/.png` (CityMapView), header
+> 2. *Nomi dei file scaricati* — es. `foe-map-YYYY-MM-DD.svg/.png/.json` (CityMapView), header
 >    del CSV di debug (`CityEntityID;name;num`). Sono identificatori di file, non UI
 >    mostrata: si tengono in inglese neutro a prescindere da `uiLang`, evitando di
 >    introdurre `t()` in punti che altrimenti non ne avrebbero bisogno.
@@ -1680,6 +1680,40 @@ niente colore dedicato finché non si re-importa), e per `mapEntityId` fa scatta
 fallback aggregato di `allySlotsPerBuilding` (§24). Rinominare un campo o cambiarne
 il tipo invece rompe silenziosamente i profili salvati: valutare
 `STORAGE_FORMAT_VERSION` (§21).
+
+**`roadLevel: number`** (luglio 2026) — livello di strada richiesto
+dall'edificio (0/1/2, vedi `BuildingModel.requiredRoadLevel` §13.5), popolato
+in App.tsx nello stesso punto/scope in cui viene costruito `mapBuildings`
+(l'oggetto `entity = cityEntities?.[entityId] ?? {}` era già disponibile lì).
+Usato SOLO dall'export JSON della mappa (vedi sotto), non dal rendering
+SVG/PNG. Essendo un campo aggiunto dopo l'introduzione di `CityMapBuilding`,
+nei profili vecchi arriva `undefined`: l'export JSON applica `?? 0` per non
+produrre `"road_requirement": undefined` (JSON non valido per quella chiave).
+
+**Le espansioni sbloccate nell'export JSON (`unlocked_areas`, luglio 2026)
+richiedono un campo NUOVO e SEPARATO da `cityMapUnlockedCells`.**
+`cityMapUnlockedCells` (esistente da prima) sono le celle sbloccate GIÀ
+ESPANSE una per una (formato `"x,y"`): il codice che le produce
+(`unlockedAreas.forEach(...)` in App.tsx, dove `unlockedAreas =
+preloadedData.UnlockedAreas`) itera ogni rettangolo originale
+(`{x, y, width?, length?}`, default 4×4) e aggiunge OGNI cella al suo
+interno al Set — l'informazione sul rettangolo di partenza (dove iniziava,
+quanto era largo) va persa in quel momento, non è ricostruibile a ritroso
+dalle sole celle senza un algoritmo di raggruppamento euristico. Per un
+export JSON fedele ai rettangoli REALI dati dal gioco (invece di migliaia di
+celle sciolte, o una ricostruzione approssimata), è stato aggiunto un
+secondo campo che salva `preloadedData.UnlockedAreas` COSÌ COM'È, in
+parallelo a `cityMapUnlockedCells`: nuovo state `cityMapUnlockedAreas:
+UnlockedArea[]` in App.tsx, nuovo campo opzionale `CityStore.
+cityMapUnlockedAreas?: UnlockedArea[]` (§18) — popolato/persistito negli
+stessi 3 punti di `cityMapUnlockedCells` (import città, switch tra profili
+salvati, scrittura `writeStoredJson`). Opzionale per compatibilità: i
+profili salvati prima di questa modifica non hanno questo campo, letto con
+fallback `?? []` al caricamento — l'export JSON mostra semplicemente
+`"unlocked_areas": []`, nessun crash. `CityMapView` riceve il campo come
+nuova prop e lo mappa 1:1 nell'export (`width`/`length` inclusi solo se
+presenti nel dato originale, per non scrivere valori ridondanti quando
+l'area è quella standard 4×4).
 
 ---
 
