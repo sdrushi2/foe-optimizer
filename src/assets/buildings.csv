@@ -1180,9 +1180,9 @@ W_MultiAge_FALL16A6;Fabbrica di succo fiorente;Flourishing Cider Mill;P_MultiAge
 W_MultiAge_FALL16A7;Fabbrica di Succo Vintage;Vintage Cider Mill;055e2386c;;;3x6;1.5;-1320;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A8;Fabbrica di Succo Patrimonio;Heritage Cider Mill;daa0098c3;1;;3x5;1.5;-1390;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A9;Fabbrica di succo Nobile;Noble Cider Mill;784df1cdb;1;;3x4;1.5;-1460;;;20;;;;;;;;;;;;;;;;;;;;;;75;75;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL21A10;;Golden Crops Harvest;9eebf5493;1;;6x4;2;75500;60000;;100;;;;;100;;;;120;400000;300000;100;100;100;100;;;;;;;;;;;;;;;;;;;;;1;;;;;1;;;
-W_MultiAge_FALL21A11;;Golden Crops Feast;6325fb544;1;;6x4;;82500;70000;;150;;;;;130;;;;150;450000;400000;130;130;130;130;;;;;;;;;;;;;;;;;;;;;1;;;;;2;;;
-W_MultiAge_FALL21A12;;Ascended Golden Crops Feast;7db9338f0;1;90;6x4;;82500;160000;;400;;;;;400;;;;300;900000;800000;320;320;320;320;;;;;;;;;25;25;25;25;;;;;;;200;8000;1;;;;;5;;;
+W_MultiAge_FALL21A10;;Golden Crops Harvest;9eebf5493;1;;6x4;2;75670;60130;;150;;;;;90;;;;100;400000;50000;100;100;100;100;;;;;;;;;;;;;;;;;;;;;1;;;;;1;;;
+W_MultiAge_FALL21A11;;Golden Crops Feast;6325fb544;1;;6x4;;85470;70130;;200;;;;;120;;;;200;500000;60000;120;120;120;120;;;;;;;;;;;;;;;;;;;;;1;;;;;2;;;
+W_MultiAge_FALL21A12;;Ascended Golden Crops Feast;7db9338f0;1;90;6x4;;85470;100000;;460;;;;;380;;;;300;600000;70000;320;320;320;320;;;;;;;;;25;25;25;25;;;;;;;200;8000;1;;;;;6;;;
 W_MultiAge_FALL22A1;Frantoio per olio di semi di girasole - Liv. 1;Sunflower Oil Press - Lv. 1;R_MultiAge_FallBonus22a-1e65b4d17;;;6x4;2;12939;14390;;;;;;;;;;;;115900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A10;Frantoio per olio di semi di girasole vivace;Vibrant Sunflower Oil Press;R_MultiAge_FallBonus22j-9d149b5de;1;;6x4;2;22643;39250;;29;;;8;;82;;;;;263500;52320;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A11;Frantoio per Olio di semi di Girasole Incontaminato;Pristine Sunflower Oil Press;R_MultiAge_FallBonus22k-6070c9eeb;1;;6x4;2;26955;45780;;35;;;10;;100;;;;;316100;65400;107;109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1264,10 +1264,10 @@ W_MultiAge_FALL26A9;;Momiji Station;ed0a60d38;1;;4x6;2;;;15;260;;6;6;6.3;330;210
 W_MultiAge_FALL26B1;;Koyo Treat;d191d8895;1;;4x2;;-30000;;;90;;;;;;;;;;;150000;;;;;100;100;;;80;80;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26B2;;Ascended Koyo Treat;68a222745;1;30;4x2;;-30000;;;240;;;;;;;;;;;310000;;;;;220;220;;;190;190;;;25;25;25;25;0.04;;;;;5;;;;;;;;;;;
 W_MultiAge_FALL26C1;;Kinoko Stage;fac49523b;1;;2x3;;-35000;;;;;;;;55;;45;;;;;60;60;60;60;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL26C2;;Ascended Kinoko Stage;606f0bc93;1;30;2x3;;-35000;;;;;;;;180;;155;;;;;120;120;120;120;;;;;;;;;;;25;;;0.04;;;10;;;;;;;;;;;;
-W_MultiAge_FALL26D1;;Mizube Lodge;60a077718;1;;6x4;;;;;450;;;;;400;270;;;;;;;;350;350;550;550;550;550;;;;;25;25;25;25;;;;;;;;;1;;;;;;;;golden_selection_kit_FALL26A
-W_MultiAge_FALL26E1;;Ramen Nook - Lv. 1;c89dc128a;1;;4x4;;-75000;;;190;0.02;;;;;;;;;;;210;210;;;190;190;;;150;150;150;150;;;;;;;;;;;;;1;3;;;;;;;
-W_MultiAge_FALL26E2;;Ramen Nook - Lv. 2;3ed493352;1;;4x4;;-75000;;;240;0.04;;;;;;;;;;;290;290;;;260;260;;;230;230;230;230;;;;;;;;;;;;;1;6;;;;;;;upgrade_kit_ascended_FALL21A
+W_MultiAge_FALL26C2;;Ascended Kinoko Stage;606f0bc93;1;30;2x3;;-35000;;;;;;;;170;;155;;;;;120;120;120;120;;;;;;;;;;;25;;;0.04;;;10;;;;;;;;;;;;
+W_MultiAge_FALL26D1;;Mizube Lodge;60a077718;1;;6x4;;;;;450;;;;;400;270;;;;;;;;350;350;550;550;550;550;;;;;25;25;25;25;;;;;;;;;1;;;;3;;3;;golden_selection_kit_FALL26A
+W_MultiAge_FALL26E1;;Ramen Nook - Lv. 1;c89dc128a;1;;4x4;;-75000;;;160;0.02;;;;;;;;;;;210;210;;;190;190;;;150;150;150;150;;;;;;;;;;;;;1;3;;;;;;;
+W_MultiAge_FALL26E2;;Ramen Nook - Lv. 2;3ed493352;1;;4x4;;-75000;;;200;0.04;;;;;;;;;;;290;290;;;260;260;;;210;210;210;210;;;;;;;;;;;;;1;6;;;;;;;upgrade_kit_ascended_FALL21A
 W_MultiAge_FELL22A1;Taverna degli eroi - Liv. 1;Heroes Tavern - Lv. 1;R_MultiAge_HeroBonus22a-7e6ce64d5;;;5x4;2;9990;15180;;;;;;;;;;;;154300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A10;Taverna degli eroi - Liv. 10;Heroes Tavern - Lv. 10;R_MultiAge_HeroBonus22j-b8050c1c0;1;;5x4;2;16200;24030;;11;;;;;;;;;;299700;;22;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A11;Loggia leggendaria;Legendary Lodge;R_MultiAge_HeroBonus22k-cc7752668;1;;5x4;2;17100;25120;;15;;;;;55;;;;;308500;;25;31;25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2041,6 +2041,26 @@ W_MultiAge_WIN25C2;Chiosco Viale Stellato Asceso;Ascended Starlight Boulevard Ki
 W_MultiAge_WIN25D1;Atelier Meraviglie del Giocattolaio;Toymaker’s Atelier of Little Wonders;408704826;1;;3x3;1.5;;;;105;;;;;;;;;;;;84;84;84;84;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN25A
 W_MultiAge_WIN25E1;Vivaio Stella del Nord di Penelope;Penelope’s Northstar Nursery;fa080d942;1;;5x5;2.5;;;;495;;;;;;;;;;;;110;110;110;110;240;240;240;240;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN24A
 W_MultiAge_WIN25F1;Corriere Northwind;Northwind Courier;5ecd45942;1;;3x2;1;;;;98;;;;;;;;;;;;;;;;98;;98;;;;;;;;;;;;;;;;;;;5.1;;;;;;;golden_selection_kit_WIN19A|selection_kit_WIN19BCD21B
+W_MultiAge_WIN26A1;;WIN26A;c50d279c9;;;4x4;2;5000;7500;;50;;;;;;40;;;;40000;80000;5;5;5;5;5;5;5;5;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A10;;WIN26A Gold;b2f406053;1;;4x4;2;38000;57000;;180;;;;;;280;;;;300000;600000;70;70;70;70;70;70;70;70;;;;;;;;;;;;;;;;;1;;1.1;;;;;;selection_kit_WIN26BC
+W_MultiAge_WIN26A11;;WIN26A Platinum;132195138;1;;4x4;;40000;60000;;200;;;;;;300;;;;320000;640000;80;80;80;80;80;80;80;80;;;;;;;;;;;;;;;;;1;;1.5;;;;;;selection_kit_WIN26BC
+W_MultiAge_WIN26A12a;;WIN26A Platinum Ascended A;c5a06473c;1;90;4x4;;40000;60000;;200;0.02;;;;;300;;;;320000;640000;80;80;80;80;80;80;80;80;;;;;30;;;;;;;;;;;8000;1;2;1.5;;;;;;selection_kit_WIN26BC
+W_MultiAge_WIN26A12b;;WIN26A Platinum Ascended B;5c5071aa4;1;90;4x4;;40000;60000;;200;;;;;;300;;0.01;;320000;640000;80;80;80;80;80;80;80;80;;;;;;;30;;;;;;;;200;;1;2.6;1.5;;;;;;selection_kit_WIN26BC
+W_MultiAge_WIN26A2;;WIN26A;;;;4x4;2;8000;12000;;60;;;;;;60;;;;60000;120000;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A3;;WIN26A;;;;4x4;2;11000;16500;;70;;;;;;80;;;;80000;160000;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A4;;WIN26A;;;;4x4;2;14000;21000;;80;;;;;;100;;;;100000;200000;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A5;;WIN26A;;;;4x4;2;17000;25500;;90;;;;;;120;;;;120000;240000;25;25;25;25;25;25;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A6;;WIN26A;;;;4x4;2;20000;30000;;100;;;;;;140;;;;140000;280000;30;30;30;30;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A7;;WIN26A;;;;4x4;2;23000;34500;;110;;;;;;160;;;;160000;320000;35;35;35;35;35;35;35;35;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A8;;WIN26A;;1;;4x4;2;26000;39000;;120;;;;;;180;;;;180000;360000;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC|silver_upgrade_kit_WIN26A
+W_MultiAge_WIN26A9;;WIN26A Silver;15cf8c594;1;;4x4;2;32000;48000;;160;;;;;;220;;;;240000;480000;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;1;;;;;;;;golden_upgrade_kit_WIN26A|selection_kit_WIN26BC
+W_MultiAge_WIN26B1;;WIN26B;64d67fe9d;1;;4x4;;-160000;;;288;;;;;102;;;;;160000;480000;;;160;160;;;160;160;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26B2;;Ascended WIN26B;7f7b1c8f2;1;30;4x4;;-160000;;;720;0.02;;;;256;;;;;320000;960000;;;400;400;;;400;400;;;;;80;;;;;;;25000;;5;;;;;;;;;;;
+W_MultiAge_WIN26C1;;WIN26C;0528ffda5;1;;4x4;;-160000;;;64;;;;;480;;;;;320000;320000;160;160;;;160;160;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26C2;;Ascended WIN26C;751161a0c;1;30;4x4;;-160000;;;160;;;;;1200;;;0.02;;640000;640000;400;400;;;400;400;;;;;;;;;80;;;;25000;;10;;;;;;;;;;;;
+W_MultiAge_WIN26D1;;WIN26D;28d2edf69;1;;4x6;2;;;;130;0.06;;;;260;;;0.05;;;;145;145;145;145;145;145;145;145;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN26A
+W_MultiAge_WIN26E1;;WIN26E;f736c4d85;1;;6x4;2;;;;780;;;;;1560;1170;;;;;;255;255;255;255;255;255;255;255;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN26A
+W_MultiAge_WIN26F1;;WIN26F;bcabf86f9;1;;4x4;2;-180000;;;270;;;;175;;;360;;;;;180;180;180;180;245;245;245;245;;;;;;;;;;;;;;;;;;12.9;;;;;;;
 W_SpaceAgeJupiterMoon_Residential1;Villetta di Juno;Juno Dwelling;5ae2f9301;;;4x3;1.5;8240;;;;;;;;;;;;;142080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_SpaceAgeJupiterMoon_Residential2;Residenza titanica;Titanus Residence;1af702f83;;;3x2;1;7060;;;;;;;;;;;;;83280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_SpaceAgeJupiterMoon_Workshop1;Farmacia Aerospaziale;Aerospace Pharmacy;acb96ed72;;;4x4;2;-2220;;;;;;;;;;;;;;73540;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -5223,7 +5223,7 @@
     "upgrade_kit_ascended_CUP22A": {
       "names": {
         "en": "Ascended Bougainvillea Windmill Upgrade Kit ",
-        "it": "Kit di aggiornamento Mulino a vento Bougainvillea asceso"
+        "it": "Kit di aggiornamento Mulino a vento Buganville asceso"
       },
       "steps": [
         "W_MultiAge_CUP22A10",
@@ -5393,6 +5393,78 @@
       "steps": [
         "W_MultiAge_GBG26H1",
         "W_MultiAge_GBG26H2"
+      ]
+    },
+    "upgrade_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26A1",
+        "W_MultiAge_WIN26A2",
+        "W_MultiAge_WIN26A3",
+        "W_MultiAge_WIN26A4",
+        "W_MultiAge_WIN26A5",
+        "W_MultiAge_WIN26A6",
+        "W_MultiAge_WIN26A7",
+        "W_MultiAge_WIN26A8"
+      ]
+    },
+    "silver_upgrade_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Silver Silver Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26A8",
+        "W_MultiAge_WIN26A9"
+      ]
+    },
+    "golden_upgrade_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Gold Golden Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26A9",
+        "W_MultiAge_WIN26A10"
+      ]
+    },
+    "platinum_upgrade_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Platinum Platinum Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26A10",
+        "W_MultiAge_WIN26A11"
+      ]
+    },
+    "upgrade_kit_ascended_WIN26A": {
+      "names": {
+        "en": "WIN26A Platinum Ascended Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26A11",
+        [
+          "W_MultiAge_WIN26A12a",
+          "W_MultiAge_WIN26A12b"
+        ]
+      ]
+    },
+    "upgrade_kit_ascended_WIN26B": {
+      "names": {
+        "en": "Ascended WIN26B Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26B1",
+        "W_MultiAge_WIN26B2"
+      ]
+    },
+    "upgrade_kit_ascended_WIN26C": {
+      "names": {
+        "en": "Ascended WIN26C Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WIN26C1",
+        "W_MultiAge_WIN26C2"
       ]
     }
   },
@@ -10818,6 +10890,99 @@
       "options": [
         "W_MultiAge_GBG26H1",
         "upgrade_kit_GBG26H"
+      ]
+    },
+    "selection_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WIN26A1",
+        "upgrade_kit_WIN26A"
+      ]
+    },
+    "silver_selection_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Silver Silver Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WIN26A1",
+        "upgrade_kit_WIN26A",
+        "silver_upgrade_kit_WIN26A"
+      ]
+    },
+    "golden_selection_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Gold Golden Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WIN26A1",
+        "upgrade_kit_WIN26A",
+        "silver_upgrade_kit_WIN26A",
+        "golden_upgrade_kit_WIN26A"
+      ]
+    },
+    "platinum_selection_kit_WIN26A": {
+      "names": {
+        "en": "WIN26A Platinum Platinum Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WIN26A1",
+        "upgrade_kit_WIN26A",
+        "silver_upgrade_kit_WIN26A",
+        "golden_upgrade_kit_WIN26A",
+        "platinum_upgrade_kit_WIN26A"
+      ]
+    },
+    "selection_kit_WIN26BC": {
+      "names": {
+        "en": "WIN26BC Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WIN26B1",
+        "W_MultiAge_WIN26C1"
+      ]
+    },
+    "selection_kit_epic_WIN26": {
+      "names": {
+        "en": "Epic Winter 2026 Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WIN25A1",
+        "upgrade_kit_WIN25A",
+        "W_MultiAge_WIN25B1",
+        "W_MultiAge_WIN25C1",
+        "W_MultiAge_WIN24A1",
+        "upgrade_kit_WIN24A",
+        "W_MultiAge_WIN24B1",
+        "W_MultiAge_WIN24C1",
+        "W_MultiAge_WIN23A1",
+        "upgrade_kit_WIN23A",
+        "W_MultiAge_WIN23E1",
+        "W_MultiAge_WIN23F1",
+        "W_MultiAge_WIN22A1",
+        "upgrade_kit_W_MultiAge_WIN22A",
+        "W_MultiAge_WIN22B1",
+        "upgrade_kit_WIN22B",
+        "R_MultiAge_WinterBonus21a",
+        "upgrade_kit_winter_canal",
+        "R_MultiAge_WinterBonus20a",
+        "upgrade_kit_winter_bakery",
+        "W_MultiAge_WIN19A1",
+        "upgrade_kit_winter_train",
+        "W_MultiAge_WIN19B1",
+        "upgrade_kit_WIN19B",
+        "W_MultiAge_WIN19C1",
+        "upgrade_kit_WIN19C",
+        "W_MultiAge_WIN19D1",
+        "upgrade_kit_WIN19D",
+        "W_MultiAge_WIN21B1",
+        "upgrade_kit_WIN21B",
+        "R_MultiAge_WinterBonus18",
+        "W_MultiAge_WIN18B1",
+        "upgrade_kit_WIN18B",
+        "R_MultiAge_WinterBonus18a",
+        "upgrade_kit_winter_spire"
       ]
     }
   }
