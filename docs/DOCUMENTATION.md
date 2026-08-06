@@ -2554,10 +2554,14 @@ di build completo).
 `eslint-plugin-react-hooks` e `eslint-plugin-security`. Regole chiave:
 `react-hooks/rules-of-hooks` (error), `exhaustive-deps` (warn), `eqeqeq` (error),
 `no-explicit-any` (warn). La regola `security/detect-object-injection` è disattivata
-(genera falsi positivi su accessi `obj[key]` legittimi). Esistono **2 warning di
-sicurezza preesistenti** (su regex con argomenti non-letterali in `BuildingModel.ts` e
-`format.ts`) che sono **falsi positivi accettati**: gli input sono sempre stringhe
-controllate, non input utente.
+(genera falsi positivi su accessi `obj[key]` legittimi). Esistono **3 warning di
+sicurezza preesistenti** — 2 `security/detect-non-literal-regexp` in `BuildingModel.ts`
+(righe ~775 e ~972: regex costruita da `FALLBACK_ERA` e da `baseId` escaped) e 1
+`security/detect-unsafe-regex` in `format.ts` (riga ~29, `formatInt`) — che sono
+**falsi positivi accettati**: gli input sono sempre stringhe interne controllate
+(codici era, id edificio, numeri convertiti in stringa), mai input utente. Non
+"correggerli"; se `npm run lint` riporta un conteggio diverso da 3, è un segnale
+che è comparso un warning nuovo da valutare, non un refresh di questa nota.
 
 ---
 
