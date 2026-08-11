@@ -524,6 +524,24 @@ essere ridisegnata. Estratta da `buildings.py::extract_ally_type` (gemello:
 `ALLY_TYPE_CODE` in entrambi i lati, fail-fast su un allyType sconosciuto non
 mappato — mai una lettera arbitraria silenziosa).
 
+**Fix in `confronta_buildings.py` (11 agosto 2026):** il cambio di semantica
+sopra ha rotto silenziosamente il confronto della colonna `Ally` col foglio di
+Linnun. Il foglio (`buildings_linnun.csv`) usa ancora il vecchio booleano 0/1
+(non è un dato del gioco, lo tiene Linnun a mano); prima del fix `Ally` era
+dichiarata `kind="num"` in `SECTIONS`, quindi `pd.to_numeric(..., errors=
+"coerce")` collassava silenziosamente sia "M" sia "S" sia "" a `NaN`→`0.0`,
+rendendo il confronto sempre "uguale" a prescindere dal valore reale (falso
+negativo totale, zero discrepanze rilevate anche quando lo slot alleato non
+combaciava). Introdotto un quarto `kind`, `"ally"`: confronta solo PRESENZA
+(sheet "1"/numero non-zero vs game allyType non vuoto), non il testo letterale
+— il foglio non distingue mai M/S, quindi un mismatch di TIPO (M nel gioco,
+S sul foglio) resta invisibile a questo confronto per costruzione, viene
+rilevata solo l'assenza/presenza dello slot. Validato sui dati reali: 85/85
+righe con slot alleato combaciano esattamente tra foglio e gioco, zero
+differenze spurie nella sezione GENERAL del report (prima del fix la
+`kind="num"` nascondeva comunque tutto, quindi il "prima" non aveva mai
+generato discrepanze visibili — il bug era silenzioso, non rumoroso).
+
 Ogni colonna mappa direttamente su un campo di `Building`. I prefissi degli ID
 seguono una convenzione (vedi §11): `R_` residenziali, `P_` produzione/laboratori,
 `A_` culturali, `D_` decorazioni, `W_` edifici evento, `T_`/`Z_` casi particolari.

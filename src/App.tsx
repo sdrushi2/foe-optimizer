@@ -1128,30 +1128,6 @@ const BuildingRow = memo(function BuildingRow({
       </td>
       <td
         className={`cell-name${activeTab === "database" && b.unique ? " unique" : ""} ${b.isGreatBuilding ? "text-slate-100" : ""}`}
-        // Tooltip col nome completo: la cella (nome + eventuali badge inline,
-        // es. 🧩 frammenti) è troncata con ellissi (.cell-name usa
-        // `truncate`, vedi index.css) quando il CONTENUTO TOTALE eccede i
-        // 260px fissi della colonna — non solo quando il nome da solo è
-        // lungo. Senza questo title, un nome che sta interamente in 260px ma
-        // che con un badge accanto supera quella soglia veniva comunque
-        // troncato senza modo di leggerlo per intero (bug segnalato
-        // dall'utente su "Palazzo della Luce Liquida - Livello 2" + badge
-        // frammenti). Ricalcola lo stesso displayNameText usato più sotto:
-        // duplicazione minima, ma evita di sollevare lo stato fuori dalla IIFE.
-        // Per le Grandi Opere include anche " - Lv. X/Y" (stessa stringa del
-        // ramo isGreatBuilding più sotto): è spesso proprio quella parte,
-        // non il nome, a restare tagliata dal truncate — bug segnalato
-        // luglio 2026 su "Cancello di Saturno VI IDRA - Lv. 100/100".
-        title={(() => {
-          const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
-          const nameText = isGameTab
-            ? (gameDisplayName ?? displayName(b.cityEntityId, b.name, gameLang))
-            : displayName(b.cityEntityId, b.name, uiLang);
-          if (b.isGreatBuilding && greatBuildingInfo) {
-            return `${nameText} - Lv. ${greatBuildingInfo.level}/${greatBuildingInfo.maxLevel}`;
-          }
-          return nameText;
-        })()}
       >
         {/* Wrapper truncabile SOLO sul testo nome: .cell-name (index.css) è ora
             un flex row, non più un blocco con `truncate` diretto — così i
@@ -1168,8 +1144,35 @@ const BuildingRow = memo(function BuildingRow({
             subito dopo il testo — bug segnalato luglio 2026. Solo `shrink`
             (senza grow, flex-basis auto di default): lo span parte dalla
             sua larghezza naturale e si comprime SOLO quando testo+badge
-            insieme non ci stanno nei 260px. */}
-        <span className="truncate min-w-0 shrink">
+            insieme non ci stanno nei 260px.
+            Tooltip col nome completo SPOSTATO QUI (agosto 2026, era sulla
+            <td> intera): un title sull'intera cella faceva apparire il
+            tooltip anche passando sopra i badge dopo il nome (frammenti,
+            ×N, GE...), coprendo i LORO popup — segnalato dall'utente come
+            fastidioso. Il browser mostra comunque il tooltip nativo SOLO
+            quando il mouse è sopra questo span (non sui badge fratelli,
+            che sono elementi separati fuori da questo tag) — non serve
+            calcolare se il testo è realmente troncato: già di fatto non
+            appare più fuori dal nome. Ricalcola lo stesso displayNameText
+            usato più sotto: duplicazione minima, ma evita di sollevare lo
+            stato fuori dalla IIFE. Per le Grandi Opere include anche
+            " - Lv. X/Y" (stessa stringa del ramo isGreatBuilding più sotto):
+            è spesso proprio quella parte, non il nome, a restare tagliata
+            dal truncate — bug segnalato luglio 2026 su "Cancello di Saturno
+            VI IDRA - Lv. 100/100". */}
+        <span
+          className="truncate min-w-0 shrink"
+          title={(() => {
+            const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
+            const nameText = isGameTab
+              ? (gameDisplayName ?? displayName(b.cityEntityId, b.name, gameLang))
+              : displayName(b.cityEntityId, b.name, uiLang);
+            if (b.isGreatBuilding && greatBuildingInfo) {
+              return `${nameText} - Lv. ${greatBuildingInfo.level}/${greatBuildingInfo.maxLevel}`;
+            }
+            return nameText;
+          })()}
+        >
           {(() => {
             const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
             // Tab gioco: nome originale del gioco (gameNames) > traduzione
