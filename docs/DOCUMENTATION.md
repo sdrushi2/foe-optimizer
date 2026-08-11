@@ -1659,8 +1659,12 @@ Un modulo di **soli tipi** (nessuna logica) per la visualizzazione della mappa c
 - **`CityMapBuilding`** — un edificio piazzato sulla mappa: `entityId`, `name`,
   coordinate `x`/`y`, dimensioni `w`/`h`, `type` (es. `"street"`, `"main_building"`), e
   i flag `isGreatBuilding`, `isMilitary`, `isNeedlessRoad` (strada inutile),
-  `isInactive`, `isSuppliesProducer` (produttore di materiali). Questi flag sono
-  obbligatori (sempre valorizzati alla costruzione, che avviene in un solo punto).
+  `isInactive`, `isSuppliesProducer` (produttore di materiali — calcolato e
+  incluso nel tipo per il contratto di persistenza, ma dal 11 agosto 2026 NON
+  più usato per colorare la mappa: quella categoria dedicata è stata rimossa
+  su richiesta esplicita dell'utente, vedi nota `roadLevel` sotto). Questi
+  flag sono obbligatori (sempre valorizzati alla costruzione, che avviene in
+  un solo punto).
   Include anche `mapEntityId` — l'id grezzo dell'**istanza** sulla mappa (chiave in
   CityMapData), distinto da `entityId` (che è il tipo di edificio, uguale per più
   copie): permette di associare una specifica copia al proprio alleato piazzato
@@ -1685,10 +1689,17 @@ il tipo invece rompe silenziosamente i profili salvati: valutare
 dall'edificio (0/1/2, vedi `BuildingModel.requiredRoadLevel` §13.5), popolato
 in App.tsx nello stesso punto/scope in cui viene costruito `mapBuildings`
 (l'oggetto `entity = cityEntities?.[entityId] ?? {}` era già disponibile lì).
-Usato SOLO dall'export JSON della mappa (vedi sotto), non dal rendering
-SVG/PNG. Essendo un campo aggiunto dopo l'introduzione di `CityMapBuilding`,
-nei profili vecchi arriva `undefined`: l'export JSON applica `?? 0` per non
-produrre `"road_requirement": undefined` (JSON non valido per quella chiave).
+Inizialmente usato SOLO dall'export JSON della mappa; dal 11 agosto 2026
+è usato ANCHE per colorare gli edifici sia nel rendering SVG a schermo
+(`getBuildingColor` in CityMapView.tsx) sia nell'export PNG
+(`renderCityMapPng`, vedi sotto): verde (`MAP_COLOR_ROAD_REQUIRED`,
+`#5dd15d`) se `roadLevel > 0`, azzurro (`MAP_COLOR_NO_ROAD_REQUIRED`,
+`#7abaff`) se `roadLevel === 0` — per gli edifici che non rientrano nelle
+altre categorie con colore dedicato (municipio, Grandi Edifici, militari).
+Essendo un campo aggiunto dopo l'introduzione di `CityMapBuilding`, nei
+profili vecchi arriva `undefined`: sia l'export JSON (`?? 0`) sia il
+confronto `roadLevel === 0` nel rendering trattano l'assenza come "non
+richiede strada" (degradazione dolce, mai un crash).
 
 **Le espansioni sbloccate nell'export JSON (`unlocked_areas`, luglio 2026)
 richiedono un campo NUOVO e SEPARATO da `cityMapUnlockedCells`.**
@@ -2542,8 +2553,22 @@ del codice) → gate **bloccanti** (madge per i cicli di import, typecheck, lint
 
 - **`typescript` resta sulla 6.x**: `typescript-eslint` dichiara peer dependency
   `typescript >=4.8.4 <6.1.0` — aggiornare a TS 7.x romperebbe il linting type-aware.
-  Rivalutare solo quando typescript-eslint pubblicherà il supporto esplicito alla 7.x.
-- **`pako` resta sulla 2.x** (major 3 non adottata).
+  Rivalutare solo quando typescript-eslint pubblicherà il supporto esplicito alla 7.x
+  (verificato 11 agosto 2026: l'ultima versione pubblicata, 8.67.0, dichiara ancora
+  lo stesso range `<6.1.0` — nessuna versione stabile la supera).
+- **`pako` è stato aggiornato alla 3.x (11 agosto 2026)**, non più pinnato sulla 2.x.
+  La 3.x rinomina l'opzione usata in `storage.ts` (`{ to: "string" }` → `{ toText:
+  true }`), non ha più un default export (serve `import * as pako from "pako"`,
+  non più `import pako from "pako"`), e sostituisce i tipi community `@types/pako`
+  con tipi nativi nel pacchetto (rimossa la devDependency `@types/pako`). Nessun
+  cambio nel formato dei dati: pako è un'implementazione zlib/deflate standard
+  (RFC 1950, header `0x78 0x9c` identico in 2.x e 3.x), quindi i profili già
+  compressi e salvati in `localStorage` con la 2.x restano leggibili senza
+  migrazione — verificato empiricamente comprimendo con 2.x e decomprimendo con
+  3.x (e viceversa), incluso un caso con caratteri UTF-8 non-ASCII (accenti,
+  ideogrammi, emoji): risultato sempre identico byte per byte. `typescript`
+  resta invece bloccato sulla 6.x (vedi sopra), nessuna relazione con questo
+  aggiornamento.
 
 Le altre dipendenze si aggiornano normalmente ai minor/patch (verificando poi il ciclo
 di build completo).

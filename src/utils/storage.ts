@@ -1,4 +1,4 @@
-import pako from "pako";
+import * as pako from "pako";
 import type { InventoryStore } from "../data/inventory";
 import type { ImportedAlly } from "../data/allies";
 import type { CityStore } from "../data/cityStore";
@@ -55,7 +55,7 @@ export function readStoredJson<T>(key: string, fallback: T): T {
     if (!raw) return fallback;
     if (isCompressedKey(key)) {
       const binary = Uint8Array.from(atob(raw), c => c.charCodeAt(0));
-      const json = pako.inflate(binary, { to: "string" });
+      const json = pako.inflate(binary, { toText: true });
       return JSON.parse(json) as T;
     }
     return JSON.parse(raw) as T;

@@ -3,6 +3,156 @@ import type { CityMapBuilding, CityMapBounds } from "../data/cityMap";
 import type { UnlockedArea } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
 
+/** Colori per categoria edificio: condivisi tra il render PNG "a griglia"
+ *  (renderCityMapPng) e il rendering SVG a schermo (getBuildingColor) —
+ *  stessa palette in entrambe le viste, richiesta esplicita dell'utente.
+ *  I 3 colori "PNG_*" restano usati solo dal render PNG (sfondo/celle
+ *  libere/celle strada, che l'SVG a schermo gestisce diversamente con la
+ *  griglia di sfondo e le celle di cityMapUnlockedCells). */
+const MAP_COLOR_GREAT_BUILDING = "#e6542f";
+const MAP_COLOR_TOWN_HALL = "#ffb300";
+const MAP_COLOR_ROAD_REQUIRED = "#5dd15d";
+const MAP_COLOR_NO_ROAD_REQUIRED = "#7abaff";
+const PNG_COLOR_FREE = "#fffead";
+const PNG_COLOR_UNAVAILABLE = "#29190d";
+const PNG_COLOR_ROAD = "#888888";
+const PNG_CELL = 24;
+
+/** Spezza `name` su più righe per stare nella larghezza di un edificio
+ *  (in celle), replicando textwrap.fill di render_json.py: circa 2.8
+ *  caratteri per cella, minimo 10 caratteri per riga. */
+function wrapBuildingName(name: string, widthCells: number): string[] {
+  const maxChars = Math.max(10, Math.round(widthCells * 2.8));
+  const words = name.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+/**
+ * Disegna la mappa città su un canvas già dimensionato, con lo stesso layout
+ * "a griglia" di render_json.py (progetto FoE City Builder): sfondo grigio
+ * scuro fuori dall'area sbloccata, celle libere bianco crema, celle strada
+ * grigie, edifici colorati per categoria (municipio/Grandi Edifici/senza
+ * strada/altri) con nome a capo al centro. Coordinate SEMPRE quelle reali
+ * del payload (nessun ricalcolo/traslazione), stessa filosofia dello script
+ * Python: serve una verifica visiva fedele, non un'illustrazione stilizzata
+ * (quella resta la vista SVG isometrica/verticale a schermo).
+ */
+function renderCityMapPng(
+  canvas: HTMLCanvasElement,
+  buildings: CityMapBuilding[],
+  unlockedAreas: UnlockedArea[],
+  scale: number,
+  uiLang: UiLang
+): void {
+  const areas = unlockedAreas.map((a) => ({
+    x: Number(a.x ?? 0),
+    y: Number(a.y ?? 0),
+    width: Number(a.width ?? 4),
+    length: Number(a.length ?? 4),
+  }));
+  const placedBuildings = buildings.filter((b) => b.type !== "street");
+  const roadCells = buildings.filter((b) => b.type === "street");
+
+  const gridX0 = Math.min(...areas.map((a) => a.x));
+  const gridY0 = Math.min(...areas.map((a) => a.y));
+  const gridX1 = Math.max(...areas.map((a) => a.x + a.width));
+  const gridY1 = Math.max(...areas.map((a) => a.y + a.length));
+  const W = gridX1 - gridX0;
+  const H = gridY1 - gridY0;
+
+  const CELL = PNG_CELL * scale;
+  const PAD = CELL; // mezzo margine di respiro attorno alla griglia
+  canvas.width = (W + 2) * CELL + PAD * 2;
+  canvas.height = (H + 2) * CELL + PAD * 2;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const toPx = (gx: number, gy: number) => ({
+    px: PAD + (gx - gridX0 + 1) * CELL,
+    py: PAD + (gy - gridY0 + 1) * CELL,
+  });
+
+  // Sfondo: tutto "non disponibile", poi le celle libere sopra.
+  ctx.fillStyle = PNG_COLOR_UNAVAILABLE;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const occupied = new Set<string>();
+  for (const b of placedBuildings) {
+    for (let gx = b.x; gx < b.x + b.w; gx++) {
+      for (let gy = b.y; gy < b.y + b.h; gy++) {
+        occupied.add(`${gx},${gy}`);
+      }
+    }
+  }
+
+  ctx.strokeStyle = "#dddddd";
+  ctx.lineWidth = 0.5 * scale;
+  for (const a of areas) {
+    for (let gx = a.x; gx < a.x + a.width; gx++) {
+      for (let gy = a.y; gy < a.y + a.length; gy++) {
+        if (occupied.has(`${gx},${gy}`)) continue;
+        const { px, py } = toPx(gx, gy);
+        ctx.fillStyle = PNG_COLOR_FREE;
+        ctx.fillRect(px, py, CELL, CELL);
+        ctx.strokeRect(px, py, CELL, CELL);
+      }
+    }
+  }
+
+  // Celle strada, sopra il terreno libero ma sotto gli edifici.
+  for (const cell of roadCells) {
+    const { px, py } = toPx(cell.x, cell.y);
+    ctx.fillStyle = PNG_COLOR_ROAD;
+    ctx.fillRect(px, py, CELL, CELL);
+    ctx.strokeRect(px, py, CELL, CELL);
+  }
+
+  // Edifici: municipio, poi Grandi Edifici/altri, colore per categoria.
+  for (const b of placedBuildings) {
+    const { px, py } = toPx(b.x, b.y);
+    const w = b.w * CELL;
+    const h = b.h * CELL;
+    const color =
+      b.type === "main_building"
+        ? MAP_COLOR_TOWN_HALL
+        : b.isGreatBuilding
+        ? MAP_COLOR_GREAT_BUILDING
+        : b.roadLevel === 0
+        ? MAP_COLOR_NO_ROAD_REQUIRED
+        : MAP_COLOR_ROAD_REQUIRED;
+    ctx.fillStyle = color;
+    ctx.fillRect(px, py, w, h);
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1 * scale;
+    ctx.strokeRect(px, py, w, h);
+
+    const label = b.type === "main_building" ? t("legendTownHall", uiLang) : b.name;
+    const fontSize = (b.w >= 3 ? 11 : b.w === 2 ? 9 : 7) * scale;
+    ctx.fillStyle = "#000000";
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const lines = wrapBuildingName(label, b.w);
+    const lineHeight = fontSize * 1.15;
+    const startY = py + h / 2 - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, px + w / 2, startY + i * lineHeight, w - 2 * scale);
+    });
+  }
+}
+
 export type CityMapDragState = {
   pointerId: number;
   startX: number;
@@ -72,12 +222,11 @@ export default function CityMapView({
 
   const getBuildingColor = (b: CityMapBuilding): string => {
     if (b.type === "street") return "#8B7355";
-    if (b.type === "main_building") return "#F59E0B";
-    if (b.isGreatBuilding) return "#DC2626";
+    if (b.type === "main_building") return MAP_COLOR_TOWN_HALL;
+    if (b.isGreatBuilding) return MAP_COLOR_GREAT_BUILDING;
     if (b.isMilitary) return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : "#92400E";
     if (b.isNeedlessRoad) return "url(#needlessPattern)";
-    if (b.isSuppliesProducer) return "#1D4ED8";
-    return "#60A5FA";
+    return b.roadLevel === 0 ? MAP_COLOR_NO_ROAD_REQUIRED : MAP_COLOR_ROAD_REQUIRED;
   };
 
   // Celle libere (sbloccate ma non occupate)
@@ -225,72 +374,34 @@ export default function CityMapView({
                 </button>
               </div>
 
-              {/* gap-1.5/px-2 invece di gap-2/px-3: con 3 pulsanti (SVG/PNG/
-                  JSON, prima erano solo 2) nel riquadro a larghezza fissa
-                  (lg:w-64) il padding largo li faceva andare a capo — ridotto
-                  per farli stare sulla stessa riga senza flex-wrap. */}
+              {/* gap-1.5/px-2 invece di gap-2/px-3: con 2 pulsanti (PNG/JSON)
+                  nel riquadro a larghezza fissa (lg:w-64) il padding largo li
+                  faceva andare a capo — ridotto per farli stare sulla stessa
+                  riga senza flex-wrap. */}
               <div className="flex gap-1.5">
                 <button
                   onClick={() => {
-                    const svgEl = document.querySelector<SVGSVGElement>(".city-map-svg");
-                    if (!svgEl) return;
-                    const serializer = new XMLSerializer();
-                    const svgString = serializer.serializeToString(svgEl);
-                    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `foe-map-${new Date().toISOString().slice(0, 10)}.svg`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                  }}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
-                >
-                  <Download size={13} /> SVG
-                </button>
-                <button
-                  onClick={() => {
-                    const svgEl = document.querySelector<SVGSVGElement>(".city-map-svg");
-                    if (!svgEl) return;
-                    const scale = 4;
-                    const svgRect = svgEl.getBBox();
-                    const w = svgEl.viewBox.baseVal.width || svgRect.width;
-                    const h = svgEl.viewBox.baseVal.height || svgRect.height;
-                    const canvas = document.createElement("canvas");
-                    canvas.width = w * scale;
-                    canvas.height = h * scale;
-                    const ctx = canvas.getContext("2d");
-                    if (!ctx) return;
-                    // Sfondo nero come nella UI: senza questo il PNG ha sfondo
-                    // trasparente e i bordi scuri spariscono su sfondo bianco.
-                    ctx.fillStyle = "#000000";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    const serializer = new XMLSerializer();
-                    const svgString = serializer.serializeToString(svgEl);
-                    const img = new Image();
-                    img.onload = () => {
-                      try {
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const link = document.createElement("a");
-                        link.download = `foe-map-${new Date().toISOString().slice(0, 10)}.png`;
-                        link.href = canvas.toDataURL("image/png");
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      } catch (err) {
-                        // toDataURL lancia se il canvas è "tainted" (es. SVG con
-                        // riferimenti esterni). Avvisiamo invece di fallire muti.
-                        console.error("[FOE] PNG export failed:", err);
-                        alert(t("exportPngFailedAlert", uiLang));
-                      }
-                    };
-                    img.onerror = () => {
-                      console.error("[FOE] Loading SVG for PNG export failed.");
+                    if (cityMapUnlockedAreas.length === 0) {
+                      // Senza aree sbloccate non c'è modo di calcolare la
+                      // griglia (bounding box, celle libere/non disponibili):
+                      // capita sui profili salvati prima dell'introduzione di
+                      // questo campo (luglio 2026) — servirebbe un re-import.
                       alert(t("exportPngFailedAlert", uiLang));
-                    };
-                    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
+                      return;
+                    }
+                    try {
+                      const canvas = document.createElement("canvas");
+                      renderCityMapPng(canvas, cityMapBuildings, cityMapUnlockedAreas, 2, uiLang);
+                      const link = document.createElement("a");
+                      link.download = `foe-map-${new Date().toISOString().slice(0, 10)}.png`;
+                      link.href = canvas.toDataURL("image/png");
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    } catch (err) {
+                      console.error("[FOE] PNG export failed:", err);
+                      alert(t("exportPngFailedAlert", uiLang));
+                    }
                   }}
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >
@@ -367,12 +478,13 @@ export default function CityMapView({
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-800 pb-2">{t("mapLegendTitle", uiLang)}</h4>
             <div className="space-y-3 text-[11px] text-slate-300">
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#D97706]" style={{ background: "#F59E0B" }} /> {t("legendTownHall", uiLang)}</div>
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#991B1B]" style={{ background: "#DC2626" }} /> {t("legendGreatBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isGreatBuilding).length}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_TOWN_HALL, borderColor: MAP_COLOR_TOWN_HALL, borderWidth: 1, borderStyle: "solid" }} /> {t("legendTownHall", uiLang)}</div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_GREAT_BUILDING, borderColor: MAP_COLOR_GREAT_BUILDING, borderWidth: 1, borderStyle: "solid" }} /> {t("legendGreatBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isGreatBuilding).length}</span></div>
               {cityMapBuildings.some((b) => b.isMilitary) && (
                 <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#78350F]" style={{ background: "#92400E" }} /> {t("legendMilitaryBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isMilitary).length}</span></div>
               )}
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#3B82F6]" style={{ background: "#60A5FA" }} /> {t("legendTotalBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-sky-400 bg-sky-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => !b.isGreatBuilding && !b.isMilitary && !b.isInactive && b.type !== "street").length}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_ROAD_REQUIRED, borderColor: MAP_COLOR_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => !b.isGreatBuilding && !b.isMilitary && !b.isInactive && b.type !== "street" && b.type !== "main_building" && b.roadLevel > 0).length}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_NO_ROAD_REQUIRED, borderColor: MAP_COLOR_NO_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendNoRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-sky-400 bg-sky-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => !b.isGreatBuilding && !b.isMilitary && !b.isInactive && b.type !== "street" && b.type !== "main_building" && b.roadLevel === 0).length}</span></div>
 
               {cityMapBuildings.some((b) => b.isNeedlessRoad) && (
                 <div className="flex items-center gap-3 font-medium">
@@ -389,10 +501,6 @@ export default function CityMapView({
                 </div>
               )}
 
-              {cityMapBuildings.some((b) => b.isSuppliesProducer) && (
-                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#1E3A8A]" style={{ background: "#1D4ED8" }} /> {t("legendSuppliesProducers", uiLang)} <span className="ml-1 text-xs font-bold text-blue-400 bg-blue-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isSuppliesProducer).length}</span></div>
-              )}
-
               {cityMapBuildings.some((b) => b.isInactive) && (
                 <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B21A8]" style={{ background: "rgba(88,28,135,0.45)" }} /> {t("legendInactive", uiLang)} <span className="ml-1 text-xs font-bold text-violet-400 bg-violet-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isInactive).length}</span></div>
               )}
@@ -400,7 +508,7 @@ export default function CityMapView({
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B5B45]" style={{ background: "#8B7355" }} /> {t("legendStreets", uiLang)} <span className="ml-1 text-xs font-bold text-stone-400 bg-stone-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.type === "street").length}</span></div>
 
               {freeCells.length > 0 && (
-                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#064e3b]" style={{ background: "#34D399" }} /> {t("legendFreeSpace", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{freeCells.length}</span></div>
+                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: PNG_COLOR_FREE, borderColor: "#a89b3f", borderWidth: 1, borderStyle: "solid" }} /> {t("legendFreeSpace", uiLang)} <span className="ml-1 text-xs font-bold text-amber-200 bg-amber-950/40 px-1.5 py-0.5 rounded">{freeCells.length}</span></div>
               )}
 
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-slate-700" style={{ background: "#000000" }} /> {t("legendUnavailableSpace", uiLang)}</div>
@@ -498,8 +606,8 @@ export default function CityMapView({
                     y={(gy - minY) * CELL}
                     width={CELL}
                     height={CELL}
-                    fill="#34D399"
-                    stroke="#064e3b"
+                    fill={PNG_COLOR_FREE}
+                    stroke="#a89b3f"
                     strokeWidth={0.1}
                   />
                 ))}

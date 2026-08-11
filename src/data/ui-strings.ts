@@ -861,17 +861,17 @@ const UI_STRINGS = {
     it: "Edifici militari",
     en: "Military buildings",
   },
-  legendTotalBuildings: {
-    it: "Edifici totali",
-    en: "Total buildings",
+  legendRoadRequired: {
+    it: "Richiede strada",
+    en: "Requires road",
+  },
+  legendNoRoadRequired: {
+    it: "Non richiede strada",
+    en: "Doesn't require road",
   },
   legendNeedlesslyConnected: {
     it: "Connessi inutilmente",
     en: "Needlessly connected",
-  },
-  legendSuppliesProducers: {
-    it: "Produce materiali",
-    en: "Supply producers",
   },
   legendInactive: {
     it: "Inattivi",
@@ -910,10 +910,6 @@ const UI_STRINGS = {
   profileEraTitle: {
     it: (era: string) => `Tutti i dati del profilo visualizzato corrispondono all'era: ${era}`,
     en: (era: string) => `All data for the displayed profile corresponds to the age: ${era}`,
-  },
-  downloadCityListTitle: {
-    it: "Scarica la lista completa degli edifici in città",
-    en: "Download the full list of city buildings",
   },
   showOnlyOldBuildingsTitle: {
     it: "Mostra solo edifici di ere precedenti",
@@ -1206,12 +1202,6 @@ const UI_STRINGS = {
   gotItExclamationButton: {
     it: "Ho capito!",
     en: "Got it!",
-  },
-
-  // ── Pulsante Download Inventario (gemello di downloadCityListTitle) ──
-  downloadInventoryListTitle: {
-    it: "Scarica la lista completa dell'inventario",
-    en: "Download the full inventory list",
   },
 
   // ── Contatore "Alleati posseduti" (riga header tabella alleati) ──────

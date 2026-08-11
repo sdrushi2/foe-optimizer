@@ -2147,24 +2147,6 @@ export default function App() {
     return Array.from(greatBuildingsJson.keys());
   }, [greatBuildingsJson]);
 
-  const downloadDebugList = (title: string, entries: Array<{ id: string; name: string; count: number }>) => {
-    if (entries.length === 0) return;
-    const csvContent = "\uFEFFCityEntityID;name;num\n" + 
-      entries.map(e => `${e.id};${e.name};${e.count}`).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    // Chiamata solo con "city" (lista città) o "all-inventory" (lista
-    // inventario completo): due soli nomi file, niente rami morti.
-    const fileName = title === "city" ? "city.csv" : "inventory.csv";
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   // ── Funzioni Export/Import Sessione (file locale) ────────────────────────
   const handleExportSession = () => {
     setExportLoading(true);
@@ -5688,21 +5670,6 @@ export default function App() {
                 >
                   {t("debugLabel")}
                 </button>
-                <button
-                  onClick={() => {
-                    const entries: Array<{ id: string; name: string; count: number }> = [];
-                    cityEntityIds.forEach((count, id) => {
-                      if (!greatBuildingsJson.has(id)) {
-                        entries.push({ id, name: displayName(id, id, gameLang), count });
-                      }
-                    });
-                    downloadDebugList("city", entries);
-                  }}
-                  className="flex items-center justify-center rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300 transition-all h-7"
-                  title={t("downloadCityListTitle", uiLang)}
-                >
-                  <Download size={13} />
-                </button>
                 {cityMapBuildings.length > 0 && cityMapBounds && (
                   <button
                     onClick={() => {
@@ -5919,21 +5886,6 @@ export default function App() {
                 className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
               >
                 {t("debugLabel")}
-              </button>
-              <button
-                onClick={() => {
-                  const all = [
-                    ...Array.from(inventoryMatched.values()),
-                    ...Array.from(inventoryUnmatched.values()),
-                    ...Array.from(inventorySelectionKits.values()).map(k => ({ cityEntityId: k.kitId, name: k.name, inStock: k.inStock })),
-                    ...Array.from(inventoryUpgradeKits.values()).map(k => ({ cityEntityId: k.kitId, name: k.name, inStock: k.inStock })),
-                  ];
-                  downloadDebugList("all-inventory", all.map(e => ({ id: e.cityEntityId, name: e.name, count: e.inStock })));
-                }}
-                className="flex items-center justify-center rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300 transition-all h-7"
-                title={t("downloadInventoryListTitle", uiLang)}
-              >
-                <Download size={13} />
               </button>
               <button
                 onClick={() => setShowOnlyWithAllySlot(v => !v)}
