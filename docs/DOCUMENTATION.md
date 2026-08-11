@@ -511,6 +511,19 @@ FSP; TPM; TPB; ADM; MOD; RIN; IMM; Fragments
 `Lin` è un flag manuale di riferimento per stabilire gli edifici da includere
 nella visualizzazione `Light` delle tabelle.
 
+**`Ally`** (cambiata semantica l'11 agosto 2026): NON è più un booleano 0/1,
+ma una stringa con un carattere per ogni slot alleato dell'edificio, "" se
+nessuno — "M" = militare, "S" = scientifico (introdotto con StellarAgeDiscovery,
+Steelport Warship, gli unici 2 edifici con slot "science" osservati finora).
+Il conteggio slot (`Building.ally: number`, usato ovunque nell'app per i
+confronti `> 0`) si deriva da `allyType.length` al parsing (`buildings.ts`),
+non è più una colonna a sé: il gioco modella `AllyComponent.rooms` come lista
+(un edificio POTREBBE avere più slot, anche misti, anche se oggi nessuno ne
+ha più di 1), quindi la colonna è pensata per quel caso futuro senza dover
+essere ridisegnata. Estratta da `buildings.py::extract_ally_type` (gemello:
+`ALLY_TYPE_CODE` in entrambi i lati, fail-fast su un allyType sconosciuto non
+mappato — mai una lettera arbitraria silenziosa).
+
 Ogni colonna mappa direttamente su un campo di `Building`. I prefissi degli ID
 seguono una convenzione (vedi §11): `R_` residenziali, `P_` produzione/laboratori,
 `A_` culturali, `D_` decorazioni, `W_` edifici evento, `T_`/`Z_` casi particolari.
@@ -527,12 +540,34 @@ Id; NomeIta; NomeEng; Rarity; MaxLevel; Val1;
 GenAtk_A; GenDef_A; GenAtk_D; GenDef_D;
 CampiAtk_A; CampiDef_A; CampiAtk_D; CampiDef_D;
 SpedAtk_A; SpedDef_A; SpedAtk_D; SpedDef_D;
+PF; Beni; BeniP;
 abilityIta; abilityEng
 ```
 
 `abilityIta`/`abilityEng` sono la descrizione testuale dell'abilità speciale
 dell'alleato, per lingua; vuote per la maggior parte degli alleati (solo alcuni hanno
 un'abilità speciale documentata).
+
+**`PF`/`Beni`/`BeniP`** (aggiunte l'11 agosto 2026): produzione diretta degli
+alleati `allyType="science"` in `Allies.txt`/MainParser (oggi 3 su 41: Fibonacci,
+Indradevi, Ernest Shackleton) — a differenza dei 38 alleati "military", questi
+non danno boost di combattimento (`rarityBoosts` vuoto su tutte le rarità) ma
+producono una risorsa fissa per rarità, identica su tutte le 24 ere del gioco,
+letta da `productionReward`. Stesso schema di `buildings.csv`: `PF` = Punti
+Forgia, `Beni` = beni dell'era corrente, `BeniP` = beni dell'era PRECEDENTE (mai
+osservato un caso "era successiva"/BeniS sui 3 alleati esistenti). Il valore
+salvato è quello al **livello massimo (100)** della singola rarità — un valore
+GREZZO, non cumulativo: l'ereditarietà fra rarità (vedi §14.3) la somma
+`getComputedAllyStats` a runtime, non il CSV. Estratte da
+`allies.py::resolve_production_columns`, che distingue i tre casi dal campo
+`name` del reward (`"Forge Points"` / `"Previous Age Goods"` / `"Goods"`), e usa
+`totalAmount` invece di `amount` quando presente — il reward espone ENTRAMBI i
+campi per i Beni (`amount` = quantità di ciascun bene, `totalAmount` = somma su
+tutti i beni dell'era, es. amount=26 → totalAmount=130 con 5 beni): il valore
+mostrato in game (e quello coerente con `buildings.csv`) è sempre `totalAmount`.
+Nessuna colonna valorizzata per i 38 alleati "military" (fail-fast implicito:
+se in futuro Inno introduce un quarto tipo di reward non riconosciuto dai tre
+pattern di `name`, la funzione ritorna vuoto invece di un valore arbitrario).
 
 La colonna `Rarity` è **numerica** (1–5), lingua-neutra:
 
@@ -1299,10 +1334,12 @@ statistiche.
 - **`Ally`** — un alleato dal catalogo (`allies.csv`): `id`, `names` (multilingua),
   `rarity` (1–5), `maxLevel` (oggi sempre 100 e non letto da nessun consumer, TENUTO
   deliberatamente perché Inno potrebbe variarlo), `val1` (valore base), i 4 blocchi
-  di bonus (general/gbg/sped/iq) e `abilityIta`/`abilityEng` (descrizione
-  dell'abilità speciale, vuota per la maggior parte degli alleati; CONTRATTO con la
-  pipeline: il rendering mostra abilityIta senza fallback su abilityEng, perché è
-  allies.py a garantire che l'italiana sia valorizzata quando esiste l'inglese).
+  di bonus (general/gbg/sped/iq), `pf`/`beni`/`beniP` (produzione diretta degli
+  alleati "science" — vedi §8.2 — 0 per i normali alleati "military") e
+  `abilityIta`/`abilityEng` (descrizione dell'abilità speciale, vuota per la
+  maggior parte degli alleati; CONTRATTO con la pipeline: il rendering mostra
+  abilityIta senza fallback su abilityEng, perché è allies.py a garantire che
+  l'italiana sia valorizzata quando esiste l'inglese).
   `parseAlliesCsv` valida fail-fast le righe duplicate `id+rarity`: un duplicato
   vincerebbe silenziosamente l'ultimo in `ALLIES_BY_ID_RARITY` ma verrebbe sommato
   DUE volte nell'ereditarietà, gonfiando le statistiche.
@@ -1314,7 +1351,11 @@ statistiche.
   dello stesso `cityEntityId`, e alimenta il filtro alleati per slot in App.tsx (la
   controparte lato mappa è `mapEntityId` in `CityMapBuilding`, §17).
 - **`ComputedAllyStats`** — le statistiche calcolate (con ereditarietà): i 4 blocchi
-  `computedGeneral/Gbg/Sped/Iq`.
+  `computedGeneral/Gbg/Sped/Iq` più `computedPf`/`computedBeni`/`computedBeniP`
+  (somma di `pf`/`beni`/`beniP` sulle rarità ereditate — vedi §14.3 — MA senza il
+  moltiplicatore di livello di `getAllyStatValue`: la produzione degli alleati
+  "science" è un valore fisso già letto al livello 100, non dipende dal `level`
+  passato a `getComputedAllyStats`).
 
 ### 14.2 Funzioni di parsing
 
@@ -1347,6 +1388,13 @@ Empires, un alleato di rarità alta "eredita" i bonus delle versioni di rarità 
 dello stesso alleato. La funzione recupera tutti gli alleati ereditati (da
 `inheritedAlliesMap`, indicizzato su `allyId__rarity`) e somma i loro contributi per
 ogni categoria e indice.
+
+`pf`/`beni`/`beniP` (alleati "science") seguono la STESSA logica di ereditarietà
+(somma su tutte le rarità ≤ quella corrente) ma con `sumProduction`, un helper
+separato da `sumCategory`: niente `getAllyStatValue`/scaling per livello, perché
+questi tre campi sono già il valore assoluto al livello 100 letto dal CSV — un
+Leggendario possiede quindi anche i PF/Beni delle rarità inferiori, sommati
+direttamente, indipendentemente dal `level` con cui è stata chiamata la funzione.
 
 ### 14.4 Costanti di rarità
 
@@ -2478,6 +2526,90 @@ richiede logica di rendering aggiuntiva.
   continue;`, stesso pattern per `showOnlyDeclassable`) — non avrebbe senso
   segnalarle come obsolete/declassabili, non essendo istanze reali. Selezione
   (checkbox) ed export restano invece disponibili anche sulle righe merged.
+
+### 24.3octies Badge slot alleato a due emoji, e sezione Produzioni nella tab Alleati (agosto 2026)
+
+**Badge ⭐/🔬 per tipo di slot alleato.** Il badge sulla tabella edifici che
+segnala "questo edificio può ospitare un Alleato Storico" mostrava sempre la
+stessa emoji ⭐, indipendentemente dal tipo di alleato ospitabile. Da quando
+`Building.allyType` (§7, §12) espone il tipo reale per slot ("M"=militare,
+"S"=scienza — introdotto con StellarAgeDiscovery, Steelport Warship), il
+badge in `BuildingRow` itera i caratteri di `allyType` (`[...b.allyType].map`)
+e mostra un'icona per carattere: ⭐ per "M" (tooltip
+`historicalAllySlotTitleMilitary`), 🔬 per "S" (tooltip
+`historicalAllySlotTitleScience`) — la vecchia chiave i18n unica
+`historicalAllySlotTitle` è stata rimossa. Il formato regge nativamente un
+futuro edificio a slot misti (es. "MS" → due icone), senza bisogno di
+modifiche: non è un caso speciale, è la conseguenza diretta di iterare la
+stringa.
+
+**Sezione "📦 PRODUZIONI" (PF/Beni/BeniP) nelle due tabelle Alleati.** Fino
+ad agosto 2026 le due tabelle Alleati (Database e Posseduti) mostravano solo
+i boost di combattimento (Generali/Campi/Spedizioni/IQ): i 3 alleati
+"science" (Fibonacci, Indradevi, Ernest Shackleton — vedi §8.2, §14.1)
+apparivano quindi con tutte le colonne boost a zero, senza alcuna traccia
+della loro vera produzione. Aggiunta una sezione dedicata, deliberatamente
+**limitata a 3 colonne** (PF/Beni/BeniP) invece di replicare l'intera
+sezione Produzioni della tabella edifici (~20 colonne): sono le uniche
+produzioni che gli alleati hanno oggi, repliche vuote delle altre 17
+colonne sarebbero solo rumore.
+
+- **`AllyProductionCells`** (componente `memo()`, accanto a
+  `MilitaryBoostCells`) — 3 `<td>` con `formatProdNum`, stesso trattamento
+  visivo delle celle Produzioni della tabella edifici (`cell-prod` quando
+  il valore è `> 0`); la prima cella (PF) porta anche `section-divider`
+  (separatore verticale che marca l'inizio della sezione, essendo la
+  colonna del gruppo).
+- **`renderAllyProductionGroupHeader()`** (colSpan 3, testo
+  `groupProductions` con `whitespace-nowrap` per non andare a capo) e
+  **`renderAllyProductionHeaders(scope: SortScope)`** — riusano il pattern
+  già esistente di `renderMilitaryGroupHeaders`/`renderMilitaryHeaders`
+  (stesso `SortScope` per scope indipendenti Database/Posseduti, vedi
+  §24.3sexies). Le colonne riusano le `SortKey` **già esistenti** per gli
+  edifici (`"fp"`/`"beni"`/`"benip"`), senza introdurne di nuove:
+  `SortableAlly`/`allySortValue`/`compareAllies` sono estesi con
+  `computedPf`/`computedBeni`/`computedBeniP` e i tre nuovi `case` nello
+  switch di `allySortValue`.
+- **`ComputedAllyStats.computedPf/Beni/BeniP`** (§14.1, §14.3) alimentano
+  sia il sort sia le celle: calcolati da `getComputedAllyStats` con la
+  stessa ereditarietà fra rarità dei boost di combattimento, ma sommati
+  senza scaling di livello (sono valori assoluti già al livello 100).
+- **Filtro "zero-stats" esteso**: sia in `filteredAllies` (Database) sia in
+  `processedImportedAllies` (Posseduti) il controllo "nascondi alleato con
+  tutte le statistiche a zero" includeva solo General/Gbg/Sped/Iq — un
+  Fibonacci con boost di combattimento a zero sarebbe stato escluso
+  nonostante produca PF/Beni. Esteso a controllare anche
+  `computedPf === 0 && computedBeni === 0 && computedBeniP === 0`
+  (Database: il filtro "zero-stats" è stato POI rimosso del tutto in
+  questa stessa sessione — vedi sotto — quindi oggi si applica solo alla
+  tabella Posseduti, dove filtra solo i non-frammenti).
+- **Nessun filtro "zero-stats" nel Database Alleati** (rimosso
+  deliberatamente, agosto 2026): prima escludeva silenziosamente qualunque
+  alleato con Gen/Campi/Sped/IQ tutti a zero, il che nascondeva anche i 3
+  alleati "science" (le cui statistiche di combattimento sono SEMPRE zero
+  per costruzione — producono altro). L'utente vuole vedere tutti gli
+  alleati del gioco nel Database, punto: filtrare per "non ha boost" non è
+  un criterio valido quando esiste una categoria intera di alleati che non
+  ne ha mai.
+- **Colonna "lv1" rimossa da entrambe le tabelle Alleati** (agosto 2026):
+  mostrava `a.val1`, il valore grezzo della colonna `Val1` del CSV al
+  livello 1 — un dato di **debug interno** (serve a chi tocca la pipeline
+  per verificare `resolve_val1_and_flags`, non a un giocatore che deve
+  decidere quale alleato usare) diventato ancora più confuso una volta
+  introdotte le colonne PF/Beni/BeniP (che invece mostrano il valore al
+  livello 100): coesistere le due scale nella stessa riga generava
+  ambiguità. Rimossi header, `<td>` body, `<col>` dedicata in entrambi i
+  `<colgroup>`, e la chiave i18n `ally1stLevelValueTitle` (ora orfana).
+  **Tre `colSpan` erano rimasti a contare la colonna eliminata** (bug
+  introdotto dalla rimozione stessa, corretto nello stesso ciclo): il
+  `<th colSpan={3}>` "CALCOLA EFFICIENZA A LIVELLO..." del Database
+  (nome+lv1+eff → nome+eff, quindi `colSpan={2}`), il
+  `<th colSpan={4}>` "ALLEATO ▾ / Alleati posseduti: N" della tabella
+  Posseduti (nome+Lvl+lv1+eff → nome+Lvl+eff, quindi `colSpan={3}`), e il
+  colSpan del placeholder "nessun alleato trovato" (`3 + ...` → `2 + ...`).
+  Il campo `Ally.val1` resta nel tipo: è ancora usato internamente da
+  `getAllyStatValue`/`getComputedAllyStats` per il calcolo dei boost, solo
+  la sua visualizzazione diretta in tabella è stata tolta.
 
 ### 24.4 Import e gestione errori
 

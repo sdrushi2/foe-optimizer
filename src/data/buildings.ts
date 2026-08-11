@@ -43,7 +43,19 @@ export interface Building {
   iqTruppe: number;
   iqAzioni: number;
   iqCap: number;
+  /** Numero di slot alleato (0, 1, 2...). Derivato da allyType.length: NON
+   *  è una colonna separata nel CSV (evita di duplicare lo stesso dato in
+   *  due punti che potrebbero disallinearsi) — vedi allyType. */
   ally: number;
+  /** Tipo di ciascuno slot alleato, un carattere per slot, nell'ordine del
+   *  gioco: "M" = militare, "S" = scientifico (introdotto con
+   *  StellarAgeDiscovery, Steelport Warship). "" se l'edificio non ha slot.
+   *  Oggi sempre lunga 0 o 1 carattere (nessun edificio ha più di 1 slot),
+   *  ma il formato regge anche edifici futuri a più slot misti (es. "MS").
+   *  Colonna CSV "Ally" (stesso nome di sempre, contenuto cambiato da
+   *  luglio 2026 numero 0/1 a questa stringa — gemello Python:
+   *  buildings.py extract_ally_type). */
+  allyType: string;
   fp: number;
   fpb: number;
   fur: number;
@@ -328,7 +340,8 @@ export function parseBuildingsCsv(csv: string): Building[] {
       iqTruppe: getNumber(parts, "IQTruppe"),
       iqAzioni: getNumber(parts, "IQAzioni"),
       iqCap: getNumber(parts, "IQCap"),
-      ally: getNumber(parts, "Ally"),
+      ally: getText(parts, "Ally").length,
+      allyType: getText(parts, "Ally"),
       fsp: getNumber(parts, "FSP"),
       tpm: getNumber(parts, "TPM"),
       tpb: getNumber(parts, "TPB"),

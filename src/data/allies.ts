@@ -17,6 +17,20 @@ export interface Ally {
   gbg: [number, number, number, number];
   sped: [number, number, number, number];
   iq: [number, number, number, number];
+  /** Produzione diretta degli alleati "science" (allyType="science" in
+   *  Allies.txt: Fibonacci, Indradevi, Ernest Shackleton — non danno boost
+   *  di combattimento, producono invece una risorsa fissa per rarità,
+   *  identica su tutte le 24 ere del gioco). 0 per i normali alleati
+   *  "military" (nessuna colonna valorizzata nel CSV per loro). Stesso
+   *  schema di buildings.csv: PF = Punti Forgia, Beni = beni dell'era
+   *  corrente, BeniP = beni dell'era PRECEDENTE (mai osservato un caso
+   *  "era successiva"/BeniS sui 3 alleati esistenti — vedi
+   *  allies.py::resolve_production_columns). Valore GREZZO della singola
+   *  rarità, letto al livello massimo (100): come general/gbg/sped/iq,
+   *  l'ereditarietà fra rarità la somma getComputedAllyStats, non il CSV. */
+  pf: number;
+  beni: number;
+  beniP: number;
   /** Descrizione testuale dell'abilità speciale dell'alleato, per lingua
    *  (colonne abilityIta/abilityEng del CSV). Vuota per la maggior parte
    *  degli alleati (solo alcuni hanno un'abilità speciale documentata).
@@ -51,6 +65,14 @@ export interface ComputedAllyStats {
   computedGbg: [number, number, number, number];
   computedSped: [number, number, number, number];
   computedIq: [number, number, number, number];
+  /** Somma di pf/beni/beniP su tutte le rarità ereditate (stessa logica di
+   *  computedGeneral ecc.), MA senza moltiplicatore di livello: a differenza
+   *  dei boost di combattimento (che scalano con getAllyStatValue/val1+livello),
+   *  la produzione degli alleati "science" è un valore FISSO per rarità letto
+   *  al livello 100 — vedi Ally.pf/beni/beniP. */
+  computedPf: number;
+  computedBeni: number;
+  computedBeniP: number;
 }
 
 export function parseAlliesCsv(csv: string): Ally[] {
@@ -93,6 +115,9 @@ export function parseAlliesCsv(csv: string): Ally[] {
   const idxIQDefA = colIndex("IQDef_A");
   const idxIQAtkD = colIndex("IQAtk_D");
   const idxIQDefD = colIndex("IQDef_D");
+  const idxPf = colIndex("PF");
+  const idxBeni = colIndex("Beni");
+  const idxBeniP = colIndex("BeniP");
   const idxAbilityIta = colIndex("abilityIta");
   const idxAbilityEng = colIndex("abilityEng");
 
@@ -125,6 +150,9 @@ export function parseAlliesCsv(csv: string): Ally[] {
       iq: idxIQAtkA >= 0
         ? [toNumber(at(cols, idxIQAtkA)), toNumber(at(cols, idxIQDefA)), toNumber(at(cols, idxIQAtkD)), toNumber(at(cols, idxIQDefD))]
         : [0, 0, 0, 0],
+      pf: toNumber(at(cols, idxPf)),
+      beni: toNumber(at(cols, idxBeni)),
+      beniP: toNumber(at(cols, idxBeniP)),
       abilityIta: (at(cols, idxAbilityIta) || "").trim(),
       abilityEng: (at(cols, idxAbilityEng) || "").trim(),
     };
@@ -274,10 +302,21 @@ export function getComputedAllyStats(ally: Ally, level: number, inheritedAlliesM
   const cat = (key: StatCategory): [number, number, number, number] =>
     [sumCategory(key, 0), sumCategory(key, 1), sumCategory(key, 2), sumCategory(key, 3)];
 
+  // pf/beni/beniP: somma diretta sulle rarità ereditate, SENZA
+  // getAllyStatValue — a differenza dei boost di combattimento (che scalano
+  // con val1+livello), la produzione degli alleati "science" è un valore
+  // fisso già letto al livello 100 (vedi Ally.pf/beni/beniP): non dipende
+  // dal parametro `level` di questa funzione.
+  const sumProduction = (key: "pf" | "beni" | "beniP") =>
+    inherited.reduce((s, a) => s + a[key], 0);
+
   return {
     computedGeneral: cat("general"),
     computedGbg:     cat("gbg"),
     computedSped:    cat("sped"),
     computedIq:      cat("iq"),
+    computedPf:      sumProduction("pf"),
+    computedBeni:    sumProduction("beni"),
+    computedBeniP:   sumProduction("beniP"),
   };
 }

@@ -134,7 +134,7 @@ export class BuildingModel {
       time: 0, size: "1x1", area: 1, road: 0, pop: 0, fel: 0,
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
-      iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0, 
+      iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "", fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0,
       beni: 0, benip: 0, benis: 0, benib: 0, benig: 0, mon: 0, mat: 0, bp: 0, fsp: 0, tpm: 0, tpb: 0, 
       adm: 0, mod: 0, rin: 0, imm: 0, fragments: ""
     };

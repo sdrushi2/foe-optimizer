@@ -549,9 +549,17 @@ const UI_STRINGS = {
     it: (n: number) => n > 1 ? `${n}x CONNESSI INUTILMENTE` : "CONNESSO INUTILMENTE",
     en: (n: number) => n > 1 ? `${n}x NEEDLESSLY CONNECTED` : "NEEDLESSLY CONNECTED",
   },
-  historicalAllySlotTitle: {
-    it: "L'edificio può ospitare un Alleato Storico",
-    en: "The building can host a Historical Ally",
+  /** Tooltip del badge slot alleato (⭐ militare / 🔬 scienza, vedi App.tsx
+   *  getAllySlotIcon). "military"/"science" è il valore grezzo di
+   *  allyType (M/S -> nome esteso), non serve una label pre-risolta: la
+   *  frase è la stessa per le due lingue, cambia solo il tipo interpolato. */
+  historicalAllySlotTitleMilitary: {
+    it: "L'edificio può ospitare un Alleato Storico (militare)",
+    en: "The building can host a Historical Ally (military)",
+  },
+  historicalAllySlotTitleScience: {
+    it: "L'edificio può ospitare un Alleato Storico (scienza)",
+    en: "The building can host a Historical Ally (science)",
   },
   wonInGbgTitle: {
     it: "L'edificio si vince nei Campi",
@@ -616,10 +624,6 @@ const UI_STRINGS = {
   allyHasUnplacedCopyTitle: {
     it: "Hai una copia non posizionata in città",
     en: "You have an unplaced copy in your city",
-  },
-  ally1stLevelValueTitle: {
-    it: "Valore a livello 1",
-    en: "Level 1 value",
   },
   colAlly: {
     it: "Alleato",
