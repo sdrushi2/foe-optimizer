@@ -207,6 +207,10 @@ export interface BookmarkletData {
    *  Presente solo con il bookmarklet aggiornato (versione che cattura ExtPlayerAvatar).
    *  Assente nei payload importati con bookmarklet vecchi. */
   portraitUrl?: string;
+  /** Nome del giocatore visitato (CityMap.OtherPlayer.name), usato per proporre
+   *  il nome del nuovo profilo all'import. Presente solo con il bookmarklet
+   *  aggiornato; assente nei payload importati con bookmarklet vecchi. */
+  playerName?: string;
 }
 
 // ─── Validazione ──────────────────────────────────────────────────────────

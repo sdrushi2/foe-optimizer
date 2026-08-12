@@ -3421,7 +3421,23 @@ export default function App() {
 
     // 2) Dati validi: crea il nuovo profilo, lo attiva e svuota gli stati.
     const id = `p_${Date.now()}`;
-    const name = t("defaultProfileName", uiLang, profiles.length + 1);
+    // Se il bookmarklet ha catturato il nome del giocatore visitato (playerName),
+    // lo usiamo come nome profilo proposto invece del generico "Profilo N".
+    // In caso di collisione con un nome già esistente, appendiamo un numero
+    // progressivo ("Nome 2", "Nome 3", ...) finché non troviamo un nome libero.
+    const existingNames = new Set(profiles.map(p => p.name));
+    let name: string;
+    if (typeof data.playerName === "string" && data.playerName.trim() !== "") {
+      const base = data.playerName.trim();
+      name = base;
+      let suffix = 2;
+      while (existingNames.has(name)) {
+        name = `${base} ${suffix}`;
+        suffix += 1;
+      }
+    } else {
+      name = t("defaultProfileName", uiLang, profiles.length + 1);
+    }
     const newProfile = { id, name };
     const updated = [...profiles, newProfile];
     setProfiles(updated);
