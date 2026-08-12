@@ -5292,7 +5292,8 @@
     },
     "upgrade_kit_FALL26A": {
       "names": {
-        "en": "Momiji Stop Upgrade Kit"
+        "en": "Momiji Stop Upgrade Kit",
+        "it": "Kit di Aggiornamento Fermata Momiji"
       },
       "steps": [
         "W_MultiAge_FALL26A1",
@@ -5307,7 +5308,8 @@
     },
     "silver_upgrade_kit_FALL26A": {
       "names": {
-        "en": "Momiji Station Silver Upgrade Kit"
+        "en": "Momiji Station Silver Upgrade Kit",
+        "it": "Kit di Aggiornamento Argento Stazione Momiji"
       },
       "steps": [
         "W_MultiAge_FALL26A8",
@@ -5316,7 +5318,8 @@
     },
     "golden_upgrade_kit_FALL26A": {
       "names": {
-        "en": "Momiji Terminal Golden Upgrade Kit"
+        "en": "Momiji Terminal Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Terminal Momiji"
       },
       "steps": [
         "W_MultiAge_FALL26A9",
@@ -5325,7 +5328,8 @@
     },
     "upgrade_kit_ascended_FALL26B": {
       "names": {
-        "en": "Ascended Koyo Treat Upgrade Kit"
+        "en": "Ascended Koyo Treat Upgrade Kit",
+        "it": "Kit di aggiornamento Delizia Koyo Ascesa"
       },
       "steps": [
         "W_MultiAge_FALL26B1",
@@ -5334,7 +5338,8 @@
     },
     "upgrade_kit_ascended_FALL26C": {
       "names": {
-        "en": "Ascended Kinoko Stage Upgrade Kit "
+        "en": "Ascended Kinoko Stage Upgrade Kit ",
+        "it": "Kit di Aggiornamento Palco Kinoko Asceso"
       },
       "steps": [
         "W_MultiAge_FALL26C1",
@@ -5343,7 +5348,8 @@
     },
     "upgrade_kit_FALL26E": {
       "names": {
-        "en": "Ramen Nook Upgrade Kit "
+        "en": "Ramen Nook Upgrade Kit ",
+        "it": "Kit di Aggiornamento Angolo del Ramen"
       },
       "steps": [
         "W_MultiAge_FALL26E1",
@@ -5352,7 +5358,8 @@
     },
     "golden_upgrade_kit_FALL21A": {
       "names": {
-        "en": "Golden Crops Harvest Golden Upgrade Kit "
+        "en": "Golden Crops Harvest Golden Upgrade Kit ",
+        "it": "Kit di Aggiornamento Oro Raccolto Colture "
       },
       "steps": [
         "W_MultiAge_FallBonus21i",
@@ -5361,7 +5368,8 @@
     },
     "platinum_upgrade_kit_FALL21A": {
       "names": {
-        "en": "Golden Crops Feast Platinum Upgrade Kit "
+        "en": "Golden Crops Feast Platinum Upgrade Kit ",
+        "it": "Kit di Aggiornamento Platino Festa delle Colture dorate"
       },
       "steps": [
         "W_MultiAge_FALL21A10",
@@ -5370,7 +5378,8 @@
     },
     "upgrade_kit_ascended_FALL21A": {
       "names": {
-        "en": "Ascended Golden Crops Feast Upgrade Kit "
+        "en": "Ascended Golden Crops Feast Upgrade Kit ",
+        "it": "Kit di Aggiornamento Banchetto delle Colture dorate Asceso"
       },
       "steps": [
         "W_MultiAge_FALL21A11",
@@ -5379,7 +5388,8 @@
     },
     "upgrade_kit_GBG26G": {
       "names": {
-        "en": "Steelport Warship Upgrade Kit"
+        "en": "Steelport Warship Upgrade Kit",
+        "it": "Kit di Aggiornamento Nave da guerra Steelport"
       },
       "steps": [
         "W_MultiAge_GBG26G1",
@@ -5388,7 +5398,8 @@
     },
     "upgrade_kit_GBG26H": {
       "names": {
-        "en": "Steelport Silo Upgrade Kit"
+        "en": "Steelport Silo Upgrade Kit",
+        "it": "Kit di Aggiornamento Silo di Steelport"
       },
       "steps": [
         "W_MultiAge_GBG26H1",
@@ -5397,7 +5408,8 @@
     },
     "upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Upgrade Kit"
+        "en": "WIN26A Upgrade Kit",
+        "it": "WIN26A Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26A1",
@@ -5412,7 +5424,8 @@
     },
     "silver_upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Silver Silver Upgrade Kit"
+        "en": "WIN26A Silver Silver Upgrade Kit",
+        "it": "WIN26A Silver Silver Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26A8",
@@ -5421,7 +5434,8 @@
     },
     "golden_upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Gold Golden Upgrade Kit"
+        "en": "WIN26A Gold Golden Upgrade Kit",
+        "it": "WIN26A Gold Golden Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26A9",
@@ -5430,7 +5444,8 @@
     },
     "platinum_upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Platinum Platinum Upgrade Kit"
+        "en": "WIN26A Platinum Platinum Upgrade Kit",
+        "it": "WIN26A Platinum Platinum Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26A10",
@@ -5439,7 +5454,8 @@
     },
     "upgrade_kit_ascended_WIN26A": {
       "names": {
-        "en": "WIN26A Platinum Ascended Upgrade Kit"
+        "en": "WIN26A Platinum Ascended Upgrade Kit",
+        "it": "WIN26A Platinum Ascended Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26A11",
@@ -5451,7 +5467,8 @@
     },
     "upgrade_kit_ascended_WIN26B": {
       "names": {
-        "en": "Ascended WIN26B Upgrade Kit"
+        "en": "Ascended WIN26B Upgrade Kit",
+        "it": "Ascended WIN26B Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26B1",
@@ -5460,7 +5477,8 @@
     },
     "upgrade_kit_ascended_WIN26C": {
       "names": {
-        "en": "Ascended WIN26C Upgrade Kit"
+        "en": "Ascended WIN26C Upgrade Kit",
+        "it": "Ascended WIN26C Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_WIN26C1",
@@ -10763,7 +10781,8 @@
     },
     "selection_kit_FALL26A": {
       "names": {
-        "en": "Momiji Stop Selection Kit"
+        "en": "Momiji Stop Selection Kit",
+        "it": "Kit di Selezione Fermata Momiji"
       },
       "options": [
         "W_MultiAge_FALL26A1",
@@ -10772,7 +10791,8 @@
     },
     "silver_selection_kit_FALL26A": {
       "names": {
-        "en": "Momiji Station Silver Selection Kit"
+        "en": "Momiji Station Silver Selection Kit",
+        "it": "Kit di Selezione Argento Stazione Momiji"
       },
       "options": [
         "W_MultiAge_FALL26A1",
@@ -10782,7 +10802,8 @@
     },
     "golden_selection_kit_FALL26A": {
       "names": {
-        "en": "Momiji Terminal Golden Selection Kit"
+        "en": "Momiji Terminal Golden Selection Kit",
+        "it": "Kit Selezione Oro Terminal Momiji"
       },
       "options": [
         "W_MultiAge_FALL26A1",
@@ -10793,7 +10814,8 @@
     },
     "golden_selection_kit_FALL21A": {
       "names": {
-        "en": "Golden Crops Harvest Golden Selection Kit"
+        "en": "Golden Crops Harvest Golden Selection Kit",
+        "it": "Kit di Selezione Oro Raccolto Colture"
       },
       "options": [
         "W_MultiAge_FallBonus21a",
@@ -10803,7 +10825,8 @@
     },
     "platinum_selection_kit_FALL21A": {
       "names": {
-        "en": "Golden Crops Feast Platinum Selection Kit"
+        "en": "Golden Crops Feast Platinum Selection Kit",
+        "it": "Kit di Selezione Platino Festa delle Colture dorate"
       },
       "options": [
         "W_MultiAge_FallBonus21a",
@@ -10814,7 +10837,8 @@
     },
     "selection_kit_FALL26BC": {
       "names": {
-        "en": "Koyo Retreat Selection Kit"
+        "en": "Koyo Retreat Selection Kit",
+        "it": "Kit di Selezione Ritirata Koyo"
       },
       "options": [
         "W_MultiAge_FALL26B1",
@@ -10823,7 +10847,8 @@
     },
     "selection_kit_FALL26E": {
       "names": {
-        "en": "Ramen Nook Selection Kit"
+        "en": "Ramen Nook Selection Kit",
+        "it": "Kit di Selezione Angolo del Ramen"
       },
       "options": [
         "W_MultiAge_FALL26E1",
@@ -10832,7 +10857,8 @@
     },
     "selection_kit_epic_FALL26": {
       "names": {
-        "en": "Epic Fall 2026 Selection Kit"
+        "en": "Epic Fall 2026 Selection Kit",
+        "it": "Kit di Selezione Epico Autunnale 2026"
       },
       "options": [
         "W_MultiAge_FALL25A1",
@@ -10876,7 +10902,8 @@
     },
     "selection_kit_GBG26G": {
       "names": {
-        "en": "Steelport Warship Selection Kit"
+        "en": "Steelport Warship Selection Kit",
+        "it": "Kit di Selezione Nave da guerra Steelport"
       },
       "options": [
         "W_MultiAge_GBG26G1",
@@ -10885,7 +10912,8 @@
     },
     "selection_kit_GBG26H": {
       "names": {
-        "en": "Steelport Silo Selection Kit"
+        "en": "Steelport Silo Selection Kit",
+        "it": "Kit di Selezione Silo di Steelport"
       },
       "options": [
         "W_MultiAge_GBG26H1",
@@ -10894,7 +10922,8 @@
     },
     "selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Selection Kit"
+        "en": "WIN26A Selection Kit",
+        "it": "WIN26A Selection Kit"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -10903,7 +10932,8 @@
     },
     "silver_selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Silver Silver Selection Kit"
+        "en": "WIN26A Silver Silver Selection Kit",
+        "it": "WIN26A Silver Silver Selection Kit"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -10913,7 +10943,8 @@
     },
     "golden_selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Gold Golden Selection Kit"
+        "en": "WIN26A Gold Golden Selection Kit",
+        "it": "WIN26A Gold Golden Selection Kit"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -10924,7 +10955,8 @@
     },
     "platinum_selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Platinum Platinum Selection Kit"
+        "en": "WIN26A Platinum Platinum Selection Kit",
+        "it": "WIN26A Platinum Platinum Selection Kit"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -10936,7 +10968,8 @@
     },
     "selection_kit_WIN26BC": {
       "names": {
-        "en": "WIN26BC Selection Kit"
+        "en": "WIN26BC Selection Kit",
+        "it": "WIN26BC Selection Kit"
       },
       "options": [
         "W_MultiAge_WIN26B1",
@@ -10945,7 +10978,8 @@
     },
     "selection_kit_epic_WIN26": {
       "names": {
-        "en": "Epic Winter 2026 Selection Kit"
+        "en": "Epic Winter 2026 Selection Kit",
+        "it": "Kit di Selezione Epico Inverno 2026"
       },
       "options": [
         "W_MultiAge_WIN25A1",
