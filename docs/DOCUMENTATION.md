@@ -288,45 +288,64 @@ Una stringa contenente codice JavaScript che l'utente salva tra i preferiti del
 browser e clicca mentre è sulla pagina del gioco. Quando eseguito, accede agli oggetti
 globali del gioco e raccoglie:
 
-| Sorgente nel gioco | Cosa contiene |
-|---|---|
-| `MainParser.Inventory` | Tutti gli item dell'inventario (edifici, kit, frammenti, consumabili). |
-| `Allies.allyList` (fallback: `MainParser.Allies.allyList`) | Gli alleati posseduti dal giocatore. Da luglio 2026 FoE Helper espone `Allies` come oggetto globale a sé stante; il bookmarklet prova prima il nuovo percorso e ripiega sul vecchio per le versioni non aggiornate. |
-| `MainParser.CityMapData` | La disposizione della città (quali edifici, dove, a che livello). |
-| `MainParser.CityEntities` | Le definizioni complete delle entità (statistiche per era). |
-| `CityMap.Main.unlockedAreas` | Le aree di città sbloccate (spazio disponibile). |
-| `ExtPlayerAvatar` + `srcLinks` | URL CDN dell'avatar del giocatore (facoltativo: presente solo se le variabili globali esistono nella pagina di gioco). |
+**v3 (agosto 2026) — bookmarklet "universale".** Riscritto per supportare **sia FoE
+Helfer che Forge Hammer** con lo stesso script, e per supportare l'import della
+**città di un altro giocatore in visita**, non solo della propria. Punti chiave:
+
+- **Rilevamento dell'helper**: `S = typeof MainParser!=='undefined' ? MainParser :
+  (typeof FH!=='undefined' ? FH.Main : null)`. Se nessuno dei due esiste (né
+  `MainParser` né `FH`), lo script si ferma subito con un alert (`'No supported
+  helper found (FoE Helfer or Forge Hammer required)'`) invece di lasciar esplodere
+  un TypeError criptico.
+- **Rilevamento città propria vs. in visita**: `V = (ActiveMap ?? FH.ActiveMap) ===
+  'OtherPlayer'`. Se `V` è vero, si legge da `CityMap.OtherPlayer` invece che da
+  `CityMap.Main` per mappa e aree sbloccate.
+- **Inventario e alleati azzerati in visita**: `inventory: V ? [] : Object.values(S.Inventory)`,
+  `allies: V ? {} : (Allies ?? S.Allies).allyList`. Non è un limite del bookmarklet:
+  il gioco stesso non espone MAI inventario/alleati per un giocatore diverso da sé
+  stessi, quindi in visita questi due campi sono sempre vuoti per costruzione.
+- **Nome e avatar del giocatore visitato**: quando `V` è vero, si legge il nome da
+  `CityMap.OtherPlayer.name` e l'avatar da `Profile.otherPlayer.other_player.avatar`
+  (FoE Helfer) — popolati dallo stesso handler `visitPlayer` che popola
+  `CityMap.OtherPlayer`. Quando `V` è falso (città propria), nome e avatar vengono da
+  `ExtPlayerName`/`ExtPlayerAvatar` (FoE Helfer) o da `FH.Player.Name`/`FH.Player.Avatar`
+  (Forge Hammer) — percorsi diversi per i due helper, entrambi provati.
+- **Alleati**: legge solo da `Allies.allyList` (percorso globale, versioni recenti di
+  FoE Helfer) o `S.Allies.allyList` (fallback, versioni meno recenti / Forge Hammer).
+  Nessun'altra retrocompatibilità oltre queste due.
+- **Nessun `try/catch` nello script**: la diagnosi di errori è delegata interamente
+  all'app via `validateBookmarkletData` (§6.3). Se un campo manca, il bookmarklet
+  produce comunque un payload (con quel campo `undefined`/vuoto) e sarà l'app a
+  segnalarlo con un messaggio chiaro all'import, invece che con un alert generico
+  dentro la pagina di gioco.
 
 Costruisce un oggetto JSON e lo copia negli appunti (con fallback su `execCommand`
 per i browser senza `navigator.clipboard`).
-
-**Guard "FoE Helper è cambiato".** Prima di costruire il payload, lo script verifica
-che ALMENO uno dei due percorsi alleati esista (`Allies` globale o legacy
-`MainParser.Allies`): se mancano entrambi, si ferma con un alert chiaro che invita a
-riscaricare la bacchetta dal sito, invece di lasciar esplodere un TypeError criptico
-("Cannot read properties of undefined"). Lezione del passaggio v1→v2: gli utenti con
-lo script vecchio nei preferiti vedono solo l'errore del LORO script, quindi il
-messaggio utile va predisposto PRIMA della prossima rottura, non dopo.
 
 **Ottimizzazione delle aree:** per ridurre la dimensione del payload, le aree sbloccate
 standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `width`,
 `length` (ricostruibili al default 4) e `__class__`.
 
-**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`).** Il payload include
-un campo `_v` la cui versione corrente è la costante esportata
+**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`, attualmente **3**).**
+Il payload include un campo `_v` la cui versione corrente è la costante esportata
 `CURRENT_BOOKMARKLET_VERSION`, **interpolata** direttamente dentro `BOOKMARKLET_JS`
-(nessun numero duplicato da tenere sincronizzato a mano). All'import, `handleWandClick`
-in App.tsx confronta il `_v` del payload con la versione corrente (`_v` assente =
-versione pre-versionamento, trattata come 0): se è inferiore, mostra un alert
-(`bookmarkletOutdatedAlert`) che invita a ri-trascinare il bookmarklet aggiornato. Si
-incrementa quando cambia il MODO in cui il bookmarklet legge i dati dal gioco (es. FoE
-Helper che ristruttura un oggetto globale), non per modifiche cosmetiche. v2 (luglio
-2026): lo spostamento di `Allies` fuori da `MainParser` descritto sopra — la lettura
-è cambiata (con fallback, quindi retrocompatibile), la struttura del payload no.
-Contestualmente, in home è stato mostrato un **annuncio one-off dismissibile**
-(`BOOKMARKLET_V2_ANNOUNCEMENT_ID = "bookmarklet-v2-allies-2026-07"`, persistito in
-`DISMISSED_ANNOUNCEMENTS_KEY`, vedi §21): l'ID di un annuncio già pubblicato non va
-mai cambiato, o riapparirebbe a chi l'ha chiuso.
+(nessun numero duplicato da tenere sincronizzato a mano). All'import, dopo
+`handleImportAll`, si confronta il `_v` del payload con la versione corrente (`_v`
+assente = versione pre-versionamento, trattata come 0): se è inferiore, si apre il
+**modale "Bacchetta magica obsoleta"** (`isBookmarkletOutdatedModalOpen`, §24.3) che
+spiega il nuovo supporto Forge Hammer + import città altrui e guida l'utente a
+ri-trascinare il bookmarklet aggiornato nei preferiti. Si incrementa quando cambia il
+MODO in cui il bookmarklet legge i dati dal gioco, non per modifiche cosmetiche.
+- **v2** (luglio 2026): lo spostamento di `Allies` fuori da `MainParser` in FoE
+  Helfer — la lettura è cambiata (con fallback, quindi retrocompatibile), la
+  struttura del payload no.
+- **v3** (agosto 2026): riscrittura universale descritta sopra — supporto Forge
+  Hammer, import città altrui, rimozione del `try/catch` esterno.
+
+L'annuncio one-off dismissibile usato per v2 (`BOOKMARKLET_V2_ANNOUNCEMENT_ID`,
+persistito in `DISMISSED_ANNOUNCEMENTS_KEY`) è stato **rimosso interamente** insieme a
+tutto il meccanismo generico di annunci dismissibili, sostituito per v3 dal modale
+dedicato sopra descritto (più informativo, non serve più un meccanismo generico).
 
 > **REGOLA CRITICA:** ciò che **non va modificato** è la **struttura dei dati** che il
 > bookmarklet raccoglie ed esporta — l'oggetto `data` con i suoi 5 campi obbligatori (`inventory`,
@@ -1956,11 +1975,14 @@ foe_p_<profileId>_allies_v2
 
 Più altre chiavi globali per le impostazioni: difesa, spedizioni
 (abilitate/attacco), sigma, colonne pop/fel/IQ-prod/produzioni, mappa aperta, vista
-database, lingua UI, e `DISMISSED_ANNOUNCEMENTS_KEY` — chiave **unica** per gli
-annunci one-off dismissibili in home: il valore è un array di ID di annuncio già
-chiusi dall'utente (più annunci nel tempo condividono questa singola chiave; es.
-`bookmarklet-v2-allies-2026-07`, vedi §6.1). L'ID di un annuncio già pubblicato non
-va mai cambiato, o riapparirebbe a chi l'ha chiuso.
+database, lingua UI.
+
+> Il meccanismo generico di **annunci one-off dismissibili** (chiave
+> `DISMISSED_ANNOUNCEMENTS_KEY`, usata per l'annuncio v1→v2 del bookmarklet) è stato
+> **rimosso interamente** in agosto 2026, diventato orfano dopo la sostituzione
+> dell'annuncio con il modale dedicato "Bacchetta magica obsoleta" (§6.1, §24.3).
+> Nessun consumatore residuo: se serve di nuovo un annuncio dismissibile generico va
+> reintrodotto da zero.
 
 **Rotazione versione:** incrementare `STORAGE_FORMAT_VERSION` invalida automaticamente
 tutte le chiavi delle versioni precedenti. I dati vecchi non vengono più letti e
@@ -2226,10 +2248,12 @@ un'ipotesi plausibile in teoria, smentita dalla verifica empirica.
   (§14) per associare ogni copia specifica al proprio alleato.
 - **Pulsante Help** — nella barra tab, apre `/guida.html` o `/guide.html` (guida
   online in `public/`, fuori bundle) secondo `uiLang`.
-- **Annunci one-off dismissibili** — `dismissedAnnouncements`/`dismissAnnouncement`,
-  persistiti in `DISMISSED_ANNOUNCEMENTS_KEY` (§21.1); esempio reale in §6.1.
-- **Avviso bookmarklet obsoleto** — all'import, se `_v` del payload <
-  `CURRENT_BOOKMARKLET_VERSION` (§6.1), alert `bookmarkletOutdatedAlert`.
+- **Modale "Bacchetta magica obsoleta"** (`isBookmarkletOutdatedModalOpen`) — all'import,
+  se `_v` del payload < `CURRENT_BOOKMARKLET_VERSION` (§6.1), si apre questo modale
+  (icona `Wand2`, bordo/colori ambra — distinto dal modale "Aggiornamento richiesto"
+  di §21.1 che usa rosso/`RotateCcw`) con istruzioni step-by-step per ri-trascinare il
+  bookmarklet aggiornato. Sostituisce il vecchio `alert(bookmarkletOutdatedAlert)` e
+  il meccanismo di annunci dismissibili (rimossi, vedi §21.1).
 - **Popup immagine con chiusura ritardata** — timer
   `scheduleImagePopupClose`/`cancelImagePopupClose`: il mouse può attraversare lo
   spazio tra trigger e pannello (e copiare nome/ID) senza che il popup si chiuda.
@@ -2702,6 +2726,17 @@ globali della mia città se aggiorno tutto?".
   diversamente) + "ALL'ERA CORRENTE:"/"ALL'ERA MASSIMA:" in rosso (chiavi
   `outdatedSummaryToCurrentEra`/`outdatedSummaryToMaxEra`) + nome era in
   verde — tutto maiuscolo (`uppercase` sul contenitore).
+- **Visibilità del pulsante "ERA ➜"**: condizionata a `cityEntityIds.size > 0`
+  (qualunque edificio importato in città), **non** a `outdatedBuildings.size > 0`.
+  Scelta esplicita dell'utente: anche un giocatore già interamente aggiornato
+  all'era corrente può voler vedere cosa cambierebbe arrivando all'era massima
+  gestita dal tool (card destra), quindi il pulsante resta sempre visibile finché
+  c'è una città importata, non solo quando esistono edifici da aggiornare.
+- **Testo empty state** (`outdatedSummaryEmpty`, mostrato nella card sinistra
+  quando `outdatedBuildings` è vuoto ma `cityEntityIds` no): "Tutti gli edifici
+  della città sono già aggiornati all'era corrente." — non un'assenza di
+  differenze di statistiche (formulazione precedente, fuorviante), ma la
+  conseguenza diretta di non avere edifici obsoleti da aggiornare.
 
 ### 24.4 Import e gestione errori
 
@@ -2949,9 +2984,9 @@ Queste sono le regole d'oro per modificare il progetto in sicurezza:
    campi): è il contratto di import, cambiarla rompe i bookmarklet già salvati. I
    dettagli non-dato (es. messaggi di `alert()`) si possono invece modificare — la
    struttura resta valida e i vecchi bookmarklet continuano a funzionare. Quando è il
-   GIOCO/FoE Helper a cambiare, il pattern corretto è: lettura col fallback sul vecchio
-   percorso + bump di `CURRENT_BOOKMARKLET_VERSION` (esempio reale v2 in §6.1) — mai
-   una rottura secca del contratto. Vedi §6.1.
+   GIOCO/FoE Helfer/Forge Hammer a cambiare, il pattern corretto è: lettura col
+   fallback sul vecchio percorso + bump di `CURRENT_BOOKMARKLET_VERSION` (esempi reali
+   v2 e v3 in §6.1) — mai una rottura secca del contratto. Vedi §6.1.
 
 3. **Una sola sorgente di verità.** I tipi del payload stanno solo in `bookmarklet.ts`,
    le lingue solo in `languages.ts`, i pattern ID e i nomi consumabili solo in
