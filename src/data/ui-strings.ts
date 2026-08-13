@@ -919,6 +919,42 @@ const UI_STRINGS = {
     it: "Mostra solo edifici di ere precedenti",
     en: "Show only buildings from previous ages",
   },
+  outdatedSummaryTitle: {
+    it: "SE AGGIORNI TUTTI GLI EDIFICI VECCHI",
+    en: "IF YOU UPGRADE ALL OLD BUILDINGS",
+  },
+  outdatedSummaryFallbackTitle: {
+    it: "SE AGGIORNI TUTTI GLI EDIFICI IN CITTÀ",
+    en: "IF YOU UPGRADE ALL BUILDINGS IN YOUR CITY",
+  },
+  outdatedSummaryCount: {
+    it: (copies: number) => `(${copies} IN TOTALE)`,
+    en: (copies: number) => `(${copies} IN TOTAL)`,
+  },
+  outdatedSummaryToCurrentEra: {
+    it: "ALL'ERA CORRENTE:",
+    en: "TO THE CURRENT AGE:",
+  },
+  outdatedSummaryToMaxEra: {
+    it: "ALL'ERA MASSIMA:",
+    en: "TO THE LATEST AGE:",
+  },
+  outdatedSummaryButtonTitle: {
+    it: "Riepilogo: cosa cambia aggiornando tutti gli edifici vecchi (era attuale ed era massima)",
+    en: "Summary: what changes if you upgrade all old buildings (current age and latest age)",
+  },
+  outdatedSummaryEmpty: {
+    it: "Nessuna differenza di statistiche: gli edifici vecchi producono già gli stessi valori dell'era corrente.",
+    en: "No stat differences: the old buildings already produce the same values as the current age.",
+  },
+  outdatedSummaryAlreadyAtMax: {
+    it: "Sei già all'ultima era gestita: nessun confronto aggiuntivo.",
+    en: "You're already at the latest supported age: no extra comparison.",
+  },
+  outdatedSummaryUnchangedTitle: {
+    it: "Statistiche invariate",
+    en: "Unchanged stats",
+  },
   upgradableBuildingsButton: {
     it: "EDIFICI AGGIORNABILI",
     en: "UPGRADABLE BUILDINGS",

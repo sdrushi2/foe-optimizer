@@ -2124,6 +2124,7 @@ export default function App() {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isProdSummaryOpen, setIsProdSummaryOpen] = useState(false);
   const [isRoadSummaryOpen, setIsRoadSummaryOpen] = useState(false);
+  const [isOutdatedSummaryOpen, setIsOutdatedSummaryOpen] = useState(false);
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
 
@@ -4437,6 +4438,205 @@ export default function App() {
     iconOneUp, iconImm, iconRinn, iconAiuto,
   }), []);
 
+  // Riepilogo aggregato "se TUTTI gli edifici vecchi venissero aggiornati":
+  // stesso identico calcolo per-edificio del tooltip "SE AGGIORNI A [Era]"
+  // (righe 1297-1320 sopra), ma sommato su OGNI edificio di outdatedBuildings
+  // invece di uno solo, e senza raggruppare per era di provenienza — qui
+  // interessa solo il totale per campo su tutta la città (scelta esplicita
+  // dell'utente: un numero solo per statistica, non un blocco per era).
+  // Parametrizzata sul "to" (i valori target): due varianti richieste
+  // dall'utente, "era corrente del giocatore" e "ultima era gestita dal
+  // tool" (Hub oggi, FALLBACK_ERA — diventerà SAD non appena si aggiunge la
+  // riga in ages.csv, nessun hardcoding). Per l'era corrente il "to" è quello
+  // già in b (allProcessedBuildings, via applyEraStats). Per FALLBACK_ERA il
+  // "to" viene invece da BUILDING_BY_ID: i valori grezzi del CSV sono per
+  // costruzione quelli dell'ultima era gestita (BOOST_ERA lato pipeline
+  // Python) — nessun ricalcolo, nessuna nuova struttura dati/stato persistito
+  // (idea dell'utente: "i valori della tab Database sono già quelli dell'era
+  // massima, basta confrontare gli ID").
+  // Arrotondamento a 2 decimali sui totali PESATI (from/to * count sommati su
+  // molte copie): senza di esso valori frazionari (es. boost % non interi)
+  // accumulano rumore floating-point visibile (es. "1.2000000000000002"),
+  // difetto che il tooltip per-edificio non ha mai (lì somma sempre UNA sola
+  // istanza alla volta, valori "puliti" dal JSON).
+  const round2 = (v: number) => Math.round(v * 100) / 100;
+  const buildOutdatedSummary = (targetEraId: number, getTo: (b: ProcessedBuilding) => { [k: string]: unknown }) => {
+    if (targetEraId < 0 || outdatedBuildings.size === 0) {
+      return {
+        totalBuildings: 0, totalCopies: 0,
+        totals: [] as Array<{ field: DiffField; from: number; to: number }>,
+        unchanged: [] as Array<{ field: DiffField; from: number; to: number }>,
+      };
+    }
+    const sums = new Map<string, { from: number; to: number }>();
+    let totalCopies = 0;
+    for (const b of allProcessedBuildings) {
+      if (!b.cityEntityId || !outdatedBuildings.has(b.cityEntityId)) continue;
+      const groups = entityInstanceEraStats.get(b.cityEntityId);
+      if (!groups) continue;
+      const bRec = getTo(b);
+      // ⚠️ "to" è il valore FISSO di questo edificio all'era target (uguale
+      // per ogni copia, non varia per gruppo era di provenienza) — va
+      // moltiplicato per il TOTALE delle copie obsolete dell'edificio e
+      // sommato UNA sola volta, non una volta per ogni gruppo era del loop
+      // sotto. Bug reale corretto in questo giro: sommare "to * count"
+      // dentro il loop sui gruppi faceva contare "to" più volte per gli
+      // edifici con copie sparse su più ere diverse (es. 3 copie a IronAge +
+      // 2 a BronzeAge → "to" sommato 2 volte invece di 1), gonfiando il
+      // totale rispetto alla somma reale delle singole righe in tabella
+      // (bug segnalato dall'utente: campo FSP con totale "to" più alto della
+      // somma dei 5 edifici visibili in città).
+      let buildingCopies = 0;
+      for (const [eraAge, count] of groups) {
+        const eraId = AGE_BY_CODE.get(eraAge)?.id ?? -1;
+        if (eraId < 0 || eraId >= targetEraId) continue; // solo copie di ere più vecchie del target
+        buildingCopies += count;
+      }
+      if (buildingCopies === 0) continue;
+      totalCopies += buildingCopies;
+      // Somma SEMPRE "from" per ogni campo (nessun filtro from!==to qui):
+      // stesso pattern di fullCitySummaryToFallback, per poter poi separare
+      // i campi che cambiano da quelli che restano invariati (richiesta
+      // esplicita dell'utente: mostrare anche le statistiche che NON
+      // variano, in una sezione a parte del pannello).
+      for (const [eraAge, count, stats] of groups) {
+        const eraId = AGE_BY_CODE.get(eraAge)?.id ?? -1;
+        if (eraId < 0 || eraId >= targetEraId) continue;
+        const oldRec = stats as unknown as { [k: string]: unknown };
+        for (const f of DIFF_FIELDS) {
+          const from = f.get(oldRec);
+          const entry = sums.get(f.key) ?? { from: 0, to: 0 };
+          entry.from += from * count; // "from" varia per gruppo era: corretto sommarlo per ciascuno
+          sums.set(f.key, entry);
+        }
+      }
+      // "to" sommato una sola volta per edificio, pesato sul totale copie.
+      for (const f of DIFF_FIELDS) {
+        const to = f.get(bRec);
+        const entry = sums.get(f.key) ?? { from: 0, to: 0 };
+        entry.to += to * buildingCopies;
+        sums.set(f.key, entry);
+      }
+    }
+    const allTotals = DIFF_FIELDS
+      .filter(f => sums.has(f.key))
+      .map(f => {
+        const s = sums.get(f.key)!;
+        return { field: f, from: round2(s.from), to: round2(s.to) };
+      });
+    // l'arrotondamento può azzerare differenze residue di solo rumore
+    const totals = allTotals.filter(x => Math.abs(x.from - x.to) > 1e-6);
+    const unchanged = allTotals.filter(x => Math.abs(x.from - x.to) <= 1e-6 && (x.from !== 0 || x.to !== 0));
+    return { totalBuildings: outdatedBuildings.size, totalCopies, totals, unchanged };
+  };
+  // ⚠️ allProcessedBuildings è la fonte CSV GREZZA (valori statici a
+  // FALLBACK_ERA/Hub), MAI override-ata: l'override "valori dell'era del
+  // giocatore" avviene SOLO dentro eraAdjustedSource via applyEraStats, e
+  // quello dipende da activeTab. Qui serve applicarlo esplicitamente — bug
+  // reale corretto in questo stesso giro: senza questa chiamata il "to" di
+  // outdatedSummary e il "from" di fullCitySummaryToFallback leggevano
+  // entrambi gli stessi valori CSV statici, dando from===to quasi ovunque
+  // (sintomo osservato: card MAX con "N → 0" su ogni campo, perché i pochi
+  // campi che DIFFERISCONO dal CSV grezzo — quelli assenti a Hub — avevano
+  // "from" letto anch'esso dal CSV invece che dai veri valori dell'era del
+  // giocatore).
+  const outdatedSummary = useMemo(
+    () => buildOutdatedSummary(currentEraId, (b) => applyEraStats(b) as unknown as { [k: string]: unknown }),
+    [currentEraId, outdatedBuildings, allProcessedBuildings, entityInstanceEraStats, DIFF_FIELDS, applyEraStats]
+  );
+  const fallbackEraId = useMemo(() => AGE_BY_CODE.get(FALLBACK_ERA)?.id ?? -1, []);
+
+  // Rendering condiviso dalle due sezioni del panel "+ERA" (era corrente /
+  // ultima era gestita), affiancate in una griglia a 2 colonne come le
+  // sezioni del pannello Debug (EDIFICI MATCHATI / GRANDI EDIFICI / SENZA
+  // MATCH) — non due panel separati. Estratta per evitare di duplicare il
+  // JSX tra i due target: l'unica differenza è la fonte dati (outdatedSummary,
+  // solo edifici obsoleti, vs fullCitySummaryToFallback, TUTTA la città) e
+  // il titolo/nome era mostrati. Ogni card occupa metà larghezza
+  // (grid-cols-2 lg:grid-cols-3 per i valori, non grid-cols-6 come quando il
+  // panel era full-width su tutta la toolbar).
+  const renderOutdatedSummaryCard = (
+    summary: {
+      totalBuildings: number; totalCopies: number;
+      totals: Array<{ field: DiffField; from: number; to: number }>;
+      unchanged: Array<{ field: DiffField; from: number; to: number }>;
+    },
+    titleKey: "outdatedSummaryTitle" | "outdatedSummaryFallbackTitle",
+    toEraKey: "outdatedSummaryToCurrentEra" | "outdatedSummaryToMaxEra",
+    targetEraName: string
+  ) => {
+    const { totalCopies, totals, unchanged } = summary;
+    // Campi sempre interi per convenzione: pop/fel/mon/mat/iqMon/iqMat/fp non
+    // hanno mai senso con decimali, anche se la somma pesata su molte copie
+    // può produrre un residuo (es. ",50" per mon/mat sommando edifici con
+    // boost frazionari) — formatInt tronca i decimali invece di mostrarli.
+    // fpb/benib/iqMonB/iqMatB sono percentuali di boost (stesso set formattato
+    // con formatProdPercent nelle celle della tabella principale, righe
+    // 1625/1631/1659/1680): il valore grezzo è una frazione (0,03 = 3%), va
+    // moltiplicato per 100 e mostrato con "%" invece che come decimale nudo.
+    const percentFields = ["fpb", "benib", "iqMonB", "iqMatB"];
+    const fmtField = (field: DiffField, v: number) => {
+      if (percentFields.includes(field.key)) return formatProdPercent(v);
+      return ["pop", "fel", "mon", "mat", "iqMon", "iqMat", "fp"].includes(field.key) ? formatInt(Math.round(v)) : formatDecimal(v, 2);
+    };
+    return (
+      <div className="flex flex-col rounded-lg bg-slate-950 border border-red-500/20">
+        <div className="px-3 pt-2 pb-1.5 border-b border-slate-800 flex items-baseline gap-1 flex-wrap uppercase">
+          <span className="text-xs font-bold text-red-400">{t(titleKey, uiLang)}</span>
+          <span className="text-xs font-bold text-white">{t("outdatedSummaryCount", uiLang, totalCopies)}</span>
+          <span className="text-xs font-bold text-red-400">{t(toEraKey, uiLang)}</span>
+          <span className="text-xs font-bold text-emerald-400">{targetEraName}</span>
+        </div>
+        <div className="px-3 pt-2 pb-2.5">
+          {totals.length === 0 ? (
+            <p className="text-[11px] text-slate-400 italic">{t("outdatedSummaryEmpty", uiLang)}</p>
+          ) : (
+            <div className="grid gap-x-3 gap-y-1 grid-cols-2 lg:grid-cols-4">
+              {[...totals].sort((a, b) => Number(isWideDiffKey(a.field.key)) - Number(isWideDiffKey(b.field.key))).map(({ field, from, to }) => {
+                const up = to > from;
+                const delta = to - from;
+                const fmt = (v: number) => fmtField(field, v);
+                return (
+                  <div key={field.key} className={`flex items-center gap-1 font-mono text-xs ${isWideDiffKey(field.key) ? "col-span-2 lg:col-span-4" : ""}`} title={t(field.labelKey, uiLang)}>
+                    {field.icon
+                      ? <img src={field.icon} alt={t(field.labelKey, uiLang)} className="h-4 w-4 shrink-0 object-contain" />
+                      : <span className="w-4 shrink-0 text-center">{field.emoji}</span>}
+                    <span className="text-slate-400 tabular-nums">{fmt(from)}</span>
+                    <span className="text-slate-600">→</span>
+                    <span className={`tabular-nums ${up ? "text-emerald-400" : "text-red-400"}`}>{fmt(to)}</span>
+                    <span className={`font-bold tabular-nums ${up ? "text-emerald-500/70" : "text-red-500/70"}`}>
+                      ({up ? "+" : ""}{fmt(delta)})
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {unchanged.length > 0 && (
+            <>
+              <div className="mt-2.5 pt-2 border-t border-slate-800">
+                <span className="text-xs font-bold text-white uppercase">{t("outdatedSummaryUnchangedTitle", uiLang)}</span>
+              </div>
+              <div className="mt-1.5 grid gap-x-3 gap-y-1 grid-cols-2 lg:grid-cols-4">
+                {[...unchanged].sort((a, b) => Number(isWideDiffKey(a.field.key)) - Number(isWideDiffKey(b.field.key))).map(({ field, from }) => {
+                  const fmt = (v: number) => fmtField(field, v);
+                  return (
+                    <div key={field.key} className={`flex items-center gap-1 font-mono text-xs ${isWideDiffKey(field.key) ? "col-span-2 lg:col-span-4" : ""}`} title={t(field.labelKey, uiLang)}>
+                      {field.icon
+                        ? <img src={field.icon} alt={t(field.labelKey, uiLang)} className="h-4 w-4 shrink-0 object-contain" />
+                        : <span className="w-4 shrink-0 text-center">{field.emoji}</span>}
+                      <span className="text-slate-400 tabular-nums">{fmt(from)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // ⚠️ INVARIANTE: questo valore deve essere la somma ESATTA delle larghezze
   // del <colgroup> della tabella principale (con 260 per la colonna nome, il
   // suo valore in modalità sticky — scelto per far stare interi quasi tutti
@@ -4515,6 +4715,96 @@ export default function App() {
     () => BUILDINGS_FROM_CSV.filter(b => cityEntityIds.has(b.cityEntityId) && !b.isInactive && !b.isGreatBuilding).map(applyEraStats),
     [cityEntityIds, applyEraStats],
   );
+
+  // Sezione "MAX" del panel +ERA: a differenza di outdatedSummary (solo gli
+  // edifici OBSOLETI rispetto all'era del giocatore), qui interessa TUTTA la
+  // città — richiesta esplicita dell'utente: anche un edificio già
+  // "aggiornato" all'era corrente cambierebbe ulteriormente arrivando a Hub.
+  // ⚠️ Riusa cityBuildings/cityFallbacks — le STESSE fonti già validate da
+  // renderProdSummary/PROD+STAT (sopra) — non allProcessedBuildings. Bug
+  // reale corretto in questo giro: la prima versione iterava
+  // allProcessedBuildings (= BUILDINGS_FROM_CSV filtrato solo per
+  // !isGreatBuilding, cioè l'INTERO catalogo statico, non gli edifici
+  // realmente posseduti) e ricalcolava applyEraStats a mano — risultato
+  // verificato sbagliato dall'utente (FSP: 15,80 calcolato vs 27,8 reale,
+  // confermato dal totale PROD+STAT, la fonte già validata). cityBuildings è
+  // invece già filtrato a "solo ciò che è davvero in città"
+  // (cityEntityIds.has) ED esclude !isInactive (le decorazioni "non attive"
+  // non vanno contate — stesso trattamento di PROD+STAT), e cityFallbacks
+  // copre gli edifici fuori catalogo CSV con bonus reali. Usando la stessa
+  // coppia di fonti si ottiene per costruzione lo stesso totale "from" che
+  // PROD+STAT mostra già corretto — non serve un algoritmo diverso, serve la
+  // stessa fonte dati. Dichiarata DOPO cityBuildings (non prima, come nel
+  // primo tentativo): è una const dichiarata a livello di componente, usarla
+  // prima della sua riga di dichiarazione nello stesso render è un errore di
+  // temporal dead zone.
+  const fullCitySummaryToFallback = useMemo(() => {
+    if (fallbackEraId < 0 || cityEntityIds.size === 0) {
+      return {
+        totalBuildings: 0, totalCopies: 0,
+        totals: [] as Array<{ field: DiffField; from: number; to: number }>,
+        unchanged: [] as Array<{ field: DiffField; from: number; to: number }>,
+      };
+    }
+    const sums = new Map<string, { from: number; to: number }>();
+    let totalBuildings = 0;
+    let totalCopies = 0;
+    const cityFallbacksForSummary = Array.from(fallbackBuildings.values()).filter(b => cityEntityIds.has(b.cityEntityId));
+    for (const b of [...cityBuildings, ...cityFallbacksForSummary]) {
+      if (!b.cityEntityId || isMilitaryBuildingId(b.cityEntityId)) continue; // stessa esclusione di outdatedBuildings
+      const count = cityEntityIds.get(b.cityEntityId);
+      if (!count) continue;
+      const csvBuilding = BUILDING_BY_ID.get(b.cityEntityId);
+      if (!csvBuilding) continue; // i fallback senza corrispondenza CSV non hanno un "to" a Hub da confrontare
+      totalBuildings += 1;
+      totalCopies += count;
+      const bRec = b as unknown as { [k: string]: unknown }; // già a valori correnti (cityBuildings applica applyEraStats, i fallback sono dati di gioco reali)
+      const toRec = csvBuilding as unknown as { [k: string]: unknown };
+      // Somma SEMPRE from/to di OGNI edificio per OGNI campo (richiesta
+      // esplicita dell'utente: il totale per campo deve essere la somma su
+      // tutta la città, non solo sugli edifici che individualmente
+      // cambiano) — nessun filtro qui. La decisione "mostra questo campo
+      // nell'elenco" avviene DOPO, solo sul totale aggregato finale (vedi
+      // sotto): un edificio invariato contribuisce comunque al totale (con
+      // from===to per la sua quota), ma se la somma finale del campo su
+      // tutta la città non cambia, il campo semplicemente non compare —
+      // niente filtro per-edificio che potrebbe escludere silenziosamente
+      // un contributo legittimo.
+      for (const f of DIFF_FIELDS) {
+        const from = f.get(bRec);
+        const to = f.get(toRec);
+        const entry = sums.get(f.key) ?? { from: 0, to: 0 };
+        entry.from += from * count;
+        entry.to += to * count;
+        sums.set(f.key, entry);
+      }
+    }
+    const allTotals = DIFF_FIELDS
+      .filter(f => sums.has(f.key))
+      .map(f => {
+        const s = sums.get(f.key)!;
+        return { field: f, from: round2(s.from), to: round2(s.to) };
+      });
+    // ⚠️ Confronto con tolleranza, NON "from !== to" esatto: sui totali
+    // AGGREGATI (somma di molti edifici) il rumore floating point residuo
+    // di ciascun edificio si accumula, quindi anche un campo dove NESSUN
+    // edificio cambia davvero può risultare con un residuo dell'ordine di
+    // 1e-10/1e-12 dopo il round2 — bug gemello di quello già trovato nel
+    // confronto per-edificio (vedi commento storico più sopra sul log
+    // "[DEBUG fsp]": Corriere Northwind 5.1000000000000005 vs 5.1, Sogni
+    // Didukh 1.2000000000000002 vs 1.2). round2 già arrotonda a 2
+    // decimali, quindi qui la tolleranza può essere stretta.
+    const totals = allTotals.filter(x => Math.abs(x.from - x.to) > 1e-6);
+    // Campi presenti ma invariati tra le due ere (richiesta esplicita
+    // dell'utente: mostrarli in una sezione separata del pannello, per poter
+    // verificare a colpo d'occhio che il tool non li abbia "persi" — es. i
+    // premi truppe era_unit#.../genb_random_unit_chest... che restano
+    // identici da un'era all'altra per molti edifici). Esclusi i campi
+    // completamente a zero in entrambi i valori: non pertinenti per
+    // l'edificio/la città, mostrarli sarebbe solo rumore.
+    const unchanged = allTotals.filter(x => Math.abs(x.from - x.to) <= 1e-6 && (x.from !== 0 || x.to !== 0));
+    return { totalBuildings, totalCopies, totals, unchanged };
+  }, [fallbackEraId, cityEntityIds, cityBuildings, fallbackBuildings, DIFF_FIELDS]);
 
   // Badge AGGIORNABILE per gli edifici della città aggiornabili con i kit in inventario
   const cityUpgradeBadges = useMemo(() => {
@@ -5789,6 +6079,17 @@ export default function App() {
                     <svg viewBox="0 0 8 8" width="8" fill="#D35"><path d="M0 0l4 8 4-8H0z"/></svg>
                   </button>
                 )}
+                {outdatedBuildings.size > 0 && (
+                  <button
+                    onClick={() => setIsOutdatedSummaryOpen(v => !v)}
+                    className={`toggle-icon-btn-wide !w-auto px-2 whitespace-nowrap ${
+                      isOutdatedSummaryOpen ? "border-red-500 bg-red-950/40 text-red-300" : ""
+                    }`}
+                    title={t("outdatedSummaryButtonTitle", uiLang)}
+                  >
+                    <span className="font-semibold text-yellow-400">ERA ➜</span>
+                  </button>
+                )}
                 {declassableBuildings.size > 0 && (
                   <button
                     onClick={() => setShowOnlyDeclassable(v => !v)}
@@ -5944,6 +6245,18 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+              {isOutdatedSummaryOpen && outdatedBuildings.size > 0 && (
+                <div className="w-full mt-2 grid gap-2 md:grid-cols-2">
+                  {renderOutdatedSummaryCard(outdatedSummary, "outdatedSummaryTitle", "outdatedSummaryToCurrentEra", ageName(currentEra, gameLang))}
+                  {fallbackEraId !== currentEraId
+                    ? renderOutdatedSummaryCard(fullCitySummaryToFallback, "outdatedSummaryFallbackTitle", "outdatedSummaryToMaxEra", ageName(FALLBACK_ERA, gameLang))
+                    : (
+                      <div className="flex flex-col rounded-lg bg-slate-950 border border-slate-700/20 items-center justify-center px-3 py-4">
+                        <p className="text-[11px] text-slate-500 italic">{t("outdatedSummaryAlreadyAtMax", uiLang)}</p>
+                      </div>
+                    )}
                 </div>
               )}
             </div>
