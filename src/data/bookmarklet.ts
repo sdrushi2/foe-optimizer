@@ -25,37 +25,49 @@
  * v2 (luglio 2026): FoE Helper ha spostato gli alleati da `MainParser.Allies`
  * a un oggetto globale a sé stante `Allies`. Il bookmarklet prova prima il
  * nuovo percorso e ripiega sul vecchio se assente (vedi `allies:` sotto), così
- * funziona sia con FoE Helper aggiornato sia con versioni precedenti — ma il
- * bump di versione resta comunque utile per intercettare, in futuro, chi sta
- * ancora usando lo script v1 salvato nei preferiti.
+ * funziona sia con FoE Helper aggiornato sia con versioni precedenti.
+ *
+ * v3 (agosto 2026) — bookmarklet "universale" FoE Helfer + Forge Hammer, e
+ * supporto import città di un altro giocatore in visita:
+ * - Sorgente dati unificata in `S` = `MainParser` (FoE Helfer) o `FH.Main`
+ *   (Forge Hammer, stessa forma dati — `Inventory`/`CityMapData`/
+ *   `CityEntities`/`Allies` — dietro un namespace diverso).
+ * - Rilevamento città propria vs. in visita tramite `ActiveMap`/`FH.ActiveMap`
+ *   (variabile globale con lo stesso nome/semantica in entrambi gli helper):
+ *   se vale `'OtherPlayer'`, `CityMapData`/`UnlockedAreas`/`playerName`/
+ *   `portraitUrl` vengono dalla città visitata (`CityMap.OtherPlayer` per i
+ *   primi due, `Profile.otherPlayer.other_player` per nome/avatar — FoE
+ *   Helfer li popola entrambi dallo stesso handler `visitPlayer`), mentre
+ *   `inventory`/`allies` restano SEMPRE vuoti (il gioco non espone mai
+ *   l'inventario/gli alleati di un altro giocatore).
+ * - Guard aggiornato di conseguenza: fallisce se non esiste NÉ `MainParser`
+ *   NÉ `FH.Main`, oppure se nessuno dei due percorsi alleati (`Allies`
+ *   globale o `Src.Allies`) è disponibile.
+ * - `try/catch` esterno rimosso deliberatamente: un errore nella lettura dei
+ *   dati non mostra più un alert dedicato, risale silenziosamente — la
+ *   diagnosi in quel caso è delegata all'app (vedi `validateBookmarkletData`/
+ *   `handleWandClick`), che già copre appunti vuoti, JSON non valido, e
+ *   campi mancanti con messaggi propri. Resta invece il `try/catch` interno
+ *   alla funzione di fallback clipboard (`c()` sotto), che è meccanica di
+ *   copia, non validazione dati.
  */
-export const CURRENT_BOOKMARKLET_VERSION = 2;
+export const CURRENT_BOOKMARKLET_VERSION = 3;
 
 /**
- * Codice JavaScript del bookmarklet "bacchetta magica".
+ * Codice JavaScript del bookmarklet "bacchetta magica" (versione universale,
+ * vedi commento v3 sopra per lo storico completo delle decisioni).
  *
  * L'utente lo trascina nella barra dei preferiti del browser; clickandolo
- * mentre Forge of Empires è aperto, raccoglie i 5 oggetti globali del gioco
- * (`MainParser.Inventory`, `Allies.allyList` — con fallback su
- * `MainParser.Allies.allyList` per FoE Helper non aggiornato — `MainParser.CityMapData`,
- * `MainParser.CityEntities`, `CityMap.Main.unlockedAreas`), li serializza in
- * JSON con la forma {@link BookmarkletData} e li copia negli appunti.
+ * mentre Forge of Empires è aperto (propria città o città di un altro
+ * giocatore in visita, con FoE Helfer o Forge Hammer installato), raccoglie
+ * i dati di gioco, li serializza in JSON con la forma {@link BookmarkletData}
+ * e li copia negli appunti.
  *
  * Le aree sbloccate vengono compresse rimuovendo `__class__` e, per le aree
  * standard 4×4, anche `width`/`length` (sono il valore di default e si possono
  * dedurre lato app).
- *
- * GUARD "FoE Helper è cambiato": se NESSUNO dei due percorsi alleati esiste
- * (né il globale `Allies` né il legacy `MainParser.Allies`), lo script si
- * ferma con un alert chiaro che invita a riscaricare la bacchetta dal sito,
- * invece di lasciar esplodere un TypeError criptico ("Cannot read properties
- * of undefined"). Lezione imparata col passaggio v1→v2: gli utenti con lo
- * script vecchio nei preferiti vedono solo l'errore del loro script, quindi
- * il messaggio va reso utile PRIMA della prossima rottura, non dopo.
- * Alert in inglese come gli altri messaggi del bookmarklet (il bookmarklet
- * non conosce la lingua della GUI).
  */
-export const BOOKMARKLET_JS = `javascript:(function(){try{if(typeof Allies==='undefined'&&!MainParser.Allies){alert('FoE Helper has changed: please get the updated magic wand from foe-optimizer.com');return;}var data={_v:${CURRENT_BOOKMARKLET_VERSION},inventory:Object.values(MainParser.Inventory),allies:typeof Allies!=='undefined'?Allies.allyList:MainParser.Allies.allyList,CityMapData:MainParser.CityMapData,CityEntities:MainParser.CityEntities,UnlockedAreas:CityMap.Main.unlockedAreas.map(o=>o.width==4&&o.length==4?(({width,length,__class__:_,...r})=>r)(o):(({__class__:_,...r})=>r)(o)),portraitUrl:typeof ExtPlayerAvatar!=='undefined'&&typeof srcLinks!=='undefined'?srcLinks.GetPortrait(ExtPlayerAvatar):undefined};var s=JSON.stringify(data);function fb(){try{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e2){alert('Copy failed: '+e2.message);}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).catch(fb);}else{fb();}}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){var S=typeof MainParser!='undefined'?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S||(typeof Allies=='undefined'&&!S.Allies)){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}var V=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:'main'))=='OtherPlayer';var M=V?CityMap.OtherPlayer:CityMap.Main;var A=typeof srcLinks!='undefined'?srcLinks.GetPortrait((V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:(typeof FH!='undefined'?FH.Player.Avatar:null)))):null;var d={_v:${CURRENT_BOOKMARKLET_VERSION},inventory:V?[]:Object.values(S.Inventory),allies:V?{}:(typeof Allies!='undefined'?Allies.allyList:S.Allies.allyList),CityMapData:V?M.mapData:S.CityMapData,CityEntities:S.CityEntities,UnlockedAreas:M.unlockedAreas.map(function(o){return o.width==4&&o.length==4?{x:o.x,y:o.y}:{x:o.x,y:o.y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:(typeof FH!='undefined'?FH.Player.Name:null))};var s=JSON.stringify(d);function c(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(c):c();})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 

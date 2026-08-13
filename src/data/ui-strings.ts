@@ -944,8 +944,8 @@ const UI_STRINGS = {
     en: "Summary: what changes if you upgrade all old buildings (current age and latest age)",
   },
   outdatedSummaryEmpty: {
-    it: "Nessuna differenza di statistiche: gli edifici vecchi producono già gli stessi valori dell'era corrente.",
-    en: "No stat differences: the old buildings already produce the same values as the current age.",
+    it: "Tutti gli edifici della città sono già aggiornati all'era corrente.",
+    en: "All buildings in the city are already up to date with the current age.",
   },
   outdatedSummaryAlreadyAtMax: {
     it: "Sei già all'ultima era gestita: nessun confronto aggiuntivo.",
@@ -1184,12 +1184,12 @@ const UI_STRINGS = {
     en: "Tutorial: how to import your city",
   },
   profileHelpStep2_1Title: {
-    it: "Installa FoE Helper nel tuo browser",
-    en: "Install FoE Helper in your browser",
+    it: "Installa FoE Helper o Forge Hammer nel tuo browser",
+    en: "Install FoE Helper or Forge Hammer in your browser",
   },
   profileHelpStep2_1Body: {
-    it: "È un'estensione gratuita per il browser che legge i dati di Forge of Empires mentre giochi.",
-    en: "It's a free browser extension that reads Forge of Empires data while you play.",
+    it: "Sono estensioni gratuite per il browser che leggono i dati di Forge of Empires mentre giochi. Basta una delle due.",
+    en: "These are free browser extensions that read Forge of Empires data while you play. Either one works.",
   },
   profileHelpStep2_2Title: {
     it: "Trascina nella barra dei preferiti",
@@ -1208,8 +1208,8 @@ const UI_STRINGS = {
     en: "Go to the game and click that bookmark",
   },
   profileHelpStep2_3Body: {
-    it: "Con Forge of Empires aperto nel browser e FoE Helper funzionante clicca il segnalibro che hai creato. Lui copierà in silenzio tutti i dati di gioco negli appunti del computer.",
-    en: "While the game is open and FoE Helper is active, click that bookmark. It will silently copy your data to your computer’s clipboard.",
+    it: "Con Forge of Empires aperto nel browser e FoE Helper (o Forge Hammer) funzionante clicca il segnalibro che hai creato. Copierà in silenzio tutti i dati di gioco negli appunti del computer.",
+    en: "While the game is open and FoE Helper (or Forge Hammer) is active, click that bookmark. It will silently copy your data to your computer's clipboard.",
   },
   profileHelpStep2_4Title: {
     it: "Torna qui e clicca",
@@ -1549,19 +1549,27 @@ const UI_STRINGS = {
     it: (detail: string) => `Errore durante l'importazione dei dati. Il profilo non è stato creato.\n\nDettaglio: ${detail}`,
     en: (detail: string) => `Error while importing data. The profile was not created.\n\nDetail: ${detail}`,
   },
-  bookmarkletOutdatedAlert: {
-    it: "Import riuscito, ma il bookmarklet che hai usato è una versione precedente: alcuni dati potrebbero mancare o non essere aggiornati. Trascina di nuovo la bacchetta magica nella barra dei preferiti per aggiornarla, poi riprova l'import.",
-    en: "Import successful, but the bookmarklet you used is an older version: some data may be missing or outdated. Drag the magic wand to your bookmarks bar again to update it, then try importing again.",
+  // ── Modale "Bacchetta magica obsoleta" (bookmarklet v1/v2 in uso) ─────
+  bookmarkletOutdatedModalTitle: {
+    it: "Bacchetta magica obsoleta",
+    en: "Outdated magic wand",
   },
-  bookmarkletAnnouncementTitle: {
-    it: "FoE Helper ha aggiornato la gestione degli alleati",
-    en: "FoE Helper updated how allies are handled",
+  bookmarkletOutdatedModalIntro: {
+    it: "Import riuscito, ma hai usato una versione precedente della bacchetta magica: alcuni dati potrebbero mancare o non essere aggiornati.",
+    en: "Import successful, but you used an older version of the magic wand: some data may be missing or outdated.",
   },
-  bookmarkletAnnouncementBody: {
-    it: "Se dopo aver cliccato la bacchetta magica 🪄 sul gioco vedi un errore JavaScript (es. su \"allyList\"), il tuo bookmarklet è una versione precedente: trascinane uno nuovo dai pulsanti profilo qui sopra.",
-    en: "If clicking the magic wand 🪄 on the game shows a JavaScript error (e.g. about \"allyList\"), your bookmarklet is an older version: drag a new one from the profile buttons above.",
+  bookmarkletOutdatedModalBody: {
+    it: "La nuova bacchetta magica supporta sia FoE Helper sia Forge Hammer, e funziona anche sulle città di altri giocatori: basta visitare la loro città e cliccarla per importarla (senza inventario né alleati, che il gioco non mostra mai per un altro giocatore).",
+    en: "The new magic wand supports both FoE Helper and Forge Hammer, and also works on other players' cities: just visit their city and click it to import it (without inventory or allies, which the game never shows for another player).",
   },
-
+  bookmarkletOutdatedModalSteps: {
+    it: "Per aggiornarla: elimina la vecchia bacchetta magica dalla barra dei preferiti, poi trascina di nuovo quella qui sopra per sostituirla.",
+    en: "To update it: delete the old magic wand from your bookmarks bar, then drag the one above again to replace it.",
+  },
+  bookmarkletOutdatedModalButton: {
+    it: "Ho capito",
+    en: "Got it",
+  },
   // ── Modale "Aggiornamento richiesto" (dati salvati obsoleti) ─────────
   outdatedModalTitle: {
     it: "Aggiornamento richiesto",

@@ -30,18 +30,13 @@ import type { CityStore } from "./data/cityStore";
 import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY, DISMISSED_ANNOUNCEMENTS_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
   isStorageOutdated
 } from "./utils/storage";
 
-// ID dell'annuncio dismissibile per il cambio di FoE Helper (Allies spostato
-// fuori da MainParser, luglio 2026, vedi CURRENT_BOOKMARKLET_VERSION in
-// data/bookmarklet.ts). ID stabile: non cambiare per non far ricomparire
-// l'annuncio a chi l'ha già chiuso.
-const BOOKMARKLET_V2_ANNOUNCEMENT_ID = "bookmarklet-v2-allies-2026-07";
 import buildingsCsv from "./assets/buildings.csv?raw";
 import alliesCsv from "./assets/allies.csv?raw";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
@@ -2127,17 +2122,7 @@ export default function App() {
   const [isOutdatedSummaryOpen, setIsOutdatedSummaryOpen] = useState(false);
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
-
-  // Annunci one-off dismissibili (vedi DISMISSED_ANNOUNCEMENTS_KEY). Array di
-  // ID già chiusi dall'utente; lazy init da localStorage come le altre chiavi.
-  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>(
-    () => readStoredJson(DISMISSED_ANNOUNCEMENTS_KEY, [] as string[])
-  );
-  const dismissAnnouncement = (id: string) => {
-    const updated = [...dismissedAnnouncements, id];
-    setDismissedAnnouncements(updated);
-    writeStoredJson(DISMISSED_ANNOUNCEMENTS_KEY, updated);
-  };
+  const [isBookmarkletOutdatedModalOpen, setIsBookmarkletOutdatedModalOpen] = useState(false);
 
   const [storageVersion, setStorageVersion] = useState(0);
   const bumpStorage = () => setStorageVersion(v => v + 1);
@@ -3454,11 +3439,14 @@ export default function App() {
       await handleImportAll(data, id);
       // Import riuscito: se il bookmarklet usato è più vecchio di quello
       // attuale (_v assente = versione "pre-versionamento", trattata come 0),
-      // avvisiamo che alcuni dati potrebbero mancare/essere sbagliati e che
-      // conviene aggiornare il bookmarklet trascinandolo di nuovo.
+      // mostriamo un modale (non un semplice alert, dalla v3 in poi: c'è
+      // abbastanza da spiegare — supporto Forge Hammer, città di altri
+      // giocatori — da meritare lo stesso trattamento del modale "Aggiornamento
+      // richiesto" invece di un alert nativo del browser) che spiega di
+      // eliminare la vecchia bacchetta e trascinarne una nuova.
       const usedVersion = typeof data._v === "number" ? data._v : 0;
       if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
-        alert(t("bookmarkletOutdatedAlert", uiLang));
+        setIsBookmarkletOutdatedModalOpen(true);
       }
     } catch (err) {
       // L'import ha fallito DOPO che il profilo era già stato creato: può
@@ -5604,23 +5592,6 @@ export default function App() {
         </nav>
       </header>
 
-      {!dismissedAnnouncements.includes(BOOKMARKLET_V2_ANNOUNCEMENT_ID) && (
-        <div className="mx-2 mt-2 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200">
-          <Info size={16} className="mt-0.5 shrink-0 text-amber-400" />
-          <div className="flex-1 leading-relaxed">
-            <p className="font-bold text-amber-300">{t("bookmarkletAnnouncementTitle", uiLang)}</p>
-            <p className="mt-0.5">{t("bookmarkletAnnouncementBody", uiLang)}</p>
-          </div>
-          <button
-            onClick={() => dismissAnnouncement(BOOKMARKLET_V2_ANNOUNCEMENT_ID)}
-            aria-label={t("closeAriaLabel", uiLang)}
-            className="shrink-0 text-amber-400/70 hover:text-amber-200 transition-colors"
-          >
-            <XIcon size={14} />
-          </button>
-        </div>
-      )}
-
       {(activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario") && (
          <div className="flex flex-wrap items-start px-2 pt-2 pb-1">
            <section className="flex flex-wrap items-center gap-1.5 text-xs flex-1">
@@ -6084,7 +6055,7 @@ export default function App() {
                     <svg viewBox="0 0 8 8" width="8" fill="#D35"><path d="M0 0l4 8 4-8H0z"/></svg>
                   </button>
                 )}
-                {outdatedBuildings.size > 0 && (
+                {cityEntityIds.size > 0 && (
                   <button
                     onClick={() => setIsOutdatedSummaryOpen(v => !v)}
                     className={`toggle-icon-btn-wide !w-auto px-2 whitespace-nowrap ${
@@ -6252,7 +6223,7 @@ export default function App() {
                   </div>
                 </div>
               )}
-              {isOutdatedSummaryOpen && outdatedBuildings.size > 0 && (
+              {isOutdatedSummaryOpen && cityEntityIds.size > 0 && (
                 <div className="w-full mt-2 grid gap-2 md:grid-cols-2">
                   {renderOutdatedSummaryCard(outdatedSummary, "outdatedSummaryTitle", "outdatedSummaryToCurrentEra", ageName(currentEra, gameLang))}
                   {fallbackEraId !== currentEraId
@@ -7586,6 +7557,35 @@ export default function App() {
               className="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-500 transition-colors shadow-lg shadow-red-600/20 active:scale-[0.98]"
             >
               {t("outdatedModalButton", uiLang)}
+            </button>
+          </div>
+        </div>
+      )}
+      {/* ── Modale Avviso Bacchetta Magica Obsoleta ─────────────────────── */}
+      {isBookmarkletOutdatedModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-md">
+          <div className="flex w-full max-w-md flex-col rounded-2xl border border-amber-500/30 bg-slate-900 p-8 shadow-2xl">
+            <div className="mb-6 flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
+                <Wand2 size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-white">{t("bookmarkletOutdatedModalTitle", uiLang)}</h3>
+              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+                {t("bookmarkletOutdatedModalIntro", uiLang)}
+              </p>
+              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+                {t("bookmarkletOutdatedModalBody", uiLang)}
+              </p>
+              <div className="mt-4 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 text-xs text-amber-400">
+                {t("bookmarkletOutdatedModalSteps", uiLang)}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsBookmarkletOutdatedModalOpen(false)}
+              className="w-full rounded-xl bg-amber-600 py-3 text-sm font-bold text-white hover:bg-amber-500 transition-colors shadow-lg shadow-amber-600/20 active:scale-[0.98]"
+            >
+              {t("bookmarkletOutdatedModalButton", uiLang)}
             </button>
           </div>
         </div>
