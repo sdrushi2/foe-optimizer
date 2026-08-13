@@ -4460,7 +4460,12 @@ export default function App() {
   // difetto che il tooltip per-edificio non ha mai (lì somma sempre UNA sola
   // istanza alla volta, valori "puliti" dal JSON).
   const round2 = (v: number) => Math.round(v * 100) / 100;
-  const buildOutdatedSummary = (targetEraId: number, getTo: (b: ProcessedBuilding) => { [k: string]: unknown }) => {
+  // useCallback (non una semplice funzione locale): serve un riferimento
+  // stabile tra render per poterla mettere nelle deps di outdatedSummary
+  // sotto senza invalidare il useMemo a ogni render (altrimenti l'eslint
+  // warning "missing dependency" andrebbe silenziato ignorandolo, oppure
+  // buildOutdatedSummary ricreata ogni volta romperebbe la memoizzazione).
+  const buildOutdatedSummary = useCallback((targetEraId: number, getTo: (b: ProcessedBuilding) => { [k: string]: unknown }) => {
     if (targetEraId < 0 || outdatedBuildings.size === 0) {
       return {
         totalBuildings: 0, totalCopies: 0,
@@ -4528,7 +4533,7 @@ export default function App() {
     const totals = allTotals.filter(x => Math.abs(x.from - x.to) > 1e-6);
     const unchanged = allTotals.filter(x => Math.abs(x.from - x.to) <= 1e-6 && (x.from !== 0 || x.to !== 0));
     return { totalBuildings: outdatedBuildings.size, totalCopies, totals, unchanged };
-  };
+  }, [outdatedBuildings, allProcessedBuildings, entityInstanceEraStats, DIFF_FIELDS]);
   // ⚠️ allProcessedBuildings è la fonte CSV GREZZA (valori statici a
   // FALLBACK_ERA/Hub), MAI override-ata: l'override "valori dell'era del
   // giocatore" avviene SOLO dentro eraAdjustedSource via applyEraStats, e
@@ -4542,7 +4547,7 @@ export default function App() {
   // giocatore).
   const outdatedSummary = useMemo(
     () => buildOutdatedSummary(currentEraId, (b) => applyEraStats(b) as unknown as { [k: string]: unknown }),
-    [currentEraId, outdatedBuildings, allProcessedBuildings, entityInstanceEraStats, DIFF_FIELDS, applyEraStats]
+    [currentEraId, applyEraStats, buildOutdatedSummary]
   );
   const fallbackEraId = useMemo(() => AGE_BY_CODE.get(FALLBACK_ERA)?.id ?? -1, []);
 

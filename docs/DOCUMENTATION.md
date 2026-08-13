@@ -2629,6 +2629,80 @@ colonne sarebbero solo rumore.
   `getAllyStatValue`/`getComputedAllyStats` per il calcolo dei boost, solo
   la sua visualizzazione diretta in tabella è stata tolta.
 
+### 24.3novies Pannello riepilogo "ERA ➜": cosa cambia aggiornando tutti gli edifici (agosto 2026)
+
+Nella tab Città, accanto alla freccetta rossa "mostra solo edifici vecchi"
+(`showOnlyOutdated`), un secondo pulsante toggle indipendente — etichetta
+"ERA ➜" in giallo, stile identico agli altri toggle-icon-btn-wide ma allargato
+al contenuto (`!w-auto px-2 whitespace-nowrap`, non il box fisso 32px) — apre
+un pannello full-width con due card affiancate (`grid md:grid-cols-2`), stesso
+stile visivo del pannello Debug esistente. Risponde alla domanda che ogni
+giocatore si pone dopo un avanzamento di era: "come cambieranno le statistiche
+globali della mia città se aggiorno tutto?".
+
+- **Stato**: `isOutdatedSummaryOpen: boolean`. Disaccoppiato da
+  `showOnlyOutdated`: i due pulsanti si attivano/disattivano in modo
+  indipendente, click separati.
+- **Card sinistra — "SE AGGIORNI TUTTI GLI EDIFICI VECCHI (N in totale)
+  ALL'ERA CORRENTE"**: copre SOLO gli edifici in `outdatedBuildings` (quelli
+  con almeno una copia più vecchia dell'era attuale del giocatore), verso
+  `currentEraId`. Calcolata da `buildOutdatedSummary` (`useCallback`, deps
+  `[outdatedBuildings, allProcessedBuildings, entityInstanceEraStats,
+  DIFF_FIELDS]`), richiamata dentro `outdatedSummary` (`useMemo`, deps
+  `[currentEraId, applyEraStats, buildOutdatedSummary]`).
+- **Card destra — "SE AGGIORNI TUTTI GLI EDIFICI IN CITTÀ (N in totale)
+  ALL'ERA MASSIMA"**: copre invece **tutti** gli edifici posseduti in città
+  (`cityEntityIds`, non solo quelli obsoleti — richiesta esplicita
+  dell'utente), verso `fallbackEraId` (= `FALLBACK_ERA`, l'era più alta gestita
+  dal tool, oggi Hub — nessun hardcoding, si aggiorna da sola quando si
+  aggiunge una riga a `ages.csv`). Calcolata da `fullCitySummaryToFallback`
+  (`useMemo`). Se `fallbackEraId === currentEraId` (il giocatore è già
+  all'ultima era gestita), la card è sostituita da un placeholder
+  (`outdatedSummaryAlreadyAtMax`): non avrebbe senso un confronto a delta
+  zero garantito.
+- **Il pattern di somma "sempre from/to, filtro solo sul totale finale"**
+  (stesso in entrambe le funzioni, dopo un giro di bugfix): per ogni campo di
+  `DIFF_FIELDS` si sommano SEMPRE `from` e `to` pesati sul numero di copie,
+  per OGNI edificio idoneo — nessun filtro "salta se questo edificio non
+  cambia" dentro il loop. Solo alla fine, sul totale aggregato per campo, si
+  decide se il campo va in `totals` (mostrato con delta, `|from-to| > 1e-6`)
+  o in `unchanged` (statistica invariata, `|from-to| <= 1e-6` ma valore non
+  nullo). Filtrare per-edificio dentro il loop (versione precedente, bacata)
+  poteva scartare silenziosamente il contributo legittimo di un edificio che
+  individualmente non cambia ma che fa parte di un totale che invece cambia
+  — o viceversa, dare un totale sottostimato rispetto alla somma reale
+  visibile in tabella. La tolleranza `1e-6` (non uguaglianza esatta) esiste
+  per il rumore floating point residuo (es. `5.1000000000000005` vs `5.1`)
+  che un confronto `===` non filtrerebbe.
+- **`totalBuildings`/`totalCopies`** contano TUTTE le copie idonee per la
+  card (obsolete per la sinistra, tutte per la destra), non solo quelle con
+  differenza effettiva: devono combaciare col badge "N edifici" della tab
+  Città meno il municipio (scelta esplicita dell'utente, per essere
+  verificabili a colpo d'occhio contro la tabella).
+- **Sezione "STATISTICHE INVARIATE"**, sotto un separatore sottile in fondo a
+  ciascuna card: elenca (icona + solo valore, senza freccia/delta, testo
+  `text-slate-400` non-bold — stesso stile del valore "from" di sopra) i
+  campi il cui totale aggregato non cambia tra le due ere, per rendere
+  verificabile che il pannello non li abbia "persi" (es. i premi truppe
+  `era_unit#...`/`genb_random_unit_chest...`, spesso identici tra ere
+  adiacenti secondo i dati di gioco reali — vedi MainParser). Esclusi i campi
+  a zero in entrambi i valori (non pertinenti, sarebbero solo rumore).
+- **Formattazione dei valori**: `fpb`/`benib`/`iqMonB`/`iqMatB` sono
+  percentuali di boost (stesso set di `formatProdPercent` nella tabella
+  principale) e vanno mostrati come `%`, non come frazione decimale grezza.
+  `pop`/`fel`/`mon`/`mat`/`iqMon`/`iqMat`/`fp` sono arrotondati a intero
+  (`formatInt`, mai senso con decimali anche se la somma pesata produce un
+  residuo tipo ",50"). Tutti gli altri campi restano a 2 decimali
+  (`formatDecimal`). Il delta tra parentesi è in grassetto, il valore "to" no
+  (l'utente ha esplicitamente invertito il grassetto rispetto alla prima
+  versione).
+- **Header compatto su una riga**: titolo (rosso, es. "SE AGGIORNI TUTTI GLI
+  EDIFICI VECCHI") + conteggio in bianco tra parentesi (chiave
+  `outdatedSummaryCount`, separata dal titolo per poterla colorare
+  diversamente) + "ALL'ERA CORRENTE:"/"ALL'ERA MASSIMA:" in rosso (chiavi
+  `outdatedSummaryToCurrentEra`/`outdatedSummaryToMaxEra`) + nome era in
+  verde — tutto maiuscolo (`uppercase` sul contenitore).
+
 ### 24.4 Import e gestione errori
 
 Le tre funzioni async (`handleImportCityMap`, `handleImportAll`, `handleWandClick`)
