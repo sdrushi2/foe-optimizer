@@ -4431,6 +4431,84 @@
         "W_MultiAge_FELL25E2"
       ]
     },
+    "upgrade_kit_FELL26A": {
+      "names": {
+        "en": "FELL26A Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL26A1",
+        "W_MultiAge_FELL26A2",
+        "W_MultiAge_FELL26A3",
+        "W_MultiAge_FELL26A4",
+        "W_MultiAge_FELL26A5",
+        "W_MultiAge_FELL26A6",
+        "W_MultiAge_FELL26A7",
+        "W_MultiAge_FELL26A8"
+      ]
+    },
+    "silver_upgrade_kit_FELL26A": {
+      "names": {
+        "en": "FELL26A Silver Silver Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL26A8",
+        "W_MultiAge_FELL26A9"
+      ]
+    },
+    "golden_upgrade_kit_FELL26A": {
+      "names": {
+        "en": "FELL26A Gold Golden Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL26A9",
+        "W_MultiAge_FELL26A10"
+      ]
+    },
+    "upgrade_kit_ascended_FELL26B": {
+      "names": {
+        "en": "Ascended FELL26B Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL26B1",
+        "W_MultiAge_FELL26B2"
+      ]
+    },
+    "upgrade_kit_ascended_FELL26C": {
+      "names": {
+        "en": "Ascended FELL26C Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL26C1",
+        "W_MultiAge_FELL26C2"
+      ]
+    },
+    "upgrade_kit_FELL26E": {
+      "names": {
+        "en": "FELL26E Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL26E1",
+        "W_MultiAge_FELL26E2"
+      ]
+    },
+    "platinum_upgrade_kit_FELL24A": {
+      "names": {
+        "en": "FELL24A Platinum Platinum Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL24A10",
+        "W_MultiAge_FELL24A11"
+      ]
+    },
+    "upgrade_kit_ascended_FELL24A": {
+      "names": {
+        "en": "Ascended FELL24A Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL24A11",
+        "W_MultiAge_FELL24A12"
+      ]
+    },
     "golden_upgrade_kit_BOWL22A": {
       "names": {
         "en": "Evergreen Fiore Village Golden Upgrade Kit",
@@ -9850,6 +9928,90 @@
         "R_MultiAge_HeroBonus22pass"
       ]
     },
+    "selection_kit_FELL26A": {
+      "names": {
+        "en": "FELL26A Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FELL26A1",
+        "upgrade_kit_FELL26A"
+      ]
+    },
+    "silver_selection_kit_FELL26A": {
+      "names": {
+        "en": "FELL26A Silver Silver Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FELL26A1",
+        "upgrade_kit_FELL26A",
+        "silver_upgrade_kit_FELL26A"
+      ]
+    },
+    "golden_selection_kit_FELL26A": {
+      "names": {
+        "en": "FELL26A Gold Golden Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FELL26A1",
+        "upgrade_kit_FELL26A",
+        "silver_upgrade_kit_FELL26A",
+        "golden_upgrade_kit_FELL26A"
+      ]
+    },
+    "selection_kit_FELL26BC": {
+      "names": {
+        "en": "FELL26BC Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FELL26B1",
+        "W_MultiAge_FELL26C1"
+      ]
+    },
+    "selection_kit_FELL26E": {
+      "names": {
+        "en": "FELL26E Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FELL26E1",
+        "upgrade_kit_FELL26E"
+      ]
+    },
+    "selection_kit_epic_FELL26": {
+      "names": {
+        "en": "Epic Fellowship 2026 Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_FELL25A1",
+        "upgrade_kit_FELL25A",
+        "W_MultiAge_FELL25B1",
+        "W_MultiAge_FELL25C1",
+        "W_MultiAge_FELL24A1",
+        "upgrade_kit_FELL24A",
+        "W_MultiAge_FELL24B1",
+        "W_MultiAge_FELL24C1",
+        "W_MultiAge_FELL23A1",
+        "upgrade_kit_FELL23A",
+        "W_MultiAge_FELL23B1",
+        "W_MultiAge_FELL23C1",
+        "W_MultiAge_FELL22A1",
+        "upgrade_kit_heroes_tavern",
+        "W_MultiAge_FELL22B1",
+        "upgrade_kit_FELL22B",
+        "R_MultiAge_HeroBonus22pass"
+      ]
+    },
+    "platinum_selection_kit_FELL24A": {
+      "names": {
+        "en": "Dummy"
+      },
+      "options": [
+        "W_MultiAge_FELL24A1",
+        "upgrade_kit_FELL24A",
+        "silver_upgrade_kit_FELL24A",
+        "golden_upgrade_kit_FELL24A",
+        "platinum_upgrade_kit_FELL24A"
+      ]
+    },
     "selection_kit_GR25I": {
       "names": {
         "en": "Neo Clocktower Selection Kit",
@@ -10865,6 +11027,7 @@
         "upgrade_kit_FALL25A",
         "W_MultiAge_FALL25B1",
         "W_MultiAge_FALL25C1",
+        "W_MultiAge_FALL25D1",
         "W_MultiAge_FALL24A1",
         "upgrade_kit_FALL24A",
         "W_MultiAge_FALL24B1",
