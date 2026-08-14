@@ -3639,7 +3639,7 @@ export default function App() {
     // popolazione/felicità e tutte le produzioni (beni, FP, truppe, blueprint,
     // reward speciali). Il CSV resta usato solo per la scheda Info. Le produzioni
     // estratte da CityEntities sostituiscono quelle del CSV (che sono fissate a
-    // SpaceHub) così le ere intermedie sono precise.
+    // FALLBACK_ERA, oggi Stellar Age: Discovery) così le ere intermedie sono precise.
     return {
       ...b,
       pop: stats.pop,
@@ -4434,8 +4434,8 @@ export default function App() {
   // dell'utente: un numero solo per statistica, non un blocco per era).
   // Parametrizzata sul "to" (i valori target): due varianti richieste
   // dall'utente, "era corrente del giocatore" e "ultima era gestita dal
-  // tool" (Hub oggi, FALLBACK_ERA — diventerà SAD non appena si aggiunge la
-  // riga in ages.csv, nessun hardcoding). Per l'era corrente il "to" è quello
+  // tool" (FALLBACK_ERA, oggi Stellar Age: Discovery — si aggiorna da sola
+  // aggiungendo una riga in ages.csv, nessun hardcoding). Per l'era corrente il "to" è quello
   // già in b (allProcessedBuildings, via applyEraStats). Per FALLBACK_ERA il
   // "to" viene invece da BUILDING_BY_ID: i valori grezzi del CSV sono per
   // costruzione quelli dell'ultima era gestita (BOOST_ERA lato pipeline
@@ -4523,16 +4523,16 @@ export default function App() {
     return { totalBuildings: outdatedBuildings.size, totalCopies, totals, unchanged };
   }, [outdatedBuildings, allProcessedBuildings, entityInstanceEraStats, DIFF_FIELDS]);
   // ⚠️ allProcessedBuildings è la fonte CSV GREZZA (valori statici a
-  // FALLBACK_ERA/Hub), MAI override-ata: l'override "valori dell'era del
-  // giocatore" avviene SOLO dentro eraAdjustedSource via applyEraStats, e
-  // quello dipende da activeTab. Qui serve applicarlo esplicitamente — bug
-  // reale corretto in questo stesso giro: senza questa chiamata il "to" di
-  // outdatedSummary e il "from" di fullCitySummaryToFallback leggevano
-  // entrambi gli stessi valori CSV statici, dando from===to quasi ovunque
-  // (sintomo osservato: card MAX con "N → 0" su ogni campo, perché i pochi
-  // campi che DIFFERISCONO dal CSV grezzo — quelli assenti a Hub — avevano
-  // "from" letto anch'esso dal CSV invece che dai veri valori dell'era del
-  // giocatore).
+  // FALLBACK_ERA, oggi Stellar Age: Discovery), MAI override-ata: l'override
+  // "valori dell'era del giocatore" avviene SOLO dentro eraAdjustedSource via
+  // applyEraStats, e quello dipende da activeTab. Qui serve applicarlo
+  // esplicitamente — bug reale corretto in questo stesso giro: senza questa
+  // chiamata il "to" di outdatedSummary e il "from" di
+  // fullCitySummaryToFallback leggevano entrambi gli stessi valori CSV
+  // statici, dando from===to quasi ovunque (sintomo osservato: card MAX con
+  // "N → 0" su ogni campo, perché i pochi campi che DIFFERISCONO dal CSV
+  // grezzo — quelli assenti a FALLBACK_ERA — avevano "from" letto anch'esso
+  // dal CSV invece che dai veri valori dell'era del giocatore).
   const outdatedSummary = useMemo(
     () => buildOutdatedSummary(currentEraId, (b) => applyEraStats(b) as unknown as { [k: string]: unknown }),
     [currentEraId, applyEraStats, buildOutdatedSummary]
@@ -4716,7 +4716,8 @@ export default function App() {
   // Sezione "MAX" del panel +ERA: a differenza di outdatedSummary (solo gli
   // edifici OBSOLETI rispetto all'era del giocatore), qui interessa TUTTA la
   // città — richiesta esplicita dell'utente: anche un edificio già
-  // "aggiornato" all'era corrente cambierebbe ulteriormente arrivando a Hub.
+  // "aggiornato" all'era corrente cambierebbe ulteriormente arrivando a
+  // FALLBACK_ERA (oggi Stellar Age: Discovery).
   // ⚠️ Riusa cityBuildings/cityFallbacks — le STESSE fonti già validate da
   // renderProdSummary/PROD+STAT (sopra) — non allProcessedBuildings. Bug
   // reale corretto in questo giro: la prima versione iterava
@@ -4752,7 +4753,7 @@ export default function App() {
       const count = cityEntityIds.get(b.cityEntityId);
       if (!count) continue;
       const csvBuilding = BUILDING_BY_ID.get(b.cityEntityId);
-      if (!csvBuilding) continue; // i fallback senza corrispondenza CSV non hanno un "to" a Hub da confrontare
+      if (!csvBuilding) continue; // i fallback senza corrispondenza CSV non hanno un "to" a FALLBACK_ERA da confrontare
       totalBuildings += 1;
       totalCopies += count;
       const bRec = b as unknown as { [k: string]: unknown }; // già a valori correnti (cityBuildings applica applyEraStats, i fallback sono dati di gioco reali)

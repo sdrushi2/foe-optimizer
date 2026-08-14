@@ -2678,8 +2678,8 @@ globali della mia città se aggiorno tutto?".
   ALL'ERA MASSIMA"**: copre invece **tutti** gli edifici posseduti in città
   (`cityEntityIds`, non solo quelli obsoleti — richiesta esplicita
   dell'utente), verso `fallbackEraId` (= `FALLBACK_ERA`, l'era più alta gestita
-  dal tool, oggi Hub — nessun hardcoding, si aggiorna da sola quando si
-  aggiunge una riga a `ages.csv`). Calcolata da `fullCitySummaryToFallback`
+  dal tool, oggi Stellar Age: Discovery — nessun hardcoding, si aggiorna da
+  sola quando si aggiunge una riga a `ages.csv`). Calcolata da `fullCitySummaryToFallback`
   (`useMemo`). Se `fallbackEraId === currentEraId` (il giocatore è già
   all'ultima era gestita), la card è sostituita da un placeholder
   (`outdatedSummaryAlreadyAtMax`): non avrebbe senso un confronto a delta
