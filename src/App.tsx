@@ -4570,7 +4570,11 @@ export default function App() {
     const percentFields = ["fpb", "benib", "iqMonB", "iqMatB"];
     const fmtField = (field: DiffField, v: number) => {
       if (percentFields.includes(field.key)) return formatProdPercent(v);
-      return ["pop", "fel", "mon", "mat", "iqMon", "iqMat", "fp"].includes(field.key) ? formatInt(Math.round(v)) : formatDecimal(v, 2);
+      if (["pop", "fel", "mon", "mat", "iqMon", "iqMat", "fp"].includes(field.key)) return formatInt(Math.round(v));
+      // Sopra le 1000 unità i decimali sono solo rumore visivo (es. "1.510,758"):
+      // arrotondati a intero. Sotto restano a 1 decimale, dove può essere
+      // l'unica differenza visibile tra from/to (2 decimali erano eccessivi).
+      return Math.abs(v) >= 1000 ? formatInt(Math.round(v)) : formatDecimal(v, 1);
     };
     return (
       <div className="flex flex-col rounded-lg bg-slate-950 border border-red-500/20">
