@@ -1377,7 +1377,8 @@
       "steps": [
         "W_MultiAge_HERO24A7",
         "W_MultiAge_HERO24A8"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_HERO24A": {
       "names": {
@@ -1387,7 +1388,8 @@
       "steps": [
         "W_MultiAge_HERO24A8",
         "W_MultiAge_HERO24A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_HERO24H": {
       "names": {
@@ -1444,7 +1446,8 @@
       "steps": [
         "W_MultiAge_FELL23A9",
         "W_MultiAge_FELL23A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FELL22A": {
       "names": {
@@ -1526,7 +1529,8 @@
       "steps": [
         "W_MultiAge_FALL23A9",
         "W_MultiAge_FALL23A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FALL23A": {
       "names": {
@@ -1536,7 +1540,8 @@
       "steps": [
         "W_MultiAge_FALL23A10",
         "W_MultiAge_FALL23A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_FALL23B": {
       "names": {
@@ -1595,7 +1600,8 @@
         "W_MultiAge_SUM23A7",
         "W_MultiAge_SUM23A8",
         "W_MultiAge_SUM23A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_SUM23A": {
       "names": {
@@ -1605,7 +1611,8 @@
       "steps": [
         "W_MultiAge_SUM23A9",
         "W_MultiAge_SUM23A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_SUM20A": {
       "names": {
@@ -1693,7 +1700,8 @@
       "steps": [
         "W_MultiAge_PAT23A9",
         "W_MultiAge_PAT23A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_WILD23A": {
       "names": {
@@ -1720,7 +1728,8 @@
       "steps": [
         "W_MultiAge_WILD23A9",
         "W_MultiAge_WILD23A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_WILD23E": {
       "names": {
@@ -1788,7 +1797,8 @@
       "steps": [
         "W_MultiAge_WIN23A10",
         "W_MultiAge_WIN23A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WIN23A": {
       "names": {
@@ -1798,7 +1808,8 @@
       "steps": [
         "W_MultiAge_WIN23A11",
         "W_MultiAge_WIN23A12"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_WIN23C": {
       "names": {
@@ -1885,7 +1896,8 @@
       "steps": [
         "W_MultiAge_HAL25A9",
         "W_MultiAge_HAL25A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_HAL25A": {
       "names": {
@@ -1895,7 +1907,8 @@
       "steps": [
         "W_MultiAge_HAL25A10",
         "W_MultiAge_HAL25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_HAL25B": {
       "names": {
@@ -1955,7 +1968,8 @@
       "steps": [
         "W_MultiAge_HAL15A3",
         "W_MultiAge_HAL15A4"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "golden_upgrade_kit_HAL17A": {
       "names": {
@@ -1985,7 +1999,8 @@
       "steps": [
         "W_MultiAge_HAL17A3",
         "W_MultiAge_HAL17A4"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_HAL24A": {
       "names": {
@@ -2011,7 +2026,8 @@
       "steps": [
         "W_MultiAge_HAL24A8",
         "W_MultiAge_HAL24A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_HAL24A": {
       "names": {
@@ -2021,7 +2037,8 @@
       "steps": [
         "W_MultiAge_HAL24A9",
         "W_MultiAge_HAL24A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_upgrade_kit_HAL24F": {
       "names": {
@@ -2087,7 +2104,8 @@
       "steps": [
         "W_MultiAge_HAL23A8",
         "W_MultiAge_HAL23A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_HAL23A": {
       "names": {
@@ -2097,7 +2115,8 @@
       "steps": [
         "W_MultiAge_HAL23A9",
         "W_MultiAge_HAL23A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_HAL23B": {
       "names": {
@@ -2166,7 +2185,8 @@
       "steps": [
         "W_MultiAge_WILD24A11",
         "W_MultiAge_WILD24A12"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WILD24A": {
       "names": {
@@ -2176,7 +2196,8 @@
       "steps": [
         "W_MultiAge_WILD24A12",
         "W_MultiAge_WILD24A13"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WILD22A": {
       "names": {
@@ -2196,7 +2217,8 @@
       "steps": [
         "W_MultiAge_WILD24C1",
         "W_MultiAge_WILD24C2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_WILD24D": {
       "names": {
@@ -2206,7 +2228,8 @@
       "steps": [
         "W_MultiAge_WILD24D1",
         "W_MultiAge_WILD24D2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_PAT24A": {
       "names": {
@@ -2231,7 +2254,8 @@
       "steps": [
         "W_MultiAge_PAT24A7",
         "W_MultiAge_PAT24A8"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_PAT24A": {
       "names": {
@@ -2241,7 +2265,8 @@
       "steps": [
         "W_MultiAge_PAT24A8",
         "W_MultiAge_PAT24A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_upgrade_kit_PAT23A": {
       "names": {
@@ -2261,7 +2286,8 @@
       "steps": [
         "W_MultiAge_PAT23B1",
         "W_MultiAge_PAT23B2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_PAT23C": {
       "names": {
@@ -2271,7 +2297,8 @@
       "steps": [
         "W_MultiAge_PAT23C1",
         "W_MultiAge_PAT23C2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_PAT23D": {
       "names": {
@@ -2281,7 +2308,8 @@
       "steps": [
         "W_MultiAge_PAT23D1",
         "W_MultiAge_PAT23D2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_PAT24C": {
       "names": {
@@ -2339,7 +2367,8 @@
       "steps": [
         "W_MultiAge_ANNI24A10",
         "W_MultiAge_ANNI24A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_ANNI24A": {
       "names": {
@@ -2349,7 +2378,8 @@
       "steps": [
         "W_MultiAge_ANNI24A11",
         "W_MultiAge_ANNI24A12"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_ANNI22A": {
       "names": {
@@ -2574,7 +2604,8 @@
       "steps": [
         "W_MultiAge_GBG24C1",
         "W_MultiAge_GBG24C2"
-      ]
+      ],
+      "requiredFragments": 350
     },
     "upgrade_kit_GBG24D": {
       "names": {
@@ -2611,7 +2642,8 @@
       "steps": [
         "W_MultiAge_SUM24A9",
         "W_MultiAge_SUM24A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_SUM24A": {
       "names": {
@@ -2621,7 +2653,8 @@
       "steps": [
         "W_MultiAge_SUM24A10",
         "W_MultiAge_SUM24A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_SUM24B": {
       "names": {
@@ -2631,7 +2664,8 @@
       "steps": [
         "W_MultiAge_SUM24B1",
         "W_MultiAge_SUM24B2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_ascended_SUM24B": {
       "names": {
@@ -2651,7 +2685,8 @@
       "steps": [
         "W_MultiAge_SUM24C1",
         "W_MultiAge_SUM24C2"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "upgrade_kit_ascended_SUM24C": {
       "names": {
@@ -2716,7 +2751,8 @@
       "steps": [
         "W_MultiAge_CARE24A7",
         "W_MultiAge_CARE24A8"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_CARE24A": {
       "names": {
@@ -2726,7 +2762,8 @@
       "steps": [
         "W_MultiAge_CARE24A8",
         "W_MultiAge_CARE24A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_CARE24B": {
       "names": {
@@ -2763,7 +2800,8 @@
       "steps": [
         "W_MultiAge_FALL25A9",
         "W_MultiAge_FALL25A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FALL25A": {
       "names": {
@@ -2773,7 +2811,8 @@
       "steps": [
         "W_MultiAge_FALL25A10",
         "W_MultiAge_FALL25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_FALL25E": {
       "names": {
@@ -2820,7 +2859,8 @@
       "steps": [
         "W_MultiAge_FALL24A9",
         "W_MultiAge_FALL24A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FALL24A": {
       "names": {
@@ -2830,7 +2870,8 @@
       "steps": [
         "W_MultiAge_FALL24A10",
         "W_MultiAge_FALL24A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_FALL24B": {
       "names": {
@@ -2930,7 +2971,8 @@
       "steps": [
         "W_MultiAge_GBG24E1",
         "W_MultiAge_GBG24E2"
-      ]
+      ],
+      "requiredFragments": 350
     },
     "upgrade_kit_GBG24F": {
       "names": {
@@ -3046,7 +3088,8 @@
       "steps": [
         "W_MultiAge_FELL24A8",
         "W_MultiAge_FELL24A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FELL24A": {
       "names": {
@@ -3056,7 +3099,8 @@
       "steps": [
         "W_MultiAge_FELL24A9",
         "W_MultiAge_FELL24A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_upgrade_kit_FELL22A": {
       "names": {
@@ -3106,7 +3150,8 @@
       "steps": [
         "W_MultiAge_GBG24G1",
         "W_MultiAge_GBG24G2"
-      ]
+      ],
+      "requiredFragments": 350
     },
     "upgrade_kit_GBG24H": {
       "names": {
@@ -3339,7 +3384,8 @@
       "steps": [
         "W_MultiAge_WILD25A9",
         "W_MultiAge_WILD25A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WILD25A": {
       "names": {
@@ -3349,7 +3395,8 @@
       "steps": [
         "W_MultiAge_WILD25A10",
         "W_MultiAge_WILD25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WILD21Aa": {
       "names": {
@@ -3426,7 +3473,8 @@
       "steps": [
         "W_MultiAge_WILD26A9",
         "W_MultiAge_WILD26A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WILD26A": {
       "names": {
@@ -3436,7 +3484,8 @@
       "steps": [
         "W_MultiAge_WILD26A10",
         "W_MultiAge_WILD26A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_WILD26B": {
       "names": {
@@ -3476,7 +3525,8 @@
       "steps": [
         "W_MultiAge_WILD22A11",
         "W_MultiAge_WILD22A12"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "platinum_upgrade_kit_WILD24A": {
       "names": {
@@ -3496,7 +3546,8 @@
       "steps": [
         "W_MultiAge_WILD24A14",
         "W_MultiAge_WILD24A15"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_GBG25A": {
       "names": {
@@ -3506,7 +3557,8 @@
       "steps": [
         "W_MultiAge_GBG25A1",
         "W_MultiAge_GBG25A2"
-      ]
+      ],
+      "requiredFragments": 350
     },
     "upgrade_kit_GBG25B": {
       "names": {
@@ -3526,7 +3578,8 @@
       "steps": [
         "W_MultiAge_GBG25C1",
         "W_MultiAge_GBG25C2"
-      ]
+      ],
+      "requiredFragments": 350
     },
     "upgrade_kit_GBG25D": {
       "names": {
@@ -3546,7 +3599,8 @@
       "steps": [
         "W_MultiAge_GBG25E1",
         "W_MultiAge_GBG25E2"
-      ]
+      ],
+      "requiredFragments": 350
     },
     "upgrade_kit_GBG25F": {
       "names": {
@@ -3584,7 +3638,8 @@
       "steps": [
         "W_MultiAge_HIS25A10",
         "W_MultiAge_HIS25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_HIS25A": {
       "names": {
@@ -3594,7 +3649,8 @@
       "steps": [
         "W_MultiAge_HIS25A11",
         "W_MultiAge_HIS25A12"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_HIS25B": {
       "names": {
@@ -3691,7 +3747,8 @@
       "steps": [
         "W_MultiAge_HIS26A9",
         "W_MultiAge_HIS26A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_HIS26A": {
       "names": {
@@ -3701,7 +3758,8 @@
       "steps": [
         "W_MultiAge_HIS26A10",
         "W_MultiAge_HIS26A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_HIS26B": {
       "names": {
@@ -3761,7 +3819,8 @@
       "steps": [
         "W_MultiAge_HIS25A13",
         "W_MultiAge_HIS25A14"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_PAT25A": {
       "names": {
@@ -3788,7 +3847,8 @@
       "steps": [
         "W_MultiAge_PAT25A9",
         "W_MultiAge_PAT25A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_PAT25A": {
       "names": {
@@ -3798,7 +3858,8 @@
       "steps": [
         "W_MultiAge_PAT25A10",
         "W_MultiAge_PAT25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_PAT25E": {
       "names": {
@@ -3884,7 +3945,8 @@
       "steps": [
         "W_MultiAge_PAT26A8",
         "W_MultiAge_PAT26A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_PAT26A": {
       "names": {
@@ -3894,7 +3956,8 @@
       "steps": [
         "W_MultiAge_PAT26A9",
         "W_MultiAge_PAT26A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_PAT26E": {
       "names": {
@@ -3964,7 +4027,8 @@
       "steps": [
         "W_MultiAge_PAT25A12",
         "W_MultiAge_PAT25A13"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_ANNI25A": {
       "names": {
@@ -3992,7 +4056,8 @@
       "steps": [
         "W_MultiAge_ANNI25A10",
         "W_MultiAge_ANNI25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_ANNI25A": {
       "names": {
@@ -4002,7 +4067,8 @@
       "steps": [
         "W_MultiAge_ANNI25A11",
         "W_MultiAge_ANNI25A12"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_ANNI25B": {
       "names": {
@@ -4022,7 +4088,8 @@
       "steps": [
         "W_MultiAge_ANNI25C1",
         "W_MultiAge_ANNI25C2"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "silver_upgrade_kit_ARCH20A": {
       "names": {
@@ -4196,7 +4263,8 @@
       "steps": [
         "W_MultiAge_SUM25A16",
         "W_MultiAge_SUM25A17"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_SUM25A": {
       "names": {
@@ -4206,7 +4274,8 @@
       "steps": [
         "W_MultiAge_SUM25A17",
         "W_MultiAge_SUM25A18"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_SUM25B": {
       "names": {
@@ -4276,7 +4345,8 @@
       "steps": [
         "W_MultiAge_SUM20A11",
         "W_MultiAge_SUM20A12"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_CARE25A": {
       "names": {
@@ -4303,7 +4373,8 @@
       "steps": [
         "W_MultiAge_CARE25A9",
         "W_MultiAge_CARE25A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_CARE25A": {
       "names": {
@@ -4313,7 +4384,8 @@
       "steps": [
         "W_MultiAge_CARE25A10",
         "W_MultiAge_CARE25A11"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_CARE25B": {
       "names": {
@@ -4363,7 +4435,8 @@
       "steps": [
         "W_MultiAge_CARE24A10",
         "W_MultiAge_CARE24A11"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_FELL25A": {
       "names": {
@@ -4389,7 +4462,8 @@
       "steps": [
         "W_MultiAge_FELL25A8",
         "W_MultiAge_FELL25A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FELL25A": {
       "names": {
@@ -4399,7 +4473,8 @@
       "steps": [
         "W_MultiAge_FELL25A9",
         "W_MultiAge_FELL25A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_FELL25B": {
       "names": {
@@ -4453,7 +4528,8 @@
       "steps": [
         "W_MultiAge_FELL26A8",
         "W_MultiAge_FELL26A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FELL26A": {
       "names": {
@@ -4462,7 +4538,8 @@
       "steps": [
         "W_MultiAge_FELL26A9",
         "W_MultiAge_FELL26A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_FELL26B": {
       "names": {
@@ -4507,7 +4584,8 @@
       "steps": [
         "W_MultiAge_FELL24A11",
         "W_MultiAge_FELL24A12"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "golden_upgrade_kit_BOWL22A": {
       "names": {
@@ -4547,7 +4625,8 @@
       "steps": [
         "W_MultiAge_BOWL22A12",
         "W_MultiAge_BOWL22A13"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_GR25I": {
       "names": {
@@ -4748,7 +4827,8 @@
       "steps": [
         "W_MultiAge_WIN25A7",
         "W_MultiAge_WIN25A8"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WIN25A": {
       "names": {
@@ -4758,7 +4838,8 @@
       "steps": [
         "W_MultiAge_WIN25A8",
         "W_MultiAge_WIN25A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_WIN25B": {
       "names": {
@@ -4798,7 +4879,8 @@
       "steps": [
         "W_MultiAge_WIN24A13",
         "W_MultiAge_WIN24A14"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "golden_upgrade_kit_WIN19Aa": {
       "names": {
@@ -5024,7 +5106,8 @@
       "steps": [
         "W_MultiAge_ANNI26A8",
         "W_MultiAge_ANNI26A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_ANNI26A": {
       "names": {
@@ -5037,7 +5120,8 @@
           "W_MultiAge_ANNI26A10a",
           "W_MultiAge_ANNI26A10b"
         ]
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_ANNI26B": {
       "names": {
@@ -5107,7 +5191,8 @@
       "steps": [
         "W_MultiAge_ARCH19A13",
         "W_MultiAge_ARCH19A14"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_GR26E": {
       "names": {
@@ -5151,7 +5236,8 @@
       "steps": [
         "W_MultiAge_ARTHUR26A6",
         "W_MultiAge_ARTHUR26A7"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_ARTHUR26A": {
       "names": {
@@ -5161,7 +5247,8 @@
       "steps": [
         "W_MultiAge_ARTHUR26A7",
         "W_MultiAge_ARTHUR26A8"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_upgrade_kit_ARTHUR26A": {
       "names": {
@@ -5181,7 +5268,8 @@
       "steps": [
         "W_MultiAge_ARTHUR26A9",
         "W_MultiAge_ARTHUR26A10"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_ascended_ARTHUR26B": {
       "names": {
@@ -5246,7 +5334,8 @@
       "steps": [
         "W_MultiAge_CARE26A7",
         "W_MultiAge_CARE26A8"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_CARE26A": {
       "names": {
@@ -5256,7 +5345,8 @@
       "steps": [
         "W_MultiAge_CARE26A8",
         "W_MultiAge_CARE26A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_CARE26B": {
       "names": {
@@ -5306,7 +5396,8 @@
       "steps": [
         "W_MultiAge_CUP22A10",
         "W_MultiAge_CUP22A11"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_CUP22B": {
       "names": {
@@ -5392,7 +5483,8 @@
       "steps": [
         "W_MultiAge_FALL26A8",
         "W_MultiAge_FALL26A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_FALL26A": {
       "names": {
@@ -5402,7 +5494,8 @@
       "steps": [
         "W_MultiAge_FALL26A9",
         "W_MultiAge_FALL26A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "upgrade_kit_ascended_FALL26B": {
       "names": {
@@ -5462,7 +5555,8 @@
       "steps": [
         "W_MultiAge_FALL21A11",
         "W_MultiAge_FALL21A12"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_GBG26G": {
       "names": {
@@ -5508,7 +5602,8 @@
       "steps": [
         "W_MultiAge_WIN26A8",
         "W_MultiAge_WIN26A9"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_upgrade_kit_WIN26A": {
       "names": {
@@ -5518,7 +5613,8 @@
       "steps": [
         "W_MultiAge_WIN26A9",
         "W_MultiAge_WIN26A10"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_upgrade_kit_WIN26A": {
       "names": {
@@ -5541,7 +5637,8 @@
           "W_MultiAge_WIN26A12a",
           "W_MultiAge_WIN26A12b"
         ]
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_ascended_WIN26B": {
       "names": {
@@ -6601,7 +6698,8 @@
         "W_MultiAge_CUP22C1",
         "W_MultiAge_CUP22D1",
         "W_MultiAge_CUP22E1"
-      ]
+      ],
+      "requiredFragments": 15
     },
     "selection_kit_gentiana_windmill_farm": {
       "names": {
@@ -6837,7 +6935,8 @@
       "options": [
         "W_MultiAge_FELL23A1",
         "upgrade_kit_FELL23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_epic_FELL23": {
       "names": {
@@ -6859,7 +6958,8 @@
       "options": [
         "W_MultiAge_FELL23B1",
         "W_MultiAge_FELL23C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_ANNI23A": {
       "names": {
@@ -6870,7 +6970,8 @@
         "W_MultiAge_ANNI23A1",
         "upgrade_kit_ANNI23A",
         "golden_upgrade_kit_ANNI23A"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_ANNI23B": {
       "names": {
@@ -6890,7 +6991,8 @@
       "options": [
         "W_MultiAge_FALL23A1",
         "upgrade_kit_FALL23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_epic_FALL23": {
       "names": {
@@ -6991,7 +7093,8 @@
         "W_MultiAge_SUM23D1",
         "W_MultiAge_SUM23E1",
         "W_MultiAge_SUM23F1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_CUP23A": {
       "names": {
@@ -7012,7 +7115,8 @@
         "W_MultiAge_CUP23A1",
         "upgrade_kit_CUP23A",
         "golden_upgrade_kit_CUP23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_CUP23BC": {
       "names": {
@@ -7022,7 +7126,8 @@
       "options": [
         "W_MultiAge_CUP23B1",
         "W_MultiAge_CUP23C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_CUP23": {
       "names": {
@@ -7225,7 +7330,8 @@
       "options": [
         "W_MultiAge_WIN23A1",
         "upgrade_kit_WIN23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_WIN23A": {
       "names": {
@@ -7236,7 +7342,8 @@
         "W_MultiAge_WIN23A1",
         "upgrade_kit_WIN23A",
         "silver_upgrade_kit_WIN23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_WIN23A": {
       "names": {
@@ -7248,7 +7355,8 @@
         "upgrade_kit_WIN23A",
         "silver_upgrade_kit_WIN23A",
         "golden_upgrade_kit_WIN23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_WIN22A": {
       "names": {
@@ -7270,7 +7378,8 @@
       "options": [
         "W_MultiAge_WIN22B1",
         "upgrade_kit_WIN22B"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_WIN23": {
       "names": {
@@ -7323,7 +7432,8 @@
       "options": [
         "W_MultiAge_WIN23E1",
         "W_MultiAge_WIN23F1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_HAL23A": {
       "names": {
@@ -7333,7 +7443,8 @@
       "options": [
         "W_MultiAge_HAL23A1",
         "upgrade_kit_HAL23A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_epic_HAL23": {
       "names": {
@@ -7370,7 +7481,8 @@
       "options": [
         "W_MultiAge_HAL23E1",
         "W_MultiAge_HAL23F1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_WILD24A": {
       "names": {
@@ -7380,7 +7492,8 @@
       "options": [
         "W_MultiAge_WILD24A1",
         "upgrade_kit_WILD24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_WILD24CD": {
       "names": {
@@ -7390,7 +7503,8 @@
       "options": [
         "W_MultiAge_WILD24C1",
         "W_MultiAge_WILD24D1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_WILD24": {
       "names": {
@@ -7423,7 +7537,8 @@
         "W_MultiAge_PAT23B1",
         "W_MultiAge_PAT23C1",
         "W_MultiAge_PAT23D1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_PAT24A": {
       "names": {
@@ -7433,7 +7548,8 @@
       "options": [
         "W_MultiAge_PAT24A1",
         "upgrade_kit_PAT24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_PAT24C": {
       "names": {
@@ -7453,7 +7569,8 @@
       "options": [
         "W_MultiAge_PAT24D1",
         "W_MultiAge_PAT24E1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_PAT24": {
       "names": {
@@ -7500,7 +7617,8 @@
       "options": [
         "W_MultiAge_GBG24D1",
         "upgrade_kit_GBG24D"
-      ]
+      ],
+      "requiredFragments": 500
     },
     "selection_kit_GBG24A": {
       "names": {
@@ -7520,7 +7638,8 @@
       "options": [
         "W_MultiAge_GBG24B1",
         "upgrade_kit_GBG24B"
-      ]
+      ],
+      "requiredFragments": 500
     },
     "selection_kit_ANNI24A": {
       "names": {
@@ -7530,7 +7649,8 @@
       "options": [
         "W_MultiAge_ANNI24A1",
         "upgrade_kit_ANNI24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_ANNI24A": {
       "names": {
@@ -7541,7 +7661,8 @@
         "W_MultiAge_ANNI24A1",
         "upgrade_kit_ANNI24A",
         "silver_upgrade_kit_ANNI24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_ANNI24A": {
       "names": {
@@ -7553,7 +7674,8 @@
         "upgrade_kit_ANNI24A",
         "silver_upgrade_kit_ANNI24A",
         "golden_upgrade_kit_ANNI24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_ANNI24CD": {
       "names": {
@@ -7563,7 +7685,8 @@
       "options": [
         "W_MultiAge_ANNI24C1",
         "W_MultiAge_ANNI24D1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_ANNI22B": {
       "names": {
@@ -7573,7 +7696,8 @@
       "options": [
         "W_MultiAge_AgeBonus22",
         "upgrade_kit_ANNI22B"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_ANNI24": {
       "names": {
@@ -7601,7 +7725,8 @@
       "options": [
         "W_MultiAge_HERO24A1",
         "upgrade_kit_HERO24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_HERO24BC": {
       "names": {
@@ -7642,7 +7767,8 @@
       "options": [
         "W_MultiAge_HERO24H1",
         "upgrade_kit_HERO24H"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "silver_selection_kit_HERO24H": {
       "names": {
@@ -7653,7 +7779,8 @@
         "W_MultiAge_HERO24H1",
         "upgrade_kit_HERO24H",
         "silver_upgrade_kit_HERO24H"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "golden_selection_kit_HERO24H": {
       "names": {
@@ -7665,7 +7792,8 @@
         "upgrade_kit_HERO24H",
         "silver_upgrade_kit_HERO24H",
         "golden_upgrade_kit_HERO24H"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_HERO24": {
       "names": {
@@ -7721,7 +7849,8 @@
       "options": [
         "W_MultiAge_GR23C1",
         "upgrade_kit_GR23C"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "selection_kit_neo_botanical_rotunda": {
       "names": {
@@ -7777,7 +7906,8 @@
       "options": [
         "W_MultiAge_SUM24A1",
         "upgrade_kit_SUM24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_SUM24A": {
       "names": {
@@ -7788,7 +7918,8 @@
         "W_MultiAge_SUM24A1",
         "upgrade_kit_SUM24A",
         "silver_upgrade_kit_SUM24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_SUM24A": {
       "names": {
@@ -7800,7 +7931,8 @@
         "upgrade_kit_SUM24A",
         "silver_upgrade_kit_SUM24A",
         "golden_upgrade_kit_SUM24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_SUM24BC": {
       "names": {
@@ -7810,7 +7942,8 @@
       "options": [
         "W_MultiAge_SUM24B1",
         "W_MultiAge_SUM24C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_SUM24B": {
       "names": {
@@ -7872,7 +8005,8 @@
       "options": [
         "W_MultiAge_CARE24A1",
         "upgrade_kit_CARE24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_CARE24A": {
       "names": {
@@ -7883,7 +8017,8 @@
         "W_MultiAge_CARE24A1",
         "upgrade_kit_CARE24A",
         "silver_upgrade_kit_CARE24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_CARE24A": {
       "names": {
@@ -7895,7 +8030,8 @@
         "upgrade_kit_CARE24A",
         "silver_upgrade_kit_CARE24A",
         "golden_upgrade_kit_CARE24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_CARE24BC": {
       "names": {
@@ -7905,7 +8041,8 @@
       "options": [
         "W_MultiAge_CARE24B1",
         "W_MultiAge_CARE24C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_FALL24A": {
       "names": {
@@ -7915,7 +8052,8 @@
       "options": [
         "W_MultiAge_FALL24A1",
         "upgrade_kit_FALL24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_FALL24A": {
       "names": {
@@ -8024,7 +8162,8 @@
         "upgrade_kit_FALL25A",
         "silver_upgrade_kit_FALL25A",
         "golden_upgrade_kit_FALL25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_FALL25BCD": {
       "names": {
@@ -8045,7 +8184,8 @@
       "options": [
         "W_MultiAge_FALL25F1",
         "W_MultiAge_FALL25E1"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_epic_FALL25": {
       "names": {
@@ -8179,7 +8319,8 @@
         "upgrade_kit_HAL25A",
         "silver_upgrade_kit_HAL25A",
         "golden_upgrade_kit_HAL25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_HAL25BC": {
       "names": {
@@ -8189,7 +8330,8 @@
       "options": [
         "W_MultiAge_HAL25B1",
         "W_MultiAge_HAL25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_HAL25E": {
       "names": {
@@ -8289,7 +8431,8 @@
       "options": [
         "W_MultiAge_HAL24A1",
         "upgrade_kit_HAL24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_HAL24A": {
       "names": {
@@ -8434,7 +8577,8 @@
         "upgrade_kit_FELL24A",
         "silver_upgrade_kit_FELL24A",
         "golden_upgrade_kit_FELL24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_FELL24BC": {
       "names": {
@@ -8454,7 +8598,8 @@
       "options": [
         "W_MultiAge_FELL22B1",
         "upgrade_kit_FELL22B"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_FELL24": {
       "names": {
@@ -8500,7 +8645,8 @@
       "options": [
         "W_MultiAge_WIN24A1",
         "upgrade_kit_WIN24A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_WIN24BC": {
       "names": {
@@ -8510,7 +8656,8 @@
       "options": [
         "W_MultiAge_WIN24B1",
         "W_MultiAge_WIN24C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_WIN18B": {
       "names": {
@@ -8520,7 +8667,8 @@
       "options": [
         "W_MultiAge_WIN18B1",
         "upgrade_kit_WIN18B"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_WIN24": {
       "names": {
@@ -8765,7 +8913,8 @@
         "upgrade_kit_WILD25A",
         "silver_upgrade_kit_WILD25A",
         "golden_upgrade_kit_WILD25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_WILD21A": {
       "names": {
@@ -8788,7 +8937,8 @@
       "options": [
         "W_MultiAge_WILD25B1",
         "W_MultiAge_WILD25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_WILD25": {
       "names": {
@@ -8852,7 +9002,8 @@
         "upgrade_kit_WILD26A",
         "silver_upgrade_kit_WILD26A",
         "golden_upgrade_kit_WILD26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_WILD26BC": {
       "names": {
@@ -8862,7 +9013,8 @@
       "options": [
         "W_MultiAge_WILD26B1",
         "W_MultiAge_WILD26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "platinum_selection_kit_WILD22A": {
       "names": {
@@ -9013,7 +9165,8 @@
         "upgrade_kit_HIS25A",
         "silver_upgrade_kit_HIS25A",
         "golden_upgrade_kit_HIS25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_HIS25G": {
       "names": {
@@ -9077,7 +9230,8 @@
       "options": [
         "W_MultiAge_HIS25B1",
         "W_MultiAge_HIS25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_HIS25A": {
       "names": {
@@ -9133,7 +9287,8 @@
         "upgrade_kit_HIS26A",
         "silver_upgrade_kit_HIS26A",
         "golden_upgrade_kit_HIS26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_HIS26BC": {
       "names": {
@@ -9143,7 +9298,8 @@
       "options": [
         "W_MultiAge_HIS26B1",
         "W_MultiAge_HIS26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_HIS26F": {
       "names": {
@@ -9226,7 +9382,8 @@
         "upgrade_kit_PAT25A",
         "silver_upgrade_kit_PAT25A",
         "golden_upgrade_kit_PAT25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_PAT25BC": {
       "names": {
@@ -9236,7 +9393,8 @@
       "options": [
         "W_MultiAge_PAT25B1",
         "W_MultiAge_PAT25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_PAT25E": {
       "names": {
@@ -9348,7 +9506,8 @@
         "upgrade_kit_PAT26A",
         "silver_upgrade_kit_PAT26A",
         "golden_upgrade_kit_PAT26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_PAT26BC": {
       "names": {
@@ -9358,7 +9517,8 @@
       "options": [
         "W_MultiAge_PAT26B1",
         "W_MultiAge_PAT26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_PAT26E": {
       "names": {
@@ -9474,7 +9634,8 @@
         "upgrade_kit_ANNI25A",
         "silver_upgrade_kit_ANNI25A",
         "golden_upgrade_kit_ANNI25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_ANNI25BC": {
       "names": {
@@ -9484,7 +9645,8 @@
       "options": [
         "W_MultiAge_ANNI25B1",
         "W_MultiAge_ANNI25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "silver_selection_kit_ARCH20A": {
       "names": {
@@ -9613,7 +9775,8 @@
       "options": [
         "W_MultiAge_SUM25A1",
         "upgrade_kit_SUM25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_SUM25A": {
       "names": {
@@ -9624,7 +9787,8 @@
         "W_MultiAge_SUM25A1",
         "upgrade_kit_SUM25A",
         "silver_upgrade_kit_SUM25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_SUM25A": {
       "names": {
@@ -9636,7 +9800,8 @@
         "upgrade_kit_SUM25A",
         "silver_upgrade_kit_SUM25A",
         "golden_upgrade_kit_SUM25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_SUM20A": {
       "names": {
@@ -9702,7 +9867,8 @@
       "options": [
         "W_MultiAge_SUM25B1",
         "W_MultiAge_SUM25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_SUM25": {
       "names": {
@@ -9773,7 +9939,8 @@
         "upgrade_kit_CARE25A",
         "silver_upgrade_kit_CARE25A",
         "golden_upgrade_kit_CARE25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_selection_kit_CARE24A": {
       "names": {
@@ -9796,7 +9963,8 @@
       "options": [
         "W_MultiAge_CARE25B1",
         "W_MultiAge_CARE25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_CARE25E": {
       "names": {
@@ -9851,7 +10019,8 @@
         "upgrade_kit_FELL25A",
         "silver_upgrade_kit_FELL25A",
         "golden_upgrade_kit_FELL25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "silver_selection_kit_BOWL22A": {
       "names": {
@@ -9895,7 +10064,8 @@
       "options": [
         "W_MultiAge_FELL25B1",
         "W_MultiAge_FELL25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_FELL25E": {
       "names": {
@@ -9965,7 +10135,8 @@
       "options": [
         "W_MultiAge_FELL26B1",
         "W_MultiAge_FELL26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_FELL26E": {
       "names": {
@@ -10072,7 +10243,8 @@
       "options": [
         "W_MultiAge_GR25D1",
         "upgrade_kit_GR25D"
-      ]
+      ],
+      "requiredFragments": 1000
     },
     "selection_kit_GR25C": {
       "names": {
@@ -10207,7 +10379,8 @@
         "upgrade_kit_WIN25A",
         "silver_upgrade_kit_WIN25A",
         "golden_upgrade_kit_WIN25A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_WIN25BC": {
       "names": {
@@ -10217,7 +10390,8 @@
       "options": [
         "W_MultiAge_WIN25B1",
         "W_MultiAge_WIN25C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "silver_selection_kit_WIN24A": {
       "names": {
@@ -10266,7 +10440,8 @@
         "golden_upgrade_kit_WIN19Aa",
         "golden_upgrade_kit_WIN19Ab",
         "golden_upgrade_kit_WIN19Ac"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_WIN19BCD21B": {
       "names": {
@@ -10282,7 +10457,8 @@
         "W_MultiAge_WIN19C1",
         "W_MultiAge_WIN19D1",
         "W_MultiAge_WIN21B1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_WIN25": {
       "names": {
@@ -10553,7 +10729,8 @@
         "upgrade_kit_ANNI26A",
         "silver_upgrade_kit_ANNI26A",
         "golden_upgrade_kit_ANNI26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_ANNI26BC": {
       "names": {
@@ -10563,7 +10740,8 @@
       "options": [
         "W_MultiAge_ANNI26B1",
         "W_MultiAge_ANNI26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_ANNI26E": {
       "names": {
@@ -10713,7 +10891,8 @@
         "upgrade_kit_ARTHUR26A",
         "silver_upgrade_kit_ARTHUR26A",
         "golden_upgrade_kit_ARTHUR26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_selection_kit_ARTHUR26A": {
       "names": {
@@ -10736,7 +10915,8 @@
       "options": [
         "W_MultiAge_ARTHUR26B1",
         "W_MultiAge_ARTHUR26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_SUM26": {
       "names": {
@@ -10831,7 +11011,8 @@
         "upgrade_kit_CARE26A",
         "silver_upgrade_kit_CARE26A",
         "golden_upgrade_kit_CARE26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_selection_kit_CUP22A": {
       "names": {
@@ -10853,7 +11034,8 @@
       "options": [
         "W_MultiAge_CARE26B1",
         "W_MultiAge_CARE26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_CARE26E": {
       "names": {
@@ -10972,7 +11154,8 @@
         "upgrade_kit_FALL26A",
         "silver_upgrade_kit_FALL26A",
         "golden_upgrade_kit_FALL26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "golden_selection_kit_FALL21A": {
       "names": {
@@ -11005,7 +11188,8 @@
       "options": [
         "W_MultiAge_FALL26B1",
         "W_MultiAge_FALL26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_FALL26E": {
       "names": {
@@ -11114,7 +11298,8 @@
         "upgrade_kit_WIN26A",
         "silver_upgrade_kit_WIN26A",
         "golden_upgrade_kit_WIN26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "platinum_selection_kit_WIN26A": {
       "names": {
@@ -11137,7 +11322,8 @@
       "options": [
         "W_MultiAge_WIN26B1",
         "W_MultiAge_WIN26C1"
-      ]
+      ],
+      "requiredFragments": 100
     },
     "selection_kit_epic_WIN26": {
       "names": {
@@ -11182,5 +11368,22 @@
         "upgrade_kit_winter_spire"
       ]
     }
+  },
+  "requiredFragmentsByBuilding": {
+    "W_MultiAge_FALL23E1": 100,
+    "W_MultiAge_FALL23F1": 100,
+    "W_MultiAge_FALL23E2": 100,
+    "W_MultiAge_FALL23F2": 100,
+    "W_MultiAge_FALL23C1": 100,
+    "W_MultiAge_FALL23C2": 100,
+    "W_MultiAge_FALL23D1": 100,
+    "W_MultiAge_FALL23D2": 100,
+    "guild_arena": 500,
+    "limited_daunting_tower_active": 100,
+    "W_MultiAge_HERO24E1": 100,
+    "W_MultiAge_PAT23C1": 100,
+    "W_MultiAge_PAT23D1": 100,
+    "W_MultiAge_SUM23A1": 150,
+    "W_MultiAge_WIN22B1": 200
   }
 }

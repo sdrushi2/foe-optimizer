@@ -87,9 +87,15 @@ const ITALIAN_NAMES = getItalianMap();
 // ────────────────────────────────────────────────────────────────
 // FRAMMENTI (colonna Fragments del CSV), costruiti in un singolo passaggio:
 // - FRAGMENTS_PRODUCED: cityEntityId -> lista di ciò di cui l'edificio PRODUCE
-//   frammenti. Token "building_<id>" = un edificio (es. building_W_MultiAge_WIN22B1);
-//   ogni altro token è l'id di un kit così com'è (selection/upgrade, inclusi i
+//   frammenti. Ogni token è "<fid>:<amount>" (amount = quanti frammenti dà
+//   QUESTA raccolta, stabile per coppia edificio+kit — assente solo per dati
+//   storici pre-agosto-2026 senza amount, fallback undefined). Token
+//   "building_<id>" = un edificio (es. building_W_MultiAge_WIN22B1); ogni
+//   altro token è l'id di un kit così com'è (selection/upgrade, inclusi i
 //   tier silver_/golden_, es. selection_kit_WIN23EF + silver_upgrade_kit_WIN23A).
+//   Un edificio può produrre PIÙ kit/edifici diversi contemporaneamente (es.
+//   W_MultiAge_CARE26A8: golden_upgrade_kit_CARE26A + selection_kit_CARE26BC),
+//   da cui il tipo lista invece di un singolo valore.
 //   Alimenta il badge 🧩 in tabella, che mostra la lista completa dei prodotti.
 //   (La vecchia mappa inversa "chi produce frammenti di questo edificio" è
 //   stata rimossa insieme al vecchio significato del badge: quell'informazione
@@ -97,21 +103,29 @@ const ITALIAN_NAMES = getItalianMap();
 // - FRAGMENT_KIT_PRODUCERS: mappa inversa kit -> edifici produttori, usata
 //   dalla modale Edifici Aggiornabili ("frammenti prodotti da").
 // ────────────────────────────────────────────────────────────────
-type FragmentProduced = { kind: "building" | "kit"; id: string };
+type FragmentProduced = { kind: "building" | "kit"; id: string; amountPerCollection?: number };
 const FRAGMENTS_PRODUCED = new Map<string, FragmentProduced[]>();
 const FRAGMENT_KIT_PRODUCERS = new Map<string, string[]>();
 for (const b of BUILDINGS_FROM_CSV) {
   if (!b.fragments) continue;
   const produced: FragmentProduced[] = [];
-  for (const token of b.fragments.split("|")) {
-    const frag = token.trim();
-    if (!frag) continue;
+  for (const rawToken of b.fragments.split("|")) {
+    const token = rawToken.trim();
+    if (!token) continue;
+    // "<fid>:<amount>" — il separatore ":" non compare mai dentro un fid
+    // (pattern lingua-neutro validati in buildingClassification.ts), quindi
+    // uno split semplice basta. Dati storici senza ":" restano supportati
+    // (amountPerCollection undefined, il tooltip non mostra il conteggio).
+    const sepIdx = token.lastIndexOf(":");
+    const frag = sepIdx === -1 ? token : token.slice(0, sepIdx);
+    const amountStr = sepIdx === -1 ? undefined : token.slice(sepIdx + 1);
+    const amountPerCollection = amountStr !== undefined && amountStr !== "" ? Number(amountStr) : undefined;
     if (isFragmentBuildingToken(frag)) {
       // "building_W_MultiAge_WIN22B1" -> "W_MultiAge_WIN22B1"
-      produced.push({ kind: "building", id: fragmentBuildingId(frag) });
+      produced.push({ kind: "building", id: fragmentBuildingId(frag), amountPerCollection });
     } else if (isFragmentKitToken(frag)) {
       // L'id del kit coincide col token (es. "selection_kit_FELL25BC", "upgrade_kit_ascended_ARCH19A")
-      produced.push({ kind: "kit", id: frag });
+      produced.push({ kind: "kit", id: frag, amountPerCollection });
       const arr = FRAGMENT_KIT_PRODUCERS.get(frag);
       if (arr) arr.push(b.cityEntityId);
       else FRAGMENT_KIT_PRODUCERS.set(frag, [b.cityEntityId]);
@@ -990,7 +1004,7 @@ interface BuildingRowProps {
   scheduleImagePopupClose: () => void;
   setUpgradeTooltip: (v: { x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null) => void;
   setOutdatedTooltip: (v: { x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null) => void;
-  setFragmentTooltip: (v: { x: number; y: number; produced: Array<{ name: string; options?: string[] }> } | null) => void;
+  setFragmentTooltip: (v: { x: number; y: number; produced: Array<{ name: string; options?: string[]; producedAmount?: number; requiredAmount?: number }> } | null) => void;
   setFabTooltip: (v: { x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null) => void;
 }
 
@@ -1430,6 +1444,21 @@ const BuildingRow = memo(function BuildingRow({
                     options: f.kind === "kit" && KIT_RAW.selectionKits[f.id]
                       ? selectionKitOptionNames(f.id, uiLang)
                       : undefined,
+                    // "(prodotti/richiesti)": entrambi opzionali — producedAmount
+                    // manca solo su dati storici pre-agosto-2026 senza ":amount"
+                    // nel token; requiredAmount manca per i kit/edifici non
+                    // ottenibili per frammenti (es. solo acquisto/evento).
+                    // Mostrato SOLO se entrambi presenti: un singolo numero
+                    // isolato ("4/?" o "?/15") sarebbe più confuso che utile.
+                    // Due fonti diverse per requiredAmount a seconda del kind:
+                    // kit -> KIT_RAW (selectionKits/buildingUpgrades); building
+                    // -> requiredFragmentsByBuilding (un edificio che assembla
+                    // un altro edificio, es. W_MultiAge_FALL23F2 -> frammenti
+                    // di W_MultiAge_FALL23D2, non copribile da kit.json).
+                    producedAmount: f.amountPerCollection,
+                    requiredAmount: f.kind === "kit"
+                      ? (KIT_RAW.selectionKits[f.id]?.requiredFragments ?? KIT_RAW.buildingUpgrades[f.id]?.requiredFragments)
+                      : KIT_RAW.requiredFragmentsByBuilding?.[f.id],
                   })),
                 });
               }}
@@ -2109,7 +2138,7 @@ export default function App() {
   }, [cancelImagePopupClose]);
   const [outdatedTooltip, setOutdatedTooltip] = useState<{ x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null>(null);
   const [declassableTooltip, setDeclassableTooltip] = useState<{ x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null>(null);
-  const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; produced: Array<{ name: string; options?: string[] }> } | null>(null);
+  const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; produced: Array<{ name: string; options?: string[]; producedAmount?: number; requiredAmount?: number }> } | null>(null);
   const [kitProducersTooltip, setKitProducersTooltip] = useState<{ x: number; y: number; producers: Array<{ id: string; name: string }> } | null>(null);
   const [fabTooltip, setFabTooltip] = useState<{ x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null>(null);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
@@ -7372,7 +7401,17 @@ export default function App() {
               <li key={i}>
                 <div className="flex items-start gap-1.5">
                   <span className="text-emerald-400">•</span>
-                  <span className="flex-1">{item.name}</span>
+                  <span className="flex-1">
+                    {item.name}
+                    {/* "(prodotti/richiesti)": mostrato SOLO se entrambi i numeri
+                        sono noti — un singolo valore isolato confonderebbe più
+                        che aiutare (vedi commento nel call-site di setFragmentTooltip). */}
+                    {item.producedAmount !== undefined && item.requiredAmount !== undefined && (
+                      <span className="ml-1 font-mono text-slate-400">
+                        ({item.producedAmount}/{item.requiredAmount})
+                      </span>
+                    )}
+                  </span>
                 </div>
                 {/* Selection kit: mostra anche cosa si può scegliere (il nome
                     del kit spesso non lo chiarisce) — kit.json come sorgente. */}

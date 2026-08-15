@@ -841,12 +841,12 @@ W_MultiAge_ANNI23A8;Torre di congiunzione - Liv. 8;Tower of Conjunction - Lv. 8;
 W_MultiAge_ANNI23A9;Torre di congiunzione - Liv. 9;Tower of Conjunction - Lv. 9;32cd97758;;;3x7;;;;;7;;;;;11;;;;;;71393;6078;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI23B1;Laboratorio del mastro di chiavi - Liv. 1;Key Master's Workshop - Lv. 1;34f5153d3;;;3x2;1;-6951;-15833;;5;;;;;11;;;;;;;;;5;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI23B2;Laboratorio del mastro di chiavi - Liv. 2;Key Master's Workshop - Lv. 2;c4ac6fa37;;;3x2;1;-9272;-21118;;6;;;;;14;;;;;;;;;7;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI23B3;Laboratorio del mastro di chiavi - Liv. 3;Key Master's Workshop - Lv. 3;9bbba74af;;;3x2;1;-11586;-26410;;7;;;;;17;;;;;;;;;9;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI23A
-W_MultiAge_ANNI23B4;Laboratorio del mastro di chiavi - Liv. 4;Key Master's Workshop - Lv. 4;c7e94c42b;1;;3x2;1;-13901;-31656;;8;;;;;20;;;;;;;;;11;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI23A
+W_MultiAge_ANNI23B3;Laboratorio del mastro di chiavi - Liv. 3;Key Master's Workshop - Lv. 3;9bbba74af;;;3x2;1;-11586;-26410;;7;;;;;17;;;;;;;;;9;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI23A:1
+W_MultiAge_ANNI23B4;Laboratorio del mastro di chiavi - Liv. 4;Key Master's Workshop - Lv. 4;c7e94c42b;1;;3x2;1;-13901;-31656;;8;;;;;20;;;;;;;;;11;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI23A:2
 W_MultiAge_ANNI24A1;Stazione della Metro - Lv. 1;Metro Station - Lv. 1;d7e22099b;;;4x4;;8180;12260;;9;;;;;28;;;;;131120;;;;8;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI24A10;Stazione della Metro - Lv. 10;Metro Station - Lv. 10;c52ff4466;1;;4x4;;16360;24520;;18;;;;;64;;;;55;299680;;15440;;20;;24;;16;;18;;12;;12;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24CD|silver_upgrade_kit_ANNI24A
-W_MultiAge_ANNI24A11;Metro Plaza;Metro Plaza;149a730b1;1;;4x4;;17260;25880;;19;;;;;68;;;;60;318420;;17380;;20;;24;;18;;21;;14;;15;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_ANNI24A|selection_kit_ANNI24CD
-W_MultiAge_ANNI24A12;Urban Metro Plaza;Urban Metro Plaza;c932de959;1;;4x4;;18160;27240;;20;;;;;72;;;;65;337160;;19320;;20;;24;;20;;24;;16;;18;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24CD
+W_MultiAge_ANNI24A10;Stazione della Metro - Lv. 10;Metro Station - Lv. 10;c52ff4466;1;;4x4;;16360;24520;;18;;;;;64;;;;55;299680;;15440;;20;;24;;16;;18;;12;;12;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24CD:1|silver_upgrade_kit_ANNI24A:5
+W_MultiAge_ANNI24A11;Metro Plaza;Metro Plaza;149a730b1;1;;4x4;;17260;25880;;19;;;;;68;;;;60;318420;;17380;;20;;24;;18;;21;;14;;15;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_ANNI24A:5|selection_kit_ANNI24CD:2
+W_MultiAge_ANNI24A12;Urban Metro Plaza;Urban Metro Plaza;c932de959;1;;4x4;;18160;27240;;20;;;;;72;;;;65;337160;;19320;;20;;24;;20;;24;;16;;18;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24CD:3
 W_MultiAge_ANNI24A2;Stazione della Metro - Lv. 2;Metro Station - Lv. 2;407ef8401;;;4x4;;9080;13620;;10;;;;;32;;;;;149840;;;;10;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24A3;Stazione della Metro - Lv. 3;Metro Station - Lv. 3;654982e79;;;4x4;;10000;14980;;11;;;;;36;;;;;168580;;1940;;12;;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24A4;Stazione della Metro - Lv. 4;Metro Station - Lv. 4;a2a903fff;;;4x4;;10900;16340;;12;;;;;40;;;;;187300;;3860;;14;;16;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -855,15 +855,15 @@ W_MultiAge_ANNI24A6;Stazione della Metro - Lv. 6;Metro Station - Lv. 6;dde978447
 W_MultiAge_ANNI24A7;Stazione della Metro - Lv. 7;Metro Station - Lv. 7;ed0ec383c;;;4x4;;13620;20440;;15;;;;;52;;;;;243500;;9660;;20;;22;;10;;;;6;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24A8;Stazione della Metro - Lv. 8;Metro Station - Lv. 8;a11e17b33;;;4x4;;14540;21800;;16;;;;;56;;;;;262220;;11580;;20;;24;;12;;12;;8;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24A9;Stazione della Metro - Lv. 9;Metro Station - Lv. 9;b31aaa963;;;4x4;;15440;23160;;17;;;;;60;;;;;280960;;13520;;20;;24;;14;;15;;10;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI24B1;Bevande Fusion di Zephy - Lv. 1;Zephy's Fusion Drinks - Lv. 1;caec5e3e3;1;;2x3;;;;;18;;;;;48;;;;40;;;;;24;30;30;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24A
-W_MultiAge_ANNI24B2;Bevande Fusion di Zephy - Lv. 2;Zephy's Fusion Drinks - Lv. 2;71562d82b;1;;2x3;;;;;24;;;;;48;;;;55;;;;;24;36;30;42;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_ANNI24A
-W_MultiAge_ANNI24B3;Bevande Fusion di Zephy - Lv. 3;Zephy's Fusion Drinks - Lv. 3;f77a555f8;1;;2x3;;;;;30;;;;;48;;;;70;;;;;24;42;30;48;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_ANNI24A
+W_MultiAge_ANNI24B1;Bevande Fusion di Zephy - Lv. 1;Zephy's Fusion Drinks - Lv. 1;caec5e3e3;1;;2x3;;;;;18;;;;;48;;;;40;;;;;24;30;30;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24A:5
+W_MultiAge_ANNI24B2;Bevande Fusion di Zephy - Lv. 2;Zephy's Fusion Drinks - Lv. 2;71562d82b;1;;2x3;;;;;24;;;;;48;;;;55;;;;;24;36;30;42;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_ANNI24A:10
+W_MultiAge_ANNI24B3;Bevande Fusion di Zephy - Lv. 3;Zephy's Fusion Drinks - Lv. 3;f77a555f8;1;;2x3;;;;;30;;;;;48;;;;70;;;;;24;42;30;48;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_ANNI24A:20
 W_MultiAge_ANNI24C1;Arboreto dei Fiori;Flower Arboretum;7da3f024c;1;;1x2;0.5;-2840;;;4;;;;;16;;;;15;;;;;;;8;10;;;3;5;;;2;4;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24D1;Dirigibile Etereo;Ethereal Airship;f12675657;1;;2x2;;-4540;;;9;;;3;;16;;;;;;;;;9;11;;;5;7;;;4;6;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI25A1;Faro Viatico - Lv. 1;Viaticum Lighthouse - Lv. 1;b52aa3508;;;6x5;2.5;31110;46660;;;;;;;140;;;;;;;10660;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI25A10;Faro Viatico - Lv. 10;Viaticum Lighthouse - Lv. 10;39c9dc7bf;1;;6x5;2.5;62210;93300;;;;;;;185;;;;;;;74650;;112;;;;;;;;156;156;;;;;;;;;;;;;;;;4;;;;;;;selection_kit_ANNI25BC|silver_upgrade_kit_ANNI25A
-W_MultiAge_ANNI25A11;Faro Viatico Celeste;Celestial Viaticum Lighthouse;554647a08;1;;6x5;2.5;65670;98490;;;;;;;190;;;;;;;81760;;122;;;;;;;;176;176;;;;;;;;;;;;;;;;6;;;;;;;golden_upgrade_kit_ANNI25A|selection_kit_ANNI25BC
-W_MultiAge_ANNI25A12;Faro Viatico Astrale;Astral Viaticum Lighthouse;e51bafdbc;1;;6x5;2.5;69120;103670;;;;;;;195;;;;;;;88870;;132;;;;;;;;196;196;;;;;;;;;;;;;;;M;8;;;;;;;selection_kit_ANNI25BC
+W_MultiAge_ANNI25A10;Faro Viatico - Lv. 10;Viaticum Lighthouse - Lv. 10;39c9dc7bf;1;;6x5;2.5;62210;93300;;;;;;;185;;;;;;;74650;;112;;;;;;;;156;156;;;;;;;;;;;;;;;;4;;;;;;;selection_kit_ANNI25BC:4|silver_upgrade_kit_ANNI25A:5
+W_MultiAge_ANNI25A11;Faro Viatico Celeste;Celestial Viaticum Lighthouse;554647a08;1;;6x5;2.5;65670;98490;;;;;;;190;;;;;;;81760;;122;;;;;;;;176;176;;;;;;;;;;;;;;;;6;;;;;;;golden_upgrade_kit_ANNI25A:5|selection_kit_ANNI25BC:8
+W_MultiAge_ANNI25A12;Faro Viatico Astrale;Astral Viaticum Lighthouse;e51bafdbc;1;;6x5;2.5;69120;103670;;;;;;;195;;;;;;;88870;;132;;;;;;;;196;196;;;;;;;;;;;;;;;M;8;;;;;;;selection_kit_ANNI25BC:12
 W_MultiAge_ANNI25A2;Faro Viatico - Lv. 2;Viaticum Lighthouse - Lv. 2;2fd8cb344;;;6x5;2.5;34560;51840;;;;;;;145;;;;;;;17770;;31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI25A3;Faro Viatico - Lv. 3;Viaticum Lighthouse - Lv. 3;b3aa7a44e;;;6x5;2.5;38020;57030;;;;;;;150;;;;;;;24880;;41;;;;;;;;15;15;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI25A4;Faro Viatico - Lv. 4;Viaticum Lighthouse - Lv. 4;a09233a01;;;6x5;2.5;41470;62200;;;;;;;155;;;;;;;31990;;52;;;;;;;;36;36;;;;;;;;;;;;;;;;;;;;;;;
@@ -876,26 +876,26 @@ W_MultiAge_ANNI25B1;Arboreto di Helianthus;Helianthus Arboretum;45cd3dd19;1;;2x3
 W_MultiAge_ANNI25B2;Arboreto di Helianthus Asceso;Ascended Helianthus Arboretum;f195e98a5;1;30;2x3;;-12760;19140;;;;;;24;;90;;;;258870;126720;;;;;;;;122;;;;122;;;;;;;;;20000;20000;;;;;;;;;;;;;
 W_MultiAge_ANNI25C1;Octo Orbita;Octo Orb;a47467018;1;;2x2;;-94526;;;45;;;;;45;;;;;;;9726;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI25C2;Octo Orbita Asceso;Ascended Octo Orb;7e60e7a4e;1;30;2x2;;-94526;;;90;0.02;;;;90;;;0.02;;;;9726;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI25D1;Aeternum Hydropool;Aeternum Hydropool;fbb832480;1;;3x5;;;;;;;;;;;150;;;;;;;;;;;;;;;;300;300;300;300;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_ANNI25A
-W_MultiAge_ANNI25E1;Camera della Trascendenza Quantistica;Chamber of Quantum Transcendence;4f271d976;1;;6x4;;102090;153110;;;;;;;;;;;;;;;;96;96;96;96;144;144;144;144;;;;;5;5;5;5;;;;;;;;;;;;;;;;;upgrade_kit_ascended_ANNI25C
+W_MultiAge_ANNI25D1;Aeternum Hydropool;Aeternum Hydropool;fbb832480;1;;3x5;;;;;;;;;;;150;;;;;;;;;;;;;;;;300;300;300;300;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_ANNI25A:20
+W_MultiAge_ANNI25E1;Camera della Trascendenza Quantistica;Chamber of Quantum Transcendence;4f271d976;1;;6x4;;102090;153110;;;;;;;;;;;;;;;;96;96;96;96;144;144;144;144;;;;;5;5;5;5;;;;;;;;;;;;;;;;;upgrade_kit_ascended_ANNI25C:35
 W_MultiAge_ANNI26A1;Estrattore di anomalie Mk I - Livello 1;Mk I Anomaly Extractor - Lv. 1;3bfc23aa1;;;3x6;1.5;;;;30;;;;;30;;;;;399630;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI26A10a;Estrattore di anomalie purificato Mk III;Mk III Purified Anomaly Extractor;258eb528f;1;;3x6;1.5;;;;300;;;;;170;;;;;588930;;;;;;242;242;;;;;;;407;407;;;;;;;;;;;;;M;;;;;;;;selection_kit_ANNI26BC
-W_MultiAge_ANNI26A10b;Estrattore di anomalie Nullo Mk III;Mk III Null Anomaly Extractor;4ac607f2d;1;;3x6;1.5;;;;170;;;;;378;;;;;588930;;;;242;242;;;;;;;407;407;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_ANNI26BC
+W_MultiAge_ANNI26A10a;Estrattore di anomalie purificato Mk III;Mk III Purified Anomaly Extractor;258eb528f;1;;3x6;1.5;;;;300;;;;;170;;;;;588930;;;;;;242;242;;;;;;;407;407;;;;;;;;;;;;;M;;;;;;;;selection_kit_ANNI26BC:4
+W_MultiAge_ANNI26A10b;Estrattore di anomalie Nullo Mk III;Mk III Null Anomaly Extractor;4ac607f2d;1;;3x6;1.5;;;;170;;;;;378;;;;;588930;;;;242;242;;;;;;;407;407;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_ANNI26BC:4
 W_MultiAge_ANNI26A2;Estrattore di anomalie Mk I - Livello 2;Mk I Anomaly Extractor - Lv. 2;e1f7835ed;;;3x6;1.5;;;;45;;;;;45;;;;;420660;;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26A3;Estrazione anomalie Mk I - Livello 3;Mk I Anomaly Extractor - Lv. 3;fd1026670;;;3x6;1.5;;;;60;;;;;60;;;;;441700;;;;;;47;47;;;;;;;31;31;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26A4;Estrattore di anomalie Mk I - Livello 4;Mk I Anomaly Extractor - Lv. 4;d2c3c5d4d;;;3x6;1.5;;;;75;;;;;75;;;;;462730;;;;;;78;78;;;;;;;93;93;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26A5;Estrazione anomalie Mk I - Livello 5;Mk I Anomaly Extractor - Lv. 5;07a389526;;;3x6;1.5;;;;90;;;;;90;;;;;483760;;;;;;108;108;;;;;;;153;153;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26A6;Estrattore di anomalie Mk I - Livello 6;Mk I Anomaly Extractor - Lv. 6;c91608925;;;3x6;1.5;;;;105;;;;;105;;;;;504800;;;;;;139;139;;;;;;;214;214;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26A7;Estrattore di anomalie Mk I - Livello 7;Mk I Anomaly Extractor - Lv. 7;e2f1396d0;;;3x6;1.5;;;;120;;;;;120;;;;;525830;;;;;;170;170;;;;;;;275;275;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI26A8;Estrazione anomalie Mk I - Livello 8;Mk I Anomaly Extractor - Lv. 8;a03bbebe4;1;;3x6;1.5;;;;135;;;;;135;;;;;546860;;;;;;201;201;;;;;;;336;336;;;;;;;;;;;;;M;;;;;;;;selection_kit_ANNI26BC|silver_upgrade_kit_ANNI26A
-W_MultiAge_ANNI26A9;Estrattore di anomalie Mk II;Mk II Anomaly Extractor;6ce8e9771;1;;3x6;1.5;;;;170;;;;;170;;;;;567890;;;;;;232;232;;;;;;;397;397;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_ANNI26A|selection_kit_ANNI26BC
+W_MultiAge_ANNI26A8;Estrazione anomalie Mk I - Livello 8;Mk I Anomaly Extractor - Lv. 8;a03bbebe4;1;;3x6;1.5;;;;135;;;;;135;;;;;546860;;;;;;201;201;;;;;;;336;336;;;;;;;;;;;;;M;;;;;;;;selection_kit_ANNI26BC:1|silver_upgrade_kit_ANNI26A:5
+W_MultiAge_ANNI26A9;Estrattore di anomalie Mk II;Mk II Anomaly Extractor;6ce8e9771;1;;3x6;1.5;;;;170;;;;;170;;;;;567890;;;;;;232;232;;;;;;;397;397;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_ANNI26A:5|selection_kit_ANNI26BC:2
 W_MultiAge_ANNI26B1;Giardini di vetro Iride;Iris Glass Gardens;93bb52f61;1;;4x2;;-42540;;;;;;5;4;;70;70;;;;168960;;;;;;;;;92;92;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26B2;Giardini di vetro dell'Iride Asceso;Ascended Iris Glass Gardens;b8b5adc4d;1;30;4x2;;-42540;;;;;;11;8;;170;170;;;;337930;;;;;;;;;368;368;;;;;;;32;;;;;25000;10;;;;;;;;;;;;
 W_MultiAge_ANNI26C1;Meridiana del Sole;Meridian Sun Dial;aaacb3dd1;1;;3x3;;-47850;;;100;;;6;5;;;;;;;;19690;;;;;;102;102;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI26C2;Meridiana del Sole Asceso;Ascended Meridian Sun Dial;55c50065e;1;30;3x3;;-47850;;;290;;;12;10;;;;;;;;39370;;;;;;408;408;;;;;;;36;;;;;;25000;;;5;;;;;;;;;;;
-W_MultiAge_ANNI26D1;Arena Vortice;Vortex Arena;30e2a40db;1;;4x3;1.5;;;;;;;;;;;;0.02;;1456140;;;;;;;;100;100;100;100;;;;;25;25;25;25;;;;;;;;;M;;;;;;;;golden_selection_kit_ANNI26A
-W_MultiAge_ANNI26E1;Palazzo della Luce Liquida - Livello 1;Palace of Liquid Light - Lv. 1;03e7800a7;1;;4x6;2;69120;103670;;364;;;;;;;;;;;;;;;;;;120;120;120;120;;;;;5;5;5;5;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_ARCH19A
-W_MultiAge_ANNI26E2;Palazzo della Luce Liquida - Livello 2;Palace of Liquid Light - Lv. 2;17a699f64;1;;4x6;2;110600;165870;;494;;;;;;;;;;;;;;;;;;285;285;285;285;;;;;10;10;10;10;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_ARCH19A
+W_MultiAge_ANNI26D1;Arena Vortice;Vortex Arena;30e2a40db;1;;4x3;1.5;;;;;;;;;;;;0.02;;1456140;;;;;;;;100;100;100;100;;;;;25;25;25;25;;;;;;;;;M;;;;;;;;golden_selection_kit_ANNI26A:20
+W_MultiAge_ANNI26E1;Palazzo della Luce Liquida - Livello 1;Palace of Liquid Light - Lv. 1;03e7800a7;1;;4x6;2;69120;103670;;364;;;;;;;;;;;;;;;;;;120;120;120;120;;;;;5;5;5;5;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_ARCH19A:3
+W_MultiAge_ANNI26E2;Palazzo della Luce Liquida - Livello 2;Palace of Liquid Light - Lv. 2;17a699f64;1;;4x6;2;110600;165870;;494;;;;;;;;;;;;;;;;;;285;285;285;285;;;;;10;10;10;10;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_ARCH19A:12
 W_MultiAge_ARCH19A1;Esposizione universale - Lv. 1;World's Fair - Lv. 1;R_MultiAge_ArcheologyBonus19a-7d77b26e8;;;6x4;2;12652;;;;;;;;;;;;;171700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARCH19A10;Esposizione universale - Lv. 10;World's Fair - Lv. 10;R_MultiAge_ArcheologyBonus19j-30e97d18d;1;;6x4;2;21854;;;10;;;;;10;;;;;274700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARCH19A11;Esposizione Universale;World Expo;ee18870b1;1;;6x4;2;30410;;;100;;;;;50;;;;;350550;;;;24;24;24;24;;;;;;;;;;;;;;;;;;;;;M;;;;;;;;
@@ -925,21 +925,21 @@ W_MultiAge_ARCH20A7;Aeronave - Liv. 7;Airship - Lv. 7;R_MultiAge_ArcheologyBonus
 W_MultiAge_ARCH20A8;Aeronave - Liv. 8;Airship - Lv. 8;R_MultiAge_ArcheologyBonus20h-7caaecd42;;;7x3;1.5;13084;23210;;7;;;;;10;;;;;250400;32980;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARCH20A9;Aeronave - Liv. 9;Airship - Lv. 9;R_MultiAge_ArcheologyBonus20i-e7a6cd3ee;;;7x3;1.5;13588;24440;;8;;;;;15;;;;;260300;34200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARTHUR26A1;Camelot - Liv. 1;Camelot - Lv. 1;ccb92d455;;;6x6;3;36370;54550;;104;;;;;145;;;;;77660;;;;58;58;58;58;105;105;105;105;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ARTHUR26A10;Trono di Camelot di Pendragon;Pendragon's Throne of Camelot;ae4e70838;1;90;6x6;;67000;100480;;411;0.04;;;;575;;;0.02;;776610;;;;246;246;246;246;371;371;371;371;;;;;;;30;30;;;;;;;200;8000;M;;;;10;;;;selection_kit_ARTHUR26BC
+W_MultiAge_ARTHUR26A10;Trono di Camelot di Pendragon;Pendragon's Throne of Camelot;ae4e70838;1;90;6x6;;67000;100480;;411;0.04;;;;575;;;0.02;;776610;;;;246;246;246;246;371;371;371;371;;;;;;;30;30;;;;;;;200;8000;M;;;;10;;;;selection_kit_ARTHUR26BC:5
 W_MultiAge_ARTHUR26A2;Camelot - Liv. 2;Camelot - Lv. 2;2b1dc87fe;;;6x6;3;40200;60290;;130;;;;;180;;;;;155320;;;;63;63;63;63;115;115;115;115;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARTHUR26A3;Camelot - Liv. 3;Camelot - Lv. 3;36bf5a6ca;;;6x6;3;44030;66030;;156;;;;;220;;;;;232980;;;;68;68;68;68;126;126;126;126;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARTHUR26A4;Camelot - Liv. 4;Camelot - Lv. 4;6a2b7bd1f;;;6x6;3;47850;71770;;182;;;;;255;;;;;310640;;;;73;73;73;73;136;136;136;136;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARTHUR26A5;Camelot - Liv. 5;Camelot - Lv. 5;264c04251;;;6x6;3;51680;77510;;208;;;;;290;;;;;388300;;;;78;78;78;78;146;146;146;146;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ARTHUR26A6;Camelot - Liv. 6;Camelot - Lv. 6;d29bc2217;1;;6x6;3;55510;83260;;260;;;;;365;;;;;465960;;;;83;83;83;83;156;156;156;156;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ARTHUR26BC|silver_upgrade_kit_ARTHUR26A
-W_MultiAge_ARTHUR26A7;Camelot Nobile;Noble Camelot;e39a40987;1;;6x6;3;59340;89000;;311;;;;;435;;;;;543630;;;;124;124;124;124;249;249;249;249;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_ARTHUR26A|selection_kit_ARTHUR26BC
-W_MultiAge_ARTHUR26A8;Camelot Reale;Royal Camelot;192f7a793;1;;6x6;3;63170;94740;;336;;;;;470;;;;;621290;;;;165;165;165;165;290;290;290;290;;;;;;;;;;;;;;;;;M;;;;10;;;;selection_kit_ARTHUR26BC
-W_MultiAge_ARTHUR26A9;Corona di Camelot;Crown of Camelot;ebf951df4;1;;6x6;;67000;100480;;361;;;;;505;;;;;698950;;;;206;206;206;206;331;331;331;331;;;;;;;15;15;;;;;;;;;M;;;;10;;;;selection_kit_ARTHUR26BC
+W_MultiAge_ARTHUR26A6;Camelot - Liv. 6;Camelot - Lv. 6;d29bc2217;1;;6x6;3;55510;83260;;260;;;;;365;;;;;465960;;;;83;83;83;83;156;156;156;156;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ARTHUR26BC:1|silver_upgrade_kit_ARTHUR26A:5
+W_MultiAge_ARTHUR26A7;Camelot Nobile;Noble Camelot;e39a40987;1;;6x6;3;59340;89000;;311;;;;;435;;;;;543630;;;;124;124;124;124;249;249;249;249;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_ARTHUR26A:5|selection_kit_ARTHUR26BC:2
+W_MultiAge_ARTHUR26A8;Camelot Reale;Royal Camelot;192f7a793;1;;6x6;3;63170;94740;;336;;;;;470;;;;;621290;;;;165;165;165;165;290;290;290;290;;;;;;;;;;;;;;;;;M;;;;10;;;;selection_kit_ARTHUR26BC:3
+W_MultiAge_ARTHUR26A9;Corona di Camelot;Crown of Camelot;ebf951df4;1;;6x6;;67000;100480;;361;;;;;505;;;;;698950;;;;206;206;206;206;331;331;331;331;;;;;;;15;15;;;;;;;;;M;;;;10;;;;selection_kit_ARTHUR26BC:4
 W_MultiAge_ARTHUR26B1;Tavola Rotonda dei Cavalieri;Knights' Round Table;dbf6908f4;1;;3x3;;-95710;;;124;;;;;66;;;;;;285130;;;82;82;;;123;123;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARTHUR26B2;Tavola Rotonda dei Cavalieri Ascesa;Ascended Knights' Round Table;ffda03e65;1;30;3x3;;-95710;;;278;0.01;;;;148;;;;;;380170;;;184;184;;;276;276;;;;;;;45;45;;;;;25000;;;5;;;;;;;;;;;
 W_MultiAge_ARTHUR26C1;La Spada nel Lago;Sword in the Lake;a5d7eae91;1;;3x3;;-95710;;;41;;;;;206;;;;;;285130;;;;;82;82;;;123;123;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ARTHUR26C2;Spada nel Lago Ascesa;Ascended Sword in the Lake;085c1414a;1;30;3x3;;-95710;;;92;;;;;462;;;0.01;;;380170;;;;;184;184;;;276;276;;;;;;;45;45;;;;25000;10;;;;;;;;;;;;
-W_MultiAge_ARTHUR26D1;L'ira di Morgana;The Wrath of Morgan le Fay;035590e45;1;;6x6;3;;;;225;0.05;;;;400;;;0.05;;;;;;400;400;400;400;600;600;600;600;;;;;25;25;25;25;;;;;;;;;M;;;;;;;;golden_selection_kit_ARTHUR26A
-W_MultiAge_ARTHUR26E1;L'Excalibur del Vero Re;The True King's Excalibur;c364d15a5;1;;6x6;3;207370;;;950;;;;;1900;;;;;;;;;250;250;250;250;375;375;375;375;;;;;25;25;25;25;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_ARTHUR26A
+W_MultiAge_ARTHUR26D1;L'ira di Morgana;The Wrath of Morgan le Fay;035590e45;1;;6x6;3;;;;225;0.05;;;;400;;;0.05;;;;;;400;400;400;400;600;600;600;600;;;;;25;25;25;25;;;;;;;;;M;;;;;;;;golden_selection_kit_ARTHUR26A:20
+W_MultiAge_ARTHUR26E1;L'Excalibur del Vero Re;The True King's Excalibur;c364d15a5;1;;6x6;3;207370;;;950;;;;;1900;;;;;;;;;250;250;250;250;375;375;375;375;;;;;25;25;25;25;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_ARTHUR26A:24
 W_MultiAge_ARTHUR26F1;Consiglio di Merlino;Merlin's Counsel;8209c85f1;1;;4x4;2;-191420;;;180;;;;;;270;;;;;;78750;;225;225;225;225;;;;;;;;;;;;;;;;;;;;;;13.5;5;;;;6;;
 W_MultiAge_AgeBonus22;Palco delle ere;Stage of Ages;c28d8dd04;1;;4x4;2;6121;6730;;4;;;;;;15;;;;;;;;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_AgeBonus22a;Planetario dorato - Liv. 1;Golden Orrery - Lv. 1;9d606c2d2;;;4x5;2;5846;;;;;;;;;;;;;;11987;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -952,7 +952,7 @@ W_MultiAge_AgeBonus22g;Planetario dorato - Liv. 7;Golden Orrery - Lv. 7;eed5997b
 W_MultiAge_AgeBonus22h;Planetario dorato - Liv. 8;Golden Orrery - Lv. 8;4067d9a69;;;4x5;2;7187;;;6;;;;;;;;;;;15175;;;;23;;;;;;;;;;;;;;;;;;;;;;;;;;;;0.1;;;
 W_MultiAge_AgeBonus22i;Planetario dorato - Liv. 9;Golden Orrery - Lv. 9;a12890f83;;;4x5;2;7402;;;8;;;;;;5;;;;;15933;;;;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;0.15;;;
 W_MultiAge_AgeBonus22j;Planetario dorato - Liv. 10;Golden Orrery - Lv. 10;f51927fdb;1;;4x5;2;7623;;;10;;;;;;10;;;;;16889;;;;29;;;;;;;;;;;;;;;;;;;;;;;;;;;;0.4;;;
-W_MultiAge_AgeBonus22k;Planetario dorato celestiale;Celestial Golden Orrery;60a234ba2;1;;4x5;2;18740;28090;;30;;;;;;140;;;;;147660;;;;29;;39;;59;;70;;48;;58;;;;;;;;;;;;;;;;;;2;;;selection_kit_ANNI22B
+W_MultiAge_AgeBonus22k;Planetario dorato celestiale;Celestial Golden Orrery;60a234ba2;1;;4x5;2;18740;28090;;30;;;;;;140;;;;;147660;;;;29;;39;;59;;70;;48;;58;;;;;;;;;;;;;;;;;;2;;;selection_kit_ANNI22B:3
 W_MultiAge_AgeBonus22stage;Palco delle Ere Celestiale;Celestial Stage of Ages;460e0c708;1;;4x4;2;15320;22990;;22;;;12;;;125;;;;;;;;21;;26;;24;;28;;20;;20;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Anw23A1;Ultima Provincia;Last Province;5b940c98f;1;;3x3;1.5;;;;6;;;;;15;;;;;;;;;8;8;8;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_BOWL21A1;Vigneto di terracotta - Liv. 1;Terracotta Vineyard - Lv. 1;R_MultiAge_SportBonus21a-24142cfc6;;;5x3;1.5;7189;9430;;;;;;;;;;;;121600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -993,27 +993,27 @@ W_MultiAge_BOWL23A7;Pergola - Liv. 7;Pergola - Lv. 7;324962b2d;;;5x4;2;;;;;;;;;;
 W_MultiAge_BOWL23A8;Pergola - Liv. 8;Pergola - Lv. 8;082a7adf0;;;5x4;2;;;;;;;;;;;;;;;139635;2479;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_BOWL23A9;Pergola - Liv. 9;Pergola - Lv. 9;a99d603bd;;;5x4;2;;;;;;;;;;;;;;;143813;2896;;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A1;Eco Hub - Lv. 1;Eco Hub - Lv. 1;2523de88a;;;6x6;3;-4420;30980;;69;;;;;;;113;;;;;9420;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CARE24A10;Eco Nexus;Eco Nexus;4ec3ba9ec;1;;6x6;;-57430;106330;;151;0.04;;;30;;;225;;;;;49220;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC
-W_MultiAge_CARE24A11;Eco Utopia;Eco Utopia;1e9de1556;1;90;6x6;;-90390;212660;;;0.13;;;60;;;450;;;;;98440;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC
+W_MultiAge_CARE24A10;Eco Nexus;Eco Nexus;4ec3ba9ec;1;;6x6;;-57430;106330;;151;0.04;;;30;;;225;;;;;49220;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC:4
+W_MultiAge_CARE24A11;Eco Utopia;Eco Utopia;1e9de1556;1;90;6x6;;-90390;212660;;;0.13;;;60;;;450;;;;;98440;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC:4
 W_MultiAge_CARE24A2;Eco Hub - Lv. 2;Eco Hub - Lv. 2;9df78545d;;;6x6;3;-6650;39840;;76;;;;;;;125;;;;;14120;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A3;Eco Hub - Lv. 3;Eco Hub - Lv. 3;804348f5e;;;6x6;3;-8860;48700;;83;;;;;;;137;;;;;18820;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A4;Eco Hub - Lv. 4;Eco Hub - Lv. 4;f86015cb4;;;6x6;3;-11070;57560;;90;;;;;;;149;;;;;23540;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A5;Eco Hub - Lv. 5;Eco Hub - Lv. 5;6963b00f7;;;6x6;3;-13280;66400;;97;;;;;;;161;;;;;28240;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A6;Eco Hub - Lv. 6;Eco Hub - Lv. 6;ef0f1382e;;;6x6;3;-15490;75260;;104;;;;;;;173;;;;;32940;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CARE24A7;Eco Hub - Lv. 7;Eco Hub - Lv. 7;3967ffa7a;1;;6x6;3;-17720;84120;;111;0.01;;;10;;;185;;;;;37660;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_CARE24BC|silver_upgrade_kit_CARE24A
-W_MultiAge_CARE24A8;Eco Centro;Eco Center;debcf7427;1;;6x6;3;-19930;92960;;131;0.02;;;20;;;205;;;;;42360;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_CARE24A|selection_kit_CARE24BC
-W_MultiAge_CARE24A9;Eco Sanctum;Eco Sanctum;ce34fd732;1;;6x6;3;-22140;101820;;151;0.03;;;30;;;225;;;;;47060;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC
+W_MultiAge_CARE24A7;Eco Hub - Lv. 7;Eco Hub - Lv. 7;3967ffa7a;1;;6x6;3;-17720;84120;;111;0.01;;;10;;;185;;;;;37660;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_CARE24BC:2|silver_upgrade_kit_CARE24A:10
+W_MultiAge_CARE24A8;Eco Centro;Eco Center;debcf7427;1;;6x6;3;-19930;92960;;131;0.02;;;20;;;205;;;;;42360;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_CARE24A:10|selection_kit_CARE24BC:4
+W_MultiAge_CARE24A9;Eco Sanctum;Eco Sanctum;ce34fd732;1;;6x6;3;-22140;101820;;151;0.03;;;30;;;225;;;;;47060;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC:4
 W_MultiAge_CARE24B1;Eden della Terra;Earth's Eden;7eea3656c;1;;3x3;;-10220;25540;;18;;;;;;;;;;;100680;;;;;;;76;;;;;;68;68;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24B2;Eden della Terra Asceso;Ascended Earth's Eden;1a6c51c4c;1;10;3x3;;-10220;51080;;36;;;;;;;;;;;201360;;;;;;;112;;;;;;132;132;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24C1;Mercato dei Guardiani del Verde;Green Guardians Market;034e62a81;1;;3x3;;-10220;25540;;;;;;;54;;;;;210720;;;;;;;;54;54;;;;;76;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24C2;Mercato dei Guardiani del Verde Asceso;Ascended Green Guardians Market;2252084df;1;10;3x3;;-10220;51080;;;;;;;81;;;;;421440;;;;;;;;79;79;;;;;114;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CARE24D1;EverGreen Hover Express - Lv. 1;EverGreen Hover Express - Lv. 1;0c72e5aa3;1;;5x3;;34060;;;75;;;;;75;;;;;;;;;;;;;90;105;;;;;;;;;;15;;;;;;;;;;;;;;;;;selection_kit_CARE24A
-W_MultiAge_CARE24D2;EverGreen Hover Express - Lv. 2;EverGreen Hover Express - Lv. 2;f283c7cea;1;;5x3;;42580;;;90;;;;;90;;;;;;;;;;;;;105;120;;;;;;;;;;20;;;;;;;;;;;;;;;;;silver_selection_kit_CARE24A
-W_MultiAge_CARE24D3;EverGreen Hover Express - Lv. 3;EverGreen Hover Express - Lv. 3;2285bbb7f;1;;5x3;;51100;;;105;;;;;105;;;;;;;;;;;;;120;135;;;;;;;;;;25;;;;;;;;;;;;;;;;;golden_selection_kit_CARE24A
+W_MultiAge_CARE24D1;EverGreen Hover Express - Lv. 1;EverGreen Hover Express - Lv. 1;0c72e5aa3;1;;5x3;;34060;;;75;;;;;75;;;;;;;;;;;;;90;105;;;;;;;;;;15;;;;;;;;;;;;;;;;;selection_kit_CARE24A:5
+W_MultiAge_CARE24D2;EverGreen Hover Express - Lv. 2;EverGreen Hover Express - Lv. 2;f283c7cea;1;;5x3;;42580;;;90;;;;;90;;;;;;;;;;;;;105;120;;;;;;;;;;20;;;;;;;;;;;;;;;;;silver_selection_kit_CARE24A:10
+W_MultiAge_CARE24D3;EverGreen Hover Express - Lv. 3;EverGreen Hover Express - Lv. 3;2285bbb7f;1;;5x3;;51100;;;105;;;;;105;;;;;;;;;;;;;120;135;;;;;;;;;;25;;;;;;;;;;;;;;;;;golden_selection_kit_CARE24A:20
 W_MultiAge_CARE24E1;Il frutteto dei Sogni d'Arancio;Orchard of Orange Dreams;3eb362030;1;;5x5;;99360;141940;;125;;;;;140;;;;;;;;;;;;;;200;;300;;300;;200;5;5;5;5;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25A1;Sentinella della Foresta - Lv. 1;Forest Sentinel - Lv. 1;121edc6a7;;;5x4;2;;;;10;;;;;;;;;;;;4370;;;;;;;;62;62;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CARE25A10;Custode della Foresta;Forest Warden;9d14279f2;1;;5x4;2;;;;140;;;;;;;;;270;;;43750;;;;;;;;245;245;;;355;355;;;;;;;;;;;;;;;;3;;;;;golden_upgrade_kit_CARE25A|selection_kit_CARE25BC
-W_MultiAge_CARE25A11;Guardiano della Foresta;Forest Guardian;e1c85afc3;1;;5x4;2;;;;180;;;;;;;;;330;;;48120;;;;;;;;265;265;;;395;395;;;;;;;;;;;;;M;;;5;;;;;selection_kit_CARE25BC
+W_MultiAge_CARE25A10;Custode della Foresta;Forest Warden;9d14279f2;1;;5x4;2;;;;140;;;;;;;;;270;;;43750;;;;;;;;245;245;;;355;355;;;;;;;;;;;;;;;;3;;;;;golden_upgrade_kit_CARE25A:5|selection_kit_CARE25BC:2
+W_MultiAge_CARE25A11;Guardiano della Foresta;Forest Guardian;e1c85afc3;1;;5x4;2;;;;180;;;;;;;;;330;;;48120;;;;;;;;265;265;;;395;395;;;;;;;;;;;;;M;;;5;;;;;selection_kit_CARE25BC:3
 W_MultiAge_CARE25A2;Sentinella della Foresta - Lv. 2;Forest Sentinel - Lv. 2;0d094600b;;;5x4;2;;;;20;;;;;;;;;;;;8750;;;;;;;;83;83;;;31;31;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25A3;Sentinella della Foresta - Lv. 3;Forest Sentinel - Lv. 3;14410e2b3;;;5x4;2;;;;30;;;;;;;;;;;;13120;;;;;;;;104;104;;;72;72;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25A4;Sentinella della Foresta - Lv. 4;Forest Sentinel - Lv. 4;91eb9929a;;;5x4;2;;;;40;;;;;;;;;;;;17500;;;;;;;;125;125;;;113;113;;;;;;;;;;;;;;;;;;;;;
@@ -1021,30 +1021,30 @@ W_MultiAge_CARE25A5;Sentinella della Foresta - Lv. 5;Forest Sentinel - Lv. 5;4be
 W_MultiAge_CARE25A6;Sentinella della Foresta - Lv. 6;Forest Sentinel - Lv. 6;de158ce45;;;5x4;2;;;;60;;;;;;;;;30;;;26250;;;;;;;;165;165;;;195;195;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25A7;Sentinella della Foresta - Lv. 7;Forest Sentinel - Lv. 7;7d7a90797;;;5x4;2;;;;70;;;;;;;;;90;;;30620;;;;;;;;185;185;;;235;235;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25A8;Sentinella della Foresta - Lv. 8;Forest Sentinel - Lv. 8;2834be3eb;;;5x4;2;;;;80;;;;;;;;;150;;;35000;;;;;;;;205;205;;;275;275;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CARE25A9;Sentinella della Foresta - Lv. 9;Forest Sentinel - Lv. 9;02918df66;1;;5x4;2;;;;100;;;;;;;;;210;;;39370;;;;;;;;225;225;;;315;315;;;;;;;;;;;;;;;;1;;;;;selection_kit_CARE25BC|silver_upgrade_kit_CARE25A
+W_MultiAge_CARE25A9;Sentinella della Foresta - Lv. 9;Forest Sentinel - Lv. 9;02918df66;1;;5x4;2;;;;100;;;;;;;;;210;;;39370;;;;;;;;225;225;;;315;315;;;;;;;;;;;;;;;;1;;;;;selection_kit_CARE25BC:1|silver_upgrade_kit_CARE25A:5
 W_MultiAge_CARE25B1;Torre dei Fiori Nano-Nutrizionali;Nano-Nurture Flower Tower;795e0f2b8;1;;2x4;;-17020;;;;;;;;35;35;;;80;172580;;;;;;;;;;;;72;;72;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25B2;Torre dei Fiori Nano-Nutrizionali Ascesa;Ascended Nano-Nurture Flower Tower;e9397a449;1;30;2x4;;-17020;;;;;;;;85;85;;;160;345160;;;;;;;;;;;;144;;144;;;30;;;;;;;10;;;;;;;;;;;;
 W_MultiAge_CARE25C1;Sala da Tè Terrestre;Terra Tea Lounge;fd383290f;1;;1x2;;-4250;;;14;;;;;;;;;20;;21120;;;;;;;;;;20;;;;20;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE25C2;Sala da Tè Terrestre Ascesa;Ascended Terra Tea Lounge;458a8929e;1;30;1x2;;-4250;;;28;;;;;;;;;40;;42240;;;;;;;;;;41;;;;41;;;;10;0.04;0.04;;;;;;;;;;;;;;;
-W_MultiAge_CARE25D1;Sussurri del Firmamento;Whispers of the Firmament;4e3237734;1;;4x5;;;;;150;;;;;;;80;;;;;;;75;75;75;75;125;125;125;125;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_CARE25A
-W_MultiAge_CARE25E1;Giardino delle Visioni Unite - Lv. 1;Garden of United Visions - Lv. 1;c229cc82f;1;;6x5;2.5;82950;124400;;234;;;;;;;;;;;;;;60;60;60;60;;;;;96;96;96;96;5;5;5;5;;;;;;;;;;;;;;;;;upgrade_kit_ascended_CARE24A
-W_MultiAge_CARE25E2;Giardino delle Visioni Unite - Lv. 2;Garden of United Visions - Lv. 2;1c53fe59a;1;;6x5;2.5;138250;207340;;390;;;;;;;;;;;;;;100;100;100;100;;;;;192;192;192;192;10;10;10;10;;;;;;;;;;;;;;;;;upgrade_kit_ascended_CARE24A
+W_MultiAge_CARE25D1;Sussurri del Firmamento;Whispers of the Firmament;4e3237734;1;;4x5;;;;;150;;;;;;;80;;;;;;;75;75;75;75;125;125;125;125;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_CARE25A:20
+W_MultiAge_CARE25E1;Giardino delle Visioni Unite - Lv. 1;Garden of United Visions - Lv. 1;c229cc82f;1;;6x5;2.5;82950;124400;;234;;;;;;;;;;;;;;60;60;60;60;;;;;96;96;96;96;5;5;5;5;;;;;;;;;;;;;;;;;upgrade_kit_ascended_CARE24A:3
+W_MultiAge_CARE25E2;Giardino delle Visioni Unite - Lv. 2;Garden of United Visions - Lv. 2;1c53fe59a;1;;6x5;2.5;138250;207340;;390;;;;;;;;;;;;;;100;100;100;100;;;;;192;192;192;192;10;10;10;10;;;;;;;;;;;;;;;;;upgrade_kit_ascended_CARE24A:12
 W_MultiAge_CARE26A1;Stazione di purificazione - Liv. 1;Purifier Post - Lv. 1;a10b90011;;;5x5;2.5;2130;;;60;;;;;;;;;;;26400;;;;;;;;;;;118;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE26A2;Stazione di purificazione - Liv. 2;Purifier Post - Lv. 2;f7eb3f6e2;;;5x5;2.5;5320;;;85;;;;;;;;;;;52800;;;;;;;;;;;143;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE26A3;Stazione di purificazione - Liv. 3;Purifier Post - Lv. 3;6eeef373a;;;5x5;2.5;9570;;;110;;;;;;;;;;;105600;;;;;;;;;;;168;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE26A4;Stazione di purificazione - Liv. 4;Purifier Post - Lv. 4;c3268d12d;;;5x5;2.5;14890;;;135;;;;;;;;;;;158400;;;;50;;;83;83;;;193;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE26A5;Stazione di purificazione - Liv. 5;Purifier Post - Lv. 5;b6465e8d4;;;5x5;2.5;21270;;;160;;;;;;;;;;;211200;;;;62;;;143;143;;;218;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE26A6;Posto del purificatore - Liv. 6;Purifier Post - Lv. 6;2871b10ee;;;5x5;2.5;28710;;;185;;;;;;;;;;;264010;;;;77;;;203;203;;;243;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CARE26A7;Posto del purificatore - Liv. 7;Purifier Post - Lv. 7;0cddd9dac;1;;5x5;2.5;42540;;10;210;;;;;;;;;;;316810;;;;92;;;263;263;;;283;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_CARE26BC|silver_upgrade_kit_CARE26A
-W_MultiAge_CARE26A8;Torre del purificatore;Purifier Tower;130052674;1;;5x5;2.5;64870;;15;265;;;;;;;;;;;369610;;;;122;;;323;323;;;343;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_CARE26A|selection_kit_CARE26BC
-W_MultiAge_CARE26A9;Apice del depuratore;Purifier Apex;8bbf28e58;1;;5x5;2.5;95710;;25;350;;;;;;;;;;;422410;;;;167;;;383;383;;;423;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_CARE26BC
+W_MultiAge_CARE26A7;Posto del purificatore - Liv. 7;Purifier Post - Lv. 7;0cddd9dac;1;;5x5;2.5;42540;;10;210;;;;;;;;;;;316810;;;;92;;;263;263;;;283;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_CARE26BC:1|silver_upgrade_kit_CARE26A:5
+W_MultiAge_CARE26A8;Torre del purificatore;Purifier Tower;130052674;1;;5x5;2.5;64870;;15;265;;;;;;;;;;;369610;;;;122;;;323;323;;;343;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_CARE26A:5|selection_kit_CARE26BC:2
+W_MultiAge_CARE26A9;Apice del depuratore;Purifier Apex;8bbf28e58;1;;5x5;2.5;95710;;25;350;;;;;;;;;;;422410;;;;167;;;383;383;;;423;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_CARE26BC:3
 W_MultiAge_CARE26B1;Campo dei Droni della strada del riciclo;Field of Recycling Drones;17e4bdb62;1;;2x3;;-31900;9570;;;;;;;;;82;;;;;;;;;;;;92;;;;;;;;;;;;;;;;;;;;;;;;2;;;
 W_MultiAge_CARE26B2;Campo dei droni della strada del riciclo asceso;Ascended Field of Recycling Drones;57eecb83b;1;30;2x3;;-31900;19140;;;;;;;;;142;;;;;;;;;;;;182;;;;;;;30;;;;0.04;;16600;;;5;;;;;;;;3;;;
 W_MultiAge_CARE26C1;Rifugio della Birra Terrestre;Terra Brew Lodge;a4a3559ff;1;;2x2;;-38280;;;46;;;3.2;;;;;;;;;;;25;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;
 W_MultiAge_CARE26C2;Rifugio dell'infuso terrestre asceso;Ascended Terra Brew Lodge;35d21d5f3;1;30;2x2;;-38280;;;86;;;5.8;;;;;;;;;;;40;;;42;;;;;;;;;;;21;21;;0.02;;11100;6;;;;;;;;;;;2;
-W_MultiAge_CARE26D1;Rootline Express;Rootline Express;9ddac53ec;1;;3x6;;;;;162;0.05;;;;;;;;;;;;;240;240;240;240;;;;;290;290;290;290;25;25;25;25;;;;;;;;;M;;;;;;;;golden_selection_kit_CARE26A
-W_MultiAge_CARE26E1;Centro Terrafarm - Liv. 1;Terrafarm Center - Lv. 1;a4c0bee83;;;5x4;2;90390;85060;;;;;;;;;;0.02;;269660;;;;;;;;;293;;293;;;;;5;5;5;5;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_CUP22A
-W_MultiAge_CARE26E2;Centro Terrafarm - Liv. 2;Terrafarm Center - Lv. 2;9e005e64b;1;;5x4;2;113790;191390;;;;;;;;;;0.05;;895260;;;;;;;;;423;;423;;;;;10;10;10;10;;;;;;;;;M;;;;;;3;;upgrade_kit_ascended_CUP22A
+W_MultiAge_CARE26D1;Rootline Express;Rootline Express;9ddac53ec;1;;3x6;;;;;162;0.05;;;;;;;;;;;;;240;240;240;240;;;;;290;290;290;290;25;25;25;25;;;;;;;;;M;;;;;;;;golden_selection_kit_CARE26A:20
+W_MultiAge_CARE26E1;Centro Terrafarm - Liv. 1;Terrafarm Center - Lv. 1;a4c0bee83;;;5x4;2;90390;85060;;;;;;;;;;0.02;;269660;;;;;;;;;293;;293;;;;;5;5;5;5;;;;;;;;;M;;;;;;;;upgrade_kit_ascended_CUP22A:3
+W_MultiAge_CARE26E2;Centro Terrafarm - Liv. 2;Terrafarm Center - Lv. 2;9e005e64b;1;;5x4;2;113790;191390;;;;;;;;;;0.05;;895260;;;;;;;;;423;;423;;;;;10;10;10;10;;;;;;;;;M;;;;;;3;;upgrade_kit_ascended_CUP22A:12
 W_MultiAge_COP24A1;Yggdrasil - Liv. 1;Yggdrasil - Lv. 1;R_MultiAge_CulturalBuilding1a-06c00420c;;;3x3;;;;;4;;;;;15;;;;;11828;10713;273;;14;;;;7;;;;7;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_COP24A10TEMP;Yggdrasil Asceso;Ascended Yggdrasil;af449d583;1;28;3x3;;;;;41;;;;;115;;;;;380903;151533;11232;;113;;;;57;;;;57;;;;75;;;;;;;;;;;;;6;;;;;;;
 W_MultiAge_COP24A2;Yggdrasil - Liv. 2;Yggdrasil - Lv. 2;R_MultiAge_CulturalBuilding1b-f1168e7d7;;;3x3;;;;;8;;;;;25;;;;;50119;25511;1440;;24;;;;12;;;;12;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1135,8 +1135,8 @@ W_MultiAge_CUP20C1;Pista Venetoi;Venetoi Track;D_MultiAge_SoccerBonus20Venetoi-a
 W_MultiAge_CUP20D1;Pista Leukoi;Leukoi Track;D_MultiAge_SoccerBonus20Leukoi-0e86debb5;1;;1x4;;;4070;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP20E1;Pista Rousioi;Rousioi Track;D_MultiAge_SoccerBonus20Rousioi-18872cc80;1;;1x4;;;4070;;;;;;;;;;;;;;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A1;Mulino a vento Genziana - Liv. 1;Gentiana Windmill - Lv. 1;R_MultiAge_SoccerBonus22a-7fb545889;;;4x5;2;9777;13970;;;;;;;;;;;;98200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP22A10;Mulino a vento di azalee;Azalea Windmill;9c9810bb4;1;;4x5;;42540;53160;;200;;;;;180;170;;;100;475460;380170;;;191;191;;;;;211;211;;;;;10;10;;;;;;;;;;;M;;;;;;;;selection_kit_gentiana_windmill_farmland
-W_MultiAge_CUP22A11;Mulino con Buganville;Bougainvillea Windmill;b3023b585;1;90;4x5;;42540;106330;;450;;;;;350;330;;;300;961700;876500;;;411;411;;;;;421;421;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;selection_kit_gentiana_windmill_farmland
+W_MultiAge_CUP22A10;Mulino a vento di azalee;Azalea Windmill;9c9810bb4;1;;4x5;;42540;53160;;200;;;;;180;170;;;100;475460;380170;;;191;191;;;;;211;211;;;;;10;10;;;;;;;;;;;M;;;;;;;;selection_kit_gentiana_windmill_farmland:4
+W_MultiAge_CUP22A11;Mulino con Buganville;Bougainvillea Windmill;b3023b585;1;90;4x5;;42540;106330;;450;;;;;350;330;;;300;961700;876500;;;411;411;;;;;421;421;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;selection_kit_gentiana_windmill_farmland:5
 W_MultiAge_CUP22A2;Mulino a vento Genziana - Liv. 2;Gentiana Windmill - Lv. 2;R_MultiAge_SoccerBonus22b-aaf8082d5;;;4x5;2;10064;15130;;;;;;;;;;;;99200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A3;Mulino a vento Genziana - Liv. 3;Gentiana Windmill - Lv. 3;R_MultiAge_SoccerBonus22c-8005eafaa;;;4x5;2;10352;16290;;;;;;;;;;;;101000;18600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22A4;Mulino a vento Genziana - Liv. 4;Gentiana Windmill - Lv. 4;R_MultiAge_SoccerBonus22d-13332fadf;;;4x5;2;10735;17450;;;;;;;10.5;;;;4;102000;19780;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1154,9 +1154,9 @@ W_MultiAge_CUP22D2;Sentiero tra gli olivi;Olive Trail;941935790;1;;4x1;;;4250;;;
 W_MultiAge_CUP22E1;Sentiero roccioso;Rocky Path;D_MultiAge_SoccerBonus22rockypath-b4cb37bb2;1;;4x1;;;4070;;;;;;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP22E2;Sentiero Roccioso;Rocky Trail;fe3ea18e0;1;;4x1;;;4250;;;;;;;;;30;;;;;;;6;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A1;Resort Egeo - liv. 1;Aegean Resort - Lv. 1;63cc5ef92;;;4x5;;;;0.5;0.5;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP23A10a;Resort Egeo per coppie;Aegean Couples Resort;cd9b1a7ec;1;;4x5;;;;5;20;;;;;45;15;;;;;;;;36;45;26;61;;;;;;;;;;;;;;;;;;;;;;3;;;;;;;selection_kit_CUP23BC
-W_MultiAge_CUP23A10b;Resort Egeo con giardino;Aegean Garden Resort;8f1eb6671;1;;4x5;;;;9;22;;;;;30;31;;;;;;;;41;45;;61;;;;;;;;;;;;;;;;;;;;;;3.25;;;;;;;selection_kit_CUP23BC
-W_MultiAge_CUP23A10c;Resort Egeo con porto;Aegean Marina Resort;98c1f5292;1;;4x5;;;;7;24;;;;;61;;;;;;;;;;45;39;61;;;;;;;;;;;;;;;;;;;;;;2.25;;;;;;;selection_kit_CUP23BC
+W_MultiAge_CUP23A10a;Resort Egeo per coppie;Aegean Couples Resort;cd9b1a7ec;1;;4x5;;;;5;20;;;;;45;15;;;;;;;;36;45;26;61;;;;;;;;;;;;;;;;;;;;;;3;;;;;;;selection_kit_CUP23BC:6
+W_MultiAge_CUP23A10b;Resort Egeo con giardino;Aegean Garden Resort;8f1eb6671;1;;4x5;;;;9;22;;;;;30;31;;;;;;;;41;45;;61;;;;;;;;;;;;;;;;;;;;;;3.25;;;;;;;selection_kit_CUP23BC:3
+W_MultiAge_CUP23A10c;Resort Egeo con porto;Aegean Marina Resort;98c1f5292;1;;4x5;;;;7;24;;;;;61;;;;;;;;;;45;39;61;;;;;;;;;;;;;;;;;;;;;;2.25;;;;;;;selection_kit_CUP23BC:13
 W_MultiAge_CUP23A2;Resort Egeo - liv. 2;Aegean Resort - Lv. 2;3798f67e9;;;4x5;;;;0.5;1;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A3;Resort Egeo - liv. 3;Aegean Resort - Lv. 3;041c33a6c;;;4x5;;;;0.5;1.5;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A4;Resort Egeo - liv. 4;Aegean Resort - Lv. 4;4ff4f150f;;;4x5;;;;1;2;;;;;10;;;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1164,10 +1164,10 @@ W_MultiAge_CUP23A5;Resort Egeo - liv. 5;Aegean Resort - Lv. 5;fcefb2355;;;4x5;;;
 W_MultiAge_CUP23A6;Resort Egeo - liv. 6;Aegean Resort - Lv. 6;a2727798a;;;4x5;;;;1;3;;;;;15;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A7;Resort Egeo - liv. 7;Aegean Resort - Lv. 7;23eef793e;;;4x5;;;;1.5;3.5;;;;;20;;;;;;;;;;8;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23A8;Resort Egeo - liv. 8;Aegean Resort - Lv. 8;38bcb50fd;;;4x5;;;;2;7.5;;;;;25;;;;;;;;;;15;;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP23A9;Resort Egeo - liv. 9;Aegean Resort - Lv. 9;9a7d92806;1;;4x5;;;;3;15;;;;;30;;;;;;;;;;31;;42;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;selection_kit_CUP23BC
+W_MultiAge_CUP23A9;Resort Egeo - liv. 9;Aegean Resort - Lv. 9;9a7d92806;1;;4x5;;;;3;15;;;;;30;;;;;;;;;;31;;42;;;;;;;;;;;;;;;;;;;;;;1;;;;;;;selection_kit_CUP23BC:2
 W_MultiAge_CUP23B1;Fattoria di feta;Feta Farm;392dad8d5;1;;3x2;;;;;8;;;;;31;;;;20;;;;;18;;;23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CUP23C1;Gyros del golden goal;Golden Goal Gyros;f96db6676;1;;2x2;1;;;;7;;;;;;21;;;;;;;;;15;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_CUP23D1;Buganville in fiore;Flowering Bougainvillea Tree;5eea1581d;1;;1x2;;;;;6;;;;;12;;;;;;;;;11;;11;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_CUP23A
+W_MultiAge_CUP23D1;Buganville in fiore;Flowering Bougainvillea Tree;5eea1581d;1;;1x2;;;;;6;;;;;12;;;;;;;;;11;;11;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_CUP23A:20
 W_MultiAge_Expedition16aBase;Fattoria Terrazzata;Terrace Farm;P_MultiAge_Expedition16-cf9a5a730;;;5x6;2.5;-3470;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition16bBase;Fattoria Terrazzata - Lv. 2;Terrace Farm - Lv. 2;P_MultiAge_Expedition16b-9948ee634;1;;5x6;2.5;-4630;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition16cSilver;Fattoria Terrazzata Argento;Silver Terrace Farm;a69953a36;1;;4x5;2;1389;;;90;;;;;;;;;;;;;;30;30;60;60;47;47;102;102;;;;;;;;;;;;;;;50;;;;;;;;;;
@@ -1201,9 +1201,9 @@ W_MultiAge_FALL22A7;Frantoio per olio di semi di girasole - Liv. 7;Sunflower Oil
 W_MultiAge_FALL22A8;Frantoio per olio di semi di girasole - Liv. 8;Sunflower Oil Press - Lv. 8;R_MultiAge_FallBonus22h-0af4d390c;;;6x4;2;18347;20860;;8;;;;;12;;;;;170700;25030;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A9;Frantoio per olio di semi di girasole - Liv. 9;Sunflower Oil Press - Lv. 9;R_MultiAge_FallBonus22i-e7cc14dd2;1;;6x4;2;22932;27800;;12;;;3;;27;;;;;227400;41740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A1;Vigneto autunnale - Liv. 1;Autumn Vineyard - Lv. 1;47ab41771;;;3x7;1.5;4414;10950;;;;;;;;;;;;149300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL23A10;Vigneto autunnale rustico;Rustic Autumn Vineyard;22e00eaec;1;;3x7;1.5;18862;43820;6;23;;;;;80;;;;;328200;162300;;;36;;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1|building_W_MultiAge_FALL23F1|golden_upgrade_kit_FALL23A
-W_MultiAge_FALL23A11;Vigneto autunnale vivace;Vibrant Autumn Vineyard;1d4a4c059;1;;3x7;1.5;20467;47450;10;25;;;;;90;;;;;348200;178000;;;42;;44;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1|building_W_MultiAge_FALL23F1
-W_MultiAge_FALL23A12;Vigneto Autunnale Maestoso;Majestic Autumn Vineyard;b8ad98287;1;;3x7;1.5;24560;56940;10;41;;;;;120;;;;;417840;213600;;;61;;61;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1|building_W_MultiAge_FALL23E2|building_W_MultiAge_FALL23F1|building_W_MultiAge_FALL23F2
+W_MultiAge_FALL23A10;Vigneto autunnale rustico;Rustic Autumn Vineyard;22e00eaec;1;;3x7;1.5;18862;43820;6;23;;;;;80;;;;;328200;162300;;;36;;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1:2|building_W_MultiAge_FALL23F1:2|golden_upgrade_kit_FALL23A:5
+W_MultiAge_FALL23A11;Vigneto autunnale vivace;Vibrant Autumn Vineyard;1d4a4c059;1;;3x7;1.5;20467;47450;10;25;;;;;90;;;;;348200;178000;;;42;;44;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1:3|building_W_MultiAge_FALL23F1:3
+W_MultiAge_FALL23A12;Vigneto Autunnale Maestoso;Majestic Autumn Vineyard;b8ad98287;1;;3x7;1.5;24560;56940;10;41;;;;;120;;;;;417840;213600;;;61;;61;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1:5|building_W_MultiAge_FALL23E2:3|building_W_MultiAge_FALL23F1:5|building_W_MultiAge_FALL23F2:3
 W_MultiAge_FALL23A2;Vigneto autunnale - Liv. 2;Autumn Vineyard - Lv. 2;f8a7be4d5;;;3x7;1.5;6020;14610;;;;;;;;;;;;169000;35700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A3;Vigneto autunnale - Liv. 3;Autumn Vineyard - Lv. 3;cfe4bdbc1;;;3x7;1.5;7626;18270;;;;;;;10;;;;;188800;51400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A4;Vigneto autunnale - Liv. 4;Autumn Vineyard - Lv. 4;4d3fbd839;;;3x7;1.5;9229;21900;;;;;;;20;;;;;208800;67400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1211,19 +1211,19 @@ W_MultiAge_FALL23A5;Vigneto autunnale - Liv. 5;Autumn Vineyard - Lv. 5;5f206fd5c
 W_MultiAge_FALL23A6;Vigneto autunnale - Liv. 6;Autumn Vineyard - Lv. 6;6a10c18b9;;;3x7;1.5;12441;29190;;6;;;;;40;;;;;248600;99100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A7;Vigneto autunnale - Liv. 7;Autumn Vineyard - Lv. 7;77ae9e1e1;;;3x7;1.5;14047;32870;;11;;;;;50;;;;;268600;114800;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A8;Vigneto autunnale - Liv. 8;Autumn Vineyard - Lv. 8;64152d315;;;3x7;1.5;15650;36530;;16;;;;;60;;;;;288400;130800;;;15;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL23A9;Vigneto autunnale - Liv. 9;Autumn Vineyard - Lv. 9;f99bd7441;1;;3x7;1.5;17256;40160;3;21;;;;;70;;;;;308400;146300;;;30;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1|building_W_MultiAge_FALL23F1|silver_upgrade_kit_FALL23A
-W_MultiAge_FALL23B1;Festival della Pigiatura dell'uva - Liv. 1;Grape Stompin' Festival - Lv. 1;3fb3c3a23;1;;3x2;;;;;15;;;;;27;;;;;;;;;18;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL23A|silver_upgrade_kit_FALL23A
-W_MultiAge_FALL23B2;Festival della Pigiatura dell'uva - Liv. 2;Grape Stompin' Festival - Lv. 2;634c54b58;1;;3x2;;;;;21;;;;;33;;;;;;;;;30;;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL23A|selection_kit_FALL23A|silver_upgrade_kit_FALL23A
+W_MultiAge_FALL23A9;Vigneto autunnale - Liv. 9;Autumn Vineyard - Lv. 9;f99bd7441;1;;3x7;1.5;17256;40160;3;21;;;;;70;;;;;308400;146300;;;30;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1:1|building_W_MultiAge_FALL23F1:1|silver_upgrade_kit_FALL23A:5
+W_MultiAge_FALL23B1;Festival della Pigiatura dell'uva - Liv. 1;Grape Stompin' Festival - Lv. 1;3fb3c3a23;1;;3x2;;;;;15;;;;;27;;;;;;;;;18;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL23A:10|silver_upgrade_kit_FALL23A:10
+W_MultiAge_FALL23B2;Festival della Pigiatura dell'uva - Liv. 2;Grape Stompin' Festival - Lv. 2;634c54b58;1;;3x2;;;;;21;;;;;33;;;;;;;;;30;;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL23A:20|selection_kit_FALL23A:20|silver_upgrade_kit_FALL23A:20
 W_MultiAge_FALL23C1;Zucca balzante;Jumpin' Pumpkin;e3ac9d323;1;;2x2;1;-22932;-27830;;;;;;;;;;;;;30160;;;13;;10;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23C2;Zucca Balzante d'élite;Elite Jumpin' Pumpkin;429ee8fb1;1;;2x2;1;-26372;-32005;;;;;;;;;;;;;34684;;;15;;12;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23D1;Giardino del sidro;Cider Garden;692a0cdc8;1;;2x2;;;;;5;;1.5;;1.5;;;;;;;;;;9;13;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23D2;Giardino del Sidro Squisito;Exquisite Cider Garden;bfa7fa759;1;;2x2;;;;;6;;2;;2;;;;;;;;;;11;15;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL23E1;Trono di funghi;Shroom Throne;69008aed6;1;;1x1;0.5;;;;;;;;;7;;;;;;;;;3;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23C1
-W_MultiAge_FALL23E2;Trono Reale di Funghi;Royal Shroom Throne;4f7de7950;1;;1x1;0.5;;;;;;;;;9;;;;;;;;;4;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23C2
-W_MultiAge_FALL23F1;Albero di mele di Nonna Aurora;Granny Aurora's Apple Tree;4a109ea96;1;;1x1;0.5;;;;3;;;;;;;;;;;;;;;;4;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23D1
-W_MultiAge_FALL23F2;Bocciolo di Mela di Nonna Aurora;Granny Aurora's Apple Blossom;c6dc6a16e;1;;1x1;0.5;;;;4;;;;;;;;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23D2
+W_MultiAge_FALL23E1;Trono di funghi;Shroom Throne;69008aed6;1;;1x1;0.5;;;;;;;;;7;;;;;;;;;3;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23C1:3
+W_MultiAge_FALL23E2;Trono Reale di Funghi;Royal Shroom Throne;4f7de7950;1;;1x1;0.5;;;;;;;;;9;;;;;;;;;4;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23C2:3
+W_MultiAge_FALL23F1;Albero di mele di Nonna Aurora;Granny Aurora's Apple Tree;4a109ea96;1;;1x1;0.5;;;;3;;;;;;;;;;;;;;;;4;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23D1:3
+W_MultiAge_FALL23F2;Bocciolo di Mela di Nonna Aurora;Granny Aurora's Apple Blossom;c6dc6a16e;1;;1x1;0.5;;;;4;;;;;;;;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23D2:3
 W_MultiAge_FALL24A1;Sala dello Scoiattolo del Raccolto - Lv. 1;Harvest Squirrel Hall - Lv. 1;bb9a68872;;;6x5;2.5;6820;13620;;;;;;;;;;;;175600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL24A10;Sala dello Scoiattolo Generoso;Bountiful Squirrel Hall;d857f311b;1;;6x5;2.5;39740;90800;2.4;76;;;;;110;;;;;702400;;;;;;111;101;;;;;;;;;;;;;;;;;;;;;;;;;8;3;;;golden_upgrade_kit_FALL24A
+W_MultiAge_FALL24A10;Sala dello Scoiattolo Generoso;Bountiful Squirrel Hall;d857f311b;1;;6x5;2.5;39740;90800;2.4;76;;;;;110;;;;;702400;;;;;;111;101;;;;;;;;;;;;;;;;;;;;;;;;;8;3;;;golden_upgrade_kit_FALL24A:5
 W_MultiAge_FALL24A11;Sala dello Scoiattolo Regale;Regal Squirrel Hall;b6c183255;1;;6x5;2.5;45420;102160;3.2;101;0.01;;;;140;;;;;819460;;;;;;131;121;;;;;;;;;;;;;;;;;;;;;;0.6;;4.5;10;7.5;3;;
 W_MultiAge_FALL24A2;Sala dello Scoiattolo del Raccolto - Lv. 2;Harvest Squirrel Hall - Lv. 2;b1f89a7c2;;;6x5;2.5;7940;17020;;;;;;;5;;;;;169000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL24A3;Sala dello Scoiattolo del Raccolto - Lv. 3;Harvest Squirrel Hall - Lv. 3;54780d174;;;6x5;2.5;9660;22700;;;;;;;10;;;;;188800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1232,15 +1232,15 @@ W_MultiAge_FALL24A5;Sala dello Scoiattolo del Raccolto - Lv. 5;Harvest Squirrel 
 W_MultiAge_FALL24A6;Sala dello Scoiattolo del Raccolto - Lv. 6;Harvest Squirrel Hall - Lv. 6;6a6898a1c;;;6x5;2.5;17040;39720;;11;;;;;25;;;;;351200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL24A7;Sala dello Scoiattolo del Raccolto - Lv. 7;Harvest Squirrel Hall - Lv. 7;625390ed4;;;6x5;2.5;22700;45400;;22;;;;;30;;;;;409740;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL24A8;Sala dello Scoiattolo del Raccolto - Lv. 8;Harvest Squirrel Hall - Lv. 8;8cb3a5e99;;;6x5;2.5;26120;56760;;36;;;;;35;;;;;468260;;;;;;14;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL24A9;Sala dello Scoiattolo del Raccolto - Lv. 9;Harvest Squirrel Hall - Lv. 9;e0bda6455;1;;6x5;2.5;34060;79460;2;51;;;;;80;;;;;585340;;;;;;91;81;;;;;;;;;;;;;;;;;;;;;;;;;6;2.4;;;silver_upgrade_kit_FALL24A
+W_MultiAge_FALL24A9;Sala dello Scoiattolo del Raccolto - Lv. 9;Harvest Squirrel Hall - Lv. 9;e0bda6455;1;;6x5;2.5;34060;79460;2;51;;;;;80;;;;;585340;;;;;;91;81;;;;;;;;;;;;;;;;;;;;;;;;;6;2.4;;;silver_upgrade_kit_FALL24A:5
 W_MultiAge_FALL24B1;Biblioteca Itinerante;Vagabond Library;5c91b946d;1;;3x2;;-11920;29790;1.5;;;;;;;;;;20;87800;;;;10;18;;;;;;;;;;;;;;;;;5000;;;;;;;;1.5;;;0.6;;;
 W_MultiAge_FALL24B2;Biblioteca Itinerante Ascesa;Ascended Vagabond Library;4a83dc51a;1;10;3x2;;-11920;29790;2.4;;;;;;40;;;;;175600;;;;16;30;;;;;;;;;;;8;;;;0.02;;10000;;;;;;;;3;;;;10;;
 W_MultiAge_FALL24C1;Hub del Raccolto;Harvest Hub;90c4dd6e7;1;;2x2;;-17040;39720;;;;;;;10;;;;;87800;;;;;;15;20;;;;;;;;;;;;;;;;3500;;;;;;;3;;;;;;
 W_MultiAge_FALL24C2;Hub del Raccolto Asceso;Ascended Harvest Hub;048891cca;1;10;2x2;;-17040;39720;1.6;;;;;;20;;;;;175600;;;;;;31;31;;;;;;;;20;;;;;;0.02;;7000;;;;;;;3;;;;7.5;;
-W_MultiAge_FALL24D1;Gala Fienile Bovino;Bovine Gala Barnhouse;7fedec1bc;1;;4x4;;45420;94700;;;;;5;;100;;;;;;184580;;;136;146;;;;;;;;;;;25;;;;;;;;;;;;;6;;;;13.5;10.5;;golden_upgrade_kit_FALL24A|selection_kit_FALL24A|silver_upgrade_kit_FALL24A
+W_MultiAge_FALL24D1;Gala Fienile Bovino;Bovine Gala Barnhouse;7fedec1bc;1;;4x4;;45420;94700;;;;;5;;100;;;;;;184580;;;136;146;;;;;;;;;;;25;;;;;;;;;;;;;6;;;;13.5;10.5;;golden_upgrade_kit_FALL24A:5|selection_kit_FALL24A:30|silver_upgrade_kit_FALL24A:5
 W_MultiAge_FALL25A1;Fattoria BrezzaMolino - Livello 1;Breezemill Homestead - Lv. 1;cacdf6b42;;;6x5;2.5;;5320;;6;;;;;;;;;;;;550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL25A10;Tenuta BrezzaMolino;Breezemill Acres;0bd00268b;1;;6x5;2.5;;95700;10;235;;;;;225;180;140;;;;;54690;;;;;;;;;562;507;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL25A|selection_kit_FALL25EF
-W_MultiAge_FALL25A11;Residenza BrezzaMolino;Breezemill Estate;ff935cdc8;1;;6x5;2.5;;106330;15;270;;;;;250;195;150;;;;;82030;;;;;;;;;652;557;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FALL25EF
+W_MultiAge_FALL25A10;Tenuta BrezzaMolino;Breezemill Acres;0bd00268b;1;;6x5;2.5;;95700;10;235;;;;;225;180;140;;;;;54690;;;;;;;;;562;507;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL25A:5|selection_kit_FALL25EF:2
+W_MultiAge_FALL25A11;Residenza BrezzaMolino;Breezemill Estate;ff935cdc8;1;;6x5;2.5;;106330;15;270;;;;;250;195;150;;;;;82030;;;;;;;;;652;557;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FALL25EF:3
 W_MultiAge_FALL25A2;Fattoria BrezzaMolino - Livello 2;Breezemill Homestead - Lv. 2;68ad3bee2;;;6x5;2.5;;10630;;11;;;;;;;;;;;;1090;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25A3;Fattoria BrezzaMolino - Livello 3;Breezemill Homestead - Lv. 3;9cb78b187;;;6x5;2.5;;21270;;16;;;;;;;;;;;;1640;;;;;;;;;15;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25A4;Fattoria BrezzaMolino - Livello 4;Breezemill Homestead - Lv. 4;7e9254b7f;;;6x5;2.5;;31900;;21;;;;;;;;;;;;2190;;;;;;;;;55;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1248,7 +1248,7 @@ W_MultiAge_FALL25A5;Fattoria BrezzaMolino - Livello 5;Breezemill Homestead - Lv.
 W_MultiAge_FALL25A6;Fattoria BrezzaMolino - Livello 6;Breezemill Homestead - Lv. 6;df4e65c21;;;6x5;2.5;;53160;;52;;;;;;;;;;;;6560;;;;;;;;;246;51;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25A7;Fattoria BrezzaMolino - Livello 7;Breezemill Homestead - Lv. 7;308d6f449;;;6x5;2.5;;63800;1;78;;;;;;;;;;;;8750;;;;;;;;;316;151;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25A8;Fattoria BrezzaMolino - Livello 8;Breezemill Homestead - Lv. 8;2cb59c47a;;;6x5;2.5;;74430;3;104;;;;;;;;;;;;10940;;;;;;;;;460;305;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL25A9;Fattoria BrezzaMolino - Livello 9;Breezemill Homestead - Lv. 9;e0e8d65d2;1;;6x5;2.5;;85060;5;185;;;;;175;150;120;;;;;27340;;;;;;;;;521;456;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL25EF|silver_upgrade_kit_FALL25A
+W_MultiAge_FALL25A9;Fattoria BrezzaMolino - Livello 9;Breezemill Homestead - Lv. 9;e0e8d65d2;1;;6x5;2.5;;85060;5;185;;;;;175;150;120;;;;;27340;;;;;;;;;521;456;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL25EF:1|silver_upgrade_kit_FALL25A:5
 W_MultiAge_FALL25B1;Campo di Sternbergia;Sternbergia Patch;b2fdcc702;1;;6x2;;;106330;;35;;;;;;;;;;;;;;;;;;;;;70;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25C1;Campo di grano;Wheat Patch;ce0fd1147;1;;6x2;;;106330;;;;;;;50;;;;;;;;;;;;;;;;;80;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25D1;Campo di Lavanda;Lavender Patch;5ce529ecc;1;;6x2;;;106330;;28;;;;;;;50;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1256,28 +1256,28 @@ W_MultiAge_FALL25E1;Pergolato di Azalee;Azalea Arbor;b9bbca5cc;1;;2x2;;-12760;12
 W_MultiAge_FALL25E2;Pergolato di Azalee Asceso;Ascended Azalea Arbor;0d899065a;1;30;2x2;;-12760;12760;;90;;;;;;;;;;;;5470;;;;;;;100;;;;;70;;20;;;;0.04;;20000;;;5;;;;;;;;;;;
 W_MultiAge_FALL25F1;Stagno Amberbill;Amberbill Pond;1e09d3523;1;;3x2;;-12760;12760;;;;;;;60;;;;;;158400;;;;;;;;;;60;;50;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL25F2;Stagno Amberbill Asceso;Ascended Amberbill Pond;4e3203212;1;30;3x2;;-12760;12760;;;;;;;130;;;;;;184800;;;;;;;;;;120;;120;;;;;20;;;0.04;;20000;20;;;;;;;;;;;;
-W_MultiAge_FALL25G1;Labirinto di Maizespire;Maizespire Labyrinth;d6000b2f1;1;;5x5;;;;;250;;;;;150;150;150;;;;;;;;;;;175;175;175;175;175;175;175;175;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_FALL25A
+W_MultiAge_FALL25G1;Labirinto di Maizespire;Maizespire Labyrinth;d6000b2f1;1;;5x5;;;;;250;;;;;150;150;150;;;;;;;;;;;175;175;175;175;175;175;175;175;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_FALL25A:20
 W_MultiAge_FALL26A1;Fermata Momiji - Liv. 1;Momiji Stop - Lv. 1;4c1b2281a;;;4x6;2;;;;19;;;;;25;12;;;;;;;;;;52;52;75;75;75;75;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL26A10;Terminal Momiji;Momiji Terminal;6984d377c;1;;4x6;2;;;20;360;;10;10;10.15;390;250;;;;;;;;;;242;242;293;293;293;293;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FALL26BC
+W_MultiAge_FALL26A10;Terminal Momiji;Momiji Terminal;6984d377c;1;;4x6;2;;;20;360;;10;10;10.15;390;250;;;;;;;;;;242;242;293;293;293;293;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FALL26BC:3
 W_MultiAge_FALL26A2;Fermata Momiji - Liv. 2;Momiji Stop - Lv. 2;W_MultiAge_FALL26A1-4c1b2281a;;;4x6;2;;;;42;;;;;60;36;;;;;;;;;;62;62;89;89;89;89;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26A3;Fermata Momiji - Liv. 3;Momiji Stop - Lv. 3;W_MultiAge_FALL26A1-4c1b2281a;;;4x6;2;;;;65;;;;;95;60;;;;;;;;;;72;72;103;103;103;103;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26A4;Fermata Momiji - Liv. 4;Momiji Stop - Lv. 4;W_MultiAge_FALL26A1-4c1b2281a;;;4x6;2;;;;88;;;;;130;84;;;;;;;;;;82;82;117;117;117;117;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26A5;Fermata Momiji - Liv. 5;Momiji Stop - Lv. 5;0f3c962a4;;;4x6;2;;;;111;;0.75;0.8;1.05;165;108;;;;;;;;;;92;92;131;131;131;131;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26A6;Fermata Momiji - Liv. 6;Momiji Stop - Lv. 6;W_MultiAge_FALL26A5-0f3c962a4;;;4x6;2;;;;134;;1.5;1.6;1.75;200;132;;;;;;;;;;102;102;145;145;145;145;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26A7;Fermata Momiji - Liv. 7;Momiji Stop - Lv. 7;W_MultiAge_FALL26A5-0f3c962a4;;;4x6;2;;;;157;;2.25;2.4;2.45;235;156;;;;;;;;;;112;112;159;159;159;159;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FALL26A8;Fermata Momiji - Liv. 8;Momiji Stop - Lv. 8;7dc73bdd8;1;;4x6;2;;;10;180;;3;3.2;3.15;270;180;;;;;;;;;;122;122;173;173;173;173;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL26BC|silver_upgrade_kit_FALL26A
-W_MultiAge_FALL26A9;Stazione Momiji;Momiji Station;ed0a60d38;1;;4x6;2;;;15;260;;6;6;6.3;330;210;;;;;;;;;;172;172;223;223;223;223;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL26A|selection_kit_FALL26BC
+W_MultiAge_FALL26A8;Fermata Momiji - Liv. 8;Momiji Stop - Lv. 8;7dc73bdd8;1;;4x6;2;;;10;180;;3;3.2;3.15;270;180;;;;;;;;;;122;122;173;173;173;173;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL26BC:1|silver_upgrade_kit_FALL26A:5
+W_MultiAge_FALL26A9;Stazione Momiji;Momiji Station;ed0a60d38;1;;4x6;2;;;15;260;;6;6;6.3;330;210;;;;;;;;;;172;172;223;223;223;223;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL26A:5|selection_kit_FALL26BC:2
 W_MultiAge_FALL26B1;Dolcetto Koyo;Koyo Treat;d191d8895;1;;4x2;;-31900;;;90;;;;;;;;;;;158400;;;;;;;103;103;;;82;82;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26B2;Delizia Koyo Ascesa;Ascended Koyo Treat;68a222745;1;30;4x2;;-31900;;;240;;;;;;;;;;;327370;;;;;;;223;223;;;192;192;;;25;25;25;25;0.04;;;;;5;;;;;;;;;;;
 W_MultiAge_FALL26C1;Palco di Kinoko;Kinoko Stage;fac49523b;1;;2x3;;-37220;;;;;;;;55;;45;;;;;;;62;62;62;62;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL26C2;Palco Kinoko Asceso;Ascended Kinoko Stage;606f0bc93;1;30;2x3;;-37220;;;;;;;;170;;155;;;;;;;122;122;122;122;;;;;;;;;;;25;;;0.04;;;10;;;;;;;;;;;;
-W_MultiAge_FALL26D1;Mizube Lodge;Mizube Lodge;60a077718;1;;6x4;;;;;450;;;;;400;270;;;;;;;;;;350;350;550;550;550;550;;;;;25;25;25;25;;;;;;;;;M;;;;3;;3;;golden_selection_kit_FALL26A
+W_MultiAge_FALL26D1;Mizube Lodge;Mizube Lodge;60a077718;1;;6x4;;;;;450;;;;;400;270;;;;;;;;;;350;350;550;550;550;550;;;;;25;25;25;25;;;;;;;;;M;;;;3;;3;;golden_selection_kit_FALL26A:20
 W_MultiAge_FALL26E1;Angolo del Ramen - Liv. 1;Ramen Nook - Lv. 1;c89dc128a;1;;4x4;;-79760;;;90;;;;;;;;;;;;;;180;180;;;190;190;;;;;;;;;;;;;;;;;;;M;2;;;;;;;
-W_MultiAge_FALL26E2;Angolo del Ramen - Liv. 2;Ramen Nook - Lv. 2;3ed493352;1;;4x4;;-79760;;;150;;;;;;;;;;;;;;260;260;;;240;240;;;210;210;210;210;;;;;;;;;;;;;M;6;;;;;;;upgrade_kit_ascended_FALL21A
+W_MultiAge_FALL26E2;Angolo del Ramen - Liv. 2;Ramen Nook - Lv. 2;3ed493352;1;;4x4;;-79760;;;150;;;;;;;;;;;;;;260;260;;;240;240;;;210;210;210;210;;;;;;;;;;;;;M;6;;;;;;;upgrade_kit_ascended_FALL21A:12
 W_MultiAge_FELL22A1;Taverna degli eroi - Liv. 1;Heroes Tavern - Lv. 1;R_MultiAge_HeroBonus22a-7e6ce64d5;;;5x4;2;10639;16170;;;;;;;;;;;;167000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A10;Taverna degli eroi - Liv. 10;Heroes Tavern - Lv. 10;R_MultiAge_HeroBonus22j-b8050c1c0;1;;5x4;2;17253;25600;;11;;;;;;;;;;324300;;;;23;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A11;Loggia leggendaria;Legendary Lodge;R_MultiAge_HeroBonus22k-cc7752668;1;;5x4;2;18211;26760;;15;;;;;55;;;;;333800;;;;26;32;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL22A12;Maniero Mitico;Mythical Manor;ab75376b5;1;;5x4;2;19980;27460;;35;;;;;120;;;;;334800;;;;36;36;36;36;47;;;;;;;;;;30;;;;;;;;;;;;;;;;;;selection_kit_FELL22B
+W_MultiAge_FELL22A12;Maniero Mitico;Mythical Manor;ab75376b5;1;;5x4;2;19980;27460;;35;;;;;120;;;;;334800;;;;36;36;36;36;47;;;;;;;;;;30;;;;;;;;;;;;;;;;;;selection_kit_FELL22B:3
 W_MultiAge_FELL22A2;Taverna degli eroi - Liv. 2;Heroes Tavern - Lv. 2;R_MultiAge_HeroBonus22b-0ab275daf;;;5x4;2;11023;16880;;1;;;;;;;;;;171700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A3;Taverna degli eroi - Liv. 3;Heroes Tavern - Lv. 3;R_MultiAge_HeroBonus22c-eb86ab063;;;5x4;2;11502;16880;;2;;;;;;;;;;186000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22A4;Taverna degli eroi - Liv. 4;Heroes Tavern - Lv. 4;R_MultiAge_HeroBonus22d-94734ef43;;;5x4;2;11981;17920;;3;;;;;;;;;;200300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1289,7 +1289,7 @@ W_MultiAge_FELL22A9;Taverna degli eroi - Liv. 9;Heroes Tavern - Lv. 9;R_MultiAge
 W_MultiAge_FELL22B1;Loggia dei cavalieri;Knights Pavilion;R_MultiAge_HeroBonus22-774088a26;1;;2x2;1;1917;2320;;;;;2;;5;;;;;47700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL22B2;Loggia dei Cavalieri Valorosa;Valiant Knights Pavilion;8f10992a1;1;;2x2;1;5680;8520;;;;;8;;30;45;15;;;58540;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL23A1;Tenuta Summerhold - Liv. 1;Summerhold Manor - Lv.1;2dd97bb6e;;;4x4;2;;13593;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL23A10;Palazzo Sunhaven;Sunhaven Palace;6201b7668;1;;4x4;2;;17833;;13;;;;;40;10;;;;;;;;36;;33;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL23BC
+W_MultiAge_FELL23A10;Palazzo Sunhaven;Sunhaven Palace;6201b7668;1;;4x4;2;;17833;;13;;;;;40;10;;;;;;;;36;;33;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL23BC:3
 W_MultiAge_FELL23A2;Tenuta Summerhold - Liv. 2;Summerhold Manor - Lv.2;8cd3701e4;;;4x4;2;;14036;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL23A3;Tenuta Summerhold - Liv. 3;Summerhold Manor - Lv.3;b51e77a2f;;;4x4;2;;14515;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL23A4;Tenuta Summerhold - Liv. 4;Summerhold Manor - Lv.4;9e08cd5be;;;4x4;2;;15037;;3;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1297,62 +1297,62 @@ W_MultiAge_FELL23A5;Tenuta Summerhold - Liv. 5;Summerhold Manor - Lv.5;2be5af6db
 W_MultiAge_FELL23A6;Tenuta Summerhold - Liv. 6;Summerhold Manor - Lv.6;94c327ebe;;;4x4;2;;15480;;3;;;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL23A7;Tenuta Summerhold - Liv. 7;Summerhold Manor - Lv.7;089d859ab;;;4x4;2;;16435;;4;;;;;20;;;;;;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL23A8;Tenuta Summerhold - Liv. 8;Summerhold Manor - Lv.8;fb4586f44;;;4x4;2;;16878;;5;;;;;25;;;;;;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL23A9;Tenuta Summerhold - Liv. 9;Summerhold Manor - Lv.9;c990d12c2;1;;4x4;2;;17354;;9;;;;;30;5;;;;;;;;26;;;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL23BC
+W_MultiAge_FELL23A9;Tenuta Summerhold - Liv. 9;Summerhold Manor - Lv.9;c990d12c2;1;;4x4;2;;17354;;9;;;;;30;5;;;;;;;;26;;;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL23BC:1
 W_MultiAge_FELL23B1;Palco del giullare;Jester's Stage;69ca96007;1;;2x3;1;;13593;3.4;;;;;;35;;;;;;;;;;;16;23;;;;;;;;;;;;;;;;;;;;;;3;;;;;;;
 W_MultiAge_FELL23C1;Boschetto della grigliata;Grilling Grove;58e7c2300;1;;2x2;;;13593;;1;;;;;;;;;;;;;;12;;14;;;;;;;;;;;;;;;;;;;;;;;;;;;2;;;
-W_MultiAge_FELL23D1;Fabbro Trailside;Trailside Smithy;ab58bf384;1;;1x1;;;13593;;4;;;;;5;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL23A|selection_kit_FELL23A
+W_MultiAge_FELL23D1;Fabbro Trailside;Trailside Smithy;ab58bf384;1;;1x1;;;13593;;4;;;;;5;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL23A:20|selection_kit_FELL23A:20
 W_MultiAge_FELL24A1;Mulino Whisperwood - Lv. 1;Whisperwood Watermill - Lv. 1;789eaa205;;;5x6;2.5;;44260;;42;;;;;30;;;;;;63620;6870;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A10;Mulino Whisperwood Arcadico;Arcadian Whisperwood Watermill;552f4b50d;1;;5x6;2.5;;110680;;69;;;;;165;;;;150;;309030;33330;;;66;;;99;99;;;;;;;;;;;;;;;;;;;M;;;;;;;;
-W_MultiAge_FELL24A11;;Dummy Whisperwood Watermill;;1;;5x6;;;128010;;100;;;;;285;400;;0.02;250;;338820;38280;;351;351;;;476;476;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_selection_kit_FELL24A
-W_MultiAge_FELL24A12;;Dummy Whisperwood Watermill;;1;;5x6;;;138670;;150;;;;;435;600;600;0.06;400;;360000;40470;;476;476;;;551;551;;;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;golden_selection_kit_FELL24A
+W_MultiAge_FELL24A11;;Dummy Whisperwood Watermill;;1;;5x6;;;128010;;100;;;;;285;400;;0.02;250;;338820;38280;;351;351;;;476;476;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_selection_kit_FELL24A:3
+W_MultiAge_FELL24A12;;Dummy Whisperwood Watermill;;1;;5x6;;;138670;;150;;;;;435;600;600;0.06;400;;360000;40470;;476;476;;;551;551;;;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;golden_selection_kit_FELL24A:5
 W_MultiAge_FELL24A2;Mulino Whisperwood - Lv. 2;Whisperwood Watermill - Lv. 2;2ce28a701;;;5x6;2.5;;51640;;45;;;;;45;;;;;;90890;9810;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A3;Mulino Whisperwood - Lv. 3;Whisperwood Watermill - Lv. 3;9b321e05b;;;5x6;2.5;;59020;;48;;;;;60;;;;;;118150;12740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A4;Mulino Whisperwood - Lv. 4;Whisperwood Watermill - Lv. 4;3464a0a46;;;5x6;2.5;;66400;;51;;;;;75;;;;;;145440;15680;;;5;;;7;7;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A5;Mulino Whisperwood - Lv. 5;Whisperwood Watermill - Lv. 5;709d46def;;;5x6;2.5;;73780;;54;;;;;90;;;;;;172700;18620;;;15;;;23;23;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A6;Mulino Whisperwood - Lv. 6;Whisperwood Watermill - Lv. 6;057b984ad;;;5x6;2.5;;81160;;57;;;;;105;;;;;;199970;21560;;;26;;;39;39;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A7;Mulino Whisperwood - Lv. 7;Whisperwood Watermill - Lv. 7;e1f5da46c;;;5x6;2.5;;88540;;60;;;;;120;;;;;;227230;24510;;;36;;;54;54;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL24A8;Mulino Whisperwood - Lv. 8;Whisperwood Watermill - Lv. 8;fd8034b80;1;;5x6;2.5;;95920;;63;;;;;135;;;;100;;254500;27450;;;46;;;69;69;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_upgrade_kit_FELL24A
-W_MultiAge_FELL24A9;Mulino Whisperwood Silvano;Sylvan Whisperwood Watermill;797aab7ba;1;;5x6;2.5;;103300;;66;;;;;150;;;;125;;281760;30390;;;56;;;84;84;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL24A
+W_MultiAge_FELL24A8;Mulino Whisperwood - Lv. 8;Whisperwood Watermill - Lv. 8;fd8034b80;1;;5x6;2.5;;95920;;63;;;;;135;;;;100;;254500;27450;;;46;;;69;69;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_upgrade_kit_FELL24A:5
+W_MultiAge_FELL24A9;Mulino Whisperwood Silvano;Sylvan Whisperwood Watermill;797aab7ba;1;;5x6;2.5;;103300;;66;;;;;150;;;;125;;281760;30390;;;56;;;84;84;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL24A:5
 W_MultiAge_FELL24B1;Jolly Oink Pigsty;Jolly Oink Pigsty;951f0f78c;1;;3x4;;-13620;;;25;;;;;60;75;;;;;134240;;;20;;;;31;;41;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24B2;Jolly Oink Pigsty Asceso;Ascended Jolly Oink Pigsty;89214702e;1;30;3x4;;-13620;;;40;;;;;100;120;;;;;268480;;;41;;;;62;;82;;;;;;;;;;;0.04;;20000;10;;;;;;;;;;;;
 W_MultiAge_FELL24C1;Carrozza Reale;Royal Carriage;5554bf684;1;;4x3;;-13620;;;36;;;;;18;;;;;280960;;;;;;50;50;;;;;51;;76;76;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24C2;Carrozza Reale Ascesa;Ascended Royal Carriage;9fcbdd43b;1;30;4x3;;-13620;;;90;;;;;45;;;;;561920;;;;;;101;101;;;;;102;;152;152;;;;;0.04;;20000;;;5;;;;;;;;;;;
-W_MultiAge_FELL24D1;Guglia Skyletter Imperiale ;Imperial Skyletter Spire;a53607db1;1;;4x5;;;;;170;;;;;;375;;;;;559340;;;80;80;;;120;120;;;;;;;;;25;;;;;;;;;;;;;;;;;;golden_selection_kit_FELL24A
+W_MultiAge_FELL24D1;Guglia Skyletter Imperiale ;Imperial Skyletter Spire;a53607db1;1;;4x5;;;;;170;;;;;;375;;;;;559340;;;80;80;;;120;120;;;;;;;;;25;;;;;;;;;;;;;;;;;;golden_selection_kit_FELL24A:20
 W_MultiAge_FELL24E1;Tenuta Stemma;Escutcheon Estate;c8afad6ea;1;;4x4;;31800;47680;;25;;;;;;;50;;;;;;;50;50;;;34;68;;;;;;;;;;;;;;;;;50;;;10;;;;;;;
 W_MultiAge_FELL25A1;Attraversamento mercantile - Livello 1;Mercantile Crossing - Lv. 1;e6899eb70;;;6x4;2;15950;;;;;;;;;;;;;161790;114050;;;;;;;;10;5;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL25A10;Stazione Mercantile;Mercantile Waystation;2f2955687;1;;6x4;2;74440;;;195;;;;;;;;;;755040;288290;;;;;;;;260;255;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL25BC
+W_MultiAge_FELL25A10;Stazione Mercantile;Mercantile Waystation;2f2955687;1;;6x4;2;74440;;;195;;;;;;;;;;755040;288290;;;;;;;;260;255;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL25BC:3
 W_MultiAge_FELL25A2;Attraversamento mercantile - Livello 2;Mercantile Crossing - Lv. 2;781b07829;;;6x4;2;21270;;;;;;;;;;;;;215720;119330;;;;;;;;40;35;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25A3;Attraversamento mercantile - Livello 3;Mercantile Crossing - Lv. 3;8860a8463;;;6x4;2;26590;;;;;;;;;;;;;269660;124610;;;;;;;;70;65;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25A4;Attraversamento mercantile - Livello 4;Mercantile Crossing - Lv. 4;13b423773;;;6x4;2;31900;;;45;;;;;;;;;;323590;129890;;;;;;;;100;95;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25A5;Attraversamento mercantile - Livello 5;Mercantile Crossing - Lv. 5;d645ef429;;;6x4;2;37220;;;70;;;;;;;;;;377520;135170;;;;;;;;130;125;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25A6;Attraversamento mercantile - Livello 6;Mercantile Crossing - Lv. 6;67ce2eacf;;;6x4;2;42540;;;95;;;;;;;;;;431450;140450;;;;;;;;160;155;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25A7;Attraversamento mercantile - Livello 7;Mercantile Crossing - Lv. 7;44dec5236;;;6x4;2;47850;;;120;;;;;;;;;;485380;145730;;;;;;;;190;185;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL25A8;Attraversamento mercantile - Livello 8;Mercantile Crossing - Lv. 8;0f468a91f;1;;6x4;2;53170;;;145;;;;;;;;;;539310;151010;;;;;;;;220;215;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL25BC|silver_upgrade_kit_FELL25A
-W_MultiAge_FELL25A9;Passaggio mercantile;Mercantile Passage;196856a15;1;;6x4;2;63810;;;170;;;;;;;;;;647170;205920;;;;;;;;250;245;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL25A|selection_kit_FELL25BC
+W_MultiAge_FELL25A8;Attraversamento mercantile - Livello 8;Mercantile Crossing - Lv. 8;0f468a91f;1;;6x4;2;53170;;;145;;;;;;;;;;539310;151010;;;;;;;;220;215;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL25BC:1|silver_upgrade_kit_FELL25A:5
+W_MultiAge_FELL25A9;Passaggio mercantile;Mercantile Passage;196856a15;1;;6x4;2;63810;;;170;;;;;;;;;;647170;205920;;;;;;;;250;245;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL25A:5|selection_kit_FELL25BC:2
 W_MultiAge_FELL25B1;Ritirata dei Ribbit;Ribbit Retreat;7b99c419b;1;;4x2;;-17020;21270;;90;;;;;;;;;;;;17500;;;;;;;;;;;80;;80;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25B2;Ritirata dei Ribbit Ascesa;Ascended Ribbit Retreat;d6d26989b;1;30;4x2;;-17020;46780;;200;;;;;;;;;;;;35000;;;;;;;;;;;190;;190;;;32;;;;20000;20000;;5;;;;;;;;;;;
 W_MultiAge_FELL25C1;Angolo del Nomade;Nomad's Nook;a908a8eb2;1;;3x3;;-19140;;;80;;;;6;;;;;;;;19690;;;;;;40;40;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL25C2;Angolo del Nomade Asceso;Ascended Nomad's Nook;3d04ef1ab;1;30;3x3;;-19140;;;200;;;;13;;;;;;;;39370;;;;;;85;85;;;;;;;;;;45;0.05;0.05;;;10;;;;;;;;;;;;
-W_MultiAge_FELL25D1;Soakhaven Lodge;Soakhaven Lodge;39802c075;1;;5x4;;;;;260;;;;;;;120;;;;;;;200;200;200;200;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_FELL25A
+W_MultiAge_FELL25D1;Soakhaven Lodge;Soakhaven Lodge;39802c075;1;;5x4;;;;;260;;;;;;;120;;;;;;;200;200;200;200;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_FELL25A:20
 W_MultiAge_FELL25E1;Porto con Passerella - Livello 1;Raftway Harbour - Lv. 1;52d792817;1;;3x4;1.5;-107670;;;65;;;;;49;65;;;;;;;;;;;;78;78;78;78;78;78;78;78;;;;;;;;;;;;;;4;;;;;;;
-W_MultiAge_FELL25E2;Porto con Passerella - Livello 2;Raftway Harbour - Lv. 2;cdcaf64ab;1;;3x4;1.5;-107670;;;108;;;;;81;108;;;;;;;;;;;;130;130;130;130;130;130;130;130;;;;;;;;;;;;;M;8;;;;;;;upgrade_kit_ascended_BOWL22A
+W_MultiAge_FELL25E2;Porto con Passerella - Livello 2;Raftway Harbour - Lv. 2;cdcaf64ab;1;;3x4;1.5;-107670;;;108;;;;;81;108;;;;;;;;;;;;130;130;130;130;130;130;130;130;;;;;;;;;;;;;M;8;;;;;;;upgrade_kit_ascended_BOWL22A:12
 W_MultiAge_FELL26A1;;FELL26A;;;;5x5;2.5;530;;;6;;;;;;;;;;;;26250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A10;;FELL26A Gold;;1;;5x5;2.5;42670;;;;;;50;;;;;;;;;45940;;476;476;;;;;;;601;601;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL26BC
+W_MultiAge_FELL26A10;;FELL26A Gold;;1;;5x5;2.5;42670;;;;;;50;;;;;;;;;45940;;476;476;;;;;;;601;601;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL26BC:3
 W_MultiAge_FELL26A2;;FELL26A;;;;5x5;2.5;1070;;;12;;;;;;;;;;;;28440;;11;11;;;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A3;;FELL26A;;;;5x5;2.5;2130;;;23;;;;;;;;;;;;30630;;21;21;;;;;;;26;26;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A4;;FELL26A;;;;5x5;2.5;3200;;;35;;;;;;;;;;;;32810;;31;31;;;;;;;51;51;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A5;;FELL26A;;;;5x5;2.5;4270;;;58;;;;;;;;;;;;35000;;51;51;;;;;;;101;101;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A6;;FELL26A;;;;5x5;2.5;5330;;;86;;;;;;;;;;;;37190;;101;101;;;;;;;151;151;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A7;;FELL26A;;;;5x5;2.5;10670;;;173;;;;;;;;;;;;39380;;151;151;;;;;;;251;251;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A8;;FELL26A;;1;;5x5;2.5;21330;;;288;;;20;;;;;;;;;41560;;251;251;;;;;;;351;351;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL26BC|silver_upgrade_kit_FELL26A
-W_MultiAge_FELL26A9;;FELL26A Silver;;1;;5x5;2.5;32000;;;345;;;30;;;;;;;;;43750;;376;376;;;;;;;401;401;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_FELL26A|selection_kit_FELL26BC
+W_MultiAge_FELL26A8;;FELL26A;;1;;5x5;2.5;21330;;;288;;;20;;;;;;;;;41560;;251;251;;;;;;;351;351;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL26BC:1|silver_upgrade_kit_FELL26A:5
+W_MultiAge_FELL26A9;;FELL26A Silver;;1;;5x5;2.5;32000;;;345;;;30;;;;;;;;;43750;;376;376;;;;;;;401;401;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_FELL26A:5|selection_kit_FELL26BC:2
 W_MultiAge_FELL26B1;;FELL26B;;1;;4x2;;-32000;;;87;;;;;50;;;;;271430;;;;;;65;65;;;;;;;;50;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26B2;;FELL26B;;1;30;4x2;;-32000;;;288;;;;;100;;;;;271430;;;;;;140;140;;;;;;;;100;;;;20;0.05;;25000;;;;;;;;;;;;;;
 W_MultiAge_FELL26C1;;FELL26C;;1;;3x3;;-32000;;;;;;10;;150;;;;;;;10940;;106;106;;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26C2;;FELL26C;;1;30;3x3;;-32000;;;;;;30;;300;;;;;;;10940;;336;336;;;;;;;;300;;;25;;;;;0.05;;;10;;;;;;;;;;;;
 W_MultiAge_FELL26D1;;FELL26D;;1;;5x5;;-21330;;;460;;;25;;150;;;0.08;;;;32810;;460;460;460;460;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26E1;;FELL26E;;1;;4x4;;-53330;;;86;;;;;;;;;;488570;;;;142;142;;;102;;;;;;;;;;;;;;;;;;;;;1.5;;;;2.5;;;upgrade_kit_ascended_FELL24A
-W_MultiAge_FELL26E2;;FELL26E;;1;;4x4;;-53330;;;230;0.01;;;;;;;;;597140;;;;302;302;;;312;;;;;;;;;;;;;;;;;;;;;2.5;;;;5;;;upgrade_kit_ascended_FELL24A
+W_MultiAge_FELL26E1;;FELL26E;;1;;4x4;;-53330;;;86;;;;;;;;;;488570;;;;142;142;;;102;;;;;;;;;;;;;;;;;;;;;1.5;;;;2.5;;;upgrade_kit_ascended_FELL24A:1
+W_MultiAge_FELL26E2;;FELL26E;;1;;4x4;;-53330;;;230;0.01;;;;;;;;;597140;;;;302;302;;;312;;;;;;;;;;;;;;;;;;;;;2.5;;;;5;;;upgrade_kit_ascended_FELL24A:5
 W_MultiAge_FallBonus21a;Colture dorate - Liv. 1;Golden Crops - Lv. 1;6abb31616;;;6x4;2;12862;33235;;;;;;;;;;;;206652;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FallBonus21b;Colture dorate - Liv. 2;Golden Crops - Lv. 2;e8c9d5793;;;6x4;2;13095;34213;;;;;;;;;;;;229629;30947;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FallBonus21c;Colture dorate - Liv. 3;Golden Crops - Lv. 3;b6373c2eb;;;6x4;2;13437;35953;;;;;;;3;;;;;252703;33789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1365,31 +1365,31 @@ W_MultiAge_FallBonus21i;Colture dorate - Liv. 9;Golden Crops - Lv. 9;3f6e88ea2;1
 W_MultiAge_FallBonus22donkey;Recinto per asini;Donkey Enclosure;1f9d0f5fa;1;;2x2;1;;;;;;;1;;32;;;;;;;;;;13;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG2023A;Area del torneo - Attiva;Tourney Grounds - Active;491e3ac19;1;14;3x4;;;;;;;;;;;;;;;;;;;;;;;135;135;135;135;227;227;227;227;25;25;25;25;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG2023ADecoration;Area del torneo - Inattiva;Tourney Grounds - Inactive;5789d537b;;;3x4;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG24A1;Guglia della Vittoria di Wyverntide - Lv. 1;Wyverntide Spire of Victory - Lv. 1;60fa74647;1;;4x4;2;;;;22;;;;;;;;;200;;;;;56;56;56;56;34;34;34;34;21;21;21;21;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24B
-W_MultiAge_GBG24A2;Guglia della Vittoria di Wyverntide - Lv. 2;Wyverntide Spire of Victory - Lv. 2;108d037cb;1;;4x4;;;;;50;;;;;;;;;450;;;;;85;85;85;85;52;52;52;52;42;42;42;42;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24B
+W_MultiAge_GBG24A1;Guglia della Vittoria di Wyverntide - Lv. 1;Wyverntide Spire of Victory - Lv. 1;60fa74647;1;;4x4;2;;;;22;;;;;;;;;200;;;;;56;56;56;56;34;34;34;34;21;21;21;21;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24B:3
+W_MultiAge_GBG24A2;Guglia della Vittoria di Wyverntide - Lv. 2;Wyverntide Spire of Victory - Lv. 2;108d037cb;1;;4x4;;;;;50;;;;;;;;;450;;;;;85;85;85;85;52;52;52;52;42;42;42;42;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24B:10
 W_MultiAge_GBG24B1;Fucina di Wyverntide - Lv. 1;Wyverntide Smithy - Lv. 1;c49b9dd14;1;;3x3;1.5;;;;;;;;;;;;;;;45240;;;24;24;24;24;13;13;;;;;16;16;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG24B2;Fucina di Wyverntide - Lv. 2;Wyverntide Smithy - Lv. 2;a19dd396a;1;;3x3;;;;;;;;;;;;;;;;60320;;;30;30;30;30;19;19;;;;;24;24;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG24C1;Cittadella di Thunderdrake - Lv. 1;Thunderdrake Citadel - Lv. 1;a9e8802dc;1;;4x4;2;;;;40;;;;;92;;;;200;;;;;49;49;49;49;25;25;25;25;17;17;17;17;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24D|upgrade_kit_GBG24C
-W_MultiAge_GBG24C2;Cittadella di Thunderdrake - Lv. 2;Thunderdrake Citadel - Lv. 2;27c07e85a;1;;4x4;;;;;80;;;;;185;;;;450;;;;;71;71;71;71;42;42;42;42;34;34;34;34;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24D
+W_MultiAge_GBG24C1;Cittadella di Thunderdrake - Lv. 1;Thunderdrake Citadel - Lv. 1;a9e8802dc;1;;4x4;2;;;;40;;;;;92;;;;200;;;;;49;49;49;49;25;25;25;25;17;17;17;17;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24D:3|upgrade_kit_GBG24C:1
+W_MultiAge_GBG24C2;Cittadella di Thunderdrake - Lv. 2;Thunderdrake Citadel - Lv. 2;27c07e85a;1;;4x4;;;;;80;;;;;185;;;;450;;;;;71;71;71;71;42;42;42;42;34;34;34;34;;;;;;;;;;;;;;;;;;;;;selection_kit_GBG24D:10
 W_MultiAge_GBG24D1;Centro d'Assedio Thunderdrake - Lv. 1;Thunderdrake Siegeshop - Lv. 1;a05bef6db;1;;3x3;1.5;;;;20;;;10;;42;;;;50;;;;;24;24;24;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG24D2;Centro d'Assedio Thunderdrake - Lv. 2;Thunderdrake Siegeshop - Lv. 2;4e64df490;1;;3x3;;;;;30;;;20;;70;;;;100;;;;;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG24E1;Torre di Glimmdrake - Lv. 1;Glimmdrake Tower - Lv. 1;f8e4b8fbe;1;;4x4;2;;;;35;;;;;149;;;;200;;;;;63;63;63;63;27;27;27;27;43;43;43;43;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG24E
+W_MultiAge_GBG24E1;Torre di Glimmdrake - Lv. 1;Glimmdrake Tower - Lv. 1;f8e4b8fbe;1;;4x4;2;;;;35;;;;;149;;;;200;;;;;63;63;63;63;27;27;27;27;43;43;43;43;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG24E:1
 W_MultiAge_GBG24E2;Torre di Glimmdrake - Lv. 2;Glimmdrake Tower - Lv. 2;1105ba797;1;;4x4;;;;;70;;;;;298;;;;360;;;;;72;72;72;72;45;45;45;45;63;63;63;63;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG24F1;Cavalieri di Glimmdrake - Lv. 1;Glimmdrake Riders - Lv. 1;057214538;1;;3x4;1.5;;;;15;;;10;;112;;;;40;;;;;29;29;29;29;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG24F2;Cavalieri Glimmdrake - Lv. 2;Glimmdrake Riders - Lv. 2;8a210f4f7;1;;3x4;;;;;25;;;20;;148;;;;80;;;;;36;36;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG24G1;Fortezza di Lindworm - Lv. 1;Lindworm Keep - Lv. 1;c3b540b24;1;;4x4;2;;;;42;;;;;260;;;;200;;;;;64;64;64;64;30;30;30;30;50;50;50;50;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG24G
+W_MultiAge_GBG24G1;Fortezza di Lindworm - Lv. 1;Lindworm Keep - Lv. 1;c3b540b24;1;;4x4;2;;;;42;;;;;260;;;;200;;;;;64;64;64;64;30;30;30;30;50;50;50;50;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG24G:1
 W_MultiAge_GBG24G2;Fortezza di Lindworm - Lv. 2;Lindworm Keep - Lv. 2;36c4665cd;1;;4x4;;;;;63;;;;;370;;;;300;;;;;77;77;77;77;51;51;51;51;72;72;72;72;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG24H1;Area di Tiro Lindworm - Lv. 1;Lindworm Archery Range - Lv. 1;989e1d611;1;;4x2;1;;;;13;;;10;;37;;;;25;;;;;18;18;18;18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG24H2;Area di Tiro Lindworm - Lv. 2;Lindworm Archery Range - Lv. 2;7c6c20241;1;;4x2;;;;;16;;;20;;55;;;;50;;;;;21;21;21;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG25A1;Cittadella di Frontiera - Lv. 1;Frontier Citadel - Lv. 1;f6ef4a9da;1;;4x4;;;;;84;;;;;;;;;480;;;;;99;99;99;99;;;;;148;148;148;148;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG25A
+W_MultiAge_GBG25A1;Cittadella di Frontiera - Lv. 1;Frontier Citadel - Lv. 1;f6ef4a9da;1;;4x4;;;;;84;;;;;;;;;480;;;;;99;99;99;99;;;;;148;148;148;148;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG25A:1
 W_MultiAge_GBG25A2;Cittadella di Frontiera - Lv. 2;Frontier Citadel - Lv. 2;2840a902f;1;;4x4;;;;;127;;;;;;;;;800;;;;;142;142;142;142;;;;;210;210;210;210;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG25B1;Guardia di Frontiera - Lv. 1;Frontier Watch - Lv. 1;ded143c25;1;;2x2;1;;;;;;;;;28;52;;;;;;;;18;18;18;18;;;;;26;26;26;26;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG25B2;Guardia di Frontiera - Lv. 2;Frontier Watch - Lv. 2;fbef82cf5;1;;2x2;;;;;;;;;;37;69;;;;;;;;25;25;25;25;;;;;37;37;37;37;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG25C1;Forte Imperiale - Lv. 1;Fort Imperial - Lv. 1;c6dca934b;1;;5x5;;;;;131;;;;;;;;;750;;;;;133;133;133;133;;;;;197;197;197;197;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG25C
+W_MultiAge_GBG25C1;Forte Imperiale - Lv. 1;Fort Imperial - Lv. 1;c6dca934b;1;;5x5;;;;;131;;;;;;;;;750;;;;;133;133;133;133;;;;;197;197;197;197;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG25C:1
 W_MultiAge_GBG25C2;Forte Imperiale - Lv. 2;Fort Imperial - Lv. 2;00a0f297a;1;;5x5;;;;;197;;;;;;;;;1250;;;;;177;177;177;177;;;;;263;263;263;263;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG25D1;Fonderia Imperiale - Lv. 1;Imperial Foundry - Lv. 1;6cd0518ed;1;;3x2;1;;;;;;;;;;69;;;;;;;;36;36;36;36;;;;;52;52;52;52;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG25D2;Fonderia Imperiale - Lv. 2;Imperial Foundry - Lv. 2;7b1f24ea7;1;;3x2;;;;;;;;;;;103;;;;;;;;49;49;49;49;;;;;74;74;74;74;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG25E1;Ospedale di Somerset - Lv. 1;Somerset Hospital - Lv. 1;7d4b7a35f;1;;4x5;;;;;52;;;40;;;;;;1000;;;;;125;125;125;125;;;;;210;210;210;210;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG25E
+W_MultiAge_GBG25E1;Ospedale di Somerset - Lv. 1;Somerset Hospital - Lv. 1;7d4b7a35f;1;;4x5;;;;;52;;;40;;;;;;1000;;;;;125;125;125;125;;;;;210;210;210;210;;;;;;;;;;;;;;;;;;;;;upgrade_kit_GBG25E:1
 W_MultiAge_GBG25E2;Ospedale di Somerset - Lv. 2;Somerset Hospital - Lv. 2;994bfca4e;1;;4x5;;;;;79;;;;40;;;;;1300;;;;;161;161;161;161;;;;;263;263;263;263;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG25F1;Infermeria di Somerset - Lv. 1;Somerset Infirmary - Lv. 1;fc37a8776;1;;2x3;1;;;;;;;;;;52;;;;;;;;21;21;21;21;;;74;;47;47;47;47;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG25F2;Infermeria di Somerset - Lv. 2;Somerset Infirmary - Lv. 2;cbc2b6606;1;;2x3;;;;;;;;;;;78;;;;;;;;32;32;32;32;;;99;;63;63;63;63;;;;;;;;;;;;;;;;;;;;;
@@ -1415,21 +1415,21 @@ W_MultiAge_GBG26H1;Silo di Steelport - Liv. 1;Steelport Silo - Lv. 1;ea6aa6b78;1
 W_MultiAge_GBG26H2;Silo di Steelport - Liv. 2;Steelport Silo - Lv. 2;bfc3c5980;1;;3x4;;;;;;;;;;229;362;;;990;;;9405;;176;176;176;176;;;;;176;176;176;176;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBGWatchtower2023A;Torre dei Campioni - Liv. 1;Tower of Champions - Lv. 1;f7f55d3b6;1;;4x4;;;;;18;;;;;;;;;100;;;;;;;;;54;54;54;54;113;113;113;113;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBGWatchtower2023B;Torre dei Campioni - Liv. 2;Tower of Champions - Lv. 2;167a0c83c;1;;4x4;;;;;40;;;;;;;;;400;;;;;;;;;86;86;86;86;169;169;169;169;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBGWatchtower2023C1;Torre Reale dei Campioni - Lv. 1;Royal Tower of Champions - Lv. 1;a1770f95c;1;;4x4;;;;;18;;;;;;;;;100;;;;;;;;;76;76;76;76;41;41;41;41;;;;;;;;;;;;;;;;;;;;;building_guild_arena
-W_MultiAge_GBGWatchtower2023C2;Torre Reale dei Campioni - Lv. 2;Royal Tower of Champions - Lv. 2;36590d3c2;1;;4x4;;;;;40;;;;;;;;;300;;;;;;;;;110;110;110;110;84;84;84;84;;;;;;;;;;;;;;;;;;;;;building_guild_arena
+W_MultiAge_GBGWatchtower2023C1;Torre Reale dei Campioni - Lv. 1;Royal Tower of Champions - Lv. 1;a1770f95c;1;;4x4;;;;;18;;;;;;;;;100;;;;;;;;;76;76;76;76;41;41;41;41;;;;;;;;;;;;;;;;;;;;;building_guild_arena:3
+W_MultiAge_GBGWatchtower2023C2;Torre Reale dei Campioni - Lv. 2;Royal Tower of Champions - Lv. 2;36590d3c2;1;;4x4;;;;;40;;;;;;;;;300;;;;;;;;;110;110;110;110;84;84;84;84;;;;;;;;;;;;;;;;;;;;;building_guild_arena:10
 W_MultiAge_GEX24A1Decoration;Tempio Antico - Non attivo;Ancient Temple - Inactive;fc50ca3a6;;;3x4;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GEX24A2TEMP;Tempio Antico - Attivo;Ancient Temple - Active;61353bbb7;1;28;3x4;;;;;;;;;;;;;0.2;;;;;;100;100;100;100;150;150;150;150;;;;;50;50;50;50;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23A1;Neo Colosso - Lv. 1;Neo Colossus - Lv. 1;a6f64c092;;;4x4;2;;;;9;;;;;56;;;;;;;;;;;;;14;14;14;14;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GR23A10;Neo Colosso - Lv. 10;Neo Colossus - Lv. 10;264f2106d;1;;4x4;;;;;32;;;;;186;;;;320;;;;;46;46;46;46;46;46;46;46;55;55;55;55;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way
-W_MultiAge_GR23A11;Neo Colosso - Lv. 11;Neo Colossus - Lv. 11;c225373ba;1;;4x4;;;;;37;;;;;223;;;;380;;;;;64;64;64;64;60;60;60;60;74;74;74;74;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way
+W_MultiAge_GR23A10;Neo Colosso - Lv. 10;Neo Colossus - Lv. 10;264f2106d;1;;4x4;;;;;32;;;;;186;;;;320;;;;;46;46;46;46;46;46;46;46;55;55;55;55;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way:10
+W_MultiAge_GR23A11;Neo Colosso - Lv. 11;Neo Colossus - Lv. 11;c225373ba;1;;4x4;;;;;37;;;;;223;;;;380;;;;;64;64;64;64;60;60;60;60;74;74;74;74;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way:30
 W_MultiAge_GR23A2;Neo Colosso - Lv. 2;Neo Colossus - Lv. 2;abf49cba1;;;4x4;2;;;;9;;;;;56;;;;;;;;;;;;;14;14;14;14;17;17;17;17;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23A3;Neo Colosso - Lv. 3;Neo Colossus - Lv. 3;5dc5ff101;;;4x4;2;;;;11;;;;;56;;;;;;;;;;;;;21;21;21;21;17;17;17;17;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23A4;Neo Colosso - Lv. 4;Neo Colossus - Lv. 4;c6265c729;;;4x4;2;;;;11;;;;;75;;;;;;;;;;;;;21;21;21;21;25;25;25;25;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23A5;Neo Colosso - Lv. 5;Neo Colossus - Lv. 5;77503d5d8;;;4x4;2;;;;11;;;;;75;;;;;;;;;29;29;29;29;21;21;21;21;25;25;25;25;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23A6;Neo Colosso - Lv. 6;Neo Colossus - Lv. 6;fbdfaccd2;;;4x4;2;;;;11;;;;;75;;;;;;;;;35;35;35;35;21;21;21;21;25;25;25;25;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23A7;Neo Colosso - Lv. 7;Neo Colossus - Lv. 7;46fcaec58;;;4x4;2;;;;17;;;;;93;;;;;;;;;35;35;35;35;21;21;21;21;25;25;25;25;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GR23A8;Neo Colosso - Lv. 8;Neo Colossus - Lv. 8;485b75bfc;1;;4x4;2;;;;23;;;;;111;;;;;;;;;40;40;40;40;27;27;27;27;34;34;34;34;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way
-W_MultiAge_GR23A9;Neo Colosso - Lv. 9;Neo Colossus - Lv. 9;656ecb7b4;1;;4x4;2;;;;25;;;;;149;;;;160;;;;;43;43;43;43;35;35;35;35;43;43;43;43;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way
+W_MultiAge_GR23A8;Neo Colosso - Lv. 8;Neo Colossus - Lv. 8;485b75bfc;1;;4x4;2;;;;23;;;;;111;;;;;;;;;40;40;40;40;27;27;27;27;34;34;34;34;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way:2
+W_MultiAge_GR23A9;Neo Colosso - Lv. 9;Neo Colossus - Lv. 9;656ecb7b4;1;;4x4;2;;;;25;;;;;149;;;;160;;;;;43;43;43;43;35;35;35;35;43;43;43;43;;;;;;;;;;;;;;;;;;;;;selection_kit_neo_marble_gate_way:4
 W_MultiAge_GR23B1;Neo Piazza dei Vincitori - Lv. 1;Neo Winners' Plaza - Lv. 1;c2a1114e0;1;;3x3;1.5;;;;8;;;;;42;;;;;;;;;14;14;19;19;14;14;19;19;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23B2;Neo Piazza dei Vincitori - Lv. 2;Neo Winners' Plaza - Lv. 2;cb596fb68;1;;3x3;1.5;;;;17;;;;;73;;;;75;;;;;21;21;23;23;21;21;23;23;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR23C1;Neo Portale di Marmo - Lv. 1;Neo Marble Gate Way - Lv. 1;5f6dae44f;1;;3x2;;;;;12;;;;;;;;;;;;;;11;11;11;11;26;26;;;;;32;32;;;;;;;;;;;;;;;;;;;;;
@@ -1449,17 +1449,17 @@ W_MultiAge_GR25A2;Neo Piazza degli Scacchi - Lv. 2;Neo Checkmate Square - Lv. 2;
 W_MultiAge_GR25B1;Neo Voliera - Lv. 1;Neo Aviary - Lv. 1;e65b55152;1;;2x4;1;;;;18;;;;14;;;;;;;;;;36;36;36;36;;;;;63;63;63;63;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25B2;Neo Voliera - Lv. 2;Neo Aviary - Lv. 2;bbc4810ff;1;;2x4;;;;;23;;;;28;;;;;;;;;;42;42;42;42;;;;;74;74;74;74;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25C1;Neo Bazar - Livello 1;Neo Bazaar - Lv. 1;fee2349c0;;;5x4;2;;;;26;;;;;46;;;;;;;;;36;36;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GR25C10a;Neo Solara Emporio;Neo Solara Emporium;7f2dc72f4;1;;5x4;;;;;184;;;60;;324;;;;800;;;;;319;319;319;319;203;203;203;203;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D
-W_MultiAge_GR25C10b;Neo Lunara Emporio;Neo Lunara Emporium;c85594d51;1;;5x4;;;;;184;;;;60;324;;;;;;;;;319;319;319;319;;;;;421;421;421;421;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D
+W_MultiAge_GR25C10a;Neo Solara Emporio;Neo Solara Emporium;7f2dc72f4;1;;5x4;;;;;184;;;60;;324;;;;800;;;;;319;319;319;319;203;203;203;203;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D:30
+W_MultiAge_GR25C10b;Neo Lunara Emporio;Neo Lunara Emporium;c85594d51;1;;5x4;;;;;184;;;;60;324;;;;;;;;;319;319;319;319;;;;;421;421;421;421;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D:30
 W_MultiAge_GR25C2;Neo Bazar - Livello 2;Neo Bazaar - Lv. 2;7dcc3a14c;;;5x4;2;;;;40;;;;;70;;;;;;;;;53;53;53;53;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25C3;Neo Bazar - Livello 3;Neo Bazaar - Lv. 3;e1ab1d075;;;5x4;2;;;;52;;;;;92;;;;;;;;;71;71;71;71;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25C4;Neo Bazar - Livello 4;Neo Bazaar - Lv. 4;3f3e45758;;;5x4;2;;;;66;;;;;115;;;;;;;;;88;88;88;88;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25C5;Neo Bazar - Livello 5;Neo Bazaar - Lv. 5;ae4f5e0ab;;;5x4;2;;;;79;;;10;;139;;;;;;;;;106;106;106;106;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25C6;Neo Bazar - Livello 6;Neo Bazaar - Lv. 6;e17fc4af1;;;5x4;2;;;;92;;;15;;162;;;;;;;;;125;125;125;125;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25C7;Neo Bazar - Livello 7;Neo Bazaar - Lv. 7;f1acacd23;;;5x4;2;;;;105;;;20;;185;;;;;;;;;142;142;142;142;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GR25C8;Neo Bazar - Livello 8;Neo Bazaar - Lv. 8;796b8e164;1;;5x4;2;;;;131;;;40;;231;;;;;;;;;177;177;177;177;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D
-W_MultiAge_GR25C9a;Neo Solara Bazar;Neo Solara Bazaar;cc35108b1;1;;5x4;2;;;;158;;;40;;278;;;;400;;;;;284;284;284;284;128;128;128;128;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D
-W_MultiAge_GR25C9b;Neo Lunara Bazar;Neo Lunara Bazaar;cb4079dcb;1;;5x4;2;;;;158;;;;40;278;;;;;;;;;284;284;284;284;;;;;263;263;263;263;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D
+W_MultiAge_GR25C8;Neo Bazar - Livello 8;Neo Bazaar - Lv. 8;796b8e164;1;;5x4;2;;;;131;;;40;;231;;;;;;;;;177;177;177;177;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D:10
+W_MultiAge_GR25C9a;Neo Solara Bazar;Neo Solara Bazaar;cc35108b1;1;;5x4;2;;;;158;;;40;;278;;;;400;;;;;284;284;284;284;128;128;128;128;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D:20
+W_MultiAge_GR25C9b;Neo Lunara Bazar;Neo Lunara Bazaar;cb4079dcb;1;;5x4;2;;;;158;;;;40;278;;;;;;;;;284;284;284;284;;;;;263;263;263;263;;;;;;;;;;;;;;;;;;;;;selection_kit_GR25D:20
 W_MultiAge_GR25D1;Boutique Neo Fashion - Livello 1;Neo Fashion Boutique - Lv. 1;cca18ce43;1;;2x2;;;;;26;;;;;46;;;;;;;;;57;57;49;49;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25D2;Boutique Neo Fashion - Livello 2;Neo Fashion Boutique - Lv. 2;c280cb2f6;1;;2x2;;;;;31;;;;;55;;;;;;;;;64;64;57;57;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GR25E1;Neo Chiosco - Lv. 1;Neo Kiosk - Lv. 1;1b9f8741f;1;;4x2;1;12660;;;31;;;;;;;;;;;;;;36;36;36;36;;;;;52;52;52;52;;;;;;;;;;;;;;;;;;;;;
@@ -1510,24 +1510,24 @@ W_MultiAge_HAL19A7;Manicomio abbandonato - Liv. 7;Abandoned Asylum - Lv. 7;R_Mul
 W_MultiAge_HAL19A8;Manicomio abbandonato - Liv. 8;Abandoned Asylum - Lv. 8;R_MultiAge_HalloweenBonus19h-9b6cdfd26;;;5x5;2.5;1;-2910;;6;;;;;20;;;;;345700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL19A9;Manicomio abbandonato - Liv. 9;Abandoned Asylum - Lv. 9;R_MultiAge_HalloweenBonus19i-bb687197d;1;;5x5;2.5;1;-2910;;11;;;;;20;;;;;357500;;;;25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23A1;Laboratorio delle mostruosità - Liv. 1;Laboratory of Monstrosities - Lv. 1;61532a702;;;4x5;2;;;;;;;;;;;;;;;;2002;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL23A10;Laboratorio delle mostruosità tonante;Thundering Laboratory of Monstrosities;98f224c15;1;;4x5;2;;;;27;;;;;33;77;;;90;;;20000;;41;21;42;22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_HAL23EF
+W_MultiAge_HAL23A10;Laboratorio delle mostruosità tonante;Thundering Laboratory of Monstrosities;98f224c15;1;;4x5;2;;;;27;;;;;33;77;;;90;;;20000;;41;21;42;22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_HAL23EF:3
 W_MultiAge_HAL23A2;Laboratorio delle mostruosità - Liv. 2;Laboratory of Monstrosities - Lv. 2;849b6e3b8;;;4x5;2;;;;;;;;;;7;;;;;;4001;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23A3;Laboratorio delle mostruosità - Liv. 3;Laboratory of Monstrosities - Lv. 3;e742e5010;;;4x5;2;;;;3;;;;;;14;;;;;;6000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23A4;Laboratorio delle mostruosità - Liv. 4;Laboratory of Monstrosities - Lv. 4;94d063443;;;4x5;2;;;;6;;;;;;21;;;;;;8001;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23A5;Laboratorio delle mostruosità - Liv. 5;Laboratory of Monstrosities - Lv. 5;432f8bb90;;;4x5;2;;;;9;;;;;;28;;;;;;10000;;;3;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23A6;Laboratorio delle mostruosità - Liv. 6;Laboratory of Monstrosities - Lv. 6;7ea6c106b;;;4x5;2;;;;12;;;;;;35;;;;;;11999;;;6;8;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23A7;Laboratorio delle mostruosità - Liv. 7;Laboratory of Monstrosities - Lv. 7;c0f2b9314;;;4x5;2;;;;15;;;;;;42;;;;;;14000;;15;9;16;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL23A8;Laboratorio delle mostruosità - Liv. 8;Laboratory of Monstrosities - Lv. 8;deb95188a;1;;4x5;2;;;;23;;;;;27;63;;;50;;;16002;;31;17;32;18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_HAL23EF|silver_upgrade_kit_HAL23A
-W_MultiAge_HAL23A9;Laboratorio delle mostruosità sinistro;Sinister Laboratory of Monstrosities;209de3dba;1;;4x5;2;;;;25;;;;;30;70;;;70;;;18001;;36;19;37;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL23A|selection_kit_HAL23EF
+W_MultiAge_HAL23A8;Laboratorio delle mostruosità - Liv. 8;Laboratory of Monstrosities - Lv. 8;deb95188a;1;;4x5;2;;;;23;;;;;27;63;;;50;;;16002;;31;17;32;18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_HAL23EF:1|silver_upgrade_kit_HAL23A:5
+W_MultiAge_HAL23A9;Laboratorio delle mostruosità sinistro;Sinister Laboratory of Monstrosities;209de3dba;1;;4x5;2;;;;25;;;;;30;70;;;70;;;18001;;36;19;37;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL23A:5|selection_kit_HAL23EF:2
 W_MultiAge_HAL23B1;Torre magnetica della Fonte elettrica - Liv. 1;Sparkborn Stormspire - Lv. 1;13ef5edd8;;;1x1;;-860;-2340;;1.2;;;;;1;;;;;;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23B2;Torre magnetica della Fonte elettrica - Liv. 2;Sparkborn Stormspire - Lv. 2;1d75bcdf3;1;;1x1;;-1224;-3090;;1.2;;;;;1;;;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL23B3;Torre magnetica del Sovraccarico elettrico;Sparksurge Stormspire;afab83a0e;1;;1x1;;-1585;-3840;;1.2;;;;;1;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_limited_daunting_tower_active
-W_MultiAge_HAL23B4;Torre magnetica della Fucina elettrica;Sparkforge Stormspire;36c54217a;1;;1x1;;-1949;-4640;;1.2;;;;;1;;;;;;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_limited_daunting_tower_active
+W_MultiAge_HAL23B3;Torre magnetica del Sovraccarico elettrico;Sparksurge Stormspire;afab83a0e;1;;1x1;;-1585;-3840;;1.2;;;;;1;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_limited_daunting_tower_active:1
+W_MultiAge_HAL23B4;Torre magnetica della Fucina elettrica;Sparkforge Stormspire;36c54217a;1;;1x1;;-1949;-4640;;1.2;;;;;1;;;;;;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_limited_daunting_tower_active:2
 W_MultiAge_HAL23C1;Torre degli Orrori silenziosi;Tower of Whispering Horrors;ca51b813c;1;;2x3;1;;20860;;5;;;;;;25;;;;;;;;12;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23D1;Boutique degli orrori Monster Wares;Monster Wares' Terrors Boutique;67ccdbb9a;1;;3x3;;11868;;;10;;;;;14;;;;;;;;;;;15;22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23E1;Elisir ectoplasmatici del Bar di Batsy;Batsy Bar's Ectoplasmic Elixirs;09b8bdc41;1;;2x2;1;-7797;-27750;;;;;;;25;;;;;;;;;;10;19;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL23F1;Scatola da incubo dell'Allevamento di mostri;Monster Ranch's Nightmare Box;51bcc2206;1;;2x1;;-5846;-9250;;3;;;;;;;;;;;;;;6;4;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;2;
-W_MultiAge_HAL23G1;Carrozza fantasma dei Destrieri spettrali;Spectral Steeds' Phantom Carriage;e10b72067;1;;1x3;;;;;12;;;;;;18;;;;;;;;15;18;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL23A|selection_kit_HAL23A|silver_upgrade_kit_HAL23A
+W_MultiAge_HAL23G1;Carrozza fantasma dei Destrieri spettrali;Spectral Steeds' Phantom Carriage;e10b72067;1;;1x3;;;;;12;;;;;;18;;;;;;;;15;18;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL23A:20|selection_kit_HAL23A:20|silver_upgrade_kit_HAL23A:20
 W_MultiAge_HAL24A1;Giostra Brivido Inquietante - Lv. 1;Eerie Thrill Coaster - Lv. 1;e01803b0c;;;7x4;2;4575;-5490;;10;;;;;;;;;;;4020;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A10;Giostra Incubo Inquietante;Eerie Nightmare Coaster;f23d675f9;1;;7x4;2;30554;-36664;;75;;;8;;100;125;;;;;274100;;;102;102;;;30;30;;;;;;;;;;;;;;;;;;;M;;;;3;;;;
 W_MultiAge_HAL24A2;Giostra Brivido Inquietante - Lv. 2;Eerie Thrill Coaster - Lv. 2;cdbc7b448;;;7x4;2;6100;-7320;;12;;;;;;;;;;;8042;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1536,18 +1536,18 @@ W_MultiAge_HAL24A4;Giostra Brivido Inquietante - Lv. 4;Eerie Thrill Coaster - Lv
 W_MultiAge_HAL24A5;Giostra Brivido Inquietante - Lv. 5;Eerie Thrill Coaster - Lv. 5;8031c599c;;;7x4;2;15277;-18332;;20;;;;;;;;;;;64324;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A6;Giostra Brivido Inquietante - Lv. 6;Eerie Thrill Coaster - Lv. 6;bc475db26;;;7x4;2;18326;-21991;;25;;;;;;;;;;;128650;;;11;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A7;Giostra Brivido Inquietante - Lv. 7;Eerie Thrill Coaster - Lv. 7;510262052;;;7x4;2;21377;-25652;;30;;;;;;;;;;;257300;;;32;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL24A8;Giostra Brivido Inquietante - Lv. 8;Eerie Thrill Coaster - Lv. 8;fc46f347f;1;;7x4;2;24454;-29344;;35;;;1;;50;75;;;;;274080;;;52;52;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;silver_upgrade_kit_HAL24A
-W_MultiAge_HAL24A9;Giostra Terrore Inquietante;Eerie Terror Coaster;6b14607bf;1;;7x4;2;27503;-33003;;50;;;4;;75;100;;;;;274080;;;77;77;;;15;15;;;;;;;;;;;;;;;;;;;;;;;2;;;;golden_upgrade_kit_HAL24A
+W_MultiAge_HAL24A8;Giostra Brivido Inquietante - Lv. 8;Eerie Thrill Coaster - Lv. 8;fc46f347f;1;;7x4;2;24454;-29344;;35;;;1;;50;75;;;;;274080;;;52;52;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;silver_upgrade_kit_HAL24A:5
+W_MultiAge_HAL24A9;Giostra Terrore Inquietante;Eerie Terror Coaster;6b14607bf;1;;7x4;2;27503;-33003;;50;;;4;;75;100;;;;;274080;;;77;77;;;15;15;;;;;;;;;;;;;;;;;;;;;;;2;;;;golden_upgrade_kit_HAL24A:5
 W_MultiAge_HAL24B1;Cimitero di Nightshade;Nightshade Cemetery;d992381bc;1;;5x2;1;3260;-3361;;30;;;2;;10;;;;;;;2720;;;;76;76;;;;;;15;;;;;;;;;;;;;;;;;;;;3;;;
 W_MultiAge_HAL24C1;Il rifugio di Yaga;Yaga's Roost;a5872445c;1;;5x3;1.5;4350;-3361;;75;;;4;;25;;;;;;;;;76;76;;;20;;;;;;;;;;;;;;;;;;50;;;;;;;;3;;
-W_MultiAge_HAL24D1;La corsa della Birra Stregata;Witch’s Brew Ride;003e5fca2;1;;4x5;;4350;-3361;;120;;;;;60;;10;;;;274100;;;151;151;;;;;;;;;;;25;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL24A|selection_kit_HAL24A|silver_upgrade_kit_HAL24A
+W_MultiAge_HAL24D1;La corsa della Birra Stregata;Witch’s Brew Ride;003e5fca2;1;;4x5;;4350;-3361;;120;;;;;60;;10;;;;274100;;;151;151;;;;;;;;;;;25;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL24A:5|selection_kit_HAL24A:30|silver_upgrade_kit_HAL24A:5
 W_MultiAge_HAL24E1;Emporio degli Elisir Incantati;Enchanted Elixirs Emporium;309e5fa49;1;;4x4;;31800;-15900;;30;;;;;60;;10;;;;;3260;;;;101;81;;25;;;;;;;;;;;;;;;;;50;;;6;;;;;;;
 W_MultiAge_HAL24F1;Sinistra Ruota di Joker;Joker’s Sinister Spin;97263939d;1;;2x5;;1070;-1600;;10;;;;;10;15;;;;;27000;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24F2;Ruota Infestata di Joker;Joker’s Haunted Spin;46c5f8d74;1;;2x5;;1070;-1600;;15;;;;;15;30;;;;;32360;;;25;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24F3;Ruota Malevole di Joker;Joker’s Malevolent Spin;458c16077;1;;2x5;;1070;-1600;;25;;;;;25;45;;;;;43180;;;30;;;;8;;;;5;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25A1;Fiera Spettrale Boo'loon - Lv. 1;Boo’loon Spectral Fair - Lv. 1;c7f45292d;;;5x5;2.5;;5320;;1;;;;;;;;;;10790;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL25A10;Carnevale Mascherato Boo'loon;Boo’loon Masquerade Carnival;73f07250f;1;;5x5;2.5;;79750;;200;;10.5;12.5;7.5;;;;;;431450;;;;232;232;;;377;377;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL25A|selection_kit_HAL25BC
-W_MultiAge_HAL25A11;Grande Gala Boo'loon;Boo’loon Grand Gala;30825120f;1;;5x5;2.5;;95700;;250;;14;17.5;9;;;;;;539310;;;;282;282;;;402;402;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_HAL25BC
+W_MultiAge_HAL25A10;Carnevale Mascherato Boo'loon;Boo’loon Masquerade Carnival;73f07250f;1;;5x5;2.5;;79750;;200;;10.5;12.5;7.5;;;;;;431450;;;;232;232;;;377;377;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL25A:5|selection_kit_HAL25BC:2
+W_MultiAge_HAL25A11;Grande Gala Boo'loon;Boo’loon Grand Gala;30825120f;1;;5x5;2.5;;95700;;250;;14;17.5;9;;;;;;539310;;;;282;282;;;402;402;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_HAL25BC:3
 W_MultiAge_HAL25A2;Fiera Spettrale Boo'loon - Lv. 2;Boo’loon Spectral Fair - Lv. 2;ebdeb1f4d;;;5x5;2.5;;10630;;5;;;;;;;;;;21570;;;;20;20;;;25;25;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25A3;Fiera Spettrale Boo'loon - Lv. 3;Boo’loon Spectral Fair - Lv. 3;e5ee01db4;;;5x5;2.5;;15950;;10;;;;;;;;;;32360;;;;41;41;;;51;51;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25A4;Fiera Spettrale Boo'loon - Lv. 4;Boo’loon Spectral Fair - Lv. 4;b88901808;;;5x5;2.5;;21270;;20;;;;;;;;;;48540;;;;61;61;;;101;101;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1555,23 +1555,23 @@ W_MultiAge_HAL25A5;Fiera Spettrale Boo'loon - Lv. 5;Boo’loon Spectral Fair - 
 W_MultiAge_HAL25A6;Fiera Spettrale Boo'loon - Lv. 6;Boo’loon Spectral Fair - Lv. 6;b920451a1;;;5x5;2.5;;31900;;40;;;;;;;;;;86290;;;;101;101;;;201;201;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25A7;Fiera Spettrale Boo'loon - Lv. 7;Boo’loon Spectral Fair - Lv. 7;9b5ae8d52;;;5x5;2.5;;37210;;50;;;;;;;;;;107860;;;;122;122;;;252;252;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25A8;Fiera Spettrale Boo'loon - Lv. 8;Boo’loon Spectral Fair - Lv. 8;38a23fc1a;;;5x5;2.5;;47850;;75;;;;;;;;;;215720;;;;152;152;;;302;302;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL25A9;Fiera Spettrale Boo'loon - Lv. 9;Boo’loon Spectral Fair - Lv. 9;84df875a9;1;;5x5;2.5;;53160;;150;;7;7.5;6;;;;;;323590;;;;192;192;;;352;352;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_HAL25BC|silver_upgrade_kit_HAL25A
+W_MultiAge_HAL25A9;Fiera Spettrale Boo'loon - Lv. 9;Boo’loon Spectral Fair - Lv. 9;84df875a9;1;;5x5;2.5;;53160;;150;;7;7.5;6;;;;;;323590;;;;192;192;;;352;352;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_HAL25BC:1|silver_upgrade_kit_HAL25A:5
 W_MultiAge_HAL25B1;Frullati Spettrali;Spooktastic Shakes;33ca6a362;1;;2x2;;-8510;;;;;;;;;10;;;15;;52800;;;;;;;;;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25B2;Frullati Spettrali Ascesi;Ascended Spooktastic Shakes;aca5fb64a;1;30;2x2;;-8510;;;;;;;;;15;;;20;;79200;;;;;;;;;55;55;;;;;;;15;15;0.02;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25C1;Hamburger Bestiali;Beastly Burgers;2704a851e;1;;3x3;;-12760;;;30;;;5;;;;;;;107860;;;;;;;;;;;;;;50;50;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25C2;Hamburger Bestiali Ascesi;Ascended Beastly Burgers;3852c2787;1;30;3x3;;-12760;;;60;;;5;;;;;;;134830;;;;;;;;;;;;;;150;150;25;;;;;0.03;;;;;;;;;;;;;;;
-W_MultiAge_HAL25D1;Conservatorio Nightshade;Nightshade Conservatory;c93317028;1;;5x4;;;;;200;;;;;100;100;50;;;;;;;110;110;110;110;125;125;125;125;;;;;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_HAL25A
+W_MultiAge_HAL25D1;Conservatorio Nightshade;Nightshade Conservatory;c93317028;1;;5x4;;;;;200;;;;;100;100;50;;;;;;;110;110;110;110;125;125;125;125;;;;;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_HAL25A:20
 W_MultiAge_HAL25E1;Ossario Rave Party - Lv. 1;Rattlebones Raveyard - Lv. 1;310b8e359;1;;3x4;;-42540;;;65;;;;;20;20;5;;;;;;;50;50;50;50;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL25E2;Ossario Rave Party - Lv. 2;Rattlebones Raveyard - Lv. 2;1ab7c4d32;1;;3x4;;-42540;;;200;;;;;60;60;20;;;;;;;100;100;100;100;185;185;185;185;185;185;185;185;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_HAL15A|upgrade_kit_ascended_HAL17A
+W_MultiAge_HAL25E2;Ossario Rave Party - Lv. 2;Rattlebones Raveyard - Lv. 2;1ab7c4d32;1;;3x4;;-42540;;;200;;;;;60;60;20;;;;;;;100;100;100;100;185;185;185;185;185;185;185;185;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_HAL15A:4|upgrade_kit_ascended_HAL17A:4
 W_MultiAge_HERO24A1;Santuario del Boschetto Asceso - Lv.1;Ascendant Grove Sanctuary - Lv.1;5323c5976;;;4x6;2;;;;;;;;;;;;;;188940;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A2;Santuario del Boschetto Asceso - Lv.2;Ascendant Grove Sanctuary - Lv.2;181a4f221;;;4x6;2;;;;;;;;;;;;;;208840;;4341;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A3;Santuario del Boschetto Asceso - Lv.3;Ascendant Grove Sanctuary - Lv.3;668832549;;;4x6;2;;;;;;;;;;5;;;;228740;;4560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A4;Santuario del Boschetto Asceso - Lv.4;Ascendant Grove Sanctuary - Lv.4;150680950;;;4x6;2;;;;;;;;;5;10;;;;248640;;4776;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A5;Santuario del Boschetto Asceso - Lv.5;Ascendant Grove Sanctuary - Lv.5;f8fd5a299;;;4x6;2;;;;2;;;;;10;15;;;;268540;;4992;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A6;Santuario del Boschetto Asceso - Lv.6;Ascendant Grove Sanctuary - Lv.6;62b06aeab;;;4x6;2;;;;4;;;;;15;20;;;;288460;;5211;;;;;;;;;;5;;;32;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HERO24A7;Santuario del Boschetto Asceso - Lv.7;Ascendant Grove Sanctuary - Lv.7;663c3b5b0;1;;4x6;2;;;;20;;;;;50;40;;;;308360;;6078;;52;;;31;;;;;45;;;60;;;;;;;;;;;;;;;;;;;;;silver_upgrade_kit_HERO24A
-W_MultiAge_HERO24A8;Santuario del Boschetto Crescente;Surging Grove Sanctuary;afb83691c;1;;4x6;2;;;;25;;;;;70;50;;;;328260;;6297;;62;;;41;;;;;60;;;70;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HERO24A
-W_MultiAge_HERO24A9;Santuario del Boschetto Apex;Apex Grove Sanctuary;f671461d0;1;;4x6;2;;;;30;;;;;80;60;;;;348160;;8682;;72;;;52;;;;;80;;;80;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_HERO24E1
+W_MultiAge_HERO24A7;Santuario del Boschetto Asceso - Lv.7;Ascendant Grove Sanctuary - Lv.7;663c3b5b0;1;;4x6;2;;;;20;;;;;50;40;;;;308360;;6078;;52;;;31;;;;;45;;;60;;;;;;;;;;;;;;;;;;;;;silver_upgrade_kit_HERO24A:5
+W_MultiAge_HERO24A8;Santuario del Boschetto Crescente;Surging Grove Sanctuary;afb83691c;1;;4x6;2;;;;25;;;;;70;50;;;;328260;;6297;;62;;;41;;;;;60;;;70;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HERO24A:5
+W_MultiAge_HERO24A9;Santuario del Boschetto Apex;Apex Grove Sanctuary;f671461d0;1;;4x6;2;;;;30;;;;;80;60;;;;348160;;8682;;72;;;52;;;;;80;;;80;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_HERO24E1:3
 W_MultiAge_HERO24B1REG;Giardino dei Lillà - Lv.1;Lilac Garden - Lv.1;W_MultiAge_HERO24B1-d34927e68;1;;4x2;;-22700;;;8;;;;;10;;;;;210720;;;;3;3;;;;;;;;;10;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24B2TEMP;Giardino dei lillà - Lv.2 - Attivo;Lilac Garden - Lv.2 - Active;W_MultiAge_HERO24B2-664441fa7;1;10;4x2;;-22700;;;12;;;;;20;;;;;234140;;;;12;12;;;;;;;;;20;;20;20;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24C1REG;Fontana Eterea - Lv.1;Ethereal Fountain - Lv.1;W_MultiAge_HERO24C1-4ac2200a9;1;;4x2;;-22700;;;;;;;;;;;;10;210720;;;;;;;6;;;;;;;;20;;;;;;;;;;;;;;;;;;;;;
@@ -1579,18 +1579,18 @@ W_MultiAge_HERO24C2TEMP;Fontana Eterea - Lv.2 - Attiva;Ethereal Fountain - Lv.2 
 W_MultiAge_HERO24D1REG;Padiglione Fromage - Lv.1;Fromage Pavilion - Lv.1;W_MultiAge_HERO24D1-43b6f8a87;1;;4x2;;-22700;;;;;;;;15;;;;;210720;;;;5;4;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24D2TEMP;Padiglione Fromage - Lv.2 - Attivo;Fromage Pavilion - Lv.2 - Active;W_MultiAge_HERO24D2-97f6b9415;1;10;4x2;;-22700;;;;;;;;25;;;;;234140;;;;8;10;;;30;;;;;;;;10;;10;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24E1;Porta del Bastione;Bastion Gatehouse;3909971c8;1;;3x2;1;-28380;;;10;;;;;10;20;;;;;;6040;;25;;;25;;;;;;45;;35;;;;;;;;;;;;;;0.5;0.75;1.25;;;;;
-W_MultiAge_HERO24F1;Emporio del Tessitore di seta;Silk Weaver's Emporium;1e92e992b;1;;3x3;;-22700;;;12;;;;;20;;;;;;;12060;;20;;;25;65;35;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_HERO24H|selection_kit_HERO24H|silver_selection_kit_HERO24H
-W_MultiAge_HERO24G1;Rifugio scommessa nel bosco;Woodland Wager Retreat;166c3cb96;1;;2x2;;;;;;;;;;25;;;;;;;13280;;50;20;;60;;;;;;;;;25;;;;;;;;;;;;;5;;;;;;;golden_upgrade_kit_HERO24A|selection_kit_HERO24A|silver_upgrade_kit_HERO24A
+W_MultiAge_HERO24F1;Emporio del Tessitore di seta;Silk Weaver's Emporium;1e92e992b;1;;3x3;;-22700;;;12;;;;;20;;;;;;;12060;;20;;;25;65;35;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_HERO24H:2|selection_kit_HERO24H:5|silver_selection_kit_HERO24H:4
+W_MultiAge_HERO24G1;Rifugio scommessa nel bosco;Woodland Wager Retreat;166c3cb96;1;;2x2;;;;;;;;;;25;;;;;;;13280;;50;20;;60;;;;;;;;;25;;;;;;;;;;;;;5;;;;;;;golden_upgrade_kit_HERO24A:5|selection_kit_HERO24A:20|silver_upgrade_kit_HERO24A:5
 W_MultiAge_HERO24H1;Guarnigione di Mortai- Lv.1;Mortar Garrison- Lv.1;fae383e28;;;1x1;;-2840;;;;;;;;1;;;;;;;600;;1;;;;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24H2;Guarnigione di Mortai - Lv.2;Mortar Garrison- Lv.2;0180473dc;1;;1x1;;-2280;;;;;;;;1;;;;;;;720;;2;;;;1;;;;;;;2;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24H3;Guarnigione Sterling;Sterling Garrison;d9c8d80dd;1;;1x1;;-1700;;;;;;;;2;;;;;;;910;;3;;;1;2;;;;;;;3;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24H4;Guarnigione Bullion;Bullion Garrison;34f80ec7b;1;;1x1;;-1140;;;;;;1;;4;;;;;;;1200;;4;;;3;4;;;;5;;;6;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS25A1;Molo Fjordstorm - Lv.1;Fjordstorm Wharf - Lv.1;4acf26256;;;7x4;2;;15950;;6;;;;;;;;;;26970;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HIS25A10;Molo Fjordstorm - Lv.10;Fjordstorm Wharf - Lv.10;a58ad6b8a;1;;7x4;2;;63800;;71;;;24;20;100;;75;;;431450;;;;;;;102;;;;77;;;;77;;;;;;;;;;;;;;;;;;;;;selection_kit_HIS25BC|silver_upgrade_kit_HIS25A
-W_MultiAge_HIS25A11;Cantiere Fjordstorm;Fjordstorm Dockyard;131ef09db;1;;7x4;2;;85060;;141;;;24;21;150;;100;;;647170;;;;;;;202;;;;177;;;;177;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HIS25A|selection_kit_HIS25BC
-W_MultiAge_HIS25A12;Porto Fjordstorm;Fjordstorm Harbor;cd98b95c9;1;;7x4;2;;106330;;181;;;40;30;200;;175;;;808970;;;;;;;352;;;;277;;;;277;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS25BC
-W_MultiAge_HIS25A13;Porto Fjordstorm di Njord;Njord's Fjordstorm Harbor;1cb98316a;1;;7x4;;;116960;;256;;;50;40;300;;250;;;852110;;;;;;292;292;;;;292;;;;292;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS25BC
-W_MultiAge_HIS25A14;Porto Fjordstorm di Njord Asceso;Ascended Njord's Fjordstorm Harbor;a04874e4a;1;90;7x4;;;212660;;451;;;70;65;500;;450;;;1531640;;;;;;342;342;;;;557;;;;557;;;;;;;;;;;200;8000;M;;;;;;;;selection_kit_HIS25BC
+W_MultiAge_HIS25A10;Molo Fjordstorm - Lv.10;Fjordstorm Wharf - Lv.10;a58ad6b8a;1;;7x4;2;;63800;;71;;;24;20;100;;75;;;431450;;;;;;;102;;;;77;;;;77;;;;;;;;;;;;;;;;;;;;;selection_kit_HIS25BC:1|silver_upgrade_kit_HIS25A:5
+W_MultiAge_HIS25A11;Cantiere Fjordstorm;Fjordstorm Dockyard;131ef09db;1;;7x4;2;;85060;;141;;;24;21;150;;100;;;647170;;;;;;;202;;;;177;;;;177;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HIS25A:5|selection_kit_HIS25BC:2
+W_MultiAge_HIS25A12;Porto Fjordstorm;Fjordstorm Harbor;cd98b95c9;1;;7x4;2;;106330;;181;;;40;30;200;;175;;;808970;;;;;;;352;;;;277;;;;277;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS25BC:3
+W_MultiAge_HIS25A13;Porto Fjordstorm di Njord;Njord's Fjordstorm Harbor;1cb98316a;1;;7x4;;;116960;;256;;;50;40;300;;250;;;852110;;;;;;292;292;;;;292;;;;292;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS25BC:3
+W_MultiAge_HIS25A14;Porto Fjordstorm di Njord Asceso;Ascended Njord's Fjordstorm Harbor;a04874e4a;1;90;7x4;;;212660;;451;;;70;65;500;;450;;;1531640;;;;;;342;342;;;;557;;;;557;;;;;;;;;;;200;8000;M;;;;;;;;selection_kit_HIS25BC:3
 W_MultiAge_HIS25A2;Molo Fjordstorm - Lv.2;Fjordstorm Wharf - Lv.2;62a712b89;;;7x4;2;;21270;;9;;;;;;;;;;53930;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS25A3;Molo Fjordstorm - Lv.3;Fjordstorm Wharf - Lv.3;9b6f6d850;;;7x4;2;;26580;;11;;;;;;;;;;80900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS25A4;Molo Fjordstorm - Lv.4;Fjordstorm Wharf - Lv.4;eaf544b40;;;7x4;2;;31900;;16;;;;;;;;;;107860;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1603,7 +1603,7 @@ W_MultiAge_HIS25B1;Totem Emberfang;Emberfang Totem;fa7b47e70;1;;3x3;;-19140;;;10
 W_MultiAge_HIS25B2;Totem Emberfang Asceso;Ascended Emberfang Totem;b339c275f;1;30;3x3;;-19140;;;65;;;;;;;;;;;;13120;;50;50;;;90;90;;;;;;;25;25;;;;;;20000;;5;;;;;;10;3;;4.5;;
 W_MultiAge_HIS25C1;Skuddeholm Stead;Skuddeholm Stead;663442324;1;;4x3;;-25520;25520;;;;;;;25;25;;;50;;264010;;;;;;;;;30;30;;;10;10;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS25C2;Skuddeholm Stead Asceso;Ascended Skuddeholm Stead;420ddc133;1;30;4x3;;-25520;25520;;;;;;;75;100;;;150;;264010;;;;;;;;;125;125;;;100;100;;;25;25;;;;;10;5;;;;;;;;;;;
-W_MultiAge_HIS25D1;Herringstead;Herringstead;49b190cd9;1;;5x4;;;;;;;;;;160;200;50;;;;;;;140;140;140;140;;;;;;;;50;50;;;;;;;;;;;;;;;;;;;;golden_selection_kit_HIS25A
+W_MultiAge_HIS25D1;Herringstead;Herringstead;49b190cd9;1;;5x4;;;;;;;;;;160;200;50;;;;;;;140;140;140;140;;;;;;;;50;50;;;;;;;;;;;;;;;;;;;;golden_selection_kit_HIS25A:20
 W_MultiAge_HIS25E1;Pira Drakkar;Drakkar Pyre;cde4e7411;1;;4x4;;19140;;;;;;;;105;150;;;;;;;;100;100;100;100;;;;;25;25;25;25;;;;;;;;;;;;;;4.8;12;5;;;;;
 W_MultiAge_HIS25F1;Mira dei Berserker - Lv.1;Berserkers Aim - Lv.1;ea56b7d47;;;3x3;;5320;;10;5;;;;;16;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS25F2;Mira dei Berserker - Lv.2;Berserkers Aim - Lv.2;facc3a903;1;;3x3;;9570;;6;10;;;;;20;10;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1613,8 +1613,8 @@ W_MultiAge_HIS25G1;Mulino Oarcrest;Oarcrest Mill;e72d06b33;1;;4x5;2;10630;79750;
 W_MultiAge_HIS25G2;Cascate Oarcrest;Oarcrest Falls;f5cbbb203;1;;4x5;2;21270;159490;;37.5;;;;;37.5;20;5;;;323590;;;;151;;;;;;;;;;;;25;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS25G3;Fiordo Oarcrest;Oarcrest Fjord;14848d615;1;;4x5;2;42540;212660;;60;;;;;75;40;50;;;701100;;;;181;;;;;;;;;;;;50;;;;;;;;;;;;M;;;;;;;;
 W_MultiAge_HIS26A1;Torre delle Valchirie - Liv. 1;Valkyrie Tower - Lv. 1;8d67e9098;;;6x5;2.5;1700;4250;;31;;;;;;;;;;32360;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HIS26A10;Torre delle Valchirie;Valkyrie Spire;d2c82405c;1;;6x5;2.5;72310;85060;15;256;;;;;;;;;;755040;;;;253;253;;;267;;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_HIS26A|selection_kit_HIS26BC
-W_MultiAge_HIS26A11;Santuario delle Valchirie;Valkyrie Sanctum;e4155d6ea;1;;6x5;2.5;87200;106330;30;276;;;;;;;;;;938400;;;;283;283;;;282;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS26BC
+W_MultiAge_HIS26A10;Torre delle Valchirie;Valkyrie Spire;d2c82405c;1;;6x5;2.5;72310;85060;15;256;;;;;;;;;;755040;;;;253;253;;;267;;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_HIS26A:5|selection_kit_HIS26BC:2
+W_MultiAge_HIS26A11;Santuario delle Valchirie;Valkyrie Sanctum;e4155d6ea;1;;6x5;2.5;87200;106330;30;276;;;;;;;;;;938400;;;;283;283;;;282;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS26BC:3
 W_MultiAge_HIS26A2;Torre delle Valchirie - Liv. 2;Valkyrie Tower - Lv. 2;baa6b4b79;;;6x5;2.5;8930;11700;;56;;;;;;;;;;86290;;;;;;;;46;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS26A3;Torre delle Valchirie - Liv. 3;Valkyrie Tower - Lv. 3;514c62c75;;;6x5;2.5;16160;19140;;81;;;;;;;;;;140220;;;;83;83;;;72;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS26A4;Torre delle Valchirie - Liv. 4;Valkyrie Tower - Lv. 4;de948e4cf;;;6x5;2.5;23400;26580;;106;;;;;;;;;;194150;;;;103;103;;;98;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1622,16 +1622,16 @@ W_MultiAge_HIS26A5;Torre delle Valchirie - Liv. 5;Valkyrie Tower - Lv. 5;9a9ff74
 W_MultiAge_HIS26A6;Torre delle Valchirie - Liv. 6;Valkyrie Tower - Lv. 6;b0b184cb5;;;6x5;2.5;37860;41470;;156;;;;;;;;;;302010;;;;143;143;;;150;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS26A7;Torre delle Valchirie - Liv. 7;Valkyrie Tower - Lv. 7;a4aeeac32;;;6x5;2.5;45090;48910;;181;;;;;;;;;;409880;;;;163;163;;;176;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS26A8;Torre delle Valchirie - Liv. 8;Valkyrie Tower - Lv. 8;c84704ac7;;;6x5;2.5;52320;56350;;206;;;;;;;;;;517740;;;;183;183;;;202;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HIS26A9;Torre delle Valchirie - Liv. 9;Valkyrie Tower - Lv. 9;190e055c6;1;;6x5;2.5;59550;63800;10;231;;;;;;;;;;625600;;;;213;213;;;237;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS26BC|silver_upgrade_kit_HIS26A
+W_MultiAge_HIS26A9;Torre delle Valchirie - Liv. 9;Valkyrie Tower - Lv. 9;190e055c6;1;;6x5;2.5;59550;63800;10;231;;;;;;;;;;625600;;;;213;213;;;237;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_HIS26BC:1|silver_upgrade_kit_HIS26A:5
 W_MultiAge_HIS26B1;La primavera di Mimir;Mimir's Spring;a23ce1ae0;1;;3x2;;-47850;;;66;;;;;;;;;70;;;19690;;;;;;;;97;97;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS26B2;Primavera di Mimir Ascesa;Ascended Mimir's Spring;bdca41527;1;30;3x2;;-47850;;;180;;;;;;;;;100;;;29530;;;;;;;;257;257;;;;;;;24;24;0.04;;;;10;;;;;;;;;;;;
 W_MultiAge_HIS26C1;Tana di Freki;Freki's Lair;801924541;1;;4x2;;-47850;;;;;;;;95;90;;;;;190080;;;;;;;97;97;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HIS26C2;Tana di Freki Ascesa;Ascended Freki's Lair;49acde7b8;1;30;4x2;;-47850;;;;;;;;240;240;;;;;359050;;;;;;;362;362;;;;;;;12;12;;;;0.04;;;;6;;;;;;;;;;;
-W_MultiAge_HIS26D1;Padronanza dei Dvergar ;Mastery of Dvergar ;f09dbde79;1;;4x5;2;;;;362;;;;;;;;;;;;;;;;;;222;222;222;222;292;292;292;292;30;30;30;30;;;;;;;;;M;;;;;;;;golden_selection_kit_HIS26A
+W_MultiAge_HIS26D1;Padronanza dei Dvergar ;Mastery of Dvergar ;f09dbde79;1;;4x5;2;;;;362;;;;;;;;;;;;;;;;;;222;222;222;222;292;292;292;292;30;30;30;30;;;;;;;;;M;;;;;;;;golden_selection_kit_HIS26A:20
 W_MultiAge_HIS26E1;Totem di Dreki;Dreki Totem;762707a90;1;;3x3;;-42540;23390;;54;;;;;;;41;;;;;;;57;57;57;57;;;;;;;;;;;;;;;;;;;;;M;;;;;;;;
 W_MultiAge_HIS26E2;Totem di Dreki Asceso;Ascended Dreki Totem;6726184fe;1;30;3x3;;-42540;28710;;87;0.02;;;;;;46;0.02;;;;;;92;92;92;92;;;;;;;;;;;;;;;;;;;;;M;;;;;;;;
 W_MultiAge_HIS26F1;Capanna dei racconti di Huginn - Liv. 1;Huginn Tale Hut - Lv. 1;6a458cb68;1;;4x4;2;-42540;;;160;;;;;;;;;;;;;;;;;;86;86;86;86;;;;;;;;;;;;;;;;;M;3;;;;;;;
-W_MultiAge_HIS26F2;Capanna dei racconti di Huginn - Liv. 2;Huginn Tale Hut - Lv. 2;972a6700b;1;;4x4;2;-42540;;;280;;;;;;;;;;;;;;;;;;197;197;197;197;;;;;;;;;;;;;;;;;M;8;;;;;;;upgrade_kit_ascended_HIS25A
+W_MultiAge_HIS26F2;Capanna dei racconti di Huginn - Liv. 2;Huginn Tale Hut - Lv. 2;972a6700b;1;;4x4;2;-42540;;;280;;;;;;;;;;;;;;;;;;197;197;197;197;;;;;;;;;;;;;;;;;M;8;;;;;;;upgrade_kit_ascended_HIS25A:6
 W_MultiAge_HalloweenBonus22a;Albero infestato - Attivo;Haunted Tree - Active;cdbc7029a;1;;2x2;;;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HalloweenBonus22aDecoration;Albero infestato - Non attivo;Haunted Tree - Inactive;80cca43ca;;;2x2;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HalloweenBonus22b;Torre spaventosa - Attiva;Daunting Tower - Active;171466213;1;1;1x1;;;;;;;;;;;;;;;;;;;50;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1689,16 +1689,16 @@ W_MultiAge_PAT22A7;Casale celtico - Liv. 7;Celtic Farmstead - Lv. 7;R_MultiAge_P
 W_MultiAge_PAT22A8;Casale celtico - Liv. 8;Celtic Farmstead - Lv. 8;R_MultiAge_PatrickBonus22h-20e832705;;;5x6;2.5;24442;27920;;8;;;;;20;;;;10;257500;;;;34;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT22A9;Casale celtico - Liv. 9;Celtic Farmstead - Lv. 9;R_MultiAge_PatrickBonus22i-3fed1963b;;;5x6;2.5;25879;28790;;11;;;;;20;;;;10;271800;;;;39;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT23A1;Capanna druidica - Liv. 1;Druid Hut - Lv. 1;e6f3d896d;;;5x4;2;;;;;;;;;;;;;;6346;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT23A10;Capanna dell'Arcidruido;Archdruid Hut;dce260f07;1;;5x4;2;;;;12;;;;;;;;;;12771;;;;23;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1
-W_MultiAge_PAT23A11;Sacra Capanna dell'Arcidruido;Sacred Archdruid Hut;c6db839d8;1;;5x4;2;;;;24;;;;;55;;;;;25542;;;;23;27;;31;23;27;;;;;;31;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT23BCD|upgrade_kit_PAT23B|upgrade_kit_PAT23C|upgrade_kit_PAT23D
+W_MultiAge_PAT23A10;Capanna dell'Arcidruido;Archdruid Hut;dce260f07;1;;5x4;2;;;;12;;;;;;;;;;12771;;;;23;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:10|building_W_MultiAge_PAT23D1:10
+W_MultiAge_PAT23A11;Sacra Capanna dell'Arcidruido;Sacred Archdruid Hut;c6db839d8;1;;5x4;2;;;;24;;;;;55;;;;;25542;;;;23;27;;31;23;27;;;;;;31;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT23BCD:12|upgrade_kit_PAT23B:12|upgrade_kit_PAT23C:12|upgrade_kit_PAT23D:12
 W_MultiAge_PAT23A2;Capanna druidica - Liv. 2;Druid Hut - Lv. 2;17732ee19;;;5x4;2;;;;;;;;;;;;;;6346;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT23A3;Capanna druidica - Liv. 3;Druid Hut - Lv. 3;78fcebf5d;;;5x4;2;;;;1;;;;;;;;;;7011;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT23A4;Capanna druidica - Liv. 4;Druid Hut - Lv. 4;a418a6654;;;5x4;2;;;;1;;;;;;;;;;7011;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1
-W_MultiAge_PAT23A5;Capanna druidica - Liv. 5;Druid Hut - Lv. 5;52c0456da;;;5x4;2;;;;2;;;;;;;;;;7317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1
-W_MultiAge_PAT23A6;Capanna druidica - Liv. 6;Druid Hut - Lv. 6;37d67a2cb;;;5x4;2;;;;2;;;;;;;;;;7317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1
-W_MultiAge_PAT23A7;Capanna druidica - Liv. 7;Druid Hut - Lv. 7;2aec159e6;;;5x4;2;;;;3;;;;;;;;;;7669;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1
-W_MultiAge_PAT23A8;Capanna druidica - Liv. 8;Druid Hut - Lv. 8;d5d1ca63e;;;5x4;2;;;;3;;;;;;;;;;7982;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1
-W_MultiAge_PAT23A9;Capanna druidica - Liv. 9;Druid Hut - Lv. 9;2c836c067;1;;5x4;2;;;;7;;;;;;;;;;9575;;;;18;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1|building_W_MultiAge_PAT23D1|golden_upgrade_kit_PAT23A
+W_MultiAge_PAT23A4;Capanna druidica - Liv. 4;Druid Hut - Lv. 4;a418a6654;;;5x4;2;;;;1;;;;;;;;;;7011;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:1|building_W_MultiAge_PAT23D1:1
+W_MultiAge_PAT23A5;Capanna druidica - Liv. 5;Druid Hut - Lv. 5;52c0456da;;;5x4;2;;;;2;;;;;;;;;;7317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:1|building_W_MultiAge_PAT23D1:1
+W_MultiAge_PAT23A6;Capanna druidica - Liv. 6;Druid Hut - Lv. 6;37d67a2cb;;;5x4;2;;;;2;;;;;;;;;;7317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:2|building_W_MultiAge_PAT23D1:1
+W_MultiAge_PAT23A7;Capanna druidica - Liv. 7;Druid Hut - Lv. 7;2aec159e6;;;5x4;2;;;;3;;;;;;;;;;7669;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:2|building_W_MultiAge_PAT23D1:2
+W_MultiAge_PAT23A8;Capanna druidica - Liv. 8;Druid Hut - Lv. 8;d5d1ca63e;;;5x4;2;;;;3;;;;;;;;;;7982;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:3|building_W_MultiAge_PAT23D1:2
+W_MultiAge_PAT23A9;Capanna druidica - Liv. 9;Druid Hut - Lv. 9;2c836c067;1;;5x4;2;;;;7;;;;;;;;;;9575;;;;18;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_PAT23C1:5|building_W_MultiAge_PAT23D1:5|golden_upgrade_kit_PAT23A:1
 W_MultiAge_PAT23B1;Albero del silenzio;Tree of Silence;93c82ed67;1;;1x1;0.5;;;;2;;;;;;;;;;6346;;;;3;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;
 W_MultiAge_PAT23B2;Sacro Albero del Silenzio;Sacred Tree of Silence;8320d5fbf;1;;1x1;0.5;;;;3;;;;;4;;;;;12692;;;;3;;5;;2;;;;;;1;;;;;;;;;;;;;;;;;;;;1.5;;
 W_MultiAge_PAT23C1;Albero della pazienza;Tree of Patience;7826a5184;1;;1x1;0.5;;;;0.75;;;;;;;;;;6346;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1711,21 +1711,21 @@ W_MultiAge_PAT24A3;Taverna Celtica - Lv. 3;Celtic Tavern - Lv. 3;fbf1c7c41;;;6x5
 W_MultiAge_PAT24A4;Taverna Celtica - Lv. 4;Celtic Tavern - Lv. 4;c7891c089;;;6x5;2.5;4613;6582;;;;;;;50;;;;;;32162;;;;32;14;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT24A5;Taverna Celtica - Lv. 5;Celtic Tavern - Lv. 5;73ef17a8d;;;6x5;2.5;9225;13164;;14;;;;;60;;;;;;64324;;;;47;16;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT24A6;Taverna Celtica - Lv. 6;Celtic Tavern - Lv. 6;92b721182;;;6x5;2.5;18450;26330;;24;;;;;70;;;;;;128650;;;;62;18;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT24A7;Taverna Celtica - Lv. 7;Celtic Tavern - Lv. 7;71f18b66c;1;;6x5;2.5;36900;52660;;34;;;;;80;;;;;;257300;;;;77;20;30;;;;;;;35;60;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24DE|silver_upgrade_kit_PAT24A
-W_MultiAge_PAT24A8;Taverna Celtica Incantata;Enchanted Celtic Tavern;445596eb8;1;;6x5;2.5;46135;65840;;37;;;;;90;;;;;;274080;;;;77;20;30;;10;;;;;45;80;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT24A|selection_kit_PAT24DE
-W_MultiAge_PAT24A9;Taverna Celtica Mistica;Mystic Celtic Tavern;11ec74a57;1;;6x5;2.5;55350;78970;;40;;;;;100;;;;;;290860;;;;77;20;30;;20;;;;;55;100;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24DE
-W_MultiAge_PAT24B1;Speziale delle Terre Alte - Lv. 1;Apothecary of the Highlands - Lv. 1;a631c7b32;1;;3x3;;;;;30;;;;;40;;;;;;;;;27;27;27;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24A
-W_MultiAge_PAT24B2;Speziale delle Terre Alte - Lv. 2;Apothecary of the Highlands - Lv. 2;f9340e2a9;1;;3x3;;;;;30;;;;;45;;;;;;;;;36;36;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24A|silver_upgrade_kit_PAT24A
-W_MultiAge_PAT24B3;Speziale delle Terre Alte - Lv. 3;Apothecary of the Highlands - Lv. 3;d8d70812e;1;;3x3;;;;;30;;;;;50;;;;;;;;;45;45;45;45;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT24A|selection_kit_PAT24A|silver_upgrade_kit_PAT24A
+W_MultiAge_PAT24A7;Taverna Celtica - Lv. 7;Celtic Tavern - Lv. 7;71f18b66c;1;;6x5;2.5;36900;52660;;34;;;;;80;;;;;;257300;;;;77;20;30;;;;;;;35;60;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24DE:1|silver_upgrade_kit_PAT24A:5
+W_MultiAge_PAT24A8;Taverna Celtica Incantata;Enchanted Celtic Tavern;445596eb8;1;;6x5;2.5;46135;65840;;37;;;;;90;;;;;;274080;;;;77;20;30;;10;;;;;45;80;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT24A:5|selection_kit_PAT24DE:2
+W_MultiAge_PAT24A9;Taverna Celtica Mistica;Mystic Celtic Tavern;11ec74a57;1;;6x5;2.5;55350;78970;;40;;;;;100;;;;;;290860;;;;77;20;30;;20;;;;;55;100;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24DE:3
+W_MultiAge_PAT24B1;Speziale delle Terre Alte - Lv. 1;Apothecary of the Highlands - Lv. 1;a631c7b32;1;;3x3;;;;;30;;;;;40;;;;;;;;;27;27;27;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24A:5
+W_MultiAge_PAT24B2;Speziale delle Terre Alte - Lv. 2;Apothecary of the Highlands - Lv. 2;f9340e2a9;1;;3x3;;;;;30;;;;;45;;;;;;;;;36;36;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT24A:10|silver_upgrade_kit_PAT24A:10
+W_MultiAge_PAT24B3;Speziale delle Terre Alte - Lv. 3;Apothecary of the Highlands - Lv. 3;d8d70812e;1;;3x3;;;;;30;;;;;50;;;;;;;;;45;45;45;45;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT24A:20|selection_kit_PAT24A:20|silver_upgrade_kit_PAT24A:20
 W_MultiAge_PAT24C1;Vetreria Celtica - Lv. 1;Celtic Glassworks - Lv. 1;9fcd031ce;1;;2x2;;;5680;;5;;;;;16;;;;;;;1810;;8;;11;16;;;;;;;;;;;;;;;;;;;;;;1;;1.5;;;;;
 W_MultiAge_PAT24C2;Vetreria Celtica - Lv. 2;Celtic Glassworks - Lv. 2;589028ae0;1;;2x2;;;11360;;6;;;;;20;;;;;;;3620;;12;;15;20;;;;;;;;;;;;;;;;;;;;;;2;;3;;;;;
 W_MultiAge_PAT24D1;Giardino Runico;Rune Garden;104cf33ee;1;;1x3;0.5;-3980;;3;6;;;;;20;;;;15;;;;;;15;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT24E1;Contea delle Pecore;Sheep Shire;d8e38c6ca;1;;3x1;;-3400;;;6;;;2;;15;;;;;70240;;;;10;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25A1;Orafo Celtico - Lv. 1;Celtic Goldsmith - Lv. 1;9c0419e5d;;;4x5;2;24980;49940;;22;;;;;;;;;;527960;;;;;93;28;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT25A10;Orafo Celtico Fortunato;Lucky Celtic Goldsmith;293dac540;1;;4x5;2;36220;72420;;121;;;;;;;;;;643860;;;;;111;64;64;38;38;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT25A|selection_kit_PAT25BC
-W_MultiAge_PAT25A11;Orafo Celtico Favoloso;Fabled Celtic Goldsmith;03a9d7ca6;1;;4x5;2;37480;74920;;132;;;;;;;;;;656740;;;;;113;68;68;44;44;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_PAT25BC
-W_MultiAge_PAT25A12;Orafo Celtico Beato;Fortunate Celtic Goldsmith;36a1735cf;1;;4x5;;70370;77420;;153.0;;;;;;;;;;669620;;;;;152;106;106;101;101;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_PAT25BC
-W_MultiAge_PAT25A13;Orafo celtico beato asceso;Ascended Fortunate Celtic Goldsmith;981eb7787;1;90;4x5;;70370;79920;;185;;;;;;;;;;682500;;;;;367;316;316;301;301;;;;;;;;;;;;;;;;;200;8000;M;;;;;;;;selection_kit_PAT25BC
+W_MultiAge_PAT25A10;Orafo Celtico Fortunato;Lucky Celtic Goldsmith;293dac540;1;;4x5;2;36220;72420;;121;;;;;;;;;;643860;;;;;111;64;64;38;38;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT25A:5|selection_kit_PAT25BC:2
+W_MultiAge_PAT25A11;Orafo Celtico Favoloso;Fabled Celtic Goldsmith;03a9d7ca6;1;;4x5;2;37480;74920;;132;;;;;;;;;;656740;;;;;113;68;68;44;44;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_PAT25BC:3
+W_MultiAge_PAT25A12;Orafo Celtico Beato;Fortunate Celtic Goldsmith;36a1735cf;1;;4x5;;70370;77420;;153.0;;;;;;;;;;669620;;;;;152;106;106;101;101;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_PAT25BC:3
+W_MultiAge_PAT25A13;Orafo celtico beato asceso;Ascended Fortunate Celtic Goldsmith;981eb7787;1;90;4x5;;70370;79920;;185;;;;;;;;;;682500;;;;;367;316;316;301;301;;;;;;;;;;;;;;;;;200;8000;M;;;;;;;;selection_kit_PAT25BC:3
 W_MultiAge_PAT25A2;Orafo Celtico - Lv. 2;Celtic Goldsmith - Lv. 2;2a483aed0;;;4x5;2;26220;52440;;33;;;;;;;;;;540840;;;;;95;32;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25A3;Orafo Celtico - Lv. 3;Celtic Goldsmith - Lv. 3;80dcf1a7a;;;4x5;2;27480;54940;;44.0;;;;;;;;;;553720;;;;;97;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25A4;Orafo Celtico - Lv. 4;Celtic Goldsmith - Lv. 4;8f9228c5d;;;4x5;2;28720;57440;;55;;;;;;;;;;566600;;;;;99;40;40;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1733,31 +1733,31 @@ W_MultiAge_PAT25A5;Orafo Celtico - Lv. 5;Celtic Goldsmith - Lv. 5;e7d27940d;;;4x
 W_MultiAge_PAT25A6;Orafo Celtico - Lv. 6;Celtic Goldsmith - Lv. 6;1e607c661;;;4x5;2;31220;62440;;77.0;;;;;;;;;;592360;;;;;103;48;48;13;13;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25A7;Orafo Celtico - Lv. 7;Celtic Goldsmith - Lv. 7;4da47fdb5;;;4x5;2;32480;64920;;88;;;;;;;;;;605240;;;;;105;52;52;19;19;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25A8;Orafo celtico - Lv. 8;Celtic Goldsmith - Lv. 8;b23e21d66;;;4x5;2;33720;67420;;99;;;;;;;;;;618100;;;;;107;56;56;25;25;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT25A9;Orafo Celtico - Lv. 9;Celtic Goldsmith - Lv. 9;171bb7778;1;;4x5;2;34980;69920;;110;;;;;;;;;;630980;;;;;109;60;60;32;32;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT25BC|silver_upgrade_kit_PAT25A
+W_MultiAge_PAT25A9;Orafo Celtico - Lv. 9;Celtic Goldsmith - Lv. 9;171bb7778;1;;4x5;2;34980;69920;;110;;;;;;;;;;630980;;;;;109;60;60;32;32;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT25BC:1|silver_upgrade_kit_PAT25A:5
 W_MultiAge_PAT25B1;Campo di Mirtilli;Blueberry Field;4307ca5c5;1;;3x2;;-13620;;;21;;;;9;;;;;;;;;;;;25;;;;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25B2;Campo di Mirtilli Asceso;Ascended Blueberry Field;4a8ceb546;1;30;3x2;;-13620;;;42;;;;18;;;;;;;;;;;;50;;;;50;50;;;;;;;;;;;;;;5;;;;;;;;;;;
 W_MultiAge_PAT25C1;Pozzo Sussurrante;Whispering Well;3be9e57df;1;;3x3;;-20440;;;;;;;;40;40;40;;80;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT25C2;Pozzo Sussurrante Asceso;Ascended Whispering Well;87e406352;1;30;3x3;;-20440;;;;;;;;80;80;80;;160;;;;;;;;;;;;;;;;;;;;;0.04;0.04;;;10;;;;;;;;;;;;
-W_MultiAge_PAT25D1;Giardino della Fortuna di Trifoglio;Shamrock Garden of Luck;f0a5c1593;1;;4x5;;;;;180;;;;;;;;;;;;;;;;;;222;222;222;222;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_PAT25A
+W_MultiAge_PAT25D1;Giardino della Fortuna di Trifoglio;Shamrock Garden of Luck;f0a5c1593;1;;4x5;;;;;180;;;;;;;;;;;;;;;;;;222;222;222;222;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_PAT25A:20
 W_MultiAge_PAT25E1;Rovine Fortezza Clover - Lv. 1;Clover Keep Ruin - Lv. 1;0561aea1b;1;;4x4;;;45400;;40;;;;;;;;;;;;;;8;8;8;8;25;25;25;25;16;16;16;16;;;;;;;;;;;;;;7;;7;;;;;
 W_MultiAge_PAT25E2;Rovine Fortezza Clover - Lv. 2;Clover Keep Ruin - Lv. 2;decd0863d;1;;4x4;;;90800;;80;;;;;;;;;;;;;;16;16;16;16;50;50;50;50;33;33;33;33;;;;;;;20000;20000;;;;;;10.5;;10.5;;;;;
 W_MultiAge_PAT26A1;Laghetto Lunare - Livello 1;Lochan Lune - Lv. 1;5901fc939;;;5x5;2.5;9570;;;40;;;;;60;50;;;;;13730;;;;;;;83;;79;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT26A10;Leggendario Laghetto Lunare;Fabled Lochan Lune;5d0b5558e;1;;5x5;2.5;53170;;;220;;;;;280;230;;;;;464650;;;;;;;263;;394;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_PAT26BC
+W_MultiAge_PAT26A10;Leggendario Laghetto Lunare;Fabled Lochan Lune;5d0b5558e;1;;5x5;2.5;53170;;;220;;;;;280;230;;;;;464650;;;;;;;263;;394;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_PAT26BC:3
 W_MultiAge_PAT26A2;Laghetto Lunare - Livello 2;Lochan Lune - Lv. 2;b82d1fa3d;;;5x5;2.5;12760;;;60;;;;;80;70;;;;;15840;;;;;;;103;;114;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26A3;Laghetto Lunare - Liv. 3;Lochan Lune - Lv. 3;f8ae85550;;;5x5;2.5;15950;;;80;;;;;100;90;;;;;17950;;;;;;;123;;149;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26A4;Laghetto Lunare - Liv. 4;Lochan Lune - Lv. 4;6e3c19c67;;;5x5;2.5;19140;;;100;;;;;120;110;;;;;20060;;;;;;;143;;184;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26A5;Laghetto Lunare - Liv. 5;Lochan Lune - Lv. 5;5f4bd0210;;;5x5;2.5;22330;;;120;;;;;140;130;;;;;22180;;;;;;;163;;219;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26A6;Laghetto Lunare - Liv. 6;Lochan Lune - Lv. 6;4f7126a54;;;5x5;2.5;25520;;;140;;;;;160;150;;;;;24290;;;;;;;183;;254;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26A7;Laghetto Lunare - Liv. 7;Lochan Lune - Lv. 7;deea7c32a;;;5x5;2.5;28710;;;160;;;;;180;170;;;;;26400;;;;;;;203;;289;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_PAT26A8;Laghetto Lunare - Liv. 8;Lochan Lune - Lv. 8;dc057d902;1;;5x5;2.5;31900;;;180;;;;;200;190;;;;;295690;;;;;;;223;;324;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT26BC|silver_upgrade_kit_PAT26A
-W_MultiAge_PAT26A9;Laghetto Lunare Mistico;Mystic Lochan Lune;160dc8809;1;;5x5;2.5;42540;;;200;;;;;240;210;;;;;401290;;;;;;;243;;359;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT26A|selection_kit_PAT26BC
+W_MultiAge_PAT26A8;Laghetto Lunare - Liv. 8;Lochan Lune - Lv. 8;dc057d902;1;;5x5;2.5;31900;;;180;;;;;200;190;;;;;295690;;;;;;;223;;324;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_PAT26BC:1|silver_upgrade_kit_PAT26A:5
+W_MultiAge_PAT26A9;Laghetto Lunare Mistico;Mystic Lochan Lune;160dc8809;1;;5x5;2.5;42540;;;200;;;;;240;210;;;;;401290;;;;;;;243;;359;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_PAT26A:5|selection_kit_PAT26BC:2
 W_MultiAge_PAT26B1;Il cappellaio di Moorehead;Moorehead's Hatsmith;fe2c03a2b;1;;2x3;;-31900;;;;;;;;50;;40;;;129430;;;;;;;;52;52;;;78;78;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26B2;Il cappellaio di Moorehead asceso dal cielo;Ascended Moorehead's Hatsmith;db22e2df2;1;30;2x3;;-31900;;;;;;;;85;;65;;;258870;;;;;;;;102;102;;;153;153;;;24;;;;0.03;0.04;;;;5;;;;;;;;;;;
 W_MultiAge_PAT26C1;Pietre Ogham;Ogham Stones;f0946417a;1;;2x2;;-21270;;;40;;;;;;40;;;;89530;;;;26;;;;;62;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT26C2;Pietre Ogham Ascese;Ascended Ogham Stones;0e1294589;1;30;2x2;;-21270;;;60;;;;;;60;;;;107860;;;;51;;;;;122;;;;;;;;;20;;;;10500;20000;5;;;;;;;;;;;;
-W_MultiAge_PAT26D1;Birrificio di McBrew;McBrew's Alework;1138c07cb;1;;2x4;;;;;114;;;;;;;;;;;;;;151;74;74;74;;;;;;;;;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_PAT26A
+W_MultiAge_PAT26D1;Birrificio di McBrew;McBrew's Alework;1138c07cb;1;;2x4;;;;;114;;;;;;;;;;;;;;151;74;74;74;;;;;;;;;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_PAT26A:20
 W_MultiAge_PAT26E1;Casa di pane di McDough - Liv. 1;McDough's Loaf House - Lv. 1;5599d49fa;1;;3x3;;-47850;;;75;;;;;;;;;;;;;;63;63;63;63;;;;;;;;;;;;;;;;;;;;;;2;;;;;;;
-W_MultiAge_PAT26E2;Casa di Pane di McDough - Liv. 2;McDough's Loaf House - Lv. 2;83f9314f4;1;;3x3;;-47850;;;105;;;;;;;;;;;;;;76;138;76;76;;;;;;;;;;;;;;;;;;;;;;5.6;;;;;;;upgrade_kit_ascended_PAT25A
+W_MultiAge_PAT26E2;Casa di Pane di McDough - Liv. 2;McDough's Loaf House - Lv. 2;83f9314f4;1;;3x3;;-47850;;;105;;;;;;;;;;;;;;76;138;76;76;;;;;;;;;;;;;;;;;;;;;;5.6;;;;;;;upgrade_kit_ascended_PAT25A:10
 W_MultiAge_PassBonus22a;Fontana di Forge - Attiva;Forge Fountain - Active;40176d3e1;1;5;2x2;;;250;;;0.1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PassBonus22aDecoration;Fontana di Forge - Non attiva;Forge Fountain - Inactive;70153a4ef;;;2x2;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PassBonus22b;Laguna blu cobalto - Attiva;Cobalt Blue Lagoon - Active;a7601d949;1;;2x2;;;250;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1787,7 +1787,7 @@ W_MultiAge_SUM21B1;Acque degli squali;Shark Shallows;D_MultiAge_SummerBonus21Sha
 W_MultiAge_SUM21C1;Ancoraggio del Capitano;Captain's Anchorage;D_MultiAge_SummerBonus21Boat-8c6c913ac;1;;5x2;;;10190;;;;;;;;;;;;;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM21D1;Molo del pescatore;Fisherman's Pier;D_MultiAge_SummerBonus21Pier-66c27a51c;1;;5x2;;;10190;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23A1;Emporio - Liv. 1;Trading Post - Lv. 1;59f933260;;;4x5;2;10043;23636;;;;;;;;;;;;84786;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_SUM23A10;Baia dei bucanieri;Buccaneers Bay;e1b7896bf;1;;4x5;2;11430;29263;;19;;;;;31;;;;;148482;;;;25;40;41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM23DEF
+W_MultiAge_SUM23A10;Baia dei bucanieri;Buccaneers Bay;e1b7896bf;1;;4x5;2;11430;29263;;19;;;;;31;;;;;148482;;;;25;40;41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM23DEF:4
 W_MultiAge_SUM23A2;Emporio - Liv. 2;Trading Post - Lv. 2;73fc68984;;;4x5;2;10195;24231;;1;;;;;3;;;;;86313;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23A3;Emporio - Liv. 3;Trading Post - Lv. 3;328d4b5ae;;;4x5;2;10351;24863;;3;;;;;5;;;;;88785;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23A4;Emporio - Liv. 4;Trading Post - Lv. 4;2e2ff54ed;;;4x5;2;10503;25540;;4;;;;;7;;;;;92202;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1795,15 +1795,15 @@ W_MultiAge_SUM23A5;Emporio - Liv. 5;Trading Post - Lv. 5;397e639c8;;;4x5;2;10659
 W_MultiAge_SUM23A6;Emporio - Liv. 6;Trading Post - Lv. 6;5922d7b76;;;4x5;2;10814;26770;;6;;;;;12;;;;;102334;;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23A7;Emporio - Liv. 7;Trading Post - Lv. 7;da47ce1d7;;;4x5;2;10967;27402;;7;;;;;15;;;;;110332;;;;;11;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23A8;Emporio - Liv. 8;Trading Post - Lv. 8;65f56f43d;;;4x5;2;11122;28000;;9;;;;;18;;;;;119397;;;;;18;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_SUM23A9;Emporio - Liv. 9;Trading Post - Lv. 9;bd509420c;1;;4x5;2;11278;28632;;15;;;;;25;;;;;130352;;;;20;30;31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_SUM23A|selection_kit_SUM23DEF
-W_MultiAge_SUM23B1;Casa del cartografo;Cartographer's House;e58d9bf4d;1;;2x3;1;;;;9;;;;;;;;;;;;;;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_SUM23A1|golden_upgrade_kit_SUM23A|upgrade_kit_SUM23A
+W_MultiAge_SUM23A9;Emporio - Liv. 9;Trading Post - Lv. 9;bd509420c;1;;4x5;2;11278;28632;;15;;;;;25;;;;;130352;;;;20;30;31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_SUM23A:1|selection_kit_SUM23DEF:1
+W_MultiAge_SUM23B1;Casa del cartografo;Cartographer's House;e58d9bf4d;1;;2x3;1;;;;9;;;;;;;;;;;;;;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_SUM23A1:3|golden_upgrade_kit_SUM23A:3|upgrade_kit_SUM23A:3
 W_MultiAge_SUM23C1;Grotta del teschio;Skull Cave;4834af282;1;;2x2;;;;;7;;;;;;;;;;;;;;22;;22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23D1;Beni nascosti;Hidden Goods;5e5e7ae14;1;;1x1;;;;;1;;;;;3;2;;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23E1;Saccheggiatore PY-R4T4;PY-R8 Marauder;8aac76fff;1;;1x1;;;;;;;;1;;;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM23F1;Rosa del paradiso;Paradise Rose;7897ff414;1;;1x1;;;;;;;;;;;;;;;;;;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24A1;Respiro del Drago - Lv. 1;Dragon’s Breath - Lv. 1;5b2c5ca13;;;6x4;2;1480;2210;;5;;;;;;;;;;152180;;;;2;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_SUM24A10;Respiro del Drago Argento;Silver Dragon’s Breath;f4262f1a3;1;;6x4;2;26580;39840;;32;;;;;91;;;;;426120;;;;22;35;;;47;60;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_SUM24A|selection_kit_SUM24BC|upgrade_kit_SUM24B
-W_MultiAge_SUM24A11;Respiro del Drago Cremisi;Crimson Dragon’s Breath;308c4f188;1;;6x4;2;29520;44260;;35;;;;;104;;;;;456560;;;;26;39;;;56;69;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM24BC|upgrade_kit_SUM24B|upgrade_kit_SUM24C
+W_MultiAge_SUM24A10;Respiro del Drago Argento;Silver Dragon’s Breath;f4262f1a3;1;;6x4;2;26580;39840;;32;;;;;91;;;;;426120;;;;22;35;;;47;60;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_SUM24A:5|selection_kit_SUM24BC:3|upgrade_kit_SUM24B:3
+W_MultiAge_SUM24A11;Respiro del Drago Cremisi;Crimson Dragon’s Breath;308c4f188;1;;6x4;2;29520;44260;;35;;;;;104;;;;;456560;;;;26;39;;;56;69;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM24BC:6|upgrade_kit_SUM24B:6|upgrade_kit_SUM24C:6
 W_MultiAge_SUM24A2;Respiro del Drago - Lv. 2;Dragon’s Breath - Lv. 2;a6f66ed61;;;6x4;2;2960;4420;;8;;;;;;;;;;182620;;;;3;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24A3;Respiro del Drago - Lv. 3;Dragon’s Breath - Lv. 3;00aa2bb7f;;;6x4;2;5900;8860;;11;;;;;;;;;;213060;;;;4;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24A4;Respiro del Drago - Lv. 4;Dragon’s Breath - Lv. 4;1113cef18;;;6x4;2;8860;13280;;14;;;;;13;;;;;243500;;;;5;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1811,19 +1811,19 @@ W_MultiAge_SUM24A5;Respiro del Drago - Lv. 5;Dragon’s Breath - Lv. 5;fcda7c73a
 W_MultiAge_SUM24A6;Respiro del Drago - Lv. 6;Dragon’s Breath - Lv. 6;f1a271529;;;6x4;2;14760;22140;;20;;;;;39;;;;;304380;;;;9;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24A7;Respiro del Drago - Lv. 7;Dragon’s Breath - Lv. 7;370e83576;;;6x4;2;17720;26560;;23;;;;;52;;;;;334800;;;;12;23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24A8;Respiro del Drago - Lv. 8;Dragon’s Breath - Lv. 8;19e93297d;;;6x4;2;20660;30980;;26;;;;;65;;;;;365240;;;;15;27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_SUM24A9;Respiro del Drago - Lv. 9;Dragon’s Breath - Lv. 9;0a91e2a2c;1;;6x4;2;23620;35420;;29;;;;;78;;;;;395680;;;;18;31;;;38;51;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM24BC|silver_upgrade_kit_SUM24A
+W_MultiAge_SUM24A9;Respiro del Drago - Lv. 9;Dragon’s Breath - Lv. 9;0a91e2a2c;1;;6x4;2;23620;35420;;29;;;;;78;;;;;395680;;;;18;31;;;38;51;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM24BC:1|silver_upgrade_kit_SUM24A:5
 W_MultiAge_SUM24B1;Gong del Drago d'Oro - Lv. 1;Golden Dragon Gong - Lv. 1;ae77783b9;;;1x1;;-1140;;;1;;;;;3;;;;5;;;;;;;;;4;;;;;;;4;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24B2;Gong del Drago d'Oro - Lv. 2;Golden Dragon Gong - Lv. 2;13480b1a5;1;;1x1;;-1140;;;1.32;;;;0.67;4;;;;10;;;;;;;;;6;;;;;;;6;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24B3;Gong del Drago d'Oro Asceso;Ascended Golden Dragon Gong;7d28da497;1;10;1x1;;-1140;;;2.64;;;;1.34;5;;;;10;;;;;;;;;6;;;;;;;6;;;4;;0.01;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24C1;Campana d'Oro di Zheng - Lv. 1;Zheng's Golden Bell - Lv. 1;7e9c677fe;;;1x1;;-1140;;;2;;;;;;;;;;;;;;;;;;;8;;;;;13;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24C2;Campana d'Oro di Zheng - Lv. 2;Zheng's Golden Bell - Lv. 2;294d1c4c3;1;;1x1;;-1140;;;2;;;;;;;3;;;;;;;;;;;;11;;;;;16;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM24C3;Campana d'Oro di Zheng Ascesa;Ascended Zheng's Golden Bell;b254c1d66;1;10;1x1;;-1140;;;2;;;;;;;5;;;;;;;;;;;;14;;;;;19;;3;;;;;0.01;;;;;;;;;;;;;;;
-W_MultiAge_SUM24D1;Bar Jade Booty;Jade Booty Bar;80b84c381;1;;4x3;;27260;;;72;;;;;96;;;;;;;;;;;;;96;96;84;84;;;;;;25;;;;;;;;;;;;;;;;;;;golden_selection_kit_SUM24A
-W_MultiAge_SUM24E1;Magazzino del Capitano Bao;Captain Bao's Warehouse;e27297ffe;1;;3x4;;;47680;;96;;;;;108;120;;;;;;;;;;;;;;;;84;84;96;96;;;25;;;;;;;;;;;;;;;;;;silver_selection_kit_SUM24A
-W_MultiAge_SUM24F1;Officina del Velaio - Lv. 1;Sailmaker’s Workshop - Lv. 1;94f154bc8;;;2x2;;;11360;;;;;;;;40;;;;;33560;;;;;;;;;;;24;;33;;;;;;;;;;;;;;;1.2;;;;;;;selection_kit_SUM24A
-W_MultiAge_SUM24F2;Officina del Velaio - Lv. 2;Sailmaker’s Workshop - Lv. 2;a477e5f73;1;;2x2;;;11360;;9;;;;;;40;;;;;33560;;;;;;;;;;;24;;33;;;;;;;;;;;;;;;1.6;;;;;;;selection_kit_SUM24A
-W_MultiAge_SUM24F3;Studio del Velaio;Sailmaker’s Studio;0656ef770;1;;2x2;;;11360;;9;;;;;20;40;;;;;33560;;;;;;;;;;;24;;33;;;;;;;;;;;;;;;2;;;;;;;silver_selection_kit_SUM24A
-W_MultiAge_SUM24F4;Atelier del Velaio;Sailmaker’s Atelier;2a09a0ce8;1;;2x2;;;11360;;9;;;;;20;40;;;;;33560;;;;;;;27;;30;;24;;33;;;;;;;;;;;;;;;2.4;;;;;;;golden_selection_kit_SUM24A
+W_MultiAge_SUM24D1;Bar Jade Booty;Jade Booty Bar;80b84c381;1;;4x3;;27260;;;72;;;;;96;;;;;;;;;;;;;96;96;84;84;;;;;;25;;;;;;;;;;;;;;;;;;;golden_selection_kit_SUM24A:20
+W_MultiAge_SUM24E1;Magazzino del Capitano Bao;Captain Bao's Warehouse;e27297ffe;1;;3x4;;;47680;;96;;;;;108;120;;;;;;;;;;;;;;;;84;84;96;96;;;25;;;;;;;;;;;;;;;;;;silver_selection_kit_SUM24A:10
+W_MultiAge_SUM24F1;Officina del Velaio - Lv. 1;Sailmaker’s Workshop - Lv. 1;94f154bc8;;;2x2;;;11360;;;;;;;;40;;;;;33560;;;;;;;;;;;24;;33;;;;;;;;;;;;;;;1.2;;;;;;;selection_kit_SUM24A:5
+W_MultiAge_SUM24F2;Officina del Velaio - Lv. 2;Sailmaker’s Workshop - Lv. 2;a477e5f73;1;;2x2;;;11360;;9;;;;;;40;;;;;33560;;;;;;;;;;;24;;33;;;;;;;;;;;;;;;1.6;;;;;;;selection_kit_SUM24A:5
+W_MultiAge_SUM24F3;Studio del Velaio;Sailmaker’s Studio;0656ef770;1;;2x2;;;11360;;9;;;;;20;40;;;;;33560;;;;;;;;;;;24;;33;;;;;;;;;;;;;;;2;;;;;;;silver_selection_kit_SUM24A:5
+W_MultiAge_SUM24F4;Atelier del Velaio;Sailmaker’s Atelier;2a09a0ce8;1;;2x2;;;11360;;9;;;;;20;40;;;;;33560;;;;;;;27;;30;;24;;33;;;;;;;;;;;;;;;2.4;;;;;;;golden_selection_kit_SUM24A:5
 W_MultiAge_SUM25A1;Nascondiglio della Laguna - Lv. 1;Lagoon Hideout - Lv. 1;d9f1a5f3d;;;5x5;2.5;5850;;;10;;;;;;;;;;;108910;;;;;;;;;;31;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25A10;Nascondiglio della Laguna - Lv. 10;Lagoon Hideout - Lv. 10;ab2cc058a;;;5x5;2.5;32170;;;55;;;;;;;;;;;174240;;;;;;;;;;215;;52;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25A11;Nascondiglio della Laguna - Lv. 11;Lagoon Hideout - Lv. 11;9c8cbb297;;;5x5;2.5;35090;;;60;;;;;;;;;;;181510;;;;;;;;;;235;;93;;;;;;;;;;;;;;;;;;;;;;;
@@ -1831,9 +1831,9 @@ W_MultiAge_SUM25A12;Nascondiglio della Laguna - Lv. 12;Lagoon Hideout - Lv. 12;8
 W_MultiAge_SUM25A13;Nascondiglio della Laguna - Lv. 13;Lagoon Hideout - Lv. 13;64c7dca71;;;5x5;2.5;40940;;;70;;;;;;;;;;;196030;;;;;;;;;;275;;175;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25A14;Nascondiglio della Laguna - Lv. 14;Lagoon Hideout - Lv. 14;e1ec462b7;;;5x5;2.5;43870;;;75;;;;;;;;;;;203280;;;;;;;;;;295;;215;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25A15;Nascondiglio della Laguna - Lv. 15;Lagoon Hideout - Lv. 15;7c25dd954;;;5x5;2.5;46790;;;80;;;;;;;;;;;210550;;;;;;;;;;315;;255;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_SUM25A16;Nascondiglio della Laguna - Lv. 16;Lagoon Hideout - Lv. 16;5f1e315ff;1;;5x5;2.5;49720;;;110;;;;;;;;;;;217800;;;;;;;;;;335;;295;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM25BC|silver_upgrade_kit_SUM25A
-W_MultiAge_SUM25A17;Tenuta della Laguna ;Lagoon Hold;24c0b18a4;1;;5x5;2.5;58490;;;140;;;;;;;;;;;225070;;;;;;;;;;355;;335;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_SUM25A|selection_kit_SUM25BC
-W_MultiAge_SUM25A18;Roccaforte della laguna;Lagoon Stronghold;07c82a6d9;1;;5x5;2.5;67260;;;170;;;;;;;;;;;232320;;;;;;;;;;375;;375;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_SUM25BC
+W_MultiAge_SUM25A16;Nascondiglio della Laguna - Lv. 16;Lagoon Hideout - Lv. 16;5f1e315ff;1;;5x5;2.5;49720;;;110;;;;;;;;;;;217800;;;;;;;;;;335;;295;;;;;;;;;;;;;;;;;;;;;;;selection_kit_SUM25BC:1|silver_upgrade_kit_SUM25A:5
+W_MultiAge_SUM25A17;Tenuta della Laguna ;Lagoon Hold;24c0b18a4;1;;5x5;2.5;58490;;;140;;;;;;;;;;;225070;;;;;;;;;;355;;335;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_SUM25A:5|selection_kit_SUM25BC:2
+W_MultiAge_SUM25A18;Roccaforte della laguna;Lagoon Stronghold;07c82a6d9;1;;5x5;2.5;67260;;;170;;;;;;;;;;;232320;;;;;;;;;;375;;375;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_SUM25BC:3
 W_MultiAge_SUM25A2;Nascondiglio della Laguna - Lv. 2;Lagoon Hideout - Lv. 2;2a9c1fe2f;;;5x5;2.5;8770;;;15;;;;;;;;;;;116160;;;;;;;;;;52;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25A3;Nascondiglio della Laguna - Lv. 3;Lagoon Hideout - Lv. 3;c40b36701;;;5x5;2.5;11700;;;20;;;;;;;;;;;123430;;;;;;;;;;72;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25A4;Nascondiglio della Laguna - Lv. 4;Lagoon Hideout - Lv. 4;042ee71ee;;;5x5;2.5;14620;;;25;;;;;;;;;;;130680;;;;;;;;;;93;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1846,12 +1846,12 @@ W_MultiAge_SUM25B1;Paradiso di Cocco del Capitano;Captain's Coconut Paradise;3f3
 W_MultiAge_SUM25B2;Paradiso di Cocco del Capitano Asceso;Ascended Captain's Coconut Paradise;ed747749e;1;30;1x3;;-6380;;;12;;;;;18;;;;;129430;;;;10;10;;;;;;;42;42;;;15;15;;;;;;20000;;;;;;;;;;;;;
 W_MultiAge_SUM25C1;Pergolato del Pappagallo del Pirata;Pirate's Parrot Perch;f24bfb3c2;1;;1x3;;-6380;;;12;;;;;;9;;;;;;6560;;;;6;6;;;19;19;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SUM25C2;Pergolato del Pappagallo del Pirata Asceso;Ascended Pirate's Parrot Perch;e47e6aab1;1;30;1x3;;-6380;;;18;;;;;;21;;;;;;13120;;;;6;6;;;19;19;;;;;;;15;15;;;20000;;;;;;;;;5;;;;;
-W_MultiAge_SUM25D1;Bazar Galleggiante di Barbanera;Blackbeard's Floating Bazaar;7a806faae;1;;5x5;;;;;250;;;;;;;;;;;;;;110;110;110;110;;;;;375;375;375;375;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_SUM25A
-W_MultiAge_SUM25E1;Eredità della Regina Anna;Queen Anne's Legacy;5274efaa0;1;;4x6;;;;;400;;;;;;;;;;;;;;60;60;60;60;180;180;180;180;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_SUM20A
-W_MultiAge_SUM25F1;Roccia della Sirena - Lv. 1;Siren's Rock - Lv. 1;7f9fd6e4d;;;2x5;1;14890;;;;;;;;40;;40;;;161790;;;;;;;;14;14;;;51;51;;;;;;;;;;;;;;;;2;;;;;;;selection_kit_SUM25A
-W_MultiAge_SUM25F2;Roccia della Sirena - Lv. 2;Siren's Rock - Lv. 2;d464e1f61;1;;2x5;1;17020;;;;;;;;50;;50;;;215720;;;;;;;;16;16;;;61;61;;;;;;;;;;;;;;;;4;;;;;;;selection_kit_SUM25A
-W_MultiAge_SUM25F3;Roccia Tesoro della Sirena;Siren's Treasure Rock;431d9a1a7;1;;2x5;1;19140;;;;;;;;60;;60;;;269660;;;;;;;;18;18;;;71;71;;;;;;;;;;;;;;;;6;;;;;;;silver_selection_kit_SUM25A
-W_MultiAge_SUM25F4;Roccia Tesoro della Sirena Incantata;Enchanted Siren's Treasure Rock;f0e72dbff;1;;2x5;1;21270;;;;;;;;70;;70;;;323590;;;;;;;;20;20;;;81;81;;;;;;;;;;;;;;;;8;;;;;;;golden_selection_kit_SUM25A
+W_MultiAge_SUM25D1;Bazar Galleggiante di Barbanera;Blackbeard's Floating Bazaar;7a806faae;1;;5x5;;;;;250;;;;;;;;;;;;;;110;110;110;110;;;;;375;375;375;375;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_SUM25A:20
+W_MultiAge_SUM25E1;Eredità della Regina Anna;Queen Anne's Legacy;5274efaa0;1;;4x6;;;;;400;;;;;;;;;;;;;;60;60;60;60;180;180;180;180;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_SUM20A:12
+W_MultiAge_SUM25F1;Roccia della Sirena - Lv. 1;Siren's Rock - Lv. 1;7f9fd6e4d;;;2x5;1;14890;;;;;;;;40;;40;;;161790;;;;;;;;14;14;;;51;51;;;;;;;;;;;;;;;;2;;;;;;;selection_kit_SUM25A:2
+W_MultiAge_SUM25F2;Roccia della Sirena - Lv. 2;Siren's Rock - Lv. 2;d464e1f61;1;;2x5;1;17020;;;;;;;;50;;50;;;215720;;;;;;;;16;16;;;61;61;;;;;;;;;;;;;;;;4;;;;;;;selection_kit_SUM25A:3
+W_MultiAge_SUM25F3;Roccia Tesoro della Sirena;Siren's Treasure Rock;431d9a1a7;1;;2x5;1;19140;;;;;;;;60;;60;;;269660;;;;;;;;18;18;;;71;71;;;;;;;;;;;;;;;;6;;;;;;;silver_selection_kit_SUM25A:4
+W_MultiAge_SUM25F4;Roccia Tesoro della Sirena Incantata;Enchanted Siren's Treasure Rock;f0e72dbff;1;;2x5;1;21270;;;;;;;;70;;70;;;323590;;;;;;;;20;20;;;81;81;;;;;;;;;;;;;;;;8;;;;;;;golden_selection_kit_SUM25A:5
 W_MultiAge_SummerBonus22Buccaneer;Rimessa delle barche del bucaniere;Buccaneer's Boathouse;81fa36aa9;1;;4x4;2;11586;30341;1;8;;;;;20;;;;;214193;;2813;;;23;24;;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;
 W_MultiAge_SummerBonus22Deadman;Rimessa delle barche dell'uomo morto;Deadman's Boathouse;562b5978e;1;;4x4;2;11586;30341;;6;;;;;18;;;;25;214193;;2813;;19;;;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_SummerBonus22a;Rimessa delle barche del corsaro - Liv. 1;Privateer's Boathouse - Lv. 1;f7723ba79;;;4x4;2;10043;23636;;;;;;;;;;;;84786;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1909,15 +1909,15 @@ W_MultiAge_WILD23E1;Abeti himalayani - Liv. 1;Himalayan Firs - Lv. 1;a3895d0a0;1
 W_MultiAge_WILD23E2;Abeti himalayani - Liv. 2;Himalayan Firs - Lv. 2;18425f4cc;1;;2x2;1;;;;;;;;;20;;;;;;;;;9;;9;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;
 W_MultiAge_WILD23F1;Campo di rododendri - Liv. 1;Rhododendron Field - Lv. 1;ea4d396ce;1;;2x2;1;;;;4;;;;;;;;;;;;;;;13;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23F2;Campo di rododendri - Liv. 2;Rhododendron Field - Lv. 2;702e6f268;1;;2x2;1;;;;6;;;;;;;;;;;;;;;19;;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD23G;Statua del panda d'oro;Golden Panda Statue;c4b6dc2dc;1;;1x1;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD23A
+W_MultiAge_WILD23G;Statua del panda d'oro;Golden Panda Statue;c4b6dc2dc;1;;1x1;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD23A:1
 W_MultiAge_WILD23GDecoration;Statua del panda;Panda Statue;928b0cd25;;;1x1;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24A1;Habitat dei Fenicotteri - Lv. 1;Flamingo Habitat - Lv. 1;e8dc8e354;;;5x4;2;;3400;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24A10;Habitat dei Fenicotteri - Lv. 10;Flamingo Habitat - Lv. 10;277bdde11;;;5x4;2;;34060;;22;;;;;50;;;;;;;;;13;18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD24A11;Habitat dei Fenicotteri - Lv. 11;Flamingo Habitat - Lv. 11;058eea169;1;;5x4;2;;37460;;24;;;;;60;;;;;;;;;15;20;;;15;20;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD24CD|silver_upgrade_kit_WILD24A
-W_MultiAge_WILD24A12;Habitat dei Fenicotteri Sereno;Serene Flamingo Habitat;9e1ae08ec;1;;5x4;2;;49940;;26;;;;;70;;;;;;;;;20;25;;;20;25;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD24A|selection_kit_WILD24CD|upgrade_kit_WILD24D
-W_MultiAge_WILD24A13;Paradiso dei Fenicotteri Sereno;Serene Flamingo Paradise;2bf23c32d;1;;5x4;2;;62440;;28;;;;;80;;;;;;;;;25;30;;;25;30;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD24CD|upgrade_kit_WILD24C|upgrade_kit_WILD24D
-W_MultiAge_WILD24A14;Paradiso dei Fenicotteri Sacro;Sacred Flamingo Paradise;bc094a53e;1;;5x4;;;74950;;155;;;;;255;;205;;;;;;;155;155;;;205;205;;;;;;;5;5;;;;;;;;;;;M;;;;;;;;selection_kit_WILD24CD|upgrade_kit_WILD24C|upgrade_kit_WILD24D
-W_MultiAge_WILD24A15;Paradiso dei Fenicotteri Radiosi;Radiant Flamingo Paradise;cd0b56f49;1;90;5x4;;;87470;;355;;;;;405;;355;;;;;;;315;315;;;355;355;;;;;;;25;25;;;;;;;;;200;;M;;;;;;;;selection_kit_WILD24CD|upgrade_kit_WILD24C|upgrade_kit_WILD24D
+W_MultiAge_WILD24A11;Habitat dei Fenicotteri - Lv. 11;Flamingo Habitat - Lv. 11;058eea169;1;;5x4;2;;37460;;24;;;;;60;;;;;;;;;15;20;;;15;20;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD24CD:1|silver_upgrade_kit_WILD24A:5
+W_MultiAge_WILD24A12;Habitat dei Fenicotteri Sereno;Serene Flamingo Habitat;9e1ae08ec;1;;5x4;2;;49940;;26;;;;;70;;;;;;;;;20;25;;;20;25;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD24A:5|selection_kit_WILD24CD:3|upgrade_kit_WILD24D:3
+W_MultiAge_WILD24A13;Paradiso dei Fenicotteri Sereno;Serene Flamingo Paradise;2bf23c32d;1;;5x4;2;;62440;;28;;;;;80;;;;;;;;;25;30;;;25;30;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD24CD:6|upgrade_kit_WILD24C:6|upgrade_kit_WILD24D:6
+W_MultiAge_WILD24A14;Paradiso dei Fenicotteri Sacro;Sacred Flamingo Paradise;bc094a53e;1;;5x4;;;74950;;155;;;;;255;;205;;;;;;;155;155;;;205;205;;;;;;;5;5;;;;;;;;;;;M;;;;;;;;selection_kit_WILD24CD:16|upgrade_kit_WILD24C:16|upgrade_kit_WILD24D:16
+W_MultiAge_WILD24A15;Paradiso dei Fenicotteri Radiosi;Radiant Flamingo Paradise;cd0b56f49;1;90;5x4;;;87470;;355;;;;;405;;355;;;;;;;315;315;;;355;355;;;;;;;25;25;;;;;;;;;200;;M;;;;;;;;selection_kit_WILD24CD:30|upgrade_kit_WILD24C:30|upgrade_kit_WILD24D:30
 W_MultiAge_WILD24A2;Habitat dei Fenicotteri - Lv. 2;Flamingo Habitat - Lv. 2;0d5308845;;;5x4;2;;6820;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24A3;Habitat dei Fenicotteri - Lv. 3;Flamingo Habitat - Lv. 3;d0615560e;;;5x4;2;;10220;;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24A4;Habitat dei Fenicotteri - Lv. 4;Flamingo Habitat - Lv. 4;a514a2528;;;5x4;2;;13620;;15;;;;;;;;;;;;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1926,7 +1926,7 @@ W_MultiAge_WILD24A6;Habitat dei Fenicotteri - Lv. 6;Flamingo Habitat - Lv. 6;e18
 W_MultiAge_WILD24A7;Habitat dei Fenicotteri - Lv. 7;Flamingo Habitat - Lv. 7;b199eac25;;;5x4;2;;23840;;18;;;;;35;;;;;;;;;7;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24A8;Habitat dei Fenicotteri - Lv. 8;Flamingo Habitat - Lv. 8;40ea063aa;;;5x4;2;;27240;;19;;;;;40;;;;;;;;;9;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24A9;Habitat dei Fenicotteri - Lv. 9;Flamingo Habitat - Lv. 9;c687272dd;;;5x4;2;;30640;;20;;;;;45;;;;;;;;;11;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD24B1;Giardino dei Sogni Eterni;Garden of Eternal Dreams;379e03737;1;;4x5;;56780;85140;;80;;;;;140;;;;;;;;;100;100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD24A|selection_kit_WILD24A|silver_upgrade_kit_WILD24A
+W_MultiAge_WILD24B1;Giardino dei Sogni Eterni;Garden of Eternal Dreams;379e03737;1;;4x5;;56780;85140;;80;;;;;140;;;;;;;;;100;100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD24A:20|selection_kit_WILD24A:20|silver_upgrade_kit_WILD24A:20
 W_MultiAge_WILD24C1;Sentieri del Tapiro - Lv. 1;Tapir Trails - Lv. 1;4d67bdf30;;;2x1;;-2280;;;3;;;;;6;;;;;;;;;5;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24C2;Sentieri del Tapiro - Lv. 2;Tapir Trails - Lv. 2;06cbee716;1;;2x1;;-2280;;;4;;;;;8;;;;;;;;;7;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24D1;Palude degli alligatori - Lv. 1;Alligator Swamp - Lv. 1;caadf6593;1;;2x3;1;-7940;;;10;;;;;30;;;;;;;;;;30;;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1935,8 +1935,8 @@ W_MultiAge_WILD24E1;Nascondiglio del Procione;Raccoon Hideout;548a1cbc0;1;;2x1;;
 W_MultiAge_WILD24F1;Kapok Gigante;Giant Kapok;077b21872;1;;2x2;1;6820;;;5;;;;;18;;;;;;;;;;;8;12;;;;;;;3;3;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD24G1;Gigli del Sangue;Blood Lilies;01a2578c2;1;;1x1;0.5;1700;;;2;;;;;;;;;5;;;;;2;3;;;2;2;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD25A1;Santuario Shika - Lv. 1;Shika Shrine - Lv. 1;3a7e95e5b;;;8x3;1.5;7240;10860;;21;;;;;;12;12;;;;71310;;;;;17;17;;;13;13;;;15;15;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD25A10;Santuario Momiji;Momiji Shrine;5dd3d3e51;1;;8x3;1.5;46320;69460;;48;;;;;;93;93;;;;263860;;;;;72;72;;;68;68;;;70;70;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD25A|selection_kit_WILD25BC
-W_MultiAge_WILD25A11;Santuario Momijidori;Momijidori Shrine;ab3e29967;1;;8x3;1.5;50670;75980;;51;;;;;;102;102;;;;285260;;;;;78;78;;;74;74;;;76;76;;;;;;;;;;;;;M;;;;;;;;selection_kit_WILD25BC
+W_MultiAge_WILD25A10;Santuario Momiji;Momiji Shrine;5dd3d3e51;1;;8x3;1.5;46320;69460;;48;;;;;;93;93;;;;263860;;;;;72;72;;;68;68;;;70;70;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD25A:5|selection_kit_WILD25BC:2
+W_MultiAge_WILD25A11;Santuario Momijidori;Momijidori Shrine;ab3e29967;1;;8x3;1.5;50670;75980;;51;;;;;;102;102;;;;285260;;;;;78;78;;;74;74;;;76;76;;;;;;;;;;;;;M;;;;;;;;selection_kit_WILD25BC:3
 W_MultiAge_WILD25A2;Santuario Shika - Lv. 2;Shika Shrine - Lv. 2;f43ccc1f5;;;8x3;1.5;11580;17360;;24;;;;;;21;21;;;;92700;;;;;23;23;;;19;19;;;21;21;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD25A3;Santuario Shika - Lv. 3;Shika Shrine - Lv. 3;cd1b8ed8e;;;8x3;1.5;15930;23880;;27;;;;;;30;30;;;;114100;;;;;29;29;;;25;25;;;27;27;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD25A4;Santuario Shika - Lv. 4;Shika Shrine - Lv. 4;bf31a41f6;;;8x3;1.5;20270;30380;;30;;;;;;39;39;;;;135490;;;;;35;35;;;31;31;;;33;33;;;;;;;;;;;;;;;;;;;;;
@@ -1944,15 +1944,15 @@ W_MultiAge_WILD25A5;Santuario Shika - Lv. 5;Shika Shrine - Lv. 5;8c0f23137;;;8x3
 W_MultiAge_WILD25A6;Santuario Shika - Lv. 6;Shika Shrine - Lv. 6;49fd74027;;;8x3;1.5;28960;43410;;36;;;;;;57;57;;;;178280;;;;;48;48;;;44;44;;;46;46;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD25A7;Santuario Shika - Lv. 7;Shika Shrine - Lv. 7;f5e62c880;;;8x3;1.5;33290;49930;;39;;;;;;66;66;;;;199680;;;;;54;54;;;50;50;;;52;52;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD25A8;Santuario Shika - Lv. 8;Shika Shrine - Lv. 8;203592a82;;;8x3;1.5;37650;56430;;42;;;;;;75;75;;;;221070;;;;;60;60;;;56;56;;;58;58;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD25A9;Santuario Shika - Lv. 9;Shika Shrine - Lv. 9;ad5208e82;1;;8x3;1.5;41980;62960;;45;;;;;;84;84;;;;242470;;;;;66;66;;;62;62;;;64;64;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD25BC|silver_upgrade_kit_WILD25A
+W_MultiAge_WILD25A9;Santuario Shika - Lv. 9;Shika Shrine - Lv. 9;ad5208e82;1;;8x3;1.5;41980;62960;;45;;;;;;84;84;;;;242470;;;;;66;66;;;62;62;;;64;64;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD25BC:1|silver_upgrade_kit_WILD25A:5
 W_MultiAge_WILD25B1;Stagno Koi;Koi Pond;1947fa151;1;;2x3;;-20440;17020;;;;;;;;;;;;;67120;;;;18;18;18;;;21;21;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD25B2;Stagno Koi Asceso;Ascended Koi Pond;4d01827a7;1;30;2x3;;-20440;34060;;;;;;;;;;;;;134240;;;;38;38;38;;;44;44;;;;;12;;;;0.04;0.04;20000;20000;;;;;;;;;;;;;
 W_MultiAge_WILD25C1;Cancello Usagi Bonbori;Usagi Bonbori Gate;7a4fa4413;1;;3x1;;-6820;;;;;;;;14.9;;;;;;;;;12;12;;;12;;;;15;15;;;;;;;;;;;;;;;;;;3;;;;;
 W_MultiAge_WILD25C2;Cancello Usagi Bonbori Asceso;Ascended Usagi Bonbori Gate;e0f061e05;1;30;3x1;;-6820;;;;;;;;29.8;;;;;;;;;26;26;;;26;;;;32;32;;;;;;;;;;;10;5;;;;;;5;;;;;
-W_MultiAge_WILD25D1;Grande Santuario Inari;Inari Grand Shrine;cf6b9a5ca;1;;3x5;;;255400;;105;;;;;135;;;;900;;;;;;;90;90;;;120;120;;;;;;;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WILD25A
+W_MultiAge_WILD25D1;Grande Santuario Inari;Inari Grand Shrine;cf6b9a5ca;1;;3x5;;;255400;;105;;;;;135;;;;900;;;;;;;90;90;;;120;120;;;;;;;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WILD25A:20
 W_MultiAge_WILD26A1;Centro di Riabilitazione Elefanti - Livello 1;Elephant Rehabilitation Centre - Lv. 1;c67138499;;;5x4;2;6380;;;;;;;;;;;;10;;;15310;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD26A10;Ala Conservazione Elefanti;Elephant Conservation Wing;125d2d627;1;;5x4;2;35090;;;150;;;;;;;;;180;;;35000;;;;;;250;250;;;170;170;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD26A|selection_kit_WILD26BC
-W_MultiAge_WILD26A11;Grande Riserva Elefanti;Elephant Great Reserve;0b136766a;1;;5x4;2;38280;;;200;;;;;;;;;200;;;38280;;;;;;280;280;;;200;200;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_WILD26BC
+W_MultiAge_WILD26A10;Ala Conservazione Elefanti;Elephant Conservation Wing;125d2d627;1;;5x4;2;35090;;;150;;;;;;;;;180;;;35000;;;;;;250;250;;;170;170;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD26A:5|selection_kit_WILD26BC:2
+W_MultiAge_WILD26A11;Grande Riserva Elefanti;Elephant Great Reserve;0b136766a;1;;5x4;2;38280;;;200;;;;;;;;;200;;;38280;;;;;;280;280;;;200;200;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_WILD26BC:3
 W_MultiAge_WILD26A2;Centro di Riabilitazione Elefanti - Livello 2;Elephant Rehabilitation Centre - Lv. 2;2b60873bc;;;5x4;2;9570;;;;;;;;;;;;20;;;17500;;;;;;;;;;30;30;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD26A3;Centro di Riabilitazione Elefanti - Livello 3;Elephant Rehabilitation Centre - Lv. 3;fde63d5c5;;;5x4;2;12760;;;;;;;;;;;;40;;;19690;;;;;;;;;;50;50;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD26A4;Centro di Riabilitazione Elefanti - Livello 4;Elephant Rehabilitation Centre - Lv. 4;c1024d70d;;;5x4;2;15950;;;;;;;;;;;;60;;;21870;;;;;;25;25;;;70;70;;;;;;;;;;;;;;;;;;;;;;;
@@ -1960,12 +1960,12 @@ W_MultiAge_WILD26A5;Centro di Riabilitazione Elefanti - Livello 5;Elephant Rehab
 W_MultiAge_WILD26A6;Centro di Riabilitazione Elefanti - Livello 6;Elephant Rehabilitation Centre - Lv. 6;ee5a3e55e;;;5x4;2;22330;;;10;;;;;;;;;100;;;26250;;;;;;100;100;;;110;110;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD26A7;Centro di Riabilitazione Elefanti - Livello 7;Elephant Rehabilitation Centre - Lv. 7;eece0183a;;;5x4;2;25520;;;25;;;;;;;;;120;;;28440;;;;;;150;150;;;130;130;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD26A8;Centro di Riabilitazione Elefanti - Livello 8;Elephant Rehabilitation Centre - Lv. 8;203450caa;;;5x4;2;28710;;;50;;;;;;;;;140;;;30620;;;;;;180;180;;;140;140;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WILD26A9;Centro di Riabilitazione Elefanti - Livello 9;Elephant Rehabilitation Centre - Lv. 9;11b15cbe4;1;;5x4;2;31900;;;100;;;;;;;;;160;;;32810;;;;;;200;200;;;150;150;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD26BC|silver_upgrade_kit_WILD26A
-W_MultiAge_WILD26B1;Accampamento della Savana;Savannah Camp;fc9b2ceaf;1;;2x2;;-21270;;;40;;;;;;;;;;;;5470;;;;32;32;;;;;;;32;32;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WILD22A
-W_MultiAge_WILD26B2;Accampamento della Savana Asceso;Ascended Savannah Camp;b3c695fad;1;30;2x2;;-21270;;;45;;;;;;;;;;;;5470;;;;42;42;;;;;;;42;42;;;20;20;;;20000;;;5;;;;;;;;;;;upgrade_kit_ascended_WILD22A
-W_MultiAge_WILD26C1;Laguna Ippopotamo;Hippo Lagoon;e4eb72c0e;1;;2x2;;-21270;;;45;;;;;;;;;;;;5470;;;;;;;54;54;;;;;;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WILD24A
-W_MultiAge_WILD26C2;Laguna Ippopotamo Ascesa;Ascended Hippo Lagoon;f7a3afe34;1;30;2x2;;-21270;;;60;;;;;;;;;;;;5470;;;;;;;60;60;;;;;;;25;;;;0.02;;20000;5;;;;;;;;;;;;upgrade_kit_ascended_WILD24A
-W_MultiAge_WILD26D1;Sorgenti Tartaruga Sacra;Sacred Tortoise Springs;082cfbb2d;1;;4x4;;;;;200;;;;;;;;;;;;;;150;150;150;150;;;;;100;100;100;100;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_WILD26A|selection_kit_WILD26BC
+W_MultiAge_WILD26A9;Centro di Riabilitazione Elefanti - Livello 9;Elephant Rehabilitation Centre - Lv. 9;11b15cbe4;1;;5x4;2;31900;;;100;;;;;;;;;160;;;32810;;;;;;200;200;;;150;150;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD26BC:1|silver_upgrade_kit_WILD26A:5
+W_MultiAge_WILD26B1;Accampamento della Savana;Savannah Camp;fc9b2ceaf;1;;2x2;;-21270;;;40;;;;;;;;;;;;5470;;;;32;32;;;;;;;32;32;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WILD22A:2
+W_MultiAge_WILD26B2;Accampamento della Savana Asceso;Ascended Savannah Camp;b3c695fad;1;30;2x2;;-21270;;;45;;;;;;;;;;;;5470;;;;42;42;;;;;;;42;42;;;20;20;;;20000;;;5;;;;;;;;;;;upgrade_kit_ascended_WILD22A:30
+W_MultiAge_WILD26C1;Laguna Ippopotamo;Hippo Lagoon;e4eb72c0e;1;;2x2;;-21270;;;45;;;;;;;;;;;;5470;;;;;;;54;54;;;;;;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WILD24A:2
+W_MultiAge_WILD26C2;Laguna Ippopotamo Ascesa;Ascended Hippo Lagoon;f7a3afe34;1;30;2x2;;-21270;;;60;;;;;;;;;;;;5470;;;;;;;60;60;;;;;;;25;;;;0.02;;20000;5;;;;;;;;;;;;upgrade_kit_ascended_WILD24A:30
+W_MultiAge_WILD26D1;Sorgenti Tartaruga Sacra;Sacred Tortoise Springs;082cfbb2d;1;;4x4;;;;;200;;;;;;;;;;;;;;150;150;150;150;;;;;100;100;100;100;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_WILD26A:5|selection_kit_WILD26BC:5
 W_MultiAge_WIN18B1;Costruttore di slitte;Sleigh Builder;P_MultiAge_WinterBonus18-0497e0c6d;1;;2x3;1;-370;;;;;;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN18B2;Costruttore di Slitte Deluxe;Sleigh Builder Deluxe;298a2f960;1;;2x3;;-20440;;;;;;;;50;;;;;;;;;15;15;;;15;15;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN19A1;Treno d'inverno - Lv. 1;Winter Train - Lv. 1;R_MultiAge_WinterBonus19a-89a86574d;;;7x3;1.5;11473;10590;;;;;;;;;;;;124200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1991,25 +1991,25 @@ W_MultiAge_WIN19D2;Carro Merci Serie II;Freight Car Series II;c93423057;1;;2x3;;
 W_MultiAge_WIN21B1;Carrozza Salotto;Parlor Car;D_MultiAge_WinterBonus21Parlor-b9888cca0;1;;2x3;;;6100;;;;;;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN21B2;Carrozza Salotto Serie II;Parlor Car Series II;78ff18ddd;1;;2x3;;;10630;;;;;;;;;;;;;;;;;23;;23;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;
 W_MultiAge_WIN22A1;Fabbrica di cioccolato - Liv. 1;Chocolatery - Lv. 1;4062898d2;;;4x6;2;;13593;;1;;;;;1;;;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN22A10;Fabbrica di cioccolato - Liv. 10;Chocolatery - Lv. 10;d0f28cc8f;;;4x6;2;;17833;;4;;;;;10;;;;;;;;;8;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1
-W_MultiAge_WIN22A11a;Ted's Choc;Ted's Choc;7e927ffbb;1;;4x6;2;;18755;;4;;;;;32;;;;;;;;;31;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1
-W_MultiAge_WIN22A11b;Ketebo Candy;Ketebo Candy;0ce04407a;1;;4x6;2;;18755;;14;;;;;10;;;;;;;;;8;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1
-W_MultiAge_WIN22A12a;Blissful Choc di Ted;Ted's Blissful Choc;1b4bd3def;1;;4x6;2;;19677;;8;;;;;64;;;;;;;;;43;13;9;38;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN22B
-W_MultiAge_WIN22A12b;Ketebo Candy Delights;Ketebo Candy Delights;393ea86d9;1;;4x6;2;;19677;;28;;;;;20;;;;;;;;;12;49;32;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN22B
+W_MultiAge_WIN22A10;Fabbrica di cioccolato - Liv. 10;Chocolatery - Lv. 10;d0f28cc8f;;;4x6;2;;17833;;4;;;;;10;;;;;;;;;8;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1:1
+W_MultiAge_WIN22A11a;Ted's Choc;Ted's Choc;7e927ffbb;1;;4x6;2;;18755;;4;;;;;32;;;;;;;;;31;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1:2
+W_MultiAge_WIN22A11b;Ketebo Candy;Ketebo Candy;0ce04407a;1;;4x6;2;;18755;;14;;;;;10;;;;;;;;;8;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1:2
+W_MultiAge_WIN22A12a;Blissful Choc di Ted;Ted's Blissful Choc;1b4bd3def;1;;4x6;2;;19677;;8;;;;;64;;;;;;;;;43;13;9;38;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN22B:2
+W_MultiAge_WIN22A12b;Ketebo Candy Delights;Ketebo Candy Delights;393ea86d9;1;;4x6;2;;19677;;28;;;;;20;;;;;;;;;12;49;32;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN22B:2
 W_MultiAge_WIN22A2;Fabbrica di cioccolato - Liv. 2;Chocolatery - Lv. 2;3c8735447;;;4x6;2;;14036;;1;;;;;2;;;;;;;;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN22A3;Fabbrica di cioccolato - Liv. 3;Chocolatery - Lv. 3;b658cd1e1;;;4x6;2;;14515;;1;;;;;3;;;;;;;;;1;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN22A4;Fabbrica di cioccolato - Liv. 4;Chocolatery - Lv. 4;5949c3d70;;;4x6;2;;15037;;2;;;;;4;;;;;;;;;1;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN22A5;Fabbrica di cioccolato - Liv. 5;Chocolatery - Lv. 5;5944c1ad3;;;4x6;2;;15480;;2;;;;;5;;;;;;;;;2;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN22A6;Fabbrica di cioccolato - Liv. 6;Chocolatery - Lv. 6;c5c3e9c6d;;;4x6;2;;15956;;2;;;;;6;;;;;;;;;4;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN22A7;Fabbrica di cioccolato - Liv. 7;Chocolatery - Lv. 7;b240e0607;;;4x6;2;;16435;;3;;;;;7;;;;;;;;;5;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN22A8;Fabbrica di cioccolato - Liv. 8;Chocolatery - Lv. 8;0101656d1;;;4x6;2;;16878;;3;;;;;8;;;;;;;;;6;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1
-W_MultiAge_WIN22A9;Fabbrica di cioccolato - Liv. 9;Chocolatery - Lv. 9;f0c228787;;;4x6;2;;17354;;3;;;;;9;;;;;;;;;7;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1
+W_MultiAge_WIN22A8;Fabbrica di cioccolato - Liv. 8;Chocolatery - Lv. 8;0101656d1;;;4x6;2;;16878;;3;;;;;8;;;;;;;;;6;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1:1
+W_MultiAge_WIN22A9;Fabbrica di cioccolato - Liv. 9;Chocolatery - Lv. 9;f0c228787;;;4x6;2;;17354;;3;;;;;9;;;;;;;;;7;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_WIN22B1:1
 W_MultiAge_WIN22B1;Corpo di guardia degli schiaccianoci;Nutcracker Guardhouse;e76ce4058;1;;2x2;1;;;;3;;;;;;;;;;;;;;6;8;;;;;;;;;;;;;;;;;;;;;;;;;;;2;;;;
 W_MultiAge_WIN22B2;Corpo di guardia degli schiaccianoci gioioso;Joyful Nutcracker Guardhouse;abda69c13;1;;2x2;1;;;;6;;;;;;;;;;;;;;11;15;;;;;;;;;;;;;;;;;;;;;;;;;;;3;;;;
 W_MultiAge_WIN23A1;Piramide del villaggio invernale - Liv. 1;Winter Wonderland Pyramid - Lv. 1;4ed9121f9;;;4x4;;6729;;;;;;;;;;;;;;51200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN23A10;Piramide del villaggio invernale - Liv. 10;Winter Wonderland Pyramid - Lv. 10;3278011ca;1;;4x4;;14983;;;13;;;10;;16;;;;;;132600;;;25;;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23EF|silver_upgrade_kit_WIN23A
-W_MultiAge_WIN23A11;Piramide del villaggio invernale Grandiosa;Grand Winter Wonderland Pyramid;98769e032;1;;4x4;;15899;;;16;;;11;;32;;;;;;141700;;;27;;29;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WIN23A|selection_kit_WIN23EF
-W_MultiAge_WIN23A12;Piramide del villaggio invernale maestosa;Majestic Winter Wonderland Pyramid;9005d1770;1;;4x4;;16817;;;19;;;12;;48;;;;;;150800;;;29;;32;;8;;;;;;12;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23EF
+W_MultiAge_WIN23A10;Piramide del villaggio invernale - Liv. 10;Winter Wonderland Pyramid - Lv. 10;3278011ca;1;;4x4;;14983;;;13;;;10;;16;;;;;;132600;;;25;;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23EF:1|silver_upgrade_kit_WIN23A:5
+W_MultiAge_WIN23A11;Piramide del villaggio invernale Grandiosa;Grand Winter Wonderland Pyramid;98769e032;1;;4x4;;15899;;;16;;;11;;32;;;;;;141700;;;27;;29;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WIN23A:5|selection_kit_WIN23EF:2
+W_MultiAge_WIN23A12;Piramide del villaggio invernale maestosa;Majestic Winter Wonderland Pyramid;9005d1770;1;;4x4;;16817;;;19;;;12;;48;;;;;;150800;;;29;;32;;8;;;;;;12;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23EF:3
 W_MultiAge_WIN23A2;Piramide del villaggio invernale - Liv. 2;Winter Wonderland Pyramid - Lv. 2;d0122677b;;;4x4;;7644;;;;;;;;;;;;;;60300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN23A3;Piramide del villaggio invernale - Liv. 3;Winter Wonderland Pyramid - Lv. 3;c8e20f872;;;4x4;;8560;;;3;;;;;;;;;;;69400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN23A4;Piramide del villaggio invernale - Liv. 4;Winter Wonderland Pyramid - Lv. 4;2613c37d5;;;4x4;;9478;;;4;;;;;;;;;;;78500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2018,20 +2018,20 @@ W_MultiAge_WIN23A6;Piramide del villaggio invernale - Liv. 6;Winter Wonderland P
 W_MultiAge_WIN23A7;Piramide del villaggio invernale - Liv. 7;Winter Wonderland Pyramid - Lv. 7;c38fcd364;;;4x4;;12232;;;7;;;;;2;;;;;;105600;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN23A8;Piramide del villaggio invernale - Liv. 8;Winter Wonderland Pyramid - Lv. 8;ba75b732c;;;4x4;;13150;;;8;;;;;4;;;;;;114700;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN23A9;Piramide del villaggio invernale - Liv. 9;Winter Wonderland Pyramid - Lv. 9;a1830b774;;;4x4;;14065;;;10;;;;;8;;;;;;123500;;;20;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN23B1;Cottage di pan di zenzero;Sweet Gingerbread Cottage;94aba780e;1;;3x3;;;;;31;;;;;27;27;;;;;;;;45;;56;75;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_WIN23A
-W_MultiAge_WIN23C1;Negozio di zabaione di Elfie - Liv. 1;Elfie's Nog Shop - Lv. 1;309cca093;;;3x3;1.5;;;;13;;;;;;;;;;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23A
-W_MultiAge_WIN23C2;Negozio di zabaione di Elfie - Liv. 2;Elfie's Nog Shop - Lv. 2;71b35a4d3;1;;3x3;1.5;;;;13;;;;;30;;;;;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23A
-W_MultiAge_WIN23C3;Negozio di gelato e zabaione di Elfie;Elfie's Cream & Nog Shop;3993204b0;1;;3x3;1.5;;-34720;;13;;;;;30;;;;;;;;;28;;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_WIN23A
-W_MultiAge_WIN23C4;Emporio di gelato e zabaione di Elfie;Elfie's Cream & Nog Emporium;8da737b9f;1;;3x3;1.5;-17542;-41630;;15;;;;;42;;;;;;;;;30;;39;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_WIN23A
-W_MultiAge_WIN23D1;Magico spettacolo di Babbo Natale;Santa's Spectacular Showtime;d50875a3a;1;;3x3;;;;;36;;;;;25;24;;;;;;;;44;60;57;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_WIN23A
+W_MultiAge_WIN23B1;Cottage di pan di zenzero;Sweet Gingerbread Cottage;94aba780e;1;;3x3;;;;;31;;;;;27;27;;;;;;;;45;;56;75;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_WIN23A:20
+W_MultiAge_WIN23C1;Negozio di zabaione di Elfie - Liv. 1;Elfie's Nog Shop - Lv. 1;309cca093;;;3x3;1.5;;;;13;;;;;;;;;;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23A:1
+W_MultiAge_WIN23C2;Negozio di zabaione di Elfie - Liv. 2;Elfie's Nog Shop - Lv. 2;71b35a4d3;1;;3x3;1.5;;;;13;;;;;30;;;;;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN23A:3
+W_MultiAge_WIN23C3;Negozio di gelato e zabaione di Elfie;Elfie's Cream & Nog Shop;3993204b0;1;;3x3;1.5;;-34720;;13;;;;;30;;;;;;;;;28;;37;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_WIN23A:3
+W_MultiAge_WIN23C4;Emporio di gelato e zabaione di Elfie;Elfie's Cream & Nog Emporium;8da737b9f;1;;3x3;1.5;-17542;-41630;;15;;;;;42;;;;;;;;;30;;39;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_WIN23A:3
+W_MultiAge_WIN23D1;Magico spettacolo di Babbo Natale;Santa's Spectacular Showtime;d50875a3a;1;;3x3;;;;;36;;;;;25;24;;;;;;;;44;60;57;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_WIN23A:10
 W_MultiAge_WIN23E1;Spa invernale di Capy;Capy's Winter Holiday Spa;20eb1e9e9;1;;3x2;1;-17542;-27750;;;;;;;;42;;;;;;;;12;14;27;;;;;;;;;;;;;;;;;;;;;;;;;;;1.25;0.75;;
 W_MultiAge_WIN23F1;Sfera Innevata magico inverno;Magical Winter Snow Globe;be2179c38;1;;2x3;;-11694;-41630;;9;;;;;;;;;;;;;;18;;10;15;;;;;;;;;;;;;;;;;;;;;;;;;;0.75;1.25;;
 W_MultiAge_WIN24A1;Torre Yukitomo - Lv. 1;Yukitomo Tower - Lv. 1;a17137c23;;;4x4;2;20950;;;56;;;;;;;;;;;;5440;;38;;38;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN24A10;Torre Yukitomo - Lv. 10;Yukitomo Tower - Lv. 10;eb4a6f384;1;;4x4;2;40880;;;110;;10;;;;;;;;;;54320;;83;;83;;;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_WIN18B|selection_kit_WIN24BC
-W_MultiAge_WIN24A11;Piazza Yukitomo;Yukitomo Plaza;adfedce56;1;;4x4;2;40880;;;110;;14;;;;;;;;;;54320;;83;;83;;;;;;;;;;;15;;;;;;;;;100;;M;;;;;;;;selection_kit_WIN18B|selection_kit_WIN24BC
-W_MultiAge_WIN24A12;Impero Yukitomo;Yukitomo Empire;7e205fcdf;1;;4x4;2;40880;;;110;;18;;;;;;;;;;54320;;83;;83;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B|selection_kit_WIN24BC
-W_MultiAge_WIN24A13;Yukitomo Imperiale;Yukitomo Imperial;99a0450f5;1;;4x4;;40880;;;109;;22;;;;;;;;;;54320;;82;;82;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B|selection_kit_WIN24BC
-W_MultiAge_WIN24A14;Residenza del Cielo Yukitomo Imperiale;Yukitomo Imperial Sky Residence;f1b773bd7;1;90;4x4;;40880;;;218;;26;;;;;;;;;;54320;;82;;82;;;;;;;;;;15;15;15;15;;;;;;;200;8000;M;;;;;;;;selection_kit_WIN18B|selection_kit_WIN24BC
+W_MultiAge_WIN24A10;Torre Yukitomo - Lv. 10;Yukitomo Tower - Lv. 10;eb4a6f384;1;;4x4;2;40880;;;110;;10;;;;;;;;;;54320;;83;;83;;;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3
+W_MultiAge_WIN24A11;Piazza Yukitomo;Yukitomo Plaza;adfedce56;1;;4x4;2;40880;;;110;;14;;;;;;;;;;54320;;83;;83;;;;;;;;;;;15;;;;;;;;;100;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3
+W_MultiAge_WIN24A12;Impero Yukitomo;Yukitomo Empire;7e205fcdf;1;;4x4;2;40880;;;110;;18;;;;;;;;;;54320;;83;;83;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3
+W_MultiAge_WIN24A13;Yukitomo Imperiale;Yukitomo Imperial;99a0450f5;1;;4x4;;40880;;;109;;22;;;;;;;;;;54320;;82;;82;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3
+W_MultiAge_WIN24A14;Residenza del Cielo Yukitomo Imperiale;Yukitomo Imperial Sky Residence;f1b773bd7;1;90;4x4;;40880;;;218;;26;;;;;;;;;;54320;;82;;82;;;;;;;;;;15;15;15;15;;;;;;;200;8000;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3
 W_MultiAge_WIN24A2;Torre Yukitomo - Lv. 2;Yukitomo Tower - Lv. 2;9f36472ae;;;4x4;2;22480;;;62;;;;;;;;;;;;10860;;43;;43;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN24A3;Torre Yukitomo - Lv. 3;Yukitomo Tower - Lv. 3;3f6c79d0b;;;4x4;2;24010;;;68;;;;;;;;;;;;16300;;48;;48;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN24A4;Torre Yukitomo - Lv. 4;Yukitomo Tower - Lv. 4;a8a5826cb;;;4x4;2;25540;;;74;;;;;;;;;;;;21720;;53;;53;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2044,47 +2044,47 @@ W_MultiAge_WIN24B1;Trasportatori di Agrifoglio;Holly Hauler;0f031e322;1;;4x2;;-1
 W_MultiAge_WIN24B2;Trasportatore di Agrifoglio Asceso;Ascended Holly Hauler;d522b8fcf;1;30;4x2;;-18160;;;;;;;;64;128;;;100;;;;;;67;;79;;;;;;;;;;;;;0.04;0.04;;;;;;;;;;;;;;3;
 W_MultiAge_WIN24C1;Monumento Slitta di Cuccioli;Sled Pup Monument;8ce4e56d8;1;;2x3;;-13620;;;15;;;12;;;;;;;;;;;19;19;;;19;19;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN24C2;Monumento Slitta di Cuccioli Ascesa;Ascended Sled Pup Monument;0be2fa3b7;1;30;2x3;;-13620;;;23;;;24;;;;;;;;;;;38;38;;;38;38;;;;;;;;;;;;;;;10;5;;;;;;;;;;;
-W_MultiAge_WIN24D1;Torrefazione Riserva Starbell;Starbell Reserve Roastery;611e8d929;1;;2x2;;;56760;;;;;;;;;;0.01;;;;120680;;32;32;32;32;;;;;;;;;25;25;;;;;;;;;;;;;;;;;;;selection_kit_WIN24A
-W_MultiAge_WIN24E1;Cascata di Cristallo;Crystal Cascade;c2ba31844;1;;3x4;;;;;120;;;;;120;240;;;1200;;;;;;;;;;;;;;;;;;;25;25;;;;;;;;;;;;;;;;;selection_kit_WIN24A
-W_MultiAge_WIN24F1;Didukh - Lv. 1;Didukh - Lv. 1;fcb906a72;;;2x1;;2280;4540;;;;;;;12;;;;;;;;;;9;;9;;;;;;;;;;;;;;;;;;;;;;0.6;;;0.8;;;;selection_kit_WIN24A
-W_MultiAge_WIN24F2;Didukh - Lv. 2;Didukh - Lv. 2;d348290da;1;;2x1;;3400;6820;;;;;;;12;;;;;;;;;;9;9;9;;;;;;;;;;;;;;;;;;;;;;0.8;;;1.2;;;;selection_kit_WIN24A
-W_MultiAge_WIN24F3;Delizia Didukh;Didukh Delight;989a90c86;1;;2x1;;4540;9080;;6;;;;;12;;;;;;;;;;9;9;9;;;;;;;;;;;;;;;;;;;;;;1;;;1.6;;;;selection_kit_WIN24A
-W_MultiAge_WIN24F4;Sogni Didukh;Didukh Dreams;cebb7c4ff;1;;2x1;;5680;11360;;6;;;;;12;;;;;;;;;9;9;9;9;;;;;;;;;;;;;;;;;;;;;;1.2;;;2;;;;selection_kit_WIN24A
+W_MultiAge_WIN24D1;Torrefazione Riserva Starbell;Starbell Reserve Roastery;611e8d929;1;;2x2;;;56760;;;;;;;;;;0.01;;;;120680;;32;32;32;32;;;;;;;;;25;25;;;;;;;;;;;;;;;;;;;selection_kit_WIN24A:20
+W_MultiAge_WIN24E1;Cascata di Cristallo;Crystal Cascade;c2ba31844;1;;3x4;;;;;120;;;;;120;240;;;1200;;;;;;;;;;;;;;;;;;;25;25;;;;;;;;;;;;;;;;;selection_kit_WIN24A:20
+W_MultiAge_WIN24F1;Didukh - Lv. 1;Didukh - Lv. 1;fcb906a72;;;2x1;;2280;4540;;;;;;;12;;;;;;;;;;9;;9;;;;;;;;;;;;;;;;;;;;;;0.6;;;0.8;;;;selection_kit_WIN24A:1
+W_MultiAge_WIN24F2;Didukh - Lv. 2;Didukh - Lv. 2;d348290da;1;;2x1;;3400;6820;;;;;;;12;;;;;;;;;;9;9;9;;;;;;;;;;;;;;;;;;;;;;0.8;;;1.2;;;;selection_kit_WIN24A:2
+W_MultiAge_WIN24F3;Delizia Didukh;Didukh Delight;989a90c86;1;;2x1;;4540;9080;;6;;;;;12;;;;;;;;;;9;9;9;;;;;;;;;;;;;;;;;;;;;;1;;;1.6;;;;selection_kit_WIN24A:4
+W_MultiAge_WIN24F4;Sogni Didukh;Didukh Dreams;cebb7c4ff;1;;2x1;;5680;11360;;6;;;;;12;;;;;;;;;9;9;9;9;;;;;;;;;;;;;;;;;;;;;;1.2;;;2;;;;selection_kit_WIN24A:8
 W_MultiAge_WIN25A1;Torre dell'Orologio di Mezzanotte - Livello 1;Midnight Clock Tower - Lv. 1;417af0ce9;;;4x4;2;;15310;;36;;;;;;;;;;;38020;;;;;20;20;;;104;104;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25A2;Torre dell'Orologio di Mezzanotte - Livello 2;Midnight Clock Tower - Lv. 2;4c7adfb55;;;4x4;2;;22970;;54;;;;;;;;;;;57030;;;;;26;26;;;114;114;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25A3;Torre dell'Orologio di Mezzanotte - Livello 3;Midnight Clock Tower - Lv. 3;decfcb798;;;4x4;2;;30620;;72;;;;;;;;;;;76030;;;;;31;31;;;124;124;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25A4;Torre dell'Orologio di Mezzanotte - Livello 4;Midnight Clock Tower - Lv. 4;f9f79433c;;;4x4;2;;38280;;90;;;;;;;;;;;95040;;;;;36;36;;;134;134;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25A5;Torre dell'Orologio di Mezzanotte - Livello 5;Midnight Clock Tower - Lv. 5;cbf7548db;;;4x4;2;;45930;;108;;;;;;;;;;;114050;;;;;41;41;;;144;144;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25A6;Torre dell'Orologio di Mezzanotte - Livello 6;Midnight Clock Tower - Lv. 6;8d3e6f235;;;4x4;2;;53590;;126;;;;;;;;;;;133060;;;;;46;46;;;154;154;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN25A7;Torre dell'Orologio di Mezzanotte - Livello 7;Midnight Clock Tower - Lv. 7;4986f8332;1;;4x4;2;;61250;;144;;;;;;;;;;;152070;;;;;51;51;;;164;164;;;;;;;;;;;;;;;;;;;;;;2;;0.5;selection_kit_WIN25BC|silver_upgrade_kit_WIN25A
-W_MultiAge_WIN25A8;Grande Torre dell'Orologio di Mezzanotte;Grand Midnight Clock Tower;a0c0fe25c;1;;4x4;2;;68900;;162;;;;;;;;;;;171080;;;;;56;56;;;174;174;;;;;;;;;;;;;;;;;;;;;;2.5;;1;golden_upgrade_kit_WIN25A|selection_kit_WIN25BC
-W_MultiAge_WIN25A9;Torre dell'Orologio di Mezzanotte Reale;Royal Midnight Clock Tower;e565c11ab;1;;4x4;2;;76560;;180;;;;;;;;;;;190080;;;;;61;61;;;184;184;;;;;;;;;;;;;;;;;M;;;;;3;;1.5;selection_kit_WIN25BC
+W_MultiAge_WIN25A7;Torre dell'Orologio di Mezzanotte - Livello 7;Midnight Clock Tower - Lv. 7;4986f8332;1;;4x4;2;;61250;;144;;;;;;;;;;;152070;;;;;51;51;;;164;164;;;;;;;;;;;;;;;;;;;;;;2;;0.5;selection_kit_WIN25BC:2|silver_upgrade_kit_WIN25A:5
+W_MultiAge_WIN25A8;Grande Torre dell'Orologio di Mezzanotte;Grand Midnight Clock Tower;a0c0fe25c;1;;4x4;2;;68900;;162;;;;;;;;;;;171080;;;;;56;56;;;174;174;;;;;;;;;;;;;;;;;;;;;;2.5;;1;golden_upgrade_kit_WIN25A:5|selection_kit_WIN25BC:4
+W_MultiAge_WIN25A9;Torre dell'Orologio di Mezzanotte Reale;Royal Midnight Clock Tower;e565c11ab;1;;4x4;2;;76560;;180;;;;;;;;;;;190080;;;;;61;61;;;184;184;;;;;;;;;;;;;;;;;M;;;;;3;;1.5;selection_kit_WIN25BC:6
 W_MultiAge_WIN25B1;Giardino Bucaneve;Snowdrop Garden;1b4cbd934;1;;3x3;;-57430;;;90;;;;;;;;;;194150;;;;55;55;55;55;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25B2;Giardino Bucaneve Asceso;Ascended Snowdrop Garden;979ba8a5b;1;30;3x3;;-57430;;;270;;;;;;;;;;388300;;;;109;109;109;109;;;;;;;;;27;27;27;27;;;24750;24750;;;;;;;;;;;;;
 W_MultiAge_WIN25C1;Chiosco Viale Stellato;Starlight Boulevard Kiosk;7c707882b;1;;1x1;;-6380;;;10;;;;;;;;;;21570;;;;6;6;6;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN25C2;Chiosco Viale Stellato Asceso;Ascended Starlight Boulevard Kiosk;f46143582;1;30;1x1;;-6380;;;30;;;;;;;;;;43140;;;;12;12;12;12;;;;;;;;;3;3;3;3;;;2750;2750;;;;;;;;;;;;;
-W_MultiAge_WIN25D1;Atelier Meraviglie del Giocattolaio;Toymaker’s Atelier of Little Wonders;408704826;1;;3x3;1.5;;;;105;;;;;;;;;;;;;;84;84;84;84;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN25A
-W_MultiAge_WIN25E1;Vivaio Stella del Nord di Penelope;Penelope’s Northstar Nursery;fa080d942;1;;5x5;2.5;;;;495;;;;;;;;;;;;;;110;110;110;110;240;240;240;240;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN24A
-W_MultiAge_WIN25F1;Corriere Northwind;Northwind Courier;5ecd45942;1;;3x2;1;;;;98;;;;;;;;;;;;;;;;;;98;;98;;;;;;;;;;;;;;;;;;;5.1;;;;;;;golden_selection_kit_WIN19A|selection_kit_WIN19BCD21B
+W_MultiAge_WIN25D1;Atelier Meraviglie del Giocattolaio;Toymaker’s Atelier of Little Wonders;408704826;1;;3x3;1.5;;;;105;;;;;;;;;;;;;;84;84;84;84;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN25A:20
+W_MultiAge_WIN25E1;Vivaio Stella del Nord di Penelope;Penelope’s Northstar Nursery;fa080d942;1;;5x5;2.5;;;;495;;;;;;;;;;;;;;110;110;110;110;240;240;240;240;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN24A:12
+W_MultiAge_WIN25F1;Corriere Northwind;Northwind Courier;5ecd45942;1;;3x2;1;;;;98;;;;;;;;;;;;;;;;;;98;;98;;;;;;;;;;;;;;;;;;;5.1;;;;;;;golden_selection_kit_WIN19A:5|selection_kit_WIN19BCD21B:3
 W_MultiAge_WIN26A1;WIN26A;WIN26A;c50d279c9;;;4x4;2;5330;8000;;58;;;;;;41;;;;43430;84710;;;5;5;5;5;5;5;5;5;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A10;WIN26A Gold;WIN26A Gold;b2f406053;1;;4x4;2;40530;60800;;207;;;;;;286;;;;325710;635290;;;71;71;71;71;71;71;71;71;;;;;;;;;;;;;;;;;M;;1.1;;;;;;selection_kit_WIN26BC
-W_MultiAge_WIN26A11;WIN26A Platinum;WIN26A Platinum;132195138;1;;4x4;;42670;64000;;230;;;;;;306;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;;;;;;;;;;;M;;1.5;;;;;;selection_kit_WIN26BC
-W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;WIN26A Platinum Ascended A;c5a06473c;1;90;4x4;;42670;64000;;230;0.02;;;;;306;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC
-W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;WIN26A Platinum Ascended B;5c5071aa4;1;90;4x4;;42670;64000;;230;;;;;;306;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC
+W_MultiAge_WIN26A10;WIN26A Gold;WIN26A Gold;b2f406053;1;;4x4;2;40530;60800;;207;;;;;;286;;;;325710;635290;;;71;71;71;71;71;71;71;71;;;;;;;;;;;;;;;;;M;;1.1;;;;;;selection_kit_WIN26BC:3
+W_MultiAge_WIN26A11;WIN26A Platinum;WIN26A Platinum;132195138;1;;4x4;;42670;64000;;230;;;;;;306;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;;;;;;;;;;;M;;1.5;;;;;;selection_kit_WIN26BC:4
+W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;WIN26A Platinum Ascended A;c5a06473c;1;90;4x4;;42670;64000;;230;0.02;;;;;306;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC:6
+W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;WIN26A Platinum Ascended B;5c5071aa4;1;90;4x4;;42670;64000;;230;;;;;;306;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC:6
 W_MultiAge_WIN26A2;WIN26A;WIN26A;;;;4x4;2;8530;12800;;69;;;;;;62;;;;65140;127060;;;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A3;WIN26A;WIN26A;;;;4x4;2;11730;17600;;81;;;;;;82;;;;86860;169410;;;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A4;WIN26A;WIN26A;;;;4x4;2;14930;22400;;92;;;;;;103;;;;108570;211760;;;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A5;WIN26A;WIN26A;;;;4x4;2;18130;27200;;104;;;;;;123;;;;130290;254120;;;25;25;25;25;25;25;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A6;WIN26A;WIN26A;;;;4x4;2;21330;32000;;115;;;;;;144;;;;152000;296470;;;30;30;30;30;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A7;WIN26A;WIN26A;;;;4x4;2;24530;36800;;127;;;;;;164;;;;173710;338820;;;35;35;35;35;35;35;35;35;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A8;WIN26A;WIN26A;;1;;4x4;2;27730;41600;;138;;;;;;185;;;;195430;381180;;;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC|silver_upgrade_kit_WIN26A
-W_MultiAge_WIN26A9;WIN26A Silver;WIN26A Silver;15cf8c594;1;;4x4;2;34130;51200;;184;;;;;;225;;;;260570;508240;;;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_WIN26A|selection_kit_WIN26BC
+W_MultiAge_WIN26A8;WIN26A;WIN26A;;1;;4x4;2;27730;41600;;138;;;;;;185;;;;195430;381180;;;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC:1|silver_upgrade_kit_WIN26A:5
+W_MultiAge_WIN26A9;WIN26A Silver;WIN26A Silver;15cf8c594;1;;4x4;2;34130;51200;;184;;;;;;225;;;;260570;508240;;;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_WIN26A:5|selection_kit_WIN26BC:2
 W_MultiAge_WIN26B1;WIN26B;WIN26B;64d67fe9d;1;;4x4;;-170670;;;331;;;;;105;;;;;173710;508240;;;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26B2;Ascended WIN26B;Ascended WIN26B;7f7b1c8f2;1;30;4x4;;-170670;;;828;0.02;;;;262;;;;;347430;1016470;;;;;408;408;;;408;408;;;;;80;;;;;;;25000;;5;;;;;;;;;;;
 W_MultiAge_WIN26C1;WIN26C;WIN26C;0528ffda5;1;;4x4;;-170670;;;74;;;;;489;;;;;347430;338820;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26C2;Ascended WIN26C;Ascended WIN26C;751161a0c;1;30;4x4;;-170670;;;184;;;;;1227;;;0.02;;694860;677650;;;408;408;;;408;408;;;;;;;;;80;;;;25000;;10;;;;;;;;;;;;
-W_MultiAge_WIN26D1;WIN26D;WIN26D;28d2edf69;1;;4x6;2;;;;130;0.06;;;;260;;;0.05;;;;;;145;145;145;145;145;145;145;145;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN26A
-W_MultiAge_WIN26E1;WIN26E;WIN26E;f736c4d85;1;;6x4;2;;;;780;;;;;1560;1170;;;;;;;;255;255;255;255;255;255;255;255;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN26A
+W_MultiAge_WIN26D1;WIN26D;WIN26D;28d2edf69;1;;4x6;2;;;;130;0.06;;;;260;;;0.05;;;;;;145;145;145;145;145;145;145;145;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN26A:20
+W_MultiAge_WIN26E1;WIN26E;WIN26E;f736c4d85;1;;6x4;2;;;;780;;;;;1560;1170;;;;;;;;255;255;255;255;255;255;255;255;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN26A:12
 W_MultiAge_WIN26F1;WIN26F;WIN26F;bcabf86f9;1;;4x4;2;-192000;;;270;;;;182;;;360;;;;;78750;;180;180;180;180;245;245;245;245;;;;;;;;;;;;;;;;;;13.5;;;;;;;
 W_SpaceAgeJupiterMoon_Residential1;Villetta di Juno;Juno Dwelling;5ae2f9301;;;4x3;1.5;8240;;;;;;;;;;;;;142080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_SpaceAgeJupiterMoon_Residential2;Residenza titanica;Titanus Residence;1af702f83;;;3x2;1;7060;;;;;;;;;;;;;83280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

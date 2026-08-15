@@ -491,7 +491,8 @@ costruito dai dati di gioco. Campi principali:
 - `mod` — kit modernizzatore (one up kit).
 - `rin` — kit rinnovamento (renovation kit).
 - `imm` — immagazzina edificio (store building).
-- `fragments` — stringa descrittiva dei frammenti prodotti.
+- `fragments` — stringa descrittiva dei frammenti prodotti (vedi §8.1 per il
+  formato esatto dei token e §11 per il parsing).
 
 ### Flag di classificazione (tutti opzionali)
 - `isGreatBuilding` — è un Grande Edificio (prefisso `X_`).
@@ -680,13 +681,32 @@ colora il testo del nome in oro. Non applicato a Città/Inventario/Alleati.
 
 È il file che alimenta l'ottimizzatore (§16). Ha due sezioni:
 
-- **`buildingUpgrades`**: un dizionario `kitId → { name, steps }`. Ogni `steps` è la
-  sequenza completa di ID edificio che descrive l'evoluzione di un edificio attraverso
-  i suoi livelli. Es. `upgrade_kit_maypole` ha `steps: [A_MultiAge_MayDayBonus16,
-  A_MultiAge_MayDayBonus17, A_MultiAge_MayDayBonus17b]`. Uno step può essere un array
-  (es. finale ramificato dove il giocatore sceglie una variante). Ci sono ~443 catene.
-- **`selectionKits`**: un dizionario `kitId → { name, options }`. Ogni `options` è la
-  lista di ID che quel kit di selezione può produrre. Ci sono ~407 selection kit.
+- **`buildingUpgrades`**: un dizionario `kitId → { name, steps, requiredFragments? }`.
+  Ogni `steps` è la sequenza completa di ID edificio che descrive l'evoluzione di un
+  edificio attraverso i suoi livelli. Es. `upgrade_kit_maypole` ha `steps:
+  [A_MultiAge_MayDayBonus16, A_MultiAge_MayDayBonus17, A_MultiAge_MayDayBonus17b]`. Uno
+  step può essere un array (es. finale ramificato dove il giocatore sceglie una
+  variante). Ci sono ~483 catene.
+- **`selectionKits`**: un dizionario `kitId → { name, options, requiredFragments? }`.
+  Ogni `options` è la lista di ID che quel kit di selezione può produrre. Ci sono ~441
+  selection kit.
+- **`requiredFragmentsByBuilding`** (agosto 2026): un terzo dizionario a livello
+  radice, `cityEntityId → requiredFragments`, per i frammenti che assemblano
+  direttamente un EDIFICIO invece di un kit (es. `W_MultiAge_FALL23F2` produce
+  frammenti di `W_MultiAge_FALL23D2`, 100 richiesti in totale) — caso a parte perché
+  non esiste un blocco `buildingUpgrades`/`selectionKits` indicizzato per
+  edificio-obiettivo di frammenti. 15 edifici coperti nel MainParser attuale.
+
+**`requiredFragments`** (agosto 2026, opzionale su entrambe le sezioni): il numero
+TOTALE di frammenti necessari per assemblare quel kit tramite raccolta. `parse_kit.py`
+lo legge scansionando `CityEntities[*].components[*].lookup.rewards[*]` del MainParser
+alla ricerca di blocchi `__class__: "FragmentReward"`, prendendo `requiredAmount`
+(stesso blocco da cui, lato `buildings.py`, si legge anche l'`amount` per-raccolta che
+finisce nella colonna `Fragments` del CSV — vedi §11). Assente per i kit/edifici non
+ottenibili per frammenti (solo acquisto/evento diretto): su 219 kit con dato frammenti
+nel MainParser attuale, 15 sono di tipo edificio (`requiredFragmentsByBuilding`), il
+resto selection/upgrade kit. Verificato: 0 incoerenze tra le occorrenze dello stesso
+kit/edificio ripetute in punti diversi del file (13082 occorrenze totali).
 
 I prefissi dei kit indicano il "tier": `golden_`, `silver_`, `platinum_`, oppure base.
 Il tier va riconosciuto SOLO dal prefisso (così fa `kitTier` in inventory.ts): ~31
@@ -1044,6 +1064,43 @@ crea cicli (`ui-strings.ts` non importa nulla). L'`icon` è un emoji, lingua-neu
 - `isFragmentBuildingToken(token)` / `isFragmentKitToken(token)` — riconoscono i token
   dei frammenti (di edificio vs di kit).
 - `fragmentBuildingId(token)` — estrae l'ID edificio da un token frammento.
+
+**Formato dei token nella colonna `Fragments`** (agosto 2026): ogni token è
+`<fid>:<amount>`, dove `<fid>` è l'id building/kit (come prima) e `<amount>`
+è quanti frammenti produce QUESTA raccolta specifica — stabile per ogni
+coppia edificio+kit, indipendente dall'era (verificato empiricamente:
+nessuna variazione tra le 23 ere sull'edificio di test). L'amount era già
+nella chiave grezza del reward nel MainParser (es.
+`"fragment#selection_kit_CARE26BC#2"`) ma prima veniva scartato da
+`extract_fragments` in `buildings.py`; ora viene riletto invece di buttato
+via. Un edificio può produrre frammenti di PIÙ kit/edifici diversi
+contemporaneamente (token multipli separati da `|`, es.
+`W_MultiAge_CARE26A8` → `golden_upgrade_kit_CARE26A:5|selection_kit_CARE26BC:2`).
+Dati storici senza `:amount` restano supportati lato parsing (fallback
+`amountPerCollection: undefined`).
+
+**Il numero TOTALE richiesto per assemblare** (quante volte va ripetuta la
+raccolta) vive in `kit.json`, non nel CSV — tre fonti diverse a seconda del
+tipo di frammento, tutte popolate da `parse_kit.py` leggendo `requiredAmount`
+dai blocchi `FragmentReward` del MainParser (`CityEntities[*].components[*].lookup.rewards[*]`):
+- `KIT_RAW.selectionKits[kitId].requiredFragments` — per i selection kit.
+- `KIT_RAW.buildingUpgrades[kitId].requiredFragments` — per gli upgrade kit.
+- `KIT_RAW.requiredFragmentsByBuilding[cityEntityId]` — per i frammenti che
+  assemblano direttamente un EDIFICIO invece di un kit (es.
+  `W_MultiAge_FALL23F2` produce frammenti di `W_MultiAge_FALL23D2`, 100
+  richiesti in totale): caso a parte perché non esiste un blocco
+  buildingUpgrades/selectionKits indicizzato per edificio-obiettivo.
+  Chiave senza il prefisso `building_` (rimosso in `parse_kit.py`).
+Tutti e tre i campi sono opzionali: assenti per i kit/edifici non ottenibili
+per frammenti (es. solo acquisto/evento diretto) — su 219 kit totali con
+dato frammenti nel MainParser attuale, 15 sono di tipo edificio.
+Verificato: 0 incoerenze tra le occorrenze dello stesso kit/edificio in punti
+diversi del file (13082 occorrenze totali, agosto 2026).
+
+Il tooltip del badge frammenti (§24.3, `fragmentTooltip`) mostra
+"(prodotti/richiesti)" accanto al nome SOLO quando entrambi i numeri sono
+noti — un singolo valore isolato ("4/?" o "?/15") confonderebbe più che
+aiutare.
 
 ### Costanti chiave
 
@@ -2308,6 +2365,16 @@ identità ad ogni `setState` che le ricrea, es. `setSelectedIds(new Set(...))`).
   ribaltata. La vecchia mappa inversa `FRAGMENT_BUILDING_PRODUCERS` è stata
   rimossa; `FRAGMENT_KIT_PRODUCERS` (kit → edifici produttori) resta e serve
   la modale Edifici Aggiornabili.
+
+  **Conteggio "(prodotti/richiesti)" nel tooltip** (agosto 2026): ogni voce
+  di `FragmentProduced` porta anche `amountPerCollection?: number` (letto dal
+  token `<fid>:<amount>` della colonna Fragments, vedi §11). Al passaggio del
+  mouse, `setFragmentTooltip` incrocia questo valore col totale richiesto
+  (`requiredFragments`/`requiredFragmentsByBuilding` da `kit.json`, §11) e lo
+  passa come `producedAmount`/`requiredAmount` a ciascuna voce del tooltip;
+  il rendering mostra `(producedAmount/requiredAmount)` accanto al nome SOLO
+  se ENTRAMBI sono definiti (kit.json non copre tutti i kit/edifici, e i dati
+  storici possono mancare dell'amount) — mai un singolo numero isolato.
 
   **⚠️ Tecnica anti-allargamento-riga per icone `<img>` inline nel testo
   (bug reale corretto, luglio 2026):** sostituire un'emoji con un'icona PNG

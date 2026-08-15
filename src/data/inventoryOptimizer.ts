@@ -26,6 +26,16 @@ import { type Lang, FALLBACK_LANG } from "./languages";
 export interface KitDataRaw {
   buildingUpgrades: Record<string, KitDef>;
   selectionKits: Record<string, KitDef>;
+  /** requiredAmount di frammenti per assemblare direttamente un EDIFICIO
+   *  (non un kit) — es. "W_MultiAge_FALL23D2": 100. Caso a parte perché non
+   *  esiste un blocco buildingUpgrades/selectionKits indicizzato per
+   *  edificio-obiettivo di frammenti: un edificio può produrre frammenti
+   *  che assemblano direttamente un altro edificio (es.
+   *  W_MultiAge_FALL23F2 → frammenti di W_MultiAge_FALL23D2), non solo un
+   *  kit. Chiave: cityEntityId dell'edificio assemblato, senza prefisso
+   *  "building_" (già rimosso da parse_kit.py). Opzionale: assente per gli
+   *  edifici che non si ottengono per frammenti (la stragrande maggioranza). */
+  requiredFragmentsByBuilding?: Record<string, number>;
 }
 
 interface KitDef {
@@ -39,6 +49,12 @@ interface KitDef {
   steps: Array<string | string[]>;
   /** Per selectionKits: array di cityEntityId/kit producibili dal kit. */
   options?: string[];
+  /** Numero TOTALE di frammenti necessari per assemblare questo kit tramite
+   *  raccolta (assente se il kit non si ottiene per frammenti, es. solo
+   *  acquisto/evento diretto). Popolato da parse_kit.py leggendo
+   *  requiredAmount dai FragmentReward del MainParser. Usato dal tooltip
+   *  "produce frammenti di" per mostrare "(prodotti/richiesti)". */
+  requiredFragments?: number;
 }
 
 /** Risolve il nome di un kit nella lingua scelta: lingua richiesta → inglese
