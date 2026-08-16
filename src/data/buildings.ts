@@ -101,6 +101,15 @@ export interface Building {
    *  i premi diretti di lega oro/argento degli eventi). Vedi
    *  data/uniqueBuildings.ts per la fonte e i dettagli. */
   unique?: boolean;
+  /** True se la produzione dell'edificio NON può essere terminata all'istante
+   *  con un item "Termina produzione" (es. FSP/Frammenti di Termina
+   *  produzione speciale) — in game: "Instant production finish disabled".
+   *  Colonna CSV "NoRush" ("1"/vuoto). Flag di classificazione booleano
+   *  come `unique`, non un campo statistico: valorizzato una sola volta al
+   *  parsing, nessuna logica di override città (vedi buildings.py
+   *  calc_no_rush() per il criterio di derivazione lato pipeline —
+   *  bit 5 di components.AllAge.flags.flags, validato in game). */
+  noRush?: boolean;
   fragments: string;
 }
 
@@ -355,6 +364,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
       isMilitary: isMilitaryBuildingId(cityEntityId),
       isGoods: isGoodsFactoryId(cityEntityId),
       unique: isUniqueBuildingId(cityEntityId),
+      noRush: getText(parts, "NoRush") === "1",
       isFallback: false,
     };
   });

@@ -1228,6 +1228,14 @@ const BuildingRow = memo(function BuildingRow({
             );
           })()}
         </span>
+        {b.noRush && (
+          <span className="ml-1 inline-flex flex-shrink-0 cursor-help relative top-px" title={t("noRushBadgeTitle", uiLang)}>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" />
+            </svg>
+          </span>
+        )}
         {b.isGreatBuilding && (
           <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40">
             {t("greatBuildingBadge", uiLang)}

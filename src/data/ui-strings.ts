@@ -1003,6 +1003,13 @@ const UI_STRINGS = {
     it: "GE",
     en: "GB",
   },
+  /** Tooltip del badge 🔒 (b.noRush): testo ufficiale mostrato dal gioco
+   *  stesso sull'edificio ("Instant production finish disabled"), non una
+   *  parafrasi nostra. */
+  noRushBadgeTitle: {
+    it: "Completa istantaneamente produzione disabilitato",
+    en: "Instant production finish disabled",
+  },
   daySuffix: {
     it: "g",
     en: "d",
