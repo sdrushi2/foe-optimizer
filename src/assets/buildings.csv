@@ -1496,7 +1496,7 @@ W_MultiAge_HAL15A3;Covo dello Scienziato Pazzo;Mad Scientist’s Lair;98b6469e4;
 W_MultiAge_HAL15A4;Dominio dello Scienziato Pazzo;Mad Scientist’s Dominion;b6bf652b1;1;90;1;4x4;;-2;;;;;;;;275;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;200;;;;;;;;;;
 W_MultiAge_HAL17A1;Torre Nera;Black Tower;R_MultiAge_HalloweenBonus17-85ca927ff;1;;;4x5;2;1;-11630;;3;;;;;5;;;;;152500;;600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL17A2;Torre Gotica;Gothic Tower;f60abd10b;1;;;4x5;2;26590;-26580;;40;;;;;50;25;25;;;323590;;21870;;;;;;;;;;150;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL17A3;Torre Barocca;Baroque Tower;369ed1071;1;;;4x5;;53170;-53160;;40;;;20;10;100;50;50;;;431450;;32810;;;;;;100;100;;;100;100;;;;;15;;;;;;;;;;M;;;;;;;;
+W_MultiAge_HAL17A3;Torre Barocca;Baroque Tower;4351abae4;1;;;4x5;;53170;-53160;;40;;;20;10;100;50;50;;;431450;;32810;;;;;;100;100;;;100;100;;;;;15;;;;;;;;;;M;;;;;;;;
 W_MultiAge_HAL17A4;Torre di Ossidiana;Obsidian Tower;49090a799;1;90;1;4x5;;53170;-53160;;150;;;30;20;300;150;150;;;539310;;54690;;;;;;410;410;;;410;410;;;;;35;;;;;;;;;8000;M;;;;;;;;
 W_MultiAge_HAL19A1;Manicomio abbandonato - Liv. 1;Abandoned Asylum - Lv. 1;R_MultiAge_HalloweenBonus19a-b77be48a1;;;;5x5;2.5;1;-2910;;;;;;;;;;;;262300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL19A10;Manicomio Abbandonato Inquietante;Eerie Abandoned Asylum;7d0eddfae;1;;;5x5;2.5;1;-2910;;50;;;;;80;;25;;;379870;;;;71;96;;;;;;;5;;;;20;;;;;;;;;;;;;;;;;;;;

@@ -677,6 +677,46 @@ className="cell-name">` di `BuildingRow` riceve la classe aggiuntiva
 `.building-table tbody td.cell-name.unique { color: gold; }` (`index.css`)
 colora il testo del nome in oro. Non applicato a Città/Inventario/Alleati.
 
+### 8.4ter `Building.noRush` — produzione non terminabile all'istante (agosto 2026)
+
+Flag di classificazione booleano, stesso pattern di `Building.unique`: NON
+segue la checklist a 18 punti dei campi statistici (§7), è valorizzato una
+sola volta al parsing con `getText(parts, "NoRush") === "1"`.
+
+Indica che la produzione dell'edificio NON può essere terminata all'istante
+con i Frammenti di Termina produzione speciale — "Instant production finish
+disabled" nel gioco stesso. Il motivo di gioco: il FSP ha effetto solo sulle
+produzioni, e una raccolta è normalmente disponibile ogni 24h, ma con FSP se
+ne possono fare più d'una in pochi istanti; per gli edifici che producono
+frammenti "pregiati" questo permetterebbe di assemblare più copie di edifici
+top nel giro di pochi minuti — da qui il flag di disabilitazione su un
+sottoinsieme di edifici (non necessariamente solo quelli che producono
+frammenti: verificato che alcuni NoRush non producono nulla, es. Forgotten
+Temple e Ancient Temple, entrambi rushabili in game nonostante compaiano
+come `limited`/`cityLimit`).
+
+Colonna CSV `NoRush` (`"1"`/vuota) generata da `calc_no_rush()` in
+`buildings.py` (pipeline RECUPERO DATI, §8bis). Criterio finale, validato
+empiricamente sia sui dati sia IN GAME (dopo due tentativi scartati basati
+su `limited`/`cityLimit`, entrambi smentiti da Forgotten Temple/Ancient
+Temple): bit 5 (valore 32) di `components.AllAge.flags.flags` nel
+MainParser. Confrontato anche col foglio di Linnun in `confronta_buildings.py`
+(nuovo `kind = "presence"`, colonna `Prop` col token `"I"`).
+
+**Uso visivo, in TUTTE le tab** (a differenza di `unique`): `BuildingRow`
+renderizza, subito dopo lo `<span>` del nome e prima del badge
+`isGreatBuilding`, un'icona SVG inline (non un'emoji — dà controllo diretto
+su stroke/fill invece del glifo con colore/riempimento fissi) quando
+`b.noRush` è true: cerchio + barra diagonale (simbolo "divieto"), stroke
+rosso scuro (`#7f1d1d`), fill trasparente, 12×12px, traslata di 1px in
+basso (`relative top-px`) per allineamento ottico col testo. Iterazioni
+scartate prima di arrivare all'SVG: emoji 🚫 a piena opacità (giudicata
+troppo invasiva/colore troppo acceso), emoji 🔒 (giudicata comunque troppo
+presente su ~118/2100 edifici, spingeva la colonna Time). Tooltip = testo
+ufficiale del gioco, chiave i18n `noRushBadgeTitle` in `ui-strings.ts` (it:
+"Completa istantaneamente produzione disabilitato", en: "Instant production
+finish disabled").
+
 ### 8.5 `kit.json` — catene di upgrade e selection kit
 
 È il file che alimenta l'ottimizzatore (§16). Ha due sezioni:
@@ -1189,7 +1229,11 @@ generarli, segnala un CSV corrotto. Per ogni riga:
   edifici: `isUniqueBuildingId` (in `data/uniqueBuildings.ts`) consulta un
   `Set<string>` costruito da un file esterno separato, `assets/unique.csv` (un
   `cityEntityId` per riga, senza intestazione) — vedi §8 per la fonte e §24.3bis
-  per l'uso visivo in tabella.
+  per l'uso visivo in tabella;
+- assegna `noRush: getText(parts, "NoRush") === "1"` (agosto 2026), stesso
+  punto/stile, ma QUESTO sì derivato da una colonna del CSV edifici
+  (`NoRush`, generata da `calc_no_rush()` in `buildings.py`) — vedi §8.4ter
+  per il criterio e l'uso visivo in tabella.
 
 ### `getImageUrl(id, hash)`
 Costruisce l'URL dell'immagine dell'edificio dai due formati di hash possibili. Se
@@ -2321,6 +2365,11 @@ un'ipotesi plausibile in teoria, smentita dalla verifica empirica.
   `activeTab === "database" && b.unique` (`Building.unique`, §7/§8.4bis/§12);
   `.building-table tbody td.cell-name.unique { color: gold; }` in `index.css`
   colora solo il testo. Non applicato a Città/Inventario/Alleati.
+- **Badge "divieto" per produzione non rushabile, TUTTE le tab** (agosto 2026)
+  — vedi §8.4ter/§12 per il campo `Building.noRush` e il criterio dati.
+  `BuildingRow` renderizza un'icona SVG inline (cerchio + barra diagonale,
+  stroke `#7f1d1d`, fill trasparente, 12×12px) subito dopo il nome quando
+  `b.noRush`, con tooltip `noRushBadgeTitle` (ui-strings.ts).
 
 ### 24.3bis `BuildingRow`: la riga della tabella principale, estratta e memoizzata
 

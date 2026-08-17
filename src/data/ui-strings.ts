@@ -1703,6 +1703,13 @@ const UI_STRINGS = {
     it: "per importare i tuoi dati da Forge of Empires.",
     en: "to import your data from Forge of Empires.",
   },
+  /** Import riuscito ma l'inventario di gioco è davvero vuoto (comune a inizio
+   *  partita) — distinto da noInventoryImportedYet (mai importato). Nessun
+   *  CTA verso la bacchetta magica: qui l'azione giusta non è re-importare. */
+  inventoryEmpty: {
+    it: "Il tuo inventario è vuoto.",
+    en: "Your inventory is empty.",
+  },
   noAlliesFound: {
     it: "Nessun alleato trovato con questa ricerca.",
     en: "No allies found for this search.",

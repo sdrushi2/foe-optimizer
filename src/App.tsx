@@ -6689,14 +6689,28 @@ export default function App() {
                         // l'azione giusta (usare la bacchetta magica). Scoped a Città/Inventario
                         // — in Database filteredBuildings vuoto è sempre un caso di filtri.
                         const noCityImported = activeTab === "propria_citta" && cityEntityIds.size === 0;
-                        const noInventoryImported = activeTab === "inventario" &&
+                        // Inventario vuoto per mancanza di import (mai fatto girare la bacchetta
+                        // magica) vs inventario DAVVERO vuoto (import fatto, ma l'inventario di
+                        // gioco non contiene ancora nulla — capita normalmente a inizio partita).
+                        // Distinzione: se la città NON è mai stata importata, cityEntityIds è
+                        // vuoto anch'esso (stesso identico import popola entrambi); se invece
+                        // cityEntityIds ha dati, un profilo è stato importato con successo e
+                        // l'inventario vuoto è un fatto legittimo di gioco, non un "manca il CTA".
+                        const noInventoryImportedAtAll = activeTab === "inventario" &&
                           inventoryMatched.size === 0 && inventoryUnmatched.size === 0 &&
-                          inventorySelectionKits.size === 0 && inventoryUpgradeKits.size === 0;
-                        const showWandCta = noCityImported || noInventoryImported;
+                          inventorySelectionKits.size === 0 && inventoryUpgradeKits.size === 0 &&
+                          cityEntityIds.size === 0;
+                        const inventoryImportedButEmpty = activeTab === "inventario" &&
+                          inventoryMatched.size === 0 && inventoryUnmatched.size === 0 &&
+                          inventorySelectionKits.size === 0 && inventoryUpgradeKits.size === 0 &&
+                          cityEntityIds.size > 0;
+                        const showWandCta = noCityImported || noInventoryImportedAtAll;
                         const emptyMessagePrefix = noCityImported
                           ? t("noCityImportedYet", uiLang)
-                          : noInventoryImported
+                          : noInventoryImportedAtAll
                           ? t("noInventoryImportedYet", uiLang)
+                          : inventoryImportedButEmpty
+                          ? t("inventoryEmpty", uiLang)
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>

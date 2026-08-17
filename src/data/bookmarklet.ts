@@ -253,6 +253,15 @@ export function validateBookmarkletData(parsed: unknown): BookmarkletValidationE
     return { code: "INVALID_FORMAT" };
   }
   const p = parsed as Record<string, unknown>;
+  // Normalizzazione, non validazione: il bookmarklet scrive `allies:
+  // Allies.allyList` così com'è in game, che per un giocatore senza ancora
+  // nessun alleato è `null` (non `{}` — non è il bookmarklet a poterlo
+  // sapere/normalizzare, è proprio lo stato del client di gioco). `null` è un
+  // caso legittimo ("zero alleati"), non un payload malformato: lo trattiamo
+  // qui, PRIMA della validazione sotto, mutando `p.allies` a `{}` così sia il
+  // controllo di tipo sia il cast a BookmarkletData più a valle vedono sempre
+  // un oggetto valido. Deliberatamente non tocchiamo BOOKMARKLET_JS.
+  if (p.allies === null || p.allies === undefined) p.allies = {};
   const missing: string[] = [];
   if (!Array.isArray(p.inventory)) missing.push("inventory");
   if (!p.allies || typeof p.allies !== "object" || Array.isArray(p.allies)) missing.push("allies");
