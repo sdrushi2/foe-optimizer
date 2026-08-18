@@ -296,8 +296,6 @@ D_VirtualFuture_Decoration1;Statua olografica;Holo Statue;1f156a56b;;;;1x1;;;;;;
 D_VirtualFuture_Decoration2;Pino giapponese;Japanese Pine;15ec9a19d;;;;1x1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_VirtualFuture_Decoration3;Spot olografico;Holo Ad;47b9edabb;;;;2x2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_VirtualFuture_Decoration4;Ologramma animali;Animal Hologram;5dc19a458;;;;1x2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-J_Mughals_Diplomacy1;Canale d'acqua;Water Canal;e65c5b38b;;;;2x3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-J_Mughals_Diplomacy2;Vialetto;Alley;bfef776c2;;;;3x2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 L_AllAge_ArcheologyBonus22a;Arco di zaffiro;Sapphire Arch;4982fb556;;;;3x1;;;;;4;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 L_AllAge_ArcheologyBonus22b;Arco Magenta;Magenta Arch;76b99c827;;;;3x1;;;;;2;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 L_AllAge_CarnivalBonus19a;Liv. 1 - Venditore di maschere della Piazza;Lv. 1 - Piazza Mask Vendor;45aa1fa08;;;;1x1;;;;;3;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1304,7 +1302,7 @@ W_MultiAge_FELL23D1;Fabbro Trailside;Trailside Smithy;ab58bf384;1;;;1x1;;;13593;
 W_MultiAge_FELL24A1;Mulino Whisperwood - Lv. 1;Whisperwood Watermill - Lv. 1;789eaa205;;;;5x6;2.5;;44260;;42;;;;;30;;;;;;63620;6870;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A10;Mulino Whisperwood Arcadico;Arcadian Whisperwood Watermill;552f4b50d;1;;;5x6;2.5;;110680;;69;;;;;165;;;;150;;309030;33330;;;66;;;99;99;;;;;;;;;;;;;;;;;;;M;;;;;;;;
 W_MultiAge_FELL24A11;;Dummy Whisperwood Watermill;;1;;;5x6;;;128010;;100;;;;;285;400;;0.02;250;;338820;38280;;351;351;;;476;476;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_selection_kit_FELL24A:3
-W_MultiAge_FELL24A12;;Dummy Whisperwood Watermill;;1;;1;5x6;;;138670;;150;;;;;435;600;600;0.06;400;;360000;40470;;476;476;;;551;551;;;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;golden_selection_kit_FELL24A:5
+W_MultiAge_FELL24A12;;Dummy Whisperwood Watermill;;1;90;1;5x6;;;138670;;150;;;;;435;600;600;0.06;400;;360000;40470;;476;476;;;551;551;;;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;golden_selection_kit_FELL24A:5
 W_MultiAge_FELL24A2;Mulino Whisperwood - Lv. 2;Whisperwood Watermill - Lv. 2;2ce28a701;;;;5x6;2.5;;51640;;45;;;;;45;;;;;;90890;9810;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A3;Mulino Whisperwood - Lv. 3;Whisperwood Watermill - Lv. 3;9b321e05b;;;;5x6;2.5;;59020;;48;;;;;60;;;;;;118150;12740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A4;Mulino Whisperwood - Lv. 4;Whisperwood Watermill - Lv. 4;3464a0a46;;;;5x6;2.5;;66400;;51;;;;;75;;;;;;145440;15680;;;5;;;7;7;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1337,7 +1335,7 @@ W_MultiAge_FELL25D1;Soakhaven Lodge;Soakhaven Lodge;39802c075;1;;;5x4;;;;;260;;;
 W_MultiAge_FELL25E1;Porto con Passerella - Livello 1;Raftway Harbour - Lv. 1;52d792817;1;;;3x4;1.5;-107670;;;65;;;;;49;65;;;;;;;;;;;;78;78;78;78;78;78;78;78;;;;;;;;;;;;;;4;;;;;;;
 W_MultiAge_FELL25E2;Porto con Passerella - Livello 2;Raftway Harbour - Lv. 2;cdcaf64ab;1;;;3x4;1.5;-107670;;;108;;;;;81;108;;;;;;;;;;;;130;130;130;130;130;130;130;130;;;;;;;;;;;;;M;8;;;;;;;upgrade_kit_ascended_BOWL22A:12
 W_MultiAge_FELL26A1;;FELL26A;;;;;5x5;2.5;530;;;6;;;;;;;;;;;;26250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A10;;FELL26A Gold;;1;;;5x5;2.5;42670;;;;;;50;;;;;;;;;45940;;476;476;;;;;;;601;601;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL26BC:3
+W_MultiAge_FELL26A10;;FELL26A Gold;;1;;;5x5;2.5;42670;;;460;;;50;;;;;;;;;45940;;476;476;;;;;;;601;601;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL26BC:3
 W_MultiAge_FELL26A2;;FELL26A;;;;;5x5;2.5;1070;;;12;;;;;;;;;;;;28440;;11;11;;;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A3;;FELL26A;;;;;5x5;2.5;2130;;;23;;;;;;;;;;;;30630;;21;21;;;;;;;26;26;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26A4;;FELL26A;;;;;5x5;2.5;3200;;;35;;;;;;;;;;;;32810;;31;31;;;;;;;51;51;;;;;;;;;;;;;;;;;;;;;;;
@@ -1351,8 +1349,8 @@ W_MultiAge_FELL26B2;;FELL26B;;1;30;1;4x2;;-32000;;;288;;;;;100;;;;;271430;;;;;;1
 W_MultiAge_FELL26C1;;FELL26C;;1;;;3x3;;-32000;;;;;;10;;150;;;;;;;10940;;106;106;;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26C2;;FELL26C;;1;30;1;3x3;;-32000;;;;;;30;;300;;;;;;;10940;;336;336;;;;;;;;300;;;25;;;;;0.05;;;10;;;;;;;;;;;;
 W_MultiAge_FELL26D1;;FELL26D;;1;;;5x5;;-21330;;;460;;;25;;150;;;0.08;;;;32810;;460;460;460;460;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26E1;;FELL26E;;1;;;4x4;;-53330;;;86;;;;;;;;;;488570;;;;142;142;;;102;;;;;;;;;;;;;;;;;;;;;1.5;;;;2.5;;;upgrade_kit_ascended_FELL24A:1
-W_MultiAge_FELL26E2;;FELL26E;;1;;;4x4;;-53330;;;230;0.01;;;;;;;;;597140;;;;302;302;;;312;;;;;;;;;;;;;;;;;;;;;2.5;;;;5;;;upgrade_kit_ascended_FELL24A:5
+W_MultiAge_FELL26E1;;FELL26E;;1;;;4x4;;-74670;;;86;;;;;;;;;;488570;;;;120;120;;;85;;;;;;;;;;;;;;;;;;;;;2.5;;;;2.25;;;upgrade_kit_ascended_FELL24A:1
+W_MultiAge_FELL26E2;;FELL26E;;1;;;4x4;;-74670;;;115;0.01;;;;;;;;;597140;;;;215;215;;;200;;;;;;;;;;;;;;;;;;;;;5;;;;3.75;;;upgrade_kit_ascended_FELL24A:5
 W_MultiAge_FallBonus21a;Colture dorate - Liv. 1;Golden Crops - Lv. 1;6abb31616;;;;6x4;2;12862;33235;;;;;;;;;;;;206652;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FallBonus21b;Colture dorate - Liv. 2;Golden Crops - Lv. 2;e8c9d5793;;;;6x4;2;13095;34213;;;;;;;;;;;;229629;30947;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FallBonus21c;Colture dorate - Liv. 3;Golden Crops - Lv. 3;b6373c2eb;;;;6x4;2;13437;35953;;;;;;;3;;;;;252703;33789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
