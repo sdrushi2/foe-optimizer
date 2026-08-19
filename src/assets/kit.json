@@ -4508,7 +4508,7 @@
     },
     "upgrade_kit_FELL26A": {
       "names": {
-        "en": "FELL26A Upgrade Kit"
+        "en": "Hearthglen Wayhouse Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26A1",
@@ -4523,7 +4523,7 @@
     },
     "silver_upgrade_kit_FELL26A": {
       "names": {
-        "en": "FELL26A Silver Silver Upgrade Kit"
+        "en": "Halcyon Hearthglen Wayhouse Silver Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26A8",
@@ -4533,7 +4533,7 @@
     },
     "golden_upgrade_kit_FELL26A": {
       "names": {
-        "en": "FELL26A Gold Golden Upgrade Kit"
+        "en": "Aurelian Hearthglen Wayhouse Golden Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26A9",
@@ -4543,7 +4543,7 @@
     },
     "upgrade_kit_ascended_FELL26B": {
       "names": {
-        "en": "Ascended FELL26B Upgrade Kit"
+        "en": "Ascended Banneret Muster Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26B1",
@@ -4552,7 +4552,7 @@
     },
     "upgrade_kit_ascended_FELL26C": {
       "names": {
-        "en": "Ascended FELL26C Upgrade Kit"
+        "en": "Ascended Duskmantle Covenant Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26C1",
@@ -4561,7 +4561,7 @@
     },
     "upgrade_kit_FELL26E": {
       "names": {
-        "en": "FELL26E Upgrade Kit"
+        "en": "Waitswood Songhouse Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26E1",
@@ -4570,7 +4570,7 @@
     },
     "platinum_upgrade_kit_FELL24A": {
       "names": {
-        "en": "FELL24A Platinum Platinum Upgrade Kit"
+        "en": "Elysian Whisperwood Watermill Platinum Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL24A10",
@@ -4579,7 +4579,7 @@
     },
     "upgrade_kit_ascended_FELL24A": {
       "names": {
-        "en": "Ascended FELL24A Upgrade Kit"
+        "en": "Ascended Elysian Whisperwood Watermill Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL24A11",
@@ -10100,7 +10100,7 @@
     },
     "selection_kit_FELL26A": {
       "names": {
-        "en": "FELL26A Selection Kit"
+        "en": "Hearthglen Wayhouse Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10109,7 +10109,7 @@
     },
     "silver_selection_kit_FELL26A": {
       "names": {
-        "en": "FELL26A Silver Silver Selection Kit"
+        "en": "Halcyon Hearthglen Wayhouse Silver Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10119,7 +10119,7 @@
     },
     "golden_selection_kit_FELL26A": {
       "names": {
-        "en": "FELL26A Gold Golden Selection Kit"
+        "en": "Aurelian Hearthglen Wayhouse Golden Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10130,7 +10130,7 @@
     },
     "selection_kit_FELL26BC": {
       "names": {
-        "en": "FELL26BC Selection Kit"
+        "en": "Bannered Covenant Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26B1",
@@ -10140,7 +10140,7 @@
     },
     "selection_kit_FELL26E": {
       "names": {
-        "en": "FELL26E Selection Kit"
+        "en": "Waitswood Songhouse Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26E1",
@@ -10173,7 +10173,7 @@
     },
     "platinum_selection_kit_FELL24A": {
       "names": {
-        "en": "Dummy"
+        "en": "Elysian Whisperwood Watermill Platinum Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL24A1",
