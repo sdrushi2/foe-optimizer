@@ -6539,7 +6539,7 @@ export default function App() {
                           <th className="relative text-center section-divider text-orange-400/80" colSpan={20}>
                             <button
                               onClick={() => setHideNoRush(v => !v)}
-                              className={`absolute right-1 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
+                              className={`absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
                                 hideNoRush
                                   ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
                                   : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
