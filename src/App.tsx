@@ -1068,14 +1068,30 @@ const BuildingRow = memo(function BuildingRow({
       } transition-colors ${activeTab === "propria_citta" && !b.isFallback ? "cursor-pointer" : ""}`}
     >
       <td className="cell-checkbox">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onClick={(e) => e.stopPropagation()}
-          onChange={() => toggleSelect(b.id)}
-          aria-label={t("selectBuildingLabel", uiLang, b.name)}
-          className="accent-amber-500 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-slate-900 focus:ring-offset-slate-950 cursor-pointer h-3 w-3 relative -top-[-1px]"
-        />
+        <label className="inline-flex cursor-pointer" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleSelect(b.id)}
+            aria-label={t("selectBuildingLabel", uiLang, b.name)}
+            className="peer sr-only"
+          />
+          <span
+            className={`relative top-px block box-border h-3 w-3 shrink-0 rounded-[4px] border ${
+              isSelected
+                ? "bg-amber-500 border-amber-500"
+                : "bg-transparent border-slate-600 peer-hover:border-slate-400"
+            }`}
+          >
+            {isSelected && (
+              <Check
+                size={9}
+                strokeWidth={3}
+                className="text-slate-950 pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              />
+            )}
+          </span>
+        </label>
       </td>
       <td className="cell-eye">
         {(() => {
@@ -6552,14 +6568,35 @@ export default function App() {
                       </tr>
                       <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                         <th className="cell-checkbox py-0.5 px-1 w-[32px] text-center">
-                          <input
-                            type="checkbox"
-                            checked={filteredBuildings.length > 0 && filteredBuildings.every(b => selectedIds.has(b.id))}
-                            onChange={toggleSelectAll}
-                            title={t("selectAllTitle", uiLang)}
-                            aria-label={t("selectAllTitle", uiLang)}
-                            className="accent-amber-500 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-slate-900 focus:ring-offset-slate-950 cursor-pointer h-3 w-3 relative -top-[-1px]"
-                          />
+                          {(() => {
+                            const allSelected = filteredBuildings.length > 0 && filteredBuildings.every(b => selectedIds.has(b.id));
+                            return (
+                              <label className="inline-flex cursor-pointer" title={t("selectAllTitle", uiLang)}>
+                                <input
+                                  type="checkbox"
+                                  checked={allSelected}
+                                  onChange={toggleSelectAll}
+                                  aria-label={t("selectAllTitle", uiLang)}
+                                  className="peer sr-only"
+                                />
+                                <span
+                                  className={`relative top-px block box-border h-3 w-3 shrink-0 rounded-[4px] border ${
+                                    allSelected
+                                      ? "bg-amber-500 border-amber-500"
+                                      : "bg-transparent border-slate-600 peer-hover:border-slate-400"
+                                  }`}
+                                >
+                                  {allSelected && (
+                                    <Check
+                                      size={9}
+                                      strokeWidth={3}
+                                      className="text-slate-950 pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                                    />
+                                  )}
+                                </span>
+                              </label>
+                            );
+                          })()}
                         </th>
                         <th className="cell-eye py-0.5 px-1 text-center w-[14px]"></th>
                         {/* className STATICA, senza larghezze condizionali: la larghezza della
