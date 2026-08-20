@@ -2992,6 +2992,10 @@ export default function App() {
     // highlightedCityEntityIds — senza questo, il reset filtri lasciava le
     // righe cliccate ancora evidenziate (bug segnalato luglio 2026).
     setSelectedIds(new Set());
+    // hideNoRush è un toggle globale (come showSigmaColumns ecc.), non
+    // fa parte di TabFilters — ma l'utente si aspetta che "Reset filtri"
+    // lo azzeri comunque, essendo un filtro a tutti gli effetti.
+    setHideNoRush(false);
   };
 
 
@@ -5861,7 +5865,18 @@ export default function App() {
              </button>
 
               <button
-                  onClick={() => setShowProdColumns(v => !v)}
+                  onClick={() => {
+                    setShowProdColumns(v => {
+                      const next = !v;
+                      // Nascondendo l'intera sezione Produzioni, il pulsante
+                      // "Nascondi 🚫" al suo interno sparisce dalla UI: se
+                      // hideNoRush restasse true, il filtro continuerebbe ad
+                      // agire "silenziosamente" senza controllo visibile
+                      // dell'utente — lo resettiamo insieme.
+                      if (!next) setHideNoRush(false);
+                      return next;
+                    });
+                  }}
                   className={`toggle-icon-btn text-[19px] leading-none ${
                     showProdColumns ? "border-orange-500/50 bg-orange-500/15 text-orange-300 shadow-sm" : ""
                   }`}
