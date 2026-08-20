@@ -717,6 +717,22 @@ ufficiale del gioco, chiave i18n `noRushBadgeTitle` in `ui-strings.ts` (it:
 "Completa istantaneamente produzione disabilitato", en: "Instant production
 finish disabled").
 
+**Pulsante "Nascondi 🚫"** (agosto 2026), dentro l'header di gruppo "📦
+PRODUZIONI" della tabella (il `<th colSpan={20}>` che titola le colonne di
+produzione — non la toolbar dei toggle sopra la tabella), posizionato in
+`absolute right-1` con `relative` sul `<th>`: nasconde tutte le righe con
+`b.noRush === true`, in tutte le tab. Stato `hideNoRush`, globale e
+persistente come gli altri toggle della toolbar (chiave localStorage
+`HIDE_NO_RUSH_KEY`, stesso pattern di `showProdColumns`/`PROD_COLUMNS_KEY`
+in `storage.ts`). Applicato dentro il loop di `filteredBuildings`
+(`if (hideNoRush && b.noRush) continue;`), quindi in `useMemo` con
+`hideNoRush` tra le dipendenze — non fa parte di `TabFilters`/
+`currentFilters` perché non è per-tab. Il pulsante riusa lo stesso SVG
+inline del badge (cerchio + barra, stroke `#7f1d1d`, fill trasparente)
+anziché un'emoji, con etichetta testuale breve accanto (`hideNoRushLabel`,
+"Nascondi"/"Hide") e tooltip che cambia in base allo stato
+(`hideNoRushTitle`/`hideNoRushActiveTitle`).
+
 ### 8.5 `kit.json` — catene di upgrade e selection kit
 
 È il file che alimenta l'ottimizzatore (§16). Ha due sezioni:

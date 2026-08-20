@@ -281,6 +281,18 @@ const UI_STRINGS = {
     it: "Mostra Produzioni",
     en: "Show Productions",
   },
+  hideNoRushLabel: {
+    it: "Nascondi",
+    en: "Hide",
+  },
+  hideNoRushTitle: {
+    it: "Nascondi tutti gli edifici NoRush",
+    en: "Hide all NoRush buildings",
+  },
+  hideNoRushActiveTitle: {
+    it: "Mostra di nuovo gli edifici NoRush",
+    en: "Show NoRush buildings again",
+  },
   filterLabel: {
     it: "Filtra",
     en: "Filter",

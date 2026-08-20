@@ -30,7 +30,7 @@ import type { CityStore } from "./data/cityStore";
 import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, HIDE_NO_RUSH_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -2876,6 +2876,9 @@ export default function App() {
   // la visibilità del pannello è resa globale e persistente, non la
   // selezione dei filtri al suo interno.
   const [showProdColumns, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
+  // Nasconde tutte le righe con badge NoRush (🚫): globale come showProdColumns,
+  // persistente, applicato dentro filteredBuildings insieme agli altri filtri.
+  const [hideNoRush, setHideNoRush] = useState<boolean>(() => localStorage.getItem(HIDE_NO_RUSH_KEY) === "true");
   // Vista database tab Info: false = LIGHT (solo edifici principali Lin=1,
   // default), true = FULL (tutti, inclusi livelli intermedi/varianti).
   const [dbViewFull, setDbViewFull] = useState<boolean>(() => localStorage.getItem(DB_VIEW_KEY) === "full");
@@ -3406,8 +3409,9 @@ export default function App() {
     localStorage.setItem(FEL_COLUMN_KEY, showFelColumn.toString());
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
     localStorage.setItem(PROD_COLUMNS_KEY, showProdColumns.toString());
+    localStorage.setItem(HIDE_NO_RUSH_KEY, hideNoRush.toString());
     localStorage.setItem(DB_VIEW_KEY, dbViewFull ? "full" : "light");
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, dbViewFull]);
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, hideNoRush, dbViewFull]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -4100,6 +4104,9 @@ export default function App() {
       // fuorviante, non un'informazione utile sulla riga merged stessa).
       if (isPropriacitta && showOnlyOutdated && (b._isMergedInventory || (b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)))) continue;
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
+      // Pulsante "Nascondi 🚫" nella toolbar Produzioni: filtro globale,
+      // applicato in tutte le tab (stesso pattern di showSigmaColumns ecc.).
+      if (hideNoRush && b.noRush) continue;
       // Filtri slot alleati / frammenti: disponibili anche in tab Inventario
       // (pulsanti presenti in entrambe le barre), non solo in Città.
       if ((isPropriacitta || isInventario) && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
@@ -4165,7 +4172,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, showOnlyWithFragments, dbViewFull]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, showOnlyWithFragments, hideNoRush, dbViewFull]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -6529,7 +6536,22 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center section-divider text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
-                          <th className="text-center section-divider text-orange-400/80" colSpan={20}>
+                          <th className="relative text-center section-divider text-orange-400/80" colSpan={20}>
+                            <button
+                              onClick={() => setHideNoRush(v => !v)}
+                              className={`absolute right-1 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
+                                hideNoRush
+                                  ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
+                                  : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                              }`}
+                              title={t(hideNoRush ? "hideNoRushActiveTitle" : "hideNoRushTitle", uiLang)}
+                            >
+                              {t("hideNoRushLabel", uiLang)}
+                              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5" className="flex-shrink-0">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" />
+                              </svg>
+                            </button>
                             {t("groupProductions", uiLang)}
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
                                 salta applyEraStats (isGameTab è falso), quindi i valori sono
