@@ -1718,14 +1718,14 @@ const BuildingRow = memo(function BuildingRow({
           <StaleFieldCell value={b.beni} className={`cell-num${b.beni > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.beni)}
           </StaleFieldCell>
+          <StaleFieldCell value={b.benib} className={`cell-num${b.benib > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.benib)}
+          </StaleFieldCell>
           <StaleFieldCell value={b.benip} className={`cell-num${b.benip > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benip)}
           </StaleFieldCell>
           <StaleFieldCell value={b.benis} className={`cell-num${b.benis > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benis)}
-          </StaleFieldCell>
-          <StaleFieldCell value={b.benib} className={`cell-num${b.benib > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.benib)}
           </StaleFieldCell>
           <StaleFieldCell value={b.benig} className={`cell-num${b.benig > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benig)}
@@ -5875,9 +5875,9 @@ export default function App() {
                     { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
                     { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
                     { key: "beni", icon: <img src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="icon-16" />, title: t("prodGoodsCurrent", uiLang) },
+                    { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
                     { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
                     { key: "benis", icon: <img src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="icon-16" />, title: t("prodGoodsNext", uiLang) },
-                    { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
                     { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
                     { key: "bp", icon: <img src={iconBP} alt={t("prodBlueprints", uiLang)} className="icon-16" />, title: t("prodBlueprints", uiLang) },
                     { key: "fsp", icon: "⏳", title: t("prodRushSpecial", uiLang) },
@@ -6652,9 +6652,9 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => handleSort("beni")} active={sortBy === "beni"} order={sortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
                             <SortableHeader noGap label="⏳" sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col text-sm" title={t("prodRushSpecial", uiLang)} />
