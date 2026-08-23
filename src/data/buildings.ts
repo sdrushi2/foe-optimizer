@@ -2,6 +2,28 @@ import { LANGUAGES, type Lang } from "./languages";
 import { isGreatBuildingId, isMilitaryBuildingId, isInactiveBuildingId, isGoodsFactoryId } from "./buildingClassification";
 import { isUniqueBuildingId } from "./uniqueBuildings";
 
+/** Bit noti di components.AllAge.flags.flags nel MainParser (agosto 2026),
+ *  confermati da Linnun leggendo il codice client minificato (non solo per
+ *  deduzione empirica) — vedi buildings.py in RECUPERO DATI (commento sopra
+ *  extract_flags()) per la mappa completa e la storia dell'indagine. Solo
+ *  FLAG_NO_RUSH è consumato oggi (vedi getter `noRush` sotto); gli altri
+ *  sono qui pronti per quando servirà un secondo badge/filtro, senza dover
+ *  più toccare la pipeline Python né rigenerare il CSV.
+ *  bit 0/1/4 sono presenti sulla stragrande maggioranza degli edifici
+ *  (99.9%/100%/92.6%): poco utili come discriminanti da soli. */
+export const FLAG_SELLABLE = 1;      // bit 0 — isSellable
+export const FLAG_MOVABLE = 2;       // bit 1 — isMovable
+export const FLAG_ERA_MUTABLE = 4;   // bit 2 — isEraMutable ("auto-aging")
+export const FLAG_PLUNDERABLE = 8;   // bit 3 — isPlunderable
+export const FLAG_STORABLE = 16;     // bit 4 — isStorable
+export const FLAG_NO_RUSH = 32;      // bit 5 — fspDisabled ("Instant production finish disabled")
+
+/** True se `flags` ha il bit `flag` acceso. `flags` undefined (edificio
+ *  senza AllAge.flags nel MainParser) → sempre false per qualsiasi bit. */
+export function hasFlag(flags: number | undefined, flag: number): boolean {
+  return flags !== undefined && (flags & flag) !== 0;
+}
+
 export interface Building {
   id: string;
   name: string;
@@ -101,16 +123,41 @@ export interface Building {
    *  i premi diretti di lega oro/argento degli eventi). Vedi
    *  data/uniqueBuildings.ts per la fonte e i dettagli. */
   unique?: boolean;
-  /** True se la produzione dell'edificio NON può essere terminata all'istante
-   *  con un item "Termina produzione" (es. FSP/Frammenti di Termina
-   *  produzione speciale) — in game: "Instant production finish disabled".
-   *  Colonna CSV "NoRush" ("1"/vuoto). Flag di classificazione booleano
-   *  come `unique`, non un campo statistico: valorizzato una sola volta al
-   *  parsing, nessuna logica di override città (vedi buildings.py
-   *  calc_no_rush() per il criterio di derivazione lato pipeline —
-   *  bit 5 di components.AllAge.flags.flags, validato in game). */
-  noRush?: boolean;
+  /** Valore intero grezzo di components.AllAge.flags.flags (colonna CSV
+   *  "Flags", agosto 2026 — prima della colonna dedicata "NoRush" booleana).
+   *  undefined se l'edificio non ha quel campo nel MainParser. Non leggere
+   *  direttamente: usare `hasFlag(b.flags, FLAG_X)` o il getter `noRush`
+   *  sotto. Salvare il bitmask completo invece di una singola colonna
+   *  derivata permette di gestire altri bit (es. FLAG_ERA_MUTABLE) senza
+   *  toccare più la pipeline Python — vedi il commento sopra le costanti
+   *  FLAG_* a inizio file. */
+  flags?: number;
   fragments: string;
+}
+
+/** True se la produzione dell'edificio NON può essere terminata all'istante
+ *  con un item "Termina produzione" (es. FSP/Frammenti di Termina produzione
+ *  speciale) — in game: "Instant production finish disabled". Derivato da
+ *  `b.flags` (bit 5/FLAG_NO_RUSH), non un campo salvato sull'oggetto: stesso
+ *  identico comportamento di prima (era un booleano valorizzato una sola
+ *  volta al parsing, nessuna logica di override città — vedi buildings.py
+ *  extract_flags() per il criterio di derivazione lato pipeline, validato in
+ *  game), solo ricalcolato al volo da `flags` invece di essere precalcolato.
+ *  Nome mantenuto (non `hasFlag(b.flags, FLAG_NO_RUSH)` inline) per non
+ *  dover toccare tutti i punti d'uso in App.tsx. */
+export function noRush(b: Pick<Building, "flags">): boolean {
+  return hasFlag(b.flags, FLAG_NO_RUSH);
+}
+
+/** True se l'edificio segue automaticamente l'era della città ("auto-aging":
+ *  si aggiorna da solo quando il giocatore entra in una nuova era, senza
+ *  bisogno di kit di aggiornamento manuale). Derivato da `b.flags` (bit 2/
+ *  FLAG_ERA_MUTABLE), stesso pattern di `noRush` sopra — nome ufficiale
+ *  confermato da Linnun leggendo il codice client, validato empiricamente
+ *  su un campione controllato di 18 edifici auto-aging noti vs 33
+ *  non-auto-aging (zero eccezioni) prima ancora della conferma. */
+export function isEraMutable(b: Pick<Building, "flags">): boolean {
+  return hasFlag(b.flags, FLAG_ERA_MUTABLE);
 }
 
 // Funzioni di utilità per il parsing del CSV
@@ -364,7 +411,12 @@ export function parseBuildingsCsv(csv: string): Building[] {
       isMilitary: isMilitaryBuildingId(cityEntityId),
       isGoods: isGoodsFactoryId(cityEntityId),
       unique: isUniqueBuildingId(cityEntityId),
-      noRush: getText(parts, "NoRush") === "1",
+      flags: (() => {
+        const raw = getText(parts, "Flags");
+        if (raw === "") return undefined;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : undefined;
+      })(),
       isFallback: false,
     };
   });

@@ -293,6 +293,18 @@ const UI_STRINGS = {
     it: "Mostra di nuovo gli edifici NoRush",
     en: "Show NoRush buildings again",
   },
+  hideEraMutableLabel: {
+    it: "Nascondi",
+    en: "Hide",
+  },
+  hideEraMutableTitle: {
+    it: "Nascondi tutti gli edifici che si aggiornano automaticamente",
+    en: "Hide all auto-aging buildings",
+  },
+  hideEraMutableActiveTitle: {
+    it: "Mostra di nuovo gli edifici che si aggiornano automaticamente",
+    en: "Show auto-aging buildings again",
+  },
   filterLabel: {
     it: "Filtra",
     en: "Filter",
@@ -1015,12 +1027,19 @@ const UI_STRINGS = {
     it: "GE",
     en: "GB",
   },
-  /** Tooltip del badge 🔒 (b.noRush): testo ufficiale mostrato dal gioco
-   *  stesso sull'edificio ("Instant production finish disabled"), non una
-   *  parafrasi nostra. */
+  /** Tooltip del badge 🔒 (noRush(b), derivato da b.flags): testo ufficiale
+   *  mostrato dal gioco stesso sull'edificio ("Instant production finish
+   *  disabled"), non una parafrasi nostra. */
   noRushBadgeTitle: {
     it: "Completa istantaneamente produzione disabilitato",
     en: "Instant production finish disabled",
+  },
+  /** Tooltip del badge ciano (isEraMutable(b), derivato da b.flags bit 2):
+   *  l'edificio si aggiorna automaticamente all'era corrente della città,
+   *  senza bisogno di un kit di aggiornamento manuale. */
+  eraMutableBadgeTitle: {
+    it: "Si aggiorna automaticamente alla tua era",
+    en: "Automatically upgrades to your age",
   },
   daySuffix: {
     it: "g",

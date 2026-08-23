@@ -677,73 +677,142 @@ className="cell-name">` di `BuildingRow` riceve la classe aggiuntiva
 `.building-table tbody td.cell-name.unique { color: gold; }` (`index.css`)
 colora il testo del nome in oro. Non applicato a Città/Inventario/Alleati.
 
-### 8.4ter `Building.noRush` — produzione non terminabile all'istante (agosto 2026)
+### 8.4ter `Building.flags` — bitmask grezzo e getter derivati (agosto 2026)
 
-Flag di classificazione booleano, stesso pattern di `Building.unique`: NON
-segue la checklist a 18 punti dei campi statistici (§7), è valorizzato una
-sola volta al parsing con `getText(parts, "NoRush") === "1"`.
+Fino ad agosto 2026 esisteva solo `Building.noRush`, un booleano
+precalcolato lato pipeline Python. Refactor: `buildings.py` ora salva nel
+CSV il bitmask INTERO di `components.AllAge.flags.flags` (colonna `Flags`,
+sostituisce `NoRush`), e l'interpretazione bit-per-bit è delegata
+interamente a `data/buildings.ts` — motivazione: poter gestire altri bit
+in futuro (es. `isEraMutable`, aggiunto subito dopo questo refactor) senza
+più dover toccare la pipeline Python né rigenerare il CSV con una nuova
+colonna dedicata per ognuno.
 
-Indica che la produzione dell'edificio NON può essere terminata all'istante
-con i Frammenti di Termina produzione speciale — "Instant production finish
-disabled" nel gioco stesso. Il motivo di gioco: il FSP ha effetto solo sulle
-produzioni, e una raccolta è normalmente disponibile ogni 24h, ma con FSP se
-ne possono fare più d'una in pochi istanti; per gli edifici che producono
-frammenti "pregiati" questo permetterebbe di assemblare più copie di edifici
-top nel giro di pochi minuti — da qui il flag di disabilitazione su un
-sottoinsieme di edifici (non necessariamente solo quelli che producono
-frammenti: verificato che alcuni NoRush non producono nulla, es. Forgotten
-Temple e Ancient Temple, entrambi rushabili in game nonostante compaiano
-come `limited`/`cityLimit`).
+`Building.flags?: number` — valore intero grezzo, `undefined` se
+l'edificio non ha quel campo nel MainParser. Costanti bitmask in
+`data/buildings.ts`: `FLAG_SELLABLE` (bit 0, isSellable), `FLAG_MOVABLE`
+(bit 1 — attenzione, NON è "richiede strada": è la proprietà `movable`
+del costruttore client `Mob`/`CityMapEntityPlacement`, un concetto di
+piazzamento/collisione fisico generale di cui la strada è solo un
+sotto-caso; diverge da `requires_road()`/colonna `Road` su 505/1370
+edifici), `FLAG_ERA_MUTABLE` (bit 2, "auto-aging"), `FLAG_PLUNDERABLE`
+(bit 3, isPlunderable), `FLAG_STORABLE` (bit 4, isStorable — bug Inno
+FOE-96714 su 3 edifici Ascended FALL21/FALL26 con bit4 spento ma resi
+storable in game, confermato RISOLTO ad agosto 2026 verificando il
+MainParser del 18/8: nessuna eccezione nota residua),
+`FLAG_NO_RUSH` (bit 5, fspDisabled). Nomi/semantiche ufficiali confermate
+da Linnun leggendo il codice client minificato, non solo dedotte
+empiricamente — vedi buildings.py (commento sopra `extract_flags()`) per
+la mappa completa e la storia dell'indagine. Helper generico:
+`hasFlag(flags, FLAG_X): boolean`.
 
-Colonna CSV `NoRush` (`"1"`/vuota) generata da `calc_no_rush()` in
-`buildings.py` (pipeline RECUPERO DATI, §8bis). Criterio finale, validato
-empiricamente sia sui dati sia IN GAME (dopo due tentativi scartati basati
-su `limited`/`cityLimit`, entrambi smentiti da Forgotten Temple/Ancient
-Temple): bit 5 (valore 32) di `components.AllAge.flags.flags` nel
-MainParser. Confrontato anche col foglio di Linnun in `confronta_buildings.py`
-(nuovo `kind = "presence"`, colonna `Prop` col token `"I"`).
+Getter derivati (non campi salvati sull'oggetto — ricalcolati al volo da
+`b.flags`, stesso comportamento della vecchia proprietà booleana
+precalcolata, solo senza precalcolo):
 
-**Uso visivo, in TUTTE le tab** (a differenza di `unique`): `BuildingRow`
-renderizza, subito dopo lo `<span>` del nome e prima del badge
-`isGreatBuilding`, un'icona SVG inline (non un'emoji — dà controllo diretto
-su stroke/fill invece del glifo con colore/riempimento fissi) quando
-`b.noRush` è true: cerchio + barra diagonale (simbolo "divieto"), stroke
-rosso scuro (`#7f1d1d`), fill trasparente, 12×12px, traslata di 1px in
-basso (`relative top-px`) per allineamento ottico col testo. Iterazioni
-scartate prima di arrivare all'SVG: emoji 🚫 a piena opacità (giudicata
-troppo invasiva/colore troppo acceso), emoji 🔒 (giudicata comunque troppo
-presente su ~118/2100 edifici, spingeva la colonna Time). Tooltip = testo
-ufficiale del gioco, chiave i18n `noRushBadgeTitle` in `ui-strings.ts` (it:
-"Completa istantaneamente produzione disabilitato", en: "Instant production
-finish disabled").
+- **`noRush(b): boolean`** (bit 5) — indica che la produzione dell'edificio
+  NON può essere terminata all'istante con i Frammenti di Termina
+  produzione speciale — "Instant production finish disabled" nel gioco
+  stesso. Il motivo di gioco: il FSP ha effetto solo sulle produzioni, e
+  una raccolta è normalmente disponibile ogni 24h, ma con FSP se ne
+  possono fare più d'una in pochi istanti; per gli edifici che producono
+  frammenti "pregiati" questo permetterebbe di assemblare più copie di
+  edifici top nel giro di pochi minuti — da qui il flag di disabilitazione
+  su un sottoinsieme di edifici (non necessariamente solo quelli che
+  producono frammenti: verificato che alcuni NoRush non producono nulla,
+  es. Forgotten Temple e Ancient Temple, entrambi rushabili in game
+  nonostante compaiano come `limited`/`cityLimit`). Criterio bit 5
+  validato empiricamente sia sui dati sia IN GAME (dopo due tentativi
+  scartati basati su `limited`/`cityLimit`, entrambi smentiti da Forgotten
+  Temple/Ancient Temple). Confrontato anche col foglio di Linnun in
+  `confronta_buildings.py` (vedi sotto).
+- **`isEraMutable(b): boolean`** (bit 2, agosto 2026) — l'edificio si
+  aggiorna automaticamente all'era della città ("auto-aging"), senza
+  bisogno di un kit di aggiornamento manuale. Validato empiricamente su un
+  campione controllato di 18 edifici auto-aging noti vs 33 non-auto-aging
+  (zero eccezioni), poi confermato dal nome ufficiale letto nel codice
+  client da Linnun.
 
-**Pulsante "Nascondi 🚫"** (agosto 2026), dentro l'header di gruppo "📦
-PRODUZIONI" della tabella (il `<th colSpan={20}>` che titola le colonne di
-produzione — non la toolbar dei toggle sopra la tabella), posizionato in
-`absolute left-2 top-1/2 -translate-y-1/2` con `relative` sul `<th>`:
-nasconde tutte le righe con `b.noRush === true`, in tutte le tab. Stato
-`hideNoRush`, globale e persistente come gli altri toggle della toolbar
-(chiave localStorage `HIDE_NO_RUSH_KEY`, stesso pattern di
-`showProdColumns`/`PROD_COLUMNS_KEY` in `storage.ts`). Applicato dentro il
-loop di `filteredBuildings` (`if (hideNoRush && b.noRush) continue;`),
-quindi in `useMemo` con `hideNoRush` tra le dipendenze — non fa parte di
-`TabFilters`/`currentFilters` perché non è per-tab. Il pulsante riusa lo
-stesso SVG inline del badge (cerchio + barra, stroke `#7f1d1d`, fill
-trasparente, 12×12px) anziché un'emoji, con etichetta testuale breve PRIMA
-dell'icona (`hideNoRushLabel`, "Nascondi"/"Hide" poi l'SVG) e tooltip che
-cambia in base allo stato (`hideNoRushTitle`/`hideNoRushActiveTitle`).
-Stile a riposo allineato a `.toggle-icon-btn` (`border-slate-700/50`,
-`bg-transparent`, hover `border-slate-500`) senza riusare la classe
-condivisa (dimensioni e `position: absolute` diversi da quel pattern).
+Entrambi i getter funzionano identicamente per edifici letti dal CSV
+Database E per quelli con override città/inventario, perché `flags` non
+ha logica di override per-città (proprietà statica dell'edificio, come
+`unique`).
 
-Due reset automatici (agosto 2026), per evitare che il filtro resti attivo
-senza un modo visibile di disattivarlo: il pulsante "Reset filtri" chiama
-`setHideNoRush(false)` insieme al reset di `TabFilters` (pur essendo
-`hideNoRush` un toggle globale, non per-tab); e l'`onClick` del pulsante
-📦 (`setShowProdColumns`) resetta `hideNoRush` a `false` quando la sezione
-Produzioni viene nascosta (transizione `true` → `false`), perché altrimenti
-il pulsante "Nascondi 🚫" — che vive dentro quella sezione — sparirebbe
-dalla UI lasciando il filtro attivo senza modo di disattivarlo.
+**Uso visivo, in TUTTE le tab** (a differenza di `unique`, scoped a
+Database): `BuildingRow` renderizza, subito dopo lo `<span>` del nome e
+prima del badge `isGreatBuilding`, icone SVG inline (non emoji — dà
+controllo diretto su stroke/fill invece del glifo con colore/riempimento
+fissi), in sequenza:
+
+1. `noRush(b)` → cerchio + barra diagonale (simbolo "divieto"), stroke
+   rosso scuro (`#7f1d1d`), fill trasparente, 12×12px (`viewBox 0 0 24 24`,
+   `r=10`, `strokeWidth=2.5`), traslata di 1px in basso (`relative
+   top-px`) per allineamento ottico col testo. Iterazioni scartate prima
+   di arrivare all'SVG: emoji 🚫 a piena opacità (giudicata troppo
+   invasiva/colore troppo acceso), emoji 🔒 (giudicata comunque troppo
+   presente su ~118/2100 edifici, spingeva la colonna Time). Tooltip =
+   testo ufficiale del gioco, chiave i18n `noRushBadgeTitle` in
+   `ui-strings.ts` (it: "Completa istantaneamente produzione disabilitato",
+   en: "Instant production finish disabled").
+2. `isEraMutable(b)` (agosto 2026) → stesso cerchio identico (stesso
+   `viewBox`/`r`/`strokeWidth`/traslazione del divieto, scelto
+   deliberatamente per coerenza dimensionale tra i due badge), ma stroke
+   ciano scuro (`#0e7490`) e un chevron verso l'alto al posto della barra
+   diagonale (`polyline points="8 14 12 10 16 14"`, richiama "sale di
+   livello/era da solo"). Tooltip chiave i18n `eraMutableBadgeTitle` (it:
+   "Si aggiorna automaticamente alla tua era", en: "Automatically
+   upgrades to your age").
+
+**Due pulsanti "Nascondi 🚫"/"Nascondi ^"** (agosto 2026), dentro l'header
+di gruppo "📦 PRODUZIONI" della tabella (il `<th colSpan={20}>` che titola
+le colonne di produzione — non la toolbar dei toggle sopra la tabella),
+affiancati dentro un unico `<div className="absolute left-2 top-1/2
+-translate-y-1/2 flex items-center gap-1">` (con `relative` sul `<th>`
+stesso). Nascondono rispettivamente le righe con `noRush(b) === true` e
+`isEraMutable(b) === true`, in tutte le tab. Stato `hideNoRush`/
+`hideEraMutable`, entrambi globali e persistenti come gli altri toggle
+della toolbar (chiavi localStorage `HIDE_NO_RUSH_KEY`/
+`HIDE_ERA_MUTABLE_KEY`, stesso pattern di `showProdColumns`/
+`PROD_COLUMNS_KEY` in `storage.ts`). Applicati dentro il loop di
+`filteredBuildings` (`if (hideNoRush && noRush(b)) continue;` e
+`if (hideEraMutable && isEraMutable(b)) continue;`), entrambi tra le
+dipendenze del `useMemo` — non fanno parte di `TabFilters`/
+`currentFilters` perché non sono per-tab. Ogni pulsante riusa lo stesso
+SVG inline del badge corrispondente (divieto rosso `#7f1d1d` per NoRush,
+cerchio ciano `#0e7490` con chevron per EraMutable, entrambi 12×12px)
+anziché un'emoji, con etichetta testuale breve PRIMA dell'icona
+(`hideNoRushLabel`/`hideEraMutableLabel`, "Nascondi"/"Hide" poi l'SVG) e
+tooltip che cambia in base allo stato (`hideNoRushTitle`/
+`hideNoRushActiveTitle` e `hideEraMutableTitle`/
+`hideEraMutableActiveTitle`). Stile a riposo allineato a
+`.toggle-icon-btn` (`border-slate-700/50`, `bg-transparent`, hover
+`border-slate-500`) senza riusare la classe condivisa (dimensioni e
+`position: absolute` diversi da quel pattern).
+
+Due reset automatici per ENTRAMBI i toggle (agosto 2026), per evitare che
+i filtri restino attivi senza un modo visibile di disattivarli: il
+pulsante "Reset filtri" chiama `setHideNoRush(false)` E
+`setHideEraMutable(false)` insieme al reset di `TabFilters` (pur essendo
+entrambi toggle globali, non per-tab); e l'`onClick` del pulsante 📦
+(`setShowProdColumns`) resetta ENTRAMBI a `false` quando la sezione
+Produzioni viene nascosta (transizione `true` → `false`), perché
+altrimenti i due pulsanti "Nascondi" — che vivono dentro quella sezione —
+sparirebbero dalla UI lasciando i filtri attivi senza modo di
+disattivarli.
+
+`confronta_buildings.py` (report discrepanze vs foglio Linnun, nuovo
+`kind = "presence"`, colonna sheet `Prop` col token `"I"`) non legge
+`Flags` direttamente: subito dopo aver caricato il CSV `game` in `main()`,
+ricostruisce una colonna `NoRush` ("1"/vuoto) da bit 5 di `Flags`, così la
+riga `("NoRush", ..., "presence")` in `SECTIONS` e tutta la logica di
+confronto sotto restano invariate, senza dover sapere nulla del bitmask.
+
+⚠️ **Nota per chi rigenera i dati**: il CSV di produzione in
+`src/assets/buildings.csv` deve avere la colonna `Flags` (non più
+`NoRush`) perché l'app funzioni — va rigenerato con la pipeline completa
+(`aggiorna_dati.py` o almeno `buildings.py` + `lin_inject.py`) dopo questo
+refactor, altrimenti `b.flags` resta sempre `undefined` e i due badge
+spariscono silenziosamente per tutti gli edifici.
 
 ### 8.5 `kit.json` — catene di upgrade e selection kit
 
@@ -2393,11 +2462,14 @@ un'ipotesi plausibile in teoria, smentita dalla verifica empirica.
   `activeTab === "database" && b.unique` (`Building.unique`, §7/§8.4bis/§12);
   `.building-table tbody td.cell-name.unique { color: gold; }` in `index.css`
   colora solo il testo. Non applicato a Città/Inventario/Alleati.
-- **Badge "divieto" per produzione non rushabile, TUTTE le tab** (agosto 2026)
-  — vedi §8.4ter/§12 per il campo `Building.noRush` e il criterio dati.
-  `BuildingRow` renderizza un'icona SVG inline (cerchio + barra diagonale,
-  stroke `#7f1d1d`, fill trasparente, 12×12px) subito dopo il nome quando
-  `b.noRush`, con tooltip `noRushBadgeTitle` (ui-strings.ts).
+- **Badge "divieto" + badge "auto-aging", TUTTE le tab** (agosto 2026) —
+  vedi §8.4ter/§12 per `Building.flags` (bitmask grezzo) e i getter
+  derivati `noRush(b)`/`isEraMutable(b)`. `BuildingRow` renderizza due
+  icone SVG inline in sequenza subito dopo il nome: `noRush(b)` → cerchio
+  + barra diagonale, stroke `#7f1d1d`, fill trasparente, 12×12px, tooltip
+  `noRushBadgeTitle`; `isEraMutable(b)` → stesso cerchio, stroke `#0e7490`
+  con chevron verso l'alto, tooltip `eraMutableBadgeTitle` (entrambe in
+  ui-strings.ts).
 
 ### 24.3bis `BuildingRow`: la riga della tabella principale, estratta e memoizzata
 

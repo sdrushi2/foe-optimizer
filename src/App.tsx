@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import type { Building } from "./data/buildings";
-import { getImageUrl } from "./data/buildings";
+import { getImageUrl, noRush, isEraMutable } from "./data/buildings";
 import type { Weights } from "./utils/calculator";
 import { calculateEfficiency } from "./utils/calculator";
 import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, isStaleField } from "./utils/format";
@@ -30,7 +30,7 @@ import type { CityStore } from "./data/cityStore";
 import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, HIDE_NO_RUSH_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, HIDE_NO_RUSH_KEY, HIDE_ERA_MUTABLE_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -1244,11 +1244,19 @@ const BuildingRow = memo(function BuildingRow({
             );
           })()}
         </span>
-        {b.noRush && (
+        {noRush(b) && (
           <span className="ml-1 inline-flex flex-shrink-0 cursor-help relative top-px" title={t("noRushBadgeTitle", uiLang)}>
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5">
               <circle cx="12" cy="12" r="10" />
               <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" />
+            </svg>
+          </span>
+        )}
+        {isEraMutable(b) && (
+          <span className="ml-1 inline-flex flex-shrink-0 cursor-help relative top-px" title={t("eraMutableBadgeTitle", uiLang)}>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#0e7490" strokeWidth="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="8 14 12 10 16 14" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
         )}
@@ -2879,6 +2887,9 @@ export default function App() {
   // Nasconde tutte le righe con badge NoRush (🚫): globale come showProdColumns,
   // persistente, applicato dentro filteredBuildings insieme agli altri filtri.
   const [hideNoRush, setHideNoRush] = useState<boolean>(() => localStorage.getItem(HIDE_NO_RUSH_KEY) === "true");
+  // Nasconde tutte le righe con badge auto-aging (^): stesso identico
+  // pattern di hideNoRush sopra.
+  const [hideEraMutable, setHideEraMutable] = useState<boolean>(() => localStorage.getItem(HIDE_ERA_MUTABLE_KEY) === "true");
   // Vista database tab Info: false = LIGHT (solo edifici principali Lin=1,
   // default), true = FULL (tutti, inclusi livelli intermedi/varianti).
   const [dbViewFull, setDbViewFull] = useState<boolean>(() => localStorage.getItem(DB_VIEW_KEY) === "full");
@@ -2992,10 +3003,11 @@ export default function App() {
     // highlightedCityEntityIds — senza questo, il reset filtri lasciava le
     // righe cliccate ancora evidenziate (bug segnalato luglio 2026).
     setSelectedIds(new Set());
-    // hideNoRush è un toggle globale (come showSigmaColumns ecc.), non
-    // fa parte di TabFilters — ma l'utente si aspetta che "Reset filtri"
-    // lo azzeri comunque, essendo un filtro a tutti gli effetti.
+    // hideNoRush/hideEraMutable sono toggle globali (come showSigmaColumns
+    // ecc.), non fanno parte di TabFilters — ma l'utente si aspetta che
+    // "Reset filtri" li azzeri comunque, essendo filtri a tutti gli effetti.
     setHideNoRush(false);
+    setHideEraMutable(false);
   };
 
 
@@ -3414,8 +3426,9 @@ export default function App() {
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
     localStorage.setItem(PROD_COLUMNS_KEY, showProdColumns.toString());
     localStorage.setItem(HIDE_NO_RUSH_KEY, hideNoRush.toString());
+    localStorage.setItem(HIDE_ERA_MUTABLE_KEY, hideEraMutable.toString());
     localStorage.setItem(DB_VIEW_KEY, dbViewFull ? "full" : "light");
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, hideNoRush, dbViewFull]);
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, hideNoRush, hideEraMutable, dbViewFull]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -4110,7 +4123,10 @@ export default function App() {
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
       // Pulsante "Nascondi 🚫" nella toolbar Produzioni: filtro globale,
       // applicato in tutte le tab (stesso pattern di showSigmaColumns ecc.).
-      if (hideNoRush && b.noRush) continue;
+      if (hideNoRush && noRush(b)) continue;
+      // Pulsante "Nascondi ^" nella toolbar Produzioni: stesso identico
+      // pattern di hideNoRush sopra, per il badge auto-aging.
+      if (hideEraMutable && isEraMutable(b)) continue;
       // Filtri slot alleati / frammenti: disponibili anche in tab Inventario
       // (pulsanti presenti in entrambe le barre), non solo in Città.
       if ((isPropriacitta || isInventario) && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
@@ -4176,7 +4192,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, showOnlyWithFragments, hideNoRush, dbViewFull]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, showOnlyWithFragments, hideNoRush, hideEraMutable, dbViewFull]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -5868,12 +5884,16 @@ export default function App() {
                   onClick={() => {
                     setShowProdColumns(v => {
                       const next = !v;
-                      // Nascondendo l'intera sezione Produzioni, il pulsante
-                      // "Nascondi 🚫" al suo interno sparisce dalla UI: se
-                      // hideNoRush restasse true, il filtro continuerebbe ad
-                      // agire "silenziosamente" senza controllo visibile
-                      // dell'utente — lo resettiamo insieme.
-                      if (!next) setHideNoRush(false);
+                      // Nascondendo l'intera sezione Produzioni, i pulsanti
+                      // "Nascondi 🚫"/"Nascondi ^" al suo interno spariscono
+                      // dalla UI: se hideNoRush/hideEraMutable restassero
+                      // true, i filtri continuerebbero ad agire
+                      // "silenziosamente" senza controllo visibile
+                      // dell'utente — li resettiamo insieme.
+                      if (!next) {
+                        setHideNoRush(false);
+                        setHideEraMutable(false);
+                      }
                       return next;
                     });
                   }}
@@ -6552,21 +6572,38 @@ export default function App() {
                         <th className="py-2 px-2 text-center section-divider text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
                           <th className="relative text-center section-divider text-orange-400/80" colSpan={20}>
-                            <button
-                              onClick={() => setHideNoRush(v => !v)}
-                              className={`absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
-                                hideNoRush
-                                  ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
-                                  : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
-                              }`}
-                              title={t(hideNoRush ? "hideNoRushActiveTitle" : "hideNoRushTitle", uiLang)}
-                            >
-                              {t("hideNoRushLabel", uiLang)}
-                              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5" className="flex-shrink-0">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" />
-                              </svg>
-                            </button>
+                            <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                              <button
+                                onClick={() => setHideNoRush(v => !v)}
+                                className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
+                                  hideNoRush
+                                    ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
+                                    : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                                }`}
+                                title={t(hideNoRush ? "hideNoRushActiveTitle" : "hideNoRushTitle", uiLang)}
+                              >
+                                {t("hideNoRushLabel", uiLang)}
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5" className="flex-shrink-0">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => setHideEraMutable(v => !v)}
+                                className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
+                                  hideEraMutable
+                                    ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
+                                    : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                                }`}
+                                title={t(hideEraMutable ? "hideEraMutableActiveTitle" : "hideEraMutableTitle", uiLang)}
+                              >
+                                {t("hideEraMutableLabel", uiLang)}
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#0e7490" strokeWidth="2.5" className="flex-shrink-0">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <polyline points="8 14 12 10 16 14" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            </div>
                             {t("groupProductions", uiLang)}
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
                                 salta applyEraStats (isGameTab è falso), quindi i valori sono

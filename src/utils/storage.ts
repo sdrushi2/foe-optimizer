@@ -24,6 +24,9 @@ export const PROD_COLUMNS_KEY = `foe_global_show_prod_columns_${V}`;
 // Nasconde tutte le righe con badge NoRush (🚫): globale come le altre
 // preferenze della sezione Produzioni, non per-tab.
 export const HIDE_NO_RUSH_KEY = `foe_global_hide_no_rush_${V}`;
+// Nasconde tutte le righe con badge auto-aging/isEraMutable (^): stesso
+// pattern di HIDE_NO_RUSH_KEY.
+export const HIDE_ERA_MUTABLE_KEY = `foe_global_hide_era_mutable_${V}`;
 export const SHOW_CITY_MAP_KEY = `foe_global_show_city_map_${V}`;
 // Vista database tab Info: "light" (solo edifici principali, Lin=1) o "full".
 export const DB_VIEW_KEY = `foe_global_db_view_${V}`;
