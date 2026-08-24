@@ -1828,7 +1828,10 @@ const UI_STRINGS = {
     en: "Maximum time exceeded, no solution found",
   },
   piratiInterruptedMessage: { it: "Ricerca interrotta", en: "Search interrupted" },
-  piratiFailedMessage: { it: "Nessuna soluzione valida", en: "No valid solution" },
+  piratiSolverCrashed: {
+    it: "Errore imprevisto durante la ricerca: ripristinata l'ultima disposizione valida (dettagli nella console del browser)",
+    en: "Unexpected error during the search: restored the last valid layout (details in the browser console)",
+  },
   piratiRestoredLastSolutionMessage: {
     it: "Nessuna soluzione trovata: ripristinata l'ultima disposizione valida",
     en: "No solution found: restored the last valid layout",
@@ -1848,10 +1851,6 @@ const UI_STRINGS = {
   piratiImportInvalidJson: {
     it: "JSON non valido: controlla di aver copiato tutto il testo dal bookmarklet.",
     en: "Invalid JSON: make sure you copied all the text from the bookmarklet.",
-  },
-  piratiImportWrongMap: {
-    it: "Questi dati sono stati copiati dalla città, non dall'Insediamento dei Pirati. Vai sull'Insediamento e riprova.",
-    en: "This data was copied from the city, not from the Pirate Outpost. Go to the Outpost and try again.",
   },
   piratiImportInvalidStructure: {
     it: "Il JSON non ha la struttura attesa (servono i campi 'areas' e 'entities').",
@@ -1880,10 +1879,6 @@ const UI_STRINGS = {
     it: "in alto a sinistra per importare i dati.",
     en: "in the top left to import your data.",
   },
-  piratiImportNoAreas: {
-    it: "Il payload non contiene nessuna area sbloccata (areas vuoto).",
-    en: "The payload contains no unlocked areas (areas is empty).",
-  },
   piratiImportUnsupportedFaction: {
     it: (faction: string) => `L'insediamento importato (${faction}) non è supportato: questo tool gestisce solo l'Insediamento dei Pirati.`,
     en: (faction: string) => `The imported outpost (${faction}) is not supported: this tool only handles the Pirate Outpost.`,
@@ -1901,10 +1896,6 @@ const UI_STRINGS = {
   piratiImportUnrecognizedNote: {
     it: (count: number, ids: string) => ` (${count} tipo/i non riconosciuto/i: ${ids})`,
     en: (count: number, ids: string) => ` (${count} unrecognized type(s): ${ids})`,
-  },
-  piratiClipboardEmpty: {
-    it: "Gli appunti sono vuoti: clicca prima il bookmarklet in game per copiare i dati.",
-    en: "The clipboard is empty: click the bookmarklet in-game first to copy the data.",
   },
 
   // ── Tab Pirati: griglia/tooltip ────────────────────────────────────────

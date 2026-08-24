@@ -64,7 +64,10 @@ export type Baseline = {
   importedObstacleCells: Set<string>;
 };
 
-export type BlockPosition = {
+// Niente `export`: usato solo dentro questo modulo (DIRECTIONS, parseBlockKey).
+// I consumatori esterni ricevono il tipo per inferenza dal ritorno di
+// parseBlockKey, senza doverlo importare.
+type BlockPosition = {
   row: number;
   col: number;
 };

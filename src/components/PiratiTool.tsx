@@ -110,6 +110,44 @@ function IconAlertCircle({ size = 16, className }: { size?: number; className?: 
   );
 }
 
+/**
+ * Cede il controllo all'event loop (per aggiornare la UI e permettere lo Stop)
+ * SENZA pagare il clamp dei timer annidati.
+ *
+ * ⚠️ Perché non `setTimeout(resolve, 0)`: la spec HTML impone un minimo di 4ms
+ * ai timer con più di 5 livelli di annidamento, e una ricerca che cede il
+ * controllo in catena li supera dopo poche iterazioni. Il solver perdeva così
+ * ~4ms per ogni yield: su una ricerca reale da 472.629 passi (189 yield) erano
+ * 0,76s di attesa forzata su 2,85s totali — il 27% del tempo speso ad
+ * aspettare, e ~24s su una ricerca da 15 milioni di passi.
+ *
+ * Ordine di preferenza:
+ *  1. `scheduler.yield()` — API nativa pensata esattamente per questo, nessun
+ *     clamp, la continuazione ha priorità sui task successivi.
+ *  2. `MessageChannel` — fallback classico clamp-free (misurato ~14x più
+ *     economico di setTimeout(0) anche a parità di clamp).
+ *  3. `setTimeout` — ultima spiaggia, per ambienti che non hanno né l'uno né
+ *     l'altro (es. test in Node senza DOM).
+ */
+function yieldToEventLoop(): Promise<void> {
+  const scheduler = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+  if (typeof scheduler?.yield === "function") return scheduler.yield();
+
+  if (typeof MessageChannel === "function") {
+    return new Promise<void>((resolve) => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => {
+        channel.port1.close();
+        channel.port2.close();
+        resolve();
+      };
+      channel.port2.postMessage(undefined);
+    });
+  }
+
+  return new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
 /** Concatena classi condizionali (niente clsx/tailwind-merge: qui non servono
  * merge di classi Tailwind in conflitto, solo composizione condizionale semplice). */
 function cx(...parts: Array<string | false | null | undefined>) {
@@ -161,8 +199,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // '+' su un edificio che non trova subito posto lancia Risolvi da solo; se
   // anche Risolvi fallisce, quell'edificio viene tolto (vedi updateCount).
   const [autoMode, setAutoMode] = useState(false);
-  const [status, setStatus] = useState<"idle" | "solving" | "success" | "failed" | "interrupted">("success");
-  const [stats, setStats] = useState({ steps: 0, time: 0 });
+  // Niente stato "failed": da quando lastSolvedRef non è mai vuoto (vedi sotto),
+  // un fallimento del solver ripristina SEMPRE l'ultima disposizione valida e
+  // torna quindi a "success", spiegando l'accaduto con un toast temporaneo
+  // invece che con uno stato persistente di errore.
+  const [status, setStatus] = useState<"idle" | "solving" | "success" | "interrupted">("success");
+  // `null` finché non è stata eseguita almeno una ricerca in questa sessione:
+  // la pillola passi/tempo non ha senso prima (mostrava "0 passi · 0ms" al primo
+  // caricamento) né dopo un import/Undo/Reset, dove resterebbero i numeri di una
+  // ricerca precedente, riferiti a una disposizione che non è più quella a schermo.
+  const [stats, setStats] = useState<{ steps: number; time: number } | null>(null);
   const [draggedPlacement, setDraggedPlacement] = useState<Placement | null>(null);
   const [dragOffset, setDragOffset] = useState<{ row: number; col: number }>({ row: 0, col: 0 });
   const [dragTargetCell, setDragTargetCell] = useState<{ row: number; col: number } | null>(null);
@@ -611,6 +657,15 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     setObstacles(nextObstacles);
     setPlacements(nextPlacements);
     setStatus("success");
+    // Le statistiche dell'eventuale ricerca precedente si riferivano a un'altra
+    // città: azzerate insieme al resto, la pillola passi/tempo sparisce finché
+    // non viene lanciata una nuova ricerca su questi dati.
+    setStats(null);
+    // La griglia cambia completamente forma con l'import: se l'utente era in
+    // "Aggiungi/Rimuovi EXP" quelle modalità non hanno più senso sui blocchi
+    // appena importati. Stesso ritorno a 'obstacle' che fanno addExpansion e
+    // removeExpansion al termine.
+    setEditMode("obstacle");
     // Tutte le espansioni dopo un import sono considerate "reali" (sbloccate in game):
     // non devono poter essere rimosse con "Rimuovi EXP", altrimenti il tool andrebbe
     // fuori sincro con lo stato vero della città.
@@ -667,10 +722,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // ancora quella VECCHIA (senza l'edificio appena aggiunto). Passare
   // esplicitamente lo stato che il chiamante già conosce evita di risolvere sui
   // dati sbagliati invece di aspettare un re-render.
-  const solve = useCallback(async (buildingsOverride?: BuildingType[]): Promise<{ found: boolean; restored: boolean }> => {
+  const solve = useCallback(async (buildingsOverride?: BuildingType[]): Promise<boolean> => {
     if (isSolving) {
+      // Questa chiamata è in realtà lo "Stop": stesso pulsante di Risolvi, che
+      // durante una ricerca significa "fermati". Non è un fallimento.
       stopSolvingRef.current = true;
-      return { found: true, restored: false };
+      return true;
     }
 
     setIsSolving(true);
@@ -681,476 +738,598 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     stopSolvingRef.current = false;
     timedOutRef.current = false;
     setDisplaySteps(0);
+    // try/catch/finally: senza questo, QUALUNQUE eccezione lanciata durante la
+    // ricerca (es. il RangeError da superamento del limite di 2^24 elementi di
+    // un Set, vedi FAILED_STATES_CAP) lasciava isSolving a true per sempre —
+    // il tool restava bloccato sul pulsante "Stop" e l'unica via d'uscita era
+    // ricaricare la pagina. Ora l'uscita è garantita in ogni caso.
+    try {
 
-    const startTime = performance.now();
-    let steps = 0;
+      const startTime = performance.now();
+      let steps = 0;
+      // Intervallo minimo tra due cessioni del controllo all'event loop: ~20
+      // aggiornamenti al secondo del contatore passi, abbastanza fluidi per
+      // l'utente e abbastanza radi da non frammentare il lavoro della CPU.
+      const YIELD_INTERVAL_MS = 50;
+      let lastYieldTime = startTime;
 
-    type CandidatePlacement = {
-      row: number;
-      col: number;
-      w: number;
-      h: number;
-      cells: number[];
-      score: number;
-    };
+      type CandidatePlacement = {
+        row: number;
+        col: number;
+        w: number;
+        h: number;
+        cells: number[];
+        score: number;
+      };
 
-    const cellCount = gridRows * gridCols;
-    const sourceBuildings = buildingsOverride ?? buildings;
+      const cellCount = gridRows * gridCols;
+      const sourceBuildings = buildingsOverride ?? buildings;
 
-    // true se, durante questa ricerca, almeno un ramo si è fermato per aver
-    // superato SMALL_CUTOFF (tentativi nella fase "solo piccoli") invece che
-    // per aver davvero esaurito le alternative — un fallimento finale in
-    // questo caso è un possibile FALSO NEGATIVO: potrebbe esistere una
-    // soluzione che la ricerca non ha avuto il tempo di scoprire su quel
-    // ramo specifico, a differenza di un fallimento "pulito" dove ogni
-    // alternativa è stata davvero provata ed esclusa.
-    let hitSmallCutoff = false;
+      // true se, durante questa ricerca, almeno un ramo si è fermato per aver
+      // superato SMALL_CUTOFF (tentativi nella fase "solo piccoli") invece che
+      // per aver davvero esaurito le alternative — un fallimento finale in
+      // questo caso è un possibile FALSO NEGATIVO: potrebbe esistere una
+      // soluzione che la ricerca non ha avuto il tempo di scoprire su quel
+      // ramo specifico, a differenza di un fallimento "pulito" dove ogni
+      // alternativa è stata davvero provata ed esclusa.
+      let hitSmallCutoff = false;
 
-    // ⚠️ V8 impone un tetto fisso di 2^24 (16.777.216) elementi per Set: oltre,
-    // .add() lancia RangeError e la ricerca crasha lasciando il tool bloccato su
-    // "Stop". Un caso reale è arrivato a 15,75M passi, cioè a un soffio. Al cap
-    // il Set si svuota: la memoization diventa una finestra scorrevole invece di
-    // coprire tutta la ricerca, ma non può più crashare.
-    const FAILED_STATES_CAP = 4_000_000;
+      // ⚠️ V8 impone un tetto fisso di 2^24 (16.777.216) elementi per Set: oltre,
+      // .add() lancia RangeError e la ricerca crasha lasciando il tool bloccato su
+      // "Stop". Un caso reale è arrivato a 15,75M passi, cioè a un soffio. Al cap
+      // il Set si svuota: la memoization diventa una finestra scorrevole invece di
+      // coprire tutta la ricerca, ma non può più crashare.
+      const FAILED_STATES_CAP = 4_000_000;
 
-    // Metriche di debug (console.debug a fine ricerca, MAI in UI): utili per
-    // distinguere "esaurimento reale" da "limite euristico raggiunto" senza
-    // dover indovinare dal conteggio edifici sulla mappa — vedi il gruppo
-    // console alla fine di questa funzione.
-    const debugInfo = {
-      runs: [] as Array<{
-        keepMunicipioInitial: boolean;
-        result: "found" | "no-solution" | "stopped";
-        steps: number;
-        smallBacktracksFinal: number;
-        maxFailedStatesSize: number;
-        failedStatesCapHit: boolean;
-        enteredSmallOnlyPhase: boolean;
-      }>,
-    };
+      // Metriche di debug (console.debug a fine ricerca, MAI in UI): utili per
+      // distinguere "esaurimento reale" da "limite euristico raggiunto" senza
+      // dover indovinare dal conteggio edifici sulla mappa — vedi il gruppo
+      // console alla fine di questa funzione.
+      const debugInfo = {
+        runs: [] as Array<{
+          keepMunicipioInitial: boolean;
+          result: "found" | "no-solution" | "stopped";
+          steps: number;
+          smallBacktracksFinal: number;
+          maxFailedStatesSize: number;
+          failedStatesCapHit: boolean;
+          enteredSmallOnlyPhase: boolean;
+        }>,
+      };
 
-    const runSearch = async (keepMunicipioInitial: boolean): Promise<Placement[] | null> => {
-      let smallBacktracks = 0;
-      let maxFailedStatesSize = 0;
-      let failedStatesCapHit = false;
-      let enteredSmallOnlyPhase = false;
-      const stepsAtStart = steps;
-      const currentPlacements: Placement[] = keepMunicipioInitial ? [{ ...MUNICIPIO_INITIAL_PLACEMENT }] : [];
-      const buildingPool = [
-        ...(keepMunicipioInitial ? [] : [{ ...MUNICIPIO }]),
-        ...sourceBuildings.filter((building) => building.count > 0).map((building) => ({ ...building })),
-      ].sort((a, b) => (b.width * b.height) - (a.width * a.height));
+      const runSearch = async (keepMunicipioInitial: boolean): Promise<Placement[] | null> => {
+        let smallBacktracks = 0;
+        let maxFailedStatesSize = 0;
+        let failedStatesCapHit = false;
+        let enteredSmallOnlyPhase = false;
+        const stepsAtStart = steps;
 
-      const hasBigRemaining = () => buildingPool.some(b => b.count > 0 && (b.width * b.height) > BIG_THRESHOLD);
+        // ── CLASSI DI FORMA ─────────────────────────────────────────────────
+        // La ricerca ragiona per FOOTPRINT, non per tipo di edificio: due tipi
+        // con la stessa larghezza×altezza (es. Amaca e Imbarcazione, entrambi
+        // 2x2; Spezie/Capanno/Grande Molo, tutti 3x3) sono geometricamente
+        // intercambiabili, e il backtracking guarda solo la geometria (`pop` e
+        // gli altri attributi non entrano mai qui dentro).
+        //
+        // Trattarli come tipi distinti faceva esplodere la ricerca su simmetrie
+        // inutili: la chiave Zobrist include i conteggi residui PER TIPO, quindi
+        // due stati con le stesse celle occupate ma tipi scambiati producevano
+        // hash diversi e venivano riesplorati entrambi. Il numero di questi
+        // duplicati è il coefficiente multinomiale della ripartizione — con 8
+        // pezzi 2x2 divisi 2+6 sono C(8,2)=28 varianti per ogni layout, divisi
+        // 1+7 sono C(8,1)=8: è la ragione per cui aggiungere un'Amaca costava
+        // ~470k passi e aggiungere un'Imbarcazione ~350k, a parità di forma.
+        //
+        // Raggruppando, quelle varianti collassano in un unico stato. I tipi
+        // concreti vengono riassegnati alla fine (assignConcreteTypes), quando
+        // la geometria è già decisa: qualunque assegnazione che rispetti i
+        // conteggi è valida per costruzione.
+        type ShapeClass = {
+          width: number;
+          height: number;
+          area: number;
+          /** Residuo della classe, mutato/ripristinato dal backtracking. */
+          count: number;
+          /** Totale iniziale: dimensiona la tabella Zobrist dei conteggi. */
+          initialCount: number;
+          /** Il Municipio resta una classe a sé (ha un bonus di punteggio
+           *  dedicato sulla sua posizione iniziale), mai fuso con altri tipi. */
+          isMunicipio: boolean;
+          /** Tipi concreti che compongono la classe, con il rispettivo
+           *  conteggio: NON mutati durante la ricerca, servono a valle. */
+          members: { id: string; count: number }[];
+        };
 
-      const occupied = new Uint8Array(cellCount);
-      let freeCells = 0;
+        // Municipio già piazzato (fork "raccordo" con posizione iniziale fissa):
+        // non entra nel pool, viene riaccodato dopo la ricerca.
+        const seededPlacements: Placement[] = keepMunicipioInitial ? [{ ...MUNICIPIO_INITIAL_PLACEMENT }] : [];
 
-      for (let row = 0; row < gridRows; row++) {
-        for (let col = 0; col < gridCols; col++) {
-          const index = row * gridCols + col;
-          if (!gridMask[row][col] || obstacles.has(cellKey(storageCell(row, col)))) {
-            occupied[index] = 1;
-          } else {
-            freeCells++;
+        const buildingPool: ShapeClass[] = [];
+        const classByKey = new Map<string, ShapeClass>();
+        const addToPool = (source: { id: string; width: number; height: number; count: number }, isMunicipio: boolean) => {
+          const key = isMunicipio ? "municipio" : `${source.width}x${source.height}`;
+          let shapeClass = classByKey.get(key);
+          if (!shapeClass) {
+            shapeClass = {
+              width: source.width,
+              height: source.height,
+              area: source.width * source.height,
+              count: 0,
+              initialCount: 0,
+              isMunicipio,
+              members: [],
+            };
+            classByKey.set(key, shapeClass);
+            buildingPool.push(shapeClass);
           }
-        }
-      }
+          shapeClass.count += source.count;
+          shapeClass.initialCount += source.count;
+          shapeClass.members.push({ id: source.id, count: source.count });
+        };
 
-      if (keepMunicipioInitial) {
-        for (let dr = 0; dr < MUNICIPIO.height; dr++) {
-          for (let dc = 0; dc < MUNICIPIO.width; dc++) {
-            const row = MUNICIPIO_INITIAL_PLACEMENT.row + dr;
-            const col = MUNICIPIO_INITIAL_PLACEMENT.col + dc;
+        if (!keepMunicipioInitial) addToPool(MUNICIPIO, true);
+        sourceBuildings.filter((building) => building.count > 0).forEach((building) => addToPool(building, false));
+        buildingPool.sort((a, b) => b.area - a.area);
+
+        // Dalla geometria ai tipi concreti: le posizioni trovate dalla ricerca
+        // portano solo l'indice della classe, qui vengono distribuite tra i tipi
+        // che la compongono rispettandone i conteggi. Si parte da `members`
+        // (mai mutato) e non da `count`, che dopo un successo resta a metà
+        // svolgimento — la ricorsione ritorna senza ripristinarlo.
+        const assignConcreteTypes = (placed: Array<{ classIndex: number; row: number; col: number; w: number; h: number }>): Placement[] => {
+          const remaining = buildingPool.map((shapeClass) => shapeClass.members.map((member) => ({ ...member })));
+          const result: Placement[] = [...seededPlacements];
+          for (const placement of placed) {
+            const members = remaining[placement.classIndex];
+            const member = members?.find((candidate) => candidate.count > 0);
+            // `member` è sempre definito: la ricerca non piazza mai più istanze
+            // di quante ne dichiari la classe. Il fallback evita comunque un
+            // crash silenzioso se quell'invariante venisse infranta in futuro.
+            if (!member) continue;
+            member.count--;
+            result.push({ buildingId: member.id, row: placement.row, col: placement.col, w: placement.w, h: placement.h });
+          }
+          return result;
+        };
+
+        const currentPlacements: Array<{ classIndex: number; row: number; col: number; w: number; h: number }> = [];
+
+        const hasBigRemaining = () => buildingPool.some((shapeClass) => shapeClass.count > 0 && shapeClass.area > BIG_THRESHOLD);
+
+        const occupied = new Uint8Array(cellCount);
+        let freeCells = 0;
+
+        for (let row = 0; row < gridRows; row++) {
+          for (let col = 0; col < gridCols; col++) {
             const index = row * gridCols + col;
-            if (row >= gridRows || col >= gridCols || occupied[index]) return null;
-            occupied[index] = 1;
-            freeCells--;
+            if (!gridMask[row][col] || obstacles.has(cellKey(storageCell(row, col)))) {
+              occupied[index] = 1;
+            } else {
+              freeCells++;
+            }
           }
         }
-      }
 
-      // Piazzamenti validi per un tipo, ordinati per punteggio euristico. Con
-      // `anchor` restituisce solo quelli che coprono quella cella; senza, scansiona
-      // tutta la griglia (solo per il controllo di fattibilità iniziale).
-      function scorePlacement(building: (typeof buildingPool)[number], row: number, col: number, edgeTouches: number) {
-        const isBig = (building.width * building.height) > BIG_THRESHOLD;
-        const bigBonus = isBig ? 100 : 0;
-        const cornerBonus = (row === 0 || row + building.height === gridRows) && (col === 0 || col + building.width === gridCols) ? 60 : 0;
-        const initialMunicipioBonus = building.id === MUNICIPIO.id && row === MUNICIPIO_INITIAL_PLACEMENT.row && col === MUNICIPIO_INITIAL_PLACEMENT.col ? 500 : 0;
-        const edgeBonus = edgeTouches * 4;
-        const areaBonus = building.width * building.height;
-        return bigBonus + initialMunicipioBonus + cornerBonus + edgeBonus + areaBonus;
-      }
+        if (keepMunicipioInitial) {
+          for (let dr = 0; dr < MUNICIPIO.height; dr++) {
+            for (let dc = 0; dc < MUNICIPIO.width; dc++) {
+              const row = MUNICIPIO_INITIAL_PLACEMENT.row + dr;
+              const col = MUNICIPIO_INITIAL_PLACEMENT.col + dc;
+              const index = row * gridCols + col;
+              if (row >= gridRows || col >= gridCols || occupied[index]) return null;
+              occupied[index] = 1;
+              freeCells--;
+            }
+          }
+        }
 
-      function generatePlacements(building: (typeof buildingPool)[number], anchor?: { row: number; col: number }): CandidatePlacement[] {
-        const placements: CandidatePlacement[] = [];
-        // Vincolare a righe/colonne che possono coprire la cella anchor riduce
-        // drasticamente lo spazio da scansionare (da tutta la griglia a al più
-        // width*height combinazioni) — vedi il commento più esteso su
-        // generatePlacements/firstFreeIndex più sotto, nel backtracking.
-        const rowStart = anchor ? Math.max(0, anchor.row - building.height + 1) : 0;
-        const rowEnd = anchor ? Math.min(anchor.row, gridRows - building.height) : gridRows - building.height;
-        const colStart = anchor ? Math.max(0, anchor.col - building.width + 1) : 0;
-        const colEnd = anchor ? Math.min(anchor.col, gridCols - building.width) : gridCols - building.width;
+        // Piazzamenti validi per un tipo, ordinati per punteggio euristico. Con
+        // `anchor` restituisce solo quelli che coprono quella cella; senza, scansiona
+        // tutta la griglia (solo per il controllo di fattibilità iniziale).
+        function scorePlacement(building: ShapeClass, row: number, col: number, edgeTouches: number) {
+          const isBig = building.area > BIG_THRESHOLD;
+          const bigBonus = isBig ? 100 : 0;
+          const cornerBonus = (row === 0 || row + building.height === gridRows) && (col === 0 || col + building.width === gridCols) ? 60 : 0;
+          const initialMunicipioBonus = building.isMunicipio && row === MUNICIPIO_INITIAL_PLACEMENT.row && col === MUNICIPIO_INITIAL_PLACEMENT.col ? 500 : 0;
+          const edgeBonus = edgeTouches * 4;
+          const areaBonus = building.area;
+          return bigBonus + initialMunicipioBonus + cornerBonus + edgeBonus + areaBonus;
+        }
 
-        for (let row = rowStart; row <= rowEnd; row++) {
-          for (let col = colStart; col <= colEnd; col++) {
-            const cells: number[] = [];
-            let valid = true;
-            let edgeTouches = 0;
+        function generatePlacements(building: ShapeClass, anchor?: { row: number; col: number }): CandidatePlacement[] {
+          const placements: CandidatePlacement[] = [];
+          // Vincolare a righe/colonne che possono coprire la cella anchor riduce
+          // drasticamente lo spazio da scansionare (da tutta la griglia a al più
+          // width*height combinazioni) — vedi il commento più esteso su
+          // generatePlacements/firstFreeIndex più sotto, nel backtracking.
+          const rowStart = anchor ? Math.max(0, anchor.row - building.height + 1) : 0;
+          const rowEnd = anchor ? Math.min(anchor.row, gridRows - building.height) : gridRows - building.height;
+          const colStart = anchor ? Math.max(0, anchor.col - building.width + 1) : 0;
+          const colEnd = anchor ? Math.min(anchor.col, gridCols - building.width) : gridCols - building.width;
 
-            for (let dr = 0; dr < building.height; dr++) {
-              for (let dc = 0; dc < building.width; dc++) {
-                const currentRow = row + dr;
-                const currentCol = col + dc;
-                const index = currentRow * gridCols + currentCol;
+          for (let row = rowStart; row <= rowEnd; row++) {
+            for (let col = colStart; col <= colEnd; col++) {
+              const cells: number[] = [];
+              let valid = true;
+              let edgeTouches = 0;
 
-                if (occupied[index]) {
-                  valid = false;
-                  break;
+              for (let dr = 0; dr < building.height; dr++) {
+                for (let dc = 0; dc < building.width; dc++) {
+                  const currentRow = row + dr;
+                  const currentCol = col + dc;
+                  const index = currentRow * gridCols + currentCol;
+
+                  if (occupied[index]) {
+                    valid = false;
+                    break;
+                  }
+
+                  const touchesEdge =
+                    currentRow === 0 ||
+                    currentRow === gridRows - 1 ||
+                    currentCol === 0 ||
+                    currentCol === gridCols - 1 ||
+                    !gridMask[currentRow - 1]?.[currentCol] ||
+                    !gridMask[currentRow + 1]?.[currentCol] ||
+                    !gridMask[currentRow]?.[currentCol - 1] ||
+                    !gridMask[currentRow]?.[currentCol + 1];
+
+                  if (touchesEdge) edgeTouches++;
+                  cells.push(index);
                 }
-
-                const touchesEdge =
-                  currentRow === 0 ||
-                  currentRow === gridRows - 1 ||
-                  currentCol === 0 ||
-                  currentCol === gridCols - 1 ||
-                  !gridMask[currentRow - 1]?.[currentCol] ||
-                  !gridMask[currentRow + 1]?.[currentCol] ||
-                  !gridMask[currentRow]?.[currentCol - 1] ||
-                  !gridMask[currentRow]?.[currentCol + 1];
-
-                if (touchesEdge) edgeTouches++;
-                cells.push(index);
+                if (!valid) break;
               }
-              if (!valid) break;
-            }
 
-            if (valid) {
-              placements.push({ row, col, w: building.width, h: building.height, cells, score: scorePlacement(building, row, col, edgeTouches) });
+              if (valid) {
+                placements.push({ row, col, w: building.width, h: building.height, cells, score: scorePlacement(building, row, col, edgeTouches) });
+              }
             }
           }
+
+          placements.sort((a, b) => b.score - a.score);
+          return placements;
         }
 
-        placements.sort((a, b) => b.score - a.score);
-        return placements;
-      }
+        // Controllo di fattibilità iniziale una tantum (non dentro il backtracking):
+        // se un tipo con count>0 non ha NESSUN piazzamento valido in tutta la
+        // griglia, la ricerca fallisce subito, senza nemmeno iniziare.
+        if (buildingPool.some((building) => building.count > 0 && generatePlacements(building).length === 0)) return null;
 
-      // Controllo di fattibilità iniziale una tantum (non dentro il backtracking):
-      // se un tipo con count>0 non ha NESSUN piazzamento valido in tutta la
-      // griglia, la ricerca fallisce subito, senza nemmeno iniziare.
-      if (buildingPool.some((building) => building.count > 0 && generatePlacements(building).length === 0)) return null;
-
-      // Zobrist hashing per la chiave di memoization: ogni cella e ogni coppia
-      // (tipo, count) ha un valore casuale a 64 bit fissato una volta, XORato
-      // dentro/fuori quando cambia. Così la chiave è O(1) incrementale invece di
-      // ricostruire una stringa lunga quanto la griglia ad ogni nodo.
-      let seed = 0x9e3779b9;
-      function nextRandomUint32() {
-        // xorshift32: basta un PRNG ben distribuito, non serve sicurezza.
-        seed ^= seed << 13; seed |= 0;
-        seed ^= seed >>> 17;
-        seed ^= seed << 5; seed |= 0;
-        return seed >>> 0;
-      }
-
-      const cellHashLo = new Uint32Array(cellCount);
-      const cellHashHi = new Uint32Array(cellCount);
-      for (let index = 0; index < cellCount; index++) {
-        cellHashLo[index] = nextRandomUint32();
-        cellHashHi[index] = nextRandomUint32();
-      }
-
-      // Il count di un edificio può solo diminuire da un valore iniziale (mai
-      // salire oltre quello): la tabella copre [0, initialCount] per ogni tipo.
-      const countHashLo = buildingPool.map((building) => {
-        const table = new Uint32Array(building.count + 1);
-        for (let c = 0; c <= building.count; c++) table[c] = nextRandomUint32();
-        return table;
-      });
-      const countHashHi = buildingPool.map((building) => {
-        const table = new Uint32Array(building.count + 1);
-        for (let c = 0; c <= building.count; c++) table[c] = nextRandomUint32();
-        return table;
-      });
-
-      // Hash corrente, mantenuto incrementale per tutta la durata della ricerca.
-      let hashLo = 0;
-      let hashHi = 0;
-      for (let index = 0; index < cellCount; index++) {
-        if (occupied[index]) { hashLo ^= cellHashLo[index]; hashHi ^= cellHashHi[index]; }
-      }
-      for (let typeIndex = 0; typeIndex < buildingPool.length; typeIndex++) {
-        hashLo ^= countHashLo[typeIndex][buildingPool[typeIndex].count];
-        hashHi ^= countHashHi[typeIndex][buildingPool[typeIndex].count];
-      }
-
-      function toggleCellHash(index: number) {
-        hashLo ^= cellHashLo[index];
-        hashHi ^= cellHashHi[index];
-      }
-      function toggleCountHash(typeIndex: number, count: number) {
-        hashLo ^= countHashLo[typeIndex][count];
-        hashHi ^= countHashHi[typeIndex][count];
-      }
-      function currentHashKey() {
-        return (hashHi >>> 0) * 4294967296 + (hashLo >>> 0);
-      }
-
-      // FAILED_STATES_CAP dichiarato fuori da runSearch (vedi sopra): usato
-      // anche nel blocco di log a fine solve().
-      let failedStates = new Set<number>();
-
-      // Area ancora da piazzare, mantenuta incrementale invece di ricalcolata con
-      // un reduce su tutti i tipi ad ogni nodo (viene letta una volta per nodo).
-      let remainingArea = buildingPool.reduce((total, building) => total + building.count * building.width * building.height, 0);
-
-      // Prima cella libera in ordine row-major: è l'ancora a cui restringere i
-      // candidati di piazzamento. La scansione parte da `from` invece che da 0
-      // perché un piazzamento valido non può contenere celle prima dell'ancora
-      // del nodo padre (erano già occupate), quindi nel figlio la prima cella
-      // libera è sempre > dell'ancora del padre.
-      function firstFreeIndex(from: number): number {
-        for (let index = from; index < cellCount; index++) {
-          if (!occupied[index]) return index;
+        // Zobrist hashing per la chiave di memoization: ogni cella e ogni coppia
+        // (tipo, count) ha un valore casuale a 64 bit fissato una volta, XORato
+        // dentro/fuori quando cambia. Così la chiave è O(1) incrementale invece di
+        // ricostruire una stringa lunga quanto la griglia ad ogni nodo.
+        let seed = 0x9e3779b9;
+        function nextRandomUint32() {
+          // xorshift32: basta un PRNG ben distribuito, non serve sicurezza.
+          seed ^= seed << 13; seed |= 0;
+          seed ^= seed >>> 17;
+          seed ^= seed << 5; seed |= 0;
+          return seed >>> 0;
         }
-        return -1;
-      }
 
-      // Branching ancorato alla prima cella libera (idx0): i candidati sono solo
-      // quelli che la coprono, al più width*height per tipo invece di decine sparsi
-      // su tutta la griglia — è ciò che tiene sotto controllo il branching factor.
-      // MRV (meno candidati prima) decide solo l'ORDINE di tentativo, non esclude
-      // alternative: se tutti i tipi falliscono, idx0 resta vuota per sempre e si
-      // prosegue (gli edifici non devono coprire tutta l'area).
-      async function backtrack(availableCells: number, isSmallOnlyPhase: boolean, scanFrom: number): Promise<boolean> {
-        if (isSmallOnlyPhase && smallBacktracks > SMALL_CUTOFF) {
-          hitSmallCutoff = true;
-          return false;
+        const cellHashLo = new Uint32Array(cellCount);
+        const cellHashHi = new Uint32Array(cellCount);
+        for (let index = 0; index < cellCount; index++) {
+          cellHashLo[index] = nextRandomUint32();
+          cellHashHi[index] = nextRandomUint32();
         }
-        if (stopSolvingRef.current) return false;
 
-        steps++;
-        if (steps % 2500 === 0) {
-          setDisplaySteps(steps);
-          await new Promise((resolve) => setTimeout(resolve, 0));
-          if (stopSolvingRef.current) return false;
-          // Tetto massimo di tempo (vedi SOLVE_TIME_LIMIT_MS): controllato qui,
-          // nello stesso punto in cui già si cede il controllo all'event loop
-          // ogni 2500 passi, così non introduce un costo per-nodo aggiuntivo.
-          if (performance.now() - startTime > SOLVE_TIME_LIMIT_MS) {
-            timedOutRef.current = true;
-            stopSolvingRef.current = true;
+        // Il count di una classe può solo diminuire dal valore iniziale (mai
+        // salire oltre): la tabella copre [0, initialCount] per ogni classe.
+        const countHashLo = buildingPool.map((shapeClass) => {
+          const table = new Uint32Array(shapeClass.initialCount + 1);
+          for (let c = 0; c <= shapeClass.initialCount; c++) table[c] = nextRandomUint32();
+          return table;
+        });
+        const countHashHi = buildingPool.map((shapeClass) => {
+          const table = new Uint32Array(shapeClass.initialCount + 1);
+          for (let c = 0; c <= shapeClass.initialCount; c++) table[c] = nextRandomUint32();
+          return table;
+        });
+
+        // Hash corrente, mantenuto incrementale per tutta la durata della ricerca.
+        let hashLo = 0;
+        let hashHi = 0;
+        for (let index = 0; index < cellCount; index++) {
+          if (occupied[index]) { hashLo ^= cellHashLo[index]; hashHi ^= cellHashHi[index]; }
+        }
+        for (let typeIndex = 0; typeIndex < buildingPool.length; typeIndex++) {
+          hashLo ^= countHashLo[typeIndex][buildingPool[typeIndex].count];
+          hashHi ^= countHashHi[typeIndex][buildingPool[typeIndex].count];
+        }
+
+        function toggleCellHash(index: number) {
+          hashLo ^= cellHashLo[index];
+          hashHi ^= cellHashHi[index];
+        }
+        function toggleCountHash(typeIndex: number, count: number) {
+          hashLo ^= countHashLo[typeIndex][count];
+          hashHi ^= countHashHi[typeIndex][count];
+        }
+        function currentHashKey() {
+          return (hashHi >>> 0) * 4294967296 + (hashLo >>> 0);
+        }
+
+        // FAILED_STATES_CAP dichiarato fuori da runSearch (vedi sopra): usato
+        // anche nel blocco di log a fine solve().
+        let failedStates = new Set<number>();
+
+        // Area ancora da piazzare, mantenuta incrementale invece di ricalcolata con
+        // un reduce su tutti i tipi ad ogni nodo (viene letta una volta per nodo).
+        let remainingArea = buildingPool.reduce((total, shapeClass) => total + shapeClass.count * shapeClass.area, 0);
+
+        // Prima cella libera in ordine row-major: è l'ancora a cui restringere i
+        // candidati di piazzamento. La scansione parte da `from` invece che da 0
+        // perché un piazzamento valido non può contenere celle prima dell'ancora
+        // del nodo padre (erano già occupate), quindi nel figlio la prima cella
+        // libera è sempre > dell'ancora del padre.
+        function firstFreeIndex(from: number): number {
+          for (let index = from; index < cellCount; index++) {
+            if (!occupied[index]) return index;
+          }
+          return -1;
+        }
+
+        // Branching ancorato alla prima cella libera (idx0): i candidati sono solo
+        // quelli che la coprono, al più width*height per tipo invece di decine sparsi
+        // su tutta la griglia — è ciò che tiene sotto controllo il branching factor.
+        // MRV (meno candidati prima) decide solo l'ORDINE di tentativo, non esclude
+        // alternative: se tutti i tipi falliscono, idx0 resta vuota per sempre e si
+        // prosegue (gli edifici non devono coprire tutta l'area).
+        async function backtrack(availableCells: number, isSmallOnlyPhase: boolean, scanFrom: number): Promise<boolean> {
+          if (isSmallOnlyPhase && smallBacktracks > SMALL_CUTOFF) {
+            hitSmallCutoff = true;
             return false;
           }
-        }
+          if (stopSolvingRef.current) return false;
 
-        const areaLeft = remainingArea;
-        if (areaLeft === 0) return true;
-        if (areaLeft > availableCells) return false;
-
-        const stateKey = currentHashKey();
-        if (failedStates.has(stateKey)) return false;
-
-        const idx0 = firstFreeIndex(scanFrom);
-        if (idx0 === -1) return areaLeft === 0;
-        const anchor = { row: Math.floor(idx0 / gridCols), col: idx0 % gridCols };
-
-        const stillHasBig = hasBigRemaining();
-        const enteringSmallOnly = !stillHasBig && !isSmallOnlyPhase;
-        const nextIsSmallOnly = isSmallOnlyPhase || enteringSmallOnly;
-
-        if (enteringSmallOnly) {
-          smallBacktracks = 0;
-          enteredSmallOnlyPhase = true;
-        }
-
-        // Candidati per OGNI tipo che copre idx0, ordinati per MRV (meno
-        // candidati prima). A differenza di prima, un tipo senza candidati per
-        // idx0 non fa fallire subito il nodo: potrebbe semplicemente non coprire
-        // questa cella specifica pur avendo posizioni valide altrove.
-        const typeCandidates: { typeIndex: number; candidates: CandidatePlacement[] }[] = [];
-        for (let typeIndex = 0; typeIndex < buildingPool.length; typeIndex++) {
-          const building = buildingPool[typeIndex];
-          if (building.count <= 0) continue;
-          if (nextIsSmallOnly && (building.width * building.height) > BIG_THRESHOLD) continue;
-          const candidates = generatePlacements(building, anchor);
-          if (candidates.length > 0) typeCandidates.push({ typeIndex, candidates });
-        }
-        typeCandidates.sort((a, b) => a.candidates.length - b.candidates.length);
-
-        for (const { typeIndex, candidates } of typeCandidates) {
-          const building = buildingPool[typeIndex];
-          // L'hash del count va aggiornato in coppia: XOR fuori il valore vecchio,
-          // decrementa, XOR dentro il valore nuovo (idem all'incremento sotto).
-          toggleCountHash(typeIndex, building.count);
-          building.count--;
-          remainingArea -= building.width * building.height;
-          toggleCountHash(typeIndex, building.count);
-
-          for (const placement of candidates) {
-            if (stopSolvingRef.current) break;
-
-            for (const index of placement.cells) { occupied[index] = 1; toggleCellHash(index); }
-            currentPlacements.push({ buildingId: building.id, row: placement.row, col: placement.col, w: placement.w, h: placement.h });
-
-            if (await backtrack(availableCells - placement.cells.length, nextIsSmallOnly, idx0 + 1)) return true;
-
-            currentPlacements.pop();
-            for (const index of placement.cells) { occupied[index] = 0; toggleCellHash(index); }
-
-            if (nextIsSmallOnly) smallBacktracks++;
+          steps++;
+          // Yield a TEMPO, non a numero di passi. Prima si cedeva il controllo
+          // ogni 2500 passi: su una griglia con nodi economici significava
+          // migliaia di interruzioni, ognuna delle quali costava il clamp dei
+          // timer annidati (vedi yieldToEventLoop). Ora si lavora ininterrotti
+          // per lotti di ~50ms, il che tiene comunque la UI reattiva (20
+          // aggiornamenti al secondo, più di quanto l'occhio segua su un
+          // contatore che scorre) e riduce le interruzioni di ordini di
+          // grandezza.
+          //
+          // La lettura dell'orologio è protetta da un controllo economico sul
+          // contatore: performance.now() a ogni nodo avrebbe un costo proprio
+          // non trascurabile su milioni di nodi, mentre un AND bit a bit no.
+          if ((steps & 1023) === 0) {
+            const now = performance.now();
+            if (now - lastYieldTime > YIELD_INTERVAL_MS) {
+              lastYieldTime = now;
+              setDisplaySteps(steps);
+              await yieldToEventLoop();
+              if (stopSolvingRef.current) return false;
+            }
+            // Tetto massimo di tempo (vedi SOLVE_TIME_LIMIT_MS): controllato qui,
+            // dove l'orologio è già stato letto, così non costa nulla in più.
+            if (now - startTime > SOLVE_TIME_LIMIT_MS) {
+              timedOutRef.current = true;
+              stopSolvingRef.current = true;
+              return false;
+            }
           }
 
-          toggleCountHash(typeIndex, building.count);
-          building.count++;
-          remainingArea += building.width * building.height;
-          toggleCountHash(typeIndex, building.count);
+          const areaLeft = remainingArea;
+          if (areaLeft === 0) return true;
+          if (areaLeft > availableCells) return false;
+
+          const stateKey = currentHashKey();
+          if (failedStates.has(stateKey)) return false;
+
+          const idx0 = firstFreeIndex(scanFrom);
+          if (idx0 === -1) return areaLeft === 0;
+          const anchor = { row: Math.floor(idx0 / gridCols), col: idx0 % gridCols };
+
+          const stillHasBig = hasBigRemaining();
+          const enteringSmallOnly = !stillHasBig && !isSmallOnlyPhase;
+          const nextIsSmallOnly = isSmallOnlyPhase || enteringSmallOnly;
+
+          if (enteringSmallOnly) {
+            smallBacktracks = 0;
+            enteredSmallOnlyPhase = true;
+          }
+
+          // Candidati per OGNI classe di forma che copre idx0, ordinati per MRV
+          // (meno candidati prima). Una classe senza candidati per idx0 non fa
+          // fallire subito il nodo: potrebbe semplicemente non coprire questa
+          // cella specifica pur avendo posizioni valide altrove.
+          const typeCandidates: { typeIndex: number; candidates: CandidatePlacement[] }[] = [];
+          for (let typeIndex = 0; typeIndex < buildingPool.length; typeIndex++) {
+            const shapeClass = buildingPool[typeIndex];
+            if (shapeClass.count <= 0) continue;
+            if (nextIsSmallOnly && shapeClass.area > BIG_THRESHOLD) continue;
+            const candidates = generatePlacements(shapeClass, anchor);
+            if (candidates.length > 0) typeCandidates.push({ typeIndex, candidates });
+          }
+          typeCandidates.sort((a, b) => a.candidates.length - b.candidates.length);
+
+          for (const { typeIndex, candidates } of typeCandidates) {
+            const shapeClass = buildingPool[typeIndex];
+            // L'hash del count va aggiornato in coppia: XOR fuori il valore vecchio,
+            // decrementa, XOR dentro il valore nuovo (idem all'incremento sotto).
+            toggleCountHash(typeIndex, shapeClass.count);
+            shapeClass.count--;
+            remainingArea -= shapeClass.area;
+            toggleCountHash(typeIndex, shapeClass.count);
+
+            for (const placement of candidates) {
+              if (stopSolvingRef.current) break;
+
+              for (const index of placement.cells) { occupied[index] = 1; toggleCellHash(index); }
+              // Solo la geometria: il tipo concreto viene deciso a fine ricerca
+              // da assignConcreteTypes (vedi il commento sulle classi di forma).
+              currentPlacements.push({ classIndex: typeIndex, row: placement.row, col: placement.col, w: placement.w, h: placement.h });
+
+              if (await backtrack(availableCells - placement.cells.length, nextIsSmallOnly, idx0 + 1)) return true;
+
+              currentPlacements.pop();
+              for (const index of placement.cells) { occupied[index] = 0; toggleCellHash(index); }
+
+              if (nextIsSmallOnly) smallBacktracks++;
+            }
+
+            toggleCountHash(typeIndex, shapeClass.count);
+            shapeClass.count++;
+            remainingArea += shapeClass.area;
+            toggleCountHash(typeIndex, shapeClass.count);
+          }
+
+          // Nessun tipo/candidato copre idx0 (o tutti i tentativi hanno fallito):
+          // l'unica opzione rimasta è lasciare la cella vuota per sempre.
+          occupied[idx0] = 1;
+          toggleCellHash(idx0);
+          const res = await backtrack(availableCells - 1, nextIsSmallOnly, idx0 + 1);
+          occupied[idx0] = 0;
+          toggleCellHash(idx0);
+
+          if (res) return true;
+          if (nextIsSmallOnly) smallBacktracks++;
+          // Vedi commento su FAILED_STATES_CAP più sopra: evita il crash da
+          // superamento del limite massimo del Set svuotandolo prima di raggiungerlo.
+          if (failedStates.size >= FAILED_STATES_CAP) {
+            failedStatesCapHit = true;
+            failedStates = new Set<number>();
+          }
+          failedStates.add(stateKey);
+          if (failedStates.size > maxFailedStatesSize) maxFailedStatesSize = failedStates.size;
+          return false;
         }
 
-        // Nessun tipo/candidato copre idx0 (o tutti i tentativi hanno fallito):
-        // l'unica opzione rimasta è lasciare la cella vuota per sempre.
-        occupied[idx0] = 1;
-        toggleCellHash(idx0);
-        const res = await backtrack(availableCells - 1, nextIsSmallOnly, idx0 + 1);
-        occupied[idx0] = 0;
-        toggleCellHash(idx0);
+        const initialSmallOnly = !hasBigRemaining();
+        // La ricerca ha lavorato per classi di forma: qui la geometria trovata
+        // viene tradotta in edifici concreti (e riaccodata al Municipio già
+        // piazzato, quando questo fork lo teneva fisso).
+        const result = (await backtrack(freeCells, initialSmallOnly, 0)) ? assignConcreteTypes(currentPlacements) : null;
+        debugInfo.runs.push({
+          keepMunicipioInitial,
+          result: stopSolvingRef.current ? "stopped" : result ? "found" : "no-solution",
+          steps: steps - stepsAtStart,
+          smallBacktracksFinal: smallBacktracks,
+          maxFailedStatesSize,
+          failedStatesCapHit,
+          enteredSmallOnlyPhase,
+        });
+        return result;
+      };
 
-        if (res) return true;
-        if (nextIsSmallOnly) smallBacktracks++;
-        // Vedi commento su FAILED_STATES_CAP più sopra: evita il crash da
-        // superamento del limite massimo del Set svuotandolo prima di raggiungerlo.
-        if (failedStates.size >= FAILED_STATES_CAP) {
-          failedStatesCapHit = true;
-          failedStates = new Set<number>();
-        }
-        failedStates.add(stateKey);
-        if (failedStates.size > maxFailedStatesSize) maxFailedStatesSize = failedStates.size;
+      const solvedPlacements = (await runSearch(true)) ?? (stopSolvingRef.current ? null : await runSearch(false));
+      const found = solvedPlacements !== null;
+      const endTime = performance.now();
+
+      // Debug ricco SOLO in console (mai in UI, per non appesantire l'interfaccia):
+      // permette di distinguere a colpo d'occhio "esaurimento reale" (nessuna fase
+      // small-only raggiunta, o raggiunta ma senza toccare SMALL_CUTOFF) da "limite
+      // euristico toccato" (hitSmallCutoff) o "memoization saturata e svuotata"
+      // (failedStatesCapHit) — invece di doverlo dedurre dal conteggio edifici
+      // sulla mappa. Apri la Console di Chrome (F12) subito dopo un Risolvi/AUTO.
+      console.groupCollapsed(
+        `%c[Pirati Solver] ${found ? "✅ soluzione trovata" : stopSolvingRef.current ? "⏸️ interrotta" : "❌ nessuna soluzione"} — ${steps} passi totali in ${Math.round(endTime - startTime)}ms`,
+        "font-weight: bold;"
+      );
+      console.info("Esito:", found ? "trovata" : stopSolvingRef.current ? (timedOutRef.current ? "interrotta (timeout)" : "interrotta (stop manuale)") : "nessuna soluzione");
+      console.info("Falso negativo possibile (SMALL_CUTOFF toccato in almeno un tentativo):", hitSmallCutoff);
+      console.table(
+        debugInfo.runs.map((run, i) => ({
+          tentativo: i + 1,
+          "municipio fisso": run.keepMunicipioInitial,
+          esito: run.result,
+          passi: run.steps,
+          "fase small-only raggiunta": run.enteredSmallOnlyPhase,
+          "backtracks small-only finali": run.smallBacktracksFinal,
+          "cutoff (100.000) superato": run.smallBacktracksFinal > SMALL_CUTOFF,
+          "max stati memorizzati (failedStates)": run.maxFailedStatesSize,
+          "cap memoization (4M) toccato": run.failedStatesCapHit,
+        }))
+      );
+      console.info("Edifici richiesti in questa ricerca:", sourceBuildings.filter((b) => b.count > 0).map((b) => `${b.id} ×${b.count} (${b.width}×${b.height}=${b.width * b.height})`));
+      console.info(`BIG_THRESHOLD=${BIG_THRESHOLD} · SMALL_CUTOFF=${SMALL_CUTOFF} · SOLVE_TIME_LIMIT_MS=${SOLVE_TIME_LIMIT_MS} · FAILED_STATES_CAP=${FAILED_STATES_CAP}`);
+      console.groupEnd();
+
+      setDisplaySteps(steps);
+      setStats({ steps, time: Math.round(endTime - startTime) });
+
+      const wasInterrupted = stopSolvingRef.current;
+      if (wasInterrupted) {
+        // Stop manuale (o timeout): la ricerca lavora su variabili locali, non
+        // ha mai toccato lo state, quindi la mappa a schermo è già quella di
+        // prima — ma i conteggi (buildings) possono essere stati modificati
+        // dall'utente subito prima di premere Risolvi. Stesso ripristino del
+        // ramo "nessuna soluzione" sotto: si torna sempre interamente
+        // (conteggi inclusi) all'ultima soluzione valida nota — lastSolvedRef
+        // non è mai vuoto (vedi dichiarazione), quindi il ripristino avviene
+        // sempre, invece di lasciare i conteggi nuovi disallineati dalla mappa.
+        setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
+        setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
+        setImportMessage({ kind: "error", text: t("piratiRestoredLastSolutionMessage", uiLang) });
+        setStatus("interrupted");
+        // Un'interruzione manuale (Stop o timeout) NON conta come fallimento per
+        // il chiamante AUTO: l'utente ha scelto lui di fermarsi. isSolving e
+        // stopSolvingRef vengono azzerati dal `finally` del wrapper, che è
+        // l'unico punto di uscita della funzione.
+        return true;
+      } else if (found) {
+        setPlacements(solvedPlacements);
+        // Snapshot dell'ultima soluzione valida: sourceBuildings è lo stato
+        // edifici effettivamente usato da questa ricerca (buildingsOverride se
+        // presente, altrimenti buildings), coerente con solvedPlacements.
+        lastSolvedRef.current = { buildings: sourceBuildings.map((b) => ({ ...b })), placements: solvedPlacements };
+        setStatus("success");
+      } else {
+        // Nessuna soluzione per i conteggi appena impostati: non lasciare la
+        // mappa vecchia con conteggi nuovi disallineati, torna sempre
+        // all'ultima soluzione valida nota (lastSolvedRef non è mai vuoto).
+        setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
+        setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
+        // Stato ripristinato = di nuovo una disposizione valida: "success",
+        // non "failed", così il pulsante Risolvi torna disabilitato come in
+        // ogni altra situazione stabile. Ma "success" da solo sparirebbe il
+        // messaggio di errore senza spiegare perché la modifica appena fatta
+        // non è comparsa — un toast temporaneo colma il vuoto (stesso
+        // meccanismo del toast di import, vedi useEffect su importMessage).
+        setStatus("success");
+        // hitSmallCutoff: distingue un fallimento "pulito" (ogni alternativa
+        // provata ed esclusa: la soluzione richiesta non esiste per questi
+        // conteggi) da un fallimento dove almeno un ramo si è fermato per il
+        // tetto di tentativi SMALL_CUTOFF prima di esaurire davvero le
+        // alternative — in quel caso potrebbe esistere una soluzione che la
+        // ricerca non ha avuto modo di scoprire, messaggio diverso per non
+        // far credere all'utente che il problema sia insolubile per certo.
+        setImportMessage({
+          kind: "error",
+          text: t(hitSmallCutoff ? "piratiRestoredLastSolutionCutoffMessage" : "piratiRestoredLastSolutionMessage", uiLang),
+        });
+
+        // Il ripristino appena fatto rende superfluo qualunque aggiustamento
+        // lato chiamante: lo stato è già coerente (buildings+placements tornati
+        // all'ultima soluzione valida, che per costruzione NON contiene
+        // l'edificio appena aggiunto da un eventuale AUTO).
         return false;
       }
 
-      const initialSmallOnly = !hasBigRemaining();
-      const result = (await backtrack(freeCells, initialSmallOnly, 0)) ? currentPlacements : null;
-      debugInfo.runs.push({
-        keepMunicipioInitial,
-        result: stopSolvingRef.current ? "stopped" : result ? "found" : "no-solution",
-        steps: steps - stepsAtStart,
-        smallBacktracksFinal: smallBacktracks,
-        maxFailedStatesSize,
-        failedStatesCapHit,
-        enteredSmallOnlyPhase,
-      });
-      return result;
-    };
-
-    const solvedPlacements = (await runSearch(true)) ?? (stopSolvingRef.current ? null : await runSearch(false));
-    const found = solvedPlacements !== null;
-    const endTime = performance.now();
-
-    // Debug ricco SOLO in console (mai in UI, per non appesantire l'interfaccia):
-    // permette di distinguere a colpo d'occhio "esaurimento reale" (nessuna fase
-    // small-only raggiunta, o raggiunta ma senza toccare SMALL_CUTOFF) da "limite
-    // euristico toccato" (hitSmallCutoff) o "memoization saturata e svuotata"
-    // (failedStatesCapHit) — invece di doverlo dedurre dal conteggio edifici
-    // sulla mappa. Apri la Console di Chrome (F12) subito dopo un Risolvi/AUTO.
-    console.groupCollapsed(
-      `%c[Pirati Solver] ${found ? "✅ soluzione trovata" : stopSolvingRef.current ? "⏸️ interrotta" : "❌ nessuna soluzione"} — ${steps} passi totali in ${Math.round(endTime - startTime)}ms`,
-      "font-weight: bold;"
-    );
-    console.info("Esito:", found ? "trovata" : stopSolvingRef.current ? (timedOutRef.current ? "interrotta (timeout)" : "interrotta (stop manuale)") : "nessuna soluzione");
-    console.info("Falso negativo possibile (SMALL_CUTOFF toccato in almeno un tentativo):", hitSmallCutoff);
-    console.table(
-      debugInfo.runs.map((run, i) => ({
-        tentativo: i + 1,
-        "municipio fisso": run.keepMunicipioInitial,
-        esito: run.result,
-        passi: run.steps,
-        "fase small-only raggiunta": run.enteredSmallOnlyPhase,
-        "backtracks small-only finali": run.smallBacktracksFinal,
-        "cutoff (100.000) superato": run.smallBacktracksFinal > SMALL_CUTOFF,
-        "max stati memorizzati (failedStates)": run.maxFailedStatesSize,
-        "cap memoization (4M) toccato": run.failedStatesCapHit,
-      }))
-    );
-    console.info("Edifici richiesti in questa ricerca:", sourceBuildings.filter((b) => b.count > 0).map((b) => `${b.id} ×${b.count} (${b.width}×${b.height}=${b.width * b.height})`));
-    console.info(`BIG_THRESHOLD=${BIG_THRESHOLD} · SMALL_CUTOFF=${SMALL_CUTOFF} · SOLVE_TIME_LIMIT_MS=${SOLVE_TIME_LIMIT_MS} · FAILED_STATES_CAP=${FAILED_STATES_CAP}`);
-    console.groupEnd();
-
-    setDisplaySteps(steps);
-    setStats({ steps, time: Math.round(endTime - startTime) });
-
-    const wasInterrupted = stopSolvingRef.current;
-    if (wasInterrupted) {
-      // Stop manuale (o timeout): la ricerca lavora su variabili locali, non
-      // ha mai toccato lo state, quindi la mappa a schermo è già quella di
-      // prima — ma i conteggi (buildings) possono essere stati modificati
-      // dall'utente subito prima di premere Risolvi. Stesso ripristino del
-      // ramo "nessuna soluzione" sotto: si torna sempre interamente
-      // (conteggi inclusi) all'ultima soluzione valida nota — lastSolvedRef
-      // non è mai vuoto (vedi dichiarazione), quindi il ripristino avviene
-      // sempre, invece di lasciare i conteggi nuovi disallineati dalla mappa.
+      // Raggiunto solo dal ramo `found` (gli altri due ritornano prima): lo
+      // stato a schermo è già quello risolto con successo.
+      return true;
+    } catch (error) {
+      // Errore imprevisto: la ricerca non ha toccato lo state (lavora su
+      // variabili locali), quindi basta riportare buildings/placements
+      // all'ultima soluzione valida nota, come per un fallimento normale.
+      console.error("[Pirati Solver] errore imprevisto durante la ricerca:", error);
       setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
       setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
-      setImportMessage({ kind: "error", text: t("piratiRestoredLastSolutionMessage", uiLang) });
-      setStatus("interrupted");
+      setStatus("success");
+      setImportMessage({ kind: "error", text: t("piratiSolverCrashed", uiLang) });
+      return false;
+    } finally {
+      // Unico punto in cui la ricerca viene chiusa: vale per il ritorno
+      // normale, per l'interruzione e per un'eccezione imprevista.
       setIsSolving(false);
       stopSolvingRef.current = false;
-      // Un'interruzione manuale non conta come fallimento per AUTO (vedi
-      // commento sul return finale), e il ripristino appena fatto non va
-      // sovrascritto dal decremento extra che il chiamante farebbe altrimenti
-      // — stesso motivo del ramo 'else' sotto.
-      return { found: true, restored: true };
-    } else if (found) {
-      setPlacements(solvedPlacements);
-      // Snapshot dell'ultima soluzione valida: sourceBuildings è lo stato
-      // edifici effettivamente usato da questa ricerca (buildingsOverride se
-      // presente, altrimenti buildings), coerente con solvedPlacements.
-      lastSolvedRef.current = { buildings: sourceBuildings.map((b) => ({ ...b })), placements: solvedPlacements };
-      setStatus("success");
-    } else {
-      // Nessuna soluzione per i conteggi appena impostati: non lasciare la
-      // mappa vecchia con conteggi nuovi disallineati, torna sempre
-      // all'ultima soluzione valida nota (lastSolvedRef non è mai vuoto).
-      setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
-      setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
-      // Stato ripristinato = di nuovo una disposizione valida: "success",
-      // non "failed", così il pulsante Risolvi torna disabilitato come in
-      // ogni altra situazione stabile. Ma "success" da solo sparirebbe il
-      // messaggio di errore senza spiegare perché la modifica appena fatta
-      // non è comparsa — un toast temporaneo colma il vuoto (stesso
-      // meccanismo del toast di import, vedi useEffect su importMessage).
-      setStatus("success");
-      // hitSmallCutoff: distingue un fallimento "pulito" (ogni alternativa
-      // provata ed esclusa: la soluzione richiesta non esiste per questi
-      // conteggi) da un fallimento dove almeno un ramo si è fermato per il
-      // tetto di tentativi SMALL_CUTOFF prima di esaurire davvero le
-      // alternative — in quel caso potrebbe esistere una soluzione che la
-      // ricerca non ha avuto modo di scoprire, messaggio diverso per non
-      // far credere all'utente che il problema sia insolubile per certo.
-      setImportMessage({
-        kind: "error",
-        text: t(hitSmallCutoff ? "piratiRestoredLastSolutionCutoffMessage" : "piratiRestoredLastSolutionMessage", uiLang),
-      });
-
-      setIsSolving(false);
-      stopSolvingRef.current = false;
-      // `restored: true` segnala al chiamante (AUTO in updateCount) che lo
-      // stato è già stato riportato a buildings+placements coerenti — un
-      // ulteriore decremento manuale dell'edificio appena aggiunto andrebbe a
-      // modificare quello stato GIÀ corretto, producendo un secondo
-      // disallineamento (bug osservato: la lista edifici mostrava sempre una
-      // soluzione "più vecchia" della mappa, perché veniva decrementato un
-      // conteggio già ripristinato da qui, invece di lasciarlo stare).
-      return { found: false, restored: true };
     }
-
-    setIsSolving(false);
-    stopSolvingRef.current = false;
-    // Raggiunto solo dal ramo `found` (wasInterrupted e "nessuna soluzione"
-    // ritornano anticipatamente sopra, con il proprio `restored`): nessun
-    // ripristino qui, lo stato è già quello risolto con successo.
-    return { found: true, restored: false };
   }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles, uiLang]);
 
   const updateCount = async (id: string, delta: number) => {
@@ -1240,20 +1419,13 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         // aggiunto (l'unica cosa che sappiamo per certo essere "di troppo" in
         // questo tentativo) e ci fermiamo lì, senza altri retry a catena.
         if (autoMode) {
-          const { found: solved, restored } = await solve(nextBuildings);
-          // `restored`: solve() ha già riportato buildings+placements a
-          // un'ultima soluzione valida precedente (che per costruzione non
-          // includeva ancora l'edificio appena aggiunto). Decrementarlo di
-          // nuovo qui applicherebbe la sottrazione a uno stato già corretto,
-          // producendo un conteggio disallineato dalla mappa (bug osservato:
-          // la lista edifici mostrava sempre una soluzione "più vecchia").
-          if (!solved && !restored) {
-            setBuildings((current) =>
-              current.map((building) =>
-                building.id === id ? { ...building, count: Math.max(0, building.count - 1) } : building
-              )
-            );
-          }
+          // Nessun aggiustamento dopo la ricerca: se fallisce, solve() riporta
+          // già da sé buildings+placements all'ultima disposizione valida (che
+          // per costruzione non contiene l'edificio appena aggiunto). Il
+          // decremento manuale che si faceva qui prima veniva applicato a uno
+          // stato GIÀ ripristinato, sottraendo due volte — era la causa della
+          // lista edifici che mostrava una soluzione "più vecchia" della mappa.
+          await solve(nextBuildings);
         }
       }
 
@@ -1271,14 +1443,24 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     const placement = placements.find(p => p.row === row && p.col === col);
     if (!placement || placement.buildingId === MUNICIPIO.id) return;
 
-    setBuildings((previous) =>
-      previous.map((building) =>
-        building.id === placement.buildingId ? { ...building, count: Math.max(0, building.count - 1) } : building
-      )
+    // Stato successivo calcolato esplicitamente (invece di due setState
+    // funzionali indipendenti): serve per poter valutare layoutStatus e
+    // aggiornare lastSolvedRef in modo coerente, vedi sotto.
+    const nextBuildings = buildings.map((building) =>
+      building.id === placement.buildingId ? { ...building, count: Math.max(0, building.count - 1) } : building
     );
+    const nextPlacements = placements.filter((p) => !(p.row === row && p.col === col));
 
-    setPlacements((previous) => previous.filter((p) => !(p.row === row && p.col === col)));
-    setStatus("success");
+    setBuildings(nextBuildings);
+    setPlacements(nextPlacements);
+    // Prima era un `setStatus("success")` fisso: sbagliato se i conteggi erano
+    // già disallineati (es. un '+' che non era riuscito a piazzare nulla),
+    // perché nascondeva il disallineamento disabilitando Risolvi.
+    const nextStatus = layoutStatus(nextBuildings, nextPlacements);
+    setStatus(nextStatus);
+    if (nextStatus === "success") {
+      lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
+    }
   };
 
   const canSwapPlacements = (source: Placement | null, target: Placement) => {
@@ -1318,31 +1500,45 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const movePlacementTo = (source: Placement, targetRow: number, targetCol: number) => {
     if (!canMovePlacementTo(source, targetRow, targetCol)) return;
 
-    setPlacements((previous) =>
-      previous.map((placement) =>
-        placement.row === source.row && placement.col === source.col
-          ? { ...placement, row: targetRow, col: targetCol }
-          : placement
-      )
+    const nextPlacements = placements.map((placement) =>
+      placement.row === source.row && placement.col === source.col
+        ? { ...placement, row: targetRow, col: targetCol }
+        : placement
     );
-    setStatus("success");
+    setPlacements(nextPlacements);
+    // canMovePlacementTo ha già verificato che la destinazione sia dentro
+    // l'area sbloccata, libera da ostacoli e da altri edifici: la disposizione
+    // resta valida. Se copre tutti i conteggi, diventa la nuova "ultima
+    // soluzione valida" — altrimenti uno spostamento manuale andrebbe perso al
+    // primo Risolvi fallito, che ripristinerebbe una disposizione precedente.
+    const nextStatus = layoutStatus(buildings, nextPlacements);
+    setStatus(nextStatus);
+    if (nextStatus === "success") {
+      lastSolvedRef.current = { buildings: buildings.map((b) => ({ ...b })), placements: nextPlacements };
+    }
   };
 
   const swapPlacements = (source: Placement, target: Placement) => {
     if (!canSwapPlacements(source, target)) return;
 
-    setPlacements((previous) =>
-      previous.map((placement) => {
-        if (placement.row === source.row && placement.col === source.col) {
-          return { ...placement, row: target.row, col: target.col };
-        }
-        if (placement.row === target.row && placement.col === target.col) {
-          return { ...placement, row: source.row, col: source.col };
-        }
-        return placement;
-      })
-    );
-    setStatus("success");
+    const nextPlacements = placements.map((placement) => {
+      if (placement.row === source.row && placement.col === source.col) {
+        return { ...placement, row: target.row, col: target.col };
+      }
+      if (placement.row === target.row && placement.col === target.col) {
+        return { ...placement, row: source.row, col: source.col };
+      }
+      return placement;
+    });
+    setPlacements(nextPlacements);
+    // Uno scambio avviene solo tra edifici della STESSA dimensione (vedi
+    // canSwapPlacements): le celle occupate sono identiche, la disposizione
+    // resta valida. Stesso trattamento di movePlacementTo qui sopra.
+    const nextStatus = layoutStatus(buildings, nextPlacements);
+    setStatus(nextStatus);
+    if (nextStatus === "success") {
+      lastSolvedRef.current = { buildings: buildings.map((b) => ({ ...b })), placements: nextPlacements };
+    }
   };
 
   const cellFromPointer = (clientX: number, clientY: number) => {
@@ -1634,6 +1830,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             // Risolvi fallito dopo l'Undo torna qui e non a una disposizione
             // precedente all'Undo stesso.
             lastSolvedRef.current = { buildings: baseline.buildings.map((b) => ({ ...b })), placements: baseline.placements.map((p) => ({ ...p })) };
+            // La disposizione a schermo non è più il risultato dell'ultima
+            // ricerca: le sue statistiche non la descrivono più (vedi `stats`).
+            setStats(null);
             setBuildings(baseline.buildings.map((building) => ({ ...building })));
             setPlacements(baseline.placements.map((placement) => ({ ...placement })));
             setObstacles(new Set(baseline.obstacles));
@@ -1671,6 +1870,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
               importedExpansions: new Set(),
               importedObstacleCells: new Set(),
             };
+            setStats(null);
             setBuildings(INITIAL_BUILDINGS.map((building) => ({ ...building })));
             setPlacements(INITIAL_PLACEMENTS.map((placement) => ({ ...placement })));
             setObstacles(new Set());
@@ -1779,7 +1979,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           </button>
         </div>
 
-        {status !== "idle" && (
+        {/* Condizionata a `stats` (non più a status !== "idle"): le statistiche
+            appartengono a UNA ricerca specifica, quindi la pillola compare solo
+            dopo che una ricerca è stata eseguita e sparisce quando lo stato a
+            schermo non ne è più il risultato (import/Undo/Reset azzerano stats). */}
+        {stats && (
           <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5 font-mono text-[11px] text-slate-400">
             <span>{t("piratiStepsCountLabel", uiLang, stats.steps)}</span>
             <span className="text-slate-600">·</span>
@@ -1806,11 +2010,6 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           <div className="flex h-7 items-center gap-1.5 rounded border border-yellow-500/30 bg-yellow-500/10 px-2.5 text-yellow-400 font-semibold">
             <IconStop size={12} />
             {timedOutRef.current ? t("piratiTimedOutMessage", uiLang) : t("piratiInterruptedMessage", uiLang)}
-          </div>
-        )}
-        {status === "failed" && (
-          <div className="flex h-7 items-center gap-1.5 rounded border border-red-500/30 bg-red-500/10 px-2.5 text-red-400 font-semibold">
-            <IconAlertCircle size={12} /> {t("piratiFailedMessage", uiLang)}
           </div>
         )}
         {totalArea > maxArea && (
