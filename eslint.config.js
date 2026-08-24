@@ -95,7 +95,11 @@ export default tseslint.config(
 
       // console.log lasciati per debug: warning, non error, per non
       // bloccare la build durante lo sviluppo ma ricordare di rimuoverli.
-      "no-console": ["warn", { allow: ["info", "warn", "error"] }],
+      // groupCollapsed/groupEnd/table: distinti da console.log generico,
+      // usati deliberatamente per raggruppare diagnostica ricca in console
+      // (es. il debug del solver Pirati) senza toccare la UI — non sono un
+      // log dimenticato, quindi in whitelist come info/warn/error.
+      "no-console": ["warn", { allow: ["info", "warn", "error", "groupCollapsed", "groupEnd", "table"] }],
 
       // Variabili shadow (es. una `id` interna che ne nasconde una esterna):
       // è esattamente il tipo di bug riscontrato in passato in questo

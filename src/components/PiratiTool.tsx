@@ -697,8 +697,44 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     const cellCount = gridRows * gridCols;
     const sourceBuildings = buildingsOverride ?? buildings;
 
+    // true se, durante questa ricerca, almeno un ramo si è fermato per aver
+    // superato SMALL_CUTOFF (tentativi nella fase "solo piccoli") invece che
+    // per aver davvero esaurito le alternative — un fallimento finale in
+    // questo caso è un possibile FALSO NEGATIVO: potrebbe esistere una
+    // soluzione che la ricerca non ha avuto il tempo di scoprire su quel
+    // ramo specifico, a differenza di un fallimento "pulito" dove ogni
+    // alternativa è stata davvero provata ed esclusa.
+    let hitSmallCutoff = false;
+
+    // ⚠️ V8 impone un tetto fisso di 2^24 (16.777.216) elementi per Set: oltre,
+    // .add() lancia RangeError e la ricerca crasha lasciando il tool bloccato su
+    // "Stop". Un caso reale è arrivato a 15,75M passi, cioè a un soffio. Al cap
+    // il Set si svuota: la memoization diventa una finestra scorrevole invece di
+    // coprire tutta la ricerca, ma non può più crashare.
+    const FAILED_STATES_CAP = 4_000_000;
+
+    // Metriche di debug (console.debug a fine ricerca, MAI in UI): utili per
+    // distinguere "esaurimento reale" da "limite euristico raggiunto" senza
+    // dover indovinare dal conteggio edifici sulla mappa — vedi il gruppo
+    // console alla fine di questa funzione.
+    const debugInfo = {
+      runs: [] as Array<{
+        keepMunicipioInitial: boolean;
+        result: "found" | "no-solution" | "stopped";
+        steps: number;
+        smallBacktracksFinal: number;
+        maxFailedStatesSize: number;
+        failedStatesCapHit: boolean;
+        enteredSmallOnlyPhase: boolean;
+      }>,
+    };
+
     const runSearch = async (keepMunicipioInitial: boolean): Promise<Placement[] | null> => {
       let smallBacktracks = 0;
+      let maxFailedStatesSize = 0;
+      let failedStatesCapHit = false;
+      let enteredSmallOnlyPhase = false;
+      const stepsAtStart = steps;
       const currentPlacements: Placement[] = keepMunicipioInitial ? [{ ...MUNICIPIO_INITIAL_PLACEMENT }] : [];
       const buildingPool = [
         ...(keepMunicipioInitial ? [] : [{ ...MUNICIPIO }]),
@@ -862,12 +898,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         return (hashHi >>> 0) * 4294967296 + (hashLo >>> 0);
       }
 
-      // ⚠️ V8 impone un tetto fisso di 2^24 (16.777.216) elementi per Set: oltre,
-      // .add() lancia RangeError e la ricerca crasha lasciando il tool bloccato su
-      // "Stop". Un caso reale è arrivato a 15,75M passi, cioè a un soffio. Al cap
-      // il Set si svuota: la memoization diventa una finestra scorrevole invece di
-      // coprire tutta la ricerca, ma non può più crashare.
-      const FAILED_STATES_CAP = 4_000_000;
+      // FAILED_STATES_CAP dichiarato fuori da runSearch (vedi sopra): usato
+      // anche nel blocco di log a fine solve().
       let failedStates = new Set<number>();
 
       // Area ancora da piazzare, mantenuta incrementale invece di ricalcolata con
@@ -893,7 +925,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // alternative: se tutti i tipi falliscono, idx0 resta vuota per sempre e si
       // prosegue (gli edifici non devono coprire tutta l'area).
       async function backtrack(availableCells: number, isSmallOnlyPhase: boolean, scanFrom: number): Promise<boolean> {
-        if (isSmallOnlyPhase && smallBacktracks > SMALL_CUTOFF) return false;
+        if (isSmallOnlyPhase && smallBacktracks > SMALL_CUTOFF) {
+          hitSmallCutoff = true;
+          return false;
+        }
         if (stopSolvingRef.current) return false;
 
         steps++;
@@ -928,6 +963,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
 
         if (enteringSmallOnly) {
           smallBacktracks = 0;
+          enteredSmallOnlyPhase = true;
         }
 
         // Candidati per OGNI tipo che copre idx0, ordinati per MRV (meno
@@ -985,18 +1021,61 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         if (nextIsSmallOnly) smallBacktracks++;
         // Vedi commento su FAILED_STATES_CAP più sopra: evita il crash da
         // superamento del limite massimo del Set svuotandolo prima di raggiungerlo.
-        if (failedStates.size >= FAILED_STATES_CAP) failedStates = new Set<number>();
+        if (failedStates.size >= FAILED_STATES_CAP) {
+          failedStatesCapHit = true;
+          failedStates = new Set<number>();
+        }
         failedStates.add(stateKey);
+        if (failedStates.size > maxFailedStatesSize) maxFailedStatesSize = failedStates.size;
         return false;
       }
 
       const initialSmallOnly = !hasBigRemaining();
-      return (await backtrack(freeCells, initialSmallOnly, 0)) ? currentPlacements : null;
+      const result = (await backtrack(freeCells, initialSmallOnly, 0)) ? currentPlacements : null;
+      debugInfo.runs.push({
+        keepMunicipioInitial,
+        result: stopSolvingRef.current ? "stopped" : result ? "found" : "no-solution",
+        steps: steps - stepsAtStart,
+        smallBacktracksFinal: smallBacktracks,
+        maxFailedStatesSize,
+        failedStatesCapHit,
+        enteredSmallOnlyPhase,
+      });
+      return result;
     };
 
     const solvedPlacements = (await runSearch(true)) ?? (stopSolvingRef.current ? null : await runSearch(false));
     const found = solvedPlacements !== null;
     const endTime = performance.now();
+
+    // Debug ricco SOLO in console (mai in UI, per non appesantire l'interfaccia):
+    // permette di distinguere a colpo d'occhio "esaurimento reale" (nessuna fase
+    // small-only raggiunta, o raggiunta ma senza toccare SMALL_CUTOFF) da "limite
+    // euristico toccato" (hitSmallCutoff) o "memoization saturata e svuotata"
+    // (failedStatesCapHit) — invece di doverlo dedurre dal conteggio edifici
+    // sulla mappa. Apri la Console di Chrome (F12) subito dopo un Risolvi/AUTO.
+    console.groupCollapsed(
+      `%c[Pirati Solver] ${found ? "✅ soluzione trovata" : stopSolvingRef.current ? "⏸️ interrotta" : "❌ nessuna soluzione"} — ${steps} passi totali in ${Math.round(endTime - startTime)}ms`,
+      "font-weight: bold;"
+    );
+    console.info("Esito:", found ? "trovata" : stopSolvingRef.current ? (timedOutRef.current ? "interrotta (timeout)" : "interrotta (stop manuale)") : "nessuna soluzione");
+    console.info("Falso negativo possibile (SMALL_CUTOFF toccato in almeno un tentativo):", hitSmallCutoff);
+    console.table(
+      debugInfo.runs.map((run, i) => ({
+        tentativo: i + 1,
+        "municipio fisso": run.keepMunicipioInitial,
+        esito: run.result,
+        passi: run.steps,
+        "fase small-only raggiunta": run.enteredSmallOnlyPhase,
+        "backtracks small-only finali": run.smallBacktracksFinal,
+        "cutoff (100.000) superato": run.smallBacktracksFinal > SMALL_CUTOFF,
+        "max stati memorizzati (failedStates)": run.maxFailedStatesSize,
+        "cap memoization (4M) toccato": run.failedStatesCapHit,
+      }))
+    );
+    console.info("Edifici richiesti in questa ricerca:", sourceBuildings.filter((b) => b.count > 0).map((b) => `${b.id} ×${b.count} (${b.width}×${b.height}=${b.width * b.height})`));
+    console.info(`BIG_THRESHOLD=${BIG_THRESHOLD} · SMALL_CUTOFF=${SMALL_CUTOFF} · SOLVE_TIME_LIMIT_MS=${SOLVE_TIME_LIMIT_MS} · FAILED_STATES_CAP=${FAILED_STATES_CAP}`);
+    console.groupEnd();
 
     setDisplaySteps(steps);
     setStats({ steps, time: Math.round(endTime - startTime) });
@@ -1042,7 +1121,17 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // non è comparsa — un toast temporaneo colma il vuoto (stesso
       // meccanismo del toast di import, vedi useEffect su importMessage).
       setStatus("success");
-      setImportMessage({ kind: "error", text: t("piratiRestoredLastSolutionMessage", uiLang) });
+      // hitSmallCutoff: distingue un fallimento "pulito" (ogni alternativa
+      // provata ed esclusa: la soluzione richiesta non esiste per questi
+      // conteggi) da un fallimento dove almeno un ramo si è fermato per il
+      // tetto di tentativi SMALL_CUTOFF prima di esaurire davvero le
+      // alternative — in quel caso potrebbe esistere una soluzione che la
+      // ricerca non ha avuto modo di scoprire, messaggio diverso per non
+      // far credere all'utente che il problema sia insolubile per certo.
+      setImportMessage({
+        kind: "error",
+        text: t(hitSmallCutoff ? "piratiRestoredLastSolutionCutoffMessage" : "piratiRestoredLastSolutionMessage", uiLang),
+      });
 
       setIsSolving(false);
       stopSolvingRef.current = false;
@@ -1863,7 +1952,17 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                         else removeObstacle(row, col);
                       }}
                       className={cx(
-                        "rounded-sm border flex items-center justify-center transition-colors duration-200",
+                        // Niente transition-colors: la key di questa cella è
+                        // `${row},${col}` in coordinate DISPLAY, che si spostano
+                        // quando si entra/esce da 'add-expansion' (la griglia si
+                        // ridimensiona, minDisplayBlockRow/Col cambiano). React
+                        // non sa che una cella "è la stessa" tra un render e
+                        // l'altro in quel caso, quindi un'animazione di colore
+                        // qui appariva applicata alla cella sbagliata per un
+                        // istante — un lampo rosso "ostacolo senza X" che si
+                        // spostava durante il resize. Cambio di colore istantaneo,
+                        // nessuna transizione da animare erroneamente.
+                        "rounded-sm border flex items-center justify-center",
                         isValid
                           ? isObstacle
                             // Dopo un import gli ostacoli si possono solo rimuovere: solo le

@@ -1837,6 +1837,10 @@ const UI_STRINGS = {
     it: "Attendi la fine della ricerca (o premi Stop) prima di importare",
     en: "Wait for the search to finish (or press Stop) before importing",
   },
+  piratiRestoredLastSolutionCutoffMessage: {
+    it: "Nessuna soluzione trovata entro il limite di tentativi (potrebbe comunque esisterne una): ripristinata l'ultima disposizione valida",
+    en: "No solution found within the attempt limit (one may still exist): restored the last valid layout",
+  },
   piratiAreaExcessiveMessage: { it: "Area eccessiva", en: "Area exceeded" },
   piratiPopInsufficientMessage: { it: "Popolazione insufficiente", en: "Insufficient population" },
 
