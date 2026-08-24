@@ -14,7 +14,8 @@ import {
   Check,
   Wand2,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  Anchor
 } from "lucide-react";
 
 import type { Building } from "./data/buildings";
@@ -47,6 +48,7 @@ import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import ProfileHelpModal from "./components/ProfileHelpModal";
 import AboutModal from "./components/AboutModal";
+import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
 import { t, UI_LANGUAGES, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
@@ -2012,7 +2014,7 @@ export default function App() {
     setRenamingProfileId(null);
   };
 
-  const [activeTab, setActiveTab] = useState<"database" | "alleati" | "propria_citta" | "inventario">("database");
+  const [activeTab, setActiveTab] = useState<"database" | "alleati" | "propria_citta" | "inventario" | "pirati">("database");
   const buildingTableWrapperRef = useRef<HTMLDivElement | null>(null);
   const buildingTableScrollRef = useRef<HTMLDivElement | null>(null);
   const buildingTableFloatingScrollRef = useRef<HTMLDivElement | null>(null);
@@ -2936,7 +2938,11 @@ export default function App() {
     inventario: { ...DEFAULT_FILTERS },
   });
 
-  const currentFilters = tabFilters[activeTab];
+  // "pirati" non ha filtri propri (pagina placeholder, non ancora
+  // integrata) e non fa parte di TabType/tabFilters: fallback a
+  // DEFAULT_FILTERS quando activeTab è "pirati", così currentFilters
+  // resta sempre un TabFilters valido senza dover toccare TabType.
+  const currentFilters = activeTab === "pirati" ? DEFAULT_FILTERS : tabFilters[activeTab];
   const currentEventFilter: EventEntry | null = useMemo(
     () => currentFilters.showEventFilter
       ? EVENTS_LIST.find((event) => event.id === currentFilters.showEventFilter) ?? null
@@ -2957,20 +2963,26 @@ export default function App() {
       }));
       return;
     }
+    // updateFilter è chiamata solo da controlli UI presenti esclusivamente
+    // nelle tab con filtri reali (mai renderizzati in "pirati", pagina
+    // placeholder priva di TabFilters) — il cast è sicuro per costruzione.
+    const tab = activeTab as TabType;
     setTabFilters(prev => ({
       ...prev,
-      [activeTab]: {
-        ...prev[activeTab],
+      [tab]: {
+        ...prev[tab],
         [key]: value
       }
     }));
   };
 
   const toggleProdFilter = (key: string) => {
+    // Stesso ragionamento di updateFilter sopra: mai chiamata da "pirati".
+    const tab = activeTab as TabType;
     setTabFilters(prev => {
-      const current = new Set(prev[activeTab].prodFilter);
+      const current = new Set(prev[tab].prodFilter);
       if (current.has(key)) current.delete(key); else current.add(key);
-      return { ...prev, [activeTab]: { ...prev[activeTab], prodFilter: current } };
+      return { ...prev, [tab]: { ...prev[tab], prodFilter: current } };
     });
   };
 
@@ -3439,8 +3451,41 @@ export default function App() {
     }
   }, []);
 
+  // Handle imperativo del planner Pirati (vedi PiratiToolHandle): permette a
+  // handleWandClick di smistare l'import lì quando activeTab === "pirati",
+  // invece di creare un profilo città/inventario — un solo pulsante bacchetta
+  // in tutta l'app, nessuna icona duplicata dentro PiratiTool.
+  const piratiToolRef = useRef<PiratiToolHandle | null>(null);
+
   const handleWandClick = async (e: React.MouseEvent) => {
     e.preventDefault();
+
+    // Ramo Pirati: se siamo sulla tab "pirati", la bacchetta popola SOLO il
+    // planner dell'Insediamento (nessun profilo città/inventario creato/
+    // toccato). Lettura appunti dedicata: il payload cultural_outpost non
+    // passa da validateBookmarkletData (schema diverso, vedi bookmarklet.ts).
+    if (activeTab === "pirati") {
+      let text: string;
+      try {
+        text = await navigator.clipboard.readText();
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "NotAllowedError") {
+          alert(t("clipboardPermissionDeniedAlert", uiLang));
+        } else {
+          alert(t("clipboardReadErrorAlert", uiLang));
+        }
+        return;
+      }
+      if (!text) {
+        alert(t("clipboardEmptyAlert", uiLang));
+        return;
+      }
+      // Esito (successo/errore) mostrato SOLO dal toast interno di PiratiTool
+      // (importMessage, testo colorato nella toolbar): nessun alert() qui,
+      // sarebbe un doppione dello stesso messaggio.
+      piratiToolRef.current?.importFromClipboardText(text);
+      return;
+    }
 
     // 1) Legge e valida i dati dalla clipboard PRIMA di creare il profilo.
     //    Se manca anche solo uno dei 5 blocchi attesi, mostra un alert e termina
@@ -5506,7 +5551,14 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    // h-screen/overflow-hidden SOLO sulla tab Pirati: è il primo anello della
+    // catena di vincolo di altezza reale che il planner (PiratiTool) ha
+    // bisogno per ridimensionarsi correttamente — con min-h-screen (le altre
+    // tab, scroll pagina naturale) il div poteva sempre crescere oltre il
+    // viewport per accomodare il contenuto, quindi anche con min-h-0/
+    // overflow-hidden su main/section il planner finiva comunque per far
+    // scrollare l'INTERA pagina invece di ridimensionarsi internamente.
+    <div className={`bg-slate-950 text-slate-100 flex flex-col font-sans ${activeTab === "pirati" ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       {/* HEADER */}
       <header className="bg-slate-900/60 backdrop-blur-xl border-b border-amber-500/10 sticky top-0 z-40 pl-3 py-2 flex flex-col md:flex-row md:items-center md:justify-between">
         {/* Riga superiore mobile: logo + Export/Import. Su desktop: solo logo */}
@@ -5664,6 +5716,18 @@ export default function App() {
                 {importedAllies.length}
               </span>
             )}
+          </button>
+
+           <button
+             onClick={() => setActiveTab("pirati")}
+             className={`flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
+               activeTab === "pirati"
+                 ? "bg-slate-900/80 border border-amber-500/60 text-amber-400 shadow-lg shadow-amber-500/5"
+                 : "text-slate-400 hover:text-slate-300 border border-slate-500"
+             }`}
+           >
+             <Anchor size={16} className={activeTab === "pirati" ? "text-amber-400" : "text-slate-500"} />
+             {t("tabPirates", uiLang)}
           </button>
 
            <a
@@ -6089,9 +6153,14 @@ export default function App() {
         </section>
       )}
 
-      <main className="flex-1 px-2 pt-1 pb-4 flex flex-col gap-4">
+      {/* min-h-0/overflow-hidden SOLO sulla tab Pirati: il planner (dentro
+          PiratiTool) ha bisogno di un vincolo di altezza REALE propagato
+          dall'alto per potersi ridimensionare (vedi commento su gridWrapperSize
+          in PiratiTool.tsx) — le altre tab restano scrollabili come sempre
+          (nessun min-h-0/overflow-hidden), quindi la classe è condizionale. */}
+      <main className={`flex-1 px-2 pt-1 pb-4 flex flex-col gap-4 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
 
-        <section className="flex-1 flex flex-col gap-2">
+        <section className={`flex-1 flex flex-col gap-2 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
           
           {activeTab === "propria_citta" && cityEntityIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs">
@@ -7093,6 +7162,30 @@ export default function App() {
             </div>
           </>
           )}
+
+          {/* SEMPRE montato (mai smontato/rimontato al cambio tab), nascosto con
+              `hidden` (display:none) quando non è la tab attiva — a differenza di
+              tutte le altre sezioni qui sopra, che invece sono condizionate con
+              `{activeTab === "..." && (...)}` e quindi smontate quando non attive.
+              Motivo: PiratiTool tiene tutto il suo stato (edifici piazzati, import,
+              baseline, ecc.) in useState locali al componente. Smontare/rimontare
+              su ogni cambio tab distruggeva quello stato: importare l'Insediamento,
+              passare a un'altra tab e tornare su Pirati perdeva l'import. Tenerlo
+              sempre montato lo mantiene vivo senza serializzare nulla su
+              localStorage — `display:none` rimuove il nodo dal flusso di layout,
+              quindi non interferisce con le altre tab quando non è quella attiva.
+              Tool Insediamento dei Pirati, portato dal progetto standalone
+              "foe-pirati" (agosto 2026) e montato come modulo separato: vedi
+              data/piratiBuildings.ts, data/importCulturalOutpost.ts e il branch
+              'cultural_outpost' di data/bookmarklet.ts. Dentro <main><section>,
+              come tutte le altre tab (non più fuori), con lo stesso padding verso
+              l'header (pt-1 di main). h-full/min-h-0/flex-col: propaga il vincolo
+              di altezza reale di <main> (reso min-h-0/overflow-hidden solo su
+              questa tab, vedi sopra) fino a PiratiTool, che ne ha bisogno per il
+              ridimensionamento del planner (gridWrapperSize). */}
+          <div className={activeTab === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
+            <PiratiTool ref={piratiToolRef} uiLang={uiLang} />
+          </div>
 
         </section>
       </main>

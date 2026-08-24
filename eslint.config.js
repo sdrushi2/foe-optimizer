@@ -43,6 +43,11 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         ecmaFeatures: { jsx: true },
+        // Project service (type-aware linting): richiesto da regole che hanno
+        // bisogno del type-checker, come no-floating-promises sotto. Costo di
+        // performance accettabile per le dimensioni di questo progetto.
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
       globals: {
         ...globals.browser,
@@ -81,7 +86,7 @@ export default tseslint.config(
 
       // Promise non gestite (es. una async function chiamata senza await
       // né .catch): bug silenzioso difficile da notare a revisione.
-      "@typescript-eslint/no-floating-promises": "off", // richiede project service, attivare se serve
+      "@typescript-eslint/no-floating-promises": "error",
 
       // == vs === : tsc non lo controlla, ma è un classico bug silenzioso
       // su confronti come `x == null` (voluto) vs `x == "0"` (quasi sempre

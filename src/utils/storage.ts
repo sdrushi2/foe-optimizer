@@ -42,7 +42,8 @@ export function profileStorageKey(profileId: string, slot: "city" | "inventory" 
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = "";
   const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  // `i` è vincolato da `i < len` nel for: sempre in range.
+  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]!);
   return btoa(binary);
 }
 
@@ -163,7 +164,8 @@ export function getActiveProfileId(profiles: Profile[]): string {
   if (profiles.length === 0) return "";
   const saved = localStorage.getItem(ACTIVE_PROFILE_KEY);
   if (saved && profiles.find(p => p.id === saved)) return saved;
-  return profiles[0].id;
+  // `profiles.length === 0` gestito dal return anticipato sopra.
+  return profiles[0]!.id;
 }
 
 export function collectFoeLocalStorage(): Record<string, string> {

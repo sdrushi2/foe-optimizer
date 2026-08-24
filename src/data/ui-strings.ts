@@ -77,6 +77,10 @@ const UI_STRINGS = {
     it: "Alleati",
     en: "Allies",
   },
+  tabPirates: {
+    it: "Pirati",
+    en: "Pirates",
+  },
   tabHelp: {
     it: "Guida",
     en: "Help",
@@ -1769,6 +1773,201 @@ const UI_STRINGS = {
     it: "Nuova versione disponibile — aggiornamento in corso…",
     en: "New version available — updating…",
   },
+
+  // ── Tab Pirati: toolbar (components/PiratiTool.tsx) ──────────────────
+  piratiSolveLabel: { it: "Risolvi", en: "Solve" },
+  piratiStopLabel: { it: "Stop", en: "Stop" },
+  piratiAutoLabel: { it: "AUTO", en: "AUTO" },
+  piratiAutoTitle: {
+    it: "AUTO: quando aggiungi un edificio che non trova subito posto, prova a risolvere da sola; se non riesce, toglie quell'edificio.",
+    en: "AUTO: when you add a building that doesn't immediately find a spot, it tries to solve automatically; if it still fails, it removes that building.",
+  },
+  piratiUndoLabel: { it: "Undo", en: "Undo" },
+  piratiUndoTitle: {
+    it: "Torna allo stato subito dopo l'ultimo import (o allo stato vuoto se non hai ancora importato)",
+    en: "Revert to the state right after the last import (or the empty state if you haven't imported yet)",
+  },
+  piratiResetLabel: { it: "Reset", en: "Reset" },
+  piratiResetTitle: {
+    it: "Riporta tutto alla situazione di partenza, cancellando anche i dati importati",
+    en: "Reset everything to the starting state, also discarding imported data",
+  },
+  piratiAddExpLabel: { it: "+ EXP", en: "+ EXP" },
+  piratiRemoveExpLabel: { it: "− EXP", en: "− EXP" },
+  piratiAddExpTitle: {
+    it: "Sblocca una nuova espansione (area 4x4) dell'Insediamento",
+    en: "Unlock a new expansion (4x4 area) of the Outpost",
+  },
+  piratiAddExpNoneTitle: {
+    it: "Nessuna nuova espansione disponibile da sbloccare",
+    en: "No new expansion available to unlock",
+  },
+  piratiRemoveExpTitle: {
+    it: "Richiudi un'espansione (area 4x4) già sbloccata",
+    en: "Close a previously unlocked expansion (4x4 area)",
+  },
+  piratiRemoveExpNoneTitle: {
+    it: "Nessuna espansione richiudibile al momento",
+    en: "No expansion can be closed right now",
+  },
+  piratiStepsLabel: { it: "Stati", en: "States" },
+  piratiStepsCountLabel: {
+    it: (n: number) => `${n.toLocaleString()} passi`,
+    en: (n: number) => `${n.toLocaleString()} steps`,
+  },
+  piratiAreaLabel: { it: "Area", en: "Area" },
+  piratiAreaOccupiedTitle: { it: "Area occupata", en: "Occupied area" },
+  piratiAreaOccupiedWithObstaclesTitle: {
+    it: (n: number) => `Area occupata (-${n} per ostacoli)`,
+    en: (n: number) => `Occupied area (-${n} for obstacles)`,
+  },
+  piratiPopLabel: { it: "Pop", en: "Pop" },
+  piratiPopOccupiedTitle: { it: "Popolazione occupata", en: "Occupied population" },
+  piratiTimedOutMessage: {
+    it: "Tempo massimo superato, nessuna soluzione trovata",
+    en: "Maximum time exceeded, no solution found",
+  },
+  piratiInterruptedMessage: { it: "Ricerca interrotta", en: "Search interrupted" },
+  piratiFailedMessage: { it: "Nessuna soluzione valida", en: "No valid solution" },
+  piratiAreaExcessiveMessage: { it: "Area eccessiva", en: "Area exceeded" },
+  piratiPopInsufficientMessage: { it: "Popolazione insufficiente", en: "Insufficient population" },
+
+  // ── Tab Pirati: import (bacchetta magica, esiti runImport) ───────────
+  piratiImportInvalidJson: {
+    it: "JSON non valido: controlla di aver copiato tutto il testo dal bookmarklet.",
+    en: "Invalid JSON: make sure you copied all the text from the bookmarklet.",
+  },
+  piratiImportWrongMap: {
+    it: "Questi dati sono stati copiati dalla città, non dall'Insediamento dei Pirati. Vai sull'Insediamento e riprova.",
+    en: "This data was copied from the city, not from the Pirate Outpost. Go to the Outpost and try again.",
+  },
+  piratiImportInvalidStructure: {
+    it: "Il JSON non ha la struttura attesa (servono i campi 'areas' e 'entities').",
+    en: "The JSON doesn't have the expected structure (the 'areas' and 'entities' fields are required).",
+  },
+  piratiImportUnknownError: {
+    it: "Errore sconosciuto durante l'import.",
+    en: "Unknown error during import.",
+  },
+  piratiImportOutdatedBookmarklet: {
+    it: "Stai usando una bacchetta magica vecchia. Cancellala dalla barra dei preferiti e ricreala.",
+    en: "You're using an old magic wand bookmarklet. Delete it from your bookmarks bar and recreate it.",
+  },
+  piratiImportVisitOutpostFirst: {
+    it: "Devi prima visitare il tuo Insediamento dei Pirati almeno una volta in questa sessione di gioco, poi riprova.",
+    en: "You need to visit your Pirate Outpost at least once in this game session first, then try again.",
+  },
+  // Spezzata in prefix/suffix (invece di un'unica stringa) per incorniciare
+  // l'icona Wand2 nel flusso della frase, stesso pattern di noCityImportedYet
+  // + noImportedYetSuffix in App.tsx ("...in alto a sinistra [icona] per...").
+  piratiImportHowToHintPrefix: {
+    it: "Apri FoE, visita l'Insediamento dei Pirati, poi usa la bacchetta magica",
+    en: "Open FoE, visit your Pirate Outpost, then use the magic wand",
+  },
+  piratiImportHowToHintSuffix: {
+    it: "in alto a sinistra per importare i dati.",
+    en: "in the top left to import your data.",
+  },
+  piratiImportNoAreas: {
+    it: "Il payload non contiene nessuna area sbloccata (areas vuoto).",
+    en: "The payload contains no unlocked areas (areas is empty).",
+  },
+  piratiImportUnsupportedFaction: {
+    it: (faction: string) => `L'insediamento importato (${faction}) non è supportato: questo tool gestisce solo l'Insediamento dei Pirati.`,
+    en: (faction: string) => `The imported outpost (${faction}) is not supported: this tool only handles the Pirate Outpost.`,
+  },
+  piratiImportNoTownhall: {
+    it: "Nessun municipio dei Pirati (H_Pirates_Townhall) trovato nel payload: assicurati di essere sulla schermata dell'Insediamento dei Pirati quando usi la bacchetta.",
+    en: "No Pirate townhall (H_Pirates_Townhall) found in the payload: make sure you're on the Pirate Outpost screen when using the wand.",
+  },
+  piratiImportSuccess: {
+    it: (buildings: number, obstacles: number, expansions: number) =>
+      `Importati ${buildings} edifici, ${obstacles} celle ostacolo, ${expansions} espansioni extra.`,
+    en: (buildings: number, obstacles: number, expansions: number) =>
+      `Imported ${buildings} buildings, ${obstacles} obstacle cells, ${expansions} extra expansions.`,
+  },
+  piratiImportUnrecognizedNote: {
+    it: (count: number, ids: string) => ` (${count} tipo/i non riconosciuto/i: ${ids})`,
+    en: (count: number, ids: string) => ` (${count} unrecognized type(s): ${ids})`,
+  },
+  piratiClipboardEmpty: {
+    it: "Gli appunti sono vuoti: clicca prima il bookmarklet in game per copiare i dati.",
+    en: "The clipboard is empty: click the bookmarklet in-game first to copy the data.",
+  },
+
+  // ── Tab Pirati: griglia/tooltip ────────────────────────────────────────
+  piratiCellRemoveObstacleTitle: { it: "Clicca per rimuovere", en: "Click to remove" },
+  piratiCellAddObstacleTitle: { it: "Clicca per segnare come ostacolo", en: "Click to mark as obstacle" },
+  piratiMoveTownhallTitle: {
+    it: "Trascina in un area libera per spostare",
+    en: "Drag to a free area to move",
+  },
+  piratiMoveOrSwapTitle: {
+    it: "Trascina per spostare o scambiare",
+    en: "Drag to move or swap",
+  },
+  piratiDeleteBuildingTitle: { it: "Elimina edificio", en: "Delete building" },
+  piratiExpansionObstacleTitle: {
+    it: "Ostacolo presente in questa espansione (da un import)",
+    en: "Obstacle present in this expansion (from an import)",
+  },
+  piratiExpansionAdd4x4: { it: "+ 4x4", en: "+ 4x4" },
+  piratiExpansionRemoveLabel: { it: "Rimuovi", en: "Remove" },
+  piratiExpansionLockedLabel: { it: "Vincolo", en: "Locked" },
+  piratiExpansionLockedTitle: {
+    it: "Rimuoverla isolerebbe altre espansioni dal resto della mappa.",
+    en: "Removing it would isolate other expansions from the rest of the map.",
+  },
+  piratiAddExpansionHint: {
+    it: "Seleziona col mouse uno slot 4x4 verde per sbloccarlo. Le ❌ semitrasparenti mostrano gli ostacoli già presenti in quell'area (da un import).",
+    en: "Click a green 4x4 slot to unlock it. The semi-transparent ❌ show obstacles already present in that area (from an import).",
+  },
+  piratiRemoveExpansionHint: {
+    it: "Seleziona col mouse un'espansione rossa per rimuoverla.",
+    en: "Click a red expansion to remove it.",
+  },
+
+  // ── Tab Pirati: pannello edifici (categorie) ──────────────────────────
+  piratiCategoryResidential: { it: "🏠 Edifici residenziali", en: "🏠 Residential buildings" },
+  piratiCategoryGoods: { it: "🛢️ Edifici per i beni", en: "🛢️ Goods buildings" },
+  piratiCategoryDiplomacyDoubloons: { it: "🤝 Diplomazia e Dobloni", en: "🤝 Diplomacy and Doubloons" },
+  piratiCategoryDiplomacyOnly: { it: "🤝 Solo Diplomazia", en: "🤝 Diplomacy only" },
+
+  // ── Tab Pirati: nomi edifici (nome completo / etichetta breve in griglia) ──
+  // shortName è pensato per restare leggibile dentro la cella della griglia
+  // (spazio minimo): non è sempre la prima parola del nome completo, a
+  // differenza del vecchio comportamento (name.split(" ")[0]) — scelto a
+  // mano per lingua così anche l'inglese resta riconoscibile.
+  piratiBuildingMunicipioName: { it: "Municipio", en: "Townhall" },
+  piratiBuildingMunicipioShort: { it: "Municipio", en: "Townhall" },
+  piratiBuildingPescatoreName: { it: "Pesci", en: "Fish" },
+  piratiBuildingPescatoreShort: { it: "Pesci", en: "Fish" },
+  piratiBuildingSpezieName: { it: "Spezie", en: "Spices" },
+  piratiBuildingSpezieShort: { it: "Spezie", en: "Spices" },
+  piratiBuildingRumName: { it: "Rum", en: "Rum" },
+  piratiBuildingRumShort: { it: "Rum", en: "Rum" },
+  piratiBuildingCannoniName: { it: "Cannoni", en: "Cannons" },
+  piratiBuildingCannoniShort: { it: "Cannoni", en: "Cannons" },
+  piratiBuildingAmacaName: { it: "Amaca", en: "Hammock" },
+  piratiBuildingAmacaShort: { it: "Amaca", en: "Hammock" },
+  piratiBuildingCapannoName: { it: "Capanno", en: "Small Shed" },
+  piratiBuildingCapannoShort: { it: "Capanno", en: "Small Shed" },
+  piratiBuildingBaraccaName: { it: "Baracca", en: "Barrack" },
+  piratiBuildingBaraccaShort: { it: "Baracca", en: "Barrack" },
+  piratiBuildingMoloName: { it: "Molo Piccolo", en: "Small Pier" },
+  piratiBuildingMoloShort: { it: "Molo", en: "S. Pier" },
+  piratiBuildingMoloLungoName: { it: "Molo Lungo", en: "Long Pier" },
+  piratiBuildingMoloLungoShort: { it: "M. Lungo", en: "Long Pier" },
+  piratiBuildingMoloLargoName: { it: "Molo Largo", en: "Wide Pier" },
+  piratiBuildingMoloLargoShort: { it: "M. Largo", en: "W. Pier" },
+  piratiBuildingGrandeMoloName: { it: "Grande Molo", en: "Big Pier" },
+  piratiBuildingGrandeMoloShort: { it: "Gr. Molo", en: "Big Pier" },
+  piratiBuildingImbarcazioneName: { it: "Imbarcazione", en: "Small Cutter" },
+  piratiBuildingImbarcazioneShort: { it: "Imbarc.", en: "Small Cutter" },
+  piratiBuildingBrigantinoName: { it: "Brigantino", en: "Red Sailed Brig" },
+  piratiBuildingBrigantinoShort: { it: "Brigantino", en: "Red Sailed Brig" },
+  piratiBuildingGaleoneName: { it: "Galeone", en: "Galleon" },
+  piratiBuildingGaleoneShort: { it: "Galeone", en: "Galleon" },
 } as const;
 
 /** Stringhe identiche in italiano e inglese: una sola entry, niente da

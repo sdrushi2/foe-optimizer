@@ -326,7 +326,7 @@ per i browser senza `navigator.clipboard`).
 standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `width`,
 `length` (ricostruibili al default 4) e `__class__`.
 
-**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`, attualmente **3**).**
+**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`, attualmente **4**).**
 Il payload include un campo `_v` la cui versione corrente è la costante esportata
 `CURRENT_BOOKMARKLET_VERSION`, **interpolata** direttamente dentro `BOOKMARKLET_JS`
 (nessun numero duplicato da tenere sincronizzato a mano). All'import, dopo
@@ -341,6 +341,15 @@ MODO in cui il bookmarklet legge i dati dal gioco, non per modifiche cosmetiche.
   struttura del payload no.
 - **v3** (agosto 2026): riscrittura universale descritta sopra — supporto Forge
   Hammer, import città altrui, rimozione del `try/catch` esterno.
+- **v4** (agosto 2026): cattura UNIFICATA città + Insediamento dei Pirati in un
+  solo payload (vedi §6bis) — sostituisce il branch v3.1 con `return`
+  anticipato che catturava solo l'uno o l'altro a seconda della mappa attiva.
+- **v4.1** (agosto 2026, stesso `_v: 4`): hardening completo — `try/catch`
+  esterno su tutta la costruzione del payload (prima assente, un campo
+  mancante lanciava un `TypeError` non gestito e lo script moriva
+  silenziosamente) + fallback su ogni campo annidato letto dal client di
+  gioco. Nessun cambio di struttura dati, solo robustezza. Dettagli
+  completi in `docs/SKILL.md`.
 
 L'annuncio one-off dismissibile usato per v2 (`BOOKMARKLET_V2_ANNOUNCEMENT_ID`,
 persistito in `DISMISSED_ANNOUNCEMENTS_KEY`) è stato **rimosso interamente** insieme a
@@ -416,7 +425,55 @@ livello UI traduce.
 > …'`, `'Magic wand error: …'`) sono in inglese fisso. Girano nella pagina di Forge of
 > Empires, fuori dal contesto dell'app, quindi non hanno accesso a `t()`/`uiLang`; si
 > attivano solo in casi d'errore rari (copia clipboard fallita). Si possono modificare
-> liberamente — vedi la precisazione sull'invariante in §6.1.
+> liberamente — vedi la precisazione sull'invariante in §6.1. Il branch
+> `cultural_outpost` aggiunto in v3.1 (agosto 2026, vedi §6bis) ha un terzo `alert()`
+> dello stesso tipo (`'Errore: '+e.message`, in italiano nel branch storico portato dal
+> tool Pirati) — stessa logica: gira in pagina, fuori da `t()`.
+
+---
+
+## 6bis. Tab "Pirati": planner Insediamento dei Pirati (agosto 2026)
+
+Quinta tab di navigazione (icona `Anchor`, tra "Alleati" e "Guida") che monta il tool
+standalone "foe-pirati" come modulo integrato: calcola il piazzamento ottimale degli
+edifici nell'Insediamento dei Pirati (mappa di gioco `cultural_outpost`), con un solver
+a backtracking (Zobrist hashing per la memoization, stesso stile del progetto
+`foe-city-builder`).
+
+**File**: `src/data/piratiBuildings.ts` (dominio puro: tipi, costanti griglia/solver,
+i 14 edifici con `cityentityId` reali — nessuna dipendenza React), `src/data/
+importCulturalOutpost.ts` (converte il payload assoluto del bookmarklet in coordinate
+relative del tool), `src/components/PiratiTool.tsx` (il componente: state, solver,
+drag&drop, JSX — montato con `forwardRef`, espone `importFromClipboardText` via
+`useImperativeHandle`).
+
+**Bookmarklet condiviso, cattura UNIFICATA (v4)**: `BOOKMARKLET_JS` in
+`bookmarklet.ts` cattura SEMPRE il payload città/inventario (`BookmarkletData`, come
+v3) e, in più, se l'utente ha visitato il proprio Insediamento nella sessione di gioco
+corrente (`CityMap.CulturalOutpost` popolato, e non in visita da un altro giocatore),
+annida anche i dati Pirati in `d.pirateOutpost` nello STESSO payload — un solo click,
+un solo JSON. Sostituisce la v3.1 (storico: branch `cultural_outpost` anteposto con un
+`return` anticipato, che catturava SOLO l'uno o l'altro a seconda della mappa attiva e
+rompeva l'import città se lo si tentava mentre si era sull'Insediamento). Non esiste
+una seconda bacchetta magica: `PiratiTool` non ha alcun pulsante bookmarklet proprio.
+`handleWandClick` nell'header globale fa branching su `activeTab`: su `"pirati"`
+importa nel planner (via `piratiToolRef.current.importFromClipboardText`, che estrae
+`payload.pirateOutpost` dal payload unificato), altrimenti crea un profilo
+città/inventario come prima (che ignora `pirateOutpost`, non tra i campi validati da
+`validateBookmarkletData`).
+
+**i18n completa (agosto 2026)**: `PiratiTool` riceve `uiLang` come prop e traduce
+tutto — toolbar, messaggi di stato/errore/import, tooltip, nomi edifici — con lo
+stesso `t()`/`UI_STRINGS` del resto dell'app (prefisso chiavi `pirati*`). Ogni
+edificio ha `nameKey` (nome completo) e `shortNameKey` (etichetta breve per la cella
+della griglia, scelta a mano per lingua, non derivata da `name.split(" ")[0]`). Gli
+errori di `importCulturalOutpostPayload` usano un `code` stabile
+(`ImportCulturalOutpostFailure.detail`, pattern identico a
+`BookmarkletValidationError`) invece di un messaggio già scritto in una lingua.
+
+Dettagli completi (coordinate a due spazi Storage/Display, layout responsive senza
+vincolo di altezza, montaggio nel layout `<main><section>`) in `docs/SKILL.md`,
+sezione "Tab 'Pirati'".
 
 ---
 
@@ -689,22 +746,24 @@ più dover toccare la pipeline Python né rigenerare il CSV con una nuova
 colonna dedicata per ognuno.
 
 `Building.flags?: number` — valore intero grezzo, `undefined` se
-l'edificio non ha quel campo nel MainParser. Costanti bitmask in
-`data/buildings.ts`: `FLAG_SELLABLE` (bit 0, isSellable), `FLAG_MOVABLE`
-(bit 1 — attenzione, NON è "richiede strada": è la proprietà `movable`
-del costruttore client `Mob`/`CityMapEntityPlacement`, un concetto di
-piazzamento/collisione fisico generale di cui la strada è solo un
-sotto-caso; diverge da `requires_road()`/colonna `Road` su 505/1370
-edifici), `FLAG_ERA_MUTABLE` (bit 2, "auto-aging"), `FLAG_PLUNDERABLE`
-(bit 3, isPlunderable), `FLAG_STORABLE` (bit 4, isStorable — bug Inno
+l'edificio non ha quel campo nel MainParser. Costanti bitmask raggruppate
+nell'oggetto `KNOWN_FLAGS` in `data/buildings.ts` (non `export`, usate
+solo internamente al file — vedi §SKILL.md per il perché del
+raggruppamento invece di 6 `const` isolate): `SELLABLE` (bit 0,
+isSellable), `MOVABLE` (bit 1 — attenzione, NON è "richiede strada": è la
+proprietà `movable` del costruttore client `Mob`/`CityMapEntityPlacement`,
+un concetto di piazzamento/collisione fisico generale di cui la strada è
+solo un sotto-caso; diverge da `requires_road()`/colonna `Road` su
+505/1370 edifici), `ERA_MUTABLE` (bit 2, "auto-aging"), `PLUNDERABLE`
+(bit 3, isPlunderable), `STORABLE` (bit 4, isStorable — bug Inno
 FOE-96714 su 3 edifici Ascended FALL21/FALL26 con bit4 spento ma resi
 storable in game, confermato RISOLTO ad agosto 2026 verificando il
 MainParser del 18/8: nessuna eccezione nota residua),
-`FLAG_NO_RUSH` (bit 5, fspDisabled). Nomi/semantiche ufficiali confermate
+`NO_RUSH` (bit 5, fspDisabled). Nomi/semantiche ufficiali confermate
 da Linnun leggendo il codice client minificato, non solo dedotte
 empiricamente — vedi buildings.py (commento sopra `extract_flags()`) per
-la mappa completa e la storia dell'indagine. Helper generico:
-`hasFlag(flags, FLAG_X): boolean`.
+la mappa completa e la storia dell'indagine. Helper generico (anch'esso
+non `export`): `hasFlag(flags, KNOWN_FLAGS.X): boolean`.
 
 Getter derivati (non campi salvati sull'oggetto — ricalcolati al volo da
 `b.flags`, stesso comportamento della vecchia proprietà booleana

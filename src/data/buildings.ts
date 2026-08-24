@@ -6,21 +6,34 @@ import { isUniqueBuildingId } from "./uniqueBuildings";
  *  confermati da Linnun leggendo il codice client minificato (non solo per
  *  deduzione empirica) — vedi buildings.py in RECUPERO DATI (commento sopra
  *  extract_flags()) per la mappa completa e la storia dell'indagine. Solo
- *  FLAG_NO_RUSH è consumato oggi (vedi getter `noRush` sotto); gli altri
- *  sono qui pronti per quando servirà un secondo badge/filtro, senza dover
- *  più toccare la pipeline Python né rigenerare il CSV.
- *  bit 0/1/4 sono presenti sulla stragrande maggioranza degli edifici
- *  (99.9%/100%/92.6%): poco utili come discriminanti da soli. */
-export const FLAG_SELLABLE = 1;      // bit 0 — isSellable
-export const FLAG_MOVABLE = 2;       // bit 1 — isMovable
-export const FLAG_ERA_MUTABLE = 4;   // bit 2 — isEraMutable ("auto-aging")
-export const FLAG_PLUNDERABLE = 8;   // bit 3 — isPlunderable
-export const FLAG_STORABLE = 16;     // bit 4 — isStorable
-export const FLAG_NO_RUSH = 32;      // bit 5 — fspDisabled ("Instant production finish disabled")
+ *  ERA_MUTABLE e NO_RUSH sono consumati oggi (vedi getter
+ *  `noRush`/`isEraMutable` sotto, che leggono `KNOWN_FLAGS.ERA_MUTABLE`/
+ *  `KNOWN_FLAGS.NO_RUSH`); gli altri sono qui pronti per quando servirà un
+ *  secondo badge/filtro, senza dover più toccare la pipeline Python né
+ *  rigenerare il CSV. bit 0/1/4 sono presenti sulla stragrande maggioranza
+ *  degli edifici (99.9%/100%/92.6%): poco utili come discriminanti da soli.
+ *  Raggruppati in un oggetto (invece di 6 `const` separate) apposta: TypeScript
+ *  segnala errore su una `const` MAI letta da nessuno (non solo un warning
+ *  come knip su un `export` inutilizzato) — i 4 bit ancora "di riserva" non
+ *  sono letti da nessun punto del codice, quindi come costanti isolate
+ *  romperebbero la build. Come proprietà di un oggetto restano vive,
+ *  documentate e consultabili (`KNOWN_FLAGS.SELLABLE` ecc.) senza quell'obbligo.
+ *  Niente `export`: nessun altro modulo importa questi bit — rimosso durante
+ *  la pulizia knip (agosto 2026). Se in futuro serve un secondo badge/filtro
+ *  basato su uno di questi bit, va semplicemente riaggiunto `export`. */
+const KNOWN_FLAGS = {
+  SELLABLE: 1,      // bit 0 — isSellable
+  MOVABLE: 2,       // bit 1 — isMovable
+  ERA_MUTABLE: 4,   // bit 2 — isEraMutable ("auto-aging")
+  PLUNDERABLE: 8,   // bit 3 — isPlunderable
+  STORABLE: 16,     // bit 4 — isStorable
+  NO_RUSH: 32,      // bit 5 — fspDisabled ("Instant production finish disabled")
+} as const;
 
 /** True se `flags` ha il bit `flag` acceso. `flags` undefined (edificio
- *  senza AllAge.flags nel MainParser) → sempre false per qualsiasi bit. */
-export function hasFlag(flags: number | undefined, flag: number): boolean {
+ *  senza AllAge.flags nel MainParser) → sempre false per qualsiasi bit.
+ *  Niente `export`: usata solo all'interno di questo file. */
+function hasFlag(flags: number | undefined, flag: number): boolean {
   return flags !== undefined && (flags & flag) !== 0;
 }
 
@@ -126,11 +139,11 @@ export interface Building {
   /** Valore intero grezzo di components.AllAge.flags.flags (colonna CSV
    *  "Flags", agosto 2026 — prima della colonna dedicata "NoRush" booleana).
    *  undefined se l'edificio non ha quel campo nel MainParser. Non leggere
-   *  direttamente: usare `hasFlag(b.flags, FLAG_X)` o il getter `noRush`
-   *  sotto. Salvare il bitmask completo invece di una singola colonna
-   *  derivata permette di gestire altri bit (es. FLAG_ERA_MUTABLE) senza
-   *  toccare più la pipeline Python — vedi il commento sopra le costanti
-   *  FLAG_* a inizio file. */
+   *  direttamente: usare `hasFlag(b.flags, KNOWN_FLAGS.X)` o il getter
+   *  `noRush` sotto. Salvare il bitmask completo invece di una singola
+   *  colonna derivata permette di gestire altri bit (es.
+   *  KNOWN_FLAGS.ERA_MUTABLE) senza toccare più la pipeline Python — vedi
+   *  il commento sopra KNOWN_FLAGS a inizio file. */
   flags?: number;
   fragments: string;
 }
@@ -138,26 +151,27 @@ export interface Building {
 /** True se la produzione dell'edificio NON può essere terminata all'istante
  *  con un item "Termina produzione" (es. FSP/Frammenti di Termina produzione
  *  speciale) — in game: "Instant production finish disabled". Derivato da
- *  `b.flags` (bit 5/FLAG_NO_RUSH), non un campo salvato sull'oggetto: stesso
- *  identico comportamento di prima (era un booleano valorizzato una sola
- *  volta al parsing, nessuna logica di override città — vedi buildings.py
- *  extract_flags() per il criterio di derivazione lato pipeline, validato in
- *  game), solo ricalcolato al volo da `flags` invece di essere precalcolato.
- *  Nome mantenuto (non `hasFlag(b.flags, FLAG_NO_RUSH)` inline) per non
- *  dover toccare tutti i punti d'uso in App.tsx. */
+ *  `b.flags` (bit 5/KNOWN_FLAGS.NO_RUSH), non un campo salvato sull'oggetto:
+ *  stesso identico comportamento di prima (era un booleano valorizzato una
+ *  sola volta al parsing, nessuna logica di override città — vedi
+ *  buildings.py extract_flags() per il criterio di derivazione lato
+ *  pipeline, validato in game), solo ricalcolato al volo da `flags` invece
+ *  di essere precalcolato. Nome mantenuto (non
+ *  `hasFlag(b.flags, KNOWN_FLAGS.NO_RUSH)` inline) per non dover toccare
+ *  tutti i punti d'uso in App.tsx. */
 export function noRush(b: Pick<Building, "flags">): boolean {
-  return hasFlag(b.flags, FLAG_NO_RUSH);
+  return hasFlag(b.flags, KNOWN_FLAGS.NO_RUSH);
 }
 
 /** True se l'edificio segue automaticamente l'era della città ("auto-aging":
  *  si aggiorna da solo quando il giocatore entra in una nuova era, senza
  *  bisogno di kit di aggiornamento manuale). Derivato da `b.flags` (bit 2/
- *  FLAG_ERA_MUTABLE), stesso pattern di `noRush` sopra — nome ufficiale
- *  confermato da Linnun leggendo il codice client, validato empiricamente
- *  su un campione controllato di 18 edifici auto-aging noti vs 33
- *  non-auto-aging (zero eccezioni) prima ancora della conferma. */
+ *  KNOWN_FLAGS.ERA_MUTABLE), stesso pattern di `noRush` sopra — nome
+ *  ufficiale confermato da Linnun leggendo il codice client, validato
+ *  empiricamente su un campione controllato di 18 edifici auto-aging noti
+ *  vs 33 non-auto-aging (zero eccezioni) prima ancora della conferma. */
 export function isEraMutable(b: Pick<Building, "flags">): boolean {
-  return hasFlag(b.flags, FLAG_ERA_MUTABLE);
+  return hasFlag(b.flags, KNOWN_FLAGS.ERA_MUTABLE);
 }
 
 // Funzioni di utilità per il parsing del CSV
@@ -300,7 +314,9 @@ export function parseBuildingsCsv(csv: string): Building[] {
 
   const getNumber = (parts: string[], name: string) => {
     const index = columnIndex(name);
-    return parseCsvNumber(index >= 0 ? parts[index] : "");
+    // parts[index] può mancare se questa riga è più corta dell'header
+    // (CSV malformato): "" fa collassare parseCsvNumber sul suo default.
+    return parseCsvNumber(index >= 0 ? (parts[index] ?? "") : "");
   };
 
   // Quali lingue di LANGUAGES hanno davvero una colonna in questo CSV.
@@ -317,9 +333,11 @@ export function parseBuildingsCsv(csv: string): Building[] {
   const buildings = rows.slice(1).map((parts, index): Building => {
     const cityEntityId = (parts[0] || "").trim();
     const size = getText(parts, "Size", "1x1");
-    // Calcolo area una tantum
+    // Calcolo area una tantum. Se "size" non contiene "x" (valore CSV
+    // malformato, es. solo un numero), lo split produce un solo elemento:
+    // wStr resta valido, hStr manca e collassa nel fallback "|| 1" sotto.
     const [wStr, hStr] = size.toLowerCase().split("x");
-    const area = (parseInt(wStr) || 1) * (parseInt(hStr) || 1);
+    const area = (parseInt(wStr ?? "") || 1) * (parseInt(hStr ?? "") || 1);
     
     // Calcolo strada: se l'edificio la richiede (valore > 0 nel CSV), 
     // il valore effettivo è la metà del minimo tra larghezza e altezza.

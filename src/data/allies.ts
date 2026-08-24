@@ -295,8 +295,11 @@ export function getComputedAllyStats(ally: Ally, level: number, inheritedAlliesM
   const inherited = inheritedAlliesMap.get(`${ally.id}__${ally.rarity}`) ?? [ally];
 
   // Helper: somma il valore della categoria `key` all'indice `i` su tutti gli alleati ereditati.
+  // `i` è tipizzato 0|1|2|3 (non number generico): general/gbg/sped/iq sono
+  // tuple a 4 elementi fissi (atk_a/def_a/atk_d/def_d), mai indicizzate fuori
+  // range — il tipo letterale lo rende esplicito anche a TypeScript.
   type StatCategory = "general" | "gbg" | "sped" | "iq";
-  const sumCategory = (key: StatCategory, i: number) =>
+  const sumCategory = (key: StatCategory, i: 0 | 1 | 2 | 3) =>
     inherited.reduce((s, a) => s + getAllyStatValue(a[key][i], a, level), 0);
 
   const cat = (key: StatCategory): [number, number, number, number] =>

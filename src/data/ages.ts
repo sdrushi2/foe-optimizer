@@ -31,7 +31,8 @@ function parseAgesCsv(csvText: string): Age[] {
   const lines = csvText.replace(/^\uFEFF/, "").split(/\r?\n/);
   const ages: Age[] = [];
 
-  const header = lines[0].split(";").map(h => h.trim().toLowerCase());
+  // String.split produce sempre almeno 1 elemento (anche "" per input vuoto).
+  const header = lines[0]!.split(";").map(h => h.trim().toLowerCase());
   const colIndex = (name: string) => header.indexOf(name.toLowerCase());
   const idCol = colIndex("id");
   const ageCol = colIndex("age");
@@ -43,11 +44,15 @@ function parseAgesCsv(csvText: string): Age[] {
     .filter(l => l.idx >= 0);
 
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
+    // `i` è vincolato da `i < lines.length` nel for: sempre in range.
+    const line = lines[i]!.trim();
     if (!line) continue;
     const parts = line.split(";");
-    const idStr = idCol >= 0 ? parts[idCol] : parts[0];
-    const age = (ageCol >= 0 ? parts[ageCol] : parts[1])?.trim();
+    // Riga più corta dell'header atteso (CSV malformato): idStr/age
+    // diventano undefined, parseInt("") è NaN, e il controllo sotto scarta
+    // la riga — stesso comportamento runtime di prima, ora esplicito nei tipi.
+    const idStr = (idCol >= 0 ? parts[idCol] : parts[0]) ?? "";
+    const age = ((ageCol >= 0 ? parts[ageCol] : parts[1]) ?? "").trim();
     const id = parseInt(idStr, 10);
     if (!Number.isFinite(id) || !age) continue;
 
@@ -88,7 +93,8 @@ if (new Set(AGES.map(a => a.age)).size !== AGES.length) {
 }
 
 /** Era massima: quella con l'id più alto presente nel CSV. */
-const MAX_AGE: Age = AGES[AGES.length - 1];
+// Il fail-fast su AGES.length === 0 sopra garantisce l'array non vuoto.
+const MAX_AGE: Age = AGES[AGES.length - 1]!;
 
 /** FALLBACK ERA: codice dell'era massima, usato ovunque serva un'era di default. */
 export const FALLBACK_ERA: string = MAX_AGE.age;

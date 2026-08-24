@@ -2,6 +2,7 @@ import { RotateCcw, Download } from "lucide-react";
 import type { CityMapBuilding, CityMapBounds } from "../data/cityMap";
 import type { UnlockedArea } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
+import { parseNumberPair } from "../data/piratiBuildings";
 
 /** Colori per categoria edificio: condivisi tra il render PNG "a griglia"
  *  (renderCityMapPng) e il rendering SVG a schermo (getBuildingColor) —
@@ -233,7 +234,7 @@ export default function CityMapView({
   const freeCells: Array<[number, number]> = [];
   cityMapUnlockedCells.forEach((cellKey) => {
     if (!cityMapGrid.has(cellKey)) {
-      const [cx, cy] = cellKey.split(",").map(Number);
+      const [cx, cy] = parseNumberPair(cellKey, ",");
       freeCells.push([cx, cy]);
     }
   });
@@ -289,7 +290,12 @@ export default function CityMapView({
   // usare solo le celle sbloccate ha lasciato fuori edifici reali.
   let realMinX = Infinity, realMinY = Infinity, realMaxX = -Infinity, realMaxY = -Infinity;
   const accumulateBounds = (gx: number, gy: number, w: number, h: number) => {
-    for (const [px, py] of [[gx, gy], [gx + w, gy], [gx, gy + h], [gx + w, gy + h]]) {
+    // Tipizzato esplicitamente come tupla [number, number][]: senza questa
+    // annotazione l'array letterale è inferito number[][], e la
+    // destrutturazione [px, py] diventerebbe number | undefined nonostante
+    // i 4 elementi (i 4 angoli del rettangolo) siano tutti fissi qui sopra.
+    const corners: Array<[number, number]> = [[gx, gy], [gx + w, gy], [gx, gy + h], [gx + w, gy + h]];
+    for (const [px, py] of corners) {
       const p = transformPoint(px, py);
       if (p.x < realMinX) realMinX = p.x;
       if (p.y < realMinY) realMinY = p.y;
@@ -298,7 +304,7 @@ export default function CityMapView({
     }
   };
   cityMapUnlockedCells.forEach((cellKey) => {
-    const [cx, cy] = cellKey.split(",").map(Number);
+    const [cx, cy] = parseNumberPair(cellKey, ",");
     accumulateBounds((cx - minX) * CELL, (cy - minY) * CELL, CELL, CELL);
   });
   cityMapBuildings.forEach((b) => {
