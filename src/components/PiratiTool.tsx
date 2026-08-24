@@ -190,6 +190,22 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // c'è un import da cui tornare indietro).
   const [hasImportedCity, setHasImportedCity] = useState(false);
 
+  // Ultima disposizione "risolta" nota (indipendente dalla baseline, che
+  // cambia solo con import/Reset/Undo, anche se le due coincidono sempre
+  // subito dopo uno di quei tre eventi): aggiornata a ogni successo del
+  // solver O quando una modifica manuale (+/-) produce comunque un layout
+  // valido, usata per riportare buildings+placements allo stato coerente
+  // precedente quando un Risolvi successivo NON trova soluzione — altrimenti
+  // la mappa resterebbe quella vecchia ma i conteggi edifici (già modificati
+  // dall'utente prima di premere Risolvi) risulterebbero disallineati dalla
+  // disposizione mostrata a schermo. Mai null dopo il mount: lo stato vuoto
+  // iniziale è "risolto" per definizione (nessun edificio da piazzare oltre
+  // al municipio), stesso principio dell'import/Reset/Undo più sotto.
+  const lastSolvedRef = useRef<{ buildings: BuildingType[]; placements: Placement[] }>({
+    buildings: INITIAL_BUILDINGS.map((b) => ({ ...b })),
+    placements: INITIAL_PLACEMENTS.map((p) => ({ ...p })),
+  });
+
   const stopSolvingRef = useRef(false);
   // true quando la ricerca si è fermata da sola per aver superato il tempo
   // massimo (vedi SOLVE_TIME_LIMIT_MS), non perché l'utente ha premuto Stop:
@@ -474,6 +490,19 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // pulsante bacchetta dentro PiratiTool stesso — un solo pulsante nell'app,
   // che qui riceve solo il testo già letto dagli appunti dal chiamante.
   const runImport = (rawText: string): { kind: "success" | "error"; text: string } => {
+    // Guard critico: runImport è raggiungibile dalla bacchetta magica nell'header
+    // globale (App.tsx), che non sa nulla dello stato isSolving interno a questo
+    // componente. Senza questo controllo, un import durante una ricerca in corso
+    // sovrascriverebbe buildings/placements/obstacles mentre solve() sta ancora
+    // lavorando su uno snapshot precedente catturato nella sua closure — al termine
+    // della ricerca, il risultato (calcolato su dati ormai superati) sovrascriverebbe
+    // di nuovo lo stato, vanificando l'import appena fatto in modo silenzioso.
+    if (isSolving) {
+      const message = { kind: "error" as const, text: t("piratiImportBlockedWhileSolving", uiLang) };
+      setImportMessage(message);
+      return message;
+    }
+
     let payload: unknown;
     try {
       payload = JSON.parse(rawText);
@@ -600,6 +629,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       importedExpansions: nextExpansions,
       importedObstacleCells: nextObstacles,
     });
+    // Un import riuscito è "risolto" per definizione (rispecchia la città
+    // reale del giocatore): diventa subito l'ultima soluzione valida, così
+    // anche un primissimo Risolvi fallito (prima di qualsiasi successo del
+    // solver in questa sessione) ha comunque un posto coerente dove tornare,
+    // invece di lasciare lo stato "failed" senza alcun ripristino possibile.
+    lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
     setHasImportedCity(true);
 
     const unrecognizedNote = result.unrecognizedCityentityIds.length > 0
@@ -632,10 +667,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // ancora quella VECCHIA (senza l'edificio appena aggiunto). Passare
   // esplicitamente lo stato che il chiamante già conosce evita di risolvere sui
   // dati sbagliati invece di aspettare un re-render.
-  const solve = useCallback(async (buildingsOverride?: BuildingType[]) => {
+  const solve = useCallback(async (buildingsOverride?: BuildingType[]): Promise<{ found: boolean; restored: boolean }> => {
     if (isSolving) {
       stopSolvingRef.current = true;
-      return;
+      return { found: true, restored: false };
     }
 
     setIsSolving(true);
@@ -968,22 +1003,66 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
 
     const wasInterrupted = stopSolvingRef.current;
     if (wasInterrupted) {
+      // Stop manuale (o timeout): la ricerca lavora su variabili locali, non
+      // ha mai toccato lo state, quindi la mappa a schermo è già quella di
+      // prima — ma i conteggi (buildings) possono essere stati modificati
+      // dall'utente subito prima di premere Risolvi. Stesso ripristino del
+      // ramo "nessuna soluzione" sotto: si torna sempre interamente
+      // (conteggi inclusi) all'ultima soluzione valida nota — lastSolvedRef
+      // non è mai vuoto (vedi dichiarazione), quindi il ripristino avviene
+      // sempre, invece di lasciare i conteggi nuovi disallineati dalla mappa.
+      setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
+      setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
+      setImportMessage({ kind: "error", text: t("piratiRestoredLastSolutionMessage", uiLang) });
       setStatus("interrupted");
+      setIsSolving(false);
+      stopSolvingRef.current = false;
+      // Un'interruzione manuale non conta come fallimento per AUTO (vedi
+      // commento sul return finale), e il ripristino appena fatto non va
+      // sovrascritto dal decremento extra che il chiamante farebbe altrimenti
+      // — stesso motivo del ramo 'else' sotto.
+      return { found: true, restored: true };
     } else if (found) {
       setPlacements(solvedPlacements);
+      // Snapshot dell'ultima soluzione valida: sourceBuildings è lo stato
+      // edifici effettivamente usato da questa ricerca (buildingsOverride se
+      // presente, altrimenti buildings), coerente con solvedPlacements.
+      lastSolvedRef.current = { buildings: sourceBuildings.map((b) => ({ ...b })), placements: solvedPlacements };
       setStatus("success");
     } else {
-      setStatus("failed");
+      // Nessuna soluzione per i conteggi appena impostati: non lasciare la
+      // mappa vecchia con conteggi nuovi disallineati, torna sempre
+      // all'ultima soluzione valida nota (lastSolvedRef non è mai vuoto).
+      setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
+      setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
+      // Stato ripristinato = di nuovo una disposizione valida: "success",
+      // non "failed", così il pulsante Risolvi torna disabilitato come in
+      // ogni altra situazione stabile. Ma "success" da solo sparirebbe il
+      // messaggio di errore senza spiegare perché la modifica appena fatta
+      // non è comparsa — un toast temporaneo colma il vuoto (stesso
+      // meccanismo del toast di import, vedi useEffect su importMessage).
+      setStatus("success");
+      setImportMessage({ kind: "error", text: t("piratiRestoredLastSolutionMessage", uiLang) });
+
+      setIsSolving(false);
+      stopSolvingRef.current = false;
+      // `restored: true` segnala al chiamante (AUTO in updateCount) che lo
+      // stato è già stato riportato a buildings+placements coerenti — un
+      // ulteriore decremento manuale dell'edificio appena aggiunto andrebbe a
+      // modificare quello stato GIÀ corretto, producendo un secondo
+      // disallineamento (bug osservato: la lista edifici mostrava sempre una
+      // soluzione "più vecchia" della mappa, perché veniva decrementato un
+      // conteggio già ripristinato da qui, invece di lasciarlo stare).
+      return { found: false, restored: true };
     }
 
     setIsSolving(false);
     stopSolvingRef.current = false;
-    // Esito riportato al chiamante (usato da AUTO per decidere se togliere
-    // l'edificio appena aggiunto quando la ricerca fallisce). Un'interruzione
-    // manuale (Stop) NON conta come fallimento: l'utente ha scelto lui di
-    // fermarsi, AUTO non deve "punire" togliendo l'edificio in quel caso.
-    return found || wasInterrupted;
-  }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles]);
+    // Raggiunto solo dal ramo `found` (wasInterrupted e "nessuna soluzione"
+    // ritornano anticipatamente sopra, con il proprio `restored`): nessun
+    // ripristino qui, lo stato è già quello risolto con successo.
+    return { found: true, restored: false };
+  }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles, uiLang]);
 
   const updateCount = async (id: string, delta: number) => {
     if (isSolving) return;
@@ -1028,7 +1107,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // Ricalcolato su TUTTI gli edifici: un '+' fallito su un altro edificio
       // lascerebbe un disallineamento che questo ramo non vedrebbe mai
       // (placedCount/nextCount riguardano solo `id`).
-      setStatus(layoutStatus(nextBuildings, nextPlacements));
+      const nextStatus = layoutStatus(nextBuildings, nextPlacements);
+      setStatus(nextStatus);
+      // A differenza del ramo '+' sotto, qui NON serve che il layout sia
+      // completo (nextStatus === "success"): nextPlacements è per costruzione
+      // un sottoinsieme di placements, che erano già un layout valido (nessuna
+      // sovrapposizione, tutto dentro l'area sbloccata). Un sottoinsieme di una
+      // disposizione valida è sempre a sua volta valido — anche se ora manca
+      // qualche edificio rispetto al conteggio corrente — quindi diventa
+      // comunque la nuova ultima soluzione nota.
+      lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
       return;
     }
 
@@ -1044,7 +1132,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       if (autoPlacement && nextTotalArea <= maxArea) {
         const nextPlacements = [...placements, autoPlacement];
         setPlacements(nextPlacements);
-        setStatus(layoutStatus(nextBuildings, nextPlacements));
+        const nextStatus = layoutStatus(nextBuildings, nextPlacements);
+        setStatus(nextStatus);
+        // Auto-piazzamento immediato (senza passare da solve()): se il layout
+        // risultante è comunque una soluzione completa e valida (tutti gli
+        // edifici piazzati, popolazione coperta), va trattato come un successo
+        // del solver a tutti gli effetti — altrimenti un futuro Risolvi fallito
+        // non avrebbe questo stato come punto di ripristino, pur essendo valido.
+        if (nextStatus === "success") {
+          lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
+        }
       } else {
         setStatus("idle");
         // AUTO: l'auto-piazzamento immediato non ha trovato posto per il nuovo
@@ -1054,8 +1151,14 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         // aggiunto (l'unica cosa che sappiamo per certo essere "di troppo" in
         // questo tentativo) e ci fermiamo lì, senza altri retry a catena.
         if (autoMode) {
-          const solved = await solve(nextBuildings);
-          if (solved === false) {
+          const { found: solved, restored } = await solve(nextBuildings);
+          // `restored`: solve() ha già riportato buildings+placements a
+          // un'ultima soluzione valida precedente (che per costruzione non
+          // includeva ancora l'edificio appena aggiunto). Decrementarlo di
+          // nuovo qui applicherebbe la sottrazione a uno stato già corretto,
+          // producendo un conteggio disallineato dalla mappa (bug osservato:
+          // la lista edifici mostrava sempre una soluzione "più vecchia").
+          if (!solved && !restored) {
             setBuildings((current) =>
               current.map((building) =>
                 building.id === id ? { ...building, count: Math.max(0, building.count - 1) } : building
@@ -1437,6 +1540,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             // un import, altrimenti lo stato subito dopo l'ultimo import riuscito.
             // (ex "Reset", rinominato "Undo" quando è stato introdotto il vero Reset
             // qui sotto, che invece cancella anche i dati importati.)
+            // La baseline è "risolta" per definizione (vuota o subito dopo un
+            // import): diventa la nuova ultima soluzione valida, così un
+            // Risolvi fallito dopo l'Undo torna qui e non a una disposizione
+            // precedente all'Undo stesso.
+            lastSolvedRef.current = { buildings: baseline.buildings.map((b) => ({ ...b })), placements: baseline.placements.map((p) => ({ ...p })) };
             setBuildings(baseline.buildings.map((building) => ({ ...building })));
             setPlacements(baseline.placements.map((placement) => ({ ...placement })));
             setObstacles(new Set(baseline.obstacles));
@@ -1444,7 +1552,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             setImportedExpansions(new Set(baseline.importedExpansions));
             setImportedObstacleCells(new Set(baseline.importedObstacleCells));
           }}
-          disabled={!hasChangesFromBaseline}
+          // isSolving: l'onClick già ignora il click con isSolving, ma senza
+          // rifletterlo qui il pulsante restava visivamente attivo durante una
+          // ricerca in corso (stesso problema visto sui pulsanti +/- e sulla X
+          // di eliminazione placement).
+          disabled={!hasChangesFromBaseline || isSolving}
           // Attivo solo se lo stato corrente si è discostato dalla baseline (stato
           // vuoto, o stato subito dopo l'ultimo import) — vedi hasChangesFromBaseline.
           className="flex items-center gap-1.5 h-7 px-3 rounded border border-slate-600 bg-slate-700/20 text-slate-400 font-bold hover:bg-slate-700/40 hover:text-slate-100 transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-700/20 disabled:hover:text-slate-400"
@@ -1477,9 +1589,14 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             setImportedExpansions(new Set());
             setImportedObstacleCells(new Set());
             setBaseline(emptyBaseline);
+            // Come per un nuovo import: lo stato vuoto è "risolto" per definizione
+            // (nessun edificio da piazzare oltre al municipio), diventa la nuova
+            // ultima soluzione valida.
+            lastSolvedRef.current = { buildings: INITIAL_BUILDINGS.map((b) => ({ ...b })), placements: INITIAL_PLACEMENTS.map((p) => ({ ...p })) };
             setHasImportedCity(false);
           }}
-          disabled={!hasImportedCity}
+          // isSolving: stesso motivo del pulsante Undo sopra.
+          disabled={!hasImportedCity || isSolving}
           // Stesso schema colore/stato del cestino "elimina tutti i profili"
           // nell'header (App.tsx): rosso scuro e leggero quando disabilitato
           // (niente importato, o dopo Reset), rosso più chiaro e abilitato
@@ -1834,8 +1951,13 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                     </span>
                     {/* Il corpo dell'edificio serve solo a trascinare (sposta/scambia):
                         l'eliminazione passa esclusivamente da questa X, visibile solo in
-                        hover, per evitare rimozioni accidentali con un click distratto. */}
-                    {!isMunicipio && editMode === "obstacle" && (
+                        hover, per evitare rimozioni accidentali con un click distratto.
+                        !isSolving: removePlacement ha già il guard su canEditGrid (che
+                        include !isSolving) e quindi il click sarebbe comunque no-op, ma
+                        senza nascondere la X qui il pulsante restava visibile e cliccabile
+                        durante una ricerca in corso — stesso problema di UX del pulsante
+                        '-' sui conteggi, corretto per coerenza. */}
+                    {!isMunicipio && editMode === "obstacle" && !isSolving && (
                       <button
                         type="button"
                         title={t("piratiDeleteBuildingTitle", uiLang)}
@@ -2073,10 +2195,14 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => updateCount(building.id, -1)}
-                              disabled={building.count <= 0}
+                              // isSolving: manca dal solo count<=0 usato altrove (updateCount
+                              // già ignora il click con isSolving, ma senza disabled qui il
+                              // pulsante restava visivamente cliccabile durante una ricerca,
+                              // dando l'impressione di un tool bloccato/non responsivo).
+                              disabled={building.count <= 0 || isSolving}
                               className={cx(
                                 "w-5 h-5 flex items-center justify-center rounded text-xs transition-colors",
-                                building.count <= 0
+                                building.count <= 0 || isSolving
                                   ? "bg-slate-800 text-slate-600 cursor-not-allowed"
                                   : "bg-slate-700 hover:bg-slate-600 text-white"
                               )}

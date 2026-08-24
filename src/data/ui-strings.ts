@@ -1829,6 +1829,14 @@ const UI_STRINGS = {
   },
   piratiInterruptedMessage: { it: "Ricerca interrotta", en: "Search interrupted" },
   piratiFailedMessage: { it: "Nessuna soluzione valida", en: "No valid solution" },
+  piratiRestoredLastSolutionMessage: {
+    it: "Nessuna soluzione trovata: ripristinata l'ultima disposizione valida",
+    en: "No solution found: restored the last valid layout",
+  },
+  piratiImportBlockedWhileSolving: {
+    it: "Attendi la fine della ricerca (o premi Stop) prima di importare",
+    en: "Wait for the search to finish (or press Stop) before importing",
+  },
   piratiAreaExcessiveMessage: { it: "Area eccessiva", en: "Area exceeded" },
   piratiPopInsufficientMessage: { it: "Popolazione insufficiente", en: "Insufficient population" },
 
