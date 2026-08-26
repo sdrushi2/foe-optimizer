@@ -418,7 +418,7 @@ R_ArcticFuture_Residential5;Villa di cristallo;Crystal Villa;f23f0fa4e;;;;4x3;1.
 R_BronzeAge_Residential1;Baracca;Chalet;fe58518e7;;;;2x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_BronzeAge_Residential2;Casa con tetto in paglia;Thatched House;9badd5fdc;;;;2x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_BronzeAge_Residential3;Palafitta;Stilt House;6de3dcb98;;;;2x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_BronzeAge_Residential4;Casa lunga;Longhouse;5beb534e7;;;;4x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_BronzeAge_Residential4;Casa lunga;Longhouse;d9daae200;;;;4x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_ColonialAge_Residential1;Casa con Mansarda;Gambrel Roof House;9ceb9cfab;;;;2x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_ColonialAge_Residential2;Casa della Piantagione;Plantation House;067583f77;;;;2x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_ColonialAge_Residential3;Casa con Portico;Arcade House;0323fd2ac;;;;2x2;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1301,8 +1301,8 @@ W_MultiAge_FELL23C1;Boschetto della grigliata;Grilling Grove;58e7c2300;1;;19;2x2
 W_MultiAge_FELL23D1;Fabbro Trailside;Trailside Smithy;ab58bf384;1;;19;1x1;;;13593;;4;;;;;5;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL23A:20|selection_kit_FELL23A:20
 W_MultiAge_FELL24A1;Mulino Whisperwood - Lv. 1;Whisperwood Watermill - Lv. 1;789eaa205;;;19;5x6;2.5;;44260;;42;;;;;30;;;;;;63620;6870;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A10;Mulino Whisperwood Arcadico;Arcadian Whisperwood Watermill;552f4b50d;1;;19;5x6;2.5;;110680;;69;;;;;165;;;;150;;309030;33330;;;66;;;99;99;;;;;;;;;;;;;;;;;;;M;;;;;;;;
-W_MultiAge_FELL24A11;;Elysian Whisperwood Watermill;954c30f7f;1;;19;5x6;;;128010;;100;;;;;285;400;;0.02;250;;338820;38280;;351;351;;;476;476;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_selection_kit_FELL24A:3
-W_MultiAge_FELL24A12;;Ascended Elysian Whisperwood Watermill;6c778284b;1;90;51;5x6;;;138670;;150;;;;;435;600;600;0.06;400;;360000;40470;;476;476;;;551;551;;;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;golden_selection_kit_FELL24A:5
+W_MultiAge_FELL24A11;Dummy Whisperwood Watermill;Elysian Whisperwood Watermill;954c30f7f;1;;19;5x6;;;128010;;100;;;;;285;400;;0.02;250;;338820;38280;;351;351;;;476;476;;;;;;;;;;;;;;;;;;;M;;;;;;;;golden_selection_kit_FELL24A:3
+W_MultiAge_FELL24A12;Dummy Whisperwood Watermill;Ascended Elysian Whisperwood Watermill;6c778284b;1;90;51;5x6;;;138670;;150;;;;;435;600;600;0.06;400;;360000;40470;;476;476;;;551;551;;;;;;;25;25;;;;;;;;;200;8000;M;;;;;;;;golden_selection_kit_FELL24A:5
 W_MultiAge_FELL24A2;Mulino Whisperwood - Lv. 2;Whisperwood Watermill - Lv. 2;2ce28a701;;;19;5x6;2.5;;51640;;45;;;;;45;;;;;;90890;9810;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A3;Mulino Whisperwood - Lv. 3;Whisperwood Watermill - Lv. 3;9b321e05b;;;19;5x6;2.5;;59020;;48;;;;;60;;;;;;118150;12740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL24A4;Mulino Whisperwood - Lv. 4;Whisperwood Watermill - Lv. 4;3464a0a46;;;19;5x6;2.5;;66400;;51;;;;;75;;;;;;145440;15680;;;5;;;7;7;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1334,23 +1334,23 @@ W_MultiAge_FELL25C2;Angolo del Nomade Asceso;Ascended Nomad's Nook;3d04ef1ab;1;3
 W_MultiAge_FELL25D1;Soakhaven Lodge;Soakhaven Lodge;39802c075;1;;19;5x4;;;;;260;;;;;;;120;;;;;;;200;200;200;200;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_FELL25A:20
 W_MultiAge_FELL25E1;Porto con Passerella - Livello 1;Raftway Harbour - Lv. 1;52d792817;1;;19;3x4;1.5;-107670;;;65;;;;;49;65;;;;;;;;;;;;78;78;78;78;78;78;78;78;;;;;;;;;;;;;;4;;;;;;;
 W_MultiAge_FELL25E2;Porto con Passerella - Livello 2;Raftway Harbour - Lv. 2;cdcaf64ab;1;;19;3x4;1.5;-107670;;;108;;;;;81;108;;;;;;;;;;;;130;130;130;130;130;130;130;130;;;;;;;;;;;;;M;8;;;;;;;upgrade_kit_ascended_BOWL22A:12
-W_MultiAge_FELL26A1;;Hearthglen Wayhouse - Lv. 1;fde1e9081;;;19;5x5;2.5;530;;;6;;;;;;;;;;;;26250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A10;;Aurelian Hearthglen Wayhouse;7e654d8f5;1;;19;5x5;2.5;42670;;;460;;;50;;;;;;;;;45940;;476;476;;;;;;;601;601;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL26BC:3
-W_MultiAge_FELL26A2;;Hearthglen Wayhouse - Lv. 2;W_MultiAge_FELL26A1-fde1e9081;;;19;5x5;2.5;1070;;;12;;;;;;;;;;;;28440;;11;11;;;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A3;;Hearthglen Wayhouse - Lv. 3;W_MultiAge_FELL26A1-fde1e9081;;;19;5x5;2.5;2130;;;23;;;;;;;;;;;;30630;;21;21;;;;;;;26;26;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A4;;Hearthglen Wayhouse - Lv. 4;W_MultiAge_FELL26A1-fde1e9081;;;19;5x5;2.5;3200;;;35;;;;;;;;;;;;32810;;31;31;;;;;;;51;51;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A5;;Hearthglen Wayhouse - Lv. 5;e8fcc6319;;;19;5x5;2.5;4270;;;58;;;;;;;;;;;;35000;;51;51;;;;;;;101;101;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A6;;Hearthglen Wayhouse - Lv. 6;W_MultiAge_FELL26A5-e8fcc6319;;;19;5x5;2.5;5330;;;86;;;;;;;;;;;;37190;;101;101;;;;;;;151;151;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A7;;Hearthglen Wayhouse - Lv. 7;W_MultiAge_FELL26A5-e8fcc6319;;;19;5x5;2.5;10670;;;173;;;;;;;;;;;;39380;;151;151;;;;;;;251;251;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26A8;;Hearthglen Wayhouse - Lv. 8;ddd9467c2;1;;19;5x5;2.5;21330;;;288;;;20;;;;;;;;;41560;;251;251;;;;;;;351;351;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL26BC:1|silver_upgrade_kit_FELL26A:5
-W_MultiAge_FELL26A9;;Halcyon Hearthglen Wayhouse;8b7b5b63d;1;;19;5x5;2.5;32000;;;345;;;30;;;;;;;;;43750;;376;376;;;;;;;401;401;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_FELL26A:5|selection_kit_FELL26BC:2
-W_MultiAge_FELL26B1;;Banneret Muster;167a9d901;1;;19;4x2;;-32000;;;87;;;;;50;;;;;271430;;;;;;65;65;;;;;;;;50;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26B2;;Ascended Banneret Muster;52a575d19;1;30;51;4x2;;-32000;;;288;;;;;100;;;;;271430;;;;;;140;140;;;;;;;;100;;;;20;0.05;;25000;;;;;;;;;;;;;;
-W_MultiAge_FELL26C1;;Duskmantle Covenant;5ce328c8e;1;;19;3x3;;-32000;;;;;;10;;150;;;;;;;10940;;106;106;;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26C2;;Ascended Duskmantle Covenant;616a94ab4;1;30;51;3x3;;-32000;;;;;;30;;300;;;;;;;10940;;336;336;;;;;;;;300;;;25;;;;;0.05;;;10;;;;;;;;;;;;
-W_MultiAge_FELL26D1;;Thistlemarket Moot Hall;a38191d33;1;;19;5x5;;-21330;;;460;;;25;;150;;;0.08;;;;32810;;460;460;460;460;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;
-W_MultiAge_FELL26E1;;Waitswood Songhouse - Lv. 1;12855cfb0;1;;19;4x4;;-74670;;;86;;;;;;;;;;488570;;;;120;120;;;85;;;;;;;;;;;;;;;;;;;;;2.5;;;;2.25;;;upgrade_kit_ascended_FELL24A:1
-W_MultiAge_FELL26E2;;Waitswood Songhouse - Lv. 2;8d473fe04;1;;19;4x4;;-74670;;;115;0.01;;;;;;;;;597140;;;;215;215;;;200;;;;;;;;;;;;;;;;;;;;;5;;;;3.75;;;upgrade_kit_ascended_FELL24A:5
+W_MultiAge_FELL26A1;FELL26A;Hearthglen Wayhouse - Lv. 1;fde1e9081;;;19;5x5;2.5;530;;;6;;;;;;;;;;;;26250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A10;FELL26A Gold;Aurelian Hearthglen Wayhouse;7e654d8f5;1;;19;5x5;2.5;42670;;;460;;;50;;;;;;;;;45940;;476;476;;;;;;;601;601;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_FELL26BC:3
+W_MultiAge_FELL26A2;FELL26A;Hearthglen Wayhouse - Lv. 2;W_MultiAge_FELL26A1-fde1e9081;;;19;5x5;2.5;1070;;;12;;;;;;;;;;;;28440;;11;11;;;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A3;FELL26A;Hearthglen Wayhouse - Lv. 3;W_MultiAge_FELL26A1-fde1e9081;;;19;5x5;2.5;2130;;;23;;;;;;;;;;;;30630;;21;21;;;;;;;26;26;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A4;FELL26A;Hearthglen Wayhouse - Lv. 4;W_MultiAge_FELL26A1-fde1e9081;;;19;5x5;2.5;3200;;;35;;;;;;;;;;;;32810;;31;31;;;;;;;51;51;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A5;FELL26A;Hearthglen Wayhouse - Lv. 5;e8fcc6319;;;19;5x5;2.5;4270;;;58;;;;;;;;;;;;35000;;51;51;;;;;;;101;101;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A6;FELL26A;Hearthglen Wayhouse - Lv. 6;W_MultiAge_FELL26A5-e8fcc6319;;;19;5x5;2.5;5330;;;86;;;;;;;;;;;;37190;;101;101;;;;;;;151;151;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A7;FELL26A;Hearthglen Wayhouse - Lv. 7;W_MultiAge_FELL26A5-e8fcc6319;;;19;5x5;2.5;10670;;;173;;;;;;;;;;;;39380;;151;151;;;;;;;251;251;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26A8;FELL26A;Hearthglen Wayhouse - Lv. 8;ddd9467c2;1;;19;5x5;2.5;21330;;;288;;;20;;;;;;;;;41560;;251;251;;;;;;;351;351;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FELL26BC:1|silver_upgrade_kit_FELL26A:5
+W_MultiAge_FELL26A9;FELL26A Silver;Halcyon Hearthglen Wayhouse;8b7b5b63d;1;;19;5x5;2.5;32000;;;345;;;30;;;;;;;;;43750;;376;376;;;;;;;401;401;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_FELL26A:5|selection_kit_FELL26BC:2
+W_MultiAge_FELL26B1;FELL26B;Banneret Muster;167a9d901;1;;19;4x2;;-32000;;;87;;;;;50;;;;;271430;;;;;;65;65;;;;;;;;50;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26B2;FELL26B;Ascended Banneret Muster;52a575d19;1;30;51;4x2;;-32000;;;288;;;;;100;;;;;271430;;;;;;140;140;;;;;;;;100;;;;20;0.05;;25000;;;;;;;;;;;;;;
+W_MultiAge_FELL26C1;FELL26C;Duskmantle Covenant;5ce328c8e;1;;19;3x3;;-32000;;;;;;10;;150;;;;;;;10940;;106;106;;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_FELL26C2;FELL26C;Ascended Duskmantle Covenant;616a94ab4;1;30;51;3x3;;-32000;;;;;;30;;300;;;;;;;10940;;336;336;;;;;;;;300;;;25;;;;;0.05;;;10;;;;;;;;;;;;
+W_MultiAge_FELL26D1;FELL26D;Thistlemarket Moot Hall;a38191d33;1;;19;5x5;;-21330;;;460;;;25;;150;;;0.08;;;;32810;;460;460;460;460;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL26A:5
+W_MultiAge_FELL26E1;FELL26E;Waitswood Songhouse - Lv. 1;12855cfb0;1;;19;4x4;;-74670;;;86;;;;;;;;;;488570;;;;120;120;;;85;;;;;;;;;;;;;;;;;;;;;2.5;;;;2.25;;;upgrade_kit_ascended_FELL24A:1
+W_MultiAge_FELL26E2;FELL26E;Waitswood Songhouse - Lv. 2;8d473fe04;1;;19;4x4;;-74670;;;115;0.01;;;;;;;;;597140;;;;215;215;;;200;;;;;;;;;;;;;;;;;;;;;5;;;;3.75;;;upgrade_kit_ascended_FELL24A:5
 W_MultiAge_FallBonus21a;Colture dorate - Liv. 1;Golden Crops - Lv. 1;6abb31616;;;19;6x4;2;12862;33235;;;;;;;;;;;;206652;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FallBonus21b;Colture dorate - Liv. 2;Golden Crops - Lv. 2;e8c9d5793;;;19;6x4;2;13095;34213;;;;;;;;;;;;229629;30947;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FallBonus21c;Colture dorate - Liv. 3;Golden Crops - Lv. 3;b6373c2eb;;;19;6x4;2;13437;35953;;;;;;;3;;;;;252703;33789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2069,13 +2069,13 @@ W_MultiAge_WIN26A10;WIN26A Gold;WIN26A Gold;b2f406053;1;;19;4x4;2;40530;60800;;2
 W_MultiAge_WIN26A11;WIN26A Platinum;WIN26A Platinum;132195138;1;;19;4x4;;42670;64000;;230;;;;;;306;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;;;;;;;;;;;M;;1.5;;;;;;selection_kit_WIN26BC:4
 W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;WIN26A Platinum Ascended A;c5a06473c;1;90;51;4x4;;42670;64000;;230;0.02;;;;;306;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC:6
 W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;WIN26A Platinum Ascended B;5c5071aa4;1;90;51;4x4;;42670;64000;;230;;;;;;306;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC:6
-W_MultiAge_WIN26A2;WIN26A;WIN26A;;;;19;4x4;2;8530;12800;;69;;;;;;62;;;;65140;127060;;;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A3;WIN26A;WIN26A;;;;19;4x4;2;11730;17600;;81;;;;;;82;;;;86860;169410;;;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A4;WIN26A;WIN26A;;;;19;4x4;2;14930;22400;;92;;;;;;103;;;;108570;211760;;;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A5;WIN26A;WIN26A;;;;19;4x4;2;18130;27200;;104;;;;;;123;;;;130290;254120;;;25;25;25;25;25;25;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A6;WIN26A;WIN26A;;;;19;4x4;2;21330;32000;;115;;;;;;144;;;;152000;296470;;;30;30;30;30;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A7;WIN26A;WIN26A;;;;19;4x4;2;24530;36800;;127;;;;;;164;;;;173710;338820;;;35;35;35;35;35;35;35;35;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A8;WIN26A;WIN26A;;1;;19;4x4;2;27730;41600;;138;;;;;;185;;;;195430;381180;;;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC:1|silver_upgrade_kit_WIN26A:5
+W_MultiAge_WIN26A2;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;8530;12800;;69;;;;;;62;;;;65140;127060;;;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A3;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;11730;17600;;81;;;;;;82;;;;86860;169410;;;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A4;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;14930;22400;;92;;;;;;103;;;;108570;211760;;;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A5;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;18130;27200;;104;;;;;;123;;;;130290;254120;;;25;25;25;25;25;25;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A6;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;21330;32000;;115;;;;;;144;;;;152000;296470;;;30;30;30;30;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A7;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;24530;36800;;127;;;;;;164;;;;173710;338820;;;35;35;35;35;35;35;35;35;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A8;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;1;;19;4x4;2;27730;41600;;138;;;;;;185;;;;195430;381180;;;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC:1|silver_upgrade_kit_WIN26A:5
 W_MultiAge_WIN26A9;WIN26A Silver;WIN26A Silver;15cf8c594;1;;19;4x4;2;34130;51200;;184;;;;;;225;;;;260570;508240;;;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_WIN26A:5|selection_kit_WIN26BC:2
 W_MultiAge_WIN26B1;WIN26B;WIN26B;64d67fe9d;1;;19;4x4;;-170670;;;331;;;;;105;;;;;173710;508240;;;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26B2;Ascended WIN26B;Ascended WIN26B;7f7b1c8f2;1;30;51;4x4;;-170670;;;828;0.02;;;;262;;;;;347430;1016470;;;;;408;408;;;408;408;;;;;80;;;;;;;25000;;5;;;;;;;;;;;

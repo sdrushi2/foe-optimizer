@@ -4508,7 +4508,8 @@
     },
     "upgrade_kit_FELL26A": {
       "names": {
-        "en": "Hearthglen Wayhouse Upgrade Kit"
+        "en": "Hearthglen Wayhouse Upgrade Kit",
+        "it": "FELL26A Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26A1",
@@ -4523,7 +4524,8 @@
     },
     "silver_upgrade_kit_FELL26A": {
       "names": {
-        "en": "Halcyon Hearthglen Wayhouse Silver Upgrade Kit"
+        "en": "Halcyon Hearthglen Wayhouse Silver Upgrade Kit",
+        "it": "FELL26A Silver Silver Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26A8",
@@ -4533,7 +4535,8 @@
     },
     "golden_upgrade_kit_FELL26A": {
       "names": {
-        "en": "Aurelian Hearthglen Wayhouse Golden Upgrade Kit"
+        "en": "Aurelian Hearthglen Wayhouse Golden Upgrade Kit",
+        "it": "FELL26A Gold Golden Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26A9",
@@ -4543,7 +4546,8 @@
     },
     "upgrade_kit_ascended_FELL26B": {
       "names": {
-        "en": "Ascended Banneret Muster Upgrade Kit"
+        "en": "Ascended Banneret Muster Upgrade Kit",
+        "it": "Ascended FELL26B Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26B1",
@@ -4552,7 +4556,8 @@
     },
     "upgrade_kit_ascended_FELL26C": {
       "names": {
-        "en": "Ascended Duskmantle Covenant Upgrade Kit"
+        "en": "Ascended Duskmantle Covenant Upgrade Kit",
+        "it": "Ascended FELL26C Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26C1",
@@ -4561,7 +4566,8 @@
     },
     "upgrade_kit_FELL26E": {
       "names": {
-        "en": "Waitswood Songhouse Upgrade Kit"
+        "en": "Waitswood Songhouse Upgrade Kit",
+        "it": "FELL26E Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL26E1",
@@ -4570,7 +4576,8 @@
     },
     "platinum_upgrade_kit_FELL24A": {
       "names": {
-        "en": "Elysian Whisperwood Watermill Platinum Upgrade Kit"
+        "en": "Elysian Whisperwood Watermill Platinum Upgrade Kit",
+        "it": "FELL24A Platinum Platinum Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL24A10",
@@ -4579,7 +4586,8 @@
     },
     "upgrade_kit_ascended_FELL24A": {
       "names": {
-        "en": "Ascended Elysian Whisperwood Watermill Upgrade Kit"
+        "en": "Ascended Elysian Whisperwood Watermill Upgrade Kit",
+        "it": "Ascended FELL24A Upgrade Kit"
       },
       "steps": [
         "W_MultiAge_FELL24A11",
@@ -10100,7 +10108,8 @@
     },
     "selection_kit_FELL26A": {
       "names": {
-        "en": "Hearthglen Wayhouse Selection Kit"
+        "en": "Hearthglen Wayhouse Selection Kit",
+        "it": "FELL26A Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10109,7 +10118,8 @@
     },
     "silver_selection_kit_FELL26A": {
       "names": {
-        "en": "Halcyon Hearthglen Wayhouse Silver Selection Kit"
+        "en": "Halcyon Hearthglen Wayhouse Silver Selection Kit",
+        "it": "FELL26A Silver Silver Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10119,7 +10129,8 @@
     },
     "golden_selection_kit_FELL26A": {
       "names": {
-        "en": "Aurelian Hearthglen Wayhouse Golden Selection Kit"
+        "en": "Aurelian Hearthglen Wayhouse Golden Selection Kit",
+        "it": "FELL26A Gold Golden Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10130,7 +10141,8 @@
     },
     "selection_kit_FELL26BC": {
       "names": {
-        "en": "Bannered Covenant Selection Kit"
+        "en": "Bannered Covenant Selection Kit",
+        "it": "FELL26BC Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26B1",
@@ -10140,7 +10152,8 @@
     },
     "selection_kit_FELL26E": {
       "names": {
-        "en": "Waitswood Songhouse Selection Kit"
+        "en": "Waitswood Songhouse Selection Kit",
+        "it": "FELL26E Selection Kit"
       },
       "options": [
         "W_MultiAge_FELL26E1",
@@ -10149,7 +10162,8 @@
     },
     "selection_kit_epic_FELL26": {
       "names": {
-        "en": "Epic Fellowship 2026 Selection Kit"
+        "en": "Epic Fellowship 2026 Selection Kit",
+        "it": "Kit di Selezione Compagnia Epico 2026"
       },
       "options": [
         "W_MultiAge_FELL25A1",
@@ -10173,7 +10187,8 @@
     },
     "platinum_selection_kit_FELL24A": {
       "names": {
-        "en": "Elysian Whisperwood Watermill Platinum Selection Kit"
+        "en": "Elysian Whisperwood Watermill Platinum Selection Kit",
+        "it": "Dummy"
       },
       "options": [
         "W_MultiAge_FELL24A1",
@@ -11366,6 +11381,64 @@
         "upgrade_kit_WIN18B",
         "R_MultiAge_WinterBonus18a",
         "upgrade_kit_winter_spire"
+      ]
+    },
+    "selection_kit_epic_ASC26": {
+      "names": {
+        "en": "Epic Ascended 2026 Selection Kit"
+      },
+      "options": [
+        "upgrade_kit_ascended_WIN26B",
+        "upgrade_kit_ascended_WIN26C",
+        "upgrade_kit_ascended_HAL25B",
+        "upgrade_kit_ascended_HAL25B",
+        "upgrade_kit_ascended_HAL25B",
+        "upgrade_kit_ascended_FELL26B",
+        "upgrade_kit_ascended_FELL26C",
+        "upgrade_kit_ascended_FALL26B",
+        "upgrade_kit_ascended_FALL26C",
+        "upgrade_kit_ascended_CARE26B",
+        "upgrade_kit_ascended_CARE26C",
+        "upgrade_kit_ascended_ARTHUR26B",
+        "upgrade_kit_ascended_ARTHUR26C",
+        "upgrade_kit_ascended_HIS26B",
+        "upgrade_kit_ascended_HIS26C",
+        "upgrade_kit_ascended_HIS26E",
+        "upgrade_kit_ascended_ANNI26B",
+        "upgrade_kit_ascended_ANNI26C",
+        "upgrade_kit_ascended_PAT26B",
+        "upgrade_kit_ascended_PAT26C",
+        "upgrade_kit_ascended_WILD26B",
+        "upgrade_kit_ascended_WILD26C",
+        "upgrade_kit_ascended_WIN25B",
+        "upgrade_kit_ascended_WIN25C",
+        "upgrade_kit_ascended_HAL25B",
+        "upgrade_kit_ascended_HAL25C",
+        "upgrade_kit_ascended_FELL25B",
+        "upgrade_kit_ascended_FELL25C",
+        "upgrade_kit_ascended_FALL25E",
+        "upgrade_kit_ascended_FALL25F",
+        "upgrade_kit_ascended_CARE25B",
+        "upgrade_kit_ascended_CARE25C",
+        "upgrade_kit_ascended_SUM25B",
+        "upgrade_kit_ascended_SUM25C",
+        "upgrade_kit_ascended_HIS25B",
+        "upgrade_kit_ascended_HIS25C",
+        "upgrade_kit_ascended_ANNI25B",
+        "upgrade_kit_ascended_PAT25B",
+        "upgrade_kit_ascended_PAT25C",
+        "upgrade_kit_ascended_WILD25B",
+        "upgrade_kit_ascended_WILD25C",
+        "upgrade_kit_ascended_WIN24B",
+        "upgrade_kit_ascended_WIN24C",
+        "upgrade_kit_ascended_FELL24B",
+        "upgrade_kit_ascended_FELL24C",
+        "upgrade_kit_ascended_FALL24B",
+        "upgrade_kit_ascended_FALL24C",
+        "upgrade_kit_ascended_CARE24B",
+        "upgrade_kit_ascended_CARE24C",
+        "upgrade_kit_ascended_SUM24B",
+        "upgrade_kit_ascended_SUM24C"
       ]
     }
   },
