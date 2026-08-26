@@ -1,6 +1,6 @@
 # Informativa sulla Privacy
 
-**Ultimo aggiornamento:** 13 luglio 2026
+**Ultimo aggiornamento:** 26 agosto 2026
 
 *(English version below)*
 
@@ -104,19 +104,38 @@ Informative dei fornitori:
 - Cloudflare: https://www.cloudflare.com/privacypolicy/
 - GitHub: https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
 
-### 5. Cookie
+### 5. Immagini caricate dal CDN di InnoGames
+
+Le immagini degli edifici (e, se hai importato la tua città, l'avatar del tuo profilo)
+non sono copiate dentro il tool: il tuo browser le richiede direttamente al **CDN di
+InnoGames** (`*.innogamescdn.com`), lo stesso da cui le carica il gioco. Questo vale
+anche se non importi nulla, perché il database consultabile mostra le immagini degli
+edifici.
+
+In pratica significa che, come per qualunque immagine caricata da un sito esterno,
+InnoGames vede la richiesta e i dati tecnici che l'accompagnano (indirizzo IP, user
+agent). Il tool **non invia a InnoGames nessun dato della tua città**: solo il nome del
+file immagine da scaricare. Il sito imposta inoltre una `Referrer-Policy` restrittiva,
+così l'indirizzo completo della pagina che stai guardando non viene trasmesso.
+
+L'URL dell'avatar viene accettato **solo** se punta a `https://*.innogamescdn.com`:
+qualunque altro indirizzo eventualmente presente in un profilo importato viene scartato
+e sostituito dall'avatar segnaposto, così un file di profilo ricevuto da terzi non può
+far contattare al tuo browser un server arbitrario.
+
+### 6. Cookie
 
 Il tool **non installa cookie propri**. Non ci sono cookie di profilazione, marketing o
 di terze parti.
 
-### 6. Service Worker / funzionamento offline
+### 7. Service Worker / funzionamento offline
 
 Il tool installa un *service worker* per permettere l'uso offline e il caricamento
 istantaneo dell'app dopo la prima visita. Il service worker si limita a salvare in
 cache, **sul tuo dispositivo**, i file statici dell'app (HTML/CSS/JS, icone): non
 raccoglie né trasmette alcun dato.
 
-### 7. Nessuna pubblicità, nessuna vendita di dati
+### 8. Nessuna pubblicità, nessuna vendita di dati
 
 Il tool non mostra pubblicità e non vende, affitta o condivide alcun dato con terze
 parti a fini commerciali — anche perché, come spiegato sopra, non esiste alcun dato
@@ -155,7 +174,7 @@ aziendali) è opportuno consultare un professionista.
 
 # Privacy Policy (English)
 
-**Last updated:** July 13, 2026
+**Last updated:** August 26, 2026
 
 ## Who we are
 
@@ -257,18 +276,36 @@ Providers' privacy policies:
 - Cloudflare: https://www.cloudflare.com/privacypolicy/
 - GitHub: https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
 
-### 5. Cookies
+### 5. Images loaded from InnoGames' CDN
+
+Building images (and, if you imported your city, your profile avatar) are not bundled
+inside the tool: your browser requests them directly from **InnoGames' CDN**
+(`*.innogamescdn.com`), the same one the game itself uses. This happens even if you
+import nothing, because the browsable database shows building images.
+
+In practice this means that, as with any image loaded from an external site, InnoGames
+sees the request and the technical data that comes with it (IP address, user agent). The
+tool **sends InnoGames no data about your city**: only the name of the image file to
+download. The site also sets a restrictive `Referrer-Policy`, so the full address of the
+page you are viewing is not transmitted.
+
+The avatar URL is accepted **only** if it points to `https://*.innogamescdn.com`: any
+other address that might be present in an imported profile is discarded and replaced by
+the placeholder avatar, so a profile file received from someone else cannot make your
+browser contact an arbitrary server.
+
+### 6. Cookies
 
 The tool **does not set any cookies of its own**. There are no profiling, marketing, or
 third-party cookies.
 
-### 6. Service worker / offline functionality
+### 7. Service worker / offline functionality
 
 The tool installs a *service worker* to enable offline use and instant loading after
 the first visit. The service worker only caches the app's static files (HTML/CSS/JS,
 icons) **on your device**: it does not collect or transmit any data.
 
-### 7. No advertising, no data sale
+### 8. No advertising, no data sale
 
 The tool shows no advertising and does not sell, rent, or share any data with third
 parties for commercial purposes — not least because, as explained above, there is no

@@ -359,6 +359,42 @@ export function isLegacyBookmarkletPayload(value: unknown): boolean {
  * dati reali di gioco possono avere un impediment senza 'y' — vengono
  * filtrate a valle (import Pirati), qui si verifica solo che sia un array.
  */
+/**
+ * Host consentiti per l'avatar del giocatore (`portraitUrl`). Il campo arriva
+ * dal payload del bookmarklet — cioè da `srcLinks.GetPortrait()` nel gioco —
+ * ed è l'UNICO URL esterno che l'app carica su indicazione di dati importati.
+ * Gli avatar stanno sul CDN di InnoGames, che usa host per mercato
+ * (foeit/foezz/foeen/...): il match è quindi sul suffisso del dominio.
+ */
+const PORTRAIT_ALLOWED_HOST_SUFFIX = ".innogamescdn.com";
+
+/**
+ * Normalizza `portraitUrl` accettando SOLO https su un host InnoGames noto.
+ *
+ * ⚠️ Non è un problema di XSS (`javascript:` non esegue dentro `<img src>`, e un
+ * SVG caricato via `<img>` non può eseguire script), ma di PRIVACY: senza questo
+ * filtro un profilo condiviso da terzi — i file di export nascono proprio per
+ * essere scambiati — poteva puntare a un server arbitrario, che riceveva una
+ * richiesta a ogni apertura dell'app rivelando IP e user-agent di chi lo aveva
+ * importato, e confermando all'attaccante che quel file era stato aperto.
+ *
+ * Restituisce "" per qualunque valore non conforme: il chiamante mostra
+ * semplicemente l'avatar segnaposto, esattamente come per un profilo importato
+ * con un bookmarklet più vecchio che l'avatar non lo catturava affatto.
+ */
+export function sanitizePortraitUrl(value: unknown): string {
+  if (typeof value !== "string" || value === "") return "";
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:") return "";
+    if (!parsed.hostname.endsWith(PORTRAIT_ALLOWED_HOST_SUFFIX)) return "";
+    return parsed.toString();
+  } catch {
+    // URL relativo o malformato: scartato.
+    return "";
+  }
+}
+
 export function validateBookmarkletPirateOutpostData(value: unknown): value is BookmarkletPirateOutpostData {
   if (!value || typeof value !== "object") return false;
   const payload = value as Record<string, unknown>;

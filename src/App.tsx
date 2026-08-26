@@ -28,7 +28,7 @@ import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, t
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, sanitizePortraitUrl, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
 import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
@@ -1941,7 +1941,9 @@ export default function App() {
     setEntityInstanceEraStats(new Map(rawIES.map(([k, v]: [string, Array<[string, number, EraStats]>]) => [k, v])));
     setGameNames(reviveMap<string>(city?.gameNames));
     setGameLang(city?.gameLang === "it" || city?.gameLang === "en" ? city.gameLang : "it");
-    setPortraitUrl(typeof city?.portraitUrl === "string" ? city.portraitUrl : "");
+    // sanitizePortraitUrl anche in rilettura da localStorage: un profilo può
+    // essere stato importato da un file di terzi prima che il filtro esistesse.
+    setPortraitUrl(sanitizePortraitUrl(city?.portraitUrl));
     setInventoryMatched(reviveMap<InventoryEntry>(inv?.inventoryMatched));
     setInventoryUnmatched(reviveMap<InventoryEntry>(inv?.inventoryUnmatched));
     setInventorySelectionKits(reviveMap<SelectionKitEntry>(inv?.inventorySelectionKits));
@@ -2125,7 +2127,7 @@ export default function App() {
     const s = getInitCity()?.gameLang;
     return s === "it" || s === "en" ? s : "it";
   });
-  const [portraitUrl, setPortraitUrl] = useState<string>(() => getInitCity()?.portraitUrl ?? "");
+  const [portraitUrl, setPortraitUrl] = useState<string>(() => sanitizePortraitUrl(getInitCity()?.portraitUrl));
   const [selectedJsonEntry, setSelectedJsonEntry] = useState<DebugJsonEntry | null>(null);
   const [upgradeTooltip, setUpgradeTooltip] = useState<{ x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null>(null);
   // Popup anteprima immagine edificio: posizione + url + nome (alt/titolo).
@@ -2704,7 +2706,7 @@ export default function App() {
       setEraStats(eraStatsMap);
       setGameNames(gameNames);
       setGameLang(gameLang);
-      setPortraitUrl(typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : "");
+      setPortraitUrl(sanitizePortraitUrl(preloadedData.portraitUrl));
       setEntityLevels(entityLevels);
       setEntityLevelsList(entityLevelsList);
 
@@ -2786,7 +2788,9 @@ export default function App() {
         declassableBuildings: Array.from(declassableMap.entries()),
         gameNames: Array.from(gameNames.entries()),
         gameLang,
-        portraitUrl: typeof preloadedData.portraitUrl === "string" ? preloadedData.portraitUrl : undefined,
+        // Filtrato PRIMA di essere persistito: così un URL ostile non resta
+        // nemmeno salvato nel profilo (vedi sanitizePortraitUrl).
+        portraitUrl: sanitizePortraitUrl(preloadedData.portraitUrl) || undefined,
         bookmarkletVersion: typeof preloadedData._v === "number" ? preloadedData._v : 0,
         // `satisfies CityStore`: writeStoredJson accetta `unknown`, quindi senza
         // questa verifica strutturale un campo dimenticato o con typo

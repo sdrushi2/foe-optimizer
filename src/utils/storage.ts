@@ -45,17 +45,79 @@ function isCompressedKey(key: string): boolean {
   return key.startsWith("foe_p_");
 }
 
+/**
+ * Tetto alla dimensione DECOMPRESSA di un blob profilo.
+ *
+ * ⚠️ Difesa contro le "bombe di decompressione": i blob `foe_p_*` sono
+ * gzip+base64 e possono arrivare da un file di import condiviso da terzi (vedi
+ * mergeImportedProfiles). Il gzip raggiunge facilmente rapporti di 700:1 —
+ * misurato: 253 KB nel file di import producevano 200 MB in memoria. Peggio, il
+ * blob viene PERSISTITO: senza limite l'esplosione si ripeteva a ogni
+ * caricamento successivo, rendendo l'app inutilizzabile finché l'utente non
+ * svuotava lo storage a mano.
+ *
+ * 32 MB è abbondante per una città reale (i dati veri stanno in poche centinaia
+ * di KB decompressi) e blocca comunque qualunque bomba pratica.
+ */
+const MAX_DECOMPRESSED_BYTES = 32 * 1024 * 1024;
+
+/**
+ * L'input viene spinto nel decompressore a FETTE, controllando l'output dopo
+ * ognuna: è ciò che rende il limite efficace in memoria e non solo formale.
+ * Con un unico `push` di tutto il buffer, pako decomprime comunque l'intero
+ * contenuto prima che il controllo possa scattare (misurato: 400 MB allocati
+ * lo stesso). A fette da 16 KB l'interruzione avviene in ~70ms senza crescita
+ * di heap misurabile.
+ */
+const INFLATE_SLICE_BYTES = 16 * 1024;
+
+function inflateWithLimit(bytes: Uint8Array): string {
+  const inflator = new pako.Inflate();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  // `Inflate` (a differenza della funzione pako.inflate) emette Uint8Array:
+  // il limite è quindi in BYTE, e la conversione a stringa avviene alla fine,
+  // una volta sola, solo se il totale è rientrato nel tetto.
+  inflator.onData = (chunk: Uint8Array) => {
+    chunks.push(chunk);
+    total += chunk.length;
+  };
+
+  for (let offset = 0; offset < bytes.length; offset += INFLATE_SLICE_BYTES) {
+    const end = Math.min(offset + INFLATE_SLICE_BYTES, bytes.length);
+    inflator.push(bytes.subarray(offset, end), end >= bytes.length);
+    if (total > MAX_DECOMPRESSED_BYTES) {
+      throw new Error("DECOMPRESSED_TOO_LARGE");
+    }
+    if (inflator.err) throw new Error("INFLATE_ERROR");
+  }
+  if (inflator.err) throw new Error("INFLATE_ERROR");
+
+  const merged = new Uint8Array(total);
+  let position = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, position);
+    position += chunk.length;
+  }
+  return new TextDecoder().decode(merged);
+}
+
 export function readStoredJson<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
     if (isCompressedKey(key)) {
       const binary = Uint8Array.from(atob(raw), c => c.charCodeAt(0));
-      const json = pako.inflate(binary, { toText: true });
-      return JSON.parse(json) as T;
+      return JSON.parse(inflateWithLimit(binary)) as T;
     }
     return JSON.parse(raw) as T;
-  } catch {
+  } catch (err) {
+    // Diagnostica in inglese (non testo per l'utente): senza questo log, un
+    // blob rifiutato perché troppo grande sarebbe indistinguibile da un
+    // profilo semplicemente vuoto.
+    if (err instanceof Error && err.message === "DECOMPRESSED_TOO_LARGE") {
+      console.warn(`[FOE] refused to decompress "${key}": exceeds ${MAX_DECOMPRESSED_BYTES} bytes (possible decompression bomb)`);
+    }
     return fallback;
   }
 }
