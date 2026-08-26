@@ -31,7 +31,7 @@ import type { CityStore } from "./data/cityStore";
 import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, HIDE_NO_RUSH_KEY, HIDE_ERA_MUTABLE_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -2886,12 +2886,16 @@ export default function App() {
   // la visibilità del pannello è resa globale e persistente, non la
   // selezione dei filtri al suo interno.
   const [showProdColumns, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
-  // Nasconde tutte le righe con badge NoRush (🚫): globale come showProdColumns,
-  // persistente, applicato dentro filteredBuildings insieme agli altri filtri.
-  const [hideNoRush, setHideNoRush] = useState<boolean>(() => localStorage.getItem(HIDE_NO_RUSH_KEY) === "true");
+  // Nasconde tutte le righe con badge NoRush (🚫), applicato dentro
+  // filteredBuildings insieme agli altri filtri.
+  // ⚠️ NON persistente (a differenza di showProdColumns e degli altri toggle
+  // globali qui sopra): riparte sempre spento a ogni caricamento. È un filtro
+  // che RIMUOVE righe dalla tabella, e ritrovarlo attivo da una sessione
+  // precedente faceva sembrare mancanti degli edifici che invece ci sono.
+  const [hideNoRush, setHideNoRush] = useState(false);
   // Nasconde tutte le righe con badge auto-aging (^): stesso identico
-  // pattern di hideNoRush sopra.
-  const [hideEraMutable, setHideEraMutable] = useState<boolean>(() => localStorage.getItem(HIDE_ERA_MUTABLE_KEY) === "true");
+  // pattern di hideNoRush sopra, non persistente per lo stesso motivo.
+  const [hideEraMutable, setHideEraMutable] = useState(false);
   // Vista database tab Info: false = LIGHT (solo edifici principali Lin=1,
   // default), true = FULL (tutti, inclusi livelli intermedi/varianti).
   const [dbViewFull, setDbViewFull] = useState<boolean>(() => localStorage.getItem(DB_VIEW_KEY) === "full");
@@ -3437,10 +3441,10 @@ export default function App() {
     localStorage.setItem(FEL_COLUMN_KEY, showFelColumn.toString());
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
     localStorage.setItem(PROD_COLUMNS_KEY, showProdColumns.toString());
-    localStorage.setItem(HIDE_NO_RUSH_KEY, hideNoRush.toString());
-    localStorage.setItem(HIDE_ERA_MUTABLE_KEY, hideEraMutable.toString());
+    // hideNoRush/hideEraMutable NON vengono salvati: ripartono spenti a ogni
+    // caricamento (vedi il commento sulla loro dichiarazione).
     localStorage.setItem(DB_VIEW_KEY, dbViewFull ? "full" : "light");
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, hideNoRush, hideEraMutable, dbViewFull]);
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, dbViewFull]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {

@@ -16,10 +16,10 @@
 14;ArcticFuture;Futuro artico;Arctic Future
 15;OceanicFuture;Futuro oceanico;Oceanic Future
 16;VirtualFuture;Futuro virtuale;Virtual Future
-17;SpaceAgeMars;Era spaziale di Marte;Space Age Mars
-18;SpaceAgeAsteroidBelt;Era spaziale della Fascia degli asteroidi;Space Age Asteroid Belt
-19;SpaceAgeVenus;Era spaziale di Venere;Space Age Venus
-20;SpaceAgeJupiterMoon;Era spaziale del Satellite di Giove;Space Age Jupiter Moon
-21;SpaceAgeTitan;Era spaziale di Titano;Space Age Titan
+17;SpaceAgeMars;Marte;Space Age Mars
+18;SpaceAgeAsteroidBelt;Fascia degli asteroidi;Space Age Asteroid Belt
+19;SpaceAgeVenus;Venere;Space Age Venus
+20;SpaceAgeJupiterMoon;Giove;Space Age Jupiter Moon
+21;SpaceAgeTitan;Titano;Space Age Titan
 22;SpaceAgeSpaceHub;Hub Spaziale;Space Age Space Hub
-23;StellarAgeDiscovery;Stellar Age: Discovery;Stellar Age: Discovery
+23;StellarAgeDiscovery;Era Stellare;Stellar Age: Discovery

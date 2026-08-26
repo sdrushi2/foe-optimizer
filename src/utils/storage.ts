@@ -21,12 +21,6 @@ export const POP_COLUMN_KEY = `foe_global_show_pop_column_${V}`;
 export const FEL_COLUMN_KEY = `foe_global_show_fel_column_${V}`;
 export const IQ_PROD_COLUMNS_KEY = `foe_global_show_iq_prod_columns_${V}`;
 export const PROD_COLUMNS_KEY = `foe_global_show_prod_columns_${V}`;
-// Nasconde tutte le righe con badge NoRush (🚫): globale come le altre
-// preferenze della sezione Produzioni, non per-tab.
-export const HIDE_NO_RUSH_KEY = `foe_global_hide_no_rush_${V}`;
-// Nasconde tutte le righe con badge auto-aging/isEraMutable (^): stesso
-// pattern di HIDE_NO_RUSH_KEY.
-export const HIDE_ERA_MUTABLE_KEY = `foe_global_hide_era_mutable_${V}`;
 export const SHOW_CITY_MAP_KEY = `foe_global_show_city_map_${V}`;
 // Vista database tab Info: "light" (solo edifici principali, Lin=1) o "full".
 export const DB_VIEW_KEY = `foe_global_db_view_${V}`;
@@ -128,6 +122,23 @@ export function isStorageOutdated(): boolean {
   return false;
 }
 
+/**
+ * Chiavi globali RITIRATE: erano scritte da versioni precedenti dell'app con il
+ * suffisso della versione di storage CORRENTE, quindi cleanupOrphanedKeys() le
+ * considererebbe valide e le lascerebbe lì per sempre. Vanno quindi rimosse
+ * esplicitamente, una volta sola, al primo avvio dopo l'aggiornamento.
+ *
+ * - hide_no_rush / hide_era_mutable (agosto 2026): i due filtri "nascondi 🚫" e
+ *   "nascondi ^" non sono più persistenti. Ripartono spenti a ogni caricamento:
+ *   sono filtri che RIMUOVONO righe dalla tabella, e ritrovarli attivi da una
+ *   sessione precedente faceva sembrare mancanti degli edifici che invece
+ *   c'erano — vedi la loro dichiarazione in App.tsx.
+ */
+const RETIRED_GLOBAL_KEYS = [
+  `foe_global_hide_no_rush_${V}`,
+  `foe_global_hide_era_mutable_${V}`,
+];
+
 export function cleanupOrphanedKeys() {
   const profiles = readStoredJson<Profile[]>(PROFILES_KEY, []);
   const validProfileKeys = new Set<string>();
@@ -141,6 +152,13 @@ export function cleanupOrphanedKeys() {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key?.startsWith("foe_")) continue;
+
+    // Ritirate: hanno il suffisso della versione corrente ma non sono più usate
+    // dall'app, quindi il controllo generico qui sotto le terrebbe in vita.
+    if (RETIRED_GLOBAL_KEYS.includes(key)) {
+      toRemove.push(key);
+      continue;
+    }
 
     // Proclama come "globale valida" solo se appartiene alla versione corrente
     const isGlobalCurrentVersion = key.startsWith("foe_global_") && key.endsWith(`_${V}`);
