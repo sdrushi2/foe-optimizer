@@ -301,17 +301,29 @@ export class BuildingModel {
     // bonus, andrebbe gestito qui con lo stesso pattern: leggere bonusType
     // (es. "guild_raids_coins_production") e assegnare il valore al campo
     // IQ corrispondente, seguendo BOOST_MAP come riferimento per i nomi.
-    // NOTA FUTURA (agosto 2026, BeniSp): stesso discorso per i "Beni
-    // Speciali" — nessun GE oggi ha un `p.name` riconducibile a
-    // random_special_good_up_to_age/each_special_goods_up_to_age (i 7
-    // edifici noti che li producono sono tutti W_MultiAge_*, non GE).
-    // `benisp` resta sempre 0 per i GE (via createBaseBuilding). Se in
-    // futuro un GE dovesse produrne, aggiungere un ramo `p.name === "..."`
-    // nel forEach dei `products` sotto, come per `beniP`/`beniS`.
-    // NOTA FUTURA (agosto 2026, BeniSpB): stesso discorso per il boost
-    // "special_goods_production" — nessun GE oggi ha questo BoostHint
-    // (l'unico edificio noto, W_MultiAge_SUM25E1, non è un GE). `benispb`
-    // resta sempre 0 per i GE (via createBaseBuilding).
+    // BeniSp (agosto 2026): X_SpaceAgeAsteroidBelt_Landmark1 è l'UNICO GE
+    // con un bonus type="special_goods" nel MainParser (bonusCategory=
+    // "productionBonus", targetedFeature="all", schema `bonuses[].bonuses[]`
+    // dei GE — diverso da random_special_good_up_to_age/
+    // each_special_goods_up_to_age usati dagli edifici W_MultiAge_* normali,
+    // che vivono in `components.*.production` e non in `bonuses`). Stesso
+    // pattern già in uso per clan_goods/happiness/population qui sotto: nel
+    // payload città (bookmarklet) `gb.rawEntry.bonuses` è la lista già
+    // appiattita al livello posseduto, quindi basta cercare `type ===
+    // "special_goods"` come per gli altri bonus passivi — nessun `p.name`
+    // in `current_product` (questo bonus non è un prodotto selezionabile,
+    // è passivo come clan_goods/happiness). Verificato sul MainParser: 1
+    // sola occorrenza di questo bonus type in tutto il file. Deliberatamente
+    // NON estratto in buildings.py/buildings.csv: per coerenza con la
+    // convenzione consolidata, nessun GE ha mai Beni/BeniP/BeniS/BeniG
+    // popolati nel CSV statico (dipendono dal livello posseduto, non da
+    // BOOST_ERA) — si vedono solo qui, dopo l'import città.
+    let beniSp = 0;
+    const specialGoodsBonus = allBonuses.find((b) => b.type === "special_goods");
+    if (specialGoodsBonus) beniSp = Number(specialGoodsBonus.value ?? 0);
+    // NOTA FUTURA (agosto 2026, BeniSpB): nessun GE oggi ha il BoostHint
+    // "special_goods_production" (l'unico edificio noto, W_MultiAge_SUM25E1,
+    // non è un GE). `benispb` resta sempre 0 per i GE (via createBaseBuilding).
 
     // Produzioni
     let beniG = 0, beni = 0, beniP = 0, beniS = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0;
@@ -347,7 +359,7 @@ export class BuildingModel {
       ...BuildingModel.createBaseBuilding(`ge-${gb.entityId}`, italianNames.get(gb.entityId) ?? gb.entityId),
       size, area,
       road: BuildingModel.getRoadForGreatBuildingSize(size),
-      pop, fel, general, fp, tr, beni, benip: beniP, benis: beniS, benig: beniG, mon, mat,
+      pop, fel, general, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat,
       cityEntityId: gb.entityId,
       hash,
       isGreatBuilding: true,

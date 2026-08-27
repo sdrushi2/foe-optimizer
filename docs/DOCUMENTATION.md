@@ -1708,6 +1708,40 @@ noto "each" + `special_goods_production`, non generalizzato). Verificato con
 simulazione standalone: 855 corretto contro 851 sbagliato. `tsc --noEmit` e
 `vite build` puliti.
 
+**Esempio recente #4 (agosto 2026): BeniSp da Grande Edificio,
+`X_SpaceAgeAsteroidBelt_Landmark1`.** L'utente ha segnalato che questo GE (Trasportatore
+spaziale/Space Carrier) produce beni speciali. Verifica sul MainParser: 1 sola
+occorrenza in tutto il file di un bonus GE con `type: "special_goods"` — schema
+`bonuses[].bonuses[]` (`GreatBuildingTierBonus`/`GreatBuildingBonus`, il formato
+"vecchio stile" dei GE con `entity_levels`), completamente diverso dalle chiavi
+`random_special_good_up_to_age`/`each_special_goods_up_to_age` usate dagli edifici
+W_MultiAge_* normali (che vivono in `components.*.production`). Valori per livello di
+tier (solo `copper`): `[17, 313, 400, 400, 400]`.
+
+Primo tentativo: scrivere il valore base (17) nel CSV statico — corretto dall'utente,
+che ha fatto notare la convenzione già consolidata (verificata: 0 dei 49 edifici `X_*`
+nel CSV hanno mai Beni/BeniP/BeniS/BeniG popolati, perché la produzione di un GE
+dipende dal livello posseduto — diamanti/forgiatura — non da `BOOST_ERA`, quindi non
+ha senso un valore "di catalogo" fisso). `buildings.py` NON estrae questo bonus:
+resta solo un commento esplicativo. L'unica estrazione reale è in `BuildingModel.ts`
+(`fromGreatBuilding()`): il payload città del bookmarklet espone i bonus del GE già
+appiattiti al livello posseduto in `gb.rawEntry.bonuses`, quindi
+`allBonuses.find(b => b.type === "special_goods")` restituisce direttamente il
+valore reale — stesso pattern già in uso per `clan_goods`/`happiness`/`population`.
+Validato: CSV verificato invariato rispetto a prima (`BeniSp` vuoto per questo GE,
+come tutti gli altri), colonna `Lin` intatta (872 edifici). `tsc --noEmit` e
+`vite build` puliti.
+
+> **Nota tecnica (merge CSV): attenzione alle terminazioni di riga.** Un primo
+> tentativo di merge con `csv.writer`/`newline=''` ha riscritto il file con LF puro
+> invece di preservare la terminazione originale, producendo un diff git di 2157 righe
+> anche se il contenuto reale cambiava solo su 1 riga. Fix: leggere il destinazione
+> come bytes, rilevare la terminazione dominante, modificare solo i campi necessari
+> via split/join di stringa, riscrivere preservando la terminazione originale. Un
+> `git diff --stat` che mostra "tutte le righe cambiate" dopo un merge CSV è un segnale
+> di terminazioni disallineate, non un merge realmente esteso — va sempre verificato
+> prima di considerare il merge completo.
+
 > **Nota anti-regressione.** Il calcolo di area e dimensione esiste in **due** posti con
 > scopi diversi e non vanno duplicati "per comodità": `getCityEntitySize` /
 > `areaFromCityEntity`-style derivano le dimensioni dal componente `CityEntity` (usato
