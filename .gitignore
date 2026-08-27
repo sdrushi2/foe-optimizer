@@ -7,8 +7,7 @@ dist/
 # Documentazione privata della skill (non va in repo)
 docs/SKILL.md
 
-# Script di manutenzione dati (non parte del bundle)
-scripts/
+# Script locale di controllo pre-commit/deploy (non parte del bundle)
 check-all.bat
 
 # File di sistema/editor comuni

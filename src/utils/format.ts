@@ -26,6 +26,7 @@ export function isStaleField(value: unknown): boolean {
 export function formatInt(value: number): string {
   if (value === 0) return "0";
   const abs = Math.trunc(Math.abs(value)).toString();
+  // eslint-disable-next-line security/detect-unsafe-regex -- input sempre una stringa di sole cifre (Math.trunc(Math.abs(value)).toString()), lunghezza limitata: nessun rischio ReDoS reale.
   const formatted = abs.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return value < 0 ? `-${formatted}` : formatted;
 }

@@ -543,7 +543,7 @@ costruito dai dati di gioco. Campi principali:
 ### Statistiche di base
 - `pop` — popolazione fornita.
 - `fel` — felicità fornita.
-- `lin` — `true` se fa parte del set "principale" (823 edifici storici, `Lin=1` nel
+- `light` — `true` se fa parte del set "principale" (823 edifici storici, `Light=1` nel
   CSV). Distingue gli edifici principali dai livelli intermedi/varianti. Usato dallo
   switch LIGHT/FULL nella tab Info.
 
@@ -611,7 +611,7 @@ e diventano parte del bundle. Sono la base dati immutabile del tool.
 intestazione. Contiene ~2050 edifici. Colonne principali:
 
 ```text
-CityEntityId; NomeIta; NomeEng; Hash; Lin; Kit; Time; Size; Road; Pop; Fel;
+CityEntityId; NomeIta; NomeEng; Hash; Light; Kit; Time; Size; Road; Pop; Fel;
 BP; PF; PFB; FUR; TR; TRNE; Beni; BeniP; BeniS; BeniSp; BeniSpB; BeniB; BeniG;
 GenAtk_A; GenDef_A; GenAtk_D; GenDef_D;
 CampiAtk_A; CampiDef_A; CampiAtk_D; CampiDef_D;
@@ -621,7 +621,7 @@ IQBeni; IQTruppe; IQAzioni; IQCap; Ally;
 FSP; TPM; TPB; ADM; MOD; RIN; IMM; Fragments
 ```
 
-`Lin` è un flag manuale di riferimento per stabilire gli edifici da includere
+`Light` è un flag manuale di riferimento per stabilire gli edifici da includere
 nella visualizzazione `Light` delle tabelle.
 
 **`Ally`** (cambiata semantica l'11 agosto 2026): NON è più un booleano 0/1,
@@ -1018,7 +1018,7 @@ scrivere un CSV vuoto che sembrerebbe un run riuscito).
   bare — così funziona anche sui file d'archivio) e recupera gli alleati completi
   anche da file troncati.
 - **`linnun.py`**, **`lin_inject.py`**, **`confronta_buildings.py`** — modello
-  predittivo per la colonna `Lin` (db di training protetto `lin_training.db`); i nomi
+  predittivo per la colonna `Light` (db di training protetto `lin_training.db`); i nomi
   alleati arrivano dagli stessi file Allies.
 - **`parse_kit.py`** — genera `kit.json`. ⚠️ Le `options` dei selection kit usano
   l'ID REALE dell'item (`upgradeItemId` per i kit, `cityEntityId` per gli edifici),
@@ -1688,7 +1688,7 @@ applicato se l'era non è risolvibile, per non produrre un `NaN` silenzioso).
 
 Validato: CSV rigenerato dal MainParser due volte (prima e dopo il fix del
 moltiplicatore), confrontato riga per riga col precedente ad ogni giro — zero
-differenze eccetto la nuova colonna `BeniSp`/`Lin` al primo giro, e la sola riga
+differenze eccetto la nuova colonna `BeniSp`/`Light` al primo giro, e la sola riga
 `LTE24A11` (90 → 810) al secondo giro. `tsc --noEmit` e `vite build` puliti dopo
 entrambe le modifiche.
 
@@ -1765,7 +1765,7 @@ appiattiti al livello posseduto in `gb.rawEntry.bonuses`, quindi
 `allBonuses.find(b => b.type === "special_goods")` restituisce direttamente il
 valore reale — stesso pattern già in uso per `clan_goods`/`happiness`/`population`.
 Validato: CSV verificato invariato rispetto a prima (`BeniSp` vuoto per questo GE,
-come tutti gli altri), colonna `Lin` intatta (872 edifici). `tsc --noEmit` e
+come tutti gli altri), colonna `Light` intatta (872 edifici). `tsc --noEmit` e
 `vite build` puliti.
 
 > **Nota tecnica (merge CSV): attenzione alle terminazioni di riga.** Un primo

@@ -2908,7 +2908,7 @@ export default function App() {
   // Nasconde tutte le righe con badge auto-aging (^): stesso identico
   // pattern di hideNoRush sopra, non persistente per lo stesso motivo.
   const [hideEraMutable, setHideEraMutable] = useState(false);
-  // Vista database tab Info: false = LIGHT (solo edifici principali Lin=1,
+  // Vista database tab Info: false = LIGHT (solo edifici principali Light=1,
   // default), true = FULL (tutti, inclusi livelli intermedi/varianti).
   const [dbViewFull, setDbViewFull] = useState<boolean>(() => localStorage.getItem(DB_VIEW_KEY) === "full");
   // Lingua della GUI (etichette/tooltip statici): scelta esplicita
@@ -3898,7 +3898,7 @@ export default function App() {
   // Helper: building placeholder per edifici non presenti nel CSV.
   const placeholderBuilding = useCallback((bldId: string, name: string): InventoryRowBuilding => {
     return {
-      id: `placeholder-${bldId}`, name, names: { it: name, en: name }, hash: "", lin: false, cityEntityId: bldId,
+      id: `placeholder-${bldId}`, name, names: { it: name, en: name }, hash: "", light: false, cityEntityId: bldId,
       time: 0, size: "?", area: 0, road: 0, pop: 0, fel: 0,
       general: [0,0,0,0], gbg: [0,0,0,0], sped: [0,0,0,0], iq: [0,0,0,0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
@@ -4148,10 +4148,10 @@ export default function App() {
     const isDatabase = activeTab === "database";
     for (const b of sourceBuildings) {
       // 0. Vista LIGHT (solo tab Info/database): mostra solo gli edifici
-      // "principali" (lin=true, i 823 storici), nascondendo livelli intermedi
+      // "principali" (light=true, i 823 storici), nascondendo livelli intermedi
       // e varianti. In FULL si vedono tutti. Negli altri tab non si applica:
       // lì la lista è già ristretta agli edifici effettivamente posseduti.
-      if (isDatabase && !dbViewFull && !b.lin) continue;
+      if (isDatabase && !dbViewFull && !b.light) continue;
 
       // 1. Tab-specific membership check
       if (isPropriacitta) {

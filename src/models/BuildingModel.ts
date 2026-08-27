@@ -112,8 +112,8 @@ const GOODS_KEYS: Record<"beni" | "benip" | "benis" | "benisp", string[]> = {
 // SPECIAL_GOOD_EXCLUDED_ERA_IDS in buildings.py (RECUPERO DATI): se cambia
 // un lato va aggiornato anche l'altro. Confermato in game dall'utente
 // (agosto 2026): un edificio "each" con l'era attuale = StellarAgeDiscovery
-// (id 23) deve dare valore_unitario × 9, non × 8 come risultava dal foglio
-// raw di Linnun (disallineato).
+// (id 23) deve dare valore_unitario × 9, non × 8 come risultava da un
+// foglio di validazione esterno (disallineato).
 const SPECIAL_GOOD_FIRST_ERA_ID = 14; // ArcticFuture
 const SPECIAL_GOOD_EXCLUDED_ERA_IDS = new Set([16]); // VirtualFuture
 
@@ -185,7 +185,7 @@ export class BuildingModel {
    */
   private static createBaseBuilding(id: string, name: string): Building {
     return {
-      id, name, names: { it: name, en: name }, hash: "", lin: false, cityEntityId: id,
+      id, name, names: { it: name, en: name }, hash: "", light: false, cityEntityId: id,
       time: 0, size: "1x1", area: 1, road: 0, pop: 0, fel: 0,
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
@@ -856,7 +856,13 @@ export class BuildingModel {
       // dinamicamente invece di un codice era hardcoded — altrimenti
       // smetterebbe di matchare non appena esce una nuova era (gemello
       // Python: BOOST_ERA in RECUPERO DATI/buildings.py, stessa logica).
-      const m = rid.match(new RegExp(`${FALLBACK_ERA}(\\d+)`));
+      // Escape dei metacaratteri regex: FALLBACK_ERA e' un codice era di
+      // dominio (mai input utente), ma l'escape rende il match robusto anche
+      // se un futuro codice era contenesse caratteri speciali, e in piu' zittisce
+      // il falso positivo eslint (nessuna stringa non fidata entra nella regex).
+      const escapedEra = FALLBACK_ERA.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // eslint-disable-next-line security/detect-non-literal-regexp -- FALLBACK_ERA e' sanitizzato sopra (escape dei metacaratteri), non input esterno.
+      const m = rid.match(new RegExp(`${escapedEra}(\\d+)`));
       return m ? parseInt(m[1], 10) : 0;
     }
     return 0;
@@ -1014,13 +1020,17 @@ export class BuildingModel {
       } else if (neByType[unitType] === undefined) {
         for (const [amt, chance] of entries) tr += amt * chance;
       } else {
-        const titanNeAmt = neByType[unitType];
+        // refNeAmt: quantita' NE dell'era di riferimento (neByType, derivato
+        // da prevEra/era corrente in buildPrevNextEraKeys) — nome storico
+        // "titanNeAmt" rinominato (agosto 2026): non e' specifico dell'era
+        // Titano, il valore segue qualunque sia l'era di riferimento attuale.
+        const refNeAmt = neByType[unitType];
         if (entries.length === 1) {
           const [amt, chance] = entries[0];
           trne += amt * chance;
         } else {
           for (const [amt, chance] of entries) {
-            if (amt === titanNeAmt) trne += amt * chance;
+            if (amt === refNeAmt) trne += amt * chance;
             else tr += amt * chance;
           }
         }
@@ -1053,6 +1063,7 @@ export class BuildingModel {
 
   /** Frammenti estratti dall'id del reward (fragment#base_id#N o item intero). */
   private static fragmentsFromRewardId(rewardId: string, baseId: string): number {
+    // eslint-disable-next-line security/detect-non-literal-regexp -- baseId e' gia' sanitizzato (replace esegue l'escape dei metacaratteri), non input esterno grezzo.
     const m = rewardId.match(new RegExp(`fragment#${baseId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}#(\\d+)`));
     if (m) return parseInt(m[1], 10);
     if (rewardId === baseId) return REQUIRED_FRAGMENTS[baseId] ?? 1;

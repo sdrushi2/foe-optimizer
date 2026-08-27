@@ -3,7 +3,7 @@ import { isGreatBuildingId, isMilitaryBuildingId, isInactiveBuildingId, isGoodsF
 import { isUniqueBuildingId } from "./uniqueBuildings";
 
 /** Bit noti di components.AllAge.flags.flags nel MainParser (agosto 2026),
- *  confermati da Linnun leggendo il codice client minificato (non solo per
+ *  confermati leggendo il codice client minificato (non solo per
  *  deduzione empirica) — vedi buildings.py in RECUPERO DATI (commento sopra
  *  extract_flags()) per la mappa completa e la storia dell'indagine. Solo
  *  ERA_MUTABLE e NO_RUSH sono consumati oggi (vedi getter
@@ -53,9 +53,9 @@ export interface Building {
    *  per gli edifici senza immagine (es. i "Dummy"). */
   hash: string;
   /** true se l'edificio fa parte del set "principale" (823 edifici storici,
-   *  Lin=1 nel CSV); false per i livelli intermedi/varianti aggiunti dopo.
+   *  Light=1 nel CSV); false per i livelli intermedi/varianti aggiunti dopo.
    *  Usato dallo switch LIGHT/FULL nella tab Info. */
-  lin: boolean;
+  light: boolean;
   time: number;
   size: string; // es. "3x5" (solo per visualizzazione)
   area: number; // es. 15 (per ordinamento e logica)
@@ -181,7 +181,7 @@ export function noRush(b: Pick<Building, "flags">): boolean {
  *  si aggiorna da solo quando il giocatore entra in una nuova era, senza
  *  bisogno di kit di aggiornamento manuale). Derivato da `b.flags` (bit 2/
  *  KNOWN_FLAGS.ERA_MUTABLE), stesso pattern di `noRush` sopra — nome
- *  ufficiale confermato da Linnun leggendo il codice client, validato
+ *  ufficiale confermato leggendo il codice client, validato
  *  empiricamente su un campione controllato di 18 edifici auto-aging noti
  *  vs 33 non-auto-aging (zero eccezioni) prima ancora della conferma. */
 export function isEraMutable(b: Pick<Building, "flags">): boolean {
@@ -376,7 +376,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
       name,
       names,
       hash: getText(parts, "Hash"),
-      lin: getText(parts, "Lin") === "1",
+      light: getText(parts, "Light") === "1",
       time: getNumber(parts, "Time"),
       size,
       area,
