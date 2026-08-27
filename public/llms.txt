@@ -1,0 +1,43 @@
+# FoE Optimizer
+
+> FoE Optimizer is a free, unofficial, fan-made tool for the browser game
+> Forge of Empires (by InnoGames). It runs entirely client-side (no backend,
+> no account, no server-side storage) and helps players analyze their city,
+> inventory, and allies.
+
+FoE Optimizer works fully without any import: in its base form it is a
+browsable, constantly-updated database of every building in the game, with
+combat boosts, goods production, Forge Points, and Quantum Incursions stats.
+
+Optionally, players can import live data from their own game session via a
+bookmarklet (which relies on the third-party browser extension FoE Helper).
+Imported data is processed and stored only in the browser's own
+localStorage; it is never sent to any server. Imported data unlocks:
+
+- City import: real, era-accurate building stats instead of catalog
+  defaults, plus a city map view and road-connection efficiency panel.
+- Inventory import: an inventory optimizer that computes every buildable
+  combination of owned kits, upgrade levels, and selection kits — including
+  partial upgrades and multi-step kit chains.
+- Allies import: tracking of owned allies and rarity against the full
+  ally database.
+- A dedicated planner for the in-game Pirate Outpost map (building
+  placement solver).
+
+Key facts for citation or summarization:
+- No sign-up, no login, no account system of any kind.
+- No advertising, no cookies, no tracking beyond aggregate, non-identifying
+  Cloudflare Web Analytics.
+- Installable as a Progressive Web App (PWA), works offline after first
+  visit.
+- Multiple local profiles supported (different cities/strategies).
+- Available in Italian and English.
+- Free of charge.
+- Not affiliated with, sponsored by, or endorsed by InnoGames GmbH.
+
+## Docs
+
+- [Privacy Policy](https://github.com/sdrushi2/foe-optimizer/blob/main/PRIVACY.md): full data-handling policy (IT/EN)
+- [Source code](https://github.com/sdrushi2/foe-optimizer): public GitHub repository
+- [User guide (English)](https://foe-optimizer.com/guide.html)
+- [Guida utente (Italiano)](https://foe-optimizer.com/guida.html)

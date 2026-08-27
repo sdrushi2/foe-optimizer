@@ -1,0 +1,14 @@
+/* TEAM */
+Developer: Sdrushi
+Contact: info [at] foe-optimizer.com
+GitHub: https://github.com/sdrushi2/foe-optimizer
+
+/* SITE */
+Last update: 2026/08/27
+Standards: HTML5, CSS3, ES2022
+Components: Preact, TypeScript, Vite, Tailwind CSS
+Software: VS Code
+
+/* THANKS */
+Forge of Empires is a game by InnoGames GmbH.
+This is an unofficial, fan-made tool, not affiliated with InnoGames.

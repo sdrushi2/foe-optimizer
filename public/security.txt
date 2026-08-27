@@ -1,0 +1,8 @@
+# FoE Optimizer – Security Policy
+# If you have discovered a security vulnerability in this project, please
+# report it responsibly. We appreciate your help in keeping this tool safe.
+
+Contact: mailto:info@foe-optimizer.com
+Expires: 2027-07-09T00:00:00.000Z
+Preferred-Languages: en, it
+Canonical: https://foe-optimizer.com/.well-known/security.txt
