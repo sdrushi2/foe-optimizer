@@ -2470,8 +2470,27 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         </div>
 
         {/* Colonna sinistra: elenco edifici, per categoria, in stile FoE Optimizer
-            (bordi sottili border-slate-700/60, meno padding, font più piccolo). */}
-        <div className="order-1 min-w-0 mt-1 sm:mt-0">
+            (bordi sottili border-slate-700/60, meno padding, font più piccolo).
+            ⚠️ sm:h-full sm:min-h-0 sm:overflow-y-auto (agosto 2026, bug
+            segnalato dall'utente: "in desktop con finestra bassa gli ultimi
+            edifici sono sempre nascosti, niente scrollbar"): nel layout
+            affiancato la colonna planner (order-2, sopra) ha sm:h-full
+            sm:min-h-0 — si ridimensiona internamente entro l'altezza della
+            riga del grid, che è vincolata dall'altezza REALE propagata da
+            App.tsx. La colonna edifici invece cresceva col proprio
+            contenuto naturale (nessun vincolo di altezza): in una riga di
+            CSS Grid, quando l'altra colonna FISSA l'altezza della traccia,
+            una colonna senza il proprio overflow interno viene clippata
+            SILENZIOSAMENTE dal grid (nessuno scroll visibile) invece di far
+            scrollare il genitore — lo scroll-y del contenitore esterno
+            (overflow-y-auto) non basta, serve un overflow dedicato su
+            QUESTA colonna. Con sm:h-full sm:min-h-0 sm:overflow-y-auto,
+            la colonna edifici ha ora il proprio scroll interno indipendente
+            dal planner, esattamente come già ce l'ha il planner stesso.
+            Sotto 'sm' (mobile stack verticale) resta invariato: nessun
+            vincolo di altezza, cresce col contenuto come sempre — lì lo
+            scroll è già gestito dal contenitore esterno. */}
+        <div className="order-1 min-w-0 mt-1 sm:mt-0 sm:h-full sm:min-h-0 sm:overflow-y-auto">
           <section
             className={cx(
               "rounded border p-2.5 space-y-3 transition-colors",

@@ -500,6 +500,17 @@ rendendo la parte in eccesso (lista edifici o planner) irraggiungibile. Fix: rim
 scroll non scatta mai (nessun impatto), su mobile landscape resta sempre disponibile.
 `tsc --noEmit` e `vite build` puliti.
 
+**Bug desktop risolto (stesso giorno, dopo il fix sopra): finestra bassa, ultimi
+edifici nascosti, niente scrollbar.** Nel layout affiancato, la colonna planner
+(`order-2`) ha `sm:h-full sm:min-h-0` e si ridimensiona internamente entro l'altezza
+della riga del grid; la colonna edifici (`order-1`) invece cresceva col proprio
+contenuto naturale senza alcun vincolo — quando l'altra colonna della stessa riga di
+CSS Grid fissa l'altezza della traccia, una colonna priva di overflow proprio viene
+clippata silenziosamente dal grid (nessuno scroll visibile), e lo `overflow-y-auto`
+sul contenitore esterno da solo non basta. Fix: aggiunto `sm:h-full sm:min-h-0
+sm:overflow-y-auto` anche alla colonna edifici, che ora ha il proprio scroll interno
+indipendente dal planner. `tsc --noEmit` e `vite build` puliti.
+
 ---
 
 ## 7. Modello dati centrale: `Building`
