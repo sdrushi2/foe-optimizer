@@ -375,6 +375,14 @@ const UI_STRINGS = {
     it: "Beni era successiva",
     en: "Next era goods",
   },
+  prodGoodsSpecial: {
+    it: "Beni Speciali",
+    en: "Special Goods",
+  },
+  prodGoodsSpecialBoost: {
+    it: "Beni Speciali Boost",
+    en: "Special Goods Boost",
+  },
   prodGoodsBoost: {
     it: "Beni Boost",
     en: "Goods Boost",
@@ -1524,6 +1532,14 @@ const UI_STRINGS = {
   diffGoodsNextEra: {
     it: "Beni era succ.",
     en: "Next era goods",
+  },
+  diffGoodsSpecial: {
+    it: "Beni Speciali",
+    en: "Special Goods",
+  },
+  diffGoodsSpecialBoost: {
+    it: "Beni Speciali Boost",
+    en: "Special Goods Boost",
   },
   diffGoodsBoost: {
     it: "Boost Beni",

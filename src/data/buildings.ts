@@ -99,6 +99,20 @@ export interface Building {
   beni: number;
   benip: number;
   benis: number;
+  /** Beni Speciali (agosto 2026): un bene speciale casuale tra quelli
+   *  sbloccati fino all'era corrente (random_special_good_up_to_age nel
+   *  MainParser), oppure — su un solo edificio noto (Eternal Market -
+   *  Galactic Horizon) — il totale per ciascun bene speciale
+   *  (each_special_goods_up_to_age). Colonna CSV "BeniSp". Vedi
+   *  buildings.py (RECUPERO DATI), commento su GOODS_KEYS["BeniSp"]. */
+  benisp: number;
+  /** Boost % beni speciali (agosto 2026): boost city-wide alla produzione di
+   *  beni speciali, es. 0.05 = +5%. Colonna CSV "BeniSpB". UNICO edificio
+   *  noto: W_MultiAge_SUM25E1 (Queen Anne's Legacy). Mirror di `benib`
+   *  (goods_production) ma per il BoostHint "special_goods_production" —
+   *  vedi buildings.py (RECUPERO DATI), commento su "special_goods_production"
+   *  in _extract_goods_stats(). */
+  benispb: number;
   benib: number;
   benig: number;
   /** Monete prodotte giornalmente (produzione generica, non IQ). */
@@ -377,6 +391,8 @@ export function parseBuildingsCsv(csv: string): Building[] {
       beni: getNumber(parts, "Beni"),
       benip: getNumber(parts, "BeniP"),
       benis: getNumber(parts, "BeniS"),
+      benisp: getNumber(parts, "BeniSp"),
+      benispb: getNumber(parts, "BeniSpB"),
       benib: getNumber(parts, "BeniB"),
       benig: getNumber(parts, "BeniG"),
       mon: getNumber(parts, "Mon"),

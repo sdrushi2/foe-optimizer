@@ -43,7 +43,7 @@ import alliesCsv from "./assets/allies.csv?raw";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import eventsCsv from "./assets/events.csv?raw";
 import kitData from "./assets/kit.json";
-import { BuildingModel, type GreatBuilding, type EraStats } from "./models/BuildingModel";
+import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
 import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import ProfileHelpModal from "./components/ProfileHelpModal";
@@ -279,6 +279,8 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
     { key: "beni", labelKey: "diffGoods", icon: icons.iconBeni, get: sca("beni") },
     { key: "benip", labelKey: "diffGoodsPreviousEra", icon: icons.iconBeniP, get: sca("benip") },
     { key: "benis", labelKey: "diffGoodsNextEra", icon: icons.iconBeniS, get: sca("benis") },
+    { key: "benisp", labelKey: "diffGoodsSpecial", emoji: "🌟", get: sca("benisp") },
+    { key: "benispb", labelKey: "diffGoodsSpecialBoost", emoji: "🌠", get: sca("benispb") },
     { key: "benib", labelKey: "diffGoodsBoost", icon: icons.iconBeniB, get: sca("benib") },
     { key: "benig", labelKey: "diffTreasuryGoods", icon: icons.iconBeniG, get: sca("benig") },
     { key: "bp", labelKey: "diffBlueprints", icon: icons.iconBP, get: sca("bp") },
@@ -1737,6 +1739,12 @@ const BuildingRow = memo(function BuildingRow({
           <StaleFieldCell value={b.benis} className={`cell-num${b.benis > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benis)}
           </StaleFieldCell>
+          <StaleFieldCell value={b.benisp} className={`cell-num${b.benisp > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benisp)}
+          </StaleFieldCell>
+          <StaleFieldCell value={b.benispb} className={`cell-num${b.benispb > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.benispb)}
+          </StaleFieldCell>
           <StaleFieldCell value={b.benig} className={`cell-num${b.benig > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benig)}
           </StaleFieldCell>
@@ -1810,7 +1818,7 @@ type SortKey =
   | "sig_gen_campi_atk_a" | "sig_gen_campi_def_a" | "sig_gen_campi_atk_d" | "sig_gen_campi_def_d"
   | "sig_gen_sped_atk_a" | "sig_gen_sped_def_a" | "sig_gen_sped_atk_d" | "sig_gen_sped_def_d"
   | "iq_mon_b" | "iq_mat_b" | "iq_mon" | "iq_mat" | "iq_atk_a" | "iq_def_a" | "iq_atk_d" | "iq_def_d" | "iq_beni" | "iq_truppe" | "iq_azioni" | "iq_cap"
-  | "mon" | "mat" | "fp" | "fpb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
+  | "mon" | "mat" | "fp" | "fpb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
 type SortCriterion = { key: SortKey; order: "asc" | "desc" };
 // Ambito di ordinamento indipendente: le 3 viste della tabella edifici
 // (Database/Città/Inventario, distinte da TabType) più le 2 tabelle Alleati
@@ -3422,6 +3430,8 @@ export default function App() {
       case "beni": return b.beni;
       case "benip": return b.benip;
       case "benis": return b.benis;
+      case "benisp": return b.benisp;
+      case "benispb": return b.benispb;
       case "benib": return b.benib;
       case "benig": return b.benig;
       case "bp": return b.bp;
@@ -3693,7 +3703,7 @@ export default function App() {
       "IQAtk_A", "IQDef_A", "IQAtk_D", "IQDef_D",
       "IQmon", "IQmonB", "IQmat", "IQmatB",
       "IQBeni", "IQTruppe", "IQAzioni", "IQCap",
-      "Mon", "Mat", "PF", "PFB", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
+      "Mon", "Mat", "PF", "PFB", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
     ];
     const rows = selectedBuildings.map(b => [
       b.cityEntityId, b.name, b.currentEff, b.size, b.road, b.pop, b.fel,
@@ -3703,7 +3713,7 @@ export default function App() {
       b.iq[0], b.iq[1], b.iq[2], b.iq[3],
       b.iqMon, b.iqMonB, b.iqMat, b.iqMatB,
       b.iqBeni, b.iqTruppe, b.iqAzioni, b.iqCap,
-      b.mon, b.mat, b.fp, b.fpb, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
+      b.mon, b.mat, b.fp, b.fpb, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benisp, b.benispb, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
     ]);
 
     const escapeCsv = (val: string | number) => {
@@ -3792,6 +3802,8 @@ export default function App() {
       beni: stats.beni,
       benip: stats.benip,
       benis: stats.benis,
+      benisp: stats.benisp,
+      benispb: stats.benispb,
       benib: stats.benib,
       benig: stats.benig,
       mon: stats.mon,
@@ -3892,7 +3904,7 @@ export default function App() {
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "",
       fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0,
-      beni: 0, benip: 0, benis: 0, benib: 0, benig: 0, mon: 0, mat: 0,
+      beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0,
       bp: 0, fsp: 0, tpm: 0, tpb: 0, adm: 0, mod: 0, rin: 0, imm: 0,
       fragments: "", isGreatBuilding: false, isInactive: false,
       isFallback: true, isUnresolved: true, isMilitary: false,
@@ -4700,7 +4712,7 @@ export default function App() {
     // con formatProdPercent nelle celle della tabella principale, righe
     // 1625/1631/1659/1680): il valore grezzo è una frazione (0,03 = 3%), va
     // moltiplicato per 100 e mostrato con "%" invece che come decimale nudo.
-    const percentFields = ["fpb", "benib", "iqMonB", "iqMatB"];
+    const percentFields = ["fpb", "benib", "benispb", "iqMonB", "iqMatB"];
     const fmtField = (field: DiffField, v: number) => {
       if (percentFields.includes(field.key)) return formatProdPercent(v);
       if (["pop", "fel", "mon", "mat", "iqMon", "iqMat", "fp"].includes(field.key)) return formatInt(Math.round(v));
@@ -4792,7 +4804,7 @@ export default function App() {
     const fel = showFelColumn ? 66 : 0;
     const milCols = showSigmaColumns ? (spedizioniEnabled ? 8 : 4) : (spedizioniEnabled ? 12 : 8); // gen+gbg+(sped) | sig-gc+(sig-gs)
     const iq = (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
-    const prod = showProdColumns ? 20 * 36 : 0; // Mon+Mat + le 18 colonne esistenti
+    const prod = showProdColumns ? 22 * 36 : 0; // Mon+Mat + le 20 colonne esistenti (incl. BeniSp, BeniSpB)
     return base + time + pop + fel + milCols * 42 + iq + prod;
   }, [currentFilters, showSigmaColumns, spedizioniEnabled, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
 
@@ -5295,16 +5307,67 @@ export default function App() {
             return ((b[field] as number) || 0) * count;
           };
 
+          // Unico edificio noto (agosto 2026) che usa each_special_goods_up_to_age:
+          // il suo campo `benisp` NON è un valore-per-bene ma un totale già
+          // pre-moltiplicato per countSpecialGoodEras(era) dentro BuildingModel.ts/
+          // buildings.py (vedi goodsValue()/_goods_value()) — il gioco arrotonda
+          // (ceil) la produzione boostata per SINGOLO bene speciale, non sul
+          // totale ×9 già assemblato. Per applicare il ceil nel punto giusto va
+          // scomposto: valore_unitario = benisp / countSpecialGoodEras(era), poi
+          // ceil(valore_unitario × (1+boost)) × countSpecialGoodEras(era). Hardcoded
+          // (non generalizzato ad "ogni edificio each + ogni boost"): è l'unico
+          // incrocio noto tra un edificio "each" (LTE24A11) e un boost
+          // special_goods_production (SUM25E1) — se in futuro comparisse un secondo
+          // caso, va rivisto qui.
+          const EACH_SPECIAL_GOOD_BUILDING_ID = "W_MultiAge_LTE24A11";
+
+          // Somma "boostata" di un campo produzione, con ceil applicato PER
+          // GRUPPO (istanza/copia a una data era) prima di sommare — non sul
+          // totale aggregato. Il gioco arrotonda per singola produzione, non
+          // sul totale città: con boost 5% e 2 copie di un edificio da 90,
+          // il valore reale è ceil(90×1.05)×2 = 95×2 = 190, NON
+          // ceil(90×2×1.05) = ceil(189) = 189. Stessa struttura di
+          // exactBuildingSum (gruppi per era mista vs count×valore corrente),
+          // ma con Math.ceil(valore × (1+boost)) applicato a ogni gruppo — o,
+          // per EACH_SPECIAL_GOOD_BUILDING_ID, scomposto prima in valore
+          // unitario × countSpecialGoodEras (vedi commento sopra).
+          const boostedExactBuildingSum = (b: Building & { cityEntityId: string }, field: keyof EraStats & keyof Building, boost: number): number => {
+            const ceilBoosted = (value: number, era: string): number => {
+              if (b.cityEntityId === EACH_SPECIAL_GOOD_BUILDING_ID && field === "benisp") {
+                const eraId = AGE_BY_CODE.get(era)?.id;
+                const mult = eraId !== undefined ? countSpecialGoodEras(eraId) : 0;
+                if (mult > 0) return Math.ceil((value / mult) * (1 + boost)) * mult;
+              }
+              return Math.ceil(value * (1 + boost));
+            };
+            const groups = entityInstanceEraStats.get(b.cityEntityId);
+            if (groups) {
+              return groups.reduce((s, [eraAge, count, stats]) => s + ceilBoosted(stats[field] as number ?? 0, eraAge) * count, 0);
+            }
+            const count = cityEntityIds.get(b.cityEntityId) || 0;
+            return ceilBoosted((b[field] as number) || 0, currentEra || FALLBACK_ERA) * count;
+          };
+
           const totalPFNormal = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "fp"), 0);
           const totalPFGB = processedGreatBuildings.reduce((sum, b) => sum + b.fp, 0);
           const totalPFB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "fpb"), 0);
-          const totalBeniNormal = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "beni"), 0);
           const totalBeniGB = processedGreatBuildings.reduce((sum, b) => sum + b.beni, 0);
-          const totalBeniPNormal = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benip"), 0);
           const totalBeniPGB = processedGreatBuildings.reduce((sum, b) => sum + b.benip, 0);
-          const totalBeniSNormal = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benis"), 0);
           const totalBeniSGB = processedGreatBuildings.reduce((sum, b) => sum + b.benis, 0);
+          // BeniSp (Beni Speciali): boost applicato tramite totalBeniSpB
+          // (special_goods_production, agosto 2026) — separato da totalBeniB
+          // (goods_production), che boosta solo Beni/BeniP/BeniS "normali".
+          const totalBeniSpGB = processedGreatBuildings.reduce((sum, b) => sum + b.benisp, 0);
+          const totalBeniSpB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benispb"), 0);
           const totalBeniB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benib"), 0);
+          // Beni/BeniP/BeniS/BeniSp "boostati": ceil per-gruppo (vedi
+          // boostedExactBuildingSum sopra), poi sommati su tutti gli edifici
+          // città, poi sommata la quota Grandi Edifici (senza ceil aggiuntivo:
+          // i GE non ricevono boost, il loro valore è già finale).
+          const totalBeniBoosted = cityBuildings.reduce((sum, b) => sum + boostedExactBuildingSum(b, "beni", totalBeniB), 0) + totalBeniGB;
+          const totalBeniPBoosted = cityBuildings.reduce((sum, b) => sum + boostedExactBuildingSum(b, "benip", totalBeniB), 0) + totalBeniPGB;
+          const totalBeniSBoosted = cityBuildings.reduce((sum, b) => sum + boostedExactBuildingSum(b, "benis", totalBeniB), 0) + totalBeniSGB;
+          const totalBeniSpBoosted = cityBuildings.reduce((sum, b) => sum + boostedExactBuildingSum(b, "benisp", totalBeniSpB), 0) + totalBeniSpGB;
           const totalBeniG = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benig"), 0)
             + processedGreatBuildings.reduce((sum, b) => sum + b.benig, 0);
 
@@ -5356,15 +5419,19 @@ export default function App() {
                     </tr>
                     <tr className="border-b border-slate-800/50">
                       <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsCurrent", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt((totalBeniNormal * (1 + totalBeniB)) + totalBeniGB)}</td>
+                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniBoosted)}</td>
                     </tr>
                     <tr className="border-b border-slate-800/50">
                       <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsPrevious", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt((totalBeniPNormal * (1 + totalBeniB)) + totalBeniPGB)}</td>
+                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniPBoosted)}</td>
                     </tr>
                     <tr className="border-b border-slate-800/50">
                       <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsNext", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt((totalBeniSNormal * (1 + totalBeniB)) + totalBeniSGB)}</td>
+                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniSBoosted)}</td>
+                    </tr>
+                    <tr className="border-b border-slate-800/50">
+                      <td className="py-1 px-1 flex items-center gap-1"><span className="text-sm">🌟</span><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsSpecial", uiLang)}</span></td>
+                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniSpBoosted)}</td>
                     </tr>
                     <tr>
                       <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGuildGoods", uiLang)}</span></td>
@@ -5992,6 +6059,8 @@ export default function App() {
                     { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
                     { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
                     { key: "benis", icon: <img src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="icon-16" />, title: t("prodGoodsNext", uiLang) },
+                    { key: "benisp", icon: "🌟", title: t("prodGoodsSpecial", uiLang) },
+                    { key: "benispb", icon: "🌠", title: t("prodGoodsSpecialBoost", uiLang) },
                     { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
                     { key: "bp", icon: <img src={iconBP} alt={t("prodBlueprints", uiLang)} className="icon-16" />, title: t("prodBlueprints", uiLang) },
                     { key: "fsp", icon: "⏳", title: t("prodRushSpecial", uiLang) },
@@ -6611,7 +6680,7 @@ export default function App() {
                        {showIqProdColumns && Array.from({ length: 4 }).map((_, i) => <col key={`iq-mm-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
                        <col className="w-[42px]" />
-                       {showProdColumns && Array.from({ length: 20 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
+                       {showProdColumns && Array.from({ length: 22 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
@@ -6648,7 +6717,7 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center section-divider text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
-                          <th className="relative text-center section-divider text-orange-400/80" colSpan={20}>
+                          <th className="relative text-center section-divider text-orange-400/80" colSpan={22}>
                             <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                               <button
                                 onClick={() => setHideNoRush(v => !v)}
@@ -6806,6 +6875,8 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
+                            <SortableHeader noGap label="🌟" sortKey="benisp" onClick={() => handleSort("benisp")} active={sortBy === "benisp"} order={sortOrder} className="th-col text-sm" title={t("prodGoodsSpecial", uiLang)} />
+                            <SortableHeader noGap label="🌠" sortKey="benispb" onClick={() => handleSort("benispb")} active={sortBy === "benispb"} order={sortOrder} className="th-col text-sm" title={t("prodGoodsSpecialBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
                             <SortableHeader noGap label="⏳" sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col text-sm" title={t("prodRushSpecial", uiLang)} />
@@ -6902,7 +6973,7 @@ export default function App() {
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>
-                            <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 20 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                            <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 22 : 0)} className="text-center py-12 text-slate-400 font-semibold">
                               <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
                                 <span>{emptyMessagePrefix}</span>
                                 {/* SOLO riferimento visivo al pulsante reale della toolbar

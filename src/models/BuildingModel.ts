@@ -32,6 +32,8 @@ export interface EraStats {
   beni: number;     // beni era attuale
   benip: number;    // beni era precedente
   benis: number;    // beni era successiva
+  benisp: number;   // beni speciali (random_special_good_up_to_age / each_special_goods_up_to_age)
+  benispb: number;  // boost % beni speciali (special_goods_production)
   benib: number;    // boost % beni
   benig: number;    // beni di gilda
   mon: number;      // monete prodotte giornalmente
@@ -91,11 +93,64 @@ const BOOST_MAP: Record<string, Record<string, string[]>> = {
 
 // ── Costanti produzioni (tradotte da city_entities_to_csv.py) ───────────────
 // Chiavi delle risorse beni per colonna.
-const GOODS_KEYS: Record<"beni" | "benip" | "benis", string[]> = {
+// benisp ("Beni Speciali", agosto 2026): random_special_good_up_to_age (un
+// bene speciale casuale fino all'era corrente) o each_special_goods_up_to_age
+// (totale PER CIASCUN bene speciale, un solo edificio noto la usa). Le due
+// chiavi non sono sinonimi semanticamente equivalenti come per le altre
+// colonne Beni* — vedi il commento gemello su GOODS_KEYS["BeniSp"] in
+// buildings.py (RECUPERO DATI) per i dettagli.
+const GOODS_KEYS: Record<"beni" | "benip" | "benis" | "benisp", string[]> = {
   beni:  ["random_good_of_age", "all_goods_of_age", "random_good_of_age_1", "random_good_of_age_2", "random_good_of_age_3"],
   benip: ["random_good_of_previous_age", "all_goods_of_previous_age"],
   benis: ["random_good_of_next_age", "all_goods_of_next_age"],
+  benisp: ["random_special_good_up_to_age", "each_special_goods_up_to_age"],
 };
+
+// Ere che sbloccano un nuovo bene speciale: da ArcticFuture (id 14) in poi,
+// UNA per era, TRANNE VirtualFuture (id 16) — fatto di dominio del gioco,
+// non deducibile dal MainParser. Gemello di SPECIAL_GOOD_FIRST_ERA_ID/
+// SPECIAL_GOOD_EXCLUDED_ERA_IDS in buildings.py (RECUPERO DATI): se cambia
+// un lato va aggiornato anche l'altro. Confermato in game dall'utente
+// (agosto 2026): un edificio "each" con l'era attuale = StellarAgeDiscovery
+// (id 23) deve dare valore_unitario × 9, non × 8 come risultava dal foglio
+// raw di Linnun (disallineato).
+const SPECIAL_GOOD_FIRST_ERA_ID = 14; // ArcticFuture
+const SPECIAL_GOOD_EXCLUDED_ERA_IDS = new Set([16]); // VirtualFuture
+
+/** Numero di beni speciali sbloccati da SPECIAL_GOOD_FIRST_ERA_ID fino a
+ *  upToAgeId incluso, escludendo SPECIAL_GOOD_EXCLUDED_ERA_IDS. Vedi
+ *  _count_special_good_eras() in buildings.py (stessa logica, gemella).
+ *  `export`: serve anche in App.tsx (pannello PROD+STAT, agosto 2026) per
+ *  scomporre il totale "each" (W_MultiAge_LTE24A11) nel valore per singolo
+ *  bene prima di applicare il boost `special_goods_production` — vedi il
+ *  commento su EACH_SPECIAL_GOOD_BUILDING_ID in App.tsx. */
+export function countSpecialGoodEras(upToAgeId: number): number {
+  if (upToAgeId < SPECIAL_GOOD_FIRST_ERA_ID) return 0;
+  let count = 0;
+  for (let eraId = SPECIAL_GOOD_FIRST_ERA_ID; eraId <= upToAgeId; eraId++) {
+    if (!SPECIAL_GOOD_EXCLUDED_ERA_IDS.has(eraId)) count++;
+  }
+  return count;
+}
+
+/** Converte il valore grezzo letto da GOODS_KEYS.benisp nel valore da
+ *  sommare. each_special_goods_up_to_age è, nel MainParser, il valore PER
+ *  SINGOLO bene speciale (costante, non dipende dall'era nel JSON); il
+ *  totale reale mostrato in game moltiplica quel valore per il numero di
+ *  beni speciali sbloccati fino a `era` (countSpecialGoodEras) — a
+ *  differenza di random_special_good_up_to_age, che è già il valore finale
+ *  (un solo bene casuale, nessun moltiplicatore). Gemello di _goods_value()
+ *  in buildings.py. `era` è il codice era corrente (AGE_BY_CODE.get(era)?.id
+ *  — se non risolvibile, nessun moltiplicatore applicato: meglio il valore
+ *  unitario grezzo che un NaN silenzioso). */
+function goodsValue(key: string, rawValue: number, era: string): number {
+  if (key === "each_special_goods_up_to_age") {
+    const ageId = AGE_BY_CODE.get(era)?.id;
+    if (ageId === undefined) return rawValue;
+    return rawValue * countSpecialGoodEras(ageId);
+  }
+  return rawValue;
+}
 
 // ID base dei reward per le colonne di produzione speciale.
 const REWARD_IDS: Record<"fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm", string> = {
@@ -135,7 +190,7 @@ export class BuildingModel {
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "", fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0,
-      beni: 0, benip: 0, benis: 0, benib: 0, benig: 0, mon: 0, mat: 0, bp: 0, fsp: 0, tpm: 0, tpb: 0, 
+      beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0, bp: 0, fsp: 0, tpm: 0, tpb: 0,
       adm: 0, mod: 0, rin: 0, imm: 0, fragments: ""
     };
   }
@@ -246,6 +301,17 @@ export class BuildingModel {
     // bonus, andrebbe gestito qui con lo stesso pattern: leggere bonusType
     // (es. "guild_raids_coins_production") e assegnare il valore al campo
     // IQ corrispondente, seguendo BOOST_MAP come riferimento per i nomi.
+    // NOTA FUTURA (agosto 2026, BeniSp): stesso discorso per i "Beni
+    // Speciali" — nessun GE oggi ha un `p.name` riconducibile a
+    // random_special_good_up_to_age/each_special_goods_up_to_age (i 7
+    // edifici noti che li producono sono tutti W_MultiAge_*, non GE).
+    // `benisp` resta sempre 0 per i GE (via createBaseBuilding). Se in
+    // futuro un GE dovesse produrne, aggiungere un ramo `p.name === "..."`
+    // nel forEach dei `products` sotto, come per `beniP`/`beniS`.
+    // NOTA FUTURA (agosto 2026, BeniSpB): stesso discorso per il boost
+    // "special_goods_production" — nessun GE oggi ha questo BoostHint
+    // (l'unico edificio noto, W_MultiAge_SUM25E1, non è un GE). `benispb`
+    // resta sempre 0 per i GE (via createBaseBuilding).
 
     // Produzioni
     let beniG = 0, beni = 0, beniP = 0, beniS = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0;
@@ -328,17 +394,17 @@ export class BuildingModel {
     return BuildingModel.asObj(BuildingModel.asObj(era.lookup).rewards);
   }
 
-  /** Beni, BeniP, BeniS (produzione beni) e BeniB (boost % beni) per l'era data. */
-  private static extractGoods(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; benib: number } {
-    const totals = { beni: 0, benip: 0, benis: 0 };
+  /** Beni, BeniP, BeniS, BeniSp (produzione beni) e BeniB (boost % beni) per l'era data. */
+  private static extractGoods(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; benisp: number; benispb: number; benib: number } {
+    const totals = { beni: 0, benip: 0, benis: 0, benisp: 0 };
     let found = false;
-    const cols: Array<keyof typeof totals> = ["beni", "benip", "benis"];
+    const cols: Array<keyof typeof totals> = ["beni", "benip", "benis", "benisp"];
 
     const addFromResources = (res: Record<string, unknown>, mult: number) => {
       for (const col of cols) {
         for (const key of GOODS_KEYS[col]) {
           const v = BuildingModel.num(res[key]);
-          if (v) { totals[col] += v * mult; found = true; }
+          if (v) { totals[col] += goodsValue(key, v, era) * mult; found = true; }
         }
       }
     };
@@ -377,7 +443,7 @@ export class BuildingModel {
         for (const col of cols) {
           for (const key of GOODS_KEYS[col]) {
             const v = BuildingModel.num(res[key]);
-            if (v) { totals[col] += v; found = true; eraFound = true; }
+            if (v) { totals[col] += goodsValue(key, v, era); found = true; eraFound = true; }
           }
         }
         if (eraFound) break;
@@ -453,7 +519,7 @@ export class BuildingModel {
           for (const col of cols) {
             for (const key of GOODS_KEYS[col]) {
               const v = BuildingModel.num(res[key]);
-              if (v) { totals[col] += v; eraFound = true; }
+              if (v) { totals[col] += goodsValue(key, v, era); eraFound = true; }
             }
           }
           if (eraFound) break;
@@ -489,16 +555,22 @@ export class BuildingModel {
       }
     }
 
-    // BeniB: boost goods_production (valore / 100)
+    // BeniB: boost goods_production (valore / 100). BeniSpB (agosto 2026):
+    // boost special_goods_production, stesso formato — UNICO edificio noto:
+    // W_MultiAge_SUM25E1 (+5%). Vedi buildings.py, commento gemello su
+    // "special_goods_production" in _extract_goods_stats().
     let benib = 0;
+    let benispb = 0;
     for (const eraKey of [era, "AllAge"]) {
       const boosts = BuildingModel.asArr(BuildingModel.asObj(BuildingModel.asObj(comps[eraKey]).boosts).boosts).map(BuildingModel.asObj);
       for (const boost of boosts) {
-        if (BuildingModel.str(boost.type) === "goods_production") benib += BuildingModel.num(boost.value) / 100;
+        const boostType = BuildingModel.str(boost.type);
+        if (boostType === "goods_production") benib += BuildingModel.num(boost.value) / 100;
+        else if (boostType === "special_goods_production") benispb += BuildingModel.num(boost.value) / 100;
       }
     }
 
-    return { beni: totals.beni, benip: totals.benip, benis: totals.benis, benib };
+    return { beni: totals.beni, benip: totals.benip, benis: totals.benis, benisp: totals.benisp, benispb, benib };
   }
 
   /** PF (strategy_points boostabili), PFB (boost % FP), BeniG (beni di gilda). */
@@ -1116,7 +1188,7 @@ export class BuildingModel {
     return {
       pop, fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
       bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, fur, tr, trne,
-      beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benib: goods.benib, benig: prod.benig,
+      beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benisp: goods.benisp, benispb: goods.benispb, benib: goods.benib, benig: prod.benig,
       mon: monMat.mon, mat: monMat.mat,
       fsp: BuildingModel.extractReward(cityEntity, era, "fsp"),
       tpm: BuildingModel.extractReward(cityEntity, era, "tpm"),
@@ -1151,7 +1223,7 @@ export class BuildingModel {
       // Produzioni estratte da CityEntities per l'era corrente: ora abbiamo
       // davvero tutti i dati, quindi niente più "?" per questi edifici.
       bp: stats.bp, fp: stats.fp, fpb: stats.fpb, fur: stats.fur, tr: stats.tr, trne: stats.trne,
-      beni: stats.beni, benip: stats.benip, benis: stats.benis, benib: stats.benib, benig: stats.benig,
+      beni: stats.beni, benip: stats.benip, benis: stats.benis, benisp: stats.benisp, benispb: stats.benispb, benib: stats.benib, benig: stats.benig,
       mon: stats.mon, mat: stats.mat,
       fsp: stats.fsp, tpm: stats.tpm, tpb: stats.tpb, adm: stats.adm, mod: stats.mod, rin: stats.rin, imm: stats.imm,
       cityEntityId: entityId,

@@ -576,7 +576,7 @@ intestazione. Contiene ~2050 edifici. Colonne principali:
 
 ```text
 CityEntityId; NomeIta; NomeEng; Hash; Lin; Kit; Time; Size; Road; Pop; Fel;
-BP; PF; PFB; FUR; TR; TRNE; Beni; BeniP; BeniS; BeniB; BeniG;
+BP; PF; PFB; FUR; TR; TRNE; Beni; BeniP; BeniS; BeniSp; BeniSpB; BeniB; BeniG;
 GenAtk_A; GenDef_A; GenAtk_D; GenDef_D;
 CampiAtk_A; CampiDef_A; CampiAtk_D; CampiDef_D;
 SpedAtk_A; SpedDef_A; SpedAtk_D; SpedDef_D;
@@ -1602,6 +1602,111 @@ lasciato invariato su entrambi i lati: nessuna prova che i 3 Golden Crops (edifi
 moderni con `components`) lo attraversino. Validato: diff mirato sulla sola colonna
 `BeniG` tra CSV vecchio e nuovo mostra ESATTAMENTE 3 righe cambiate (120/150/300 per i
 tre livelli base/feast/ascended), zero altri edifici o campi toccati.
+
+**Esempio recente #2 (agosto 2026): campo BeniSp aggiunto ex novo, colonna già
+presente nel foglio raw di Linnun ma mai selezionata.** L'utente ha segnalato 7
+edifici (`W_MultiAge_LTE24A11`, `WIN24E1`, `ANNI25E1`, `WIN25F1`, `COP25K10TEMP`,
+`COP25K9`, `WIN24F4`) che producono "Beni Speciali" (concetto diverso da `BeniS` =
+"Beni Successivi"/era successiva, chiarito dall'utente dopo un primo fraintendimento
+in fase di analisi) mai estratti dal tool. Codificato nel MainParser da due chiavi in
+`playerResources.resources`, sempre nei componenti PER-ERA (mai garantito in
+`AllAge` — sui due Pirate Treasure Cove vive solo nel componente dell'era
+specifica): `random_special_good_up_to_age` (un bene speciale casuale fino all'era
+corrente, 6 dei 7 edifici) e `each_special_goods_up_to_age` (totale per ciascun bene
+speciale, solo Eternal Market/`LTE24A11`). A differenza del fix BeniG sopra, qui non
+c'era un bug nell'estrazione dal MainParser: la colonna semplicemente non esisteva
+ancora nel CSV. Ma nel foglio RAW di Linnun (`buildings_linnun_raw.csv`) il dato era
+già presente all'indice posizionale 15 (verificato: combacia esattamente coi valori
+del MainParser per i 6 edifici "random") — solo mai incluso in
+`BUILDINGS_CONFIG["col_select"]` di `linnun.py`, quindi mai propagato né al CSV di
+Linnun né (stesso meccanismo di selezione posizionale) al nostro `buildings.csv`. Fix
+in tre file della pipeline RECUPERO DATI (`linnun.py`: aggiunto raw index 15 a
+`col_select`; `buildings.py`: nuova entry `GOODS_KEYS["BeniSp"]
+= ("random_special_good_up_to_age", "each_special_goods_up_to_age")`, raccolta
+automaticamente dal ciclo generico esistente di `_extract_goods_stats()`;
+`confronta_buildings.py`: nuova riga in `SECTIONS`) più la propagazione completa in
+FoE Optimizer seguendo la checklist "campo scalare nuovo" (vedi sezione Campi
+Monete/Materiali) — incluso l'override città in `App.tsx`, il punto storicamente più
+facile da dimenticare.
+
+**Correzione del moltiplicatore "each" (stesso giorno, dopo verifica in game).** Il
+valore raw di `each_special_goods_up_to_age` (90 per `LTE24A11`, sia in `AllAge` sia in
+ogni componente per-era) è il valore PER SINGOLO bene speciale, non il totale: va
+moltiplicato per il numero di beni speciali sbloccati fino all'era corrente. Il foglio
+raw di Linnun mostrava 720 (90 × 8) — un'ipotesi plausibile ma sbagliata: l'utente ha
+verificato in game il valore reale, **810** (90 × 9). Il conteggio corretto (9, non 8):
+le ere che sbloccano un bene speciale sono, per fatto di dominio del gioco, da
+ArcticFuture (id 14) in poi — UNA per era, TRANNE VirtualFuture (id 16), che non ne
+sblocca uno. Con l'era finale attuale StellarAgeDiscovery (id 23), le ere 14..23 sono
+10, meno la 16 esclusa = 9. Nessun campo del MainParser elenca esplicitamente questa
+regola: è conoscenza di dominio, codificata come costanti esplicite
+(`SPECIAL_GOOD_FIRST_ERA_ID = 14`, `SPECIAL_GOOD_EXCLUDED_ERA_IDS = {16}`) sia in
+`buildings.py` (`_count_special_good_eras()`, applicata da `_goods_value()` nei 5 punti
+di `_extract_goods_stats()` che sommano da `GOODS_KEYS`, solo per la chiave "each" — la
+chiave "random" resta invariata, è già il valore finale) sia in `BuildingModel.ts`
+(`countSpecialGoodEras()`/`goodsValue()`, quest'ultima con un parametro `era` in più
+rispetto al gemello Python: un edificio può essere estratto per un'era diversa da
+BOOST_ERA quando viene da una città importata a un'era intermedia, non solo dal CSV
+statico — risolto in id numerico via `AGE_BY_CODE.get(era)?.id`, nessun moltiplicatore
+applicato se l'era non è risolvibile, per non produrre un `NaN` silenzioso).
+
+Validato: CSV rigenerato dal MainParser due volte (prima e dopo il fix del
+moltiplicatore), confrontato riga per riga col precedente ad ogni giro — zero
+differenze eccetto la nuova colonna `BeniSp`/`Lin` al primo giro, e la sola riga
+`LTE24A11` (90 → 810) al secondo giro. `tsc --noEmit` e `vite build` puliti dopo
+entrambe le modifiche.
+
+**Esempio recente #3 (agosto 2026): campo BeniSpB, stesso giorno, stessa causa radice
+di BeniSp.** L'utente ha segnalato che `W_MultiAge_SUM25E1` ("Queen Anne's Legacy") ha
+in game un boost del 5% sui beni speciali, chiedendo di verificarne la codifica nel
+MainParser. Trovato un `BoostHint` con `type: "special_goods_production"`, `value: 5`
+— stesso formato di `goods_production` (che alimenta `BeniB`: valore intero da
+dividere per 100) ma per la categoria "beni speciali". Verificato via grep mirato sul
+MainParser: **1 sola occorrenza** in tutto il file — SUM25E1 è l'unico edificio con
+questo boost. Stessa causa radice di BeniSp: la colonna esisteva già nel foglio raw di
+Linnun all'indice posizionale 16 (valore `"0.05"` per SUM25E1), mai incluso in
+`col_select` di `linnun.py` (il 15 di `BeniSp` era seguito direttamente dal 14 di
+`BeniB`, saltando il 16). L'utente ha scelto di trattarlo come nuova colonna scalare
+seguendo la stessa checklist di BeniSp, con una differenza deliberata: qui il boost
+**è** applicato nel pannello riepilogo PROD+STAT (`totalBeniSpNormal * (1 +
+totalBeniSpB) + totalBeniSpGB`), a differenza della scelta conservativa presa per
+BeniSp/BeniB — perché il boost `special_goods_production` è specifico e inequivocabile
+per la stessa categoria di beni che modifica (nessuna ambiguità come per l'ipotesi
+"il boost % beni normali si applica anche ai beni speciali", mai confermata). Fix
+speculare in `linnun.py` (raw index 16), `buildings.py` (nuovo ramo `elif
+boost.get("type") == "special_goods_production"` nello stesso ciclo che già legge
+`goods_production` per `beni_b`), `confronta_buildings.py`, e propagazione completa in
+FoE Optimizer (incluso l'override città in `App.tsx` e l'aggiornamento del pannello
+PROD+STAT). Validato: CSV rigenerato, `SUM25E1.BeniSpB = 0.05` confermato, diff
+riga-per-riga zero differenze eccetto la nuova colonna. `tsc --noEmit` e `vite build`
+puliti.
+
+**Correzione arrotondamento pannello PROD+STAT (stesso giorno, segnalata
+dall'utente).** Il boost andava applicato al totale aggregato, non per singola
+istanza — ma il gioco arrotonda per eccesso (`ceil`) la produzione boostata PER
+EDIFICIO/COPIA, non sul totale città: con 2 copie da 90 e boost 5%, il valore reale è
+`ceil(90×1.05)×2 = 190`, non `ceil(90×2×1.05) = 189`. Bug presente anche per
+Beni/BeniP/BeniS con `totalBeniB` (mai notato prima perché nessun edificio dava quel
+boost con conteggi che ne rivelassero la differenza). Fix: `boostedExactBuildingSum()`
+in `App.tsx`, gemella di `exactBuildingSum()` (stessa gestione gruppi per istanze a
+era mista) ma con `Math.ceil(valore × (1+boost)) × count` applicato per gruppo prima
+di sommare. Usata per i 4 totali con boost city-wide (`totalBeniBoosted`,
+`totalBeniPBoosted`, `totalBeniSBoosted`, `totalBeniSpBoosted`); la quota Grandi
+Edifici resta sommata senza ceil aggiuntivo (nessun boost, valore già finale).
+Validato: `tsc --noEmit` e `vite build` puliti.
+
+**Secondo livello: il caso "each" (`W_MultiAge_LTE24A11`) + boost, stesso giorno.**
+Il fix sopra copre il caso generale, ma per LTE24A11 (Eternal Market, l'unico
+edificio "each") `benisp` non è un valore-per-produzione: è già `valore_unitario ×
+countSpecialGoodEras(era)` (90 × 9 = 810). `ceil(810×1.05) = 851` resta sbagliato: il
+gioco arrotonda per singolo bene speciale, non sul totale ×9 già assemblato — il
+valore reale con SUM25E1 in città è `ceil(90×1.05)×9 = 95×9 = 855`. Fix: scomposto il
+totale nel valore unitario (dividendo per `countSpecialGoodEras(era)`, ora esportata
+da `BuildingModel.ts`), applicato il ceil, ripristinato il moltiplicatore —
+hardcodato su `EACH_SPECIAL_GOOD_BUILDING_ID = "W_MultiAge_LTE24A11"` (unico incrocio
+noto "each" + `special_goods_production`, non generalizzato). Verificato con
+simulazione standalone: 855 corretto contro 851 sbagliato. `tsc --noEmit` e
+`vite build` puliti.
 
 > **Nota anti-regressione.** Il calcolo di area e dimensione esiste in **due** posti con
 > scopi diversi e non vanno duplicati "per comodità": `getCityEntitySize` /
