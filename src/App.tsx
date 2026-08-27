@@ -5626,14 +5626,27 @@ export default function App() {
   );
 
   return (
-    // h-screen/overflow-hidden SOLO sulla tab Pirati: è il primo anello della
+    // h-dvh/overflow-hidden SOLO sulla tab Pirati: è il primo anello della
     // catena di vincolo di altezza reale che il planner (PiratiTool) ha
     // bisogno per ridimensionarsi correttamente — con min-h-screen (le altre
     // tab, scroll pagina naturale) il div poteva sempre crescere oltre il
     // viewport per accomodare il contenuto, quindi anche con min-h-0/
     // overflow-hidden su main/section il planner finiva comunque per far
     // scrollare l'INTERA pagina invece di ridimensionarsi internamente.
-    <div className={`bg-slate-950 text-slate-100 flex flex-col font-sans ${activeTab === "pirati" ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+    // ⚠️ h-dvh (dynamic viewport height), non h-screen (100vh fisso): su
+    // Chrome mobile, 100vh include l'area coperta dalla barra indirizzi (che
+    // appare/scompare durante lo scroll/al caricamento), quindi il primo
+    // render calcolava un'altezza sbagliata prima che il browser assestasse
+    // la UI — bug segnalato dall'utente (screenshot): aprendo la tab Pirati
+    // da mobile in verticale il planner non appariva affatto (altezza reale
+    // collassata a ~0 dall'overflow-hidden a cascata), appariva ma senza
+    // scroll ruotando in orizzontale (un vero resize forzava un ricalcolo),
+    // e tornava a funzionare correttamente ruotando di nuovo in verticale
+    // (secondo resize reale). h-dvh si aggiorna in base alla viewport
+    // EFFETTIVAMENTE visibile in ogni momento, incluse le barre browser
+    // mobile — nessun bisogno di listener aggiuntivi su resize/
+    // orientationchange, il browser lo ricalcola da solo ad ogni frame.
+    <div className={`bg-slate-950 text-slate-100 flex flex-col font-sans ${activeTab === "pirati" ? "h-dvh overflow-hidden" : "min-h-screen"}`}>
       {/* HEADER */}
       <header className="bg-slate-900/60 backdrop-blur-xl border-b border-amber-500/10 sticky top-0 z-40 pl-3 py-2 flex flex-col md:flex-row md:items-center md:justify-between">
         {/* Riga superiore mobile: logo + Export/Import. Su desktop: solo logo */}

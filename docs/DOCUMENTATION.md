@@ -475,6 +475,21 @@ Dettagli completi (coordinate a due spazi Storage/Display, layout responsive sen
 vincolo di altezza, montaggio nel layout `<main><section>`) in `docs/SKILL.md`,
 sezione "Tab 'Pirati'".
 
+**Bug mobile risolto (agosto 2026): planner assente/rotto finché non si ruota lo
+schermo.** Due cause distinte: (1) la root di `App.tsx` usava `h-screen` (`100vh`
+fisso) invece di `h-dvh` (dynamic viewport height) — su Chrome mobile `100vh` include
+l'area della barra indirizzi, che appare/scompare, quindi il primo render calcolava
+un'altezza sbagliata prima che il browser assestasse la UI; (2) il `ResizeObserver` su
+`gridWrapperRef` (in `PiratiTool.tsx`) riportava `{0, 0}` al primo mount, perché
+`observer.observe()` invoca il callback subito con le dimensioni correnti — e
+`PiratiTool` è montato dentro un div con `display: none` sulle tab diverse da
+"pirati", quindi quella prima misurazione era sempre zero, disattivando il fallback
+CSS (attivo solo con `gridWrapperSize === null`) e facendo collassare il planner. Fix:
+`h-screen` → `h-dvh` sulla root; il callback del `ResizeObserver` ora ignora
+esplicitamente misurazioni `0×0`. Vedi `docs/SKILL.md`, sezione "Tab 'Pirati'", per i
+dettagli completi (inclusi i sintomi osservati sui 3 screenshot dell'utente). `tsc
+--noEmit` e `vite build` puliti dopo il fix.
+
 ---
 
 ## 7. Modello dati centrale: `Building`

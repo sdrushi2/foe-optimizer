@@ -275,6 +275,20 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       const entry = entries[0];
       if (!entry) return;
       const { width, height } = entry.contentRect;
+      // ⚠️ Ignora misurazioni 0×0: ResizeObserver.observe() invoca il
+      // callback SUBITO con le dimensioni correnti al momento della
+      // chiamata — se il wrapper è dentro un antenato "hidden" (App.tsx
+      // nasconde questo componente con display:none sulle tab diverse da
+      // "pirati", vedi il div che avvolge <PiratiTool>) al primo mount,
+      // quella prima invocazione riporta 0×0. Senza questo guard,
+      // gridWrapperSize passava da null a {0,0}, disattivando il fallback
+      // CSS (attivo solo quando gridWrapperSize === null, vedi sotto) e
+      // facendo collassare il planner a dimensione zero — bug segnalato
+      // dall'utente su mobile: aprendo la tab Pirati in verticale il
+      // planner non appariva affatto. Un vero resize successivo (rotazione
+      // schermo, o — dopo il fix qui sotto — semplicemente il layout che si
+      // stabilizza) sostituisce comunque questa misurazione con una reale.
+      if (width === 0 || height === 0) return;
       setGridWrapperSize({ width, height });
     });
     observer.observe(el);
