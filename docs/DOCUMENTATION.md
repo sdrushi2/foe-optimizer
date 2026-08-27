@@ -490,6 +490,16 @@ esplicitamente misurazioni `0×0`. Vedi `docs/SKILL.md`, sezione "Tab 'Pirati'",
 dettagli completi (inclusi i sintomi osservati sui 3 screenshot dell'utente). `tsc
 --noEmit` e `vite build` puliti dopo il fix.
 
+**Bug mobile landscape risolto (stesso giorno, dopo il fix sopra): scroll ancora
+assente.** Il layout a due colonne aveva `overflow-y-auto sm:overflow-hidden`: lo
+scroll si disattivava appena la LARGHEZZA superava il breakpoint `sm` (640px), ma un
+telefono in landscape lo supera facilmente pur avendo un'altezza reale molto ridotta
+— il layout "desktop" si attivava senza avere lo spazio verticale per contenere tutto,
+rendendo la parte in eccesso (lista edifici o planner) irraggiungibile. Fix: rimosso
+`sm:overflow-hidden`, `overflow-y-auto` sempre attivo — su schermi realmente grandi lo
+scroll non scatta mai (nessun impatto), su mobile landscape resta sempre disponibile.
+`tsc --noEmit` e `vite build` puliti.
+
 ---
 
 ## 7. Modello dati centrale: `Building`

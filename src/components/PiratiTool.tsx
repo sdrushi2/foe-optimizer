@@ -2043,8 +2043,22 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           (main/section/wrapper tab resi min-h-0+overflow-hidden SOLO sulla
           tab Pirati, vedi App.tsx) fino a qui: senza, gridWrapperRef sotto
           non avrebbe un'altezza affidabile da misurare (si adatterebbe al
-          proprio contenuto, la griglia stessa → dipendenza circolare). */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 sm:grid-cols-[minmax(0,270px)_1fr] gap-2 pt-1 overflow-y-auto sm:overflow-hidden">
+          proprio contenuto, la griglia stessa → dipendenza circolare).
+          ⚠️ overflow-y-auto SEMPRE attivo, MAI sm:overflow-hidden (rimosso,
+          agosto 2026, bug segnalato dall'utente): il breakpoint 'sm' (640px)
+          guarda solo la LARGHEZZA, ma un telefono in landscape la supera
+          facilmente pur avendo un'altezza reale molto ridotta (es. 915×412)
+          — attivava il layout "desktop" a due colonne, pensato per schermi
+          con altezza adeguata dove il contenuto si adatta internamente
+          (ResizeObserver + min-h-0), disattivando lo scroll: su landscape
+          mobile il contenuto in eccesso (parte della lista edifici, o il
+          planner) restava tagliato fuori, IRRAGGIUNGIBILE (nessun modo di
+          vederlo). Con overflow-y-auto sempre attivo, su schermi realmente
+          grandi (desktop/tablet) lo scroll semplicemente non scatta mai
+          (il contenuto ci sta già tutto in altezza) — nessuna regressione
+          lì, e su mobile landscape resta sempre disponibile come rete di
+          sicurezza. */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 sm:grid-cols-[minmax(0,270px)_1fr] gap-2 pt-1 overflow-y-auto">
         {/* Colonna destra: il planner, cioè la griglia di piazzamento.
             h-full/min-h-0 sm:only: sotto 'sm' (stack verticale) il planner
             occupa l'altezza naturale del contenuto, come la colonna edifici
