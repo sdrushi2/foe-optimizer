@@ -1186,7 +1186,7 @@ W_MultiAge_FALL16A8;Fabbrica di Succo Patrimonio;Heritage Cider Mill;daa0098c3;1
 W_MultiAge_FALL16A9;Fabbrica di succo Nobile;Noble Cider Mill;784df1cdb;1;;19;3x4;1.5;-1560;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;77;77;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL21A10;Raccolto delle Colture dorate;Golden Crops Harvest;9eebf5493;1;;19;6x4;2;80470;63930;;150;;;;;90;;;;;;100;431450;52800;;;102;102;102;102;;;;;;;;;;;;;;;;;;;;;M;;;;;1;;;
 W_MultiAge_FALL21A11;Festa delle Colture dorate;Golden Crops Feast;6325fb544;1;;19;6x4;;90900;74570;;200;;;;;120;;;;;;200;539310;63360;;;122;122;122;122;;;;;;;;;;;;;;;;;;;;;M;;;;;2;;;
-W_MultiAge_FALL21A12;Banchetto delle Colture dorate Asceso;Ascended Golden Crops Feast;7db9338f0;1;90;51;6x4;;90900;106330;;460;;;;;380;;;;;;300;647170;73920;;;322;322;322;322;;;;;;;;;25;25;25;25;;;;;;;200;8000;M;;;;;6;;;
+W_MultiAge_FALL21A12;Festa delle Colture dorate Asceso;Ascended Golden Crops Feast;7db9338f0;1;90;51;6x4;;90900;106330;;460;;;;;380;;;;;;300;647170;73920;;;322;322;322;322;;;;;;;;;25;25;25;25;;;;;;;200;8000;M;;;;;6;;;
 W_MultiAge_FALL22A1;Frantoio per olio di semi di girasole - Liv. 1;Sunflower Oil Press - Lv. 1;R_MultiAge_FallBonus22a-1e65b4d17;;;19;6x4;2;13760;15300;;;;;;;;;;;;;;125000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A10;Frantoio per olio di semi di girasole vivace;Vibrant Sunflower Oil Press;R_MultiAge_FallBonus22j-9d149b5de;1;;19;6x4;2;24080;41740;;29;;;8;;82;;;;;;;284200;55630;;;38;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL22A11;Frantoio per Olio di semi di Girasole Incontaminato;Pristine Sunflower Oil Press;R_MultiAge_FallBonus22k-6070c9eeb;1;;19;6x4;2;28665;48680;;35;;;10;;100;;;;;;;340900;69540;;;110;112;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2148,7 +2148,7 @@ X_SpaceAgeTitan_Landmark1;Cancello di Saturno VI CENTAURO;Saturn VI Gate CENTAUR
 X_SpaceAgeTitan_Landmark2;Cancello di Saturno VI PEGASO;Saturn VI Gate PEGASUS;5914257a4;;;;4x4;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 X_SpaceAgeTitan_Landmark3;Cancello di Saturno VI IDRA;Saturn VI Gate HYDRA;587b507eb;;;;4x4;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 X_SpaceAgeVenus_Landmark1;Isola volante;Flying Island;77342162d;;;;4x6;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-X_StellarAgeDiscovery_Landmark1;Sifone Orizzonte in frantumi;Shattered Horizon Siphon;f88e94040;;;;4x4;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+X_StellarAgeDiscovery_Landmark1;Sifone dell'Orizzonte Infranto;Shattered Horizon Siphon;f88e94040;;;;4x4;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 X_TomorrowEra_Landmark1;Voyager V1;Voyager V1;eb875e995;;;;4x7;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 X_TomorrowEra_Landmark2;Torre della tregua;Truce Tower;837cbc8ec;;;;6x5;2.5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 X_VirtualFuture_Landmark1;Esercito di terracotta;Terracotta Army;b74f505ff;;;;4x6;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
