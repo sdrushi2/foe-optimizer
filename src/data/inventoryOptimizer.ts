@@ -36,6 +36,17 @@ export interface KitDataRaw {
    *  "building_" (già rimosso da parse_kit.py). Opzionale: assente per gli
    *  edifici che non si ottengono per frammenti (la stragrande maggioranza). */
   requiredFragmentsByBuilding?: Record<string, number>;
+  /** {fragmentId senza prefisso "building_": cityEntityId REALE}, presente
+   *  SOLO per i frammenti "limited" in cui il cityEntityId non coincide con
+   *  lo strip naive del prefisso (es. "limited_daunting_tower_active" →
+   *  "W_MultiAge_HalloweenBonus22b"). Costruito da parse_kit.py leggendo
+   *  assembledReward.subType nel MainParser — è la fonte di verità del
+   *  server, non un pattern deducibile dall'id del frammento stesso.
+   *  Consultata come fallback PRIMA di fragmentBuildingId() (lo strip
+   *  naive) in App.tsx, per risolvere correttamente il NOME nel tooltip
+   *  "produce frammenti di" anche per questi casi. Assente per la
+   *  stragrande maggioranza dei frammenti, dove lo strip naive è corretto. */
+  fragmentBuildingId?: Record<string, string>;
 }
 
 interface KitDef {

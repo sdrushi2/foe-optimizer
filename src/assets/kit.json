@@ -375,6 +375,47 @@
         "W_MultiAge_ARCH19A10"
       ]
     },
+    "silver_upgrade_kit_ARCH19A": {
+      "names": {
+        "en": "World Expo Silver Upgrade Kit",
+        "it": "Kit di Aggiornamento Argento dell'Esposizione Universale"
+      },
+      "steps": [
+        "W_MultiAge_ARCH19A10",
+        "W_MultiAge_ARCH19A11"
+      ]
+    },
+    "golden_upgrade_kit_ARCH19A": {
+      "names": {
+        "en": "Hopeful World Expo Golden Upgrade Kit",
+        "it": "Kit di Aggiornamento Oro Esposizione Mondiale della Speranza"
+      },
+      "steps": [
+        "W_MultiAge_ARCH19A11",
+        "W_MultiAge_ARCH19A12"
+      ]
+    },
+    "platinum_upgrade_kit_ARCH19A": {
+      "names": {
+        "en": "Harmonious World Expo Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino per l'Esposizione Mondiale dell'Armonia"
+      },
+      "steps": [
+        "W_MultiAge_ARCH19A12",
+        "W_MultiAge_ARCH19A13"
+      ]
+    },
+    "upgrade_kit_ascended_ARCH19A": {
+      "names": {
+        "en": "United World Expo Upgrade Kit",
+        "it": "Kit di Aggiornamento Esposizione Mondiale Unita"
+      },
+      "steps": [
+        "W_MultiAge_ARCH19A13",
+        "W_MultiAge_ARCH19A14"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_pagoda": {
       "names": {
         "en": "Pagoda Upgrade",
@@ -448,6 +489,36 @@
         ]
       ]
     },
+    "golden_upgrade_kit_WIN19Aa": {
+      "names": {
+        "en": "The Charcoal Limited Express Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Limited Express a Carbone"
+      },
+      "steps": [
+        "W_MultiAge_WIN19A9a",
+        "W_MultiAge_WIN19A10a"
+      ]
+    },
+    "golden_upgrade_kit_WIN19Ab": {
+      "names": {
+        "en": "The Evergreen Limited Express Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Limited Express Sempreverde"
+      },
+      "steps": [
+        "W_MultiAge_WIN19A9b",
+        "W_MultiAge_WIN19A10b"
+      ]
+    },
+    "golden_upgrade_kit_WIN19Ac": {
+      "names": {
+        "en": "The Sleighride Limited Express Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Limited Express Slittino"
+      },
+      "steps": [
+        "W_MultiAge_WIN19A9c",
+        "W_MultiAge_WIN19A10c"
+      ]
+    },
     "upgrade_kit_tacticians_tower": {
       "names": {
         "en": "Tactician's Tower Upgrade Kit",
@@ -503,6 +574,26 @@
         "W_MultiAge_HAL19A9"
       ]
     },
+    "silver_upgrade_kit_HAL19A": {
+      "names": {
+        "en": "Eerie Abandoned Asylum Silver Upgrade Kit",
+        "it": "Kit di Aggiornamento Argento Manicomio Abbandonato Inquietante"
+      },
+      "steps": [
+        "W_MultiAge_HAL19A9",
+        "W_MultiAge_HAL19A10"
+      ]
+    },
+    "golden_upgrade_kit_HAL19A": {
+      "names": {
+        "en": "Phantom Abandoned Asylum Golden Upgrade Kit",
+        "it": "Kit di Aggiornamento d'oro Manicomio Abbandonato Fantasma"
+      },
+      "steps": [
+        "W_MultiAge_HAL19A10",
+        "W_MultiAge_HAL19A11"
+      ]
+    },
     "upgrade_kit_september_cottage": {
       "names": {
         "en": "September Cottage Upgrade Kit",
@@ -555,6 +646,36 @@
         "W_MultiAge_ARCH20A9",
         "W_MultiAge_ARCH20A10",
         "W_MultiAge_ARCH20A11"
+      ]
+    },
+    "silver_upgrade_kit_ARCH20A": {
+      "names": {
+        "en": "Zephyr Airship Silver Upgrade Kit",
+        "it": "Kit Aggiornamento Argento Dirigibile Zephyr"
+      },
+      "steps": [
+        "W_MultiAge_ARCH20A11",
+        "W_MultiAge_ARCH20A12"
+      ]
+    },
+    "golden_upgrade_kit_ARCH20A": {
+      "names": {
+        "en": "Celestial Airship Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Dirigibile Celeste"
+      },
+      "steps": [
+        "W_MultiAge_ARCH20A12",
+        "W_MultiAge_ARCH20A13"
+      ]
+    },
+    "platinum_upgrade_kit_ARCH20A": {
+      "names": {
+        "en": "Astral Airship Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Dirigibile Astrale"
+      },
+      "steps": [
+        "W_MultiAge_ARCH20A13",
+        "W_MultiAge_ARCH20A14"
       ]
     },
     "upgrade_kit_moon_gate": {
@@ -729,6 +850,37 @@
         "W_MultiAge_SUM20A9"
       ]
     },
+    "golden_upgrade_kit_SUM20A": {
+      "names": {
+        "en": "Viceroy's Villa Upgrade Kit",
+        "it": "Kit di aggiornamento Villa del viceré"
+      },
+      "steps": [
+        "W_MultiAge_SUM20A9",
+        "W_MultiAge_SUM20A10"
+      ]
+    },
+    "platinum_upgrade_kit_SUM20A": {
+      "names": {
+        "en": "Crown Regent's Villa Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Villa Reggente Coronato"
+      },
+      "steps": [
+        "W_MultiAge_SUM20A10",
+        "W_MultiAge_SUM20A11"
+      ]
+    },
+    "upgrade_kit_ascended_SUM20A": {
+      "names": {
+        "en": "Pirate King's Conquest Villa Upgrade Kit",
+        "it": "Kit Aggiornamento Villa della Conquista del Re Pirata"
+      },
+      "steps": [
+        "W_MultiAge_SUM20A11",
+        "W_MultiAge_SUM20A12"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_harvest_barn": {
       "names": {
         "en": "Harvest Barn Upgrade Kit",
@@ -810,6 +962,36 @@
         "W_MultiAge_Expedition16bBase"
       ]
     },
+    "upgrade_kit_silver_terrace_farm": {
+      "names": {
+        "en": "Terrace Farm Silver Upgrade Kit",
+        "it": "Kit aggiornamento Fattoria Terrazzata Argento"
+      },
+      "steps": [
+        "W_MultiAge_Expedition16bBase",
+        "W_MultiAge_Expedition16cSilver"
+      ]
+    },
+    "upgrade_kit_gold_terrace_farm": {
+      "names": {
+        "en": "Terrace Farm Gold Upgrade Kit",
+        "it": "Kit aggiornamento Fattoria Terrazzata Oro"
+      },
+      "steps": [
+        "W_MultiAge_Expedition16cSilver",
+        "W_MultiAge_Expedition16dGold"
+      ]
+    },
+    "upgrade_kit_platinum_terrace_farm": {
+      "names": {
+        "en": "Terrace Farm Platinum Upgrade Kit",
+        "it": "Kit  aggiornamento Fattoria Terrazzata Platino"
+      },
+      "steps": [
+        "W_MultiAge_Expedition16dGold",
+        "W_MultiAge_Expedition16ePlatinum"
+      ]
+    },
     "upgrade_kit_sacred_sky": {
       "names": {
         "en": "Sacred Sky Watch Upgrade Kit",
@@ -828,6 +1010,16 @@
       "steps": [
         "W_AllAge_Expedition16",
         "W_AllAge_Expedition16Small"
+      ]
+    },
+    "shrink_kit_little_fountain_of_youth": {
+      "names": {
+        "en": "Little Fountain of Youth Shrink Kit",
+        "it": "Kit rimpicciolimento Fontana della giovinezza piccola"
+      },
+      "steps": [
+        "W_AllAge_Expedition16Small",
+        "W_AllAge_Expedition24Tiny"
       ]
     },
     "upgrade_kit_jade_statue": {
@@ -896,6 +1088,26 @@
         "W_MultiAge_PAT21A10"
       ]
     },
+    "silver_upgrade_kit_PAT21A": {
+      "names": {
+        "en": "Forgotten Druid Temple Silver Upgrade Kit",
+        "it": "Kit di Aggiornamento Argento per il Tempio dei Druidi dimenticato"
+      },
+      "steps": [
+        "W_MultiAge_PAT21A10",
+        "W_MultiAge_PAT21A11"
+      ]
+    },
+    "golden_upgrade_kit_PAT21A": {
+      "names": {
+        "en": "Lost Druid Temple Golden Upgrade Kit",
+        "it": "Kit di Aggiornamento dorato del Tempio dei Druidi Perduto"
+      },
+      "steps": [
+        "W_MultiAge_PAT21A11",
+        "W_MultiAge_PAT21A12"
+      ]
+    },
     "upgrade_kit_suishun_mill": {
       "names": {
         "en": "Suishun Mill Upgrade Kit",
@@ -952,6 +1164,16 @@
         "R_MultiAge_SoccerBonus21j"
       ]
     },
+    "golden_upgrade_kit_CUP21A": {
+      "names": {
+        "en": "Azure Athlon Abbey Golden Upgrade Kit",
+        "it": "Kit di aggiornamento dorato Athlon Abbey azzurra"
+      },
+      "steps": [
+        "R_MultiAge_SoccerBonus21j",
+        "R_MultiAge_SoccerBonus21k"
+      ]
+    },
     "upgrade_kit_mountain_reserve": {
       "names": {
         "en": "Mountain Reserve Upgrade Kit",
@@ -969,6 +1191,36 @@
           "W_MultiAge_WILD21A7c",
           "W_MultiAge_WILD21A7b"
         ]
+      ]
+    },
+    "golden_upgrade_kit_WILD21Aa": {
+      "names": {
+        "en": "Serene Bear Mountain Golden Upgrade Kit",
+        "it": "Kit aggiornamento Oro Montagna dell'Orso Serena"
+      },
+      "steps": [
+        "W_MultiAge_WILD21A7a",
+        "W_MultiAge_WILD21A8a"
+      ]
+    },
+    "golden_upgrade_kit_WILD21Ab": {
+      "names": {
+        "en": "Serene Eagle Mountain Golden Upgrade Kit",
+        "it": "Kit aggiornamento Montagna dell'Aquila Serena"
+      },
+      "steps": [
+        "W_MultiAge_WILD21A7b",
+        "W_MultiAge_WILD21A8b"
+      ]
+    },
+    "golden_upgrade_kit_WILD21Ac": {
+      "names": {
+        "en": "Serene Moose Mountain Golden Upgrade Kit",
+        "it": "Kit aggiornamento Oro Montagna dell'Alce Serena"
+      },
+      "steps": [
+        "W_MultiAge_WILD21A7c",
+        "W_MultiAge_WILD21A8c"
       ]
     },
     "upgrade_kit_statue_of_honor": {
@@ -1003,6 +1255,37 @@
         "W_MultiAge_FallBonus21h",
         "W_MultiAge_FallBonus21i"
       ]
+    },
+    "golden_upgrade_kit_FALL21A": {
+      "names": {
+        "en": "Golden Crops Harvest Golden Upgrade Kit ",
+        "it": "Kit di Aggiornamento Oro Raccolto Colture "
+      },
+      "steps": [
+        "W_MultiAge_FallBonus21i",
+        "W_MultiAge_FALL21A10"
+      ]
+    },
+    "platinum_upgrade_kit_FALL21A": {
+      "names": {
+        "en": "Golden Crops Feast Platinum Upgrade Kit ",
+        "it": "Kit di Aggiornamento Platino Festa delle Colture dorate"
+      },
+      "steps": [
+        "W_MultiAge_FALL21A10",
+        "W_MultiAge_FALL21A11"
+      ]
+    },
+    "upgrade_kit_ascended_FALL21A": {
+      "names": {
+        "en": "Ascended Golden Crops Feast Upgrade Kit ",
+        "it": "Kit di Aggiornamento Festa delle Colture dorate Asceso"
+      },
+      "steps": [
+        "W_MultiAge_FALL21A11",
+        "W_MultiAge_FALL21A12"
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_winter_canal": {
       "names": {
@@ -1110,6 +1393,47 @@
         "W_MultiAge_BOWL22A10"
       ]
     },
+    "golden_upgrade_kit_BOWL22A": {
+      "names": {
+        "en": "Evergreen Fiore Village Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Villaggio Fiore Evergreen"
+      },
+      "steps": [
+        "W_MultiAge_BOWL22A10",
+        "W_MultiAge_BOWL22A11"
+      ]
+    },
+    "silver_upgrade_kit_BOWL22A": {
+      "names": {
+        "en": "Evergreen Fiore Village Silver Upgrade Kit",
+        "it": "Kit Aggiornamento Argento Villaggio Fiore Evergreen"
+      },
+      "steps": [
+        "W_MultiAge_BOWL22A10",
+        "W_MultiAge_BOWL22A11"
+      ]
+    },
+    "platinum_upgrade_kit_BOWL22A": {
+      "names": {
+        "en": "Everbloom Fiore Village Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino Villaggio Fiore Everbloom"
+      },
+      "steps": [
+        "W_MultiAge_BOWL22A11",
+        "W_MultiAge_BOWL22A12"
+      ]
+    },
+    "upgrade_kit_ascended_BOWL22A": {
+      "names": {
+        "en": "Everblossom Fiore Village Upgrade Kit",
+        "it": "Kit aggiornamento Villaggio Fiore Everblossom"
+      },
+      "steps": [
+        "W_MultiAge_BOWL22A12",
+        "W_MultiAge_BOWL22A13"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_celtic_farmstead": {
       "names": {
         "en": "Celtic Farmstead Upgrade Kit",
@@ -1126,6 +1450,36 @@
         "W_MultiAge_PAT22A8",
         "W_MultiAge_PAT22A9",
         "W_MultiAge_PAT22A10"
+      ]
+    },
+    "silver_upgrade_kit_PAT22A": {
+      "names": {
+        "en": "Enchanted Celtic Farmstead Silver Upgrade Kit",
+        "it": "Kit aggiornamento Argento Casale Celtico Incantato"
+      },
+      "steps": [
+        "W_MultiAge_PAT22A10",
+        "W_MultiAge_PAT22A11"
+      ]
+    },
+    "golden_upgrade_kit_PAT22A": {
+      "names": {
+        "en": "Mystic Celtic Farmstead Golden Upgrade Kit",
+        "it": "Kit Aggiornamento Oro Casale Celtico Mistico"
+      },
+      "steps": [
+        "W_MultiAge_PAT22A11",
+        "W_MultiAge_PAT22A12"
+      ]
+    },
+    "platinum_upgrade_kit_PAT22A": {
+      "names": {
+        "en": "Sacred Celtic Farmstead Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Casale Celtico Sacro"
+      },
+      "steps": [
+        "W_MultiAge_PAT22A12",
+        "W_MultiAge_PAT22A13"
       ]
     },
     "upgrade_kit_grand_king": {
@@ -1164,6 +1518,16 @@
         "W_MultiAge_AgeBonus22h",
         "W_MultiAge_AgeBonus22i",
         "W_MultiAge_AgeBonus22j"
+      ]
+    },
+    "golden_upgrade_kit_ANNI22A": {
+      "names": {
+        "en": "Celestial Golden Orrery Golden Upgrade Kit",
+        "it": "Kit di aggiornamento Planetario dorato celestiale"
+      },
+      "steps": [
+        "W_MultiAge_AgeBonus22j",
+        "W_MultiAge_AgeBonus22k"
       ]
     },
     "upgrade_kit_minaret": {
@@ -1227,6 +1591,37 @@
         "W_MultiAge_CUP22A8"
       ]
     },
+    "golden_upgrade_kit_CUP22A": {
+      "names": {
+        "en": "Wisteria Windmill Golden Upgrade Kit",
+        "it": "Kit di aggiornamento dorato Mulino con Glicine"
+      },
+      "steps": [
+        "W_MultiAge_CUP22A8",
+        "W_MultiAge_CUP22A9"
+      ]
+    },
+    "platinum_upgrade_kit_CUP22A": {
+      "names": {
+        "en": "Azalea Windmill Platinum Upgrade Kit ",
+        "it": "Kit di aggiornamento Platino Mulino a vento di azalee"
+      },
+      "steps": [
+        "W_MultiAge_CUP22A9",
+        "W_MultiAge_CUP22A10"
+      ]
+    },
+    "upgrade_kit_ascended_CUP22A": {
+      "names": {
+        "en": "Ascended Bougainvillea Windmill Upgrade Kit ",
+        "it": "Kit di aggiornamento Mulino a vento Buganville asceso"
+      },
+      "steps": [
+        "W_MultiAge_CUP22A10",
+        "W_MultiAge_CUP22A11"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_animal_crossing": {
       "names": {
         "en": "Animal Crossing Upgrade Kit",
@@ -1244,6 +1639,37 @@
         "W_MultiAge_WILD22A9"
       ]
     },
+    "golden_upgrade_kit_WILD22A": {
+      "names": {
+        "en": "Serene Animal Crossing Golden Upgrade Kit",
+        "it": "Kit di aggiornamento dorato Attraversamento degli animali sereno"
+      },
+      "steps": [
+        "W_MultiAge_WILD22A9",
+        "W_MultiAge_WILD22A10"
+      ]
+    },
+    "platinum_upgrade_kit_WILD22A": {
+      "names": {
+        "en": "Harmonious Animal Crossing Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Attraversamento degli Animali Armonioso"
+      },
+      "steps": [
+        "W_MultiAge_WILD22A10",
+        "W_MultiAge_WILD22A11"
+      ]
+    },
+    "upgrade_kit_ascended_WILD22A": {
+      "names": {
+        "en": "Majestic Animal Crossing Upgrade Kit",
+        "it": "Kit Aggiornamento Attraversamento degli Animali Magnifico"
+      },
+      "steps": [
+        "W_MultiAge_WILD22A11",
+        "W_MultiAge_WILD22A12"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_heroes_tavern": {
       "names": {
         "en": "Heroes Tavern Upgrade Kit",
@@ -1260,6 +1686,26 @@
         "W_MultiAge_FELL22A8",
         "W_MultiAge_FELL22A9",
         "W_MultiAge_FELL22A10"
+      ]
+    },
+    "golden_upgrade_kit_FELL22A": {
+      "names": {
+        "en": "Legendary Lodge Golden Upgrade Kit",
+        "it": "Kit di aggiornamento dorato Loggia leggendaria"
+      },
+      "steps": [
+        "W_MultiAge_FELL22A10",
+        "W_MultiAge_FELL22A11"
+      ]
+    },
+    "platinum_upgrade_kit_FELL22A": {
+      "names": {
+        "en": "Mythical Manor Platinum Upgrade Kit",
+        "it": "Kit di aggiornamento Platino Maniero Mitico"
+      },
+      "steps": [
+        "W_MultiAge_FELL22A11",
+        "W_MultiAge_FELL22A12"
       ]
     },
     "upgrade_kit_privateers_boathouse": {
@@ -1304,6 +1750,16 @@
         "W_MultiAge_HalloweenBonusGP22l"
       ]
     },
+    "golden_upgrade_kit_HAL22A": {
+      "names": {
+        "en": "Arcane Tarot Card Caravans Golden Upgrade Kit",
+        "it": "Kit di aggiornamento d'oro Carovana dei tarocchi arcani"
+      },
+      "steps": [
+        "W_MultiAge_HalloweenBonusGP22l",
+        "W_MultiAge_HalloweenBonusGP22m"
+      ]
+    },
     "upgrade_kit_sunflower_oil_press": {
       "names": {
         "en": "Sunflower Oil Press Upgrade Kit",
@@ -1319,6 +1775,26 @@
         "W_MultiAge_FALL22A7",
         "W_MultiAge_FALL22A8",
         "W_MultiAge_FALL22A9"
+      ]
+    },
+    "golden_upgrade_kit_FALL22A": {
+      "names": {
+        "en": "Vibrant Sunflower Oil Press Golden Upgrade Kit",
+        "it": "Kit di aggiornamento dorato Frantoio per olio di semi di girasole vivace"
+      },
+      "steps": [
+        "W_MultiAge_FALL22A9",
+        "W_MultiAge_FALL22A10"
+      ]
+    },
+    "platinum_upgrade_kit_FALL22A": {
+      "names": {
+        "en": "Pristine Sunflower Oil Press Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino Frantoio per Olio di semi di Girasole Incontaminato"
+      },
+      "steps": [
+        "W_MultiAge_FALL22A10",
+        "W_MultiAge_FALL22A11"
       ]
     },
     "upgrade_kit_W_MultiAge_WIN22A": {
@@ -1343,6 +1819,26 @@
         ]
       ]
     },
+    "golden_upgrade_kit_WIN22Aa": {
+      "names": {
+        "en": "Ted's Blissful Choc Golden Upgrade Kit",
+        "it": "Kit di aggiornamento Blissful Choc di Ted"
+      },
+      "steps": [
+        "W_MultiAge_WIN22A11a",
+        "W_MultiAge_WIN22A12a"
+      ]
+    },
+    "golden_upgrade_kit_WIN22Ab": {
+      "names": {
+        "en": "Ketebo Candy Delights Golden Upgrade Kit",
+        "it": "Kit di aggiornamento dorato Ketebo Candy Delights"
+      },
+      "steps": [
+        "W_MultiAge_WIN22A11b",
+        "W_MultiAge_WIN22A12b"
+      ]
+    },
     "upgrade_kit_feathered_serpent_statue": {
       "names": {
         "en": "Feathered Serpent Statue Upgrade Kit",
@@ -1352,6 +1848,36 @@
         "R_MultiAge_Expedition22a",
         "R_MultiAge_Expedition22b",
         "R_MultiAge_Expedition22c"
+      ]
+    },
+    "upgrade_kit_feathered_serpent_statue_silver": {
+      "names": {
+        "en": "Feathered Serpent Statue Silver Upgrade Kit",
+        "it": "Kit aggiornamento Statua del Serpente piumato Argento"
+      },
+      "steps": [
+        "R_MultiAge_Expedition22c",
+        "R_MultiAge_Expedition22dSilver"
+      ]
+    },
+    "upgrade_kit_feathered_serpent_statue_gold": {
+      "names": {
+        "en": "Feathered Serpent Statue Gold Upgrade Kit",
+        "it": "Kit aggiornamento Statua del Serpente Piumato Oro"
+      },
+      "steps": [
+        "R_MultiAge_Expedition22dSilver",
+        "R_MultiAge_Expedition22eGold"
+      ]
+    },
+    "upgrade_kit_feathered_serpent_statue_platinum": {
+      "names": {
+        "en": "Feathered Serpent Statue Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Statua del Serpente Piumato "
+      },
+      "steps": [
+        "R_MultiAge_Expedition22eGold",
+        "R_MultiAge_Expedition22fPlatinum"
       ]
     },
     "upgrade_kit_HERO24A": {
@@ -1449,16 +1975,6 @@
       ],
       "requiredFragments": 150
     },
-    "golden_upgrade_kit_FELL22A": {
-      "names": {
-        "en": "Legendary Lodge Golden Upgrade Kit",
-        "it": "Kit di aggiornamento dorato Loggia leggendaria"
-      },
-      "steps": [
-        "W_MultiAge_FELL22A10",
-        "W_MultiAge_FELL22A11"
-      ]
-    },
     "upgrade_kit_ANNI23A": {
       "names": {
         "en": "Tower of Conjunction Upgrade Kit",
@@ -1543,6 +2059,16 @@
       ],
       "requiredFragments": 150
     },
+    "platinum_upgrade_kit_FALL23A": {
+      "names": {
+        "en": "Majestic Autumn Vineyard Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino Vigneto Autunnale Maestoso"
+      },
+      "steps": [
+        "W_MultiAge_FALL23A11",
+        "W_MultiAge_FALL23A12"
+      ]
+    },
     "upgrade_kit_FALL23B": {
       "names": {
         "en": "Grape Stompin' Festival Upgrade Kit",
@@ -1551,16 +2077,6 @@
       "steps": [
         "W_MultiAge_FALL23B1",
         "W_MultiAge_FALL23B2"
-      ]
-    },
-    "golden_upgrade_kit_FALL22A": {
-      "names": {
-        "en": "Vibrant Sunflower Oil Press Golden Upgrade Kit",
-        "it": "Kit di aggiornamento dorato Frantoio per olio di semi di girasole vivace"
-      },
-      "steps": [
-        "W_MultiAge_FALL22A9",
-        "W_MultiAge_FALL22A10"
       ]
     },
     "upgrade_kit_BOWL23A": {
@@ -1614,16 +2130,6 @@
       ],
       "requiredFragments": 150
     },
-    "golden_upgrade_kit_SUM20A": {
-      "names": {
-        "en": "Viceroy's Villa Upgrade Kit",
-        "it": "Kit di aggiornamento Villa del viceré"
-      },
-      "steps": [
-        "W_MultiAge_SUM20A9",
-        "W_MultiAge_SUM20A10"
-      ]
-    },
     "upgrade_kit_CUP23A": {
       "names": {
         "en": "Aegean Resort Upgrade Kit",
@@ -1655,26 +2161,6 @@
         ]
       ]
     },
-    "golden_upgrade_kit_CUP22A": {
-      "names": {
-        "en": "Wisteria Windmill Golden Upgrade Kit",
-        "it": "Kit di aggiornamento dorato Mulino con Glicine"
-      },
-      "steps": [
-        "W_MultiAge_CUP22A8",
-        "W_MultiAge_CUP22A9"
-      ]
-    },
-    "golden_upgrade_kit_CUP21A": {
-      "names": {
-        "en": "Azure Athlon Abbey Golden Upgrade Kit",
-        "it": "Kit di aggiornamento dorato Athlon Abbey azzurra"
-      },
-      "steps": [
-        "R_MultiAge_SoccerBonus21j",
-        "R_MultiAge_SoccerBonus21k"
-      ]
-    },
     "upgrade_kit_PAT23A": {
       "names": {
         "en": "Druid Hut Upgrade Kit",
@@ -1702,6 +2188,16 @@
         "W_MultiAge_PAT23A10"
       ],
       "requiredFragments": 150
+    },
+    "platinum_upgrade_kit_PAT23A": {
+      "names": {
+        "en": "Sacred Archdruid Hut Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino della Sacra Capanna dell'Arcidruido"
+      },
+      "steps": [
+        "W_MultiAge_PAT23A10",
+        "W_MultiAge_PAT23A11"
+      ]
     },
     "upgrade_kit_WILD23A": {
       "names": {
@@ -1839,26 +2335,6 @@
       "steps": [
         "W_MultiAge_WIN23C3",
         "W_MultiAge_WIN23C4"
-      ]
-    },
-    "golden_upgrade_kit_WIN22Aa": {
-      "names": {
-        "en": "Ted's Blissful Choc Golden Upgrade Kit",
-        "it": "Kit di aggiornamento Blissful Choc di Ted"
-      },
-      "steps": [
-        "W_MultiAge_WIN22A11a",
-        "W_MultiAge_WIN22A12a"
-      ]
-    },
-    "golden_upgrade_kit_WIN22Ab": {
-      "names": {
-        "en": "Ketebo Candy Delights Golden Upgrade Kit",
-        "it": "Kit di aggiornamento dorato Ketebo Candy Delights"
-      },
-      "steps": [
-        "W_MultiAge_WIN22A11b",
-        "W_MultiAge_WIN22A12b"
       ]
     },
     "upgrade_kit_WIN22B": {
@@ -2060,26 +2536,6 @@
         "W_MultiAge_HAL24F3"
       ]
     },
-    "silver_upgrade_kit_HAL19A": {
-      "names": {
-        "en": "Eerie Abandoned Asylum Silver Upgrade Kit",
-        "it": "Kit di Aggiornamento Argento Manicomio Abbandonato Inquietante"
-      },
-      "steps": [
-        "W_MultiAge_HAL19A9",
-        "W_MultiAge_HAL19A10"
-      ]
-    },
-    "golden_upgrade_kit_HAL19A": {
-      "names": {
-        "en": "Phantom Abandoned Asylum Golden Upgrade Kit",
-        "it": "Kit di Aggiornamento d'oro Manicomio Abbandonato Fantasma"
-      },
-      "steps": [
-        "W_MultiAge_HAL19A10",
-        "W_MultiAge_HAL19A11"
-      ]
-    },
     "upgrade_kit_HAL23A": {
       "names": {
         "en": "Laboratory of Monstrosities Upgrade Kit",
@@ -2148,16 +2604,6 @@
         "W_MultiAge_HAL23B4"
       ]
     },
-    "golden_upgrade_kit_HAL22A": {
-      "names": {
-        "en": "Arcane Tarot Card Caravans Golden Upgrade Kit",
-        "it": "Kit di aggiornamento d'oro Carovana dei tarocchi arcani"
-      },
-      "steps": [
-        "W_MultiAge_HalloweenBonusGP22l",
-        "W_MultiAge_HalloweenBonusGP22m"
-      ]
-    },
     "upgrade_kit_WILD24A": {
       "names": {
         "en": "Flamingo Habitat Upgrade Kit",
@@ -2199,15 +2645,26 @@
       ],
       "requiredFragments": 150
     },
-    "golden_upgrade_kit_WILD22A": {
+    "platinum_upgrade_kit_WILD24A": {
       "names": {
-        "en": "Serene Animal Crossing Golden Upgrade Kit",
-        "it": "Kit di aggiornamento dorato Attraversamento degli animali sereno"
+        "en": "Sacred Flamingo Paradise Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Paradiso dei Fenicotteri Sacro"
       },
       "steps": [
-        "W_MultiAge_WILD22A9",
-        "W_MultiAge_WILD22A10"
+        "W_MultiAge_WILD24A13",
+        "W_MultiAge_WILD24A14"
       ]
+    },
+    "upgrade_kit_ascended_WILD24A": {
+      "names": {
+        "en": "Radiant Flamingo Paradise Upgrade Kit",
+        "it": "Kit Aggiornamento Paradiso dei Fenicotteri Radiosi"
+      },
+      "steps": [
+        "W_MultiAge_WILD24A14",
+        "W_MultiAge_WILD24A15"
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_WILD24C": {
       "names": {
@@ -2267,16 +2724,6 @@
         "W_MultiAge_PAT24A9"
       ],
       "requiredFragments": 150
-    },
-    "platinum_upgrade_kit_PAT23A": {
-      "names": {
-        "en": "Sacred Archdruid Hut Platinum Upgrade Kit",
-        "it": "Kit di Aggiornamento Platino della Sacra Capanna dell'Arcidruido"
-      },
-      "steps": [
-        "W_MultiAge_PAT23A10",
-        "W_MultiAge_PAT23A11"
-      ]
     },
     "upgrade_kit_PAT23B": {
       "names": {
@@ -2381,16 +2828,6 @@
       ],
       "requiredFragments": 150
     },
-    "golden_upgrade_kit_ANNI22A": {
-      "names": {
-        "en": "Celestial Golden Orrery Golden Upgrade Kit",
-        "it": "Kit di aggiornamento Planetario dorato celestiale"
-      },
-      "steps": [
-        "W_MultiAge_AgeBonus22j",
-        "W_MultiAge_AgeBonus22k"
-      ]
-    },
     "upgrade_kit_ANNI22B": {
       "names": {
         "en": "Stage of Ages Upgrade Kit",
@@ -2418,6 +2855,16 @@
         "W_MultiAge_COP24A9"
       ]
     },
+    "upgrade_kit_ascended_yggdrasil": {
+      "names": {
+        "en": "Ascended Yggdrasil Upgrade Kit",
+        "it": "Kit di aggiornamento Yggdrasil Asceso"
+      },
+      "steps": [
+        "W_MultiAge_COP24A9",
+        "W_MultiAge_COP24A10TEMP"
+      ]
+    },
     "upgrade_kit_refined_shinto_temple": {
       "names": {
         "en": "Shinto Temple Upgrade Kit",
@@ -2435,6 +2882,16 @@
         "W_MultiAge_COP24B9"
       ]
     },
+    "upgrade_kit_ascended_shinto_temple": {
+      "names": {
+        "en": "Ascended Shinto Temple Upgrade Kit",
+        "it": "Kit di aggiornamento Tempio Shintoista Asceso"
+      },
+      "steps": [
+        "W_MultiAge_COP24B9",
+        "W_MultiAge_COP24B10TEMP"
+      ]
+    },
     "upgrade_kit_refined_royal_bathhouse": {
       "names": {
         "en": "Royal Bathhouse Upgrade Kit",
@@ -2447,6 +2904,16 @@
         "W_MultiAge_COP24C4",
         "W_MultiAge_COP24C5",
         "W_MultiAge_COP24C6"
+      ]
+    },
+    "upgrade_kit_ascended_royal_bathhouse": {
+      "names": {
+        "en": "Ascended Royal Bathhouse Upgrade Kit",
+        "it": "Kit di aggiornamento Bagno reale asceso"
+      },
+      "steps": [
+        "W_MultiAge_COP24C6",
+        "W_MultiAge_COP24C7TEMP"
       ]
     },
     "upgrade_kit_refined_sun_temple": {
@@ -2466,6 +2933,16 @@
         "W_MultiAge_COP24D9"
       ]
     },
+    "upgrade_kit_ascended_sun_temple": {
+      "names": {
+        "en": "Ascended Sun Temple Upgrade Kit",
+        "it": "Kit di aggiornamento Tempio del Sole Asceso"
+      },
+      "steps": [
+        "W_MultiAge_COP24D9",
+        "W_MultiAge_COP24D10TEMP"
+      ]
+    },
     "upgrade_kit_refined_mughals_temple": {
       "names": {
         "en": "Mughal's Temple Upgrade Kit",
@@ -2478,6 +2955,16 @@
         "W_MultiAge_COP24E4",
         "W_MultiAge_COP24E5",
         "W_MultiAge_COP24E6"
+      ]
+    },
+    "upgrade_kit_ascended_mughals_temple": {
+      "names": {
+        "en": "Ascended Mughal's Temple Upgrade Kit",
+        "it": "Kit di aggiornamento Tempio di Mughal asceso"
+      },
+      "steps": [
+        "W_MultiAge_COP24E6",
+        "W_MultiAge_COP24E7TEMP"
       ]
     },
     "upgrade_kit_refined_hut_of_the_sacred_instruments": {
@@ -2495,6 +2982,16 @@
         "W_MultiAge_COP24J7",
         "W_MultiAge_COP24J8",
         "W_MultiAge_COP24J9"
+      ]
+    },
+    "upgrade_kit_ascended_hut_of_the_sacred_instruments": {
+      "names": {
+        "en": "Ascended Hut of the Sacred Instruments Upgrade Kit",
+        "it": "Kit di aggiornamento Capanna degli Strumenti Sacri Ascesa"
+      },
+      "steps": [
+        "W_MultiAge_COP24J9",
+        "W_MultiAge_COP24J10TEMP"
       ]
     },
     "upgrade_kit_great_dance_stage": {
@@ -2526,6 +3023,36 @@
         "W_MultiAge_GR23A8"
       ]
     },
+    "silver_upgrade_kit_GR23A": {
+      "names": {
+        "en": "Neo Colossus Silver Upgrade Kit",
+        "it": "Il kit argento aggiornamento Neo Colosso"
+      },
+      "steps": [
+        "W_MultiAge_GR23A8",
+        "W_MultiAge_GR23A9"
+      ]
+    },
+    "golden_upgrade_kit_GR23A": {
+      "names": {
+        "en": "Neo Colossus Golden Upgrade Kit",
+        "it": "Il kit dorato aggiornamento Neo Colosso"
+      },
+      "steps": [
+        "W_MultiAge_GR23A9",
+        "W_MultiAge_GR23A10"
+      ]
+    },
+    "platinum_upgrade_kit_GR23A": {
+      "names": {
+        "en": "Neo Colossus Platinum Upgrade Kit",
+        "it": "Kit di aggiornamento platino Neo Colosso"
+      },
+      "steps": [
+        "W_MultiAge_GR23A10",
+        "W_MultiAge_GR23A11"
+      ]
+    },
     "upgrade_kit_GR23B": {
       "names": {
         "en": "Neo Winners' Plaza Upgrade Kit",
@@ -2554,26 +3081,6 @@
       "steps": [
         "W_MultiAge_GR23D1",
         "W_MultiAge_GR23D2"
-      ]
-    },
-    "silver_upgrade_kit_GR23A": {
-      "names": {
-        "en": "Neo Colossus Silver Upgrade Kit",
-        "it": "Il kit argento aggiornamento Neo Colosso"
-      },
-      "steps": [
-        "W_MultiAge_GR23A8",
-        "W_MultiAge_GR23A9"
-      ]
-    },
-    "golden_upgrade_kit_GR23A": {
-      "names": {
-        "en": "Neo Colossus Golden Upgrade Kit",
-        "it": "Il kit dorato aggiornamento Neo Colosso"
-      },
-      "steps": [
-        "W_MultiAge_GR23A9",
-        "W_MultiAge_GR23A10"
       ]
     },
     "upgrade_kit_GR24A": {
@@ -2765,6 +3272,27 @@
       ],
       "requiredFragments": 150
     },
+    "platinum_upgrade_kit_CARE24A": {
+      "names": {
+        "en": "Eco Nexus Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Eco Nexus"
+      },
+      "steps": [
+        "W_MultiAge_CARE24A9",
+        "W_MultiAge_CARE24A10"
+      ]
+    },
+    "upgrade_kit_ascended_CARE24A": {
+      "names": {
+        "en": "Eco Utopia Upgrade Kit",
+        "it": "Kit Aggiornamento Eco Utopia"
+      },
+      "steps": [
+        "W_MultiAge_CARE24A10",
+        "W_MultiAge_CARE24A11"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_ascended_CARE24B": {
       "names": {
         "en": "Ascended Earth's Eden Upgrade Kit",
@@ -2893,26 +3421,6 @@
         "W_MultiAge_FALL24C2"
       ]
     },
-    "platinum_upgrade_kit_FALL23A": {
-      "names": {
-        "en": "Majestic Autumn Vineyard Platinum Upgrade Kit",
-        "it": "Kit di Aggiornamento Platino Vigneto Autunnale Maestoso"
-      },
-      "steps": [
-        "W_MultiAge_FALL23A11",
-        "W_MultiAge_FALL23A12"
-      ]
-    },
-    "platinum_upgrade_kit_FALL22A": {
-      "names": {
-        "en": "Pristine Sunflower Oil Press Platinum Upgrade Kit",
-        "it": "Kit di Aggiornamento Platino Frantoio per Olio di semi di Girasole Incontaminato"
-      },
-      "steps": [
-        "W_MultiAge_FALL22A10",
-        "W_MultiAge_FALL22A11"
-      ]
-    },
     "upgrade_kit_FALL23C": {
       "names": {
         "en": "Jumpin' Pumpkin Upgrade Kit",
@@ -3004,66 +3512,6 @@
         "W_MultiAge_GR24D2"
       ]
     },
-    "upgrade_kit_ascended_yggdrasil": {
-      "names": {
-        "en": "Ascended Yggdrasil Upgrade Kit",
-        "it": "Kit di aggiornamento Yggdrasil Asceso"
-      },
-      "steps": [
-        "W_MultiAge_COP24A9",
-        "W_MultiAge_COP24A10TEMP"
-      ]
-    },
-    "upgrade_kit_ascended_shinto_temple": {
-      "names": {
-        "en": "Ascended Shinto Temple Upgrade Kit",
-        "it": "Kit di aggiornamento Tempio Shintoista Asceso"
-      },
-      "steps": [
-        "W_MultiAge_COP24B9",
-        "W_MultiAge_COP24B10TEMP"
-      ]
-    },
-    "upgrade_kit_ascended_royal_bathhouse": {
-      "names": {
-        "en": "Ascended Royal Bathhouse Upgrade Kit",
-        "it": "Kit di aggiornamento Bagno reale asceso"
-      },
-      "steps": [
-        "W_MultiAge_COP24C6",
-        "W_MultiAge_COP24C7TEMP"
-      ]
-    },
-    "upgrade_kit_ascended_sun_temple": {
-      "names": {
-        "en": "Ascended Sun Temple Upgrade Kit",
-        "it": "Kit di aggiornamento Tempio del Sole Asceso"
-      },
-      "steps": [
-        "W_MultiAge_COP24D9",
-        "W_MultiAge_COP24D10TEMP"
-      ]
-    },
-    "upgrade_kit_ascended_mughals_temple": {
-      "names": {
-        "en": "Ascended Mughal's Temple Upgrade Kit",
-        "it": "Kit di aggiornamento Tempio di Mughal asceso"
-      },
-      "steps": [
-        "W_MultiAge_COP24E6",
-        "W_MultiAge_COP24E7TEMP"
-      ]
-    },
-    "upgrade_kit_ascended_hut_of_the_sacred_instruments": {
-      "names": {
-        "en": "Ascended Hut of the Sacred Instruments Upgrade Kit",
-        "it": "Kit di aggiornamento Capanna degli Strumenti Sacri Ascesa"
-      },
-      "steps": [
-        "W_MultiAge_COP24J9",
-        "W_MultiAge_COP24J10TEMP"
-      ]
-    },
     "upgrade_kit_FELL24A": {
       "names": {
         "en": "Whisperwood Watermill Upgrade Kit",
@@ -3102,15 +3550,26 @@
       ],
       "requiredFragments": 150
     },
-    "platinum_upgrade_kit_FELL22A": {
+    "platinum_upgrade_kit_FELL24A": {
       "names": {
-        "en": "Mythical Manor Platinum Upgrade Kit",
-        "it": "Kit di aggiornamento Platino Maniero Mitico"
+        "en": "Elysian Whisperwood Watermill Platinum Upgrade Kit",
+        "it": "FELL24A Platinum Platinum Upgrade Kit"
       },
       "steps": [
-        "W_MultiAge_FELL22A11",
-        "W_MultiAge_FELL22A12"
+        "W_MultiAge_FELL24A10",
+        "W_MultiAge_FELL24A11"
       ]
+    },
+    "upgrade_kit_ascended_FELL24A": {
+      "names": {
+        "en": "Ascended Elysian Whisperwood Watermill Upgrade Kit",
+        "it": "Ascended FELL24A Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_FELL24A11",
+        "W_MultiAge_FELL24A12"
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_FELL22B": {
       "names": {
@@ -3163,16 +3622,6 @@
         "W_MultiAge_GBG24H2"
       ]
     },
-    "platinum_upgrade_kit_GR23A": {
-      "names": {
-        "en": "Neo Colossus Platinum Upgrade Kit",
-        "it": "Kit di aggiornamento platino Neo Colosso"
-      },
-      "steps": [
-        "W_MultiAge_GR23A10",
-        "W_MultiAge_GR23A11"
-      ]
-    },
     "upgrade_kit_WIN24A": {
       "names": {
         "en": "Yukitomo Tower Upgrade Kit",
@@ -3210,6 +3659,27 @@
         "W_MultiAge_WIN24A11",
         "W_MultiAge_WIN24A12"
       ]
+    },
+    "platinum_upgrade_kit_WIN24A": {
+      "names": {
+        "en": "Yukitomo Imperial Platinum Upgrade Kit",
+        "it": "Kit Aggiornamento Platino Yukitomo Imperiale"
+      },
+      "steps": [
+        "W_MultiAge_WIN24A12",
+        "W_MultiAge_WIN24A13"
+      ]
+    },
+    "upgrade_kit_ascended_WIN24A": {
+      "names": {
+        "en": "Yukitomo Imperial Sky Residence Upgrade Kit",
+        "it": "Kit Aggiornamento Residenza del Cielo Yukitomo Imperiale"
+      },
+      "steps": [
+        "W_MultiAge_WIN24A13",
+        "W_MultiAge_WIN24A14"
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_WIN24F": {
       "names": {
@@ -3398,36 +3868,6 @@
       ],
       "requiredFragments": 150
     },
-    "golden_upgrade_kit_WILD21Aa": {
-      "names": {
-        "en": "Serene Bear Mountain Golden Upgrade Kit",
-        "it": "Kit aggiornamento Oro Montagna dell'Orso Serena"
-      },
-      "steps": [
-        "W_MultiAge_WILD21A7a",
-        "W_MultiAge_WILD21A8a"
-      ]
-    },
-    "golden_upgrade_kit_WILD21Ab": {
-      "names": {
-        "en": "Serene Eagle Mountain Golden Upgrade Kit",
-        "it": "Kit aggiornamento Montagna dell'Aquila Serena"
-      },
-      "steps": [
-        "W_MultiAge_WILD21A7b",
-        "W_MultiAge_WILD21A8b"
-      ]
-    },
-    "golden_upgrade_kit_WILD21Ac": {
-      "names": {
-        "en": "Serene Moose Mountain Golden Upgrade Kit",
-        "it": "Kit aggiornamento Oro Montagna dell'Alce Serena"
-      },
-      "steps": [
-        "W_MultiAge_WILD21A7c",
-        "W_MultiAge_WILD21A8c"
-      ]
-    },
     "upgrade_kit_ascended_WILD25B": {
       "names": {
         "en": "Ascended Koi Pond Upgrade Kit",
@@ -3506,48 +3946,6 @@
         "W_MultiAge_WILD26C1",
         "W_MultiAge_WILD26C2"
       ]
-    },
-    "platinum_upgrade_kit_WILD22A": {
-      "names": {
-        "en": "Harmonious Animal Crossing Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Attraversamento degli Animali Armonioso"
-      },
-      "steps": [
-        "W_MultiAge_WILD22A10",
-        "W_MultiAge_WILD22A11"
-      ]
-    },
-    "upgrade_kit_ascended_WILD22A": {
-      "names": {
-        "en": "Majestic Animal Crossing Upgrade Kit",
-        "it": "Kit Aggiornamento Attraversamento degli Animali Magnifico"
-      },
-      "steps": [
-        "W_MultiAge_WILD22A11",
-        "W_MultiAge_WILD22A12"
-      ],
-      "requiredFragments": 1000
-    },
-    "platinum_upgrade_kit_WILD24A": {
-      "names": {
-        "en": "Sacred Flamingo Paradise Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Paradiso dei Fenicotteri Sacro"
-      },
-      "steps": [
-        "W_MultiAge_WILD24A13",
-        "W_MultiAge_WILD24A14"
-      ]
-    },
-    "upgrade_kit_ascended_WILD24A": {
-      "names": {
-        "en": "Radiant Flamingo Paradise Upgrade Kit",
-        "it": "Kit Aggiornamento Paradiso dei Fenicotteri Radiosi"
-      },
-      "steps": [
-        "W_MultiAge_WILD24A14",
-        "W_MultiAge_WILD24A15"
-      ],
-      "requiredFragments": 1000
     },
     "upgrade_kit_GBG25A": {
       "names": {
@@ -3651,6 +4049,27 @@
         "W_MultiAge_HIS25A12"
       ],
       "requiredFragments": 150
+    },
+    "platinum_upgrade_kit_HIS25A": {
+      "names": {
+        "en": "Njord's Fjordstorm Harbor Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino del Porto Fjordstorm di Njord"
+      },
+      "steps": [
+        "W_MultiAge_HIS25A12",
+        "W_MultiAge_HIS25A13"
+      ]
+    },
+    "upgrade_kit_ascended_HIS25A": {
+      "names": {
+        "en": "Ascended Njord's Fjordstorm Harbor Upgrade Kit",
+        "it": "Kit di Aggiornamento del Porto Fjordstorm di Njord Asceso"
+      },
+      "steps": [
+        "W_MultiAge_HIS25A13",
+        "W_MultiAge_HIS25A14"
+      ],
+      "requiredFragments": 1000
     },
     "upgrade_kit_ascended_HIS25B": {
       "names": {
@@ -3801,27 +4220,6 @@
         "W_MultiAge_HIS26F2"
       ]
     },
-    "platinum_upgrade_kit_HIS25A": {
-      "names": {
-        "en": "Njord's Fjordstorm Harbor Platinum Upgrade Kit",
-        "it": "Kit di Aggiornamento Platino del Porto Fjordstorm di Njord"
-      },
-      "steps": [
-        "W_MultiAge_HIS25A12",
-        "W_MultiAge_HIS25A13"
-      ]
-    },
-    "upgrade_kit_ascended_HIS25A": {
-      "names": {
-        "en": "Ascended Njord's Fjordstorm Harbor Upgrade Kit",
-        "it": "Kit di Aggiornamento del Porto Fjordstorm di Njord Asceso"
-      },
-      "steps": [
-        "W_MultiAge_HIS25A13",
-        "W_MultiAge_HIS25A14"
-      ],
-      "requiredFragments": 1000
-    },
     "upgrade_kit_PAT25A": {
       "names": {
         "en": "Celtic Goldsmith Upgrade Kit",
@@ -3861,6 +4259,27 @@
       ],
       "requiredFragments": 150
     },
+    "platinum_upgrade_kit_PAT25A": {
+      "names": {
+        "en": "Fortunate Celtic Goldsmith Platinum Upgrade Kit",
+        "it": "Kit di Aggiorna in platino Orafo Celtico Beato"
+      },
+      "steps": [
+        "W_MultiAge_PAT25A11",
+        "W_MultiAge_PAT25A12"
+      ]
+    },
+    "upgrade_kit_ascended_PAT25A": {
+      "names": {
+        "en": "Ascended Fortunate Celtic Goldsmith Upgrade Kit",
+        "it": "Kit di potenziamento per orafo celtico beato asceso"
+      },
+      "steps": [
+        "W_MultiAge_PAT25A12",
+        "W_MultiAge_PAT25A13"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_PAT25E": {
       "names": {
         "en": "Clover Keep Ruin Upgrade Kit",
@@ -3889,36 +4308,6 @@
       "steps": [
         "W_MultiAge_PAT25C1",
         "W_MultiAge_PAT25C2"
-      ]
-    },
-    "silver_upgrade_kit_PAT22A": {
-      "names": {
-        "en": "Enchanted Celtic Farmstead Silver Upgrade Kit",
-        "it": "Kit aggiornamento Argento Casale Celtico Incantato"
-      },
-      "steps": [
-        "W_MultiAge_PAT22A10",
-        "W_MultiAge_PAT22A11"
-      ]
-    },
-    "golden_upgrade_kit_PAT22A": {
-      "names": {
-        "en": "Mystic Celtic Farmstead Golden Upgrade Kit",
-        "it": "Kit Aggiornamento Oro Casale Celtico Mistico"
-      },
-      "steps": [
-        "W_MultiAge_PAT22A11",
-        "W_MultiAge_PAT22A12"
-      ]
-    },
-    "platinum_upgrade_kit_PAT22A": {
-      "names": {
-        "en": "Sacred Celtic Farmstead Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Casale Celtico Sacro"
-      },
-      "steps": [
-        "W_MultiAge_PAT22A12",
-        "W_MultiAge_PAT22A13"
       ]
     },
     "upgrade_kit_PAT26A": {
@@ -3989,47 +4378,6 @@
         "W_MultiAge_PAT26C2"
       ]
     },
-    "silver_upgrade_kit_PAT21A": {
-      "names": {
-        "en": "Forgotten Druid Temple Silver Upgrade Kit",
-        "it": "Kit di Aggiornamento Argento per il Tempio dei Druidi dimenticato"
-      },
-      "steps": [
-        "W_MultiAge_PAT21A10",
-        "W_MultiAge_PAT21A11"
-      ]
-    },
-    "golden_upgrade_kit_PAT21A": {
-      "names": {
-        "en": "Lost Druid Temple Golden Upgrade Kit",
-        "it": "Kit di Aggiornamento dorato del Tempio dei Druidi Perduto"
-      },
-      "steps": [
-        "W_MultiAge_PAT21A11",
-        "W_MultiAge_PAT21A12"
-      ]
-    },
-    "platinum_upgrade_kit_PAT25A": {
-      "names": {
-        "en": "Fortunate Celtic Goldsmith Platinum Upgrade Kit",
-        "it": "Kit di Aggiorna in platino Orafo Celtico Beato"
-      },
-      "steps": [
-        "W_MultiAge_PAT25A11",
-        "W_MultiAge_PAT25A12"
-      ]
-    },
-    "upgrade_kit_ascended_PAT25A": {
-      "names": {
-        "en": "Ascended Fortunate Celtic Goldsmith Upgrade Kit",
-        "it": "Kit di potenziamento per orafo celtico beato asceso"
-      },
-      "steps": [
-        "W_MultiAge_PAT25A12",
-        "W_MultiAge_PAT25A13"
-      ],
-      "requiredFragments": 1000
-    },
     "upgrade_kit_ANNI25A": {
       "names": {
         "en": "Viaticum Lighthouse Upgrade Kit",
@@ -4091,76 +4439,6 @@
       ],
       "requiredFragments": 1000
     },
-    "silver_upgrade_kit_ARCH20A": {
-      "names": {
-        "en": "Zephyr Airship Silver Upgrade Kit",
-        "it": "Kit Aggiornamento Argento Dirigibile Zephyr"
-      },
-      "steps": [
-        "W_MultiAge_ARCH20A11",
-        "W_MultiAge_ARCH20A12"
-      ]
-    },
-    "golden_upgrade_kit_ARCH20A": {
-      "names": {
-        "en": "Celestial Airship Golden Upgrade Kit",
-        "it": "Kit Aggiornamento Oro Dirigibile Celeste"
-      },
-      "steps": [
-        "W_MultiAge_ARCH20A12",
-        "W_MultiAge_ARCH20A13"
-      ]
-    },
-    "platinum_upgrade_kit_ARCH20A": {
-      "names": {
-        "en": "Astral Airship Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Dirigibile Astrale"
-      },
-      "steps": [
-        "W_MultiAge_ARCH20A13",
-        "W_MultiAge_ARCH20A14"
-      ]
-    },
-    "upgrade_kit_silver_terrace_farm": {
-      "names": {
-        "en": "Terrace Farm Silver Upgrade Kit",
-        "it": "Kit aggiornamento Fattoria Terrazzata Argento"
-      },
-      "steps": [
-        "W_MultiAge_Expedition16bBase",
-        "W_MultiAge_Expedition16cSilver"
-      ]
-    },
-    "upgrade_kit_gold_terrace_farm": {
-      "names": {
-        "en": "Terrace Farm Gold Upgrade Kit",
-        "it": "Kit aggiornamento Fattoria Terrazzata Oro"
-      },
-      "steps": [
-        "W_MultiAge_Expedition16cSilver",
-        "W_MultiAge_Expedition16dGold"
-      ]
-    },
-    "upgrade_kit_feathered_serpent_statue_silver": {
-      "names": {
-        "en": "Feathered Serpent Statue Silver Upgrade Kit",
-        "it": "Kit aggiornamento Statua del Serpente piumato Argento"
-      },
-      "steps": [
-        "R_MultiAge_Expedition22c",
-        "R_MultiAge_Expedition22dSilver"
-      ]
-    },
-    "upgrade_kit_feathered_serpent_statue_gold": {
-      "names": {
-        "en": "Feathered Serpent Statue Gold Upgrade Kit",
-        "it": "Kit aggiornamento Statua del Serpente Piumato Oro"
-      },
-      "steps": [
-        "R_MultiAge_Expedition22dSilver",
-        "R_MultiAge_Expedition22eGold"
-      ]
-    },
     "upgrade_kit_serpent_scales_silver": {
       "names": {
         "en": "Serpent Fins Silver Upgrade Kit",
@@ -4179,6 +4457,16 @@
       "steps": [
         "D_MultiAge_Expedition22ScalesSilver",
         "D_MultiAge_Expedition22ScalesGold"
+      ]
+    },
+    "upgrade_kit_serpent_scales_platinum": {
+      "names": {
+        "en": "Serpent Scales Platinum Upgrade Kit",
+        "it": "Kit aggiornamento Platino Scaglie del Serpente"
+      },
+      "steps": [
+        "D_MultiAge_Expedition22ScalesGold",
+        "D_MultiAge_Expedition22ScalesPlatinum"
       ]
     },
     "upgrade_kit_serpent_spikes_silver": {
@@ -4201,6 +4489,16 @@
         "D_MultiAge_Expedition22SpikesGold"
       ]
     },
+    "upgrade_kit_serpent_spikes_platinum": {
+      "names": {
+        "en": "Serpent Spikes Platinum Upgrade Kit",
+        "it": "Kit aggiornamento Platino Spuntoni del Serpente"
+      },
+      "steps": [
+        "D_MultiAge_Expedition22SpikesGold",
+        "D_MultiAge_Expedition22SpikesPlatinum"
+      ]
+    },
     "upgrade_kit_serpent_feathers_silver": {
       "names": {
         "en": "Serpent Feathers Silver Upgrade Kit",
@@ -4221,14 +4519,14 @@
         "D_MultiAge_Expedition22FeathersGold"
       ]
     },
-    "shrink_kit_little_fountain_of_youth": {
+    "upgrade_kit_serpent_feathers_platinum": {
       "names": {
-        "en": "Little Fountain of Youth Shrink Kit",
-        "it": "Kit rimpicciolimento Fontana della giovinezza piccola"
+        "en": "Serpent Feathers Platinum Upgrade Kit",
+        "it": "Kit aggiornamento Platino Piume del Serpente"
       },
       "steps": [
-        "W_AllAge_Expedition16Small",
-        "W_AllAge_Expedition24Tiny"
+        "D_MultiAge_Expedition22FeathersGold",
+        "D_MultiAge_Expedition22FeathersPlatinum"
       ]
     },
     "upgrade_kit_SUM25A": {
@@ -4327,27 +4625,6 @@
         "W_MultiAge_SUM25F4"
       ]
     },
-    "platinum_upgrade_kit_SUM20A": {
-      "names": {
-        "en": "Crown Regent's Villa Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Villa Reggente Coronato"
-      },
-      "steps": [
-        "W_MultiAge_SUM20A10",
-        "W_MultiAge_SUM20A11"
-      ]
-    },
-    "upgrade_kit_ascended_SUM20A": {
-      "names": {
-        "en": "Pirate King's Conquest Villa Upgrade Kit",
-        "it": "Kit Aggiornamento Villa della Conquista del Re Pirata"
-      },
-      "steps": [
-        "W_MultiAge_SUM20A11",
-        "W_MultiAge_SUM20A12"
-      ],
-      "requiredFragments": 1000
-    },
     "upgrade_kit_CARE25A": {
       "names": {
         "en": "Forest Sentinel Upgrade Kit",
@@ -4416,27 +4693,6 @@
         "W_MultiAge_CARE25E1",
         "W_MultiAge_CARE25E2"
       ]
-    },
-    "platinum_upgrade_kit_CARE24A": {
-      "names": {
-        "en": "Eco Nexus Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Eco Nexus"
-      },
-      "steps": [
-        "W_MultiAge_CARE24A9",
-        "W_MultiAge_CARE24A10"
-      ]
-    },
-    "upgrade_kit_ascended_CARE24A": {
-      "names": {
-        "en": "Eco Utopia Upgrade Kit",
-        "it": "Kit Aggiornamento Eco Utopia"
-      },
-      "steps": [
-        "W_MultiAge_CARE24A10",
-        "W_MultiAge_CARE24A11"
-      ],
-      "requiredFragments": 1000
     },
     "upgrade_kit_FELL25A": {
       "names": {
@@ -4574,68 +4830,6 @@
         "W_MultiAge_FELL26E2"
       ]
     },
-    "platinum_upgrade_kit_FELL24A": {
-      "names": {
-        "en": "Elysian Whisperwood Watermill Platinum Upgrade Kit",
-        "it": "FELL24A Platinum Platinum Upgrade Kit"
-      },
-      "steps": [
-        "W_MultiAge_FELL24A10",
-        "W_MultiAge_FELL24A11"
-      ]
-    },
-    "upgrade_kit_ascended_FELL24A": {
-      "names": {
-        "en": "Ascended Elysian Whisperwood Watermill Upgrade Kit",
-        "it": "Ascended FELL24A Upgrade Kit"
-      },
-      "steps": [
-        "W_MultiAge_FELL24A11",
-        "W_MultiAge_FELL24A12"
-      ],
-      "requiredFragments": 1000
-    },
-    "golden_upgrade_kit_BOWL22A": {
-      "names": {
-        "en": "Evergreen Fiore Village Golden Upgrade Kit",
-        "it": "Kit Aggiornamento Oro Villaggio Fiore Evergreen"
-      },
-      "steps": [
-        "W_MultiAge_BOWL22A10",
-        "W_MultiAge_BOWL22A11"
-      ]
-    },
-    "silver_upgrade_kit_BOWL22A": {
-      "names": {
-        "en": "Evergreen Fiore Village Silver Upgrade Kit",
-        "it": "Kit Aggiornamento Argento Villaggio Fiore Evergreen"
-      },
-      "steps": [
-        "W_MultiAge_BOWL22A10",
-        "W_MultiAge_BOWL22A11"
-      ]
-    },
-    "platinum_upgrade_kit_BOWL22A": {
-      "names": {
-        "en": "Everbloom Fiore Village Platinum Upgrade Kit",
-        "it": "Kit di Aggiornamento Platino Villaggio Fiore Everbloom"
-      },
-      "steps": [
-        "W_MultiAge_BOWL22A11",
-        "W_MultiAge_BOWL22A12"
-      ]
-    },
-    "upgrade_kit_ascended_BOWL22A": {
-      "names": {
-        "en": "Everblossom Fiore Village Upgrade Kit",
-        "it": "Kit aggiornamento Villaggio Fiore Everblossom"
-      },
-      "steps": [
-        "W_MultiAge_BOWL22A12",
-        "W_MultiAge_BOWL22A13"
-      ],
-      "requiredFragments": 1000
-    },
     "upgrade_kit_GR25I": {
       "names": {
         "en": "Neo Clocktower Upgrade Kit",
@@ -4742,56 +4936,6 @@
         "W_MultiAge_GBG25H2"
       ]
     },
-    "upgrade_kit_platinum_terrace_farm": {
-      "names": {
-        "en": "Terrace Farm Platinum Upgrade Kit",
-        "it": "Kit  aggiornamento Fattoria Terrazzata Platino"
-      },
-      "steps": [
-        "W_MultiAge_Expedition16dGold",
-        "W_MultiAge_Expedition16ePlatinum"
-      ]
-    },
-    "upgrade_kit_feathered_serpent_statue_platinum": {
-      "names": {
-        "en": "Feathered Serpent Statue Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Statua del Serpente Piumato "
-      },
-      "steps": [
-        "R_MultiAge_Expedition22eGold",
-        "R_MultiAge_Expedition22fPlatinum"
-      ]
-    },
-    "upgrade_kit_serpent_scales_platinum": {
-      "names": {
-        "en": "Serpent Scales Platinum Upgrade Kit",
-        "it": "Kit aggiornamento Platino Scaglie del Serpente"
-      },
-      "steps": [
-        "D_MultiAge_Expedition22ScalesGold",
-        "D_MultiAge_Expedition22ScalesPlatinum"
-      ]
-    },
-    "upgrade_kit_serpent_spikes_platinum": {
-      "names": {
-        "en": "Serpent Spikes Platinum Upgrade Kit",
-        "it": "Kit aggiornamento Platino Spuntoni del Serpente"
-      },
-      "steps": [
-        "D_MultiAge_Expedition22SpikesGold",
-        "D_MultiAge_Expedition22SpikesPlatinum"
-      ]
-    },
-    "upgrade_kit_serpent_feathers_platinum": {
-      "names": {
-        "en": "Serpent Feathers Platinum Upgrade Kit",
-        "it": "Kit aggiornamento Platino Piume del Serpente"
-      },
-      "steps": [
-        "D_MultiAge_Expedition22FeathersGold",
-        "D_MultiAge_Expedition22FeathersPlatinum"
-      ]
-    },
     "silver_upgrade_kit_legend_a": {
       "names": {
         "en": "Statue of Castor Silver Upgrade Kit",
@@ -4867,57 +5011,6 @@
       "steps": [
         "W_MultiAge_WIN25C1",
         "W_MultiAge_WIN25C2"
-      ]
-    },
-    "platinum_upgrade_kit_WIN24A": {
-      "names": {
-        "en": "Yukitomo Imperial Platinum Upgrade Kit",
-        "it": "Kit Aggiornamento Platino Yukitomo Imperiale"
-      },
-      "steps": [
-        "W_MultiAge_WIN24A12",
-        "W_MultiAge_WIN24A13"
-      ]
-    },
-    "upgrade_kit_ascended_WIN24A": {
-      "names": {
-        "en": "Yukitomo Imperial Sky Residence Upgrade Kit",
-        "it": "Kit Aggiornamento Residenza del Cielo Yukitomo Imperiale"
-      },
-      "steps": [
-        "W_MultiAge_WIN24A13",
-        "W_MultiAge_WIN24A14"
-      ],
-      "requiredFragments": 1000
-    },
-    "golden_upgrade_kit_WIN19Aa": {
-      "names": {
-        "en": "The Charcoal Limited Express Golden Upgrade Kit",
-        "it": "Kit Aggiornamento Oro Limited Express a Carbone"
-      },
-      "steps": [
-        "W_MultiAge_WIN19A9a",
-        "W_MultiAge_WIN19A10a"
-      ]
-    },
-    "golden_upgrade_kit_WIN19Ab": {
-      "names": {
-        "en": "The Evergreen Limited Express Golden Upgrade Kit",
-        "it": "Kit Aggiornamento Oro Limited Express Sempreverde"
-      },
-      "steps": [
-        "W_MultiAge_WIN19A9b",
-        "W_MultiAge_WIN19A10b"
-      ]
-    },
-    "golden_upgrade_kit_WIN19Ac": {
-      "names": {
-        "en": "The Sleighride Limited Express Golden Upgrade Kit",
-        "it": "Kit Aggiornamento Oro Limited Express Slittino"
-      },
-      "steps": [
-        "W_MultiAge_WIN19A9c",
-        "W_MultiAge_WIN19A10c"
       ]
     },
     "upgrade_kit_WIN19B": {
@@ -5161,47 +5254,6 @@
         "W_MultiAge_ANNI26E2"
       ]
     },
-    "silver_upgrade_kit_ARCH19A": {
-      "names": {
-        "en": "World Expo Silver Upgrade Kit",
-        "it": "Kit di Aggiornamento Argento dell'Esposizione Universale"
-      },
-      "steps": [
-        "W_MultiAge_ARCH19A10",
-        "W_MultiAge_ARCH19A11"
-      ]
-    },
-    "golden_upgrade_kit_ARCH19A": {
-      "names": {
-        "en": "Hopeful World Expo Golden Upgrade Kit",
-        "it": "Kit di Aggiornamento Oro Esposizione Mondiale della Speranza"
-      },
-      "steps": [
-        "W_MultiAge_ARCH19A11",
-        "W_MultiAge_ARCH19A12"
-      ]
-    },
-    "platinum_upgrade_kit_ARCH19A": {
-      "names": {
-        "en": "Harmonious World Expo Platinum Upgrade Kit",
-        "it": "Kit di Aggiornamento Platino per l'Esposizione Mondiale dell'Armonia"
-      },
-      "steps": [
-        "W_MultiAge_ARCH19A12",
-        "W_MultiAge_ARCH19A13"
-      ]
-    },
-    "upgrade_kit_ascended_ARCH19A": {
-      "names": {
-        "en": "United World Expo Upgrade Kit",
-        "it": "Kit di Aggiornamento Esposizione Mondiale Unita"
-      },
-      "steps": [
-        "W_MultiAge_ARCH19A13",
-        "W_MultiAge_ARCH19A14"
-      ],
-      "requiredFragments": 1000
-    },
     "upgrade_kit_GR26E": {
       "names": {
         "en": "Neo Grand Bridge Upgrade Kit",
@@ -5386,27 +5438,6 @@
         "W_MultiAge_CARE26E2"
       ]
     },
-    "platinum_upgrade_kit_CUP22A": {
-      "names": {
-        "en": "Azalea Windmill Platinum Upgrade Kit ",
-        "it": "Kit di aggiornamento Platino Mulino a vento di azalee"
-      },
-      "steps": [
-        "W_MultiAge_CUP22A9",
-        "W_MultiAge_CUP22A10"
-      ]
-    },
-    "upgrade_kit_ascended_CUP22A": {
-      "names": {
-        "en": "Ascended Bougainvillea Windmill Upgrade Kit ",
-        "it": "Kit di aggiornamento Mulino a vento Buganville asceso"
-      },
-      "steps": [
-        "W_MultiAge_CUP22A10",
-        "W_MultiAge_CUP22A11"
-      ],
-      "requiredFragments": 1000
-    },
     "upgrade_kit_CUP22B": {
       "names": {
         "en": "Flower Trail Upgrade Kit",
@@ -5534,37 +5565,6 @@
         "W_MultiAge_FALL26E1",
         "W_MultiAge_FALL26E2"
       ]
-    },
-    "golden_upgrade_kit_FALL21A": {
-      "names": {
-        "en": "Golden Crops Harvest Golden Upgrade Kit ",
-        "it": "Kit di Aggiornamento Oro Raccolto Colture "
-      },
-      "steps": [
-        "W_MultiAge_FallBonus21i",
-        "W_MultiAge_FALL21A10"
-      ]
-    },
-    "platinum_upgrade_kit_FALL21A": {
-      "names": {
-        "en": "Golden Crops Feast Platinum Upgrade Kit ",
-        "it": "Kit di Aggiornamento Platino Festa delle Colture dorate"
-      },
-      "steps": [
-        "W_MultiAge_FALL21A10",
-        "W_MultiAge_FALL21A11"
-      ]
-    },
-    "upgrade_kit_ascended_FALL21A": {
-      "names": {
-        "en": "Ascended Golden Crops Feast Upgrade Kit ",
-        "it": "Kit di Aggiornamento Festa delle Colture dorate Asceso"
-      },
-      "steps": [
-        "W_MultiAge_FALL21A11",
-        "W_MultiAge_FALL21A12"
-      ],
-      "requiredFragments": 1000
     },
     "upgrade_kit_GBG26G": {
       "names": {
@@ -11451,12 +11451,16 @@
     "W_MultiAge_FALL23C2": 100,
     "W_MultiAge_FALL23D1": 100,
     "W_MultiAge_FALL23D2": 100,
-    "guild_arena": 500,
-    "limited_daunting_tower_active": 100,
+    "W_MultiAge_GBG2023A": 500,
+    "W_MultiAge_HalloweenBonus22b": 100,
     "W_MultiAge_HERO24E1": 100,
     "W_MultiAge_PAT23C1": 100,
     "W_MultiAge_PAT23D1": 100,
     "W_MultiAge_SUM23A1": 150,
     "W_MultiAge_WIN22B1": 200
+  },
+  "fragmentBuildingId": {
+    "guild_arena": "W_MultiAge_GBG2023A",
+    "limited_daunting_tower_active": "W_MultiAge_HalloweenBonus22b"
   }
 }

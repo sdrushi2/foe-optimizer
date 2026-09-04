@@ -123,8 +123,15 @@ for (const b of BUILDINGS_FROM_CSV) {
     const amountStr = sepIdx === -1 ? undefined : token.slice(sepIdx + 1);
     const amountPerCollection = amountStr !== undefined && amountStr !== "" ? Number(amountStr) : undefined;
     if (isFragmentBuildingToken(frag)) {
-      // "building_W_MultiAge_WIN22B1" -> "W_MultiAge_WIN22B1"
-      produced.push({ kind: "building", id: fragmentBuildingId(frag), amountPerCollection });
+      // "building_W_MultiAge_WIN22B1" -> "W_MultiAge_WIN22B1". Per i pochi
+      // frammenti "limited" il cui cityEntityId reale NON coincide con lo
+      // strip naive (es. "building_limited_daunting_tower_active" -> reale
+      // "W_MultiAge_HalloweenBonus22b"), KIT_RAW.fragmentBuildingId (da
+      // parse_kit.py, letto da assembledReward.subType nel MainParser) è
+      // consultato PRIMA come fallback esplicito.
+      const naiveId = fragmentBuildingId(frag);
+      const realId = (kitData as unknown as KitDataRaw).fragmentBuildingId?.[naiveId] ?? naiveId;
+      produced.push({ kind: "building", id: realId, amountPerCollection });
     } else if (isFragmentKitToken(frag)) {
       // L'id del kit coincide col token (es. "selection_kit_FELL25BC", "upgrade_kit_ascended_ARCH19A")
       produced.push({ kind: "kit", id: frag, amountPerCollection });
