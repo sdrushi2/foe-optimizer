@@ -4,7 +4,8 @@
     "-lintignore"
   ],
   "ignoreDependencies": [
-    "preact"
+    "preact",
+    "react-dom"
   ],
   "ignore": [
     "sw-template.js"
