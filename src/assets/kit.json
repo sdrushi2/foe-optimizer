@@ -10137,7 +10137,8 @@
         "upgrade_kit_FELL26A",
         "silver_upgrade_kit_FELL26A",
         "golden_upgrade_kit_FELL26A"
-      ]
+      ],
+      "requiredFragments": 150
     },
     "selection_kit_FELL26BC": {
       "names": {

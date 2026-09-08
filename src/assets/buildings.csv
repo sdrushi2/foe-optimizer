@@ -1348,7 +1348,7 @@ W_MultiAge_FELL26B1;FELL26B;Banneret Muster;167a9d901;1;;19;4x2;;-32000;;;87;;;;
 W_MultiAge_FELL26B2;FELL26B;Ascended Banneret Muster;52a575d19;1;30;51;4x2;;-32000;;;288;;;;;100;;;;;;;271430;;;;;;140;140;;;;;;;;100;;;;20;0.05;;25000;;;;;;;;;;;;;;
 W_MultiAge_FELL26C1;FELL26C;Duskmantle Covenant;5ce328c8e;1;;19;3x3;;-32000;;;;;;10;;150;;;;;;;;;10940;;106;106;;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FELL26C2;FELL26C;Ascended Duskmantle Covenant;616a94ab4;1;30;51;3x3;;-32000;;;;;;30;;300;;;;;;;;;10940;;336;336;;;;;;;;300;;;25;;;;;0.05;;;10;;;;;;;;;;;;
-W_MultiAge_FELL26D1;FELL26D;Thistlemarket Moot Hall;a38191d33;1;;19;5x5;;-21330;;;460;;;25;;150;;;;;0.08;;;;32810;;460;460;460;460;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_upgrade_kit_FELL26A:5
+W_MultiAge_FELL26D1;FELL26D;Thistlemarket Moot Hall;a38191d33;1;;19;5x5;;-21330;;;460;;;25;;150;;;;;0.08;;;;32810;;460;460;460;460;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_FELL26A:5
 W_MultiAge_FELL26E1;FELL26E;Waitswood Songhouse - Lv. 1;12855cfb0;1;;19;4x4;;-74670;;;86;;;;;;;;;;;;488570;;;;120;120;;;85;;;;;;;;;;;;;;;;;;;;;2.5;;;;2.25;;;upgrade_kit_ascended_FELL24A:1
 W_MultiAge_FELL26E2;FELL26E;Waitswood Songhouse - Lv. 2;8d473fe04;1;;19;4x4;;-74670;;;115;0.01;;;;;;;;;;;597140;;;;215;215;;;200;;;;;;;;;;;;;;;;;;;;;5;;;;3.75;;;upgrade_kit_ascended_FELL24A:5
 W_MultiAge_FallBonus21a;Colture dorate - Liv. 1;Golden Crops - Lv. 1;6abb31616;;;19;6x4;2;12862;33235;;;;;;;;;;;;;;206652;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
