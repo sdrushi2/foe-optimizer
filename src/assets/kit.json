@@ -3553,7 +3553,7 @@
     "platinum_upgrade_kit_FELL24A": {
       "names": {
         "en": "Elysian Whisperwood Watermill Platinum Upgrade Kit",
-        "it": "FELL24A Platinum Platinum Upgrade Kit"
+        "it": "Kit di Aggiornamento Platino Mulino Whisperwood Eliseo"
       },
       "steps": [
         "W_MultiAge_FELL24A10",
@@ -3563,7 +3563,7 @@
     "upgrade_kit_ascended_FELL24A": {
       "names": {
         "en": "Ascended Elysian Whisperwood Watermill Upgrade Kit",
-        "it": "Ascended FELL24A Upgrade Kit"
+        "it": "Kit di Aggiornamento Mulino Whisperwood Elisiano Asceso"
       },
       "steps": [
         "W_MultiAge_FELL24A11",
@@ -4765,7 +4765,7 @@
     "upgrade_kit_FELL26A": {
       "names": {
         "en": "Hearthglen Wayhouse Upgrade Kit",
-        "it": "FELL26A Upgrade Kit"
+        "it": "Kit di Aggiornamento Locanda di Hearthglen"
       },
       "steps": [
         "W_MultiAge_FELL26A1",
@@ -4781,7 +4781,7 @@
     "silver_upgrade_kit_FELL26A": {
       "names": {
         "en": "Halcyon Hearthglen Wayhouse Silver Upgrade Kit",
-        "it": "FELL26A Silver Silver Upgrade Kit"
+        "it": "Kit di Aggiornamento Argento Locanda di Hearthglen Halcyon"
       },
       "steps": [
         "W_MultiAge_FELL26A8",
@@ -4792,7 +4792,7 @@
     "golden_upgrade_kit_FELL26A": {
       "names": {
         "en": "Aurelian Hearthglen Wayhouse Golden Upgrade Kit",
-        "it": "FELL26A Gold Golden Upgrade Kit"
+        "it": "Kit di Aggiornamento Oro  Locanda di Hearthglen Aureliana"
       },
       "steps": [
         "W_MultiAge_FELL26A9",
@@ -4803,7 +4803,7 @@
     "upgrade_kit_ascended_FELL26B": {
       "names": {
         "en": "Ascended Banneret Muster Upgrade Kit",
-        "it": "Ascended FELL26B Upgrade Kit"
+        "it": "Kit di Aggiornamento Raduno dei Cavalieri Asceso"
       },
       "steps": [
         "W_MultiAge_FELL26B1",
@@ -4813,7 +4813,7 @@
     "upgrade_kit_ascended_FELL26C": {
       "names": {
         "en": "Ascended Duskmantle Covenant Upgrade Kit",
-        "it": "Ascended FELL26C Upgrade Kit"
+        "it": "Kit di Aggiornamento Patto del Manto del Crepuscolo Asceso"
       },
       "steps": [
         "W_MultiAge_FELL26C1",
@@ -4823,7 +4823,7 @@
     "upgrade_kit_FELL26E": {
       "names": {
         "en": "Waitswood Songhouse Upgrade Kit",
-        "it": "FELL26E Upgrade Kit"
+        "it": "Kit di Aggiornamento Casa del Canto dei Boschi del Riposo"
       },
       "steps": [
         "W_MultiAge_FELL26E1",
@@ -10109,7 +10109,7 @@
     "selection_kit_FELL26A": {
       "names": {
         "en": "Hearthglen Wayhouse Selection Kit",
-        "it": "FELL26A Selection Kit"
+        "it": "Kit di Selezione Locanda di Hearthglen"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10119,7 +10119,7 @@
     "silver_selection_kit_FELL26A": {
       "names": {
         "en": "Halcyon Hearthglen Wayhouse Silver Selection Kit",
-        "it": "FELL26A Silver Silver Selection Kit"
+        "it": "Kit di Selezione Argento Locanda di Hearthglen Halcyon"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10130,7 +10130,7 @@
     "golden_selection_kit_FELL26A": {
       "names": {
         "en": "Aurelian Hearthglen Wayhouse Golden Selection Kit",
-        "it": "FELL26A Gold Golden Selection Kit"
+        "it": "Kit di Selezione Oro Locanda di Hearthglen Aureliana"
       },
       "options": [
         "W_MultiAge_FELL26A1",
@@ -10143,7 +10143,7 @@
     "selection_kit_FELL26BC": {
       "names": {
         "en": "Banneret Covenant Selection Kit",
-        "it": "FELL26BC Selection Kit"
+        "it": "Kit di Selezione Patto dei vessilliferi"
       },
       "options": [
         "W_MultiAge_FELL26B1",
@@ -10154,7 +10154,7 @@
     "selection_kit_FELL26E": {
       "names": {
         "en": "Waitswood Songhouse Selection Kit",
-        "it": "FELL26E Selection Kit"
+        "it": "Kit di Selezione Casa del Canto dei Boschi del Riposo"
       },
       "options": [
         "W_MultiAge_FELL26E1",
@@ -10189,7 +10189,7 @@
     "platinum_selection_kit_FELL24A": {
       "names": {
         "en": "Elysian Whisperwood Watermill Platinum Selection Kit",
-        "it": "Dummy"
+        "it": "Kit di Selezione Platino Mulino Whisperwood Eliseo"
       },
       "options": [
         "W_MultiAge_FELL24A1",
@@ -11386,7 +11386,8 @@
     },
     "selection_kit_epic_ASC26": {
       "names": {
-        "en": "Epic Ascended 2026 Selection Kit"
+        "en": "Epic Ascended 2026 Selection Kit",
+        "it": "Kit di Selezione Epico Asceso 2026"
       },
       "options": [
         "upgrade_kit_ascended_WIN26B",
