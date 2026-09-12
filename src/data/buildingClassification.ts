@@ -89,6 +89,28 @@ export function isGoodsFactoryId(id: string): boolean {
   return id.startsWith("G_");
 }
 
+/** Un CityEntityId rappresenta un edificio "Tutte le ere" (nel MainParser ha
+ *  UN SOLO componente, "AllAge", invece di una entry per ogni era in cui
+ *  esiste una variante) se il secondo segmento dell'id (dopo il prefisso
+ *  categoria, es. "T_", "W_", "L_", "X_") è letteralmente "AllAge" — pattern
+ *  usato da Inno per gli edifici-premio evento che non hanno mai bisogno di
+ *  seguire l'era del giocatore (es. T_AllAge_Expedition16 "Fiamma rituale",
+ *  T_AllAge_SportBonus20a "Insediamento Sentinelle"). Da NON confondere con
+ *  "MultiAge" (es. W_MultiAge_FELL24A1): quelli sono i normali kit stagionali
+ *  con catena di upgrade manuale tramite kit, quindi restano regolarmente
+ *  soggetti al controllo "edificio vecchio". Bug scoperto settembre 2026:
+ *  outdatedBuildings (App.tsx) escludeva solo isMilitaryBuildingId dal
+ *  controllo "livello < era corrente", marcando erroneamente questi edifici
+ *  come vecchi/aggiornabili — non hanno affatto una nozione di era, quindi
+ *  il "livello" letto dal cityMap del client non è confrontabile con
+ *  currentEraId. */
+export function isAllAgeBuildingId(id: string): boolean {
+  const underscoreIdx = id.indexOf("_");
+  if (underscoreIdx === -1) return false;
+  const rest = id.slice(underscoreIdx + 1);
+  return rest === "AllAge" || rest.startsWith("AllAge_");
+}
+
 
 /**
  * Colori delle righe nelle tabelle edifici, per categoria.

@@ -54,7 +54,7 @@ import { translateName, getItalianMap, initTranslations, hasTranslation, type La
 import { t, UI_LANGUAGES, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
 import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilitaryCampBuildingId,
   isBattlegroundsPrizeId, isQuantumIncursionsPrizeId, getSettlementInfo,
-  isAscendedUpgradeKit,
+  isAscendedUpgradeKit, isAllAgeBuildingId,
   isFragmentBuildingToken, isFragmentKitToken, fragmentBuildingId,
   BUILDING_ROW_COLORS, ROW_DISCONNECTED_OVERLAY, RARITY_FROM_GAME } from "./data/buildingClassification";
 import {
@@ -4063,6 +4063,13 @@ export default function App() {
     if (currentEraId < 0) return out;
     entityLevels.forEach((minLvl, id) => {
       if (isMilitaryBuildingId(id)) return;
+      // Edifici "Tutte le ere" (un solo componente AllAge nel MainParser,
+      // es. Fiamma rituale/Insediamento Sentinelle/Faro di guardia): non
+      // hanno alcuna progressione per era, quindi il "livello" letto dal
+      // cityMap del client non è un'era confrontabile con currentEraId —
+      // segnalarli come vecchi/aggiornabili è un falso positivo (bug
+      // segnalato settembre 2026, vedi isAllAgeBuildingId).
+      if (isAllAgeBuildingId(id)) return;
       if (minLvl < currentEraId) out.add(id);
     });
     return out;
