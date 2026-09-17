@@ -1403,16 +1403,6 @@
         "W_MultiAge_BOWL22A11"
       ]
     },
-    "silver_upgrade_kit_BOWL22A": {
-      "names": {
-        "en": "Evergreen Fiore Village Silver Upgrade Kit",
-        "it": "Kit Aggiornamento Argento Villaggio Fiore Evergreen"
-      },
-      "steps": [
-        "W_MultiAge_BOWL22A10",
-        "W_MultiAge_BOWL22A11"
-      ]
-    },
     "platinum_upgrade_kit_BOWL22A": {
       "names": {
         "en": "Everbloom Fiore Village Platinum Upgrade Kit",
@@ -2347,6 +2337,78 @@
         "W_MultiAge_WIN22B2"
       ]
     },
+    "upgrade_kit_HAL26A": {
+      "names": {
+        "en": "Lost Castle Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26A1",
+        "W_MultiAge_HAL26A2",
+        "W_MultiAge_HAL26A3",
+        "W_MultiAge_HAL26A4",
+        "W_MultiAge_HAL26A5",
+        "W_MultiAge_HAL26A6",
+        "W_MultiAge_HAL26A7",
+        "W_MultiAge_HAL26A8",
+        "W_MultiAge_HAL26A9"
+      ]
+    },
+    "silver_upgrade_kit_HAL26A": {
+      "names": {
+        "en": "Mystery Castle Silver Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26A9",
+        "W_MultiAge_HAL26A10"
+      ],
+      "requiredFragments": 150
+    },
+    "golden_upgrade_kit_HAL26A": {
+      "names": {
+        "en": "Weeping Castle Golden Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26A10",
+        "W_MultiAge_HAL26A11"
+      ],
+      "requiredFragments": 150
+    },
+    "upgrade_kit_ascended_HAL26B": {
+      "names": {
+        "en": "Ascended Lycan Pavilion Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26B1",
+        "W_MultiAge_HAL26B2"
+      ]
+    },
+    "upgrade_kit_ascended_HAL26C": {
+      "names": {
+        "en": "Ascended Wraithrider Post Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26C1",
+        "W_MultiAge_HAL26C2"
+      ]
+    },
+    "upgrade_kit_ascended_HAL26E": {
+      "names": {
+        "en": "Ascended Sootkettle Corner Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26E1",
+        "W_MultiAge_HAL26E2"
+      ]
+    },
+    "upgrade_kit_HAL26F": {
+      "names": {
+        "en": "Ectobrook Hollow Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL26F1",
+        "W_MultiAge_HAL26F2"
+      ]
+    },
     "upgrade_kit_HAL25A": {
       "names": {
         "en": "Boo’loon Spectral Fair Upgrade Kit",
@@ -2515,6 +2577,25 @@
         "W_MultiAge_HAL24A10"
       ],
       "requiredFragments": 150
+    },
+    "platinum_upgrade_kit_HAL24A": {
+      "names": {
+        "en": "Eerie Delirium Coaster Platinum Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL24A10",
+        "W_MultiAge_HAL24A11"
+      ]
+    },
+    "upgrade_kit_ascended_HAL24A": {
+      "names": {
+        "en": "Ascended Eerie Delirium Coaster Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_HAL24A11",
+        "W_MultiAge_HAL24A12"
+      ],
+      "requiredFragments": 1000
     },
     "silver_upgrade_kit_HAL24F": {
       "names": {
@@ -8296,6 +8377,109 @@
         "upgrade_kit_GR24D"
       ]
     },
+    "selection_kit_HAL26A": {
+      "names": {
+        "en": "Lost Castle Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL26A1",
+        "upgrade_kit_HAL26A"
+      ]
+    },
+    "silver_selection_kit_HAL26A": {
+      "names": {
+        "en": "Mystery Castle Silver Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL26A1",
+        "upgrade_kit_HAL26A",
+        "silver_upgrade_kit_HAL26A"
+      ]
+    },
+    "golden_selection_kit_HAL26A": {
+      "names": {
+        "en": "Weeping Castle Golden Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL26A1",
+        "upgrade_kit_HAL26A",
+        "silver_upgrade_kit_HAL26A",
+        "golden_upgrade_kit_HAL26A"
+      ],
+      "requiredFragments": 150
+    },
+    "platinum_selection_kit_HAL24A": {
+      "names": {
+        "en": "Eerie Delirium Coaster Platinum Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL24A1",
+        "upgrade_kit_HAL24A",
+        "silver_upgrade_kit_HAL24A",
+        "golden_upgrade_kit_HAL24A",
+        "platinum_upgrade_kit_HAL24A"
+      ]
+    },
+    "selection_kit_HAL26BC": {
+      "names": {
+        "en": "Lycan Wraithrider Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL26B1",
+        "W_MultiAge_HAL26C1"
+      ],
+      "requiredFragments": 100
+    },
+    "selection_kit_HAL26F": {
+      "names": {
+        "en": "Ectobrook Hollow Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL26F1",
+        "upgrade_kit_HAL26F"
+      ]
+    },
+    "selection_kit_epic_HAL26": {
+      "names": {
+        "en": "Epic Halloween 2026 Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_HAL25A1",
+        "upgrade_kit_HAL25A",
+        "W_MultiAge_HAL25B1",
+        "W_MultiAge_HAL25C1",
+        "W_MultiAge_HAL24A1",
+        "upgrade_kit_HAL24A",
+        "W_MultiAge_HAL24F1",
+        "W_MultiAge_HAL23A1",
+        "upgrade_kit_HAL23A",
+        "W_MultiAge_HAL23B1",
+        "upgrade_kit_HAL23B",
+        "silver_upgrade_kit_HAL23B",
+        "golden_upgrade_kit_HAL23B",
+        "W_MultiAge_HAL23C1",
+        "W_MultiAge_HAL23D1",
+        "W_MultiAge_HalloweenBonusGP22a",
+        "upgrade_kit_tarot_card_caravans",
+        "R_MultiAge_HalloweenBonusSet21a",
+        "R_MultiAge_HalloweenBonusSet21c",
+        "L_AllAge_HalloweenBonusSet21a",
+        "D_MultiAge_HalloweenBonusSet21a",
+        "A_MultiAge_HalloweenBonusSet21a",
+        "upgrade_kit_clown_town",
+        "upgrade_kit_helter_skelter",
+        "upgrade_kit_terror_teacups",
+        "upgrade_kit_wheel_of_death",
+        "upgrade_kit_mystical_organ",
+        "R_MultiAge_HalloweenBonus20a",
+        "upgrade_kit_house_of_horrors",
+        "W_MultiAge_HAL19A1",
+        "upgrade_kit_abandoned_asylum",
+        "R_MultiAge_HalloweenBonus18",
+        "W_MultiAge_HAL17A1",
+        "W_MultiAge_HAL15A1"
+      ]
+    },
     "selection_kit_HAL25A": {
       "names": {
         "en": "Boo’loon Spectral Fair Selection Kit",
@@ -10029,17 +10213,6 @@
         "golden_upgrade_kit_FELL25A"
       ],
       "requiredFragments": 150
-    },
-    "silver_selection_kit_BOWL22A": {
-      "names": {
-        "en": "Evergreen Fiore Village Silver Selection Kit",
-        "it": "Kit di Selezione Argento Villaggio Fiore Evergreen"
-      },
-      "options": [
-        "W_MultiAge_BOWL22A1",
-        "upgrade_kit_fiore_village",
-        "silver_upgrade_kit_BOWL22A"
-      ]
     },
     "golden_selection_kit_BOWL22A": {
       "names": {
