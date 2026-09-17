@@ -1000,6 +1000,13 @@ interface BuildingRowProps {
   gameDisplayName: string | undefined;
   upgradeBadge: { targets: string[]; kits: Array<{ name: string; count: number }> } | undefined;
   isOutdated: boolean;
+  /** Zebra striping: true per la seconda/quarta/sesta... riga VISIBILE
+   *  (indice dispari nell'array già filtrato/ordinato) — aggiunge .row-even
+   *  alla classe di categoria già presente. Calcolato dal chiamante
+   *  dall'indice in filteredBuildings.map, quindi segue automaticamente
+   *  qualunque filtro/ordinamento attivo senza bisogno di ricalcolo
+   *  dedicato: l'indice nell'array già filtrato è sempre quello giusto. */
+  isEven: boolean;
   isDeclassable: boolean;
   allySlots: Array<{ filled: boolean; allyDisplayName?: string }> | undefined;
   declassablePopData: { popCurr: number; popBronze: number; statsBronze: EraStats } | undefined;
@@ -1031,7 +1038,7 @@ const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, currentFilters, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentsProduced,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
@@ -1066,6 +1073,7 @@ const BuildingRow = memo(function BuildingRow({
               const disconnected = activeTab === "propria_citta" && !b._isMergedInventory && (disconnectedCount) > 0;
               const notInCsv = b.cityEntityId && !CSV_ENTITY_IDS_SET.has(b.cityEntityId);
               return BUILDING_ROW_COLORS[cat]
+                + (isEven ? " row-even" : "")
                 + (disconnected ? " " + ROW_DISCONNECTED_OVERLAY : "")
                 // shadow inset invece di border-left: un vero border
                 // partecipa al box model e su table con
@@ -3298,7 +3306,7 @@ export default function App() {
   // "benip" già esistenti per gli edifici (stesso concetto), quindi
   // allySortValue in compareAllies non richiede chiavi nuove.
   const renderAllyProductionGroupHeader = () => (
-    <th className="py-2 px-2 text-center section-divider text-orange-400/80 whitespace-nowrap" colSpan={3}>
+    <th className="py-2 px-2 text-center group-header-orange text-orange-400/80 whitespace-nowrap" colSpan={3}>
       {t("groupProductions", uiLang)}
     </th>
   );
@@ -3321,9 +3329,9 @@ export default function App() {
   // renderMilitaryHeaders. Anche questo legge solo state già in scope.
   const renderMilitaryGroupHeaders = () => (
     <>
-      {!showSigmaColumns && <th className="py-2 px-2 text-center section-divider text-amber-400/80" colSpan={4}>{t("groupGenerals", uiLang)}</th>}
-      <th className="py-2 px-2 text-center section-divider text-emerald-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGbg", uiLang) : t("groupGbg", uiLang)}</th>
-      {spedizioniEnabled && <th className="py-2 px-2 text-center section-divider text-violet-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGe", uiLang) : t("groupGe", uiLang)}</th>}
+      {!showSigmaColumns && <th className="py-2 px-2 text-center group-header-amber text-amber-400/80" colSpan={4}>{t("groupGenerals", uiLang)}</th>}
+      <th className="py-2 px-2 text-center group-header-emerald text-emerald-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGbg", uiLang) : t("groupGbg", uiLang)}</th>
+      {spedizioniEnabled && <th className="py-2 px-2 text-center group-header-violet text-violet-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGe", uiLang) : t("groupGe", uiLang)}</th>}
     </>
   );
 
@@ -6742,16 +6750,16 @@ export default function App() {
                           </div>
                         </th>
                         {renderMilitaryGroupHeaders()}
-                        <th className="py-2 px-2 text-center section-divider text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
+                        <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
-                          <th className="relative text-center section-divider text-orange-400/80" colSpan={22}>
+                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={22}>
                             <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                               <button
                                 onClick={() => setHideNoRush(v => !v)}
-                                className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
+                                className={`inline-flex items-center gap-1 rounded border-[0.5px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
                                   hideNoRush
-                                    ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
-                                    : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                                    ? "border-orange-300 bg-orange-500/70 text-white shadow-sm"
+                                    : "border-slate-400/70 bg-slate-950/40 text-slate-300 hover:border-slate-300 hover:text-slate-100"
                                 }`}
                                 title={t(hideNoRush ? "hideNoRushActiveTitle" : "hideNoRushTitle", uiLang)}
                               >
@@ -6763,10 +6771,10 @@ export default function App() {
                               </button>
                               <button
                                 onClick={() => setHideEraMutable(v => !v)}
-                                className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
+                                className={`inline-flex items-center gap-1 rounded border-[0.5px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
                                   hideEraMutable
-                                    ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
-                                    : "border-slate-700/50 bg-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                                    ? "border-orange-300 bg-orange-500/70 text-white shadow-sm"
+                                    : "border-slate-400/70 bg-slate-950/40 text-slate-300 hover:border-slate-300 hover:text-slate-100"
                                 }`}
                                 title={t(hideEraMutable ? "hideEraMutableActiveTitle" : "hideEraMutableTitle", uiLang)}
                               >
@@ -6918,10 +6926,11 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
-                      {filteredBuildings.map((b) => (
+                      {filteredBuildings.map((b, rowIndex) => (
                         <BuildingRow
                           key={b.id}
                           b={b}
+                          isEven={rowIndex % 2 === 1}
                           activeTab={activeTab}
                           uiLang={uiLang}
                           gameLang={gameLang}

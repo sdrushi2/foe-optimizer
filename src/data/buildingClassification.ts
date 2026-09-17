@@ -132,13 +132,16 @@ export const BUILDING_ROW_COLORS: Record<
   // scorrono sotto (ghosting — bug scoperto due volte a luglio 2026: prima su
   // "normal" senza colore di base, poi su goods/inactive/fallback e
   // sull'hover di normal, che usavano utility /NN semi-trasparenti).
-  // great/military sono utility Tailwind opache (hex pieno + hover con filtro
-  // brightness, che non tocca l'alpha); le altre categorie usano le classi
-  // .row-* definite in index.css, che replicano ESATTAMENTE i vecchi colori
-  // semi-trasparenti come compositi opachi via color-mix(in srgb, …) sopra
-  // l'ambiente (--bt-ambient-solid).
-  great:    "bg-[#191900] hover:brightness-125",
-  military: "bg-[#190F05] hover:brightness-125",
+  // Tutte le 7 categorie usano ormai classi .row-* definite in index.css
+  // (great/military erano utility Tailwind arbitraria bg-[#hex] fino a
+  // settembre 2026, spostate a .row-great/.row-military per poter
+  // combinarsi con .row-even dello zebra striping — Tailwind non genera una
+  // variante utility per la combinazione di due classi custom). Le altre
+  // categorie replicano ESATTAMENTE i vecchi colori semi-trasparenti come
+  // compositi opachi via color-mix(in srgb, …) sopra l'ambiente
+  // (--bt-ambient-solid).
+  great:    "row-great",
+  military: "row-military",
   goods:    "row-goods",
   inactive: "row-inactive",
   fallback: "row-fallback",
