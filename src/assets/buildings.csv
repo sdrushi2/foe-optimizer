@@ -1528,8 +1528,8 @@ W_MultiAge_HAL23F1;Scatola da incubo dell'Allevamento di mostri;Monster Ranch's 
 W_MultiAge_HAL23G1;Carrozza fantasma dei Destrieri spettrali;Spectral Steeds' Phantom Carriage;e10b72067;1;;19;1x3;;;;;12;;;;;;18;;;;;;;;;;15;18;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL23A:20|selection_kit_HAL23A:20|silver_upgrade_kit_HAL23A:20
 W_MultiAge_HAL24A1;Giostra Brivido Inquietante - Lv. 1;Eerie Thrill Coaster - Lv. 1;e01803b0c;;;19;7x4;2;4575;-5490;;10;;;;;;;;;;;;;4020;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A10;Giostra Incubo Inquietante;Eerie Nightmare Coaster;f23d675f9;1;;19;7x4;2;30554;-36664;;75;;;8;;100;125;;;;;;;274100;;;102;102;;;30;30;;;;;;;;;;;;;;;;;;;M;;;;3;;;;
-W_MultiAge_HAL24A11;;Eerie Delirium Coaster;;1;;19;7x4;;31790;-40460;;150;;;10;;200;150;;;;;;;306580;;;280;280;;;381;381;;;;;;;;;;;;;;;;;;;M;;;;5;;2;;
-W_MultiAge_HAL24A12;;Ascended Eerie Delirium Coaster;;1;90;51;7x4;;44880;-44160;;450;;;20;;400;300;;;;;;;666590;;;460;460;;;521;521;;;;;;;25;;;;;;;;;;200;8000;M;;;;10;;6;;
+W_MultiAge_HAL24A11;;Eerie Delirium Coaster;62f3296bd;1;;19;7x4;;31790;-40460;;150;;;10;;200;150;;;;;;;306580;;;280;280;;;381;381;;;;;;;;;;;;;;;;;;;M;;;;5;;2;;
+W_MultiAge_HAL24A12;;Ascended Eerie Delirium Coaster;74e229d34;1;90;51;7x4;;44880;-44160;;450;;;20;;400;300;;;;;;;666590;;;460;460;;;521;521;;;;;;;25;;;;;;;;;;200;8000;M;;;;10;;6;;
 W_MultiAge_HAL24A2;Giostra Brivido Inquietante - Lv. 2;Eerie Thrill Coaster - Lv. 2;cdbc7b448;;;19;7x4;2;6100;-7320;;12;;;;;;;;;;;;;8042;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A3;Giostra Brivido Inquietante - Lv. 3;Eerie Thrill Coaster - Lv. 3;f8c4e5cf2;;;19;7x4;2;9177;-11012;;14;;;;;;;;;;;;;16081;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A4;Giostra Brivido Inquietante - Lv. 4;Eerie Thrill Coaster - Lv. 4;63bec6a67;;;19;7x4;2;12226;-14671;;16;;;;;;;;;;;;;32162;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1563,26 +1563,26 @@ W_MultiAge_HAL25C2;Hamburger Bestiali Ascesi;Ascended Beastly Burgers;3852c2787;
 W_MultiAge_HAL25D1;Conservatorio Nightshade;Nightshade Conservatory;c93317028;1;;19;5x4;;;;;200;;;;;100;100;50;;;;;;;;;110;110;110;110;125;125;125;125;;;;;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_HAL25A:20
 W_MultiAge_HAL25E1;Ossario Rave Party - Lv. 1;Rattlebones Raveyard - Lv. 1;310b8e359;1;;19;3x4;;-42540;;;65;;;;;20;20;5;;;;;;;;;50;50;50;50;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL25E2;Ossario Rave Party - Lv. 2;Rattlebones Raveyard - Lv. 2;1ab7c4d32;1;;19;3x4;;-42540;;;200;;;;;60;60;20;;;;;;;;;100;100;100;100;185;185;185;185;185;185;185;185;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_HAL15A:4|upgrade_kit_ascended_HAL17A:4
-W_MultiAge_HAL26A1;;Lost Castle - Lv. 1;;;;19;4x6;2;2130;;;;;;;;20;;;;;;;54290;;;;21;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A10;;Mystery Castle;;1;;19;4x6;2;29870;;;288;;;;;240;;;;;;;434280;;;;301;301;;;;;;;;;300;300;;;;;;;;;;;;;;;;3;;;;;golden_upgrade_kit_HAL26A:5|selection_kit_HAL26BC:2
-W_MultiAge_HAL26A11;;Weeping Castle;;1;;19;4x6;2;37330;;;345;;;;;280;;;;;;;542860;;;;401;401;;;;;;;;;450;450;;;;;;;;;;;;;M;;;5;;;;;selection_kit_HAL26BC:3
-W_MultiAge_HAL26A2;;Lost Castle - Lv. 2;;;;19;4x6;2;3200;;;;;;;;35;;;;;;;81430;;;;26;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A3;;Lost Castle - Lv. 3;;;;19;4x6;2;4270;;;;;;;;55;;;;;;;108570;;;;31;31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A4;;Lost Castle - Lv. 4;;;;19;4x6;2;5330;;;;;;;;75;;;;;;;135710;;;;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A5;;Lost Castle - Lv. 5;;;;19;4x6;2;8000;;;;;;;;100;;;;;;;162860;;;;41;41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A6;;Lost Castle - Lv. 6;;;;19;4x6;2;10670;;;173;;;;;125;;;;;;;190000;;;;51;51;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A7;;Lost Castle - Lv. 7;;;;19;4x6;2;16000;;;184;;;;;150;;;;;;;217140;;;;76;76;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A8;;Lost Castle - Lv. 8;;;;19;4x6;2;21330;;;207;;;;;180;;;;;;;271430;;;;101;101;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26A9;;Lost Castle - Lv. 9;;1;;19;4x6;2;26670;;;242;;;;;210;;;;;;;325710;;;;201;201;;;;;;;;;220;220;;;;;;;;;;;;;;;;1;;;;;selection_kit_HAL26BC:1|silver_upgrade_kit_HAL26A:5
-W_MultiAge_HAL26B1;;Lycan Pavilion;;1;;19;2x3;;-48000;;;104;;;6;3;;;;;;;;;;;;;;71;71;61;61;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26B2;;Ascended Lycan Pavilion;;1;30;51;2x3;;-48000;;;173;;;16;8;;;;;;;;;;;;;;121;121;151;151;;;;;;;25;25;;;0.05;;;;;5;;;;;;;;;;;
-W_MultiAge_HAL26C1;;Wraithrider Post;;1;;19;3x2;;-32000;;;;;;;;;95;90;;;;;;;16410;;;;;;;;81;;91;91;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26C2;;Ascended Wraithrider Post;;1;30;51;3x2;;-32000;;;;;;;;;135;120;;;;;;;29530;;;;;;;;151;;161;161;;;;;25;25;;0.05;;;15;;;;;;;;;;;;
-W_MultiAge_HAL26D1;;Thornhollow Woods;;1;;19;6x4;2;;;;518;;;;;400;350;;;;;;705710;423530;;;800;800;400;400;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;3;;5;golden_selection_kit_HAL26A:20
-W_MultiAge_HAL26E1;;Sootkettle Corner;;1;;19;3x3;;-32000;;;161;;;10;;;;;;;;;260570;;;;30;;;;91;91;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26E2;;Ascended Sootkettle Corner;;1;30;51;3x3;;-32000;;;207;0.02;;16;;;;;;;0.02;;325710;;;;60;;;;121;121;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_HAL26F1;;Ectobrook Hollow – Lv. 1;;;;19;3x4;1.5;-64000;53340;;;;;;;;;;;;;;;190590;38280;;;70;;;;;130;130;;;;;;;;;;;;;;;;;;3;;;;;;;
-W_MultiAge_HAL26F2;;Ectobrook Hollow – Lv. 2;;1;;19;3x4;1.5;-64000;64000;;;;;;;;;;;;;;;264710;49220;;;120;;;;;200;200;;;;;;;;;;;;;;;;;;8;;;;;;;upgrade_kit_ascended_HAL24A:5
+W_MultiAge_HAL26A1;;Lost Castle - Lv. 1;7457610e3;;;19;4x6;2;2130;;;;;;;;20;;;;;;;54290;;;;21;21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A10;;Mystery Castle;eb34aa7ab;1;;19;4x6;2;29870;;;288;;;;;240;;;;;;;434280;;;;301;301;;;;;;;;;300;300;;;;;;;;;;;;;;;;3;;;;;golden_upgrade_kit_HAL26A:5|selection_kit_HAL26BC:2
+W_MultiAge_HAL26A11;;Weeping Castle;6dc5cc0ef;1;;19;4x6;2;37330;;;345;;;;;280;;;;;;;542860;;;;401;401;;;;;;;;;450;450;;;;;;;;;;;;;M;;;5;;;;;selection_kit_HAL26BC:3
+W_MultiAge_HAL26A2;;Lost Castle - Lv. 2;W_MultiAge_HAL26A1-7457610e3;;;19;4x6;2;3200;;;;;;;;35;;;;;;;81430;;;;26;26;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A3;;Lost Castle - Lv. 3;W_MultiAge_HAL26A1-7457610e3;;;19;4x6;2;4270;;;;;;;;55;;;;;;;108570;;;;31;31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A4;;Lost Castle - Lv. 4;W_MultiAge_HAL26A1-7457610e3;;;19;4x6;2;5330;;;;;;;;75;;;;;;;135710;;;;36;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A5;;Lost Castle - Lv. 5;7e657d6d4;;;19;4x6;2;8000;;;;;;;;100;;;;;;;162860;;;;41;41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A6;;Lost Castle - Lv. 6;W_MultiAge_HAL26A5-7e657d6d4;;;19;4x6;2;10670;;;173;;;;;125;;;;;;;190000;;;;51;51;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A7;;Lost Castle - Lv. 7;W_MultiAge_HAL26A5-7e657d6d4;;;19;4x6;2;16000;;;184;;;;;150;;;;;;;217140;;;;76;76;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A8;;Lost Castle - Lv. 8;W_MultiAge_HAL26A5-7e657d6d4;;;19;4x6;2;21330;;;207;;;;;180;;;;;;;271430;;;;101;101;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26A9;;Lost Castle - Lv. 9;11af050d4;1;;19;4x6;2;26670;;;242;;;;;210;;;;;;;325710;;;;201;201;;;;;;;;;220;220;;;;;;;;;;;;;;;;1;;;;;selection_kit_HAL26BC:1|silver_upgrade_kit_HAL26A:5
+W_MultiAge_HAL26B1;;Lycan Pavilion;6488e31e3;1;;19;2x3;;-48000;;;104;;;6;3;;;;;;;;;;;;;;71;71;61;61;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26B2;;Ascended Lycan Pavilion;184d03078;1;30;51;2x3;;-48000;;;173;;;16;8;;;;;;;;;;;;;;121;121;151;151;;;;;;;25;25;;;0.05;;;;;5;;;;;;;;;;;
+W_MultiAge_HAL26C1;;Wraithrider Post;f9190863a;1;;19;3x2;;-32000;;;;;;;;;95;90;;;;;;;16410;;;;;;;;81;;91;91;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26C2;;Ascended Wraithrider Post;312700e94;1;30;51;3x2;;-32000;;;;;;;;;135;120;;;;;;;29530;;;;;;;;151;;161;161;;;;;25;25;;0.05;;;15;;;;;;;;;;;;
+W_MultiAge_HAL26D1;;Thornhollow Woods;5d5ad9b7b;1;;19;6x4;2;;;;518;;;;;400;350;;;;;;705710;423530;;;800;800;400;400;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;3;;5;golden_selection_kit_HAL26A:20
+W_MultiAge_HAL26E1;;Sootkettle Corner;59e655255;1;;19;3x3;;-32000;;;161;;;10;;;;;;;;;260570;;;;30;;;;91;91;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26E2;;Ascended Sootkettle Corner;976f89037;1;30;51;3x3;;-32000;;;207;0.02;;16;;;;;;;0.02;;325710;;;;60;;;;121;121;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_HAL26F1;;Ectobrook Hollow – Lv. 1;c5c63a12a;;;19;3x4;1.5;-64000;53340;;;;;;;;;;;;;;;190590;38280;;;70;;;;;130;130;;;;;;;;;;;;;;;;;;3;;;;;;;
+W_MultiAge_HAL26F2;;Ectobrook Hollow – Lv. 2;c474e2d45;1;;19;3x4;1.5;-64000;64000;;;;;;;;;;;;;;;264710;49220;;;120;;;;;200;200;;;;;;;;;;;;;;;;;;8;;;;;;;upgrade_kit_ascended_HAL24A:5
 W_MultiAge_HERO24A1;Santuario del Boschetto Asceso - Lv.1;Ascendant Grove Sanctuary - Lv.1;5323c5976;;;19;4x6;2;;;;;;;;;;;;;;;;188940;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A2;Santuario del Boschetto Asceso - Lv.2;Ascendant Grove Sanctuary - Lv.2;181a4f221;;;19;4x6;2;;;;;;;;;;;;;;;;208840;;4341;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HERO24A3;Santuario del Boschetto Asceso - Lv.3;Ascendant Grove Sanctuary - Lv.3;668832549;;;19;4x6;2;;;;;;;;;;5;;;;;;228740;;4560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
