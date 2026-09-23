@@ -2339,7 +2339,8 @@
     },
     "upgrade_kit_HAL26A": {
       "names": {
-        "en": "Lost Castle Upgrade Kit"
+        "en": "Lost Castle Upgrade Kit",
+        "it": "Kit di Aggiornamento del Castello Perduto"
       },
       "steps": [
         "W_MultiAge_HAL26A1",
@@ -2355,7 +2356,8 @@
     },
     "silver_upgrade_kit_HAL26A": {
       "names": {
-        "en": "Mystery Castle Silver Upgrade Kit"
+        "en": "Mystery Castle Silver Upgrade Kit",
+        "it": "Kit di Aggiornamento Argento Castello Misterioso"
       },
       "steps": [
         "W_MultiAge_HAL26A9",
@@ -2365,7 +2367,8 @@
     },
     "golden_upgrade_kit_HAL26A": {
       "names": {
-        "en": "Weeping Castle Golden Upgrade Kit"
+        "en": "Weeping Castle Golden Upgrade Kit",
+        "it": "Kit di Aggiornamento Oro Castello Piangente"
       },
       "steps": [
         "W_MultiAge_HAL26A10",
@@ -2375,7 +2378,8 @@
     },
     "upgrade_kit_ascended_HAL26B": {
       "names": {
-        "en": "Ascended Lycan Pavilion Upgrade Kit"
+        "en": "Ascended Lycan Pavilion Upgrade Kit",
+        "it": "Kit di aggiornamento Padiglione dei Lycan Asceso"
       },
       "steps": [
         "W_MultiAge_HAL26B1",
@@ -2384,7 +2388,8 @@
     },
     "upgrade_kit_ascended_HAL26C": {
       "names": {
-        "en": "Ascended Wraithrider Post Upgrade Kit"
+        "en": "Ascended Wraithrider Post Upgrade Kit",
+        "it": "Kit di aggiornamento Postazione del Cavaliere degli Spettri Ascesa"
       },
       "steps": [
         "W_MultiAge_HAL26C1",
@@ -2393,7 +2398,8 @@
     },
     "upgrade_kit_ascended_HAL26E": {
       "names": {
-        "en": "Ascended Sootkettle Corner Upgrade Kit"
+        "en": "Ascended Sootkettle Corner Upgrade Kit",
+        "it": "Kit di aggiornamento Angolo del Calderone di Fuliggine Asceso"
       },
       "steps": [
         "W_MultiAge_HAL26E1",
@@ -2402,7 +2408,8 @@
     },
     "upgrade_kit_HAL26F": {
       "names": {
-        "en": "Ectobrook Hollow Upgrade Kit"
+        "en": "Ectobrook Hollow Upgrade Kit",
+        "it": "Kit di Aggiornamento Ectobrook Hollow"
       },
       "steps": [
         "W_MultiAge_HAL26F1",
@@ -2580,7 +2587,8 @@
     },
     "platinum_upgrade_kit_HAL24A": {
       "names": {
-        "en": "Eerie Delirium Coaster Platinum Upgrade Kit"
+        "en": "Eerie Delirium Coaster Platinum Upgrade Kit",
+        "it": "Kit di Aggiornamento Platino Giostra Delirio Inquietante"
       },
       "steps": [
         "W_MultiAge_HAL24A10",
@@ -2589,7 +2597,8 @@
     },
     "upgrade_kit_ascended_HAL24A": {
       "names": {
-        "en": "Ascended Eerie Delirium Coaster Upgrade Kit"
+        "en": "Ascended Eerie Delirium Coaster Upgrade Kit",
+        "it": "Kit di aggiornamento Giostra Delirio Inquietante Ascesa"
       },
       "steps": [
         "W_MultiAge_HAL24A11",
@@ -8379,7 +8388,8 @@
     },
     "selection_kit_HAL26A": {
       "names": {
-        "en": "Lost Castle Selection Kit"
+        "en": "Lost Castle Selection Kit",
+        "it": "Kit di Selezione del Castello Perduto"
       },
       "options": [
         "W_MultiAge_HAL26A1",
@@ -8388,7 +8398,8 @@
     },
     "silver_selection_kit_HAL26A": {
       "names": {
-        "en": "Mystery Castle Silver Selection Kit"
+        "en": "Mystery Castle Silver Selection Kit",
+        "it": "Kit di Selezione Argento Castello Misterioso"
       },
       "options": [
         "W_MultiAge_HAL26A1",
@@ -8398,7 +8409,8 @@
     },
     "golden_selection_kit_HAL26A": {
       "names": {
-        "en": "Weeping Castle Golden Selection Kit"
+        "en": "Weeping Castle Golden Selection Kit",
+        "it": "Kit di Selezione Oro Castello Piangente"
       },
       "options": [
         "W_MultiAge_HAL26A1",
@@ -8410,7 +8422,8 @@
     },
     "platinum_selection_kit_HAL24A": {
       "names": {
-        "en": "Eerie Delirium Coaster Platinum Selection Kit"
+        "en": "Eerie Delirium Coaster Platinum Selection Kit",
+        "it": "Kit di Selezione Platino Giostra Delirio Inquietante"
       },
       "options": [
         "W_MultiAge_HAL24A1",
@@ -8422,7 +8435,8 @@
     },
     "selection_kit_HAL26BC": {
       "names": {
-        "en": "Lycan Wraithrider Selection Kit"
+        "en": "Lycan Wraithrider Selection Kit",
+        "it": "Kit di Selezione del Cavaliere Spettrale Licantropo"
       },
       "options": [
         "W_MultiAge_HAL26B1",
@@ -8432,7 +8446,8 @@
     },
     "selection_kit_HAL26F": {
       "names": {
-        "en": "Ectobrook Hollow Selection Kit"
+        "en": "Ectobrook Hollow Selection Kit",
+        "it": "Kit di selezione di Ectobrook Hollow"
       },
       "options": [
         "W_MultiAge_HAL26F1",
@@ -8441,7 +8456,8 @@
     },
     "selection_kit_epic_HAL26": {
       "names": {
-        "en": "Epic Halloween 2026 Selection Kit"
+        "en": "Epic Halloween 2026 Selection Kit",
+        "it": "Kit di selezione Epico Halloween 2026"
       },
       "options": [
         "W_MultiAge_HAL25A1",
@@ -10316,7 +10332,7 @@
     "selection_kit_FELL26BC": {
       "names": {
         "en": "Banneret Covenant Selection Kit",
-        "it": "Kit di Selezione Patto dei vessilliferi"
+        "it": "Kit di Selezione Patto del Banneret"
       },
       "options": [
         "W_MultiAge_FELL26B1",
