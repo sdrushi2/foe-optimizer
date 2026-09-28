@@ -12,6 +12,7 @@ import {
   Upload,
 } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
+import { useModalDismiss } from "../utils/useModalDismiss";
 
 interface ProfileHelpModalProps {
   isOpen: boolean;
@@ -24,12 +25,15 @@ interface ProfileHelpModalProps {
  *  da App.tsx in un modulo a parte perché è completamente autocontenuta —
  *  non usa nessuno stato/calcolo di App, solo isOpen/onClose/uiLang. */
 export default function ProfileHelpModal({ isOpen, onClose, uiLang }: ProfileHelpModalProps) {
+  // Esc + click sullo sfondo senza chiudere durante una selezione di testo
+  // (vedi useModalDismiss). Prima del return anticipato: è un hook.
+  const backdrop = useModalDismiss(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      {...backdrop}
     >
       <div
         className="relative flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
@@ -171,23 +175,27 @@ export default function ProfileHelpModal({ isOpen, onClose, uiLang }: ProfileHel
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-slate-950">3</span>
               <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wide">{t("profileHelpStep3Title", uiLang)}</h3>
             </div>
+            {/* Solo riproduzioni delle icone dei pulsanti SAVE/LOAD, come i
+                riquadri con la bacchetta più sopra: span non interattivi
+                (prima erano <button> veri senza azione — cliccabili, con il
+                focus da tastiera, e cliccandoli non succedeva nulla). */}
             <div className="bg-slate-950/60 rounded-xl p-4 border border-slate-800 space-y-3">
               <div className="flex items-start gap-3">
-                <button
-                  className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 transition-all shrink-0"
-                  title={t("exportProfiles", uiLang)}
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 shrink-0"
+                  aria-hidden="true"
                 >
                   <Download size={13} />
-                </button>
+                </span>
                 <p className="text-slate-300 text-xs pt-0.5">{t("profileHelpSaveBody", uiLang)}</p>
               </div>
               <div className="flex items-start gap-3">
-                <button
-                  className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 transition-all shrink-0"
-                  title={t("importProfiles", uiLang)}
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 shrink-0"
+                  aria-hidden="true"
                 >
                   <Upload size={13} />
-                </button>
+                </span>
                 <p className="text-slate-300 text-xs pt-0.5">{t("profileHelpLoadBody", uiLang)}</p>
               </div>
             </div>

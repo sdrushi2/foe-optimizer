@@ -60,6 +60,16 @@ export function formatProdPercent(value: number): string {
   return `${pct}%`;
 }
 
+/** Data LOCALE nel formato AAAA-MM-GG, per i nomi dei file esportati. Non
+ *  `toISOString().slice(0, 10)`, che dà la data UTC: tra mezzanotte e l'1-2 di
+ *  notte ora italiana il file prendeva la data del giorno prima (corretto
+ *  settembre 2026). */
+export function localDateStamp(date: Date = new Date()): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 /** Formatta produzioni con valori grandi (es. Monete, Materiali, CAP IQ):
  *  "-" se zero, "k" arrotondato all'intero per valori >= 1000 (es. 632750 ->
  *  "633k", non "632,8k"), altrimenti il numero con separatore delle migliaia. */

@@ -191,8 +191,9 @@ src/
 │
 ├── utils/
 │   ├── calculator.ts          # Efficienza + tipo Weights
-│   ├── format.ts              # Formattatori numerici puri
-│   └── storage.ts             # Persistenza localStorage + versioning + profili
+│   ├── format.ts              # Formattatori numerici puri (+ localDateStamp per i nomi file)
+│   ├── storage.ts             # Persistenza localStorage + versioning + profili
+│   └── useModalDismiss.ts     # Hook: chiusura modali con Esc e click sullo sfondo
 │
 ├── components/
 │   ├── AboutModal.tsx         # Modale info/crediti (con link a PRIVACY.md)
@@ -416,7 +417,8 @@ livello UI traduce.
 >    rivolti allo sviluppatore (es. `"initKitData not called"`, `"[FOE] PNG export
 >    failed"`, il fail-fast di `ages.ts`). Non sono testo per l'utente finale, quindi non
 >    passano per `t()`.
-> 2. *Nomi dei file scaricati* — es. `foe-map-YYYY-MM-DD.svg/.png/.json` (CityMapView), header
+> 2. *Nomi dei file scaricati* — es. `foe-map-YYYY-MM-DD.png/.json` (CityMapView; data
+>    locale via `localDateStamp()`, non quella UTC di `toISOString`), header
 >    del CSV di debug (`CityEntityID;name;num`). Sono identificatori di file, non UI
 >    mostrata: si tengono in inglese neutro a prescindere da `uiLang`, evitando di
 >    introdurre `t()` in punti che altrimenti non ne avrebbero bisogno.
@@ -510,6 +512,57 @@ clippata silenziosamente dal grid (nessuno scroll visibile), e lo `overflow-y-au
 sul contenitore esterno da solo non basta. Fix: aggiunto `sm:h-full sm:min-h-0
 sm:overflow-y-auto` anche alla colonna edifici, che ora ha il proprio scroll interno
 indipendente dal planner. `tsc --noEmit` e `vite build` puliti.
+
+**Revisione bug (settembre 2026).** Corretti in un unico giro, dettagli e
+validazioni in `docs/SKILL.md` (sezione "Tab 'Pirati'"):
+- *Messaggi d'errore dell'import*: `isLegacyBookmarkletPayload` ora riconosce una
+  bacchetta vecchia da `_v` e non dalla forma (dalla v4 ogni payload è un payload
+  città): prima un payload v4 senza `pirateOutpost` diceva "bacchetta vecchia" e la
+  v3.1 sull'Insediamento diceva "visita l'Insediamento".
+- *Import con espansioni a sinistra della base* (`importCulturalOutpost.ts`):
+  l'offset di colonna veniva dal minimo globale delle aree, spostando tutto di un
+  blocco con due blocchi fantasma; ora viene dalla riga più in alto, e le celle
+  sono ancorate al blocco sbloccato minimo come le `StorageCell` del tool.
+- *`lastSolvedRef`* (punto di ripristino dopo un Risolvi fallito/fermato) segue la
+  griglia: traslato con le espansioni, ripulito dei piazzamenti persi (blocco
+  richiuso, nuovo ostacolo); il ripristino calcola lo stato con `layoutStatus`
+  invece di forzare `"success"`.
+- *Solver*: il primo tentativo tiene fermo il Municipio nella posizione ATTUALE
+  (non più quella di default); il backtracking testa direttamente l'unica
+  posizione possibile per classe (angolo in alto a sinistra sull'ancora),
+  rimuovendo MRV e punteggio che non influivano — soluzioni e passi identici su
+  323 istanze, ~1,55-1,6x più veloce; il messaggio "possibile falso negativo"
+  guarda solo l'ultimo tentativo.
+- *Interfaccia*: × di eliminazione non più attiva quando invisibile (touch);
+  Undo/Reset tornano alla modalità ostacoli; un'espansione che contiene il
+  Municipio non è rimovibile; chiudendo un blocco i suoi ostacoli tornano a quelli
+  dell'import; `pointercancel` annulla il drag; durante una ricerca la griglia non
+  sembra più cliccabile.
+- *Rimozione di un'espansione con edifici dentro*: prima svuotava l'intera mappa
+  (tranne il Municipio, `clearSolution`); ora si spostano solo gli edifici che
+  toccavano il blocco, nella miglior posizione libera rimasta (stessa regola
+  dell'auto-piazzamento del '+'), e chi non trova posto esce dalla mappa col
+  conteggio invariato, con un messaggio che invita a premere Risolvi.
+
+**Revisione bug degli altri componenti (settembre 2026).** Dettagli in
+`docs/SKILL.md` (sezione `components/` e voce `App.tsx`):
+- *CityMapView*: l'export PNG disegna le strade a 2 corsie su tutte e 4 le celle
+  (prima solo quella in alto a sinistra, le altre uscivano come spazio libero);
+  colori e conteggi della legenda vengono da un'unica funzione (`mapCategory`),
+  quindi ogni edificio è contato una volta sola nella voce del colore con cui
+  appare; messaggio dedicato ("reimporta la città") per i profili senza aree
+  sbloccate salvate, e niente più rimando all'export SVG rimosso.
+- *Popup immagine* (App.tsx): aprendosi a sinistra finisce prima dell'ancora
+  (`anchorLeft`); sulla mappa non copre più il cursore vicino al bordo destro.
+- *Modali*: hook `useModalDismiss` (Esc + click sullo sfondo solo se la pressione
+  è iniziata sullo sfondo: prima selezionare del testo e rilasciare fuori chiudeva
+  il modale) per About, EfficiencyHelp, ProfileHelp e i modali inline di App
+  (Import sessione, Edifici aggiornabili, visualizzatore JSON solo con Esc); icone
+  SAVE/LOAD del ProfileHelp non più pulsanti finti; testo del filtro min EFF
+  corretto (esiste solo per gli edifici); testi alternativi degli avatar tradotti.
+- *Nomi dei file esportati* con la data locale (`localDateStamp`), non UTC.
+- *PRIVACY.md*: aggiunti Forge Hammer, nome del giocatore, Insediamento dei Pirati
+  e il caso della città di un altro giocatore.
 
 ---
 
@@ -1007,7 +1060,10 @@ vuoti o parziali (es. `allies.py` esce con errore se trova 0 alleati, invece di
 scrivere un CSV vuoto che sembrerebbe un run riuscito).
 
 - **`buildings.py`** — genera `buildings.csv` da MainParser + ForgeHX (nome storico:
-  `city_entities_to_csv.py`, ancora citato così nei commenti di `BuildingModel.ts`).
+  `city_entities_to_csv.py`). Da settembre 2026 estrae anche Pop/Fel/Mon/Mat degli
+  edifici standard d'era (dati a livello radice, §13.3) e non va più in errore sui
+  livelli senza `value` in `production_values` (KeyError possibile solo girando a
+  StoneAge, emerso nel confronto TS↔Python su tutte le ere).
   Il parser del FileList usa una scansione a graffe bilanciate (robusta
   all'annidamento), la stessa tecnica di `getIcons.py`. `BOOST_ERA`/`PREV_ERA`
   (l'era corrente/precedente usate per estrarre boost/statistiche/blueprint,
@@ -1019,7 +1075,22 @@ scrivere un CSV vuoto che sembrerebbe un run riuscito).
   anche da file troncati.
 - **`linnun.py`**, **`lin_inject.py`**, **`confronta_buildings.py`** — modello
   predittivo per la colonna `Light` (db di training protetto `lin_training.db`); i nomi
-  alleati arrivano dagli stessi file Allies.
+  alleati arrivano dagli stessi file Allies. ⚠️ Il modello usa Pop/Fel/Mon/Mat come
+  feature: quando `buildings.py` ha iniziato a riempirle per gli edifici standard d'era
+  (settembre 2026), alcuni di questi (es. `P_IronAge_Butcher`) uscivano dal fallback
+  "nessuna statistica" ed entravano nel modello, cambiandone il training e quindi il
+  `Light` di 17 ALTRI edifici. Per questo `lin_inject.py` ha una regola ferrea
+  esplicita (`STANDARD_ERA_RE`: `A_`/`D_`/`P_`/`R_` non MultiAge/AllAge → 0), che
+  ripristina esattamente la partizione di prima: verificato, `Light` identico prima e
+  dopo. Nota: il `Light` non è riproducibile al 100% tra ambienti diversi
+  (GradientBoosting e versioni di scikit-learn): nella sandbox Linux esce un solo
+  valore diverso da quello generato su Windows (`W_MultiAge_HAL26F1`).
+  **`confronta_buildings.py` confronta TR col totale TR+TRNE del foglio di Linnun**:
+  il foglio ha una sola colonna "Units" (mai un vero split TR/TRNE), quindi questo
+  script valida solo il totale, non la ripartizione. La ripartizione era comunque
+  sbagliata in un caso preciso (settembre 2026), corretta SOLO lato TS
+  (Città/Inventario) e non qui: il Database mostra sempre la classificazione
+  strutturale, invariata. Vedi §13.3bis.
 - **`parse_kit.py`** — genera `kit.json`. ⚠️ Le `options` dei selection kit usano
   l'ID REALE dell'item (`upgradeItemId` per i kit, `cityEntityId` per gli edifici),
   NON `itemAssetName`: l'asset grafico è riusato da Inno tra item diversi e usarlo
@@ -1437,16 +1508,36 @@ Inno (`IMAGE_BASE_URL`). Restituisce `null` se non c'è hash o l'id non ha under
 
 ## 13. Il modello di dominio (`BuildingModel.ts`)
 
-> **Coerenza TS↔Python validata (luglio 2026).** Tutti gli estrattori di questo
-> modulo sono traduzioni fedeli riga-per-riga degli algoritmi di `buildings.py`
-> (RECUPERO DATI). La coerenza è stata VALIDATA eseguendo `extractEraStats`
-> sull'intero MainParser reale e confrontando 2046 edifici × 35 campi a SpaceHub
-> col CSV: valori identici (esclusi i MANUAL_OVERRIDES del Python). Il test ha
-> scovato e fatto correggere una divergenza reale: mancava in `extractGoods` il
-> ramo `entity_levels`/`era_goods` (13 edifici produttivi `P_*` di eventi storici
-> mostravano beni=0 in tab Città); aggiunto anche il ramo
-> `RandomChestRewardAbility`-beni per fedeltà completa. Qualsiasi modifica agli
-> estrattori (di qua o di là) va validata rieseguendo quel confronto.
+> **Coerenza TS↔Python validata (luglio 2026, estesa a TUTTE le ere a settembre
+> 2026).** Tutti gli estrattori di questo modulo sono traduzioni fedeli
+> riga-per-riga degli algoritmi di `buildings.py` (RECUPERO DATI). Validazione
+> attuale (MainParser del 27/09/2026): (1) `extractEraStats` confrontato col
+> Python su **tutte le 2858 entità × tutte le 24 ere × tutti i campi** (il Python
+> girato con BOOST_ERA/PREV_ERA/BOOST_ERA_ID impostati via via su ogni era):
+> nessuna differenza; (2) TS vs `buildings.csv` all'era massima, 2178 righe × 53
+> colonne (statistiche, boost, Road, Size, Time, Ally, Flags): nessuna differenza,
+> MANUAL_OVERRIDES inclusi. Storia: il test di luglio (solo era massima) aveva
+> fatto aggiungere in `extractGoods` il ramo `entity_levels`/`era_goods` (13
+> edifici `P_*` storici con beni=0) e il ramo `RandomChestRewardAbility`-beni;
+> quello di settembre (tutte le ere) ha trovato il BP "higher_age" cercato con
+> l'era massima invece che con l'era estratta (§13.3). Qualsiasi modifica agli
+> estrattori (di qua o di là) va validata rieseguendo il confronto SU TUTTE LE
+> ERE: in tab Città/Inventario il TS gira all'era del giocatore, non a quella
+> massima come il CSV.
+>
+> **Correzioni di settembre 2026** (ricerca bug su `BuildingModel.ts`):
+> BP "higher_age" con l'era estratta; tabella gemella `MANUAL_OVERRIDES`
+> (prima i valori corretti a mano sparivano in Città/Inventario); statistiche
+> degli edifici standard d'era (gemelle in `buildings.py`, CSV rigenerato);
+> `fromGreatBuilding` con i due formati dei GE e tutti i bonus militari; sette
+> divergenze latenti dal Python allineate (0 casi con i dati attuali); il
+> fallback `fromCityEntity` ora estrae anche Time/Flags/Ally. Dettagli nei
+> paragrafi sotto. ⚠️ Le statistiche per era (`eraStats`, `fallbackBuildings`,
+> `entityInstanceEraStats`, `declassableBuildings`) sono calcolate all'import e
+> salvate nel profilo: le correzioni degli estrattori si vedono in Città/
+> Inventario solo dopo aver **reimportato la città**. I GE invece passano da
+> `fromGreatBuilding` a ogni render (dai dati grezzi salvati) e il CSV è nel
+> bundle: quelle correzioni valgono subito.
 
 **File:** `src/models/BuildingModel.ts`
 
@@ -1472,23 +1563,50 @@ edifici della città che non sono nel catalogo CSV (i "fallback"). Estrae **tutt
 statistiche reali (dimensioni, popolazione, felicità, bonus, e le produzioni — incluse
 monete/materiali via `extractMonMat`) dalla struttura `components`/`entity_levels`/
 `abilities`. Il flag `isFallback` resta `false` perché i dati sono completi (non è un
-placeholder vuoto).
+placeholder vuoto). Da settembre 2026 estrae anche le colonne "di catalogo" che per gli
+edifici del CSV arrivano dal Python, gemelle di `_calc_time()`/`extract_flags()`/
+`extract_ally_type()` (tutte su `components.AllAge`): `time` (`limited.config.
+expireTime` in giorni), `flags` (`flags.flags`) e `allyType`/`ally` (`ally.rooms[].
+allyType` → "M"/"S", un carattere per slot; un tipo sconosciuto viene saltato invece di
+far fallire l'import). Prima i fallback non avevano badge limitato/NoRush/auto-aging né
+slot alleato; `allySlotsPerBuilding` in App.tsx ora scorre anche `fallbackBuildings`.
+Validato: identici al CSV su tutte le 2178 righe (97 con slot alleato, 87 limitati,
+1311 con flags).
 
 **`fromGreatBuilding(gb, italianNames, hash)`** — crea un `Building` da un Grande
-Edificio. I GE hanno una struttura propria (`bonuses`, `state.current_product`). Estrae
-i bonus militari (interpretando i tipi `military_boost`, `fierce_resistance`,
-`advanced_tactics`) e le produzioni (punti forge, beni di vari tipi, truppe, felicità,
-popolazione, monete/materiali). Per monete/materiali, legge
+Edificio. I GE hanno una struttura propria (`bonuses`, `state.current_product`).
+**Due formati del payload città** (verificati su due export reali, settembre 2026):
+nei mondi col **rework dei GE** (tier rame/argento/oro) `bonuses` è pieno, un elemento
+per ogni bonus attivo (passivi + produzione); nei mondi **classici** c'è il solo
+`bonus` singolo (il bonus passivo) accanto a `bonuses: []` vuoto. La lista viene
+normalizzata come fa FoE Helper (`CityBuildings.getGBBonuses`): conta solo una lista
+NON vuota, altrimenti il campo singolo. Bug corretto: prima il campo singolo era letto
+solo per il bonus militare, quindi nei mondi classici felicità e popolazione dei GE
+risultavano 0 (Oracolo, Colosseo, Santa Sofia, Frauenkirche, Notre Dame, Space Needle,
+Atomium, Tempio del Loto, Alcatraz, Statua di Gea; Torre di Babele, Campidoglio,
+Innovation Tower, Habitat 67).
+**Bonus militari**: si sommano TUTTI i bonus militari della lista (costante
+`GB_MILITARY_SLOTS`: `military_boost` = att+dif attaccante, `fierce_resistance` =
+att+dif difensore, `advanced_tactics` = tutti e quattro, più i quattro tipi dei tier
+argento/oro — `attack_boost` att. attaccante, `attacker_defense_boost` dif. attaccante,
+`defender_attack_boost` att. difensore, `defense_boost` dif. difensore, semantica presa
+da FoE Helper `unit.js`), ognuno sulla sua modalità (`targetedFeature`: all → general,
+battleground → gbg, guild_expedition → sped, guild_raids → iq; assente = all;
+sconosciuta → ignorato). Prima si leggeva solo `bonuses[0]` e solo i 3 tipi classici:
+col rework dal livello 101/201 i GE aggiungono bonus che andavano persi, compresi il
+`military_boost` d'oro del Deposito di sementi e la `fierce_resistance` d'oro della
+Galassia blu (non primi nella lista). ⚠️ I valori dei tier argento/oro vanno verificati
+in gioco appena un GE supera il livello 100: il MainParser dichiara numeri molto alti
+(es. Progetto Arc argento 3040 al liv. 301), che FoE Helper mostra come "%".
+**Produzioni**: da `state.current_product` (punti forge, beni di vari tipi, truppe,
+monete/materiali, beni di gilda, e da settembre 2026 anche un prodotto
+`"special_goods"`), con fallback sui bonus di produzione del formato rework per
+`clan_goods` (valore × 5) e `special_goods` — mai sommati, così nel formato rework, che
+li porta entrambi, non c'è doppio conteggio. Per monete/materiali legge
 `state.current_product.name` (`"money"` o `"supplies"`) e il relativo
-`product.resources.money`/`.supplies` — stesso blocco `forEach` sui `products` che già
-gestisce `clan_goods`/`strategy_points`/`previous_era_goods`, un `else if` in più per
-ciascuno. **Nota**: ad oggi nessun Grande Edificio ha bonus IQ (i campi
-`iqMonB`/`iqMatB`/`iqMon`/`iqMat` restano sempre 0 per i GE, via
-`createBaseBuilding`); se in futuro il gioco introducesse GE con questo tipo di bonus,
-il punto di estensione è lo stesso (leggere `bonusType` e mappare sul campo IQ
-corrispondente, vedi `BOOST_MAP` come riferimento per i nomi) — un commento "NOTA
-FUTURA" nel codice, sopra la dichiarazione dei bonus militari, documenta esplicitamente
-questo per chi tornerà a lavorarci.
+`product.resources.money`/`.supplies`. I bonus IQ di produzione/avvio (`iqMonB`/
+`iqMatB`/`iqMon`/`iqMat`/...) restano 0 per i GE (nessun GE li ha): i soli bonus IQ dei
+GE sono quelli militari su `guild_raids`, gestiti sopra.
 
 **`createBaseBuilding(id, name)`** (privato) — crea un `Building` con tutti i valori a
 zero/default, per evitare duplicazione nei factory.
@@ -1515,7 +1633,95 @@ punti forge, beni, e reward speciali.
 **Helper di navigazione sicura:** poiché la struttura non è completamente tipizzabile,
 il modulo usa helper privati (`asObj`, `asArr`, `num`, `str`) che navigano in sicurezza
 strutture `unknown`, restituendo valori di default invece di lanciare errori su dati
-mancanti o di forma inattesa.
+mancanti o di forma inattesa. Per tradurre fedelmente gli `or` del Python ci sono
+`pyTruthy`/`pyOr` (truthiness in stile Python: falsy anche `{}`, `[]`, `0`, `""`) e
+`chainFor(cityEntity, era)` (la catena dell'era, altrimenti quella AllAge): `??`
+scarterebbe solo null/undefined e divergerebbe in silenzio.
+
+**Edifici standard d'era** (settembre 2026): gli edifici "normali" delle ere
+(culturali `A_<Era>_*`, decorazioni `D_<Era>_*`, produzione `P_<Era>_*`, residenziali
+`R_<Era>_*`, e in città beni `G_` e militari `M_`) non hanno né `components` né
+`entity_levels`: i dati stanno a livello radice. Popolazione fornita in
+`staticResources.resources.population`, popolazione richiesta (col segno meno) in
+`requirements.cost.resources.population`, felicità in `provided_happiness` (anche
+negativa), produzione in `available_products` (l'opzione più lunga, normalizzata a
+24h). Prima né il Python né il TS li leggevano: 332 righe del CSV senza Pop/Fel/Mon/Mat
+(es. Parco dei divertimenti Fel 5200, Palazzina di periferia Pop 1330 e Mon 7320,
+Macellaio Pop −66 e Mat 790). Sono il TERZO passo di `extract_population`/
+`extract_happiness` e il passo 2b di `extract_mon_mat` (gemelli in `extractEraStats`/
+`extractMonMat`): scattano solo se le fonti precedenti non danno nulla, quindi gli
+altri edifici non cambiano (verificato su tutte le ere).
+
+**BP "higher_age"**: il reward `genb_higher_age_blueprints_chest_<Era><N>` porta nel
+nome l'era DEL COMPONENTE letto; `bpFromRewardId` cerca quindi `<era estratta><N>`.
+Bug corretto settembre 2026: cercava sempre l'era massima (FALLBACK_ERA), quindi a ogni
+altra era i Vigneti autunnali (`W_MultiAge_FALL23A9`..`A12`) davano 0 BP invece di
+3/6/10/10 in tab Città/Inventario. Nel Python il problema non si vedeva perché
+BOOST_ERA è sia l'era estratta sia la massima.
+
+**Override manuali**: la costante `MANUAL_OVERRIDES` è il gemello di quella di
+`buildings.py` (stessi 8 id, stessi valori, colonne CSV tradotte nei campi di
+`EraStats`) ed è applicata per ultima in `extractEraStats`, come nel `main()` Python.
+Bug corretto settembre 2026: le tab Città/Inventario sostituiscono i valori del CSV con
+`extractEraStats` (`applyEraStats`), quindi senza il gemello i valori corretti a mano
+sparivano proprio lì (Pozzo dei desideri & co. con Beni 9 invece di 0, Rimesse del
+bucaniere/dell'uomo morto con PF/BP/MOD/BeniG a 0). Se cambia un lato va aggiornato
+anche l'altro.
+
+### 13.3bis TR/TRNE all'ultima era del gioco — Database vs Città (settembre 2026)
+
+`extractTrTrne`/`extract_tr_trne` dividono la produzione di truppe casuali in TR
+(truppe dell'era corrente) e TRNE (truppe dell'era successiva) con un'euristica:
+quando un reward `random` offre più quantità dello stesso tipo di unità senza un
+reward "NextEra" esplicito, l'importo che coincide con quanto darebbe il Titano di
+quel tipo come reward NextEra viene classificato TRNE, il resto TR (se una sola
+entry, quell'unica è considerata TRNE per default).
+
+Otto edifici segnalati avevano un totale TR+TRNE corretto (verificato: il foglio di
+Linnun ha comunque una sola colonna "Units", quindi non distingue mai TR da TRNE — non
+c'era nulla da confrontare) ma una ripartizione interna che l'utente ha verificato in
+game essere sbagliata all'ULTIMA era del gioco (`StellarAgeDiscovery`, id massimo in
+`ages.csv`/`ages.db`): a quell'era "truppe della prossima era" non può esistere per
+definizione, e il gioco fa collassare quella quota:
+- su truppe dell'era corrente per Neo Voliera Lv.1/2, Giardini di vetro Iride/Ascesa,
+  Meridiana del Sole/Ascesa (l'euristica dava TRNE-only o uno split fisso, in
+  entrambi i casi errato a quest'era);
+- su truppe correnti/Furfanti per Giardino del Sidro/Squisito (il ramo Furfante del
+  random non passa comunque da TR/TRNE, quindi qui bastava lo stesso fix).
+
+**⚠️ Prima versione del fix sbagliata, corretta lo stesso giorno**: applicare il
+collasso anche in `buildings.py` cancellava l'informazione "dà truppe prossima era"
+dal Database per TUTTI i 47 edifici col pattern, non solo per chi ha una città
+importata già a SAD — perché `buildings.py` genera `buildings.csv` una volta sola,
+sempre a `BOOST_ERA` = ultima era del gioco (per costruzione, non è parametrizzabile
+per era). L'utente ha giustamente fatto notare che il Database serve anche a chi
+NON ha ancora una città a SAD e vuole sapere quali edifici danno truppe prossima era
+in generale.
+
+**Soluzione finale — comportamento intenzionalmente diverso fra Database e
+Città/Inventario:**
+- **`extract_tr_trne` (Python, `buildings.csv`/Database): NESSUN collasso.** Mostra
+  sempre la classificazione strutturale dell'edificio (TR e TRNE separati), utile a
+  chi consulta il Database a prescindere dalla propria era.
+- **`extractTrTrne` (TS, `BuildingModel.ts`): collassa SOLO quando l'era passata è
+  quella con id massimo** (`AGES_BY_ID.size - 1`) — cioè quando si sta calcolando
+  per la città REALMENTE importata dall'utente ed è già a SAD. Usato da
+  Città/Inventario (`extractEraStats(entityDef, currentEra)`), riflette il
+  comportamento reale in game per quel giocatore. Si applica anche quando
+  l'euristica aveva già trovato uno split non-zero (confermato in game su Giardini
+  di vetro Iride/Ascesa, Meridiana del Sole/Ascesa, non solo sui 2 casi iniziali).
+
+Questo rende TS e Python **intenzionalmente divergenti su tr/trne quando l'era
+testata è l'ultima del gioco** — l'unica eccezione all'invariante "gemelli sempre
+identici". L'harness di confronto (`compare.js` nello script di validazione, fuori
+dal repo) esclude esplicitamente `tr`/`trne` per quell'era con un commento che
+rimanda a questa sezione, così un futuro run non lo segnali come falso bug.
+Differenziale su tutti gli altri campi/ere: 0 differenze su 2858 entità × 24 ere,
+verificato sia col filtro attivo sia isolando esplicitamente la divergenza (confermata
+confinata a tr/trne, 47 edifici, solo StellarAgeDiscovery). Il CSV/Database restano
+identici a prima di questo fix (verificato: unica differenza residua rispetto alla
+versione precedente è `W_MultiAge_HAL26F1` sulla colonna Light, già nota e non
+riproducibile al 100% tra ambienti, indipendente da questo fix).
 
 ### 13.4 Estrazione dei bonus militari
 
@@ -1528,7 +1734,13 @@ general/gbg/sped/iq. Es. un `att_boost_attacker` con target `guild_expedition` v
 `SpedAtk_A`. Quattro entry aggiuntive coprono i boost monete/materiali IQ:
 `guild_raids_coins_production`→`IQmonB`, `guild_raids_supplies_production`→`IQmatB`,
 `guild_raids_coins_start`→`IQmon`, `guild_raids_supplies_start`→`IQmat` (stesso schema
-di `guild_raids_goods_start`→`IQBeni`, target sempre `"all"`).
+di `guild_raids_goods_start`→`IQBeni`, target sempre `"all"`). Il lookup è sulla coppia
+(tipo, target) ESATTA, come `BOOST_MAP.get((type, target))` del Python: una modalità
+sconosciuta viene ignorata (fino a settembre 2026 ripiegava su `"all"` e sarebbe finita
+nei bonus GENERALI alla prima modalità nuova introdotta da Inno). Anche le altre fonti
+seguono il Python alla lettera: `ChainLinkAbility.bonusGiven.boost` accettato sia come
+oggetto sia come lista, `BoostAbility` con `era_map[era] or era_map["AllAge"]` e solo se
+il valore è non nullo.
 
 ### 13.5 Altri helper
 
@@ -1555,16 +1767,30 @@ di `guild_raids_goods_start`→`IQBeni`, target sempre `"all"`).
   Il vecchio calcolo di `cityEntityDisconnected` (App.tsx, import città)
   confrontava solo `Number(entry.connected ?? 0) >= 1` contro un
   `requiresRoad` booleano, trattando qualunque connessione come
-  sufficiente — ignorando il caso. Verificato su MainParser: solo 2
-  building su ~2100 richiedono livello 2
-  (`W_SpaceAgeJupiterMoon_Residential1`/`Workshop1`), quasi tutti gli altri
-  con requisito esplicito richiedono livello 1 — bug raro ma reale, non un
-  caso limite trascurabile. Corretto confrontando `connectedLevel <
-  requiredRoadLevel` invece di un semplice booleano. **`buildings.py` non
-  necessita dello stesso fix**: `requires_road()`/`calc_road()` calcolano
-  solo il fabbisogno stradale in tile per il CSV statico — nessun concetto
-  di "connesso in una città reale" esiste lato Python, il fabbisogno non
-  dipende dal livello di corsie richiesto.
+  sufficiente — ignorando il caso. Corretto confrontando `connectedLevel <
+  requiredRoadLevel` invece di un semplice booleano. **Correzione del dato
+  (settembre 2026)**: il vecchio testo diceva "solo 2 building richiedono
+  livello 2", ma contava il solo schema nuovo: nel MainParser del 27/09
+  richiedono 2 corsie **258 entità** — 2 via `streetConnectionRequirement.
+  requiredLevel` (`W_SpaceAgeJupiterMoon_Residential1`/`Workshop1`) e 256 via
+  `requirements.street_connection_level` (gli edifici standard d'era
+  dall'Era Progressista in su). ⚠️ **Da verificare in gioco**: FoE Helper e
+  Forge Hammer considerano collegato un edificio solo se `connected === 1`,
+  qualunque sia il livello richiesto; se il gioco mette 1 anche agli
+  edifici a 2 corsie ben collegati, il confronto `connectedLevel <
+  requiredRoadLevel` li segnalerebbe scollegati per errore. Le città
+  esportate finora non contengono edifici a 2 corsie (in una c'è un
+  `connected: 2` su un edificio che non richiede strada e non tocca strade),
+  quindi serve un export con un edificio a 2 corsie ben collegato. Se la
+  presenza del campo significa "richiede strada" segue la truthiness del
+  Python (`requires_road()`): `street_connection_level: 0` = nessuna strada
+  (divergenza latente allineata settembre 2026, 0 casi nei dati).
+  **`buildings.py` non necessita dello stesso fix**: `requires_road()`/
+  `calc_road()` calcolano solo il fabbisogno stradale in tile per il CSV
+  statico — nessun concetto di "connesso in una città reale" esiste lato
+  Python. Nota aperta: `Road` = min(w,l)/2 anche per gli edifici a 2 corsie,
+  mentre FoE Helper stima il doppio (× livello richiesto): scelta di
+  modellazione non ancora decisa, identica nei due gemelli.
 - `getCityEntitySize(...)` — dimensioni `[width, length]`. **Nota:** nel JSON del gioco
   x/y risultano invertiti rispetto alla convenzione della tabella, quindi la stringa
   size prodotta è `"LxW"` (lunghezza × larghezza).
@@ -1580,7 +1806,7 @@ A differenza delle altre funzioni di estrazione (scritte direttamente in TypeScr
 seguendo i pattern del modulo), `extractMonMat` è una **traduzione fedele, riga per
 riga**, di una funzione Python equivalente (`extract_mon_mat`) che vive in uno script
 esterno al progetto: `buildings.py` nella pipeline RECUPERO DATI (§8bis; nome storico
-`city_entities_to_csv.py`, ancora citato così nei commenti di `BuildingModel.ts`).
+`city_entities_to_csv.py`).
 Quello script genera `buildings.csv` partendo da un dump offline del gioco
 (`MainParser.txt`); questa funzione TypeScript fa lo stesso lavoro sui dati live del
 bookmarklet (`CityEntityDefinition`), per le città importate. Le due fonti (CSV
@@ -1604,10 +1830,16 @@ L'algoritmo, in tre passi (eseguiti in ordine, fermandosi al primo che produce u
    `produced_money`/`produced_supplies` normalizzati a 24h tramite `production_time` di
    `available_products`; se `ProductionEntityLevel`, legge l'ultimo elemento di
    `production_values` (lo slot 24h).
+2b. **Edifici standard d'era (settembre 2026), solo se nulla sopra e l'entità non ha né
+   `components` né `entity_levels`.** Prende l'opzione di `available_products` con
+   `production_time` massimo e la normalizza a 24h (residenziali: monete; produzione:
+   materiali, l'opzione da 1 giorno). Vedi §13.3, "Edifici standard d'era".
 3. **`AddResourcesWhenMotivatedAbility`.** Risorse aggiuntive (es. edifici culturali con
    materiali "motivati") da `additionalResources[era]`, sommate sopra il risultato dei
    passi precedenti (non in alternativa: un edificio può avere sia produzione base che
-   bonus da motivazione).
+   bonus da motivazione). Come nel Python (`if res: ... break`) ci si ferma alla PRIMA
+   era (`era`, poi `AllAge`) con risorse non vuote, anche se non contengono monete/
+   materiali (divergenza latente allineata settembre 2026: prima il TS proseguiva).
 
 Validata con 9 test sintetici che coprono ogni ramo dell'algoritmo (normalizzazione di
 durate diverse da 24h, scelta dell'opzione a tempo massimo, `random`+`dropChance`,
@@ -1764,6 +1996,11 @@ resta solo un commento esplicativo. L'unica estrazione reale è in `BuildingMode
 appiattiti al livello posseduto in `gb.rawEntry.bonuses`, quindi
 `allBonuses.find(b => b.type === "special_goods")` restituisce direttamente il
 valore reale — stesso pattern già in uso per `clan_goods`/`happiness`/`population`.
+**Aggiornamento settembre 2026**: il bonus esiste così solo nei mondi col rework dei GE;
+nei mondi classici `bonuses` è vuoto (c'è il solo `bonus` passivo). Ora si legge prima
+un prodotto `"special_goods"` in `state.current_product` e il bonus fa da fallback
+(mai sommati, stesso schema dei `clan_goods`), sulla lista normalizzata
+`bonuses`/`bonus` (§13.2).
 Validato: CSV verificato invariato rispetto a prima (`BeniSp` vuoto per questo GE,
 come tutti gli altri), colonna `Light` intatta (872 edifici). `tsc --noEmit` e
 `vite build` puliti.

@@ -22,7 +22,7 @@ import type { Building } from "./data/buildings";
 import { getImageUrl, noRush, isEraMutable } from "./data/buildings";
 import type { Weights } from "./utils/calculator";
 import { calculateEfficiency } from "./utils/calculator";
-import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, isStaleField } from "./utils/format";
+import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, isStaleField, localDateStamp } from "./utils/format";
 import * as Allies from "./data/allies";
 import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, type UpgradeKitEntry, type SpecialKits, type InventoryStore } from "./data/inventory";
 import { parseBuildingsCsv } from "./data/buildings";
@@ -48,6 +48,7 @@ import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import ProfileHelpModal from "./components/ProfileHelpModal";
 import AboutModal from "./components/AboutModal";
+import { useModalDismiss } from "./utils/useModalDismiss";
 import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
@@ -976,6 +977,13 @@ const AllyProductionCells = memo(function AllyProductionCells({
  *  passare intere Map/Set come prop (che cambierebbero identità ad ogni
  *  render e vanificherebbero la memo) mantenendo lo stesso identico
  *  comportamento di lookup che la riga aveva prima dell'estrazione. */
+/** Popup anteprima immagine (vedi imagePopup in App). `x` è il bordo DESTRO
+ *  dell'ancora (elemento che lo apre, o cursore + margine sulla mappa): il popup
+ *  si apre a destra di `x`. `anchorLeft` è il bordo SINISTRO dell'ancora, usato
+ *  quando a destra non c'è spazio e il popup va aperto a sinistra: deve finire
+ *  prima di `anchorLeft`, altrimenti copre l'ancora stessa (assente = `x`). */
+type ImagePopupState = { x: number; y: number; url: string; name: string; id?: string; subtitle?: string; anchorLeft?: number };
+
 interface BuildingRowProps {
   b: ProcessedBuilding;
   activeTab: TabType;
@@ -1018,7 +1026,7 @@ interface BuildingRowProps {
   handleCityRowClick: (building: ProcessedBuilding) => void;
   toggleSelect: (id: string) => void;
   getPropDisplay: (b: Building, lang: UiLang) => string;
-  setImagePopup: (v: { x: number; y: number; url: string; name: string; id?: string; subtitle?: string } | null) => void;
+  setImagePopup: (v: ImagePopupState | null) => void;
   scheduleImagePopupClose: () => void;
   setUpgradeTooltip: (v: { x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null) => void;
   setOutdatedTooltip: (v: { x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null) => void;
@@ -1134,7 +1142,7 @@ const BuildingRow = memo(function BuildingRow({
           // 2026 ("Lv. 6 non ha né immagine né ID"). */
           const showImagePopup = (e: { currentTarget: HTMLElement }) => {
             const r = e.currentTarget.getBoundingClientRect();
-            setImagePopup({ x: r.right, y: r.top, url: imgUrl ?? "", name: displayedName, id: b.cityEntityId });
+            setImagePopup({ x: r.right, y: r.top, url: imgUrl ?? "", name: displayedName, id: b.cityEntityId, anchorLeft: r.left });
           };
           if (hasItName) {
             return (
@@ -2156,7 +2164,7 @@ export default function App() {
   // Popup anteprima immagine edificio: posizione + url + nome (alt/titolo).
   // Attivato dall'hover su 👁️ in tabella e dall'hover sugli edifici in
   // mappa città; scompare all'uscita del mouse in entrambi i casi.
-  const [imagePopup, setImagePopupRaw] = useState<{ x: number; y: number; url: string; name: string; id?: string; subtitle?: string } | null>(null);
+  const [imagePopup, setImagePopupRaw] = useState<ImagePopupState | null>(null);
   // Timer di chiusura ritardata del popup immagine: permette al mouse di
   // attraversare lo spazio tra il trigger (👁️/edificio mappa/🏠) e il
   // pannello senza chiuderlo, e di restare sul pannello per copiare
@@ -2176,7 +2184,7 @@ export default function App() {
   // dal vecchio trigger scada: senza questa cancellazione, quel timer
   // "vecchio" chiuderebbe comunque (dopo, in ritardo) il popup appena
   // aperto per il nuovo trigger, anche se il mouse ci sta sopra.
-  const setImagePopup = useCallback((v: { x: number; y: number; url: string; name: string; id?: string; subtitle?: string } | null | ((prev: typeof imagePopup) => typeof imagePopup)) => {
+  const setImagePopup = useCallback((v: ImagePopupState | null | ((prev: typeof imagePopup) => typeof imagePopup)) => {
     if (typeof v === "function") {
       setImagePopupRaw(prev => {
         const next = v(prev);
@@ -2211,6 +2219,18 @@ export default function App() {
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
   const [isBookmarkletOutdatedModalOpen, setIsBookmarkletOutdatedModalOpen] = useState(false);
+
+  // Esc (e, dove c'era già, click sullo sfondo) per i modali dichiarati inline
+  // qui in App: vedi useModalDismiss — il click sullo sfondo non chiude più il
+  // modale durante una selezione di testo. Non per i due avvisi a z-200
+  // (storage obsoleto, bacchetta obsoleta): richiedono il loro pulsante.
+  const closeImportModal = useCallback(() => setIsImportModalOpen(false), []);
+  const closeCityUpgradeable = useCallback(() => setIsCityUpgradeableOpen(false), []);
+  const closeJsonEntry = useCallback(() => setSelectedJsonEntry(null), []);
+  const importModalBackdrop = useModalDismiss(isImportModalOpen, closeImportModal);
+  const cityUpgradeableBackdrop = useModalDismiss(isCityUpgradeableOpen, closeCityUpgradeable);
+  // Solo Esc: questo modale non si chiudeva col click sullo sfondo e resta così.
+  useModalDismiss(selectedJsonEntry !== null, closeJsonEntry);
 
   const [storageVersion, setStorageVersion] = useState(0);
   const bumpStorage = () => setStorageVersion(v => v + 1);
@@ -2281,7 +2301,7 @@ export default function App() {
       const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const date = new Date().toISOString().slice(0, 10);
+      const date = localDateStamp();
       a.href = url;
       a.download = `foe-optimizer-${date}.json`;
       document.body.appendChild(a);
@@ -3164,7 +3184,11 @@ export default function App() {
       }
     }
 
-    for (const b of BUILDINGS_FROM_CSV) {
+    // Anche i fallback (edifici in città non ancora nel CSV): da settembre
+    // 2026 BuildingModel.fromCityEntity ricava ally/allyType da CityEntities
+    // come fa il Python per il CSV. Nessun doppione: un fallback esiste solo
+    // per id ASSENTI dal CSV.
+    for (const b of [...BUILDINGS_FROM_CSV, ...fallbackBuildings.values()]) {
       if (b.ally <= 0 || !b.cityEntityId) continue;
       const totalInstances = cityEntityIds.get(b.cityEntityId) ?? 0;
       if (totalInstances <= 0) continue;
@@ -3204,7 +3228,7 @@ export default function App() {
       result.set(b.cityEntityId, slots);
     }
     return result;
-  }, [cityEntityIds, cityMapBuildings, importedAllies, gameLang]);
+  }, [cityEntityIds, cityMapBuildings, importedAllies, gameLang, fallbackBuildings]);
 
   const unplacedAllyLookup = useMemo(() => {
     const set = new Set<string>();
@@ -3752,7 +3776,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `foe-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `foe-export-${localDateStamp()}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -6667,17 +6691,23 @@ export default function App() {
               setCityMapDragStart={setCityMapDragStart}
               onBuildingHover={(entityId, name, clientX, clientY) => {
                 cancelImagePopupClose();
+                // Ancora = il cursore, con 16 px di margine per lato: il popup si
+                // apre a destra (da clientX + 16) o, vicino al bordo destro della
+                // finestra, a sinistra FINENDO prima di clientX - 16. Prima
+                // anchorLeft non c'era e aprendosi a sinistra il popup copriva il
+                // cursore: smetteva di seguire il mouse e intercettava il click
+                // sull'edificio (bug corretto settembre 2026).
                 setImagePopup(prev => {
                   // Stesso edificio (mouse che si muove dentro lo stesso
                   // rettangolo): aggiorna solo la posizione, evita di
                   // rifare lookup + getImageUrl ad ogni mousemove.
                   if (prev && prev.name === name) {
-                    return { ...prev, x: clientX + 16, y: clientY };
+                    return { ...prev, x: clientX + 16, y: clientY, anchorLeft: clientX - 16 };
                   }
                   const b = BUILDING_BY_ID.get(entityId);
                   const url = b ? getImageUrl(b.cityEntityId, b.hash) : null;
                   if (!url) return null;
-                  return { x: clientX + 16, y: clientY, url, name, id: entityId };
+                  return { x: clientX + 16, y: clientY, url, name, id: entityId, anchorLeft: clientX - 16 };
                 });
               }}
               onBuildingLeave={scheduleImagePopupClose}
@@ -7132,7 +7162,7 @@ export default function App() {
                                   const r = e.currentTarget.getBoundingClientRect();
                                   const building = processedBuildingsMap.get(entityId);
                                   const bName = gameNames.get(entityId) ?? translateName(entityId, gameLang);
-                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash ?? "") ?? "", name: bName, id: entityId, subtitle: t("allyPlacedTitle", uiLang) });
+                                  setImagePopup({ x: r.right, y: r.top, url: getImageUrl(entityId, building?.hash ?? "") ?? "", name: bName, id: entityId, subtitle: t("allyPlacedTitle", uiLang), anchorLeft: r.left });
                                 }}
                                 onMouseLeave={scheduleImagePopupClose}
                               >🏠</span>
@@ -7323,7 +7353,7 @@ export default function App() {
       {isImportModalOpen && (
         <div
           className="modal-overlay"
-          onClick={() => setIsImportModalOpen(false)}
+          {...importModalBackdrop}
         >
           <div
             className="flex w-full max-w-md flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"
@@ -7415,9 +7445,17 @@ export default function App() {
         <div
           className="pointer-events-auto fixed z-[120] rounded-lg border border-amber-700/50 bg-slate-900 p-2 shadow-2xl shadow-black/60"
           style={(() => {
-            const W = 232; // 224 immagine + 8 padding
-            const showLeft = imagePopup.x + W + 8 > window.innerWidth;
-            const left = showLeft ? Math.max(8, imagePopup.x - W - 8) : imagePopup.x + 8;
+            // Larghezza REALE del pannello: 224 immagine (w-56) + 16 padding
+            // (p-2 per lato) + 2 bordo. Prima era 232 ("224 + 8 padding"): 10 px
+            // in meno, e aprendosi a sinistra il pannello finiva sopra l'ancora.
+            const W = 242;
+            const GAP = 8;
+            const anchorLeft = imagePopup.anchorLeft ?? imagePopup.x;
+            const showLeft = imagePopup.x + GAP + W > window.innerWidth;
+            // A sinistra: il pannello deve FINIRE prima del bordo sinistro
+            // dell'ancora (vedi ImagePopupState), non del destro — sulla mappa
+            // l'ancora è il cursore, e coprirlo bloccava hover e click.
+            const left = showLeft ? Math.max(8, anchorLeft - GAP - W) : imagePopup.x + GAP;
             const top = Math.min(imagePopup.y, window.innerHeight - 260);
             return { left, top: Math.max(8, top) };
           })()}
@@ -7873,7 +7911,7 @@ export default function App() {
       {isCityUpgradeableOpen && (
         <div
           className="modal-overlay"
-          onClick={() => setIsCityUpgradeableOpen(false)}
+          {...cityUpgradeableBackdrop}
         >
           <div
             className="relative flex max-h-[90vh] w-full max-w-5xl flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"

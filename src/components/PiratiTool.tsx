@@ -163,6 +163,161 @@ function formatTime(milliseconds: number) {
   return `${minutes}m ${seconds}s`;
 }
 
+/** Disposizione edifici + piazzamenti usata come punto di ripristino (vedi
+ *  lastSolvedRef nel componente). */
+type SolvedSnapshot = { buildings: BuildingType[]; placements: Placement[] };
+
+/** Trasla dei piazzamenti (coordinate StorageCell) quando cambia il blocco
+ *  sbloccato minimo, cioè l'ancora dello spazio storage: stessa traslazione che
+ *  addExpansion/removeExpansion applicano a placements, ostacoli e registro import. */
+function shiftPlacements(list: Placement[], rowDelta: number, colDelta: number): Placement[] {
+  if (rowDelta === 0 && colDelta === 0) return list;
+  return list.map((placement) => ({ ...placement, row: placement.row + rowDelta, col: placement.col + colDelta }));
+}
+
+/** Toglie da una disposizione i piazzamenti su celle diventate inutilizzabili
+ *  (blocco richiuso, nuovo ostacolo), scalando i conteggi dei rispettivi edifici:
+ *  il risultato resta una disposizione valida e coerente (stesso principio del
+ *  ramo '−' di updateCount: un sottoinsieme di una disposizione valida è valido).
+ *  Restituisce null se tra i piazzamenti persi c'è il Municipio, che non si può
+ *  togliere: in quel caso il chiamante ripiega sullo stato corrente. */
+function withoutLostPlacements(snapshot: SolvedSnapshot, isLost: (placement: Placement) => boolean): SolvedSnapshot | null {
+  const lost = snapshot.placements.filter(isLost);
+  if (lost.length === 0) return snapshot;
+  if (lost.some((placement) => placement.buildingId === MUNICIPIO.id)) return null;
+  const lostCounts = new Map<string, number>();
+  for (const placement of lost) {
+    lostCounts.set(placement.buildingId, (lostCounts.get(placement.buildingId) ?? 0) + 1);
+  }
+  return {
+    buildings: snapshot.buildings.map((building) => ({
+      ...building,
+      count: Math.max(0, building.count - (lostCounts.get(building.id) ?? 0)),
+    })),
+    placements: snapshot.placements.filter((placement) => !isLost(placement)),
+  };
+}
+
+/** Miglior posizione libera per un edificio width×height, con la regola
+ *  dell'auto-piazzamento del '+': il maggior numero di celle a contatto col bordo
+ *  dell'area sbloccata, a parità la prima in ordine riga/colonna.
+ *  `isUsable(row, col)`: cella sbloccata — deve restituire false anche fuori
+ *  griglia, perché è così che si riconoscono le celle di bordo.
+ *  `isFree(row, col)`: né ostacolo né edificio (chiamata solo su celle usabili). */
+function bestFreePlacement(
+  width: number,
+  height: number,
+  rows: number,
+  cols: number,
+  isUsable: (row: number, col: number) => boolean,
+  isFree: (row: number, col: number) => boolean,
+): { row: number; col: number } | null {
+  let best: { row: number; col: number } | null = null;
+  let bestScore = -1;
+  for (let row = 0; row <= rows - height; row++) {
+    for (let col = 0; col <= cols - width; col++) {
+      let fits = true;
+      let edgeTouches = 0;
+      for (let dr = 0; dr < height && fits; dr++) {
+        for (let dc = 0; dc < width; dc++) {
+          const r = row + dr;
+          const c = col + dc;
+          if (!isUsable(r, c) || !isFree(r, c)) {
+            fits = false;
+            break;
+          }
+          if (!isUsable(r - 1, c) || !isUsable(r + 1, c) || !isUsable(r, c - 1) || !isUsable(r, c + 1)) {
+            edgeTouches++;
+          }
+        }
+      }
+      // `>` stretto: a parità di punteggio resta la prima trovata in ordine
+      // riga/colonna, come faceva l'ordinamento stabile dell'auto-piazzamento.
+      if (fits && edgeTouches > bestScore) {
+        best = { row, col };
+        bestScore = edgeTouches;
+      }
+    }
+  }
+  return best;
+}
+
+/** Disposizione dopo la chiusura di un blocco (removeExpansion). Gli edifici che
+ *  toccavano il blocco vengono spostati nella miglior posizione libera della
+ *  griglia rimasta (bestFreePlacement), uno alla volta nell'ordine della lista;
+ *  quelli che non trovano posto escono dalla mappa col conteggio invariato
+ *  (Risolvi li ridispone). Tutti gli altri restano dove sono.
+ *  Coordinate in ingresso: spazio storage PRIMA della rimozione; in uscita:
+ *  spazio storage DOPO (traslato di rowDelta/colDelta).
+ *  Prima removeExpansion passava da clearSolution, che svuotava l'INTERA mappa
+ *  (tranne il Municipio) appena un solo edificio toccava il blocco richiuso — bug
+ *  segnalato dall'utente a settembre 2026. */
+function layoutAfterBlockRemoval(params: {
+  placements: Placement[];
+  obstacles: Set<string>;
+  removedRowStart: number;
+  removedColStart: number;
+  nextUnlockedBlocks: Set<string>;
+  nextMinRow: number;
+  nextMinCol: number;
+  rowDelta: number;
+  colDelta: number;
+}): { placements: Placement[]; displaced: number; unplaced: number } {
+  const { placements, obstacles, removedRowStart, removedColStart, nextUnlockedBlocks, nextMinRow, nextMinCol, rowDelta, colDelta } = params;
+  const touchesRemovedBlock = placements.map((placement) => (
+    placement.row < removedRowStart + BLOCK_SIZE &&
+    placement.row + placement.h > removedRowStart &&
+    placement.col < removedColStart + BLOCK_SIZE &&
+    placement.col + placement.w > removedColStart
+  ));
+  const shifted = shiftPlacements(placements, rowDelta, colDelta);
+  const displaced = touchesRemovedBlock.filter(Boolean).length;
+  if (displaced === 0) return { placements: shifted, displaced: 0, unplaced: 0 };
+
+  const blocks = Array.from(nextUnlockedBlocks).map(parseBlockKey);
+  const rows = (Math.max(...blocks.map((block) => block.row)) - nextMinRow + 1) * BLOCK_SIZE;
+  const cols = (Math.max(...blocks.map((block) => block.col)) - nextMinCol + 1) * BLOCK_SIZE;
+  const isUsable = (row: number, col: number) =>
+    row >= 0 && col >= 0 && row < rows && col < cols &&
+    nextUnlockedBlocks.has(blockKey(nextMinRow + Math.floor(row / BLOCK_SIZE), nextMinCol + Math.floor(col / BLOCK_SIZE)));
+
+  const taken = new Set<string>();
+  const take = (placement: Placement) => {
+    for (let dr = 0; dr < placement.h; dr++) {
+      for (let dc = 0; dc < placement.w; dc++) {
+        taken.add(cellKey(storageCell(placement.row + dr, placement.col + dc)));
+      }
+    }
+  };
+  obstacles.forEach((obstacleKey) => {
+    const { row, col } = parseCellKey(obstacleKey);
+    taken.add(cellKey(storageCell(row + rowDelta, col + colDelta)));
+  });
+  // Prima TUTTI gli edifici che restano, poi i ricollocamenti: uno spostato non
+  // deve finire sopra un edificio che viene dopo di lui nella lista.
+  shifted.forEach((placement, index) => {
+    if (!touchesRemovedBlock[index]) take(placement);
+  });
+
+  let unplaced = 0;
+  const result: Placement[] = [];
+  shifted.forEach((placement, index) => {
+    if (!touchesRemovedBlock[index]) {
+      result.push(placement);
+      return;
+    }
+    const spot = bestFreePlacement(placement.w, placement.h, rows, cols, isUsable, (row, col) => !taken.has(cellKey(storageCell(row, col))));
+    if (!spot) {
+      unplaced++;
+      return;
+    }
+    const moved = { ...placement, row: spot.row, col: spot.col };
+    take(moved);
+    result.push(moved);
+  });
+  return { placements: result, displaced, unplaced };
+}
+
 /**
  * Handle imperativo esposto a App.tsx: la bacchetta magica dell'header
  * globale (handleWandClick) è l'UNICO pulsante bacchetta nell'app — quando
@@ -247,7 +402,13 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // disposizione mostrata a schermo. Mai null dopo il mount: lo stato vuoto
   // iniziale è "risolto" per definizione (nessun edificio da piazzare oltre
   // al municipio), stesso principio dell'import/Reset/Undo più sotto.
-  const lastSolvedRef = useRef<{ buildings: BuildingType[]; placements: Placement[] }>({
+  // ⚠️ Vive nello stesso spazio StorageCell di placements: ogni volta che la
+  // griglia cambia (ancora traslata da addExpansion/removeExpansion, blocco
+  // richiuso, nuovo ostacolo) va aggiornato anche lui, altrimenti il prossimo
+  // ripristino rimette edifici sfalsati o su celle non più utilizzabili (bug
+  // corretto settembre 2026: dopo un'espansione a sinistra, un Risolvi fallito o
+  // fermato rimetteva tutto un blocco più a sinistra, su aree non sbloccate).
+  const lastSolvedRef = useRef<SolvedSnapshot>({
     buildings: INITIAL_BUILDINGS.map((b) => ({ ...b })),
     placements: INITIAL_PLACEMENTS.map((p) => ({ ...p })),
   });
@@ -333,14 +494,6 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     [gridRows, gridCols, minDisplayBlockRow, minDisplayBlockCol, unlockedBlocks]
   );
 
-  const clearSolution = () => {
-    setStatus("idle");
-    setPlacements((previous) => {
-      const municipioPlacement = previous.find((placement) => placement.buildingId === MUNICIPIO.id);
-      return [municipioPlacement ?? MUNICIPIO_INITIAL_PLACEMENT];
-    });
-  };
-
   const canAddExpansion = (blockRow: number, blockCol: number) => {
     const key = blockKey(blockRow, blockCol);
     if (!ALLOWED_BLOCK_SET.has(key)) return false;
@@ -351,18 +504,39 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     return DIRECTIONS.some((direction) => unlockedBlocks.has(blockKey(blockRow + direction.row, blockCol + direction.col)));
   };
 
+  // Blocchi (chiavi assolute) coperti dal Municipio nella sua posizione attuale.
+  // Un'espansione che lo contiene non è rimovibile: il Municipio non si toglie
+  // dalla mappa né si sposta da solo (a differenza degli altri edifici, vedi
+  // layoutAfterBlockRemoval), e prima restava disegnato sopra un'area non più
+  // sbloccata (bug corretto settembre 2026).
+  const municipioBlockKeys = useMemo(() => {
+    const keys = new Set<string>();
+    const municipio = placements.find((placement) => placement.buildingId === MUNICIPIO.id);
+    if (!municipio) return keys;
+    for (let dr = 0; dr < municipio.h; dr++) {
+      for (let dc = 0; dc < municipio.w; dc++) {
+        keys.add(blockKey(
+          minUnlockedBlockRow + Math.floor((municipio.row + dr) / BLOCK_SIZE),
+          minUnlockedBlockCol + Math.floor((municipio.col + dc) / BLOCK_SIZE),
+        ));
+      }
+    }
+    return keys;
+  }, [placements, minUnlockedBlockRow, minUnlockedBlockCol]);
+
   const removableExpansionKeys = useMemo(() => {
     const removable = new Set<string>();
     expansions.forEach((key) => {
       // Le espansioni importate riflettono lo stato reale della città in game: non
       // devono essere rimovibili dal tool, altrimenti si andrebbe fuori sincro.
       if (importedExpansions.has(key)) return;
+      if (municipioBlockKeys.has(key)) return;
       if (isRemovableExpansion(expansions, key)) {
         removable.add(key);
       }
     });
     return removable;
-  }, [expansions, importedExpansions]);
+  }, [expansions, importedExpansions, municipioBlockKeys]);
 
   const nonRemovableExpansionKeys = useMemo(() => {
     const blocked = new Set<string>();
@@ -404,21 +578,35 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     if (!canEditGrid || hasImportedCity || !gridMask[row]?.[col]) return;
 
     const storage = storageCell(row, col);
-    const isOccupiedByPlacement = placements.some((placement) => (
+    const coversCell = (placement: Placement) => (
       storage.row >= placement.row &&
       storage.row < placement.row + placement.h &&
       storage.col >= placement.col &&
       storage.col < placement.col + placement.w
-    ));
-    if (isOccupiedByPlacement) return;
+    );
+    if (placements.some(coversCell)) return;
 
+    const key = cellKey(storage);
+    const isAddingObstacle = !obstacles.has(key);
     setObstacles((previous) => {
-      const key = cellKey(storage);
       const next = new Set(previous);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
+
+    // Il nuovo ostacolo è libero nella disposizione a schermo, ma può cadere su
+    // una cella usata dall'ultima soluzione valida quando le due non coincidono
+    // (es. edificio eliminato o spostato mentre lo stato era "idle"): senza
+    // questo, il prossimo ripristino rimetterebbe un edificio sopra l'ostacolo.
+    // Se a perdersi fosse il Municipio si ripiega sullo stato a schermo, che
+    // l'ostacolo per costruzione non tocca.
+    if (isAddingObstacle) {
+      lastSolvedRef.current = withoutLostPlacements(lastSolvedRef.current, coversCell) ?? {
+        buildings: buildings.map((building) => ({ ...building })),
+        placements,
+      };
+    }
   };
 
   const addExpansion = (blockRow: number, blockCol: number) => {
@@ -434,7 +622,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     const colDelta = (minUnlockedBlockCol - nextMinCol) * BLOCK_SIZE;
 
     if (rowDelta !== 0 || colDelta !== 0) {
-      setPlacements((previous) => previous.map((placement) => ({ ...placement, row: placement.row + rowDelta, col: placement.col + colDelta })));
+      setPlacements((previous) => shiftPlacements(previous, rowDelta, colDelta));
+      // Stesso spazio storage di placements (vedi lastSolvedRef): va traslato insieme.
+      lastSolvedRef.current = {
+        buildings: lastSolvedRef.current.buildings,
+        placements: shiftPlacements(lastSolvedRef.current.placements, rowDelta, colDelta),
+      };
     }
     // Ripristina gli ostacoli importati per il blocco appena sbloccato (nel caso fossero
     // stati ripuliti da una precedente removeExpansion su questo stesso blocco), poi
@@ -485,14 +678,14 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     const removedRowEnd = removedRowStart + BLOCK_SIZE;
     const removedColStart = (blockCol - minUnlockedBlockCol) * BLOCK_SIZE;
     const removedColEnd = removedColStart + BLOCK_SIZE;
-    const hasPlacementInExpansion = placements.some((placement) => {
-      return (
-        placement.row < removedRowEnd &&
-        placement.row + placement.h > removedRowStart &&
-        placement.col < removedColEnd &&
-        placement.col + placement.w > removedColStart
-      );
-    });
+    const isCellInRemovedBlock = (row: number, col: number) =>
+      row >= removedRowStart && row < removedRowEnd && col >= removedColStart && col < removedColEnd;
+    const overlapsRemovedBlock = (placement: Placement) => (
+      placement.row < removedRowEnd &&
+      placement.row + placement.h > removedRowStart &&
+      placement.col < removedColEnd &&
+      placement.col + placement.w > removedColStart
+    );
 
     const nextExpansions = new Set(expansions);
     nextExpansions.delete(key);
@@ -503,29 +696,69 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     const rowDelta = (minUnlockedBlockRow - nextMinRow) * BLOCK_SIZE;
     const colDelta = (minUnlockedBlockCol - nextMinCol) * BLOCK_SIZE;
 
+    // Solo gli edifici che toccano il blocco richiuso si spostano (in uno spazio
+    // libero, o fuori dalla mappa se non c'è posto): vedi layoutAfterBlockRemoval.
+    // Mai il Municipio: il blocco che lo contiene non è rimovibile (municipioBlockKeys).
+    const { placements: nextPlacements, displaced, unplaced } = layoutAfterBlockRemoval({
+      placements,
+      obstacles,
+      removedRowStart,
+      removedColStart,
+      nextUnlockedBlocks,
+      nextMinRow,
+      nextMinCol,
+      rowDelta,
+      colDelta,
+    });
+
+    // Ultima soluzione valida (vedi lastSolvedRef). Se gli edifici spostati hanno
+    // trovato tutti posto e la disposizione risultante è completa, diventa lei la
+    // nuova ultima soluzione valida. Altrimenti si tiene la precedente, tolti i
+    // piazzamenti che cadevano nel blocco richiuso (conteggi scalati) e traslata
+    // come placements; se tra quelli persi ci fosse il Municipio (solo se spostato a
+    // mano dopo l'ultima soluzione valida) si ripiega sullo stato a schermo dopo la
+    // rimozione, che per costruzione non usa il blocco richiuso.
+    if (displaced > 0 && layoutStatus(buildings, nextPlacements) === "success") {
+      lastSolvedRef.current = { buildings: buildings.map((building) => ({ ...building })), placements: nextPlacements };
+    } else {
+      const survivingLastSolved = withoutLostPlacements(lastSolvedRef.current, overlapsRemovedBlock);
+      lastSolvedRef.current = survivingLastSolved
+        ? { buildings: survivingLastSolved.buildings, placements: shiftPlacements(survivingLastSolved.placements, rowDelta, colDelta) }
+        : { buildings: buildings.map((building) => ({ ...building })), placements: nextPlacements };
+    }
+
     setExpansions(nextExpansions);
     setObstacles((previous) => {
-      // Rimuove solo gli ostacoli che ricadevano nel blocco appena richiuso: gli altri
-      // ostacoli fuori dall'area sbloccata (es. anteprime in altri blocchi candidati non
-      // toccati da questa rimozione) devono restare intatti, non venire cancellati.
-      const withoutRemovedBlock = new Set(
-        Array.from(previous).filter((obstacleKey) => {
-          const { row, col } = parseCellKey(obstacleKey);
-          const inRemovedBlock =
-            row >= removedRowStart && row < removedRowEnd && col >= removedColStart && col < removedColEnd;
-          return !inRemovedBlock;
-        })
-      );
-      if (rowDelta === 0 && colDelta === 0) return withoutRemovedBlock;
+      // Le celle del blocco richiuso tornano esattamente agli ostacoli dell'import
+      // (registro importedObstacleCells): via quelli aggiunti a mano, di nuovo presenti
+      // quelli importati eventualmente rimossi a mano. Gli ostacoli fuori dal blocco
+      // (es. anteprime in altri blocchi candidati) restano intatti. Simmetrico ad
+      // addExpansion, che alla riapertura ripristina gli stessi ostacoli importati:
+      // aggiungere e poi rimuovere la stessa espansione riporta `obstacles` identico a
+      // prima (bug corretto settembre 2026: prima venivano cancellati anche gli
+      // ostacoli importati, che la baseline contiene, e Undo restava abilitato senza
+      // alcuna differenza visibile).
+      const next = new Set<string>();
+      previous.forEach((obstacleKey) => {
+        const { row, col } = parseCellKey(obstacleKey);
+        if (!isCellInRemovedBlock(row, col)) next.add(obstacleKey);
+      });
+      importedObstacleCells.forEach((obstacleKey) => {
+        const { row, col } = parseCellKey(obstacleKey);
+        if (isCellInRemovedBlock(row, col)) next.add(obstacleKey);
+      });
+      if (rowDelta === 0 && colDelta === 0) return next;
       const shifted = new Set<string>();
-      withoutRemovedBlock.forEach((obstacleKey) => {
+      next.forEach((obstacleKey) => {
         const { row, col } = parseCellKey(obstacleKey);
         shifted.add(cellKey(storageCell(row + rowDelta, col + colDelta)));
       });
       return shifted;
     });
+    if (displaced > 0 || rowDelta !== 0 || colDelta !== 0) {
+      setPlacements(nextPlacements);
+    }
     if (rowDelta !== 0 || colDelta !== 0) {
-      setPlacements((previous) => previous.map((placement) => ({ ...placement, row: placement.row + rowDelta, col: placement.col + colDelta })));
       // Il registro permanente non va mai ripulito dal blocco rimosso (deve restare
       // disponibile per l'anteprima), ma va comunque shiftato insieme al resto quando
       // cambia il blocco minimo sbloccato, per restare nello stesso sistema di coordinate.
@@ -538,8 +771,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         return shifted;
       });
     }
-    if (hasPlacementInExpansion) {
-      clearSolution();
+    if (displaced > 0) {
+      // "idle" se qualcuno è rimasto fuori dalla mappa (Risolvi abilitato per
+      // ridisporlo), altrimenti lo stato che la disposizione aveva già. Il toast
+      // spiega perché un edificio si è spostato o è sparito dalla mappa.
+      setStatus(layoutStatus(buildings, nextPlacements));
+      setImportMessage(
+        unplaced > 0
+          ? { kind: "error", text: t("piratiExpansionRemovedUnplaced", uiLang, unplaced) }
+          : { kind: "success", text: t("piratiExpansionRemovedRelocated", uiLang, displaced) }
+      );
     }
     setEditMode("obstacle");
   };
@@ -578,25 +819,30 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     // catturava SOLO l'uno o l'altro con un `return` anticipato, rompendo l'import
     // città quando ci si trovava sull'Insediamento). Estraiamo quel blocco prima di
     // validarlo come BookmarkletPirateOutpostData.
-    const hasPirateOutpostField =
-      !!payload && typeof payload === "object" && "pirateOutpost" in (payload as Record<string, unknown>);
-    const pirateOutpostPayload = hasPirateOutpostField
+    const isObjectPayload = !!payload && typeof payload === "object" && !Array.isArray(payload);
+    const pirateOutpostPayload = isObjectPayload
       ? (payload as Record<string, unknown>).pirateOutpost
       : undefined;
 
     if (!validateBookmarkletPirateOutpostData(pirateOutpostPayload)) {
-      // Tre casi distinti, in ordine di probabilità/specificità:
-      // 1. Il payload sembra dati città "puri" senza NESSUN supporto Pirati (bookmarklet
-      //    v3, prima ancora dell'introduzione del blocco pirateOutpost) — bacchetta vecchia.
-      // 2. Il payload è un BookmarkletData v4 valido ma senza pirateOutpost popolato:
-      //    l'utente non ha ancora visitato il proprio Insediamento in questa sessione di
-      //    gioco (i dati non sono ancora in memoria), o ha importato mentre era in visita
-      //    da un altro giocatore (V, mai catturato in quel caso). Non è "bacchetta vecchia":
-      //    dirlo sarebbe fuorviante, l'azione giusta è visitare l'Insediamento e riprovare.
-      // 3. pirateOutpost presente ma strutturalmente malformato — generico.
+      // Tre casi distinti, nell'ordine in cui vanno controllati:
+      // 1. Bacchetta PRECEDENTE alla v4 (`_v` assente o < CURRENT_BOOKMARKLET_VERSION,
+      //    vedi isLegacyBookmarkletPayload): v3 "pura" (payload città senza alcun
+      //    supporto Pirati) o v3.1 cliccata sull'Insediamento ({areas, entities} in
+      //    cima, senza `_v`). Non avrà mai pirateOutpost: l'unica azione utile è
+      //    ricreare la bacchetta.
+      // 2. Payload v4+ senza pirateOutpost: l'Insediamento non è ancora in memoria in
+      //    questa sessione di gioco, o la bacchetta è stata usata in visita da un altro
+      //    giocatore (V, pirateOutpost mai catturato in quel caso). Non è "bacchetta
+      //    vecchia": dirlo sarebbe fuorviante, l'azione giusta è visitare il proprio
+      //    Insediamento e riprovare.
+      // 3. pirateOutpost presente ma malformato, o JSON che non è un oggetto — generico.
+      // ⚠️ Il caso 1 si riconosce da `_v`, non dalla forma: dalla v4 OGNI payload è un
+      // payload città, e il vecchio controllo solo-forma dava "bacchetta vecchia" anche
+      // nei casi 2 e 3, e "visita l'Insediamento" alla v3.1 (bug corretto settembre 2026).
       const text = isLegacyBookmarkletPayload(payload)
         ? t("piratiImportOutdatedBookmarklet", uiLang)
-        : !hasPirateOutpostField || pirateOutpostPayload === undefined
+        : isObjectPayload && pirateOutpostPayload === undefined
           ? t("piratiImportVisitOutpostFirst", uiLang)
           : t("piratiImportInvalidStructure", uiLang);
       const message = { kind: "error" as const, text };
@@ -752,6 +998,20 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     stopSolvingRef.current = false;
     timedOutRef.current = false;
     setDisplaySteps(0);
+
+    // Riporta buildings+placements all'ultima disposizione valida nota (vedi
+    // lastSolvedRef) e restituisce lo stato che le corrisponde: layoutStatus, MAI
+    // "success" fisso. lastSolvedRef può contenere di proposito una disposizione
+    // incompleta (ramo '−' di updateCount, piazzamenti persi con un blocco
+    // richiuso o un nuovo ostacolo): marcata "success", Risolvi restava
+    // disabilitato con edifici contati ma non piazzati (bug corretto settembre 2026).
+    const restoreLastSolved = () => {
+      const snapshot = lastSolvedRef.current;
+      setBuildings(snapshot.buildings.map((b) => ({ ...b })));
+      setPlacements(snapshot.placements.map((p) => ({ ...p })));
+      return layoutStatus(snapshot.buildings, snapshot.placements);
+    };
+
     // try/catch/finally: senza questo, QUALUNQUE eccezione lanciata durante la
     // ricerca (es. il RangeError da superamento del limite di 2^24 elementi di
     // un Set, vedi FAILED_STATES_CAP) lasciava isSolving a true per sempre —
@@ -767,26 +1027,31 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       const YIELD_INTERVAL_MS = 50;
       let lastYieldTime = startTime;
 
-      type CandidatePlacement = {
-        row: number;
-        col: number;
-        w: number;
-        h: number;
-        cells: number[];
-        score: number;
-      };
-
       const cellCount = gridRows * gridCols;
       const sourceBuildings = buildingsOverride ?? buildings;
 
-      // true se, durante questa ricerca, almeno un ramo si è fermato per aver
-      // superato SMALL_CUTOFF (tentativi nella fase "solo piccoli") invece che
-      // per aver davvero esaurito le alternative — un fallimento finale in
-      // questo caso è un possibile FALSO NEGATIVO: potrebbe esistere una
-      // soluzione che la ricerca non ha avuto il tempo di scoprire su quel
-      // ramo specifico, a differenza di un fallimento "pulito" dove ogni
-      // alternativa è stata davvero provata ed esclusa.
-      let hitSmallCutoff = false;
+      // Municipio da tenere fermo nel primo tentativo: la sua posizione ATTUALE
+      // (import, trascinamento, soluzione precedente). Prima era sempre la
+      // posizione di default MUNICIPIO_INITIAL_PLACEMENT: Risolvi provava per
+      // prima cosa a riportarci il Municipio importato o spostato a mano, e dopo
+      // un'espansione a sinistra quella posizione (coordinate storage fisse,
+      // mai traslate) cadeva su un blocco non sbloccato, quindi il tentativo
+      // falliva sempre subito e il Municipio veniva spostato (bug corretto
+      // settembre 2026). Il fallback non scatta mai in pratica: placements
+      // contiene sempre il Municipio.
+      const pinnedMunicipio: Placement =
+        placements.find((placement) => placement.buildingId === MUNICIPIO.id) ?? MUNICIPIO_INITIAL_PLACEMENT;
+
+      // true se l'ULTIMO tentativo eseguito si è fermato almeno una volta per aver
+      // superato SMALL_CUTOFF (tentativi nella fase "solo piccoli") invece che per
+      // aver davvero esaurito le alternative: un fallimento finale in quel caso è
+      // un possibile FALSO NEGATIVO. Conta solo l'ultimo tentativo perché, quando
+      // la ricerca fallisce, l'ultimo è sempre quello col Municipio libero, il cui
+      // spazio di ricerca contiene tutto quello del tentativo col Municipio fermo:
+      // se lui fallisce senza toccare il cutoff il problema è davvero insolubile,
+      // anche se il primo tentativo il cutoff l'aveva toccato (prima un unico flag
+      // condiviso mostrava in quel caso "potrebbe comunque esisterne una").
+      let lastRunHitSmallCutoff = false;
 
       // ⚠️ V8 impone un tetto fisso di 2^24 (16.777.216) elementi per Set: oltre,
       // .add() lancia RangeError e la ricerca crasha lasciando il tool bloccato su
@@ -801,22 +1066,27 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // console alla fine di questa funzione.
       const debugInfo = {
         runs: [] as Array<{
-          keepMunicipioInitial: boolean;
+          keepMunicipioInPlace: boolean;
           result: "found" | "no-solution" | "stopped";
           steps: number;
           smallBacktracksFinal: number;
+          hitSmallCutoff: boolean;
           maxFailedStatesSize: number;
           failedStatesCapHit: boolean;
           enteredSmallOnlyPhase: boolean;
         }>,
       };
 
-      const runSearch = async (keepMunicipioInitial: boolean): Promise<Placement[] | null> => {
+      const runSearch = async (keepMunicipioInPlace: boolean): Promise<Placement[] | null> => {
         let smallBacktracks = 0;
+        let hitSmallCutoff = false;
         let maxFailedStatesSize = 0;
         let failedStatesCapHit = false;
         let enteredSmallOnlyPhase = false;
         const stepsAtStart = steps;
+        // Il valore di un tentativo precedente non deve sopravvivere a questo
+        // (vedi lastRunHitSmallCutoff), anche se questo termina prima di cercare.
+        lastRunHitSmallCutoff = false;
 
         // ── CLASSI DI FORMA ─────────────────────────────────────────────────
         // La ricerca ragiona per FOOTPRINT, non per tipo di edificio: due tipi
@@ -846,17 +1116,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           count: number;
           /** Totale iniziale: dimensiona la tabella Zobrist dei conteggi. */
           initialCount: number;
-          /** Il Municipio resta una classe a sé (ha un bonus di punteggio
-           *  dedicato sulla sua posizione iniziale), mai fuso con altri tipi. */
-          isMunicipio: boolean;
           /** Tipi concreti che compongono la classe, con il rispettivo
-           *  conteggio: NON mutati durante la ricerca, servono a valle. */
+           *  conteggio: NON mutati durante la ricerca, servono a valle. Il
+           *  Municipio resta comunque una classe a sé (chiave dedicata in
+           *  addToPool), mai fuso con altri tipi. */
           members: { id: string; count: number }[];
         };
 
-        // Municipio già piazzato (fork "raccordo" con posizione iniziale fissa):
-        // non entra nel pool, viene riaccodato dopo la ricerca.
-        const seededPlacements: Placement[] = keepMunicipioInitial ? [{ ...MUNICIPIO_INITIAL_PLACEMENT }] : [];
+        // Municipio tenuto fermo nella posizione attuale (primo tentativo, vedi
+        // pinnedMunicipio): non entra nel pool, viene riaccodato dopo la ricerca.
+        const seededPlacements: Placement[] = keepMunicipioInPlace ? [{ ...pinnedMunicipio }] : [];
 
         const buildingPool: ShapeClass[] = [];
         const classByKey = new Map<string, ShapeClass>();
@@ -870,7 +1139,6 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
               area: source.width * source.height,
               count: 0,
               initialCount: 0,
-              isMunicipio,
               members: [],
             };
             classByKey.set(key, shapeClass);
@@ -881,7 +1149,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           shapeClass.members.push({ id: source.id, count: source.count });
         };
 
-        if (!keepMunicipioInitial) addToPool(MUNICIPIO, true);
+        if (!keepMunicipioInPlace) addToPool(MUNICIPIO, true);
         sourceBuildings.filter((building) => building.count > 0).forEach((building) => addToPool(building, false));
         buildingPool.sort((a, b) => b.area - a.area);
 
@@ -924,90 +1192,47 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           }
         }
 
-        if (keepMunicipioInitial) {
-          for (let dr = 0; dr < MUNICIPIO.height; dr++) {
-            for (let dc = 0; dc < MUNICIPIO.width; dc++) {
-              const row = MUNICIPIO_INITIAL_PLACEMENT.row + dr;
-              const col = MUNICIPIO_INITIAL_PLACEMENT.col + dc;
+        if (keepMunicipioInPlace) {
+          for (let dr = 0; dr < pinnedMunicipio.h; dr++) {
+            for (let dc = 0; dc < pinnedMunicipio.w; dc++) {
+              const row = pinnedMunicipio.row + dr;
+              const col = pinnedMunicipio.col + dc;
               const index = row * gridCols + col;
-              if (row >= gridRows || col >= gridCols || occupied[index]) return null;
+              if (row < 0 || col < 0 || row >= gridRows || col >= gridCols || occupied[index]) return null;
               occupied[index] = 1;
               freeCells--;
             }
           }
         }
 
-        // Piazzamenti validi per un tipo, ordinati per punteggio euristico. Con
-        // `anchor` restituisce solo quelli che coprono quella cella; senza, scansiona
-        // tutta la griglia (solo per il controllo di fattibilità iniziale).
-        function scorePlacement(building: ShapeClass, row: number, col: number, edgeTouches: number) {
-          const isBig = building.area > BIG_THRESHOLD;
-          const bigBonus = isBig ? 100 : 0;
-          const cornerBonus = (row === 0 || row + building.height === gridRows) && (col === 0 || col + building.width === gridCols) ? 60 : 0;
-          const initialMunicipioBonus = building.isMunicipio && row === MUNICIPIO_INITIAL_PLACEMENT.row && col === MUNICIPIO_INITIAL_PLACEMENT.col ? 500 : 0;
-          const edgeBonus = edgeTouches * 4;
-          const areaBonus = building.area;
-          return bigBonus + initialMunicipioBonus + cornerBonus + edgeBonus + areaBonus;
-        }
-
-        function generatePlacements(building: ShapeClass, anchor?: { row: number; col: number }): CandidatePlacement[] {
-          const placements: CandidatePlacement[] = [];
-          // Vincolare a righe/colonne che possono coprire la cella anchor riduce
-          // drasticamente lo spazio da scansionare (da tutta la griglia a al più
-          // width*height combinazioni) — vedi il commento più esteso su
-          // generatePlacements/firstFreeIndex più sotto, nel backtracking.
-          const rowStart = anchor ? Math.max(0, anchor.row - building.height + 1) : 0;
-          const rowEnd = anchor ? Math.min(anchor.row, gridRows - building.height) : gridRows - building.height;
-          const colStart = anchor ? Math.max(0, anchor.col - building.width + 1) : 0;
-          const colEnd = anchor ? Math.min(anchor.col, gridCols - building.width) : gridCols - building.width;
-
-          for (let row = rowStart; row <= rowEnd; row++) {
-            for (let col = colStart; col <= colEnd; col++) {
-              const cells: number[] = [];
-              let valid = true;
-              let edgeTouches = 0;
-
-              for (let dr = 0; dr < building.height; dr++) {
-                for (let dc = 0; dc < building.width; dc++) {
-                  const currentRow = row + dr;
-                  const currentCol = col + dc;
-                  const index = currentRow * gridCols + currentCol;
-
-                  if (occupied[index]) {
-                    valid = false;
-                    break;
-                  }
-
-                  const touchesEdge =
-                    currentRow === 0 ||
-                    currentRow === gridRows - 1 ||
-                    currentCol === 0 ||
-                    currentCol === gridCols - 1 ||
-                    !gridMask[currentRow - 1]?.[currentCol] ||
-                    !gridMask[currentRow + 1]?.[currentCol] ||
-                    !gridMask[currentRow]?.[currentCol - 1] ||
-                    !gridMask[currentRow]?.[currentCol + 1];
-
-                  if (touchesEdge) edgeTouches++;
-                  cells.push(index);
-                }
-                if (!valid) break;
-              }
-
-              if (valid) {
-                placements.push({ row, col, w: building.width, h: building.height, cells, score: scorePlacement(building, row, col, edgeTouches) });
-              }
+        // Celle (indici in `occupied`) di un'istanza della classe con l'angolo in
+        // alto a sinistra in (row, col), o null se esce dalla griglia o tocca una
+        // cella già occupata.
+        function cellsAt(shapeClass: ShapeClass, row: number, col: number): number[] | null {
+          if (row + shapeClass.height > gridRows || col + shapeClass.width > gridCols) return null;
+          const cells: number[] = [];
+          for (let dr = 0; dr < shapeClass.height; dr++) {
+            const rowStart = (row + dr) * gridCols + col;
+            for (let dc = 0; dc < shapeClass.width; dc++) {
+              if (occupied[rowStart + dc]) return null;
+              cells.push(rowStart + dc);
             }
           }
-
-          placements.sort((a, b) => b.score - a.score);
-          return placements;
+          return cells;
         }
 
         // Controllo di fattibilità iniziale una tantum (non dentro il backtracking):
-        // se un tipo con count>0 non ha NESSUN piazzamento valido in tutta la
+        // se una classe con count>0 non ha NESSUNA posizione valida in tutta la
         // griglia, la ricerca fallisce subito, senza nemmeno iniziare.
-        if (buildingPool.some((building) => building.count > 0 && generatePlacements(building).length === 0)) return null;
+        const hasAnyPlacement = (shapeClass: ShapeClass) => {
+          for (let row = 0; row + shapeClass.height <= gridRows; row++) {
+            for (let col = 0; col + shapeClass.width <= gridCols; col++) {
+              if (cellsAt(shapeClass, row, col)) return true;
+            }
+          }
+          return false;
+        };
+        if (buildingPool.some((shapeClass) => shapeClass.count > 0 && !hasAnyPlacement(shapeClass))) return null;
 
         // Zobrist hashing per la chiave di memoization: ogni cella e ogni coppia
         // (tipo, count) ha un valore casuale a 64 bit fissato una volta, XORato
@@ -1085,11 +1310,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           return -1;
         }
 
-        // Branching ancorato alla prima cella libera (idx0): i candidati sono solo
-        // quelli che la coprono, al più width*height per tipo invece di decine sparsi
-        // su tutta la griglia — è ciò che tiene sotto controllo il branching factor.
-        // MRV (meno candidati prima) decide solo l'ORDINE di tentativo, non esclude
-        // alternative: se tutti i tipi falliscono, idx0 resta vuota per sempre e si
+        // Branching ancorato alla prima cella libera (idx0): per ogni classe c'è al
+        // più UN candidato, quello con l'angolo in alto a sinistra proprio su idx0
+        // (vedi il commento sui candidati qui sotto) — è ciò che tiene sotto
+        // controllo il branching factor. Le classi si provano nell'ordine del pool
+        // (area decrescente); se falliscono tutte, idx0 resta vuota per sempre e si
         // prosegue (gli edifici non devono coprire tutta l'area).
         async function backtrack(availableCells: number, isSmallOnlyPhase: boolean, scanFrom: number): Promise<boolean> {
           if (isSmallOnlyPhase && smallBacktracks > SMALL_CUTOFF) {
@@ -1137,7 +1362,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
 
           const idx0 = firstFreeIndex(scanFrom);
           if (idx0 === -1) return areaLeft === 0;
-          const anchor = { row: Math.floor(idx0 / gridCols), col: idx0 % gridCols };
+          const anchorRow = Math.floor(idx0 / gridCols);
+          const anchorCol = idx0 % gridCols;
 
           const stillHasBig = hasBigRemaining();
           const enteringSmallOnly = !stillHasBig && !isSmallOnlyPhase;
@@ -1148,22 +1374,25 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             enteredSmallOnlyPhase = true;
           }
 
-          // Candidati per OGNI classe di forma che copre idx0, ordinati per MRV
-          // (meno candidati prima). Una classe senza candidati per idx0 non fa
-          // fallire subito il nodo: potrebbe semplicemente non coprire questa
-          // cella specifica pur avendo posizioni valide altrove.
-          const typeCandidates: { typeIndex: number; candidates: CandidatePlacement[] }[] = [];
+          // Candidati: tutte le celle prima di idx0 (ordine row-major) sono già
+          // occupate, quindi un rettangolo che copre idx0 partendo più in alto o più
+          // a sinistra ne includerebbe per forza una. L'UNICA posizione possibile per
+          // una classe è quella con l'angolo in alto a sinistra su idx0: basta
+          // testare quella. Una classe che lì non entra non fa fallire il nodo.
+          // (Prima si generavano tutte le posizioni che coprono idx0 e le si
+          // ordinava per MRV e punteggio euristico — angoli, bordi, posizione del
+          // Municipio: con al più un candidato per classe l'ordine era sempre
+          // quello del pool e il punteggio non influiva mai. Rimossi a settembre
+          // 2026: stesse soluzioni e stessi passi, verificati con un test
+          // differenziale, solo meno lavoro per nodo.)
           for (let typeIndex = 0; typeIndex < buildingPool.length; typeIndex++) {
+            if (stopSolvingRef.current) break;
             const shapeClass = buildingPool[typeIndex];
             if (shapeClass.count <= 0) continue;
             if (nextIsSmallOnly && shapeClass.area > BIG_THRESHOLD) continue;
-            const candidates = generatePlacements(shapeClass, anchor);
-            if (candidates.length > 0) typeCandidates.push({ typeIndex, candidates });
-          }
-          typeCandidates.sort((a, b) => a.candidates.length - b.candidates.length);
+            const cells = cellsAt(shapeClass, anchorRow, anchorCol);
+            if (!cells) continue;
 
-          for (const { typeIndex, candidates } of typeCandidates) {
-            const shapeClass = buildingPool[typeIndex];
             // L'hash del count va aggiornato in coppia: XOR fuori il valore vecchio,
             // decrementa, XOR dentro il valore nuovo (idem all'incremento sotto).
             toggleCountHash(typeIndex, shapeClass.count);
@@ -1171,21 +1400,17 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             remainingArea -= shapeClass.area;
             toggleCountHash(typeIndex, shapeClass.count);
 
-            for (const placement of candidates) {
-              if (stopSolvingRef.current) break;
+            for (const index of cells) { occupied[index] = 1; toggleCellHash(index); }
+            // Solo la geometria: il tipo concreto viene deciso a fine ricerca
+            // da assignConcreteTypes (vedi il commento sulle classi di forma).
+            currentPlacements.push({ classIndex: typeIndex, row: anchorRow, col: anchorCol, w: shapeClass.width, h: shapeClass.height });
 
-              for (const index of placement.cells) { occupied[index] = 1; toggleCellHash(index); }
-              // Solo la geometria: il tipo concreto viene deciso a fine ricerca
-              // da assignConcreteTypes (vedi il commento sulle classi di forma).
-              currentPlacements.push({ classIndex: typeIndex, row: placement.row, col: placement.col, w: placement.w, h: placement.h });
+            if (await backtrack(availableCells - cells.length, nextIsSmallOnly, idx0 + 1)) return true;
 
-              if (await backtrack(availableCells - placement.cells.length, nextIsSmallOnly, idx0 + 1)) return true;
+            currentPlacements.pop();
+            for (const index of cells) { occupied[index] = 0; toggleCellHash(index); }
 
-              currentPlacements.pop();
-              for (const index of placement.cells) { occupied[index] = 0; toggleCellHash(index); }
-
-              if (nextIsSmallOnly) smallBacktracks++;
-            }
+            if (nextIsSmallOnly) smallBacktracks++;
 
             toggleCountHash(typeIndex, shapeClass.count);
             shapeClass.count++;
@@ -1217,13 +1442,15 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         const initialSmallOnly = !hasBigRemaining();
         // La ricerca ha lavorato per classi di forma: qui la geometria trovata
         // viene tradotta in edifici concreti (e riaccodata al Municipio già
-        // piazzato, quando questo fork lo teneva fisso).
+        // piazzato, quando questo tentativo lo teneva fermo).
         const result = (await backtrack(freeCells, initialSmallOnly, 0)) ? assignConcreteTypes(currentPlacements) : null;
+        lastRunHitSmallCutoff = hitSmallCutoff;
         debugInfo.runs.push({
-          keepMunicipioInitial,
+          keepMunicipioInPlace,
           result: stopSolvingRef.current ? "stopped" : result ? "found" : "no-solution",
           steps: steps - stepsAtStart,
           smallBacktracksFinal: smallBacktracks,
+          hitSmallCutoff,
           maxFailedStatesSize,
           failedStatesCapHit,
           enteredSmallOnlyPhase,
@@ -1246,16 +1473,19 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         "font-weight: bold;"
       );
       console.info("Esito:", found ? "trovata" : stopSolvingRef.current ? (timedOutRef.current ? "interrotta (timeout)" : "interrotta (stop manuale)") : "nessuna soluzione");
-      console.info("Falso negativo possibile (SMALL_CUTOFF toccato in almeno un tentativo):", hitSmallCutoff);
+      console.info("Falso negativo possibile (SMALL_CUTOFF toccato nell'ultimo tentativo):", lastRunHitSmallCutoff);
       console.table(
         debugInfo.runs.map((run, i) => ({
           tentativo: i + 1,
-          "municipio fisso": run.keepMunicipioInitial,
+          "municipio fisso": run.keepMunicipioInPlace,
           esito: run.result,
           passi: run.steps,
           "fase small-only raggiunta": run.enteredSmallOnlyPhase,
           "backtracks small-only finali": run.smallBacktracksFinal,
-          "cutoff (100.000) superato": run.smallBacktracksFinal > SMALL_CUTOFF,
+          // Flag esplicito, non più `smallBacktracksFinal > SMALL_CUTOFF`: il
+          // contatore si azzera a ogni nuovo ingresso nella fase small-only, quindi
+          // il valore finale poteva essere basso anche dopo aver toccato il cutoff.
+          "cutoff SMALL_CUTOFF toccato": run.hitSmallCutoff,
           "max stati memorizzati (failedStates)": run.maxFailedStatesSize,
           "cap memoization (4M) toccato": run.failedStatesCapHit,
         }))
@@ -1277,8 +1507,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         // (conteggi inclusi) all'ultima soluzione valida nota — lastSolvedRef
         // non è mai vuoto (vedi dichiarazione), quindi il ripristino avviene
         // sempre, invece di lasciare i conteggi nuovi disallineati dalla mappa.
-        setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
-        setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
+        // Lo stato resta "interrupted" (pillola dedicata, Risolvi abilitato per
+        // riprovare) qualunque sia quello della disposizione ripristinata.
+        restoreLastSolved();
         setImportMessage({ kind: "error", text: t("piratiRestoredLastSolutionMessage", uiLang) });
         setStatus("interrupted");
         // Un'interruzione manuale (Stop o timeout) NON conta come fallimento per
@@ -1292,30 +1523,31 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         // edifici effettivamente usato da questa ricerca (buildingsOverride se
         // presente, altrimenti buildings), coerente con solvedPlacements.
         lastSolvedRef.current = { buildings: sourceBuildings.map((b) => ({ ...b })), placements: solvedPlacements };
-        setStatus("success");
+        // layoutStatus e non "success" fisso: tutti gli edifici sono piazzati per
+        // costruzione, ma la ricerca non guarda la popolazione (caso AUTO con un
+        // edificio a popolazione negativa), esattamente come '+'/sposta/scambia.
+        setStatus(layoutStatus(sourceBuildings, solvedPlacements));
       } else {
         // Nessuna soluzione per i conteggi appena impostati: non lasciare la
         // mappa vecchia con conteggi nuovi disallineati, torna sempre
         // all'ultima soluzione valida nota (lastSolvedRef non è mai vuoto).
-        setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
-        setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
-        // Stato ripristinato = di nuovo una disposizione valida: "success",
-        // non "failed", così il pulsante Risolvi torna disabilitato come in
-        // ogni altra situazione stabile. Ma "success" da solo sparirebbe il
-        // messaggio di errore senza spiegare perché la modifica appena fatta
-        // non è comparsa — un toast temporaneo colma il vuoto (stesso
-        // meccanismo del toast di import, vedi useEffect su importMessage).
-        setStatus("success");
-        // hitSmallCutoff: distingue un fallimento "pulito" (ogni alternativa
+        // Niente stato "failed": il ripristino riporta a una disposizione valida
+        // (di norma "success", Risolvi disabilitato come in ogni altra situazione
+        // stabile; "idle" se quella disposizione era incompleta, vedi
+        // restoreLastSolved). Ma il solo cambio di stato non spiegherebbe perché la
+        // modifica appena fatta non è comparsa — un toast temporaneo colma il
+        // vuoto (stesso meccanismo del toast di import, vedi useEffect su importMessage).
+        setStatus(restoreLastSolved());
+        // lastRunHitSmallCutoff: distingue un fallimento "pulito" (ogni alternativa
         // provata ed esclusa: la soluzione richiesta non esiste per questi
-        // conteggi) da un fallimento dove almeno un ramo si è fermato per il
+        // conteggi) da un fallimento dove l'ultimo tentativo si è fermato per il
         // tetto di tentativi SMALL_CUTOFF prima di esaurire davvero le
         // alternative — in quel caso potrebbe esistere una soluzione che la
         // ricerca non ha avuto modo di scoprire, messaggio diverso per non
         // far credere all'utente che il problema sia insolubile per certo.
         setImportMessage({
           kind: "error",
-          text: t(hitSmallCutoff ? "piratiRestoredLastSolutionCutoffMessage" : "piratiRestoredLastSolutionMessage", uiLang),
+          text: t(lastRunHitSmallCutoff ? "piratiRestoredLastSolutionCutoffMessage" : "piratiRestoredLastSolutionMessage", uiLang),
         });
 
         // Il ripristino appena fatto rende superfluo qualunque aggiustamento
@@ -1333,9 +1565,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // variabili locali), quindi basta riportare buildings/placements
       // all'ultima soluzione valida nota, come per un fallimento normale.
       console.error("[Pirati Solver] errore imprevisto durante la ricerca:", error);
-      setBuildings(lastSolvedRef.current.buildings.map((b) => ({ ...b })));
-      setPlacements(lastSolvedRef.current.placements.map((p) => ({ ...p })));
-      setStatus("success");
+      setStatus(restoreLastSolved());
       setImportMessage({ kind: "error", text: t("piratiSolverCrashed", uiLang) });
       return false;
     } finally {
@@ -1344,7 +1574,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       setIsSolving(false);
       stopSolvingRef.current = false;
     }
-  }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles, uiLang]);
+  }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles, placements, uiLang]);
 
   const updateCount = async (id: string, delta: number) => {
     if (isSolving) return;
@@ -1357,9 +1587,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       building.id === id ? { ...building, count: Math.max(0, building.count + delta) } : building
     );
 
-    const hasVisibleSolvedLayout = placements.some((placement) => placement.buildingId !== MUNICIPIO.id);
-
-    if (delta < 0 && hasVisibleSolvedLayout && targetBuilding && targetBuilding.count > 0) {
+    // '−' gestito sempre qui, anche con la sola mappa del Municipio a schermo (es.
+    // edifici contati ma non ancora piazzati): prima quel caso passava da
+    // clearSolution (ora rimossa), che metteva "idle" anche quando i conteggi
+    // tornavano coerenti (es. a zero) e abilitava Risolvi senza motivo.
+    if (delta < 0) {
       const nextCount = nextBuildings.find((building) => building.id === id)!.count;
       const placedCount = placements.filter((placement) => placement.buildingId === id).length;
       // Toglie un placement solo se ce n'è davvero uno in eccesso: un '+' può aver
@@ -1446,9 +1678,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       return;
     }
 
+    // Solo difensivo: '+' fuori da 'obstacle' non è raggiungibile dalla UI (il
+    // pulsante è disabilitato, vedi canAddAnother). Alza il conteggio senza
+    // piazzare nulla e senza toccare la mappa — prima passava da clearSolution,
+    // che avrebbe cancellato l'intera disposizione a schermo.
     setBuildings(nextBuildings);
-
-    clearSolution();
+    setStatus(layoutStatus(nextBuildings, placements));
   };
 
   const removePlacement = (row: number, col: number) => {
@@ -1646,6 +1881,18 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     }, 60);
   };
 
+  // Gesto interrotto dal browser (pointercancel: gesto di sistema, rotazione
+  // dello schermo...): il drag va ANNULLATO, non completato. Prima
+  // onPointerCancel passava da finishDrag, che spostava comunque l'edificio
+  // sull'ultima posizione calcolata dall'evento.
+  const cancelDrag = () => {
+    setDraggedPlacement(null);
+    setDragTargetCell(null);
+    window.setTimeout(() => {
+      suppressClickAfterDragRef.current = false;
+    }, 60);
+  };
+
   const findAutoPlacement = (building: BuildingType): Placement | null => {
     // Chiamata solo con editMode 'obstacle', dove display e storage coincidono e
     // la conversione è a delta 0. Resta esplicita via storageCell così un futuro
@@ -1674,46 +1921,20 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       }
     }
 
-    const candidates: { row: number; col: number; score: number }[] = [];
-
-    for (let row = 0; row <= gridRows - building.height; row++) {
-      for (let col = 0; col <= gridCols - building.width; col++) {
-        let canFit = true;
-        let edgeTouches = 0;
-
-        for (let dr = 0; dr < building.height; dr++) {
-          for (let dc = 0; dc < building.width; dc++) {
-            const currentRow = row + dr;
-            const currentCol = col + dc;
-            if (occupied[currentRow * gridCols + currentCol]) {
-              canFit = false;
-              break;
-            }
-
-            if (
-              currentRow === 0 ||
-              currentRow === gridRows - 1 ||
-              currentCol === 0 ||
-              currentCol === gridCols - 1 ||
-              !gridMask[currentRow - 1]?.[currentCol] ||
-              !gridMask[currentRow + 1]?.[currentCol] ||
-              !gridMask[currentRow]?.[currentCol - 1] ||
-              !gridMask[currentRow]?.[currentCol + 1]
-            ) {
-              edgeTouches++;
-            }
-          }
-          if (!canFit) break;
-        }
-
-        if (canFit) {
-          candidates.push({ row, col, score: edgeTouches });
-        }
-      }
-    }
-
-    candidates.sort((a, b) => b.score - a.score);
-    const best = candidates[0];
+    // Scelta della posizione con bestFreePlacement: la stessa regola usata per
+    // ricollocare gli edifici di un'espansione rimossa (layoutAfterBlockRemoval).
+    // Estratta da qui a settembre 2026 senza cambiarne il risultato: gridMask vale
+    // false fuori griglia, quindi "vicino non sbloccato" copre già i vecchi
+    // controlli espliciti sul bordo della griglia (verificato con un test
+    // differenziale vecchio/nuovo).
+    const best = bestFreePlacement(
+      building.width,
+      building.height,
+      gridRows,
+      gridCols,
+      (row, col) => !!gridMask[row]?.[col],
+      (row, col) => !occupied[row * gridCols + col],
+    );
     return best ? { buildingId: building.id, row: best.row, col: best.col, w: building.width, h: building.height } : null;
   };
 
@@ -1853,6 +2074,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             setExpansions(new Set(baseline.expansions));
             setImportedExpansions(new Set(baseline.importedExpansions));
             setImportedObstacleCells(new Set(baseline.importedObstacleCells));
+            // Come import/addExpansion/removeExpansion: le espansioni cambiano, e
+            // restare in "Rimuovi EXP" senza più espansioni rimovibili lasciava il
+            // pulsante −EXP disabilitato con la modalità ancora attiva (griglia
+            // bloccata, "+" e Risolvi disabilitati — bug corretto settembre 2026).
+            setEditMode("obstacle");
           }}
           // isSolving: l'onClick già ignora il click con isSolving, ma senza
           // rifletterlo qui il pulsante restava visivamente attivo durante una
@@ -1892,6 +2118,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             setImportedExpansions(new Set());
             setImportedObstacleCells(new Set());
             setBaseline(emptyBaseline);
+            // Stesso motivo dell'Undo sopra.
+            setEditMode("obstacle");
             // Come per un nuovo import: lo stato vuoto è "risolto" per definizione
             // (nessun edificio da piazzare oltre al municipio), diventa la nuova
             // ultima soluzione valida.
@@ -2120,9 +2348,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                 if (!draggedPlacement) return;
                 finishDrag(event);
               }}
-              onPointerCancel={(event) => {
+              onPointerCancel={() => {
                 if (!draggedPlacement) return;
-                finishDrag(event);
+                cancelDrag();
               }}
             >
               {Array.from({ length: gridRows }, (_, row) =>
@@ -2153,13 +2381,17 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                   // Prima di un import, si può marcare/smarcare liberamente una cella
                   // libera come ostacolo (pianificazione a mano); dopo un import gli
                   // ostacoli rappresentano dati reali e si possono solo rimuovere.
-                  const canAddObstacleHere = isValid && !isObstacle && editMode === "obstacle" && !hasImportedCity;
+                  // canEditGrid (non solo editMode): durante una ricerca le celle non
+                  // devono sembrare cliccabili (cursore/hover/tooltip), visto che il
+                  // click viene comunque ignorato — stessa coerenza già applicata a
+                  // +/−/× (settembre 2026).
+                  const canAddObstacleHere = isValid && !isObstacle && canEditGrid && !hasImportedCity;
 
                   return (
                     <div
                       key={`${row},${col}`}
                       title={
-                        isObstacle && editMode === "obstacle"
+                        isObstacle && canEditGrid
                           ? t("piratiCellRemoveObstacleTitle", uiLang)
                           : canAddObstacleHere
                             ? t("piratiCellAddObstacleTitle", uiLang)
@@ -2193,10 +2425,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                         isValid
                           ? isObstacle
                             // Dopo un import gli ostacoli si possono solo rimuovere: solo le
-                            // celle già ostacolo restano cliccabili in modalità 'obstacle'.
+                            // celle già ostacolo restano cliccabili in modalità 'obstacle'
+                            // (e fuori da una ricerca, vedi canEditGrid).
                             // Prima di un import restano cliccabili per lo stesso motivo
                             // (rimuovere il toggle appena aggiunto).
-                            ? editMode === "obstacle"
+                            ? canEditGrid
                               ? "bg-red-950/50 border-red-500/50 cursor-pointer hover:bg-red-900/60 hover:brightness-110 hover:ring-2 hover:ring-white/40"
                               : "bg-red-950/50 border-red-500/50 pointer-events-none"
                             : canAddObstacleHere
@@ -2248,7 +2481,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                     key={uniqueKey}
                     onPointerDown={(event) => handlePlacementPointerDown(event, placement)}
                     title={
-                      editMode !== "obstacle"
+                      !canEditGrid
                         ? undefined
                         : isMunicipio
                           ? t("piratiMoveTownhallTitle", uiLang)
@@ -2260,7 +2493,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       // perché è l'hover su QUESTO div a doverla far comparire.
                       "group relative flex flex-col items-center justify-center z-10 select-none",
                       "rounded-md border-2 shadow-lg hover:brightness-110 hover:ring-1 hover:ring-white/30",
-                      editMode === "obstacle" ? "cursor-move touch-none" : "cursor-default pointer-events-none",
+                      // canEditGrid e non solo editMode: durante una ricerca il
+                      // trascinamento è comunque ignorato, quindi niente cursore "sposta".
+                      canEditGrid ? "cursor-move touch-none" : "cursor-default pointer-events-none",
                       canSwapHere && "ring-2 ring-amber-300 brightness-110",
                       isThisBeingDragged && "opacity-30"
                     )}
@@ -2282,7 +2517,13 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                         include !isSolving) e quindi il click sarebbe comunque no-op, ma
                         senza nascondere la X qui il pulsante restava visibile e cliccabile
                         durante una ricerca in corso — stesso problema di UX del pulsante
-                        '-' sui conteggi, corretto per coerenza. */}
+                        '-' sui conteggi, corretto per coerenza.
+                        ⚠️ pointer-events-none finché non è visibile: Tailwind v4 avvolge
+                        group-hover in @media (hover:hover), quindi su touch opacity-0 non
+                        diventava mai opacity-100 ma il pulsante restava toccabile — un
+                        tap sull'angolo in alto a destra eliminava l'edificio senza che
+                        si vedesse nulla (bug corretto settembre 2026). Ora su touch la X
+                        non c'è: si elimina col '−' della lista edifici. */}
                     {!isMunicipio && editMode === "obstacle" && !isSolving && (
                       <button
                         type="button"
@@ -2293,7 +2534,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                           if (suppressClickAfterDragRef.current) return;
                           removePlacement(placement.row, placement.col);
                         }}
-                        className="absolute -top-2 -right-2 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 border border-red-300/60 text-white text-xs font-bold leading-none opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:scale-110 transition-all shadow-md cursor-pointer touch-none"
+                        className="absolute -top-2 -right-2 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 border border-red-300/60 text-white text-xs font-bold leading-none opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:bg-red-500 hover:scale-110 transition-all shadow-md cursor-pointer touch-none"
                       >
                         ×
                       </button>
@@ -2421,11 +2662,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                   .filter((key) => !importedExpansions.has(key))
                   .map((key) => {
                   const block = parseBlockKey(key);
+                  // Due motivi possibili, due spiegazioni: il blocco contiene il
+                  // Municipio (vedi municipioBlockKeys), oppure toglierlo isolerebbe
+                  // altre espansioni. Niente pointer-events-none (c'era prima): con
+                  // quello il tooltip non compariva mai; il div non ha azioni, e sotto
+                  // di lui in questa modalità non c'è nulla di cliccabile.
                   return (
                     <div
                       key={`locked-remove-${key}`}
-                      title={t("piratiExpansionLockedTitle", uiLang)}
-                      className="z-20 rounded-lg border-2 border-dashed border-amber-400/50 bg-amber-500/10 text-amber-200/80 flex items-center justify-center text-[10px] font-semibold pointer-events-none"
+                      title={t(municipioBlockKeys.has(key) ? "piratiExpansionLockedTownhallTitle" : "piratiExpansionLockedTitle", uiLang)}
+                      className="z-20 rounded-lg border-2 border-dashed border-amber-400/50 bg-amber-500/10 text-amber-200/80 flex items-center justify-center text-[10px] font-semibold cursor-not-allowed"
                       style={{
                         gridRow: `${(block.row - minDisplayBlockRow) * BLOCK_SIZE + 1} / span ${BLOCK_SIZE}`,
                         gridColumn: `${(block.col - minDisplayBlockCol) * BLOCK_SIZE + 1} / span ${BLOCK_SIZE}`,

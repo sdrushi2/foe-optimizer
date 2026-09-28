@@ -298,9 +298,10 @@ export interface BookmarkletData {
 
 // ─── Payload Insediamento dei Pirati ───────────────────────────────────────
 //
-// Ramo separato del bookmarklet (vedi commento v3.1 su BOOKMARKLET_JS): quando
-// ActiveMap === 'cultural_outpost' lo script produce questa forma invece di
-// BookmarkletData. Tipi/validazione portati 1:1 dal tool standalone
+// Dalla v4 questa forma arriva annidata in `BookmarkletData.pirateOutpost`
+// (cattura unificata, vedi commento v4 su CURRENT_BOOKMARKLET_VERSION); la
+// v3.1 la produceva invece come payload a sé, dal ramo 'cultural_outpost' col
+// `return` anticipato. Tipi/validazione portati 1:1 dal tool standalone
 // "foe-pirati" (D:\FOE\pirati\src\bookmarklet.ts).
 
 /** Un'area sbloccata dell'Insediamento (allineata a blocchi 4×4). */
@@ -330,26 +331,37 @@ export interface BookmarkletPirateOutpostData {
   entities: BookmarkletPirateEntity[];
 }
 
-/** Riconosce un payload prodotto da un bookmarklet v3 "puro", PRIMA che la
- *  v3.1 innestasse il branch 'cultural_outpost' (vedi commento v3.1 sopra
- *  CURRENT_BOOKMARKLET_VERSION): quel bookmarklet non ha nessun ramo
- *  Pirati, quindi sull'Insediamento produce comunque il payload città/
- *  inventario (`BookmarkletData`, campi come CityMapData/inventory/allies),
- *  mai `{areas, entities}`. `validateBookmarkletPirateOutpostData` lo
- *  rifiuta già (niente areas/entities), ma con un messaggio generico
- *  "struttura non valida" — questo controllo serve a PiratiTool per
- *  distinguere quel caso specifico e mostrare "bacchetta magica vecchia,
- *  ricreala" invece del generico. */
+/** Riconosce un payload prodotto da una bacchetta magica PRECEDENTE alla v4
+ *  (`_v` assente o < CURRENT_BOOKMARKLET_VERSION), in una delle due forme che
+ *  quelle versioni potevano copiare negli appunti:
+ *  - payload città/inventario (`BookmarkletData`: CityMapData/inventory/allies/
+ *    UnlockedAreas) — v3 "puro", senza alcun ramo Pirati, o v3.1 cliccata
+ *    fuori dall'Insediamento;
+ *  - `{activeMap, areas, entities}` in cima — v3.1 cliccata sull'Insediamento
+ *    (ramo 'cultural_outpost' col `return` anticipato, senza `_v`).
+ *  In entrambi i casi il payload non avrà mai `pirateOutpost` e l'unica azione
+ *  utile è ricreare la bacchetta: PiratiTool lo usa per mostrare quel messaggio
+ *  invece di "visita prima l'Insediamento" o del generico "struttura non valida".
+ *
+ *  ⚠️ Il discriminante è `_v`, NON la forma. Dalla v4 OGNI payload è un
+ *  payload città (con `pirateOutpost` annidato solo se disponibile): la
+ *  versione precedente di questa funzione guardava solo la forma (campi città
+ *  presenti, niente areas/entities in cima), quindi classificava come "vecchio"
+ *  anche ogni payload v4 senza `pirateOutpost` (es. bacchetta cliccata in visita
+ *  da un altro giocatore) o con `pirateOutpost` malformato, e all'opposto NON
+ *  riconosceva il payload v3.1 dell'Insediamento (bug corretto settembre 2026). */
 export function isLegacyBookmarkletPayload(value: unknown): boolean {
-  if (!value || typeof value !== "object") return false;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const payload = value as Record<string, unknown>;
-  if (Array.isArray(payload.areas) || Array.isArray(payload.entities)) return false;
-  return (
+  const isCityPayload =
     typeof payload.CityMapData === "object" ||
     typeof payload.inventory === "object" ||
     typeof payload.allies === "object" ||
-    typeof payload.UnlockedAreas === "object"
-  );
+    typeof payload.UnlockedAreas === "object";
+  const isV31OutpostPayload = Array.isArray(payload.areas) || Array.isArray(payload.entities);
+  if (!isCityPayload && !isV31OutpostPayload) return false;
+  const version = typeof payload._v === "number" ? payload._v : 0;
+  return version < CURRENT_BOOKMARKLET_VERSION;
 }
 
 /**

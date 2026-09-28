@@ -1,5 +1,6 @@
 import { X as XIcon } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
+import { useModalDismiss } from "../utils/useModalDismiss";
 
 interface EfficiencyHelpModalProps {
   isOpen: boolean;
@@ -12,12 +13,15 @@ interface EfficiencyHelpModalProps {
  *  in un modulo a parte perché è completamente autocontenuta — non usa
  *  nessuno stato/calcolo di App, solo isOpen/onClose/uiLang. */
 export default function EfficiencyHelpModal({ isOpen, onClose, uiLang }: EfficiencyHelpModalProps) {
+  // Esc + click sullo sfondo senza chiudere durante una selezione di testo
+  // (vedi useModalDismiss). Prima del return anticipato: è un hook.
+  const backdrop = useModalDismiss(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      {...backdrop}
     >
       <div
         className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"

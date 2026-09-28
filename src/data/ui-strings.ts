@@ -881,9 +881,16 @@ const UI_STRINGS = {
     it: "Aumenta zoom",
     en: "Zoom in",
   },
+  // Prima il testo consigliava "Prova l'export SVG": il pulsante SVG è stato
+  // rimosso l'11 agosto 2026 (restano PNG e JSON). Il caso "profilo senza aree
+  // sbloccate salvate", che si risolve solo reimportando, ha un messaggio suo.
   exportPngFailedAlert: {
-    it: "Impossibile esportare la mappa in PNG. Prova l'export SVG.",
-    en: "Unable to export the map as PNG. Try the SVG export instead.",
+    it: "Impossibile esportare la mappa in PNG (dettagli nella console del browser).",
+    en: "Unable to export the map as PNG (details in the browser console).",
+  },
+  exportPngNeedsReimportAlert: {
+    it: "Per esportare la mappa in PNG reimporta la città con la bacchetta magica: questo profilo è stato salvato prima che il tool memorizzasse le espansioni sbloccate.",
+    en: "To export the map as PNG, re-import your city with the magic wand: this profile was saved before the tool stored the unlocked expansions.",
   },
   mapLegendTitle: {
     it: "Legenda Mappa",
@@ -1179,9 +1186,11 @@ const UI_STRINGS = {
     it: "Filtrare per soglia di efficienza",
     en: "Filtering by efficiency threshold",
   },
+  // Solo edifici: il campo min EFF esiste nella tabella edifici (tab Info, Città,
+  // Inventario), non nelle tabelle Alleati (prima il testo diceva "edifici o alleati").
   effHelpStep3Body: {
-    it: "Nell'header della colonna EFF della tabella puoi inserire una soglia minima (min EFF): scrivendo, ad esempio, 80, vedrai solo gli edifici o alleati con efficienza superiore a 80, calcolata con i pesi attuali.",
-    en: "In the EFF column header you can enter a minimum threshold (min EFF): by typing, for example, 80, you'll only see buildings or allies with an efficiency above 80, based on the current weights.",
+    it: "Nell'header della colonna EFF della tabella edifici (tab Info, Città, Inventario) puoi inserire una soglia minima (min EFF): scrivendo, ad esempio, 80, vedrai solo gli edifici con efficienza superiore a 80, calcolata con i pesi attuali.",
+    en: "In the EFF column header of the buildings table (Info, City, Inventory tabs) you can enter a minimum threshold (min EFF): by typing, for example, 80, you'll only see buildings with an efficiency above 80, based on the current weights.",
   },
   gotItButton: {
     it: "Ho capito",
@@ -1684,6 +1693,16 @@ const UI_STRINGS = {
     it: "Server Beta",
     en: "Beta Server",
   },
+  // Testi alternativi degli avatar nell'AboutModal (prima fissi in italiano,
+  // con "--" al posto del trattino lungo).
+  aboutAvatarItAlt: {
+    it: "Sdrushi — server italiano",
+    en: "Sdrushi — Italian server",
+  },
+  aboutAvatarBetaAlt: {
+    it: "Sdrushi — server beta",
+    en: "Sdrushi — beta server",
+  },
   aboutWorldLabel: {
     it: "Mondo",
     en: "World",
@@ -1936,6 +1955,29 @@ const UI_STRINGS = {
   piratiExpansionLockedTitle: {
     it: "Rimuoverla isolerebbe altre espansioni dal resto della mappa.",
     en: "Removing it would isolate other expansions from the rest of the map.",
+  },
+  piratiExpansionLockedTownhallTitle: {
+    it: "Contiene il Municipio: spostalo altrove prima di rimuovere questa espansione.",
+    en: "It contains the Townhall: move it elsewhere before removing this expansion.",
+  },
+  // Esiti di removeExpansion quando il blocco richiuso conteneva edifici (vedi
+  // layoutAfterBlockRemoval in PiratiTool.tsx): spostati in uno spazio libero,
+  // oppure usciti dalla mappa perché non c'era posto (conteggi invariati).
+  piratiExpansionRemovedRelocated: {
+    it: (n: number) => n === 1
+      ? "Espansione rimossa: l'edificio al suo interno è stato spostato in uno spazio libero."
+      : `Espansione rimossa: i ${n} edifici al suo interno sono stati spostati in uno spazio libero.`,
+    en: (n: number) => n === 1
+      ? "Expansion removed: the building inside it was moved to a free spot."
+      : `Expansion removed: the ${n} buildings inside it were moved to free spots.`,
+  },
+  piratiExpansionRemovedUnplaced: {
+    it: (n: number) => n === 1
+      ? "Espansione rimossa: un edificio al suo interno non ha più posto ed è uscito dalla mappa (il conteggio resta). Premi Risolvi per ridisporre tutto."
+      : `Espansione rimossa: ${n} edifici al suo interno non hanno più posto e sono usciti dalla mappa (i conteggi restano). Premi Risolvi per ridisporre tutto.`,
+    en: (n: number) => n === 1
+      ? "Expansion removed: a building inside it no longer fits and left the map (its count is kept). Press Solve to rearrange everything."
+      : `Expansion removed: ${n} buildings inside it no longer fit and left the map (their counts are kept). Press Solve to rearrange everything.`,
   },
   piratiAddExpansionHint: {
     it: "Seleziona col mouse uno slot 4x4 verde per sbloccarlo. Le ❌ semitrasparenti mostrano gli ostacoli già presenti in quell'area (da un import).",

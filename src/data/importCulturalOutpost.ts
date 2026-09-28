@@ -62,13 +62,14 @@ export class ImportCulturalOutpostFailure extends Error {
 export type ImportResult = {
   /** Blocchi di espansione sbloccati oltre ai 5 di base, in coordinate blocco del tool. */
   expansionBlocks: ImportedExpansionBlock[];
-  /** Celle occupate da ostacoli (Impediment), in coordinate cella del tool. Ogni
+  /** Celle occupate da ostacoli (Impediment), in coordinate StorageCell del tool
+   * (ancorate al blocco sbloccato minimo, base ∪ espansioni: vedi toToolCell). Ogni
    * Impediment è 1x2 o 2x1: qui è già espanso in singole celle. */
   obstacleCells: ImportedObstacleCell[];
-  /** Municipio: posizione reale nel tool (row/col cella), se presente nel payload. */
+  /** Municipio: posizione reale nel tool (row/col StorageCell), se presente nel payload. */
   townhall: { row: number; col: number } | null;
   /** Edifici piazzati (non municipio, non ostacoli, non ignorati), con cityentity_id
-   * e posizione cella nel tool. Il chiamante mappa cityentity_id -> BuildingType.id. */
+   * e posizione StorageCell nel tool. Il chiamante mappa cityentity_id -> BuildingType.id. */
   buildings: ImportedBuildingPlacement[];
   /** cityentity_id incontrati nel payload che non corrispondono a nessuna categoria nota
    * (non municipio, non impediment, non ignorati, non nella tabella di mapping fornita). */
@@ -123,36 +124,36 @@ export function importCulturalOutpostPayload(
     throw new ImportCulturalOutpostFailure({ code: "NO_TOWNHALL" });
   }
 
-  // 1. Offset a blocco: allinea il blocco più in alto/a sinistra del payload al
-  // corrispondente TOOL_BASE_BLOCK_KEYS (le 5 aree di base sono uguali in ogni città).
+  // 1. Offset a blocco gioco → tool, calcolato sulle 5 aree di base (uguali in ogni
+  // città). Riga: il blocco più in alto del payload è sempre la riga di base più in
+  // alto del tool, perché nessuna espansione sta sopra la base (ALLOWED_BLOCK_KEYS in
+  // piratiBuildings.ts). Colonna: NON il minimo globale — le espansioni 2:0, 2:1,
+  // 3:0, 3:1, 4:0, 4:1 stanno a sinistra della base, e con una di queste sbloccata il
+  // minimo globale spostava tutto di un blocco a destra, con due blocchi base
+  // "fantasma" (bug corretto settembre 2026). Si usa la riga più in alto: lì il
+  // blocco più a sinistra è sempre il blocco base più a sinistra di quella riga
+  // (0:3), perché in riga 0 non esiste nessuna espansione alla sua sinistra.
   const gameAreaBlocks = payload.areas.map((a) => ({
     rowBlock: Math.floor(a.y / BLOCK_SIZE),
     colBlock: Math.floor(a.x / BLOCK_SIZE),
   }));
 
   const gameMinRowBlock = Math.min(...gameAreaBlocks.map((b) => b.rowBlock));
-  const gameMinColBlock = Math.min(...gameAreaBlocks.map((b) => b.colBlock));
+  const gameTopRowMinColBlock = Math.min(
+    ...gameAreaBlocks.filter((b) => b.rowBlock === gameMinRowBlock).map((b) => b.colBlock)
+  );
 
   const toolBaseBlocks = TOOL_BASE_BLOCK_KEYS.map((key) => {
     const [row, col] = parseNumberPair(key, ":");
     return { row, col };
   });
   const toolMinRowBlock = Math.min(...toolBaseBlocks.map((b) => b.row));
-  const toolMinColBlock = Math.min(...toolBaseBlocks.map((b) => b.col));
+  const toolTopRowMinColBlock = Math.min(
+    ...toolBaseBlocks.filter((b) => b.row === toolMinRowBlock).map((b) => b.col)
+  );
 
   const rowBlockOffset = gameMinRowBlock - toolMinRowBlock;
-  const colBlockOffset = gameMinColBlock - toolMinColBlock;
-
-  // Le CELLE in piratiBuildings.ts sono LOCALI: (0,0) è l'angolo del blocco base più
-  // in alto/a sinistra, non la cella assoluta 0. I block-key delle espansioni restano
-  // invece assoluti (sono usati letteralmente come chiavi del Set unlocked).
-  const rowCellOffset = rowBlockOffset * BLOCK_SIZE + toolMinRowBlock * BLOCK_SIZE;
-  const colCellOffset = colBlockOffset * BLOCK_SIZE + toolMinColBlock * BLOCK_SIZE;
-
-  const toToolCell = (gameX: number, gameY: number) => ({
-    row: gameY - rowCellOffset,
-    col: gameX - colCellOffset,
-  });
+  const colBlockOffset = gameTopRowMinColBlock - toolTopRowMinColBlock;
 
   // 2. Espansioni: blocchi del payload non presenti nei 5 di base.
   const baseBlockKeySet = new Set(TOOL_BASE_BLOCK_KEYS);
@@ -164,6 +165,23 @@ export function importCulturalOutpostPayload(
     if (!baseBlockKeySet.has(key)) {
       expansionBlockSet.set(key, { row: toolRowBlock, col: toolColBlock });
     }
+  });
+
+  // Le CELLE restituite sono in coordinate StorageCell di PiratiTool: (0,0) è
+  // l'angolo del blocco sbloccato più in alto/a sinistra (base ∪ espansioni
+  // importate), la stessa ancora (minUnlockedBlockRow/Col) che il tool ricava da
+  // buildUnlockedBlockSet — non l'angolo della sola base, che con un'espansione a
+  // sinistra non è più il blocco minimo. I block-key delle espansioni restano
+  // invece assoluti (sono usati letteralmente come chiavi del Set unlocked).
+  const unlockedToolBlocks = [...toolBaseBlocks, ...expansionBlockSet.values()];
+  const anchorRowBlock = Math.min(...unlockedToolBlocks.map((b) => b.row));
+  const anchorColBlock = Math.min(...unlockedToolBlocks.map((b) => b.col));
+  const rowCellOffset = (anchorRowBlock + rowBlockOffset) * BLOCK_SIZE;
+  const colCellOffset = (anchorColBlock + colBlockOffset) * BLOCK_SIZE;
+
+  const toToolCell = (gameX: number, gameY: number) => ({
+    row: gameY - rowCellOffset,
+    col: gameX - colCellOffset,
   });
 
   // 3. Entità: separa municipio, ostacoli, ignorati, riconosciuti, non riconosciuti.

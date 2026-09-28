@@ -58,6 +58,8 @@ export interface GreatBuilding {
 interface GbBonus {
   type?: string;
   value?: number;
+  /** "all" | "battleground" | "guild_expedition" | "guild_raids" (bonus militari). */
+  targetedFeature?: string;
 }
 
 interface GbProduct {
@@ -91,7 +93,7 @@ const BOOST_MAP: Record<string, Record<string, string[]>> = {
   "guild_raids_supplies_start": { "all": ["IQmat"] },
 };
 
-// ── Costanti produzioni (tradotte da city_entities_to_csv.py) ───────────────
+// ── Costanti produzioni (tradotte da buildings.py, ex city_entities_to_csv.py) ──
 // Chiavi delle risorse beni per colonna.
 // benisp ("Beni Speciali", agosto 2026): random_special_good_up_to_age (un
 // bene speciale casuale fino all'era corrente) o each_special_goods_up_to_age
@@ -178,6 +180,58 @@ const BP_BOX_AMOUNTS: Record<string, number> = {
   blueprint_box_2_item: 2, blueprint_box_4_item: 4, blueprint_box_6_item: 6,
 };
 
+/** Override manuali per edifici con reward non rilevabili dal JSON di gioco.
+ *  GEMELLO di MANUAL_OVERRIDES in buildings.py (RECUPERO DATI): stessi id e
+ *  stessi valori, con le colonne CSV tradotte nei campi di EraStats
+ *  (Beni→beni, PF→fp, BP→bp, MOD→mod, BeniG→benig). Nel CSV li applica il
+ *  Python, ma le tab Città/Inventario sostituiscono i valori del CSV con
+ *  extractEraStats (applyEraStats in App.tsx): senza questa tabella proprio
+ *  lì sparivano (bug corretto settembre 2026 — Pozzo dei desideri & co. con
+ *  Beni 9 invece di 0, Rimesse del bucaniere/dell'uomo morto con PF/BP/MOD/
+ *  BeniG a 0). I valori sono quelli noti all'era massima e valgono invariati
+ *  a ogni era, esattamente come nel CSV: per questi edifici non esiste un dato
+ *  per-era da cui ricavarli. Se cambia un lato va aggiornato anche l'altro. */
+const MANUAL_OVERRIDES: ReadonlyMap<string, Partial<Pick<EraStats, "beni" | "fp" | "bp" | "mod" | "benig">>> = new Map([
+  // Beni NON raffinati (3 ere precedenti) da drop pool: il valore atteso calcolato è errato, Beni deve essere 0.
+  ["W_AllAge_EasterBonus1", { beni: 0 }],
+  ["W_AllAge_EasterBonus1Small", { beni: 0 }],
+  ["W_AllAge_Expedition16", { beni: 0 }],
+  ["W_AllAge_Expedition16Small", { beni: 0 }],
+  ["W_AllAge_Expedition24Tiny", { beni: 0 }],
+  ["W_AllAge_ShahBonus17", { beni: 0, fp: 0.4 }], // produzione ogni 12h -> PF x2
+  // Contenuto dei "bounty item" non presente nel MainParser.
+  ["W_MultiAge_SummerBonus22Buccaneer", { mod: 1, fp: 8, bp: 1 }],
+  ["W_MultiAge_SummerBonus22Deadman", { fp: 6, benig: 25 }],
+]);
+
+/** Bonus militari dei Grandi Edifici → indici di [Atk_A, Def_A, Atk_D, Def_D]
+ *  (attacco/difesa dell'esercito attaccante, attacco/difesa del difensore).
+ *  I primi tre sono i bonus classici; gli altri quattro arrivano coi tier
+ *  argento/oro del rework dei GE (settembre 2026, MainParser: bonuses[].
+ *  bonuses[] con tier copper/silver/gold). Semantica presa dal codice di FoE
+ *  Helper (unit.js: attack_boost = attacco dell'attaccante, attacker_defense_
+ *  boost = difesa dell'attaccante, defender_attack_boost = attacco del
+ *  difensore, defense_boost = difesa del difensore). Map (non oggetto) per
+ *  non risolvere mai chiavi ereditate dal prototipo. */
+const GB_MILITARY_SLOTS: ReadonlyMap<string, ReadonlyArray<0 | 1 | 2 | 3>> = new Map<string, ReadonlyArray<0 | 1 | 2 | 3>>([
+  ["military_boost", [0, 1]],
+  ["fierce_resistance", [2, 3]],
+  ["advanced_tactics", [0, 1, 2, 3]],
+  ["attack_boost", [0]],
+  ["attacker_defense_boost", [1]],
+  ["defender_attack_boost", [2]],
+  ["defense_boost", [3]],
+]);
+
+/** allyType di components.AllAge.ally.rooms[] → carattere della colonna CSV
+ *  "Ally". Gemello di ALLY_TYPE_CODE in buildings.py: là un tipo sconosciuto
+ *  fa fallire la pipeline (fail-fast voluto); qui, dentro l'import città del
+ *  browser, un tipo sconosciuto viene saltato per non bloccare l'import. */
+const ALLY_TYPE_CODE: ReadonlyMap<string, string> = new Map([
+  ["military", "M"],
+  ["science", "S"],
+]);
+
 export class BuildingModel {
   /**
    * Crea un oggetto Building base con tutti i valori inizializzati a zero/default.
@@ -224,31 +278,43 @@ export class BuildingModel {
    * corsie (tile 2×2). Nel gioco un edificio è considerato CONNESSO solo
    * se il livello della strada a cui è collegato è >= al livello
    * richiesto — un edificio che richiede 2 corsie ma è collegato solo a
-   * una strada a 1 corsia risulta scollegato (verificato luglio 2026 su
-   * dati reali: solo 2 edifici nell'intero MainParser richiedono livello
-   * 2, es. W_SpaceAgeJupiterMoon_Residential1/Workshop1 — quasi tutti gli
-   * altri edifici con requiredLevel esplicito hanno valore 1).
-   * `streetConnectionRequirement.requiredLevel` (stile nuovo,
-   * components.AllAge) e `requirements.street_connection_level` (stile
-   * più vecchio) sono letti entrambi come numero reale, non solo come
-   * flag di presenza — bug corretto luglio 2026: prima la sola presenza
-   * del campo bastava a considerare l'edificio "richiede strada",
-   * ignorando SE richiedesse 1 o 2 corsie.
+   * una strada a 1 corsia risulta scollegato.
+   * Dati reali (MainParser del 27 settembre 2026): richiedono 2 corsie 258
+   * entità — 2 nello schema nuovo (`streetConnectionRequirement.
+   * requiredLevel`, W_SpaceAgeJupiterMoon_Residential1/Workshop1) e 256 nello
+   * schema classico (`requirements.street_connection_level`: gli edifici
+   * standard d'era dall'Era Progressista in su — culturali, produzione,
+   * beni, militari, residenziali). Il vecchio commento parlava di "solo 2
+   * edifici" perché contava il solo schema nuovo.
+   * Entrambi i campi sono letti come numero reale, non solo come flag di
+   * presenza — bug corretto luglio 2026: prima la sola presenza del campo
+   * bastava a considerare l'edificio "richiede strada", ignorando SE
+   * richiedesse 1 o 2 corsie. Se l'edificio richieda strada segue invece la
+   * truthiness del gemello Python (requires_road() in buildings.py): un
+   * `street_connection_level: 0` significa "nessuna strada" (divergenza
+   * latente allineata settembre 2026: prima valeva 1).
+   * ⚠️ Da verificare in gioco: App.tsx considera scollegato un edificio se
+   * `connected` < livello richiesto, mentre FoE Helper e Forge Hammer
+   * considerano collegato solo `connected === 1`. Se il gioco mette 1 anche
+   * agli edifici a 2 corsie ben collegati, quel controllo li segnalerebbe
+   * scollegati per errore (le città esportate finora non contengono edifici
+   * a 2 corsie, quindi non è stato possibile verificarlo).
    * I Grandi Edifici richiedono sempre strada a livello 1 (regola fissa
    * di dominio, non letta dal JSON — il riconoscimento del prefisso vive
    * SOLO in buildingClassification/isGreatBuildingId; deciso con l'utente
-   * di non differenziare 1/2 corsie per i GE).
+   * di non differenziare 1/2 corsie per i GE; nei dati tutti i 49 GE hanno
+   * comunque street_connection_level 1).
    */
   static requiredRoadLevel(cityEntity: CityEntityDefinition | undefined): number {
     if (!cityEntity) return 0;
     if (isGreatBuildingId(String(cityEntity.id || ""))) return 1;
-    const scr = BuildingModel.asObj(cityEntity.components?.AllAge?.streetConnectionRequirement);
-    if (Object.keys(scr).length > 0) {
-      const lvl = BuildingModel.num(scr.requiredLevel);
+    const scr = cityEntity.components?.AllAge?.streetConnectionRequirement;
+    if (BuildingModel.pyTruthy(scr)) {
+      const lvl = BuildingModel.num(BuildingModel.asObj(scr).requiredLevel);
       return lvl > 0 ? lvl : 1;
     }
     const reqLevel = cityEntity.requirements?.street_connection_level;
-    if (reqLevel != null) {
+    if (BuildingModel.pyTruthy(reqLevel)) {
       const lvl = BuildingModel.num(reqLevel);
       return lvl > 0 ? lvl : 1;
     }
@@ -285,51 +351,64 @@ export class BuildingModel {
     const size = `${gb.length}x${gb.width}`;
     const area = gb.length * gb.width;
 
-    // Bonus GE militari
-    const allBonuses: GbBonus[] = Array.isArray(gb.rawEntry?.bonuses) ? (gb.rawEntry.bonuses as GbBonus[]) : [];
+    // Lista dei bonus del GE. Il payload città ha DUE formati (verificati sugli
+    // export reali di settembre 2026): mondi col rework dei GE (tier rame/
+    // argento/oro) → `bonuses` pieno, un elemento per ogni bonus attivo,
+    // passivi e di produzione; mondi "classici" → `bonus` singolo (il solo
+    // bonus passivo) accanto a `bonuses: []` vuoto. Normalizzazione identica a
+    // FoE Helper (CityBuildings.getGBBonuses): conta solo una lista NON vuota,
+    // altrimenti il campo singolo. Bug corretto settembre 2026: prima il campo
+    // singolo era letto solo per il bonus militare, quindi nei mondi classici
+    // felicità e popolazione dei GE risultavano 0 (Oracolo, Colosseo, Santa
+    // Sofia, Alcatraz, Torre di Babele, Campidoglio...).
+    const rawBonuses: GbBonus[] = Array.isArray(gb.rawEntry?.bonuses) ? (gb.rawEntry.bonuses as GbBonus[]) : [];
     const singleBonus = (gb.rawEntry?.bonus ?? null) as GbBonus | null;
-    const bonusSource = allBonuses.length > 0 ? allBonuses[0] : singleBonus;
-    const bonusType = bonusSource?.type;
-    const bonusValue = Number(bonusSource?.value ?? 0);
-    let general: [number, number, number, number] = [0, 0, 0, 0];
-    if (bonusType === "military_boost") general = [bonusValue, bonusValue, 0, 0];
-    else if (bonusType === "fierce_resistance") general = [0, 0, bonusValue, bonusValue];
-    else if (bonusType === "advanced_tactics") general = [bonusValue, bonusValue, bonusValue, bonusValue];
-    // NOTA FUTURA: al momento nessun Grande Edificio ha bonus IQ (i 4 campi
-    // IQmonB/IQmatB/IQmon/IQmat restano sempre 0 per i GE, via
-    // createBaseBuilding). Se Inno introducesse un GE con questo tipo di
-    // bonus, andrebbe gestito qui con lo stesso pattern: leggere bonusType
-    // (es. "guild_raids_coins_production") e assegnare il valore al campo
-    // IQ corrispondente, seguendo BOOST_MAP come riferimento per i nomi.
-    // BeniSp (agosto 2026): X_SpaceAgeAsteroidBelt_Landmark1 è l'UNICO GE
-    // con un bonus type="special_goods" nel MainParser (bonusCategory=
-    // "productionBonus", targetedFeature="all", schema `bonuses[].bonuses[]`
-    // dei GE — diverso da random_special_good_up_to_age/
-    // each_special_goods_up_to_age usati dagli edifici W_MultiAge_* normali,
-    // che vivono in `components.*.production` e non in `bonuses`). Stesso
-    // pattern già in uso per clan_goods/happiness/population qui sotto: nel
-    // payload città (bookmarklet) `gb.rawEntry.bonuses` è la lista già
-    // appiattita al livello posseduto, quindi basta cercare `type ===
-    // "special_goods"` come per gli altri bonus passivi — nessun `p.name`
-    // in `current_product` (questo bonus non è un prodotto selezionabile,
-    // è passivo come clan_goods/happiness). Verificato sul MainParser: 1
-    // sola occorrenza di questo bonus type in tutto il file. Deliberatamente
-    // NON estratto in buildings.py/buildings.csv: per coerenza con la
-    // convenzione consolidata, nessun GE ha mai Beni/BeniP/BeniS/BeniG
-    // popolati nel CSV statico (dipendono dal livello posseduto, non da
-    // BOOST_ERA) — si vedono solo qui, dopo l'import città.
-    let beniSp = 0;
-    const specialGoodsBonus = allBonuses.find((b) => b.type === "special_goods");
-    if (specialGoodsBonus) beniSp = Number(specialGoodsBonus.value ?? 0);
+    const allBonuses: GbBonus[] = rawBonuses.length > 0 ? rawBonuses : (singleBonus ? [singleBonus] : []);
+
+    // Bonus militari: si sommano TUTTI i bonus militari della lista, ognuno
+    // sulla sua modalità (targetedFeature: all → general, battleground → gbg,
+    // guild_expedition → sped, guild_raids → iq; assente = "all"). Bug
+    // corretto settembre 2026: prima si leggeva solo il PRIMO bonus e solo
+    // military_boost/fierce_resistance/advanced_tactics, ma col rework i GE
+    // aggiungono dal livello 101 (argento) e 201 (oro) altri bonus militari
+    // (vedi GB_MILITARY_SLOTS), anche su GBG/Spedizione/IQ, e alcuni tier d'oro
+    // hanno un military_boost/fierce_resistance che NON è il primo della lista
+    // (Deposito di sementi, Galassia blu). Modalità sconosciuta → bonus
+    // ignorato, stessa regola di BOOST_MAP per gli edifici normali.
+    // ⚠️ Valori dei tier argento/oro da verificare in gioco appena un GE
+    // supera il livello 100: il MainParser dichiara numeri molto alti (es.
+    // Progetto Arc argento 3040 al liv. 301), che FoE Helper mostra come "%".
+    const general: [number, number, number, number] = [0, 0, 0, 0];
+    const gbg: [number, number, number, number] = [0, 0, 0, 0];
+    const sped: [number, number, number, number] = [0, 0, 0, 0];
+    const iq: [number, number, number, number] = [0, 0, 0, 0];
+    for (const b of allBonuses) {
+      const slots = GB_MILITARY_SLOTS.get(String(b?.type ?? ""));
+      if (!slots) continue;
+      const feature = b.targetedFeature ?? "all";
+      const target = feature === "all" ? general
+        : feature === "battleground" ? gbg
+        : feature === "guild_expedition" ? sped
+        : feature === "guild_raids" ? iq
+        : null;
+      if (!target) continue;
+      const value = Number(b.value ?? 0);
+      if (!Number.isFinite(value)) continue;
+      for (const slot of slots) target[slot] += value;
+    }
+    // NOTA FUTURA: i GE non hanno i bonus IQ di produzione/avvio (IQmonB/
+    // IQmatB/IQmon/IQmat/IQBeni/... restano 0 via createBaseBuilding): i bonus
+    // IQ dei GE sono solo quelli militari su guild_raids, gestiti qui sopra.
+    // Se Inno ne introducesse altri, vanno mappati qui seguendo BOOST_MAP.
     // NOTA FUTURA (agosto 2026, BeniSpB): nessun GE oggi ha il BoostHint
     // "special_goods_production" (l'unico edificio noto, W_MultiAge_SUM25E1,
     // non è un GE). `benispb` resta sempre 0 per i GE (via createBaseBuilding).
 
     // Produzioni
-    let beniG = 0, beni = 0, beniP = 0, beniS = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0;
+    let beniG = 0, beni = 0, beniP = 0, beniS = 0, beniSp = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0;
     allBonuses.forEach((b) => {
-      if (b.type === "happiness") fel += Number(b.value ?? 0);
-      else if (b.type === "population") pop += Number(b.value ?? 0);
+      if (b?.type === "happiness") fel += Number(b.value ?? 0);
+      else if (b?.type === "population") pop += Number(b.value ?? 0);
     });
 
     const currentProduct = gb.rawEntry?.state?.current_product as GbCurrentProduct | undefined;
@@ -344,22 +423,40 @@ export class BuildingModel {
         else if (p.name === "previous_era_goods") beniP += sumRes(resources);
         else if (p.name === "random_goods" || p.name === "current_era_goods" || p.name === "goods") beni += sumRes(resources);
         else if (p.name === "next_era_goods" || p.name === "following_era_goods") beniS += sumRes(resources);
+        else if (p.name === "special_goods") beniSp += sumRes(resources);
         else if (p.name === "money") mon += Number(resources.money ?? 0);
         else if (p.name === "supplies") mat += Number(resources.supplies ?? 0);
         else if (p.amount) tr += Number(p.amount ?? 0);
       });
     }
 
+    // Fallback sui bonus di produzione (bonusCategory "productionBonus",
+    // presenti solo nel formato rework) quando current_product non li porta.
     if (beniG === 0) {
-      const clanBonus = allBonuses.find((b) => b.type === "clan_goods");
+      const clanBonus = allBonuses.find((b) => b?.type === "clan_goods");
       if (clanBonus) beniG = Number(clanBonus.value ?? 0) * 5;
+    }
+    // BeniSp (agosto 2026): X_SpaceAgeAsteroidBelt_Landmark1 è l'UNICO GE con
+    // una produzione di beni speciali (bonus type="special_goods",
+    // bonusCategory "productionBonus" nel MainParser) — diversa da
+    // random_special_good_up_to_age/each_special_goods_up_to_age degli
+    // edifici W_MultiAge_* normali, che vivono in components.*.production.
+    // Stesso schema dei clan_goods qui sopra: prima current_product (prodotto
+    // "special_goods", se presente), poi il bonus come fallback — mai sommati,
+    // così nel formato rework, che li porta entrambi, non c'è doppio conteggio.
+    // Deliberatamente NON estratto in buildings.py/buildings.csv: nessun GE ha
+    // mai Beni/BeniP/BeniS/BeniG nel CSV statico (dipendono dal livello
+    // posseduto, non da BOOST_ERA) — si vedono solo qui, dopo l'import città.
+    if (beniSp === 0) {
+      const specialGoodsBonus = allBonuses.find((b) => b?.type === "special_goods");
+      if (specialGoodsBonus) beniSp = Number(specialGoodsBonus.value ?? 0);
     }
 
     return {
       ...BuildingModel.createBaseBuilding(`ge-${gb.entityId}`, italianNames.get(gb.entityId) ?? gb.entityId),
       size, area,
       road: BuildingModel.getRoadForGreatBuildingSize(size),
-      pop, fel, general, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat,
+      pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat,
       cityEntityId: gb.entityId,
       hash,
       isGreatBuilding: true,
@@ -386,6 +483,33 @@ export class BuildingModel {
   }
   private static str(v: unknown): string {
     return typeof v === "string" ? v : "";
+  }
+  /** Truthiness in stile Python: falsy = null/undefined, false, 0, "",
+   *  lista vuota, oggetto senza chiavi. Serve a tradurre fedelmente gli `or`
+   *  di buildings.py (es. `components.get(era, {}).get("chain") or ...`): `??`
+   *  scarterebbe solo null/undefined e terrebbe {} / [] / 0, divergendo in
+   *  silenzio dal gemello (divergenza latente allineata settembre 2026). */
+  private static pyTruthy(v: unknown): boolean {
+    if (v == null || v === false) return false;
+    if (typeof v === "number") return v !== 0;
+    if (typeof v === "string" || Array.isArray(v)) return v.length > 0;
+    if (typeof v === "object") return Object.keys(v).length > 0;
+    return true;
+  }
+  /** `a or b or ...` di Python: il primo valore truthy, altrimenti l'ultimo. */
+  private static pyOr(...values: unknown[]): unknown {
+    for (const v of values) if (BuildingModel.pyTruthy(v)) return v;
+    return values[values.length - 1];
+  }
+  /** `components.get(era, {}).get("chain") or components.get("AllAge", {}).get("chain") or {}`
+   *  del gemello Python: la catena dell'era, altrimenti quella AllAge. */
+  private static chainFor(cityEntity: CityEntityDefinition, era: string): Record<string, unknown> {
+    const comps = BuildingModel.asObj(cityEntity.components);
+    return BuildingModel.asObj(BuildingModel.pyOr(
+      BuildingModel.asObj(comps[era]).chain,
+      BuildingModel.asObj(comps.AllAge).chain,
+      {},
+    ));
   }
 
   /** Restituisce le opzioni di produzione di un componente era (production.options). */
@@ -463,9 +587,7 @@ export class BuildingModel {
     }
 
     // 3. components.{era}.chain.config.bonuses[].productions
-    const chainEra = BuildingModel.asObj(
-      BuildingModel.asObj(comps[era]).chain ?? BuildingModel.asObj(comps.AllAge).chain
-    );
+    const chainEra = BuildingModel.chainFor(cityEntity, era);
     const bonuses = BuildingModel.asArr(BuildingModel.asObj(chainEra.config).bonuses).map(BuildingModel.asObj);
     for (const bonus of bonuses) {
       for (const p of BuildingModel.asArr(bonus.productions).map(BuildingModel.asObj)) {
@@ -644,7 +766,7 @@ export class BuildingModel {
     }
 
     // 2-4. Abilities
-    const chainEra = BuildingModel.asObj(BuildingModel.asObj(comps[era]).chain ?? BuildingModel.asObj(comps.AllAge).chain);
+    const chainEra = BuildingModel.chainFor(cityEntity, era);
     for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
       const cls = BuildingModel.str(ability.__class__);
       if (cls === "AddResourcesAbility" || cls === "AddResourcesToGuildTreasuryAbility" || cls === "AddResourcesWhenMotivatedAbility") {
@@ -655,14 +777,20 @@ export class BuildingModel {
         }
         if (cls === "AddResourcesToGuildTreasuryAbility" && benig === 0) {
           for (const eraKey of [era, "AllAge"]) {
-            const eraRes = BuildingModel.asObj(addRes[eraKey]).resources;
-            const ag = BuildingModel.asObj(eraRes).all_goods_of_age ?? BuildingModel.asObj(eraRes).random_good_of_age;
-            if (ag) { benig = BuildingModel.num(ag); break; }
+            const eraRes = BuildingModel.asObj(BuildingModel.asObj(addRes[eraKey]).resources);
+            // `or` come nel gemello Python: un all_goods_of_age a 0 lascia il posto a random_good_of_age.
+            const ag = BuildingModel.pyOr(eraRes.all_goods_of_age, eraRes.random_good_of_age);
+            if (BuildingModel.pyTruthy(ag)) { benig = BuildingModel.num(ag); break; }
           }
         }
       } else if (cls === "RandomChestRewardAbility") {
         const rewards = BuildingModel.asObj(ability.rewards);
-        const eraReward = BuildingModel.asObj(rewards[era] ?? rewards.AllAge ?? Object.values(rewards)[0]);
+        // `rewards.get(era) or rewards.get("AllAge") or (primo valore se rewards else {})` del gemello Python.
+        const eraReward = BuildingModel.asObj(BuildingModel.pyOr(
+          rewards[era],
+          rewards.AllAge,
+          Object.keys(rewards).length ? Object.values(rewards)[0] : {},
+        ));
         for (const pr of BuildingModel.asArr(eraReward.possible_rewards).map(BuildingModel.asObj)) {
           const reward = BuildingModel.asObj(pr.reward);
           if (BuildingModel.str(reward.subType) === "strategy_points") {
@@ -752,10 +880,10 @@ export class BuildingModel {
   }
 
   /** Monete (mon) e materiali (mat) prodotti giornalmente per l'era data.
-   *  Traduzione fedele di extract_mon_mat() in city_entities_to_csv.py (lo
-   *  script che genera buildings.csv dal MainParser offline): qui la stessa
-   *  identica logica viene applicata ai dati CityEntities del bookmarklet,
-   *  così CSV e città importata restano coerenti per costruzione.
+   *  Traduzione fedele di extract_mon_mat() in buildings.py (lo script che
+   *  genera buildings.csv dal MainParser offline): qui la stessa identica
+   *  logica viene applicata ai dati CityEntities del bookmarklet, così CSV e
+   *  città importata restano coerenti per costruzione.
    *
    *  1. components (nuovo stile): opzioni non motivate, normalizzate a 24h.
    *     Gestisce type=resources e type=random con dropChance.
@@ -763,6 +891,9 @@ export class BuildingModel {
    *     - ResidentialEntityLevel: produced_money/produced_supplies,
    *       normalizzati a 24h tramite production_time in available_products.
    *     - ProductionEntityLevel: production_values[-1] (slot 24h).
+   *  2b. Edifici standard d'era (niente components né entity_levels, es.
+   *     R_ModernEra_Residential1, P_IronAge_Butcher): l'opzione più lunga di
+   *     available_products, normalizzata a 24h (settembre 2026).
    *  3. AddResourcesWhenMotivatedAbility: supplies/money aggiuntivi da
    *     additionalResources[era] (es. edifici culturali con Mat motivato). */
   private static extractMonMat(cityEntity: CityEntityDefinition, era: string): { mon: number; mat: number } {
@@ -826,13 +957,37 @@ export class BuildingModel {
       }
     }
 
-    // 3. AddResourcesWhenMotivatedAbility: supplies/money aggiuntivi
+    // 2b. Edifici standard d'era (schema classico: nessun components né
+    // entity_levels, es. residenziali R_<Era>_* e produzione P_<Era>_*): la
+    // produzione sta direttamente in available_products, un'opzione per
+    // durata. Si prende la più lunga, normalizzata a 24h — stesso criterio
+    // dell'ultimo slot di ProductionEntityLevel e della normalizzazione di
+    // ResidentialEntityLevel qui sopra. Prima restava 0 (bug corretto
+    // settembre 2026, es. Macellaio Mat 790, Palazzina di periferia Mon 7320).
+    // Gemello: passo 2b di extract_mon_mat() in buildings.py.
+    const hasComponents = Object.keys(comps).length > 0;
+    const hasEntityLevels = BuildingModel.asArr(cityEntity.entity_levels).length > 0;
+    if (!mon && !mat && !hasComponents && !hasEntityLevels) {
+      const timed = BuildingModel.asArr(cityEntity.available_products).map(BuildingModel.asObj)
+        .filter(p => BuildingModel.num(p.production_time));
+      if (timed.length) {
+        const opt = timed.reduce((a, b) => BuildingModel.num(b.production_time) > BuildingModel.num(a.production_time) ? b : a);
+        const res = BuildingModel.asObj(BuildingModel.asObj(opt.product).resources);
+        const mult = 86400 / BuildingModel.num(opt.production_time);
+        mon = BuildingModel.num(res.money) * mult;
+        mat = BuildingModel.num(res.supplies) * mult;
+      }
+    }
+
+    // 3. AddResourcesWhenMotivatedAbility: supplies/money aggiuntivi. Come nel
+    // gemello Python (`if res: ... break`), ci si ferma alla PRIMA era con
+    // risorse non vuote, anche se non contiene monete/materiali.
     for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
       if (BuildingModel.str(ability.__class__) !== "AddResourcesWhenMotivatedAbility") continue;
       const addRes = BuildingModel.asObj(ability.additionalResources);
       for (const eraKey of [era, "AllAge"]) {
         const res = BuildingModel.asObj(BuildingModel.asObj(addRes[eraKey]).resources);
-        if (BuildingModel.num(res.money) || BuildingModel.num(res.supplies)) {
+        if (Object.keys(res).length > 0) {
           mon += BuildingModel.num(res.money);
           mat += BuildingModel.num(res.supplies);
           break;
@@ -843,42 +998,47 @@ export class BuildingModel {
     return { mon, mat };
   }
 
-  /** Numero di blueprint per un reward id (BP e BPNE unificati). */
-  private static bpFromRewardId(rid: string, lookup: Record<string, unknown>): number {
+  /** Numero di blueprint per un reward id (BP e BPNE unificati). `era` è
+   *  l'era per cui si stanno estraendo le statistiche. */
+  private static bpFromRewardId(rid: string, lookup: Record<string, unknown>, era: string): number {
     const rv = BuildingModel.asObj(lookup[rid]);
     const rtype = BuildingModel.str(rv.type);
     if (rtype === "blueprint") return BuildingModel.num(rv.amount);
     if (BP_BOX_AMOUNTS[rid] !== undefined) return BP_BOX_AMOUNTS[rid];
     if (rtype === "chest" && rid.includes("higher_age")) {
-      // FALLBACK_ERA (data/ages.ts) è l'era con l'id più alto in ages.csv:
-      // il gioco genera questo reward id incorporando il codice dell'era
-      // corrente (es. "...SpaceAgeSpaceHub12..."), quindi va ricavato
-      // dinamicamente invece di un codice era hardcoded — altrimenti
-      // smetterebbe di matchare non appena esce una nuova era (gemello
-      // Python: BOOST_ERA in RECUPERO DATI/buildings.py, stessa logica).
-      // Escape dei metacaratteri regex: FALLBACK_ERA e' un codice era di
-      // dominio (mai input utente), ma l'escape rende il match robusto anche
-      // se un futuro codice era contenesse caratteri speciali, e in piu' zittisce
-      // il falso positivo eslint (nessuna stringa non fidata entra nella regex).
-      const escapedEra = FALLBACK_ERA.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      // eslint-disable-next-line security/detect-non-literal-regexp -- FALLBACK_ERA e' sanitizzato sopra (escape dei metacaratteri), non input esterno.
+      // Il gioco genera questo reward id incorporando il codice dell'era
+      // DEL COMPONENTE letto (es. "genb_higher_age_blueprints_chest_BronzeAge6"
+      // in components.BronzeAge, "..._StellarAgeDiscovery6" nell'era
+      // massima), quindi il codice da cercare è `era`, l'era estratta — mai
+      // un codice fisso. Bug corretto settembre 2026: qui c'era FALLBACK_ERA
+      // (l'era massima), che matchava solo all'era massima; a ogni altra era
+      // i Vigneti autunnali (W_MultiAge_FALL23A9..A12) davano 0 BP in tab
+      // Città/Inventario invece di 3/6/10/10. Gemello Python: BOOST_ERA in
+      // _bp_from_reward_id() di buildings.py, che è sempre l'era estratta.
+      // Escape dei metacaratteri regex: `era` è un codice era di dominio (mai
+      // input utente), ma l'escape rende il match robusto anche se un futuro
+      // codice era contenesse caratteri speciali, e in più zittisce il falso
+      // positivo eslint (nessuna stringa non fidata entra nella regex).
+      const escapedEra = era.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // eslint-disable-next-line security/detect-non-literal-regexp -- `era` e' sanitizzato sopra (escape dei metacaratteri), non input esterno.
       const m = rid.match(new RegExp(`${escapedEra}(\\d+)`));
       return m ? parseInt(m[1], 10) : 0;
     }
     return 0;
   }
-  private static bpFromProducts(products: Record<string, unknown>[], lookup: Record<string, unknown>): number {
+  private static bpFromProducts(products: Record<string, unknown>[], lookup: Record<string, unknown>, era: string): number {
     let bp = 0;
     for (const p of products) {
       const ptype = BuildingModel.str(p.type);
       if (ptype === "genericReward") {
-        bp += BuildingModel.bpFromRewardId(BuildingModel.str(BuildingModel.asObj(p.reward).id), lookup);
+        bp += BuildingModel.bpFromRewardId(BuildingModel.str(BuildingModel.asObj(p.reward).id), lookup, era);
       } else if (ptype === "random") {
         for (const entry of BuildingModel.asArr(p.products).map(BuildingModel.asObj)) {
           const prod = BuildingModel.asObj(entry.product);
-          const chance = BuildingModel.num(entry.dropChance);
+          // dropChance assente = 1.0, come entry.get("dropChance", 1.0) nel gemello Python.
+          const chance = entry.dropChance != null ? BuildingModel.num(entry.dropChance) : 1.0;
           if (BuildingModel.str(prod.type) === "genericReward") {
-            bp += BuildingModel.bpFromRewardId(BuildingModel.str(BuildingModel.asObj(prod.reward).id), lookup) * chance;
+            bp += BuildingModel.bpFromRewardId(BuildingModel.str(BuildingModel.asObj(prod.reward).id), lookup, era) * chance;
           }
         }
       }
@@ -891,7 +1051,7 @@ export class BuildingModel {
     const options = BuildingModel.prodOptions(cityEntity, era);
     if (options.length) {
       const opt = BuildingModel.maxTimeOption(options);
-      const bp = BuildingModel.bpFromProducts(BuildingModel.asArr(opt.products).map(BuildingModel.asObj), lookup);
+      const bp = BuildingModel.bpFromProducts(BuildingModel.asArr(opt.products).map(BuildingModel.asObj), lookup, era);
       if (bp) return bp;
     }
     // Fallback entity_levels
@@ -919,7 +1079,9 @@ export class BuildingModel {
             const prod = BuildingModel.asObj(entry.product);
             if (BuildingModel.str(prod.type) === "genericReward") {
               const rv = BuildingModel.asObj(lookup[BuildingModel.str(BuildingModel.asObj(prod.reward).id)]);
-              if (BuildingModel.str(rv.subType) === "rogue") fur += BuildingModel.num(rv.amount) * BuildingModel.num(entry.dropChance);
+              // dropChance assente = 1.0, come entry.get("dropChance", 1.0) nel gemello Python.
+              const chance = entry.dropChance != null ? BuildingModel.num(entry.dropChance) : 1.0;
+              if (BuildingModel.str(rv.subType) === "rogue") fur += BuildingModel.num(rv.amount) * chance;
             }
           }
         }
@@ -1040,15 +1202,45 @@ export class BuildingModel {
     return [tr, trne];
   }
 
-  /** (TR, TRNE) per l'era data. prevEra = era immediatamente precedente. */
+  /** (TR, TRNE) per l'era data. prevEra = era immediatamente precedente.
+   *
+   * Correzione settembre 2026 (verificata in game dall'utente su Neo Voliera
+   * Lv.1/2, Giardino del Sidro/Squisito, Giardini di vetro Iride/Ascesa,
+   * Meridiana del Sole/Ascesa): quando `era` è l'ULTIMA era del gioco (id
+   * massimo in AGES_BY_ID, oggi StellarAgeDiscovery), "truppe della prossima
+   * era" non può esistere — il gioco fa collassare quella quota su truppe
+   * dell'era corrente. trTrneFromProducts non ha modo di saperlo (si basa
+   * solo sui reward CurrentEra/NextEra del building, non su quante ere
+   * esistono ancora), quindi qui sommiamo trne dentro tr e azzeriamo trne
+   * quando `era` è l'ultima. Confermato generale (non solo per i 2 edifici
+   * inizialmente osservati): si applica anche quando trTrneFromProducts
+   * aveva già trovato uno split non-zero.
+   *
+   * ⚠️ NON un gemello 1:1 col Python: extract_tr_trne in buildings.py NON
+   * applica questo collasso. Questo metodo serve Città/Inventario, dove
+   * `era` è la vera era del giocatore importato — a SAD il collasso riflette
+   * il comportamento reale in game. buildings.py genera invece buildings.csv
+   * (tab Database) una volta sola, sempre a BOOST_ERA = ultima era, e vuole
+   * mostrare la classificazione STRUTTURALE dell'edificio (utile a chi non è
+   * ancora a SAD e vuole sapere quali edifici danno truppe prossima era):
+   * applicare lì lo stesso collasso cancellerebbe quell'informazione per
+   * tutti gli utenti, non solo per chi è già all'ultima era (bug scoperto e
+   * corretto lo stesso giorno). Divergenza intenzionale, documentata anche
+   * nell'harness di confronto TS↔Python. Vedi DOCUMENTATION.md §13.3bis. */
   private static extractTrTrne(cityEntity: CityEntityDefinition, era: string, prevEra: string): [number, number] {
     const neByType = BuildingModel.buildPrevNextEraKeys(cityEntity, prevEra);
+    const eraId = AGE_BY_CODE.get(era)?.id;
+    const isLastEra = eraId !== undefined && AGES_BY_ID.size > 0 && eraId === AGES_BY_ID.size - 1;
     for (const eraKey of [era, "AllAge"]) {
       const lookup = BuildingModel.eraLookup(cityEntity, eraKey);
       const options = BuildingModel.prodOptions(cityEntity, eraKey);
       if (!options.length) continue;
       const opt = BuildingModel.maxTimeOption(options);
-      const [tr, trne] = BuildingModel.trTrneFromProducts(BuildingModel.asArr(opt.products).map(BuildingModel.asObj), lookup, neByType);
+      let [tr, trne] = BuildingModel.trTrneFromProducts(BuildingModel.asArr(opt.products).map(BuildingModel.asObj), lookup, neByType);
+      if (eraKey === era && isLastEra) {
+        tr = tr + trne;
+        trne = 0;
+      }
       if (tr || trne) return [tr, trne];
     }
     // Fallback: RandomUnitOfAgeWhenMotivatedAbility
@@ -1099,7 +1291,6 @@ export class BuildingModel {
   /** Valore atteso per una colonna reward (FSP/TPM/TPB/ADM/MOD/RIN/IMM). */
   private static extractReward(cityEntity: CityEntityDefinition, era: string, col: keyof typeof REWARD_IDS): number {
     const baseId = REWARD_IDS[col];
-    const comps = BuildingModel.asObj(cityEntity.components);
     // 1. Produzione standard (opzione con time massimo)
     for (const eraKey of [era, "AllAge"]) {
       const options = BuildingModel.prodOptions(cityEntity, eraKey);
@@ -1112,7 +1303,7 @@ export class BuildingModel {
       }
     }
     // 2. Chain bonuses productions
-    const chainEra = BuildingModel.asObj(BuildingModel.asObj(comps[era]).chain ?? BuildingModel.asObj(comps.AllAge).chain);
+    const chainEra = BuildingModel.chainFor(cityEntity, era);
     for (const bonus of BuildingModel.asArr(BuildingModel.asObj(chainEra.config).bonuses).map(BuildingModel.asObj)) {
       const products = BuildingModel.asArr(bonus.productions).map(BuildingModel.asObj);
       if (products.length) {
@@ -1127,26 +1318,55 @@ export class BuildingModel {
    *  per una specifica era. Logica riutilizzata sia dai fallback sia
    *  dall'override per era corrente degli edifici CSV. */
   static extractEraStats(cityEntity: CityEntityDefinition, era: string): EraStats {
-    // Popolazione — legge dall'era richiesta con fallback ad AllAge
+    // Popolazione — gemello di extract_population() in buildings.py: tre
+    // fonti in ordine, vince la PRIMA che ha il dato (anche se vale 0, come
+    // il `return` del Python; allineato settembre 2026 — prima un 0 esplicito
+    // nei components faceva comunque scattare il fallback su entity_levels).
     let pop = 0;
+    let popFound = false;
+    // 1. components.{era}/AllAge.staticResources
     for (const eraKey of [era, "AllAge"]) {
       const p = cityEntity.components?.[eraKey]?.staticResources?.resources?.resources?.population;
-      if (p != null) { pop = Number(p); break; }
+      if (p != null) { pop = Number(p); popFound = true; break; }
     }
-    if (pop === 0) {
-      const eraLevel = (cityEntity.entity_levels || []).find((l) => l.era === era);
-      if (eraLevel) pop = eraLevel.provided_population ? Number(eraLevel.provided_population) : (eraLevel.required_population ? -Number(eraLevel.required_population) : 0);
+    // 2. entity_levels[era]: presenza della chiave, non truthiness (come `in` nel Python)
+    if (!popFound) {
+      const eraLevel = (cityEntity.entity_levels || []).find((l) =>
+        l?.era === era && ("provided_population" in l || "required_population" in l));
+      if (eraLevel) {
+        pop = "provided_population" in eraLevel ? Number(eraLevel.provided_population ?? 0) : -Number(eraLevel.required_population ?? 0);
+        popFound = true;
+      }
+    }
+    // 3. Edifici standard d'era (schema classico, es. R_ModernEra_Residential1,
+    // P_IronAge_Butcher: niente components né entity_levels): popolazione
+    // fornita in staticResources.resources.population, popolazione richiesta
+    // (col segno meno) in requirements.cost.resources.population. Prima
+    // restava 0 (bug corretto settembre 2026: 332 righe del CSV senza Pop/Fel).
+    if (!popFound) {
+      const staticPop = BuildingModel.num(BuildingModel.asObj(BuildingModel.asObj(cityEntity.staticResources).resources).population);
+      const requiredPop = BuildingModel.num(BuildingModel.asObj(BuildingModel.asObj(BuildingModel.asObj(cityEntity.requirements).cost).resources).population);
+      if (staticPop) pop = staticPop;
+      else if (requiredPop) pop = -requiredPop;
     }
 
-    // Felicità
+    // Felicità — gemello di extract_happiness() in buildings.py, stessa regola
+    // della popolazione (vince la prima fonte che ha il dato).
     let fel = 0;
+    let felFound = false;
     for (const eraKey of [era, "AllAge"]) {
       const h = cityEntity.components?.[eraKey]?.happiness;
-      if (h?.provided != null) { fel = Number(h.provided); break; }
+      if (h?.provided != null) { fel = Number(h.provided); felFound = true; break; }
     }
-    if (fel === 0) {
-      const eraLevel = (cityEntity.entity_levels || []).find((l) => l.era === era);
-      if (eraLevel?.provided_happiness != null) fel = Number(eraLevel.provided_happiness);
+    if (!felFound) {
+      const eraLevel = (cityEntity.entity_levels || []).find((l) => l?.era === era && l.provided_happiness != null);
+      if (eraLevel) { fel = Number(eraLevel.provided_happiness); felFound = true; }
+    }
+    // 3. Edifici standard d'era: provided_happiness a livello radice
+    // (culturali A_, decorazioni D_, alcune produzioni P_ — anche negativa).
+    if (!felFound) {
+      const rootFel = BuildingModel.num(cityEntity.provided_happiness);
+      if (rootFel) fel = rootFel;
     }
 
     // Bonus
@@ -1164,22 +1384,34 @@ export class BuildingModel {
     });
     (cityEntity.abilities || []).forEach((a) => {
       if (a?.__class__ === "ChainLinkAbility") {
-        const bd = a?.bonusGiven?.boost;
-        if (bd && typeof bd === "object" && !Array.isArray(bd)) allBoosts.push(...Object.values(bd));
+        // Oggetto (per era) o lista, come nel gemello Python (`.values()` se
+        // dict, altrimenti la lista così com'è).
+        const bd: unknown = a?.bonusGiven?.boost;
+        if (Array.isArray(bd)) allBoosts.push(...(bd as BoostHint[]));
+        else if (bd && typeof bd === "object") allBoosts.push(...Object.values(bd as Record<string, BoostHint>));
       } else if (a?.__class__ === "BoostAbility") {
         (a.boostHints || []).forEach((h) => {
-          const b = h?.boostHintEraMap?.[era] ?? h?.boostHintEraMap?.AllAge;
-          if (b) allBoosts.push(b);
+          // `era_map.get(era) or era_map.get("AllAge")` + `if boost and boost.get("value")` del gemello Python.
+          const b = BuildingModel.pyOr(h?.boostHintEraMap?.[era], h?.boostHintEraMap?.AllAge) as BoostHint | undefined;
+          if (BuildingModel.pyTruthy(b) && BuildingModel.pyTruthy(b?.value)) allBoosts.push(b as BoostHint);
         });
       }
     });
-    const chain = cityEntity.components?.[era]?.chain ?? cityEntity.components?.AllAge?.chain ?? {};
-    (chain?.config?.bonuses || []).forEach((bn) => { if (Array.isArray(bn?.boosts)) allBoosts.push(...bn.boosts); });
+    const chain = BuildingModel.chainFor(cityEntity, era);
+    BuildingModel.asArr(BuildingModel.asObj(chain.config).bonuses).map(BuildingModel.asObj).forEach((bn) => {
+      if (Array.isArray(bn.boosts)) allBoosts.push(...(bn.boosts as BoostHint[]));
+    });
 
     allBoosts.forEach(boost => {
       const type = boost?.type, target = boost?.targetedFeature, val = Number(boost?.value ?? 0);
       if (!type || !target || val === 0) return;
-      const cols = BOOST_MAP[type]?.[target] ?? BOOST_MAP[type]?.["all"];
+      // Solo coppia (tipo, modalità) esatta, come BOOST_MAP.get((type, target))
+      // nel gemello Python: una modalità sconosciuta viene ignorata. Prima
+      // ripiegava su "all" e la contava nei bonus GENERALI (divergenza latente
+      // allineata settembre 2026: sarebbe scattata alla prima nuova modalità
+      // introdotta da Inno). hasOwn: mai chiavi ereditate dal prototipo.
+      const byTarget = Object.hasOwn(BOOST_MAP, type) ? BOOST_MAP[type] : undefined;
+      const cols = byTarget && Object.hasOwn(byTarget, target) ? byTarget[target] : undefined;
       if (cols) cols.forEach(col => {
         if (col === "GenAtk_A") general[0] += val; else if (col === "GenDef_A") general[1] += val; else if (col === "GenAtk_D") general[2] += val; else if (col === "GenDef_D") general[3] += val;
         else if (col === "CampiAtk_A") gbg[0] += val; else if (col === "CampiDef_A") gbg[1] += val; else if (col === "CampiAtk_D") gbg[2] += val; else if (col === "CampiDef_D") gbg[3] += val;
@@ -1208,7 +1440,7 @@ export class BuildingModel {
     const prevEra = eraId > 0 ? (AGES_BY_ID.get(eraId - 1)?.age ?? "") : "";
     const [tr, trne] = BuildingModel.extractTrTrne(cityEntity, era, prevEra);
 
-    return {
+    const stats: EraStats = {
       pop, fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
       bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, fur, tr, trne,
       beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benisp: goods.benisp, benispb: goods.benispb, benib: goods.benib, benig: prod.benig,
@@ -1221,6 +1453,10 @@ export class BuildingModel {
       rin: BuildingModel.extractReward(cityEntity, era, "rin"),
       imm: BuildingModel.extractReward(cityEntity, era, "imm"),
     };
+    // Override manuali (gemello di MANUAL_OVERRIDES in buildings.py), applicati
+    // per ultimi come nel main() del Python. Vedi MANUAL_OVERRIDES.
+    const overrides = MANUAL_OVERRIDES.get(String(cityEntity.id ?? ""));
+    return overrides ? { ...stats, ...overrides } : stats;
   }
 
   /** Crea un Building da un CityEntity grezzo (Fallback).
@@ -1235,10 +1471,27 @@ export class BuildingModel {
 
     const stats = BuildingModel.extractEraStats(cityEntity, era || FALLBACK_ERA);
 
+    // Colonne "di catalogo" che per gli edifici del CSV arrivano dal Python
+    // (settembre 2026: prima i fallback le lasciavano vuote, quindi niente
+    // badge limitato/NoRush/auto-aging e niente slot alleato). Gemelli, tutti
+    // su components.AllAge: _calc_time() (limited.config.expireTime, in
+    // giorni), extract_flags() (flags.flags, bitmask intero) ed
+    // extract_ally_type() (ally.rooms[].allyType, un carattere per slot).
+    const allAge = BuildingModel.asObj(BuildingModel.asObj(cityEntity.components).AllAge);
+    const expireTime = BuildingModel.asObj(BuildingModel.asObj(allAge.limited).config).expireTime;
+    const time = expireTime != null ? BuildingModel.num(expireTime) / 86400 : 0;
+    const rawFlags = BuildingModel.asObj(allAge.flags).flags;
+    const flags = rawFlags != null && Number.isFinite(Number(rawFlags)) ? Number(rawFlags) : undefined;
+    const allyType = BuildingModel.asArr(BuildingModel.asObj(allAge.ally).rooms)
+      .map((room) => ALLY_TYPE_CODE.get(BuildingModel.str(BuildingModel.asObj(room).allyType)) ?? "")
+      .join("");
+
     return {
       ...BuildingModel.createBaseBuilding(`fallback-${entityId}`, displayName),
       size, area,
       road: BuildingModel.computeRoad(cityEntity),
+      time, allyType, ally: allyType.length,
+      ...(flags !== undefined ? { flags } : {}),
       pop: stats.pop, fel: stats.fel,
       general: stats.general, gbg: stats.gbg, sped: stats.sped, iq: stats.iq,
       iqMonB: stats.iqMonB, iqMatB: stats.iqMatB, iqMon: stats.iqMon, iqMat: stats.iqMat,

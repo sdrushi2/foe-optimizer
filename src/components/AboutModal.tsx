@@ -1,5 +1,6 @@
 import { X as XIcon, Info, AtSign, ShieldCheck } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
+import { useModalDismiss } from "../utils/useModalDismiss";
 
 const AVATAR_IT   = "https://foeit.innogamescdn.com/assets/shared/avatars/portrait_359-bfd78cf37.jpg";
 const AVATAR_BETA = "https://foezz.innogamescdn.com/assets/shared/avatars/portrait_847-c8fad0549.jpg";
@@ -25,12 +26,15 @@ interface AboutModalProps {
 /** Modale "Chi sono - Contatti": avatar + server FoE + link GitHub.
  *  Autocontenuta -- non usa nessuno stato/calcolo di App, solo isOpen/onClose/uiLang. */
 export default function AboutModal({ isOpen, onClose, uiLang }: AboutModalProps) {
+  // Esc + click sullo sfondo senza chiudere durante una selezione di testo
+  // (vedi useModalDismiss). Prima del return anticipato: è un hook.
+  const backdrop = useModalDismiss(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      {...backdrop}
     >
       <div
         className="relative flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-hidden"
@@ -64,7 +68,7 @@ export default function AboutModal({ isOpen, onClose, uiLang }: AboutModalProps)
               <div className="flex-1 bg-slate-950/60 rounded-xl p-3 border border-slate-800 flex flex-col items-center gap-2 text-center">
                 <img
                   src={AVATAR_IT}
-                  alt="Sdrushi -- server italiano"
+                  alt={t("aboutAvatarItAlt", uiLang)}
                   className="w-16 h-16 rounded border-2 border-amber-500/50 object-cover"
                 />
                 <div>
@@ -81,7 +85,7 @@ export default function AboutModal({ isOpen, onClose, uiLang }: AboutModalProps)
               <div className="flex-1 bg-slate-950/60 rounded-xl p-3 border border-slate-800 flex flex-col items-center gap-2 text-center">
                 <img
                   src={AVATAR_BETA}
-                  alt="Sdrushi -- server beta"
+                  alt={t("aboutAvatarBetaAlt", uiLang)}
                   className="w-16 h-16 rounded border-2 border-blue-500/40 object-cover"
                 />
                 <div>

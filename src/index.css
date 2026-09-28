@@ -91,7 +91,7 @@ body {
        costruzione — nessuna riapertura del bug ghosting sulle colonne
        sticky, vedi commento .row-goods/.row-inactive sotto). Cambiare SOLO
        questo valore per tarare l'intensità su tutte le 7 categorie insieme. */
-    --row-even-lighten: 3%;
+    --row-even-lighten: 4%;
   }
 
   /* Righe dell'header (riga 1 = titoli sezione/Export, riga 2 = colonne).

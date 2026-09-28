@@ -3,6 +3,7 @@ import type { CityMapBuilding, CityMapBounds } from "../data/cityMap";
 import type { UnlockedArea } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
 import { parseNumberPair } from "../data/piratiBuildings";
+import { localDateStamp } from "../utils/format";
 
 /** Colori per categoria edificio: condivisi tra il render PNG "a griglia"
  *  (renderCityMapPng) e il rendering SVG a schermo (getBuildingColor) —
@@ -40,6 +41,29 @@ function wrapBuildingName(name: string, widthCells: number): string[] {
   return lines;
 }
 
+/** Categoria con cui un edificio viene disegnato nella mappa SVG a schermo:
+ *  unica fonte sia per il colore (getBuildingColor) sia per i conteggi della
+ *  legenda, così ogni edificio è contato una volta sola, nella voce del colore
+ *  con cui appare. Prima i conteggi avevano filtri propri: gli edifici
+ *  "collegati senza bisogno" (disegnati a righe) finivano anche in "Non richiede
+ *  strada", e quelli senza roadLevel (profili salvati prima del campo) erano
+ *  disegnati in verde ma non contati da nessuna parte (bug corretto settembre
+ *  2026). Stessa priorità del disegno: prima gli inattivi (viola), poi Grandi
+ *  Edifici, militari (a righe se collegati senza bisogno), collegati senza
+ *  bisogno, infine strada richiesta sì/no — roadLevel diverso da 0, incluso
+ *  undefined, conta come "richiede strada", esattamente come il colore verde. */
+type MapCategory = "street" | "townhall" | "inactive" | "great" | "military" | "needless" | "noRoad" | "road";
+
+function mapCategory(b: CityMapBuilding): MapCategory {
+  if (b.type === "street") return "street";
+  if (b.type === "main_building") return "townhall";
+  if (b.isInactive) return "inactive";
+  if (b.isGreatBuilding) return "great";
+  if (b.isMilitary) return "military";
+  if (b.isNeedlessRoad) return "needless";
+  return b.roadLevel === 0 ? "noRoad" : "road";
+}
+
 /**
  * Disegna la mappa città su un canvas già dimensionato, con lo stesso layout
  * "a griglia" di render_json.py (progetto FoE City Builder): sfondo grigio
@@ -64,7 +88,7 @@ function renderCityMapPng(
     length: Number(a.length ?? 4),
   }));
   const placedBuildings = buildings.filter((b) => b.type !== "street");
-  const roadCells = buildings.filter((b) => b.type === "street");
+  const roadTiles = buildings.filter((b) => b.type === "street");
 
   const gridX0 = Math.min(...areas.map((a) => a.x));
   const gridY0 = Math.min(...areas.map((a) => a.y));
@@ -97,6 +121,20 @@ function renderCityMapPng(
       }
     }
   }
+  // Celle strada: TUTTE quelle di ogni tessera, non solo l'angolo in alto a
+  // sinistra — una strada a 2 corsie è una tessera 2x2. Prima si disegnava una
+  // sola cella per tessera e le altre 3 celle di una strada a 2 corsie uscivano
+  // color "spazio libero" (bug corretto settembre 2026). Contate anche come
+  // occupate, così non vengono prima dipinte come libere.
+  const roadCells: Array<[number, number]> = [];
+  for (const road of roadTiles) {
+    for (let gx = road.x; gx < road.x + road.w; gx++) {
+      for (let gy = road.y; gy < road.y + road.h; gy++) {
+        occupied.add(`${gx},${gy}`);
+        roadCells.push([gx, gy]);
+      }
+    }
+  }
 
   ctx.strokeStyle = "#dddddd";
   ctx.lineWidth = 0.5 * scale;
@@ -112,9 +150,9 @@ function renderCityMapPng(
     }
   }
 
-  // Celle strada, sopra il terreno libero ma sotto gli edifici.
-  for (const cell of roadCells) {
-    const { px, py } = toPx(cell.x, cell.y);
+  // Celle strada, una per una (stessa griglia delle celle libere), sotto gli edifici.
+  for (const [gx, gy] of roadCells) {
+    const { px, py } = toPx(gx, gy);
     ctx.fillStyle = PNG_COLOR_ROAD;
     ctx.fillRect(px, py, CELL, CELL);
     ctx.strokeRect(px, py, CELL, CELL);
@@ -222,13 +260,21 @@ export default function CityMapView({
   const BORDER_COLOR = "#1e293b";
 
   const getBuildingColor = (b: CityMapBuilding): string => {
-    if (b.type === "street") return "#8B7355";
-    if (b.type === "main_building") return MAP_COLOR_TOWN_HALL;
-    if (b.isGreatBuilding) return MAP_COLOR_GREAT_BUILDING;
-    if (b.isMilitary) return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : "#92400E";
-    if (b.isNeedlessRoad) return "url(#needlessPattern)";
-    return b.roadLevel === 0 ? MAP_COLOR_NO_ROAD_REQUIRED : MAP_COLOR_ROAD_REQUIRED;
+    switch (mapCategory(b)) {
+      case "street": return "#8B7355";
+      case "townhall": return MAP_COLOR_TOWN_HALL;
+      case "inactive": return "rgba(88,28,135,0.45)";
+      case "great": return MAP_COLOR_GREAT_BUILDING;
+      case "military": return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : "#92400E";
+      case "needless": return "url(#needlessPattern)";
+      case "noRoad": return MAP_COLOR_NO_ROAD_REQUIRED;
+      case "road": return MAP_COLOR_ROAD_REQUIRED;
+    }
   };
+
+  // Conteggi della legenda per categoria di disegno (vedi mapCategory).
+  const categoryCounts: Record<MapCategory, number> = { street: 0, townhall: 0, inactive: 0, great: 0, military: 0, needless: 0, noRoad: 0, road: 0 };
+  cityMapBuildings.forEach((b) => { categoryCounts[mapCategory(b)]++; });
 
   // Celle libere (sbloccate ma non occupate)
   const freeCells: Array<[number, number]> = [];
@@ -391,15 +437,18 @@ export default function CityMapView({
                       // Senza aree sbloccate non c'è modo di calcolare la
                       // griglia (bounding box, celle libere/non disponibili):
                       // capita sui profili salvati prima dell'introduzione di
-                      // questo campo (luglio 2026) — servirebbe un re-import.
-                      alert(t("exportPngFailedAlert", uiLang));
+                      // questo campo (luglio 2026) — l'unico rimedio è un
+                      // re-import, e il messaggio lo dice (prima era lo stesso
+                      // dell'errore generico, che consigliava un export SVG
+                      // ormai rimosso).
+                      alert(t("exportPngNeedsReimportAlert", uiLang));
                       return;
                     }
                     try {
                       const canvas = document.createElement("canvas");
                       renderCityMapPng(canvas, cityMapBuildings, cityMapUnlockedAreas, 2, uiLang);
                       const link = document.createElement("a");
-                      link.download = `foe-map-${new Date().toISOString().slice(0, 10)}.png`;
+                      link.download = `foe-map-${localDateStamp()}.png`;
                       link.href = canvas.toDataURL("image/png");
                       document.body.appendChild(link);
                       link.click();
@@ -466,7 +515,7 @@ export default function CityMapView({
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
                     link.href = url;
-                    link.download = `foe-map-${new Date().toISOString().slice(0, 10)}.json`;
+                    link.download = `foe-map-${localDateStamp()}.json`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
@@ -485,14 +534,14 @@ export default function CityMapView({
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-800 pb-2">{t("mapLegendTitle", uiLang)}</h4>
             <div className="space-y-3 text-[11px] text-slate-300">
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_TOWN_HALL, borderColor: MAP_COLOR_TOWN_HALL, borderWidth: 1, borderStyle: "solid" }} /> {t("legendTownHall", uiLang)}</div>
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_GREAT_BUILDING, borderColor: MAP_COLOR_GREAT_BUILDING, borderWidth: 1, borderStyle: "solid" }} /> {t("legendGreatBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isGreatBuilding).length}</span></div>
-              {cityMapBuildings.some((b) => b.isMilitary) && (
-                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#78350F]" style={{ background: "#92400E" }} /> {t("legendMilitaryBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isMilitary).length}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_GREAT_BUILDING, borderColor: MAP_COLOR_GREAT_BUILDING, borderWidth: 1, borderStyle: "solid" }} /> {t("legendGreatBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded">{categoryCounts.great}</span></div>
+              {categoryCounts.military > 0 && (
+                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#78350F]" style={{ background: "#92400E" }} /> {t("legendMilitaryBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{categoryCounts.military}</span></div>
               )}
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_ROAD_REQUIRED, borderColor: MAP_COLOR_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => !b.isGreatBuilding && !b.isMilitary && !b.isInactive && b.type !== "street" && b.type !== "main_building" && b.roadLevel > 0).length}</span></div>
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_NO_ROAD_REQUIRED, borderColor: MAP_COLOR_NO_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendNoRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-sky-400 bg-sky-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => !b.isGreatBuilding && !b.isMilitary && !b.isInactive && b.type !== "street" && b.type !== "main_building" && b.roadLevel === 0).length}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_ROAD_REQUIRED, borderColor: MAP_COLOR_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{categoryCounts.road}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_NO_ROAD_REQUIRED, borderColor: MAP_COLOR_NO_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendNoRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-sky-400 bg-sky-950/40 px-1.5 py-0.5 rounded">{categoryCounts.noRoad}</span></div>
 
-              {cityMapBuildings.some((b) => b.isNeedlessRoad) && (
+              {categoryCounts.needless > 0 && (
                 <div className="flex items-center gap-3 font-medium">
                   <svg width="16" height="16" className="rounded shadow-sm shrink-0" style={{ border: "1px solid #3B82F6" }}>
                     <defs>
@@ -503,15 +552,15 @@ export default function CityMapView({
                     </defs>
                     <rect width="16" height="16" fill="url(#needlessLegend)" />
                   </svg>
-                  {t("legendNeedlesslyConnected", uiLang)} <span className="ml-1 text-xs font-bold text-amber-400 bg-amber-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isNeedlessRoad).length}</span>
+                  {t("legendNeedlesslyConnected", uiLang)} <span className="ml-1 text-xs font-bold text-amber-400 bg-amber-950/40 px-1.5 py-0.5 rounded">{categoryCounts.needless}</span>
                 </div>
               )}
 
-              {cityMapBuildings.some((b) => b.isInactive) && (
-                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B21A8]" style={{ background: "rgba(88,28,135,0.45)" }} /> {t("legendInactive", uiLang)} <span className="ml-1 text-xs font-bold text-violet-400 bg-violet-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.isInactive).length}</span></div>
+              {categoryCounts.inactive > 0 && (
+                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B21A8]" style={{ background: "rgba(88,28,135,0.45)" }} /> {t("legendInactive", uiLang)} <span className="ml-1 text-xs font-bold text-violet-400 bg-violet-950/40 px-1.5 py-0.5 rounded">{categoryCounts.inactive}</span></div>
               )}
 
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B5B45]" style={{ background: "#8B7355" }} /> {t("legendStreets", uiLang)} <span className="ml-1 text-xs font-bold text-stone-400 bg-stone-950/40 px-1.5 py-0.5 rounded">{cityMapBuildings.filter((b) => b.type === "street").length}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B5B45]" style={{ background: "#8B7355" }} /> {t("legendStreets", uiLang)} <span className="ml-1 text-xs font-bold text-stone-400 bg-stone-950/40 px-1.5 py-0.5 rounded">{categoryCounts.street}</span></div>
 
               {freeCells.length > 0 && (
                 <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: PNG_COLOR_FREE, borderColor: "#a89b3f", borderWidth: 1, borderStyle: "solid" }} /> {t("legendFreeSpace", uiLang)} <span className="ml-1 text-xs font-bold text-amber-200 bg-amber-950/40 px-1.5 py-0.5 rounded">{freeCells.length}</span></div>

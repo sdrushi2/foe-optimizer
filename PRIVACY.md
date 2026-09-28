@@ -1,6 +1,6 @@
 # Informativa sulla Privacy
 
-**Ultimo aggiornamento:** 26 agosto 2026
+**Ultimo aggiornamento:** 28 settembre 2026
 
 *(English version below)*
 
@@ -41,18 +41,27 @@ codice.
 
 ### 1. Dati di gioco importati (opzionale: città, inventario, alleati, avatar)
 
-Questa funzione è **opzionale** e richiede l'estensione del browser di terze parti
-**[FoE Helper](https://foe-helper.com/)** ([Chrome Web Store](https://chromewebstore.google.com/detail/foe-helper/bkagcmloachflbbkfmfiggipaelfamdf),
-[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/foe-helper/)),
-**non sviluppata da Sdrushi e non parte di questo progetto**. Il tool fornisce un
+Questa funzione è **opzionale** e richiede una delle due estensioni del browser di
+terze parti **[FoE Helper](https://foe-helper.com/)** ([Chrome Web Store](https://chromewebstore.google.com/detail/foe-helper/bkagcmloachflbbkfmfiggipaelfamdf),
+[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/foe-helper/)) oppure
+**Forge Hammer** ([Chrome Web Store](https://chromewebstore.google.com/detail/forge-hammer/kmicglnhmpaebfcoiojigbnepklclboa),
+[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/forge-hammer/)),
+**non sviluppate da Sdrushi e non parte di questo progetto**. Il tool fornisce un
 **bookmarklet**: uno script che, trascinato nella barra dei preferiti ed eseguito
-mentre sei loggato su Forge of Empires con FoE Helper attivo, estrae un **piccolo
-sottoinsieme di dati** messi a disposizione da FoE Helper:
+mentre sei loggato su Forge of Empires con una delle due estensioni attiva, estrae un
+**piccolo sottoinsieme di dati** messi a disposizione dall'estensione:
 
 - gli edifici presenti nella tua città;
 - i tuoi alleati;
 - il tuo inventario;
-- l'URL dell'avatar del tuo giocatore.
+- il nome del tuo giocatore (proposto come nome del profilo);
+- l'URL dell'avatar del tuo giocatore;
+- la disposizione del tuo Insediamento dei Pirati (aree sbloccate, edifici, ostacoli),
+  se l'hai visitato nella sessione di gioco in corso.
+
+Se usi il bookmarklet mentre visiti la città di un altro giocatore, vengono letti gli
+stessi dati di quella città che il gioco ti mostra (edifici, nome e avatar del
+giocatore), con le stesse garanzie qui sotto.
 
 - Questi dati **non vengono mai inviati a un server esterno**: bookmarklet e tool
   elaborano tutto localmente, nel tuo browser.
@@ -62,9 +71,9 @@ sottoinsieme di dati** messi a disposizione da FoE Helper:
   da nessuna parte se non nel tuo browser.
 - Puoi cancellarli in qualunque momento eliminando i profili dall'interfaccia del tool,
   oppure cancellando i dati del sito dalle impostazioni del tuo browser.
-- FoE Helper è un prodotto indipendente con una propria informativa e un proprio
-  trattamento dei dati: per informazioni su come FoE Helper stesso opera, fai
-  riferimento al sito ufficiale dell'estensione.
+- FoE Helper e Forge Hammer sono prodotti indipendenti, ciascuno con una propria
+  informativa e un proprio trattamento dei dati: per informazioni su come operano,
+  fai riferimento ai siti ufficiali delle estensioni.
 
 ### 2. Account, login, dati anagrafici
 
@@ -174,7 +183,7 @@ aziendali) è opportuno consultare un professionista.
 
 # Privacy Policy (English)
 
-**Last updated:** August 26, 2026
+**Last updated:** September 28, 2026
 
 ## Who we are
 
@@ -212,18 +221,27 @@ that what's described here matches what the code actually does.
 
 ### 1. Imported game data (optional: city, inventory, allies, avatar)
 
-This feature is **optional** and requires the third-party browser extension
+This feature is **optional** and requires one of two third-party browser extensions,
 **[FoE Helper](https://foe-helper.com/)** ([Chrome Web Store](https://chromewebstore.google.com/detail/foe-helper/bkagcmloachflbbkfmfiggipaelfamdf),
-[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/foe-helper/)), **not
+[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/foe-helper/)) or
+**Forge Hammer** ([Chrome Web Store](https://chromewebstore.google.com/detail/forge-hammer/kmicglnhmpaebfcoiojigbnepklclboa),
+[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/forge-hammer/)), **not
 developed by Sdrushi and not part of this project**. The tool provides a
 **bookmarklet**: a script that, when dragged to your bookmarks bar and run while
-logged into Forge of Empires with FoE Helper active, extracts a **small subset of
-data** made available by FoE Helper:
+logged into Forge of Empires with either extension active, extracts a **small subset
+of data** made available by the extension:
 
 - the buildings present in your city;
 - your allies;
 - your inventory;
-- your player avatar's URL.
+- your player name (suggested as the profile name);
+- your player avatar's URL;
+- the layout of your Pirate Outpost (unlocked areas, buildings, obstacles), if you
+  visited it during the current game session.
+
+If you run the bookmarklet while visiting another player's city, the same data the
+game shows you about that city is read (buildings, the player's name and avatar),
+with the same guarantees described below.
 
 - This data is **never sent to an external server**: the bookmarklet and the tool
   process everything locally, in your browser.
@@ -233,9 +251,9 @@ data** made available by FoE Helper:
   anywhere except within your own browser.
 - You can delete it at any time from the tool's own interface, or by clearing the
   site's data from your browser settings.
-- FoE Helper is an independent product with its own privacy practices and data
-  handling: for information on how FoE Helper itself operates, refer to the
-  extension's official site.
+- FoE Helper and Forge Hammer are independent products, each with its own privacy
+  practices and data handling: for information on how they operate, refer to the
+  extensions' official sites.
 
 ### 2. Accounts, login, personal identifiers
 

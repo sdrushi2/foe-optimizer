@@ -35,8 +35,11 @@ export interface CityMapBuilding {
   isInactive: boolean;
   isSuppliesProducer: boolean;
   /** Livello di strada richiesto (0/1/2, vedi BuildingModel.requiredRoadLevel)
-   *  — usato SOLO per l'export JSON della mappa (§ pulsante JSON in
-   *  CityMapView), non per il rendering SVG/PNG (che non lo mostra). */
+   *  — usato dall'export JSON della mappa e, dall'11 agosto 2026, anche per il
+   *  colore (verde se richiede strada, azzurro se no) nella vista SVG, nel PNG
+   *  e nei conteggi della legenda (vedi mapCategory in CityMapView). Nei
+   *  profili salvati prima dell'introduzione del campo arriva `undefined`:
+   *  colore e legenda lo trattano come "richiede strada", l'export JSON come 0. */
   roadLevel: number;
 }
 
