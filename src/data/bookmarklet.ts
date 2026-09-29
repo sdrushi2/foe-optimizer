@@ -100,6 +100,37 @@
  * ora applicato coerentemente a TUTTO lo script. Nessun campo del payload è
  * cambiato: un payload v4.1 e uno v4 "puro" sono strutturalmente identici,
  * la differenza è solo la robustezza dello script che li produce.
+ *
+ * v4.2 (settembre 2026, stesso `_v: 4` — solo hardening, nessun cambio di
+ * struttura payload) — bug reale segnalato da un utente: alert "Magic wand
+ * error: Cannot read properties of undefined (reading 'allyList')" dopo aver
+ * cliccato il bookmarklet in gioco. Causa: `allies:` leggeva
+ * `(typeof Allies!='undefined'?Allies.allyList:S.Allies.allyList)||{}` — il
+ * `||{}` finale protegge solo il RISULTATO (se `Allies`/`S.Allies` esistono
+ * ma non hanno `.allyList`), non l'ACCESSO stesso: se `Allies`/`S.Allies` è
+ * `undefined` nel momento in cui si legge `.allyList`, l'eccezione parte
+ * prima che `||{}` possa intervenire — esattamente il buco che la v4.1
+ * doveva chiudere ovunque, rimasto qui per una svista (unico campo dello
+ * script dove il fallback protegge il risultato di un accesso annidato
+ * invece dell'oggetto letto). Il guard iniziale (`if(!S||(typeof
+ * Allies=='undefined'&&!S.Allies))`) avrebbe dovuto escludere il caso
+ * "nessuno dei due esiste" mostrando "No supported helper found" invece di
+ * questo TypeError — la causa più probabile è una finestra di race/refresh
+ * lato client di gioco fra il controllo del guard e la lettura di `allies:`
+ * poche righe sotto (FoE Helfer/Forge Hammer che invalida e ripopola i dati
+ * alleati in background), non riproducibile a comando: da qui la scelta di
+ * non fidarsi del guard per questo campo e blindare l'accesso stesso. Fix:
+ * `((typeof Allies!='undefined'?Allies:S.Allies)||{}).allyList||{}` — il
+ * `||{}` ora protegge l'oggetto PRIMA di leggere `.allyList`, non il
+ * risultato dopo. Validato con un harness che simula tutte le combinazioni
+ * (`Allies`/`S.Allies` presenti, assenti, vuoti, `null`): nessuna lancia più,
+ * il guard continua a intercettare correttamente il caso "nessun helper".
+ * ⚠️ Nota per un prossimo giro di hardening (non toccato qui, fix mirato al
+ * bug segnalato): `var M=(V?CityMap.OtherPlayer:CityMap.Main)||{}` accede a
+ * `CityMap` senza lo stesso `CityMap&&` usato poco sotto per
+ * `CityMap.CulturalOutpost` — se mai `CityMap` risultasse assente
+ * lancerebbe (catturato dal `try/catch` generale, quindi niente crash muto,
+ * ma solo un alert generico invece di un fallback pulito).
  */
 export const CURRENT_BOOKMARKLET_VERSION = 4;
 
@@ -128,7 +159,7 @@ export const CURRENT_BOOKMARKLET_VERSION = 4;
  * iniziale ("helper non trovato"): è un controllo `if`, non un accesso a
  * campo annidato, non può lanciare.
  */
-export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}var S=typeof MainParser!='undefined'?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S||(typeof Allies=='undefined'&&!S.Allies)){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}try{var V=E=='OtherPlayer';var M=(V?CityMap.OtherPlayer:CityMap.Main)||{};var A=typeof srcLinks!='undefined'?srcLinks.GetPortrait((V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:(typeof FH!='undefined'?FH.Player.Avatar:null)))):null;var d={_v:${CURRENT_BOOKMARKLET_VERSION},activeMap:E,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:(typeof Allies!='undefined'?Allies.allyList:S.Allies.allyList)||{},CityMapData:(V?M.mapData:S.CityMapData)||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){return o.width==4&&o.length==4?{x:o.x,y:o.y}:{x:o.x,y:o.y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:(typeof FH!='undefined'?FH.Player.Name:null))};if(!V){var o=CityMap&&CityMap.CulturalOutpost;if(o){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:(o.areas||[]).map(function(a){return{x:a.x,y:a.y,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x,y:e.y,cityentity_id:e.cityentity_id,type:e.type};})};}}c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}var S=typeof MainParser!='undefined'?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S||(typeof Allies=='undefined'&&!S.Allies)){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}try{var V=E=='OtherPlayer';var M=(V?CityMap.OtherPlayer:CityMap.Main)||{};var A=typeof srcLinks!='undefined'?srcLinks.GetPortrait((V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:(typeof FH!='undefined'?FH.Player.Avatar:null)))):null;var d={_v:${CURRENT_BOOKMARKLET_VERSION},activeMap:E,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((typeof Allies!='undefined'?Allies:S.Allies)||{}).allyList||{},CityMapData:(V?M.mapData:S.CityMapData)||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){return o.width==4&&o.length==4?{x:o.x,y:o.y}:{x:o.x,y:o.y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:(typeof FH!='undefined'?FH.Player.Name:null))};if(!V){var o=CityMap&&CityMap.CulturalOutpost;if(o){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:(o.areas||[]).map(function(a){return{x:a.x,y:a.y,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x,y:e.y,cityentity_id:e.cityentity_id,type:e.type};})};}}c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 

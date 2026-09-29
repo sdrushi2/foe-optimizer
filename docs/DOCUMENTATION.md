@@ -314,11 +314,19 @@ Helfer che Forge Hammer** con lo stesso script, e per supportare l'import della
 - **Alleati**: legge solo da `Allies.allyList` (percorso globale, versioni recenti di
   FoE Helfer) o `S.Allies.allyList` (fallback, versioni meno recenti / Forge Hammer).
   Nessun'altra retrocompatibilità oltre queste due.
-- **Nessun `try/catch` nello script**: la diagnosi di errori è delegata interamente
-  all'app via `validateBookmarkletData` (§6.3). Se un campo manca, il bookmarklet
-  produce comunque un payload (con quel campo `undefined`/vuoto) e sarà l'app a
-  segnalarlo con un messaggio chiaro all'import, invece che con un alert generico
-  dentro la pagina di gioco.
+
+⚠️ **Superato da v4.1/v4.2 (agosto/settembre 2026), vedi i commenti versione in
+cima a `bookmarklet.ts` per lo storico completo**: lo script HA ORA un
+`try/catch` esterno con `alert('Magic wand error: '+e.message)` (v4.1), e ogni
+campo annidato letto dal client di gioco ha un fallback prima di essere
+usato — incluso l'accesso `allyList` stesso (v4.2, dopo un bug reale
+segnalato da un utente: il fallback della v4.1 proteggeva solo il
+*risultato* di `Allies.allyList`/`S.Allies.allyList`, non l'*accesso* quando
+`Allies`/`S.Allies` stesso è `undefined` — vedi il commento v4.2 in
+bookmarklet.ts per l'analisi completa). La diagnosi di un campo mancante non
+è più delegata solo all'app via `validateBookmarkletData` (§6.3): un errore
+nella costruzione del payload ora mostra comunque un alert diretto nella
+pagina di gioco, PRIMA che l'utente tenti di incollare qualcosa nell'app.
 
 Costruisce un oggetto JSON e lo copia negli appunti (con fallback su `execCommand`
 per i browser senza `navigator.clipboard`).
