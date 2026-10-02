@@ -5678,7 +5678,7 @@
     },
     "upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Upgrade Kit",
+        "en": "Tidings Press Tower Upgrade Kit",
         "it": "WIN26A Upgrade Kit"
       },
       "steps": [
@@ -5694,7 +5694,7 @@
     },
     "silver_upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Silver Silver Upgrade Kit",
+        "en": "Radiant Tidings Press Tower Silver Upgrade Kit",
         "it": "WIN26A Silver Silver Upgrade Kit"
       },
       "steps": [
@@ -5705,7 +5705,7 @@
     },
     "golden_upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Gold Golden Upgrade Kit",
+        "en": "Gilded Tidings Press Tower Golden Upgrade Kit",
         "it": "WIN26A Gold Golden Upgrade Kit"
       },
       "steps": [
@@ -5716,7 +5716,7 @@
     },
     "platinum_upgrade_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Platinum Platinum Upgrade Kit",
+        "en": "Majestic Tidings Press Tower Platinum Upgrade Kit",
         "it": "WIN26A Platinum Platinum Upgrade Kit"
       },
       "steps": [
@@ -5726,7 +5726,7 @@
     },
     "upgrade_kit_ascended_WIN26A": {
       "names": {
-        "en": "WIN26A Platinum Ascended Upgrade Kit",
+        "en": "Ascended Tidings Press Tower Upgrade Kit",
         "it": "WIN26A Platinum Ascended Upgrade Kit"
       },
       "steps": [
@@ -5740,7 +5740,7 @@
     },
     "upgrade_kit_ascended_WIN26B": {
       "names": {
-        "en": "Ascended WIN26B Upgrade Kit",
+        "en": "Ascended Peppermint Confectionery Upgrade Kit",
         "it": "Ascended WIN26B Upgrade Kit"
       },
       "steps": [
@@ -5750,7 +5750,7 @@
     },
     "upgrade_kit_ascended_WIN26C": {
       "names": {
-        "en": "Ascended WIN26C Upgrade Kit",
+        "en": "Ascended Mistletoe Mansion Upgrade Kit",
         "it": "Ascended WIN26C Upgrade Kit"
       },
       "steps": [
@@ -11474,7 +11474,7 @@
     },
     "selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Selection Kit",
+        "en": "Tidings Press Tower Selection Kit",
         "it": "WIN26A Selection Kit"
       },
       "options": [
@@ -11484,7 +11484,7 @@
     },
     "silver_selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Silver Silver Selection Kit",
+        "en": "Radiant Tidings Press Tower Silver Selection Kit",
         "it": "WIN26A Silver Silver Selection Kit"
       },
       "options": [
@@ -11495,7 +11495,7 @@
     },
     "golden_selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Gold Golden Selection Kit",
+        "en": "Gilded Tidings Press Tower Golden Selection Kit",
         "it": "WIN26A Gold Golden Selection Kit"
       },
       "options": [
@@ -11508,7 +11508,7 @@
     },
     "platinum_selection_kit_WIN26A": {
       "names": {
-        "en": "WIN26A Platinum Platinum Selection Kit",
+        "en": "Majestic Tidings Press Tower Platinum Selection Kit",
         "it": "WIN26A Platinum Platinum Selection Kit"
       },
       "options": [
@@ -11521,7 +11521,7 @@
     },
     "selection_kit_WIN26BC": {
       "names": {
-        "en": "WIN26BC Selection Kit",
+        "en": "Mint & Mistletoe Selection Kit",
         "it": "WIN26BC Selection Kit"
       },
       "options": [

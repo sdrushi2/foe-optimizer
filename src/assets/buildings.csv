@@ -2086,26 +2086,26 @@ W_MultiAge_WIN25C2;Chiosco Viale Stellato Asceso;Ascended Starlight Boulevard Ki
 W_MultiAge_WIN25D1;Atelier Meraviglie del Giocattolaio;Toymaker’s Atelier of Little Wonders;408704826;1;;19;3x3;1.5;;;;105;;;;;;;;;;;;;;;;84;84;84;84;;;;;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN25A:20
 W_MultiAge_WIN25E1;Vivaio Stella del Nord di Penelope;Penelope’s Northstar Nursery;fa080d942;1;;19;5x5;2.5;;;;495;;;;;;;;;;;;;;;;110;110;110;110;240;240;240;240;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN24A:12
 W_MultiAge_WIN25F1;Corriere Northwind;Northwind Courier;5ecd45942;1;;19;3x2;1;;;;98;;;;;;;;80;;;;;;;;;;;;98;;98;;;;;;;;;;;;;;;;;;;5.1;;;;;;;golden_selection_kit_WIN19A:5|selection_kit_WIN19BCD21B:3
-W_MultiAge_WIN26A1;WIN26A;WIN26A;c50d279c9;;;19;4x4;2;5330;8000;;58;;;;;;41;;;;;;43430;84710;;;5;5;5;5;5;5;5;5;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A10;WIN26A Gold;WIN26A Gold;b2f406053;1;;19;4x4;2;40530;60800;;207;;;;;;286;;;;;;325710;635290;;;71;71;71;71;71;71;71;71;;;;;;;;;;;;;;;;;M;;1.1;;;;;;selection_kit_WIN26BC:3
-W_MultiAge_WIN26A11;WIN26A Platinum;WIN26A Platinum;132195138;1;;19;4x4;;42670;64000;;230;;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;;;;;;;;;;;M;;1.5;;;;;;selection_kit_WIN26BC:4
-W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;WIN26A Platinum Ascended A;c5a06473c;1;90;51;4x4;;42670;64000;;230;0.02;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC:6
-W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;WIN26A Platinum Ascended B;5c5071aa4;1;90;51;4x4;;42670;64000;;230;;;;;;306;;;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC:6
-W_MultiAge_WIN26A2;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;8530;12800;;69;;;;;;62;;;;;;65140;127060;;;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A3;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;11730;17600;;81;;;;;;82;;;;;;86860;169410;;;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A4;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;14930;22400;;92;;;;;;103;;;;;;108570;211760;;;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A5;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;18130;27200;;104;;;;;;123;;;;;;130290;254120;;;25;25;25;25;25;25;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A6;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;21330;32000;;115;;;;;;144;;;;;;152000;296470;;;30;30;30;30;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A7;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;24530;36800;;127;;;;;;164;;;;;;173710;338820;;;35;35;35;35;35;35;35;35;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26A8;WIN26A;WIN26A;W_MultiAge_WIN26A1-c50d279c9;1;;19;4x4;2;27730;41600;;138;;;;;;185;;;;;;195430;381180;;;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC:1|silver_upgrade_kit_WIN26A:5
-W_MultiAge_WIN26A9;WIN26A Silver;WIN26A Silver;15cf8c594;1;;19;4x4;2;34130;51200;;184;;;;;;225;;;;;;260570;508240;;;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_WIN26A:5|selection_kit_WIN26BC:2
-W_MultiAge_WIN26B1;WIN26B;WIN26B;64d67fe9d;1;;19;4x4;;-170670;;;331;;;;;105;;;;;;;173710;508240;;;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26B2;Ascended WIN26B;Ascended WIN26B;7f7b1c8f2;1;30;51;4x4;;-170670;;;828;0.02;;;;262;;;;;;;347430;1016470;;;;;408;408;;;408;408;;;;;80;;;;;;;25000;;5;;;;;;;;;;;
-W_MultiAge_WIN26C1;WIN26C;WIN26C;0528ffda5;1;;19;4x4;;-170670;;;74;;;;;489;;;;;;;347430;338820;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_WIN26C2;Ascended WIN26C;Ascended WIN26C;751161a0c;1;30;51;4x4;;-170670;;;184;;;;;1227;;;;;0.02;;694860;677650;;;408;408;;;408;408;;;;;;;;;80;;;;25000;;10;;;;;;;;;;;;
-W_MultiAge_WIN26D1;WIN26D;WIN26D;28d2edf69;1;;19;4x6;2;;;;130;0.06;;;;260;;;;;0.05;;;;;;145;145;145;145;145;145;145;145;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN26A:20
-W_MultiAge_WIN26E1;WIN26E;WIN26E;f736c4d85;1;;19;6x4;2;;;;780;;;;;1560;1170;;;;;;;;;;255;255;255;255;255;255;255;255;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN26A:12
-W_MultiAge_WIN26F1;WIN26F;WIN26F;bcabf86f9;1;;19;4x4;2;-192000;;;270;;;;182;;;360;;;;;;;78750;;180;180;180;180;245;245;245;245;;;;;;;;;;;;;;;;;;13.5;;;;;;;
+W_MultiAge_WIN26A1;WIN26A;Tidings Press Tower - Lv. 1;c50d279c9;;;19;4x4;2;5330;8000;;58;;;;;;41;;;;;;43430;84710;;;5;5;5;5;5;5;5;5;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A10;WIN26A Gold;Gilded Tidings Press Tower;b2f406053;1;;19;4x4;2;40530;60800;;207;;;;;;286;;;;;;325710;635290;;;71;71;71;71;71;71;71;71;;;;;;;;;;;;;;;;;M;;1.1;;;;;;selection_kit_WIN26BC:3
+W_MultiAge_WIN26A11;WIN26A Platinum;Majestic Tidings Press Tower;132195138;1;;19;4x4;;42670;64000;;230;;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;;;;;;;;;;;M;;1.5;;;;;;selection_kit_WIN26BC:4
+W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;Tidings Broadcasting Tower;c5a06473c;1;90;51;4x4;;42670;64000;;230;0.02;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC:6
+W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;Tidings Globe Tower;5c5071aa4;1;90;51;4x4;;42670;64000;;230;;;;;;306;;;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC:6
+W_MultiAge_WIN26A2;WIN26A;Tidings Press Tower - Lv. 2;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;8530;12800;;69;;;;;;62;;;;;;65140;127060;;;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A3;WIN26A;Tidings Press Tower - Lv. 3;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;11730;17600;;81;;;;;;82;;;;;;86860;169410;;;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A4;WIN26A;Tidings Press Tower - Lv. 4;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;14930;22400;;92;;;;;;103;;;;;;108570;211760;;;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A5;WIN26A;Tidings Press Tower - Lv. 5;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;18130;27200;;104;;;;;;123;;;;;;130290;254120;;;25;25;25;25;25;25;25;25;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A6;WIN26A;Tidings Press Tower - Lv. 6;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;21330;32000;;115;;;;;;144;;;;;;152000;296470;;;30;30;30;30;30;30;30;30;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A7;WIN26A;Tidings Press Tower - Lv. 7;W_MultiAge_WIN26A1-c50d279c9;;;19;4x4;2;24530;36800;;127;;;;;;164;;;;;;173710;338820;;;35;35;35;35;35;35;35;35;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26A8;WIN26A;Tidings Press Tower - Lv. 8;W_MultiAge_WIN26A1-c50d279c9;1;;19;4x4;2;27730;41600;;138;;;;;;185;;;;;;195430;381180;;;40;40;40;40;40;40;40;40;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WIN26BC:1|silver_upgrade_kit_WIN26A:5
+W_MultiAge_WIN26A9;WIN26A Silver;Radiant Tidings Press Tower;15cf8c594;1;;19;4x4;2;34130;51200;;184;;;;;;225;;;;;;260570;508240;;;60;60;60;60;60;60;60;60;;;;;;;;;;;;;;;;;M;;;;;;;;golden_upgrade_kit_WIN26A:5|selection_kit_WIN26BC:2
+W_MultiAge_WIN26B1;WIN26B;Peppermint Confectionery;64d67fe9d;1;;19;4x4;;-170670;;;331;;;;;105;;;;;;;173710;508240;;;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26B2;Ascended WIN26B;Ascended Peppermint Confectionery;7f7b1c8f2;1;30;51;4x4;;-170670;;;828;0.02;;;;262;;;;;;;347430;1016470;;;;;408;408;;;408;408;;;;;80;;;;;;;25000;;5;;;;;;;;;;;
+W_MultiAge_WIN26C1;WIN26C;Mistletoe Mansion;0528ffda5;1;;19;4x4;;-170670;;;74;;;;;489;;;;;;;347430;338820;;;164;164;;;164;164;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WIN26C2;Ascended WIN26C;Ascended Mistletoe Mansion;751161a0c;1;30;51;4x4;;-170670;;;184;;;;;1227;;;;;0.02;;694860;677650;;;408;408;;;408;408;;;;;;;;;80;;;;25000;;10;;;;;;;;;;;;
+W_MultiAge_WIN26D1;WIN26D;Frostbell Firehouse;28d2edf69;1;;19;4x6;2;;;;130;0.06;;;;260;;;;;0.05;;;;;;145;145;145;145;145;145;145;145;;;;;25;25;25;25;;;;;;;;;;;;;;;;;golden_selection_kit_WIN26A:20
+W_MultiAge_WIN26E1;WIN26E;Homeward Bus Stop Diner;f736c4d85;1;;19;6x4;2;;;;780;;;;;1560;1170;;;;;;;;;;255;255;255;255;255;255;255;255;;;;;25;25;25;25;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WIN26A:12
+W_MultiAge_WIN26F1;WIN26F;Snowbank Savings;bcabf86f9;1;;19;4x4;2;-192000;;;270;;;;182;;;360;;;;;;;78750;;180;180;180;180;245;245;245;245;;;;;;;;;;;;;;;;;;13.5;;;;;;;
 W_SpaceAgeJupiterMoon_Residential1;Villetta di Juno;Juno Dwelling;5ae2f9301;;;11;4x3;1.5;8240;;;;;;;;;;;;;;;142080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_SpaceAgeJupiterMoon_Residential2;Residenza titanica;Titanus Residence;1af702f83;;;11;3x2;1;7060;;;;;;;;;;;;;;;83280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_SpaceAgeJupiterMoon_Workshop1;Farmacia Aerospaziale;Aerospace Pharmacy;acb96ed72;;;11;4x4;2;-2220;;;;;;;;;;;;;;;;73540;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
