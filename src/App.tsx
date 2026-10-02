@@ -28,7 +28,7 @@ import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, t
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, sanitizePortraitUrl, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
 import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
@@ -2427,13 +2427,15 @@ export default function App() {
       for (const key in cityMap) {
         const entry = cityMap[key];
         if (!entry || typeof entry !== "object") continue;
-        if (entry.x == null || entry.y == null) continue;
+        // Il gioco omette le coordinate uguali a 0: x/y assenti = 0, non "senza posizione".
+        const ex = Number(entry.x ?? 0);
+        const ey = Number(entry.y ?? 0);
         const entityId = entry.cityentity_id ? String(entry.cityentity_id) : null;
         if (!entityId) continue;
         const [w, l] = getEntitySize(entityId);
         for (let dx = 0; dx < w; dx++) {
           for (let dy = 0; dy < l; dy++) {
-            grid.set(`${Number(entry.x) + dx},${Number(entry.y) + dy}`, String(entry.type ?? ""));
+            grid.set(`${ex + dx},${ey + dy}`, String(entry.type ?? ""));
           }
         }
       }
@@ -2441,7 +2443,8 @@ export default function App() {
       for (const key in cityMap) {
         const entry = cityMap[key];
         if (!entry || typeof entry !== "object") continue;
-        if (entry.x == null || entry.y == null) continue;
+        const ex = Number(entry.x ?? 0); // x/y assenti = 0 (vedi sopra)
+        const ey = Number(entry.y ?? 0);
         const entityId = entry.cityentity_id ? String(entry.cityentity_id) : null;
         if (!entityId) continue;
         const entity = cityEntities?.[entityId] ?? {};
@@ -2451,8 +2454,8 @@ export default function App() {
         let touchesStreet = false;
         for (let dx = 0; dx < w && !touchesStreet; dx++) {
           for (let dy = 0; dy < l && !touchesStreet; dy++) {
-            const x = Number(entry.x) + dx;
-            const y = Number(entry.y) + dy;
+            const x = ex + dx;
+            const y = ey + dy;
             const neighbors: Array<[number, number]> = [[-1,0],[1,0],[0,-1],[0,1]];
             for (const [ox, oy] of neighbors) {
               if (grid.get(`${x + ox},${y + oy}`) === "street") {
@@ -3623,6 +3626,16 @@ export default function App() {
       const usedVersion = typeof data._v === "number" ? data._v : 0;
       if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
         setIsBookmarkletOutdatedModalOpen(true);
+      } else {
+        // v5+: l'helper non ha esposto alcune sezioni (struttura cambiata dopo un
+        // suo aggiornamento): l'import è andato a buon fine ma è incompleto.
+        // 'avatar' (cosmetico) e 'outpost' (riguarda solo la tab Pirati) esclusi.
+        const diag = readPayloadDiagnostics(data);
+        const missing = diag.warnings.filter((w) => w !== "avatar" && w !== "outpost");
+        if (missing.length > 0) {
+          const helper = [diag.helperName, diag.helperVersion].filter(Boolean).join(" ") || "?";
+          alert(t("bookmarkletWarningsAlert", uiLang, missing.join(", "), helper));
+        }
       }
     } catch (err) {
       // L'import ha fallito DOPO che il profilo era già stato creato: può

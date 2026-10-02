@@ -1616,6 +1616,11 @@ const UI_STRINGS = {
     it: (detail: string) => `Errore durante l'importazione dei dati. Il profilo non è stato creato.\n\nDettaglio: ${detail}`,
     en: (detail: string) => `Error while importing data. The profile was not created.\n\nDetail: ${detail}`,
   },
+  // v5: l'import è riuscito ma lo script non ha trovato alcune sezioni nell'helper.
+  bookmarkletWarningsAlert: {
+    it: (sections: string, helper: string) => `Importazione completata, ma l'helper (${helper}) non ha fornito alcune sezioni: ${sections}.\n\nPotrebbe essere cambiata la sua struttura dopo un aggiornamento: i dati importati sono incompleti. Segnalalo allo sviluppatore indicando helper e versione.`,
+    en: (sections: string, helper: string) => `Import completed, but the helper (${helper}) did not provide some sections: ${sections}.\n\nIts structure may have changed after an update: the imported data is incomplete. Please report it to the developer, mentioning helper and version.`,
+  },
   // ── Modale "Bacchetta magica obsoleta" (bookmarklet v1/v2 in uso) ─────
   bookmarkletOutdatedModalTitle: {
     it: "Bacchetta magica obsoleta",
@@ -1626,8 +1631,8 @@ const UI_STRINGS = {
     en: "Import successful, but you used an older version of the magic wand: some data may be missing or outdated.",
   },
   bookmarkletOutdatedModalBody: {
-    it: "La nuova bacchetta magica supporta sia FoE Helper sia Forge Hammer, e funziona anche sulle città di altri giocatori: basta visitare la loro città e cliccarla per importarla (senza inventario né alleati, che il gioco non mostra mai per un altro giocatore).",
-    en: "The new magic wand supports both FoE Helper and Forge Hammer, and also works on other players' cities: just visit their city and click it to import it (without inventory or allies, which the game never shows for another player).",
+    it: "La nuova bacchetta magica resiste agli aggiornamenti di FoE Helper e Forge Hammer (segnala se un helper non fornisce qualche dato), supporta entrambi e funziona anche sulle città di altri giocatori: basta visitare la loro città e cliccarla per importarla (senza inventario né alleati, che il gioco non mostra mai per un altro giocatore).",
+    en: "The new magic wand copes with FoE Helper and Forge Hammer updates (it reports when a helper does not provide some data), supports both, and also works on other players' cities: just visit their city and click it to import it (without inventory or allies, which the game never shows for another player).",
   },
   bookmarkletOutdatedModalSteps: {
     it: "Per aggiornarla: elimina la vecchia bacchetta magica dalla barra dei preferiti, poi trascina di nuovo quella qui sopra per sostituirla.",
@@ -1898,6 +1903,10 @@ const UI_STRINGS = {
   piratiImportOutdatedBookmarklet: {
     it: "Stai usando una bacchetta magica vecchia. Cancellala dalla barra dei preferiti e ricreala.",
     en: "You're using an old magic wand bookmarklet. Delete it from your bookmarks bar and recreate it.",
+  },
+  piratiImportHelperUnsupported: {
+    it: (helper: string) => `L'helper in uso (${helper}) non espone i dati dell'Insediamento dei Pirati: probabilmente la sua struttura è cambiata dopo un aggiornamento. Segnalalo allo sviluppatore indicando helper e versione.`,
+    en: (helper: string) => `The helper in use (${helper}) does not expose the Pirate Outpost data: its structure has probably changed after an update. Please report it to the developer, mentioning helper and version.`,
   },
   piratiImportVisitOutpostFirst: {
     it: "Devi prima visitare il tuo Insediamento dei Pirati almeno una volta in questa sessione di gioco, poi riprova.",

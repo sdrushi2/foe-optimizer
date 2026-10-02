@@ -125,14 +125,52 @@
  * risultato dopo. Validato con un harness che simula tutte le combinazioni
  * (`Allies`/`S.Allies` presenti, assenti, vuoti, `null`): nessuna lancia più,
  * il guard continua a intercettare correttamente il caso "nessun helper".
- * ⚠️ Nota per un prossimo giro di hardening (non toccato qui, fix mirato al
- * bug segnalato): `var M=(V?CityMap.OtherPlayer:CityMap.Main)||{}` accede a
- * `CityMap` senza lo stesso `CityMap&&` usato poco sotto per
- * `CityMap.CulturalOutpost` — se mai `CityMap` risultasse assente
- * lancerebbe (catturato dal `try/catch` generale, quindi niente crash muto,
- * ma solo un alert generico invece di un fallback pulito).
+ * v4.3 (ottobre 2026, stesso `_v: 4` — nessun cambio di struttura payload) —
+ * Forge Hammer 1.8.0 ha rinominato i contenitori delle mappe secondarie in
+ * `CityMap` usando l'id della mappa: `CulturalOutpost` → `cultural_outpost`
+ * (stessa forma `{data, areas}`; analogamente `EraOutpost` → `era_outpost`,
+ * `QI` → `guild_raids`, nuovo `stellar_city`). Con la vecchia chiave il blocco
+ * Pirati veniva saltato e l'app mostrava "visita prima l'Insediamento".
+ * Ora lo script legge `CityMap.cultural_outpost||CityMap.CulturalOutpost`
+ * (nuovo nome prima, vecchio come ripiego per FoE Helper e FH < 1.8).
+ * Verificato dall'utente in console su FH 1.8.0: `cultural_outpost` ha
+ * areas=7, data=38. Le versioni FH precedenti (repo locale: 1.5.0) usavano
+ * ancora `CulturalOutpost`.
+ *
+ * v5 (ottobre 2026) — la bacchetta diventa a prova di aggiornamenti degli
+ * helper (Forge Hammer si aggiorna da solo: 1.8.0 ha già rotto due volte la
+ * lettura, `Allies` e `cultural_outpost`). Struttura dei dati invariata, ma
+ * sale `_v` così chi ha la bacchetta vecchia riceve l'avviso di riscaricarla.
+ * Cambiamenti:
+ * 1. `CityMap.cultural_outpost||CityMap.CulturalOutpost` (v4.3, FH ≥ 1.8).
+ * 2. Il gioco OMETTE le coordinate uguali a 0 (verificato su dati reali: edifici
+ *    e un Grande Edificio senza `y`). Ora lo script normalizza `x:…||0`,
+ *    `y:…||0` per aree sbloccate, aree e entità dell'Insediamento; l'app
+ *    tollera comunque i payload vecchi (vedi importCulturalOutpost.ts).
+ * 3. Campi diagnostici nuovi, opzionali e non letti dalla logica di import:
+ *    `helper: {n, v}` (nome e versione dell'helper in uso, per il supporto) e
+ *    `warn: string[]` con i dati che lo script NON ha trovato (`allies`,
+ *    `inventory`, `map`, `entities`, `areas`, `avatar`, `outpost`). Prima un
+ *    helper cambiato produceva un import "riuscito" ma incompleto, senza
+ *    alcun avviso; ora l'app lo segnala (vedi `readPayloadDiagnostics`).
+ * 4. Il guard iniziale richiede solo l'helper (`S`): l'assenza degli alleati
+ *    non blocca più l'intero import, diventa il warning `allies`.
+ * 5. L'avatar ha un proprio `try/catch`: se `srcLinks.GetPortrait` lancia non
+ *    fa più fallire l'import (warning `avatar`).
+ * 6. `pirateOutpost` viene incluso solo se ha almeno un'area: un Insediamento
+ *    non ancora visitato (oggetto vuoto) equivale a "assente".
  */
-export const CURRENT_BOOKMARKLET_VERSION = 4;
+export const CURRENT_BOOKMARKLET_VERSION = 5;
+
+/**
+ * Versione minima del bookmarklet il cui blocco `pirateOutpost` è ancora
+ * accettato dall'import dei Pirati. Il blocco è nato nella v4 e non ha
+ * cambiato forma: rifiutare i payload v4 perché `_v < CURRENT` farebbe
+ * riscaricare la bacchetta a chi ha già un Insediamento valido. I payload
+ * senza `pirateOutpost` restano invece "bacchetta vecchia" (vedi
+ * {@link isLegacyBookmarkletPayload}).
+ */
+export const MIN_PIRATE_BOOKMARKLET_VERSION = 4;
 
 /**
  * Codice JavaScript del bookmarklet "bacchetta magica" (versione universale,
@@ -159,7 +197,7 @@ export const CURRENT_BOOKMARKLET_VERSION = 4;
  * iniziale ("helper non trovato"): è un controllo `if`, non un accesso a
  * campo annidato, non può lanciare.
  */
-export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}var S=typeof MainParser!='undefined'?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S||(typeof Allies=='undefined'&&!S.Allies)){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}try{var V=E=='OtherPlayer';var M=(V?CityMap.OtherPlayer:CityMap.Main)||{};var A=typeof srcLinks!='undefined'?srcLinks.GetPortrait((V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:(typeof FH!='undefined'?FH.Player.Avatar:null)))):null;var d={_v:${CURRENT_BOOKMARKLET_VERSION},activeMap:E,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((typeof Allies!='undefined'?Allies:S.Allies)||{}).allyList||{},CityMapData:(V?M.mapData:S.CityMapData)||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){return o.width==4&&o.length==4?{x:o.x,y:o.y}:{x:o.x,y:o.y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:(typeof FH!='undefined'?FH.Player.Name:null))};if(!V){var o=CityMap&&CityMap.CulturalOutpost;if(o){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:(o.areas||[]).map(function(a){return{x:a.x,y:a.y,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x,y:e.y,cityentity_id:e.cityentity_id,type:e.type};})};}}c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}var K=typeof MainParser!='undefined';var S=K?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}try{var W=[];var V=E=='OtherPlayer';var C=typeof CityMap!='undefined'?CityMap:null;var M=(C&&(V?C.OtherPlayer:C.Main))||{};var P=typeof FH!='undefined'&&FH.Player?FH.Player:{};var AO=typeof Allies!='undefined'?Allies:S.Allies;var A=null;try{if(typeof srcLinks!='undefined'){A=srcLinks.GetPortrait(V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:P.Avatar));}}catch(e){A=null;}var CM=V?M.mapData:S.CityMapData;if(!V&&!AO)W.push('allies');if(!V&&!S.Inventory)W.push('inventory');if(!CM)W.push('map');if(!S.CityEntities)W.push('entities');if(!M.unlockedAreas)W.push('areas');if(!A)W.push('avatar');var d={_v:${CURRENT_BOOKMARKLET_VERSION},helper:{n:K?'FoE Helper':'Forge Hammer',v:K?(typeof extVersion!='undefined'?extVersion:null):(typeof FH!='undefined'&&FH.BaseData?FH.BaseData.extVersion:null)},activeMap:E,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((AO||{}).allyList)||{},CityMapData:CM||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){var x=o.x||0,y=o.y||0;return o.width==4&&o.length==4?{x:x,y:y}:{x:x,y:y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:P.Name)};if(!V){var o=C&&(C.cultural_outpost||C.CulturalOutpost);if(o&&o.areas&&o.areas.length){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:o.areas.map(function(a){return{x:a.x||0,y:a.y||0,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x||0,y:e.y||0,cityentity_id:e.cityentity_id,type:e.type};})};}else if(!C||(!('cultural_outpost' in C)&&!('CulturalOutpost' in C))){W.push('outpost');}}d.warn=W;c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 
@@ -325,6 +363,12 @@ export interface BookmarkletData {
    *  inventario lo ignora del tutto. Vedi commento v4 sopra
    *  CURRENT_BOOKMARKLET_VERSION per il perché della cattura unificata. */
   pirateOutpost?: BookmarkletPirateOutpostData;
+  /** v5+: helper che ha prodotto il payload (solo diagnostica/supporto).
+   *  Dato non fidato: passare da {@link readPayloadDiagnostics}. */
+  helper?: { n?: unknown; v?: unknown };
+  /** v5+: sezioni che lo script NON ha trovato nell'helper (`allies`,
+   *  `inventory`, `map`, `entities`, `areas`, `avatar`, `outpost`). */
+  warn?: unknown;
 }
 
 // ─── Payload Insediamento dei Pirati ───────────────────────────────────────
@@ -337,16 +381,19 @@ export interface BookmarkletData {
 
 /** Un'area sbloccata dell'Insediamento (allineata a blocchi 4×4). */
 interface BookmarkletPirateArea {
-  x: number;
-  y: number;
+  /** Assente = 0 (il gioco omette le coordinate uguali a 0; la v5 le scrive
+   *  già normalizzate, i payload v4 no). */
+  x?: number;
+  y?: number;
   width: number;
   length: number;
 }
 
 /** Un'entità piazzata nell'Insediamento (municipio, ostacolo, edificio). */
 export interface BookmarkletPirateEntity {
-  x: number;
-  y: number;
+  /** Assente = 0 (vedi {@link BookmarkletPirateArea}). */
+  x?: number;
+  y?: number;
   cityentity_id: string;
   type: string;
 }
@@ -392,7 +439,9 @@ export function isLegacyBookmarkletPayload(value: unknown): boolean {
   const isV31OutpostPayload = Array.isArray(payload.areas) || Array.isArray(payload.entities);
   if (!isCityPayload && !isV31OutpostPayload) return false;
   const version = typeof payload._v === "number" ? payload._v : 0;
-  return version < CURRENT_BOOKMARKLET_VERSION;
+  // Soglia pirata, non CURRENT: un v4 senza pirateOutpost va a "visita prima
+  // l'Insediamento" (azione giusta), non a "ricrea la bacchetta".
+  return version < MIN_PIRATE_BOOKMARKLET_VERSION;
 }
 
 /**
@@ -442,13 +491,41 @@ export function validateBookmarkletPirateOutpostData(value: unknown): value is B
   if (!value || typeof value !== "object") return false;
   const payload = value as Record<string, unknown>;
   if (!Array.isArray(payload.areas) || !Array.isArray(payload.entities)) return false;
+  // x/y possono mancare (coordinata 0 omessa dal gioco): se presenti, numeri.
+  const optNum = (v: unknown) => v === undefined || typeof v === "number";
   return payload.areas.every(
     (a) => a && typeof a === "object" &&
-      typeof (a as Record<string, unknown>).x === "number" &&
-      typeof (a as Record<string, unknown>).y === "number" &&
+      optNum((a as Record<string, unknown>).x) &&
+      optNum((a as Record<string, unknown>).y) &&
       typeof (a as Record<string, unknown>).width === "number" &&
       typeof (a as Record<string, unknown>).length === "number"
   );
+}
+
+/** Diagnostica v5 estratta dal payload, già sanitizzata (campi non fidati). */
+export interface PayloadDiagnostics {
+  helperName: string;
+  helperVersion: string;
+  warnings: string[];
+}
+
+const KNOWN_WARNINGS = ["allies", "inventory", "map", "entities", "areas", "avatar", "outpost"];
+
+/** Legge `helper`/`warn` di un payload v5+ con whitelist: stringhe corte, codici
+ *  noti. Payload vecchi o campi malformati → valori vuoti. */
+export function readPayloadDiagnostics(value: unknown): PayloadDiagnostics {
+  const out: PayloadDiagnostics = { helperName: "", helperVersion: "", warnings: [] };
+  if (!value || typeof value !== "object") return out;
+  const p = value as Record<string, unknown>;
+  const h = p.helper as Record<string, unknown> | undefined;
+  if (h && typeof h === "object") {
+    if (typeof h.n === "string") out.helperName = h.n.slice(0, 40);
+    if (typeof h.v === "string") out.helperVersion = h.v.slice(0, 20);
+  }
+  if (Array.isArray(p.warn)) {
+    out.warnings = p.warn.filter((w): w is string => typeof w === "string" && KNOWN_WARNINGS.includes(w));
+  }
+  return out;
 }
 
 // ─── Validazione ──────────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 // bacchetta magica mostrata come CTA in App.tsx (tab Città/Inventario, "Nessuna città
 // importata...") nella guida rapida in fondo al planner — stesso font/stile, stessa icona.
 import { Wand2 } from "lucide-react";
-import { isLegacyBookmarkletPayload, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
+import { isLegacyBookmarkletPayload, readPayloadDiagnostics, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
 import { importCulturalOutpostPayload, ImportCulturalOutpostFailure } from "../data/importCulturalOutpost";
 import { t, type UiLang } from "../data/ui-strings";
 import {
@@ -843,7 +843,17 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       const text = isLegacyBookmarkletPayload(payload)
         ? t("piratiImportOutdatedBookmarklet", uiLang)
         : isObjectPayload && pirateOutpostPayload === undefined
-          ? t("piratiImportVisitOutpostFirst", uiLang)
+          ? (() => {
+              // v5: lo script segnala 'outpost' quando l'helper non espone
+              // proprio l'oggetto dell'Insediamento (struttura cambiata dopo un
+              // suo aggiornamento): "visitalo" non servirebbe a nulla.
+              const diag = readPayloadDiagnostics(payload);
+              if (diag.warnings.includes("outpost")) {
+                const helper = [diag.helperName, diag.helperVersion].filter(Boolean).join(" ") || "?";
+                return t("piratiImportHelperUnsupported", uiLang, helper);
+              }
+              return t("piratiImportVisitOutpostFirst", uiLang);
+            })()
           : t("piratiImportInvalidStructure", uiLang);
       const message = { kind: "error" as const, text };
       setImportMessage(message);

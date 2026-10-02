@@ -7,7 +7,7 @@
 //  coordinate relative del planner Pirati (componenti/PiratiTool.tsx).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { CURRENT_BOOKMARKLET_VERSION, type BookmarkletPirateOutpostData, type BookmarkletPirateEntity } from "./bookmarklet";
+import { MIN_PIRATE_BOOKMARKLET_VERSION, type BookmarkletPirateOutpostData, type BookmarkletPirateEntity } from "./bookmarklet";
 import { parseNumberPair } from "./piratiBuildings";
 
 // Dimensione di un blocco di espansione (celle), stessa costante di data/piratiBuildings.ts.
@@ -92,7 +92,10 @@ export function importCulturalOutpostPayload(
   // perché un bookmarklet vecchio è la causa più probabile di qualunque altro
   // problema di struttura a valle (non solo aree assenti/fazione sbagliata).
   const usedVersion = typeof payload._v === "number" ? payload._v : 0;
-  if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
+  // Soglia = MIN_PIRATE_BOOKMARKLET_VERSION (4), NON la versione corrente: il
+  // blocco pirateOutpost non ha cambiato forma dalla v4 e rifiutare i v4
+  // costringerebbe a riscaricare la bacchetta chi ha già un payload valido.
+  if (usedVersion < MIN_PIRATE_BOOKMARKLET_VERSION) {
     throw new ImportCulturalOutpostFailure({ code: "OUTDATED_BOOKMARKLET" });
   }
 
@@ -104,9 +107,15 @@ export function importCulturalOutpostPayload(
   // dati reali di gioco possono avere singoli impediment senza 'y', e un ostacolo
   // perso non giustifica il fallimento dell'intero import (a differenza di
   // townhall/aree malformati, che restano errori espliciti: sono l'ancora).
-  const entities = payload.entities.filter(
-    (e): e is BookmarkletPirateEntity => !!e && typeof e.x === "number" && typeof e.y === "number" && typeof e.cityentity_id === "string"
-  );
+  // Il gioco OMETTE le coordinate uguali a 0 (x/y assenti = 0, verificato su dati
+  // reali): si normalizzano qui invece di scartare l'entità. Una coordinata
+  // presente ma non numerica resta invece un'entità malformata da scartare.
+  const coordOk = (v: unknown) => v === undefined || typeof v === "number";
+  const entities = payload.entities
+    .filter(
+      (e): e is BookmarkletPirateEntity => !!e && coordOk(e.x) && coordOk(e.y) && typeof e.cityentity_id === "string"
+    )
+    .map((e) => ({ ...e, x: e.x ?? 0, y: e.y ?? 0 }));
 
   // Un payload strutturalmente valido può appartenere a un'ALTRA fazione (il gioco
   // espone più CulturalOutpost e il bookmarklet cattura quello attivo). Senza
@@ -134,8 +143,8 @@ export function importCulturalOutpostPayload(
   // blocco più a sinistra è sempre il blocco base più a sinistra di quella riga
   // (0:3), perché in riga 0 non esiste nessuna espansione alla sua sinistra.
   const gameAreaBlocks = payload.areas.map((a) => ({
-    rowBlock: Math.floor(a.y / BLOCK_SIZE),
-    colBlock: Math.floor(a.x / BLOCK_SIZE),
+    rowBlock: Math.floor((a.y ?? 0) / BLOCK_SIZE),
+    colBlock: Math.floor((a.x ?? 0) / BLOCK_SIZE),
   }));
 
   const gameMinRowBlock = Math.min(...gameAreaBlocks.map((b) => b.rowBlock));

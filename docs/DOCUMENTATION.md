@@ -328,6 +328,34 @@ bookmarklet.ts per l'analisi completa). La diagnosi di un campo mancante non
 nella costruzione del payload ora mostra comunque un alert diretto nella
 pagina di gioco, PRIMA che l'utente tenti di incollare qualcosa nell'app.
 
+**v4.3 (ottobre 2026) — Forge Hammer 1.8.0 rinomina i contenitori delle mappe.**
+In `CityMap` le mappe secondarie sono ora indicizzate per id mappa:
+`CulturalOutpost` → `cultural_outpost` (stessa forma `{data, areas}`),
+`EraOutpost` → `era_outpost`, `QI` → `guild_raids`, più il nuovo `stellar_city`.
+Con la vecchia chiave il blocco Pirati veniva saltato e l'app diceva "visita prima
+l'Insediamento". Lo script legge `CityMap.cultural_outpost||CityMap.CulturalOutpost`
+(nuovo nome, vecchio come ripiego per FoE Helper e FH < 1.8). Stesso `_v: 4`: gli
+utenti devono riscaricare la bacchetta. Se FH rinomina di nuovo, il sintomo è lo
+stesso: diagnosi in console con
+`Object.entries(CityMap).forEach(([k,v])=>console.log(k,Object.keys(v||{})))`.
+
+**v5 (ottobre 2026) — bacchetta a prova di aggiornamenti dell'helper.** Forge Hammer
+si aggiorna da solo (la 1.8.0 ha già rotto due letture), quindi `_v` sale a 5 e lo
+script diventa difensivo: (1) il guard iniziale richiede solo l'helper; (2) campo
+diagnostico `helper: {n, v}` (nome/versione) e `warn: string[]` con le sezioni NON
+trovate (`allies`, `inventory`, `map`, `entities`, `areas`, `avatar`, `outpost`):
+l'app, dopo l'import, mostra un alert se mancano dati importanti
+(`readPayloadDiagnostics`, whitelist dei codici) e la tab Pirati dice «l'helper non
+espone l'Insediamento» invece di «visitalo»; (3) avatar in `try/catch` proprio;
+(4) coordinate normalizzate `x||0`, `y||0` (il **gioco omette le coordinate = 0**:
+prima il pirata scartava le entità senza `x`/`y` e rifiutava aree senza `y`, e due
+punti di App.tsx — griglia occupazione e «strade inutili» — saltavano gli edifici a
+x=0/y=0); l'import tollera comunque i payload v4 senza coordinate; (5)
+`pirateOutpost` incluso solo con almeno un'area. **Soglia pirata**:
+`MIN_PIRATE_BOOKMARKLET_VERSION = 4` (il blocco non ha cambiato forma) — i payload
+v4 con Insediamento restano importabili; `isLegacyBookmarkletPayload` usa la stessa
+soglia. Chi ha una bacchetta < 5 vede il modale «obsoleta» dopo l'import città.
+
 Costruisce un oggetto JSON e lo copia negli appunti (con fallback su `execCommand`
 per i browser senza `navigator.clipboard`).
 
@@ -335,7 +363,7 @@ per i browser senza `navigator.clipboard`).
 standard (4×4, la grande maggioranza) vengono compresse rimuovendo i campi `width`,
 `length` (ricostruibili al default 4) e `__class__`.
 
-**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`, attualmente **4**).**
+**Versionamento del bookmarklet (`CURRENT_BOOKMARKLET_VERSION`, attualmente **5**).**
 Il payload include un campo `_v` la cui versione corrente è la costante esportata
 `CURRENT_BOOKMARKLET_VERSION`, **interpolata** direttamente dentro `BOOKMARKLET_JS`
 (nessun numero duplicato da tenere sincronizzato a mano). All'import, dopo
