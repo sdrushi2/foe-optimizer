@@ -5757,6 +5757,24 @@
         "W_MultiAge_WIN26C1",
         "W_MultiAge_WIN26C2"
       ]
+    },
+    "upgrade_kit_GR27A": {
+      "names": {
+        "en": "Neo Carousel Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_GR27A1",
+        "W_MultiAge_GR27A2"
+      ]
+    },
+    "upgrade_kit_GR27B": {
+      "names": {
+        "en": "Neo Harmony Arbor Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_GR27B1",
+        "W_MultiAge_GR27B2"
+      ]
     }
   },
   "selectionKits": {
@@ -11628,6 +11646,51 @@
         "upgrade_kit_ascended_CARE24C",
         "upgrade_kit_ascended_SUM24B",
         "upgrade_kit_ascended_SUM24C"
+      ]
+    },
+    "selection_kit_GR27A": {
+      "names": {
+        "en": "Neo Carousel Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_GR27A1",
+        "upgrade_kit_GR27A"
+      ]
+    },
+    "selection_kit_GR27B": {
+      "names": {
+        "en": "Neo Harmony Arbor Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_GR27B1",
+        "upgrade_kit_GR27B"
+      ]
+    },
+    "selection_kit_epic_GR27_MA_1": {
+      "names": {
+        "en": "QI 2026 Middle Ages Epic Selection Kit 4"
+      },
+      "options": [
+        "W_MultiAge_GR25I1",
+        "upgrade_kit_GR25I",
+        "W_MultiAge_GR25J1",
+        "upgrade_kit_GR25J",
+        "W_MultiAge_GR26A1",
+        "upgrade_kit_GR26A",
+        "W_MultiAge_GR26B1",
+        "upgrade_kit_GR26B",
+        "W_MultiAge_GR26C1",
+        "upgrade_kit_GR26C",
+        "W_MultiAge_GR26D1",
+        "upgrade_kit_GR26D",
+        "W_MultiAge_GR26E1",
+        "upgrade_kit_GR26E",
+        "W_MultiAge_GR26F1",
+        "upgrade_kit_GR26F",
+        "W_MultiAge_GR26G1",
+        "upgrade_kit_GR26G",
+        "W_MultiAge_GR26H1",
+        "upgrade_kit_GR26H"
       ]
     }
   },
