@@ -1532,8 +1532,8 @@ W_MultiAge_HAL23F1;Scatola da incubo dell'Allevamento di mostri;Monster Ranch's 
 W_MultiAge_HAL23G1;Carrozza fantasma dei Destrieri spettrali;Spectral Steeds' Phantom Carriage;e10b72067;1;;19;1x3;;;;;12;;;;;;18;;;;;;;;;;15;18;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_HAL23A:20|selection_kit_HAL23A:20|silver_upgrade_kit_HAL23A:20
 W_MultiAge_HAL24A1;Giostra Brivido Inquietante - Lv. 1;Eerie Thrill Coaster - Lv. 1;e01803b0c;;;19;7x4;2;4575;-5490;;10;;;;;;;;;;;;;4020;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A10;Giostra Incubo Inquietante;Eerie Nightmare Coaster;f23d675f9;1;;19;7x4;2;30554;-36664;;75;;;8;;100;125;;;;;;;274100;;;102;102;;;30;30;;;;;;;;;;;;;;;;;;;M;;;;3;;;;
-W_MultiAge_HAL24A11;Giostra Delirio Inquietante;Eerie Delirium Coaster;62f3296bd;1;;19;7x4;;31790;-40460;;150;;;10;;200;150;;;;;;;306580;;;280;280;;;381;381;;;;;;;;;;;;;;;;;;;M;;;;5;;2;;
-W_MultiAge_HAL24A12;Giostra Delirio Inquietante Ascesa;Ascended Eerie Delirium Coaster;74e229d34;1;90;51;7x4;;44880;-44160;;450;;;20;;400;300;;;;;;;666590;;;460;460;;;521;521;;;;;;;25;;;;;;;;;;200;8000;M;;;;10;;6;;
+W_MultiAge_HAL24A11;Giostra Delirio Inquietante;Eerie Delirium Coaster;62f3296bd;1;;19;7x4;;33900;-40460;;150;;;10;;200;150;;;;;;;306580;;;280;280;;;381;381;;;;;;;;;;;;;;;;;;;M;;;;5;;2;;
+W_MultiAge_HAL24A12;Giostra Delirio Inquietante Ascesa;Ascended Eerie Delirium Coaster;74e229d34;1;90;51;7x4;;33900;-44160;;450;;;20;;400;300;;;;;;;666590;;;470;470;;;551;551;;;;;;;30;;;;;;;;;;200;8000;M;;;;10;;6;;
 W_MultiAge_HAL24A2;Giostra Brivido Inquietante - Lv. 2;Eerie Thrill Coaster - Lv. 2;cdbc7b448;;;19;7x4;2;6100;-7320;;12;;;;;;;;;;;;;8042;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A3;Giostra Brivido Inquietante - Lv. 3;Eerie Thrill Coaster - Lv. 3;f8c4e5cf2;;;19;7x4;2;9177;-11012;;14;;;;;;;;;;;;;16081;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_HAL24A4;Giostra Brivido Inquietante - Lv. 4;Eerie Thrill Coaster - Lv. 4;63bec6a67;;;19;7x4;2;12226;-14671;;16;;;;;;;;;;;;;32162;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
