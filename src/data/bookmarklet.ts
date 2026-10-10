@@ -160,7 +160,18 @@
  * 6. `pirateOutpost` viene incluso solo se ha almeno un'area: un Insediamento
  *    non ancora visitato (oggetto vuoto) equivale a "assente".
  */
-export const CURRENT_BOOKMARKLET_VERSION = 5;
+/*
+ * v6 (ottobre 2026) — importa l'intero magazzino risorse del giocatore
+ * (`ResourceStock` di FoE Helper, `FH.RessourceStock` di Forge Hammer — sic,
+ * con due "s"; `FH.ResourceStock` come ripiego). ~344 chiavi, ~7 KB: si
+ * importa tutto per non dover cambiare di nuovo la bacchetta quando servirà
+ * un'altra risorsa. Primo uso: Gettoni Valore (`historical_allies_valor_token`)
+ * per il consigliere alleati. Campo `resources` (oggetto risorsa→quantità),
+ * assente in visita a un altro giocatore; warning `resources` se l'helper non
+ * l'ha (ancora) popolato. Il pannello del consigliere appare SOLO se il
+ * profilo ha risorse salvate, cioè se è stato importato con la v6.
+ */
+export const CURRENT_BOOKMARKLET_VERSION = 6;
 
 /**
  * Versione minima del bookmarklet il cui blocco `pirateOutpost` è ancora
@@ -197,7 +208,7 @@ export const MIN_PIRATE_BOOKMARKLET_VERSION = 4;
  * iniziale ("helper non trovato"): è un controllo `if`, non un accesso a
  * campo annidato, non può lanciare.
  */
-export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}var K=typeof MainParser!='undefined';var S=K?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}try{var W=[];var V=E=='OtherPlayer';var C=typeof CityMap!='undefined'?CityMap:null;var M=(C&&(V?C.OtherPlayer:C.Main))||{};var P=typeof FH!='undefined'&&FH.Player?FH.Player:{};var AO=typeof Allies!='undefined'?Allies:S.Allies;var A=null;try{if(typeof srcLinks!='undefined'){A=srcLinks.GetPortrait(V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:P.Avatar));}}catch(e){A=null;}var CM=V?M.mapData:S.CityMapData;if(!V&&!AO)W.push('allies');if(!V&&!S.Inventory)W.push('inventory');if(!CM)W.push('map');if(!S.CityEntities)W.push('entities');if(!M.unlockedAreas)W.push('areas');if(!A)W.push('avatar');var d={_v:${CURRENT_BOOKMARKLET_VERSION},helper:{n:K?'FoE Helper':'Forge Hammer',v:K?(typeof extVersion!='undefined'?extVersion:null):(typeof FH!='undefined'&&FH.BaseData?FH.BaseData.extVersion:null)},activeMap:E,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((AO||{}).allyList)||{},CityMapData:CM||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){var x=o.x||0,y=o.y||0;return o.width==4&&o.length==4?{x:x,y:y}:{x:x,y:y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:P.Name)};if(!V){var o=C&&(C.cultural_outpost||C.CulturalOutpost);if(o&&o.areas&&o.areas.length){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:o.areas.map(function(a){return{x:a.x||0,y:a.y||0,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x||0,y:e.y||0,cityentity_id:e.cityentity_id,type:e.type};})};}else if(!C||(!('cultural_outpost' in C)&&!('CulturalOutpost' in C))){W.push('outpost');}}d.warn=W;c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}var K=typeof MainParser!='undefined';var S=K?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S){alert('No supported helper found (FoE Helfer or Forge Hammer required)');return;}try{var W=[];var V=E=='OtherPlayer';var C=typeof CityMap!='undefined'?CityMap:null;var M=(C&&(V?C.OtherPlayer:C.Main))||{};var P=typeof FH!='undefined'&&FH.Player?FH.Player:{};var AO=typeof Allies!='undefined'?Allies:S.Allies;var A=null;try{if(typeof srcLinks!='undefined'){A=srcLinks.GetPortrait(V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:P.Avatar));}}catch(e){A=null;}var CM=V?M.mapData:S.CityMapData;if(!V&&!AO)W.push('allies');if(!V&&!S.Inventory)W.push('inventory');if(!CM)W.push('map');if(!S.CityEntities)W.push('entities');if(!M.unlockedAreas)W.push('areas');if(!A)W.push('avatar');var d={_v:${CURRENT_BOOKMARKLET_VERSION},helper:{n:K?'FoE Helper':'Forge Hammer',v:K?(typeof extVersion!='undefined'?extVersion:null):(typeof FH!='undefined'&&FH.BaseData?FH.BaseData.extVersion:null)},activeMap:E,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((AO||{}).allyList)||{},CityMapData:CM||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){var x=o.x||0,y=o.y||0;return o.width==4&&o.length==4?{x:x,y:y}:{x:x,y:y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:P.Name)};if(!V){var o=C&&(C.cultural_outpost||C.CulturalOutpost);if(o&&o.areas&&o.areas.length){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:o.areas.map(function(a){return{x:a.x||0,y:a.y||0,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x||0,y:e.y||0,cityentity_id:e.cityentity_id,type:e.type};})};}else if(!C||(!('cultural_outpost' in C)&&!('CulturalOutpost' in C))){W.push('outpost');}}if(!V){var R=K?(typeof ResourceStock!='undefined'?ResourceStock:null):(typeof FH!='undefined'?(FH.RessourceStock||FH.ResourceStock):null);if(!R||typeof R!='object'||Array.isArray(R)||!Object.keys(R).length){W.push('resources');}else{d.resources=R;}}d.warn=W;c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 
@@ -367,8 +378,12 @@ export interface BookmarkletData {
    *  Dato non fidato: passare da {@link readPayloadDiagnostics}. */
   helper?: { n?: unknown; v?: unknown };
   /** v5+: sezioni che lo script NON ha trovato nell'helper (`allies`,
-   *  `inventory`, `map`, `entities`, `areas`, `avatar`, `outpost`). */
+   *  `inventory`, `map`, `entities`, `areas`, `avatar`, `outpost`,
+   *  `resources` dalla v6). */
   warn?: unknown;
+  /** v6+: magazzino risorse del giocatore (risorsa → quantità). Dato non
+   *  fidato: passare SEMPRE da {@link sanitizeResources}. */
+  resources?: unknown;
 }
 
 // ─── Payload Insediamento dei Pirati ───────────────────────────────────────
@@ -509,7 +524,32 @@ export interface PayloadDiagnostics {
   warnings: string[];
 }
 
-const KNOWN_WARNINGS = ["allies", "inventory", "map", "entities", "areas", "avatar", "outpost"];
+const KNOWN_WARNINGS = ["allies", "inventory", "map", "entities", "areas", "avatar", "outpost", "resources"];
+
+/** Limiti di sanità per `resources` (v6): ~344 chiavi reali, nomi snake_case. */
+const RESOURCES_MAX_KEYS = 5000;
+const RESOURCE_KEY_RE = /^[A-Za-z0-9_.-]{1,100}$/;
+
+/**
+ * Normalizza il magazzino risorse del payload v6. Tiene solo chiavi con un
+ * nome plausibile e valori numerici finiti >= 0; scarta `__proto__` & co.
+ * (oggetto senza prototipo). Restituisce null se il campo è assente, non è
+ * un oggetto o non contiene alcuna risorsa valida: per l'app "nessuna
+ * risorsa" = profilo non importato con la v6 (pannello consigliere nascosto).
+ */
+export function sanitizeResources(value: unknown): Record<string, number> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const out: Record<string, number> = Object.create(null) as Record<string, number>;
+  let n = 0;
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (n >= RESOURCES_MAX_KEYS) break;
+    if (!RESOURCE_KEY_RE.test(k) || k === "__proto__" || k === "constructor" || k === "prototype") continue;
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0) continue;
+    out[k] = v;
+    n++;
+  }
+  return n > 0 ? out : null;
+}
 
 /** Legge `helper`/`warn` di un payload v5+ con whitelist: stringhe corte, codici
  *  noti. Payload vecchi o campi malformati → valori vuoti. */

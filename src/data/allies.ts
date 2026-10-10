@@ -41,6 +41,13 @@ export interface Ally {
    *  pipeline). Se si tocca quella logica, questo è il punto che si rompe. */
   abilityIta: string;
   abilityEng: string;
+  /** Tipo di alleato dal gioco (`meta[id].allyType`) come codice: "M" militare,
+   *  "S" scienza — STESSA convenzione della colonna `Ally` di buildings.csv.
+   *  Colonna `Tipo` di allies.csv (ottobre 2026); "" con un CSV più vecchio. */
+  allyType: string;
+  /** Gettoni Valore per evolvere QUESTA rarità alla successiva
+   *  (`evolutionCost`, colonna `EvoValor`). 0 se assente. */
+  evoValor: number;
 }
 
 export interface ImportedAlly {
@@ -120,6 +127,8 @@ export function parseAlliesCsv(csv: string): Ally[] {
   const idxBeniP = colIndex("BeniP");
   const idxAbilityIta = colIndex("abilityIta");
   const idxAbilityEng = colIndex("abilityEng");
+  const idxTipo = colIndex("Tipo");
+  const idxEvoValor = colIndex("EvoValor");
 
   // Helper: converte una colonna CSV in numero, restituisce 0 se assente o NaN
   const toNumber = (s: string | undefined) => parseFloat(s || "") || 0;
@@ -155,6 +164,8 @@ export function parseAlliesCsv(csv: string): Ally[] {
       beniP: toNumber(at(cols, idxBeniP)),
       abilityIta: (at(cols, idxAbilityIta) || "").trim(),
       abilityEng: (at(cols, idxAbilityEng) || "").trim(),
+      allyType: (at(cols, idxTipo) || "").trim(),
+      evoValor: toNumber(at(cols, idxEvoValor)),
     };
   });
 

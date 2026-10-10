@@ -28,14 +28,14 @@ import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, t
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
 import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
-  isStorageOutdated
+  isStorageOutdated, PROFILE_SLOTS
 } from "./utils/storage";
 
 import buildingsCsv from "./assets/buildings.csv?raw";
@@ -49,6 +49,7 @@ import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import ProfileHelpModal from "./components/ProfileHelpModal";
 import AboutModal from "./components/AboutModal";
 import { useModalDismiss } from "./utils/useModalDismiss";
+import AllyAdvisorPanel from "./components/AllyAdvisorPanel";
 import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
@@ -152,6 +153,11 @@ for (const ally of ALLIES_FROM_CSV) {
     ALLIES_FROM_CSV.filter(c => c.id === ally.id && c.rarity >= 1 && c.rarity <= ally.rarity),
   );
 }
+
+// Database alleati: efficienza SEMPRE al livello 100 (ottobre 2026: il campo
+// modificabile è stato rimosso; stessa ipotesi "prima o poi maxato" del
+// pannello Potenziale alleati).
+const ALLY_DB_LEVEL = 100;
 
 // O(1) lookup for processedImportedAllies: avoid .find() O(n) per imported ally
 const ALLIES_BY_ID_RARITY = new Map<string, Allies.Ally>();
@@ -1981,6 +1987,7 @@ export default function App() {
     setInventoryUpgradeKits(reviveMap<UpgradeKitEntry>(inv?.inventoryUpgradeKits));
     setSpecialKits(inv?.specialKits ?? { oneUpKit: 0, oneDownKit: 0, reversionKit: 0, renovationKit: 0, storeBuilding: 0, rushEventBuildings: 0, rushMassSupplies: 0, rushGoodsBuildings: 0, massSelfAidKit: 0 });
     setImportedAllies(Array.isArray(allies) ? allies : []);
+    setPlayerResources(sanitizeResources(readStoredJson<unknown>(profileStorageKey(profileId, "resources"), null)));
     setSelectedIds(new Set());
     setSelectedJsonEntry(null);
     bumpStorage();
@@ -2003,6 +2010,7 @@ export default function App() {
     clearStoredJson(profileStorageKey(profileId, "city"));
     clearStoredJson(profileStorageKey(profileId, "inventory"));
     clearStoredJson(profileStorageKey(profileId, "allies"));
+    clearStoredJson(profileStorageKey(profileId, "resources"));
     setProfiles(updated);
     if (activeProfileId === profileId) {
       if (updated.length > 0) {
@@ -2903,6 +2911,16 @@ export default function App() {
     setImportedAllies(allImportedAllies);
     writeStoredJson(alliesKey, allImportedAllies);
 
+    // ── Fase Risorse (bacchetta v6) ─────────────────────────────────────────
+    // Salvate solo se presenti e valide; altrimenti lo slot viene cancellato,
+    // così un re-import con una bacchetta più vecchia nasconde di nuovo il
+    // pannello consigliere invece di lasciare scorte ormai non aggiornate.
+    const resources = sanitizeResources(parsed.resources);
+    const resourcesKey = profileStorageKey(pid, "resources");
+    if (resources) writeStoredJson(resourcesKey, resources);
+    else clearStoredJson(resourcesKey);
+    setPlayerResources(resources);
+
     bumpStorage();
   };
 
@@ -3120,10 +3138,14 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
   const deferredSearch = useDeferredValue(debouncedSearchTerm);
-  const [globalAllyLevel, setGlobalAllyLevel] = useState<number>(100);
 
   // Alleati importati dal gioco
   const [importedAllies, setImportedAllies] = useState<Allies.ImportedAlly[]>(() => { const s = getInitAllies(); return Array.isArray(s) ? s as Allies.ImportedAlly[] : []; });
+  // Magazzino risorse del profilo (bacchetta v6). null = profilo importato con
+  // una bacchetta precedente: il pannello consigliere alleati resta nascosto.
+  // Sanitizzato anche in rilettura (il profilo può venire da un file di terzi).
+  const [playerResources, setPlayerResources] = useState<Record<string, number> | null>(
+    () => sanitizeResources(readStoredJson<unknown>(profileStorageKey(activeProfileId, "resources"), null)));
 
   const [allyRarityFilters, setAllyRarityFilters] = useState<Record<number, boolean>>({
     1: true, 2: true, 3: true, 4: true, 5: true,
@@ -3361,6 +3383,28 @@ export default function App() {
       {spedizioniEnabled && <th className="py-2 px-2 text-center group-header-violet text-violet-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGe", uiLang) : t("groupGe", uiLang)}</th>}
     </>
   );
+
+  // Variante NON ordinabile delle intestazioni a icone (stesse colonne, stessi
+  // Σ/Spedizioni), per il Consigliere Gettoni Valore: lì le colonne mostrano
+  // variazioni dei boost, ordinarle non ha senso e agganciare uno SortScope
+  // esistente riordinerebbe un'altra tabella.
+  const renderMilitaryIconHeaders = () => {
+    type Col = [string, "atk" | "def", "red" | "blue"];
+    const block = (icons: [string, string, string, string], section: string, sigma: boolean) => {
+      const cols: Col[] = [[icons[0], "atk", "red"], [icons[1], "def", "red"], [icons[2], "atk", "blue"], [icons[3], "def", "blue"]];
+      return cols.map(([src, kind, side], i) => {
+        const title = boostTitle(uiLang, kind, side, section, sigma);
+        return <th key={`${section}-${i}`} className={`th-col ${i === 0 ? "section-divider" : ""}`} title={title}><TableHeaderIcon src={src} alt={title} /></th>;
+      });
+    };
+    return (
+      <>
+        {!showSigmaColumns && block([iconGenAtkA, iconGenDefA, iconGenAtkD, iconGenDefD], t("sectionGeneral", uiLang), false)}
+        {block([iconCampiAtkA, iconCampiDefA, iconCampiAtkD, iconCampiDefD], showSigmaColumns ? t("sectionGenPlusGbg", uiLang) : t("sectionGbg", uiLang), showSigmaColumns)}
+        {spedizioniEnabled && block([iconSpedAtkA, iconSpedDefA, iconSpedAtkD, iconSpedDefD], showSigmaColumns ? t("sectionGenPlusGe", uiLang) : t("sectionGe", uiLang), showSigmaColumns)}
+      </>
+    );
+  };
 
   // Header delle colonne Generale/Campi/Spedizioni: identico nelle 3 tabelle
   // (edifici, alleati posseduti, database alleati), ma ognuna ha il proprio
@@ -3648,7 +3692,7 @@ export default function App() {
       setProfiles(rolledBack);
       writeStoredJson(PROFILES_KEY, rolledBack);
       // Rimuovi le eventuali chiavi parziali del profilo fallito
-      (["city", "inventory", "allies"] as const).forEach(slot => {
+      PROFILE_SLOTS.forEach(slot => {
         try { localStorage.removeItem(profileStorageKey(id, slot)); } catch { /* ignorato: pulizia best-effort */ }
       });
       // Ripristina il profilo precedente
@@ -4475,7 +4519,7 @@ export default function App() {
       // Owned-only filter
       if (showOnlyOwnedAllies && !ownedAllyLookup.has(`${ally.id}__${ally.rarity}`)) continue;
 
-      const level = globalAllyLevel;
+      const level = ALLY_DB_LEVEL;
       const { computedGeneral, computedGbg, computedSped, computedIq, computedPf, computedBeni, computedBeniP } = Allies.getComputedAllyStats(ally, level, INHERITED_ALLIES_MAP);
 
       // Nessun filtro "zero-stats": rimosso deliberatamente (agosto 2026).
@@ -4512,7 +4556,7 @@ export default function App() {
     result.sort((a, b) => compareAllies(a, b, sortCriteriaAlleatiDb, getName));
 
     return result;
-  }, [deferredSearch, sortCriteriaAlleatiDb, weights, globalAllyLevel, allyRarityFilters, showOnlyOwnedAllies, ownedAllyLookup, gameLang]);
+  }, [deferredSearch, sortCriteriaAlleatiDb, weights, allyRarityFilters, showOnlyOwnedAllies, ownedAllyLookup, gameLang]);
 
 
 
@@ -7100,6 +7144,26 @@ export default function App() {
 
           {activeTab === "alleati" && (
             <>
+            {/* Potenziale alleati + Gettoni Valore (pannello unico): SOLO per profili importati con la
+                bacchetta v6 (magazzino risorse presente). Con bacchette più
+                vecchie l'utente vede il solito modale "bacchetta obsoleta". */}
+            {playerResources && importedAllies.some(a => !a.isFragment) && (
+              <AllyAdvisorPanel
+                owned={importedAllies}
+                byIdRarity={ALLIES_BY_ID_RARITY}
+                inherited={INHERITED_ALLIES_MAP}
+                weights={weights}
+                resources={playerResources}
+                uiLang={uiLang}
+                gameLang={gameLang}
+                allyName={allyName}
+                groupHeaders={renderMilitaryGroupHeaders()}
+                statHeaders={renderMilitaryIconHeaders()}
+                renderBoostCells={(g, c, sp) => (
+                  <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled={spedizioniEnabled} uiLang={uiLang} />
+                )}
+              />
+            )}
             {/* Tabella alleati importati */}
             {processedImportedAllies.length > 0 && (
               <div className="bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
@@ -7229,14 +7293,6 @@ export default function App() {
                       <th className="py-2 px-2 text-center" colSpan={2}>
                         <div className="flex items-center justify-center gap-3">
                           <span className="text-slate-400 uppercase tracking-wider">{t("calcEfficiencyAtLevel", uiLang)}</span>
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={globalAllyLevel}
-                            onChange={(e) => setGlobalAllyLevel(Number(e.target.value))}
-                            className="w-14 h-7 rounded border border-slate-700 bg-slate-950/80 px-1 text-center font-mono text-sm text-amber-400 outline-none focus:border-amber-500"
-                          />
                           <div className="h-4 w-[1px] bg-slate-800 mx-2" />
                           <span className="text-slate-400 text-[11px] normal-case font-normal">{t("alliesVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredAllies.length}</span></span>
                           <button

@@ -668,8 +668,8 @@ const UI_STRINGS = {
 
   // ── Barra "Calcola efficienza a livello" (tab Alleati) ────────────────
   calcEfficiencyAtLevel: {
-    it: "Calcola efficienza a livello",
-    en: "Calculate efficiency at level",
+    it: "Efficienza calcolata a livello 100",
+    en: "Efficiency calculated at level 100",
   },
   importAlliesFirstTitle: {
     it: "Importa prima i tuoi alleati",
@@ -1615,6 +1615,63 @@ const UI_STRINGS = {
   importErrorAlert: {
     it: (detail: string) => `Errore durante l'importazione dei dati. Il profilo non è stato creato.\n\nDettaglio: ${detail}`,
     en: (detail: string) => `Error while importing data. The profile was not created.\n\nDetail: ${detail}`,
+  },
+  // ── Consigliere Gettoni Valore (tab Alleati, bacchetta v6) ──────────────
+  allyMatrixSortTitle: { it: (r: string) => `Ordina per EFF ${r}`, en: (r: string) => `Sort by ${r} EFF` },
+  allyMatrixOwnedTitle: {
+    it: (r: string, n: number, u: number) => `${r}: possiedi ${n} ${n === 1 ? "copia" : "copie"}${u > 0 ? ` (${u} non posizionat${u === 1 ? "a" : "e"})` : ""}`,
+    en: (r: string, n: number, u: number) => `${r}: you own ${n} ${n === 1 ? "copy" : "copies"}${u > 0 ? ` (${u} not placed)` : ""}`,
+  },
+  allyAdvisorTitle: { it: "Potenziale alleati e Gettoni Valore", en: "Ally potential and Valor Tokens" },
+  allyAdvisorLegend: {
+    it: "Celle: EFF al livello 100 per rarità, dal rosso (più bassa) al verde (più alta) su tutta la matrice. Riquadro bianco = rarità posseduta. Badge #n = posizione nella coda dei Gettoni Valore, sulla rarità di arrivo (verde = lo puoi già pagare con i gettoni posseduti). Bordo tratteggiato = rarità saltata da un'evoluzione multipla. Clicca sul nome per il dettaglio dei boost.",
+    en: "Cells: level-100 EFF per rarity, from red (lowest) to green (highest) across the matrix. White frame = owned rarity. Badge #n = position in the Valor Token queue, on the target rarity (green = you can already afford it with your tokens). Dashed border = rarity skipped by a multi-step evolution. Click a name for the boost details.",
+  },
+  allyAdvisorStepTitle: {
+    it: (rank: number, from: string, to: string, cost: string, gain: string, ratio: string) => `#${rank}: ${from} → ${to} — ${cost} gettoni, EFF +${gain}, ${ratio} EFF/gettone`,
+    en: (rank: number, from: string, to: string, cost: string, gain: string, ratio: string) => `#${rank}: ${from} → ${to} — ${cost} tokens, EFF +${gain}, ${ratio} EFF/token`,
+  },
+  allyAdvisorBestNow: {
+    it: (rank: number, name: string, cost: string) => `Con i gettoni attuali il passo migliore è il #${rank}, ${name} (${cost} gettoni); i badge verdi sono quelli che puoi già pagare.`,
+    en: (rank: number, name: string, cost: string) => `With your current tokens the best step is #${rank}, ${name} (${cost} tokens); green badges are the ones you can already afford.`,
+  },
+  allyAdvisorColNext: { it: "Prossima evoluzione", en: "Next evolution" },
+  allyAdvisorSortPriorityTitle: { it: "Ordina per priorità nella coda dei Gettoni Valore", en: "Sort by priority in the Valor Token queue" },
+  allyAdvisorExpandTitle: { it: "Mostra/nascondi il dettaglio delle evoluzioni e dei boost", en: "Show/hide evolution and boost details" },
+  allyAdvisorTokensShort: { it: "gettoni", en: "tokens" },
+  allyAdvisorNoNext: { it: "— nessuna evoluzione utile", en: "— no useful evolution" },
+  allyAdvisorValorOwned: { it: "Gettoni Valore posseduti", en: "Valor Tokens owned" },
+  allyAdvisorIntro: {
+    it: (maxR: string) => `Ogni alleato militare posseduto è valutato al livello 100 (prima o poi verrà maxato), fino alla rarità ${maxR}: slot e Pergamene Eroiche non sono considerati vincoli, solo i Gettoni Valore. Le copie identiche (stesso alleato e rarità) sono una sola riga. L'efficienza usa gli stessi pesi della colonna EFF.`,
+    en: (maxR: string) => `Every owned military ally is evaluated at level 100 (it will be maxed sooner or later), up to ${maxR} rarity: slots and Heroic Scrolls are not treated as constraints, only Valor Tokens. Identical copies (same ally and rarity) are a single row. Efficiency uses the same weights as the EFF column.`,
+  },
+  allyAdvisorQueueNext: {
+    it: (name: string, missing: string) => `Prossimo obiettivo: ${name} (mancano ${missing} gettoni).`,
+    en: (name: string, missing: string) => `Next target: ${name} (${missing} tokens missing).`,
+  },
+  allyAdvisorQueueAllAffordable: { it: "Hai gettoni sufficienti per tutta la coda.", en: "You have enough tokens for the whole queue." },
+  allyAdvisorColAlly: { it: "Alleato", en: "Ally" },
+  allyAdvisorColStep: { it: "Evoluzione", en: "Evolution" },
+  allyAdvisorColTokens: { it: "Gettoni", en: "Tokens" },
+  allyAdvisorColGain: { it: "EFF +", en: "EFF +" },
+  allyAdvisorColRatio: { it: "EFF/gettone", en: "EFF/token" },
+  allyAdvisorDeltaNote: { it: "Δ boost al livello 100 dopo l'evoluzione", en: "Δ boosts at level 100 after evolving" },
+  allyAdvisorMultiStep: {
+    it: (n: number) => `(${n} evoluzioni insieme: il passo intermedio da solo rende meno)`,
+    en: (n: number) => `(${n} evolutions together: the intermediate step alone returns less)`,
+  },
+  allyAdvisorScienceTitle: { it: "Non valutati (alleati scienza)", en: "Not evaluated (science allies)" },
+  allyAdvisorScienceNote: {
+    it: "Il tool valuta solo le statistiche militari: per questi alleati solo dati di fatto, nessun consiglio.",
+    en: "The tool only evaluates military stats: for these allies, facts only, no advice.",
+  },
+  allyAdvisorScienceFacts: {
+    it: (pf: string, beni: string, beniP: string) => `al livello 100: ${pf} PF, ${beni} beni, ${beniP} beni era precedente.`,
+    en: (pf: string, beni: string, beniP: string) => `at level 100: ${pf} FP, ${beni} goods, ${beniP} previous-age goods.`,
+  },
+  allyAdvisorFootnote: {
+    it: (n: number) => `${n} alleati militari distinti valutati. Esclusi gli alleati frammentati (non ancora completi). La scelta di vendere un alleato è lasciata a te.`,
+    en: (n: number) => `${n} distinct military allies evaluated. Fragmented allies (not yet complete) are excluded. Whether to sell an ally is up to you.`,
   },
   // v5: l'import è riuscito ma lo script non ha trovato alcune sezioni nell'helper.
   bookmarkletWarningsAlert: {

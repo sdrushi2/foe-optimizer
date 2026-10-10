@@ -28,8 +28,15 @@ export const DB_VIEW_KEY = `foe_global_db_view_${V}`;
 // Diversa da gameLang: quella è rilevata dal payload importato, questa è una
 // scelta esplicita dell'utente, indipendente dal profilo attivo.
 export const UI_LANG_KEY = `foe_global_ui_lang_${V}`;
+// Consigliere Gettoni Valore (tab Alleati): pannello aperto/chiuso.
+export const ALLY_ADVISOR_OPEN_KEY = `foe_global_ally_advisor_open_${V}`;
 
-export function profileStorageKey(profileId: string, slot: "city" | "inventory" | "allies"): string {
+/** Slot di dati per profilo. `resources` (ottobre 2026) = magazzino risorse
+ *  importato dalla bacchetta v6; assente per i profili importati prima. */
+export type ProfileSlot = "city" | "inventory" | "allies" | "resources";
+export const PROFILE_SLOTS: readonly ProfileSlot[] = ["city", "inventory", "allies", "resources"];
+
+export function profileStorageKey(profileId: string, slot: ProfileSlot): string {
   return `foe_p_${profileId}_${slot}_${V}`;
 }
 
@@ -199,15 +206,17 @@ export function isStorageOutdated(): boolean {
 const RETIRED_GLOBAL_KEYS = [
   `foe_global_hide_no_rush_${V}`,
   `foe_global_hide_era_mutable_${V}`,
+  // Soglia di vendita del consigliere alleati: rimossa (ottobre 2026).
+  `foe_global_ally_advisor_mode_${V}`,
+  // Pannello matrice separato: unificato nel consigliere (ottobre 2026).
+  `foe_global_ally_matrix_open_${V}`,
 ];
 
 export function cleanupOrphanedKeys() {
   const profiles = readStoredJson<Profile[]>(PROFILES_KEY, []);
   const validProfileKeys = new Set<string>();
   profiles.forEach(p => {
-    validProfileKeys.add(profileStorageKey(p.id, "city"));
-    validProfileKeys.add(profileStorageKey(p.id, "inventory"));
-    validProfileKeys.add(profileStorageKey(p.id, "allies"));
+    for (const slot of PROFILE_SLOTS) validProfileKeys.add(profileStorageKey(p.id, slot));
   });
 
   const toRemove: string[] = [];
@@ -325,7 +334,7 @@ export function mergeImportedProfiles(
   // viene creato senza i suoi dati di slot. È un caso degenerato raro (file
   // esportati con profili privi di id) e il fallback "nessun dato" è più sicuro
   // di un possibile mismatch.
-  const findProfileBlob = (originalId: string | undefined, slot: "city" | "inventory" | "allies"): string | undefined => {
+  const findProfileBlob = (originalId: string | undefined, slot: ProfileSlot): string | undefined => {
     if (originalId) {
       // Match esatto su qualsiasi versione: foe_p_<id>_<slot>_vN
       const exactPrefix = `foe_p_${originalId}_${slot}_v`;
@@ -338,7 +347,7 @@ export function mergeImportedProfiles(
   importedProfiles.forEach((importedProfile, index) => {
     const newId = idMap.get(index);
     if (!newId) return;
-    (["city", "inventory", "allies"] as const).forEach((slot) => {
+    PROFILE_SLOTS.forEach((slot) => {
       const value = findProfileBlob(importedProfile.id, slot);
       if (!value) return;
       // Riscrivi SEMPRE con la chiave della versione corrente: i blob compressi

@@ -339,6 +339,17 @@ utenti devono riscaricare la bacchetta. Se FH rinomina di nuovo, il sintomo è l
 stesso: diagnosi in console con
 `Object.entries(CityMap).forEach(([k,v])=>console.log(k,Object.keys(v||{})))`.
 
+**v6 (ottobre 2026) — magazzino risorse.** Campo `resources` con l'intero
+`ResourceStock` (FoE Helper) o `FH.RessourceStock` (Forge Hammer, sic; ripiego
+`FH.ResourceStock`): ~344 chiavi, ~7 KB, importato tutto per non cambiare di nuovo
+la bacchetta. Assente in visita; warning `resources` se l'helper non l'ha popolato
+(FoE Helper inizializza `ResourceStock = []`). L'app lo sanitizza
+(`sanitizeResources`: nomi `[A-Za-z0-9_.-]`, valori numerici finiti ≥ 0, max 5000
+chiavi, niente `__proto__`) e lo salva nel nuovo slot profilo `resources`
+(`PROFILE_SLOTS` in storage.ts: include cleanup ed export/import profili). Slot
+assente = profilo importato con bacchetta < v6 → il Consigliere Gettoni Valore
+(§14bis) non compare; un re-import con bacchetta vecchia cancella lo slot.
+
 **v5 (ottobre 2026) — bacchetta a prova di aggiornamenti dell'helper.** Forge Hammer
 si aggiorna da solo (la 1.8.0 ha già rotto due letture), quindi `_v` sale a 5 e lo
 script diventa difensivo: (1) il guard iniziale richiede solo l'helper; (2) campo
@@ -2158,6 +2169,71 @@ direttamente, indipendentemente dal `level` con cui è stata chiamata la funzion
 > tempo, rendono il guadagno di una migrazione trascurabile.
 
 ---
+
+
+### 14bis Consigliere Gettoni Valore (`allyAdvisor.ts`, `AllyAdvisorPanel.tsx`, ottobre 2026)
+
+Pannello richiudibile in cima alla tab Alleati, visibile **solo** se il profilo ha
+risorse importate dalla bacchetta v6 e almeno un alleato non frammentato.
+
+**Ipotesi (concordate con l'utente):** unica risorsa scarsa = Gettoni Valore
+(`historical_allies_valor_token`); slot e Pergamene Eroiche non sono vincoli, quindi
+ogni alleato è valutato al **livello 100**; l'evoluzione conserva il livello; rarità
+massima Epico (`MAX_TARGET_RARITY = 4`, Leggendario in stand-by); solo alleati
+**militari posseduti** (Tipo da `allies.csv`); scienza = "non valutati" (solo fatti,
+nessun consiglio, per non trasmettere opinioni); frammentati esclusi.
+
+**Dati:** `allies.py` aggiunge a `allies.csv` le colonne `Tipo` (M/S, stessa convenzione della colonna `Ally` di buildings.csv),
+`EvoValor` (gettoni per passare alla rarità successiva, da `evolutionCost`) e
+`VenditaValor` (rimborso, da `disbandReward`; solo gettoni).
+
+**Algoritmo:** `effAt(alleato, rarità)` = EFF al livello 100 (stessi pesi della
+colonna EFF, stats ereditate): ogni alleato è ipotizzato maxato prima o poi, il
+livello attuale non conta. **Copie identiche** (stesso id e rarità, livello qualsiasi)
+sono una sola voce; durante la simulazione, se un alleato evolvendo raggiunge una
+rarità già posseduta da un'altra sua copia, le due voci si fondono → ogni riga della
+coda è unica per (alleato, rarità di partenza) e mostra "×N" copie possedute. Per
+ogni voce, il salto verso la rarità di arrivo con il miglior rendimento (guadagno ÷
+gettoni del **percorso intero**: evita la miopia sui passi intermedi); greedy
+globale sul salto migliore, la voce rientra in coda dal nuovo punto.
+
+**Niente consigli di vendita** (rimossi su richiesta, ottobre 2026): vendere è una
+valutazione dell'utente. Rimossi anche soglia di vendita e "valore di un gettone";
+la chiave `foe_global_ally_advisor_mode_vN` è in `RETIRED_GLOBAL_KEYS`. La colonna
+`VenditaValor` resta in `allies.csv` (dato del gioco) ma l'app non la usa.
+
+**UI:** coda con, per ogni salto, gettoni, EFF+, EFF/gettone e le **variazioni
+dei boost** al livello 100 nelle colonne GENERALI/CAMPI/SPEDIZIONI (`dGeneral`/
+`dGbg`/`dSped`), rese da App con gli stessi `renderMilitaryGroupHeaders`,
+`renderMilitaryIconHeaders` (variante non ordinabile) e `MilitaryBoostCells` delle
+altre tabelle (rispettano Σ e Spedizioni attive). Niente colonna "cumulativi"
+(rimossa): il cumulativo resta interno per evidenziare le righe già coperte dai
+gettoni posseduti e il "prossimo obiettivo"; sezione "non valutati" per la scienza (solo
+produzione al livello 100, copie fuse). Stato aperto/chiuso in `ALLY_ADVISOR_OPEN_KEY`.
+
+
+### 14ter Pannello unico: matrice del potenziale + coda Gettoni Valore (ottobre 2026)
+
+Il Consigliere e la matrice del potenziale sono **un solo pannello**
+(`AllyAdvisorPanel.tsx`; `AllyMatrixPanel.tsx` rimosso, chiave
+`foe_global_ally_matrix_open_vN` in `RETIRED_GLOBAL_KEYS`). La matrice è la vista
+principale: una riga per alleato **militare** posseduto (copie e livelli ignorati,
+frammentati esclusi), colonne COM/UNC/RAR/EPI/LEG (sigle dei filtri, larghezza fissa
+72px) con l'EFF al livello 100 (`allyEffAt100`), gradiente HSL rosso→verde su
+min/max dell'intera matrice, riquadro bianco sulle rarità possedute ("×N", tooltip
+con copie e non posizionate), badge NON POSIZIONATO sul nome.
+
+La coda di `computeAllyAdvice` è disegnata **sulla matrice**: ogni passo è un badge
+`#n` (posizione in coda) sulla cella della rarità di ARRIVO, verde se il SINGOLO passo
+costa al massimo i gettoni posseduti (non il cumulativo: con 335 gettoni e il #1 da
+400 nessun badge risultava verde); in alto anche "con i gettoni attuali il passo
+migliore è il #n"; le rarità saltate da un passo multiplo hanno
+il bordo tratteggiato. Colonna "Prossima evoluzione" (primo passo in coda
+dell'alleato: rarità, gettoni, EFF/gettone). Ordinamento: Priorità gettoni (default,
+rango del primo passo), nome, o una rarità. Click sul nome → riga espansa con i passi
+dell'alleato e le variazioni dei boost (`groupHeaders`/`statHeaders`/`renderBoostCells`
+passati da App, rispettano Σ/Spedizioni). In alto: gettoni posseduti, legenda,
+"Prossimo obiettivo"; in fondo: alleati scienza "non valutati".
 
 ## 15. Parsing dell'inventario (`inventory.ts`)
 
