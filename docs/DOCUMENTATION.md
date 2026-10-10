@@ -778,6 +778,8 @@ Forgia, `Beni` = beni dell'era corrente, `BeniP` = beni dell'era PRECEDENTE (mai
 osservato un caso "era successiva"/BeniS sui 3 alleati esistenti). Il valore
 salvato è quello al **livello massimo (100)** della singola rarità — un valore
 GREZZO, non cumulativo: l'ereditarietà fra rarità (vedi §14.3) la somma
+
+> **Livello 100, non max(chiavi) (ottobre 2026).** Dal 2026 le tabelle `productionReward`/`rarityBoosts`/`limitedBonuses` di `Allies.txt` arrivano al livello **110**, ma il cap reale è **100** (`Allies.rarities[*].maxLevel = 100`, `levelUpCosts` si ferma a 100, nessun alleato posseduto ≥ 100). `allies.py` leggeva l'ultima chiave (110): PF/Beni/BeniP erano quelli del 110 (es. Fibonacci rara 215 invece di 200). Ora `ALLY_MAX_LEVEL_KEY = "100"`. Scoperto perché `confronta_allies.py` era cieco sugli alleati science (confrontava solo boost d'esercito, tutti 0): ora `linnun.py` esporta PF/Beni/BeniP da «Value @100» (tipo dal flag raw 11/13/14) e `confronta_allies.py` li confronta; lo script è in `PIPELINE_INFO` di `aggiorna_dati.py` e legge l'`allies.csv` appena generato. Unica discrepanza residua con Linnun: Fibonacci comune 65 → 60.
 `getComputedAllyStats` a runtime, non il CSV. Estratte da
 `allies.py::resolve_production_columns`, che distingue i tre casi dal campo
 `name` del reward (`"Forge Points"` / `"Previous Age Goods"` / `"Goods"`), e usa
@@ -2294,6 +2296,30 @@ famiglia). Questi kit producono capability set non confrontabili per inclusione,
 vengono gestiti in modo conservativo: utilizzabili **solo** per le risorse nella loro
 capability set, mai come sostituti flessibili verso l'alto. Questa scelta è sempre
 corretta (un kit che offre {A,B} non può coprire un fabbisogno {C} che non possiede).
+
+**Livello 0 = kit di famiglia (fix ottobre 2026).** A parità di dimensione, il primo
+insieme della catena (livello 0) è quello che offre l'**edificio base**. Prima vinceva
+il primo nell'ordine dell'inventario importato: per GR25C, se `golden_selection_kit_GR25C`
+({oro a, oro b}) precedeva `selection_kit_GR25C` ({base, kit semplice}), il kit oro
+diventava livello 0 e il blocco "alias di compatibilità" di `optimizeFamily` gli faceva
+pagare anche gli step semplici 1→8 (un GR25C6 risultava portabile a 10b con un solo kit
+semplice). Ora l'alias si applica solo se il livello 0 offre davvero l'edificio base.
+Verifica: con l'inventario di test completo, nessun cambiamento con l'ordine del gioco;
+con ordine alfabetico cambiavano 3 famiglie (GR25C corretta, FALL24B/C solo kit
+equivalenti) e dopo il fix l'esito è identico nei due ordini. La regola "kit più
+economico prima" (semplice → argento → oro) resta quella di `hasEnough`/`doPay`.
+
+**Rami paralleli ai livelli intermedi (fix ottobre 2026).** Per le famiglie che si
+diramano (es. GR25C: 8 → 9a/9b → 10a/10b) le alternative venivano mostrate solo al
+livello finale. Con kit sufficienti solo fino a un livello intermedio (es. kit semplici
++ kit di selezione argento → livello 9) appariva solo il ramo principale (9b). Ora
+`altIdsAt` raccoglie gli id di tutti i rami per livello e `resolveIdsAt` li usa per la
+visualizzazione: un kit specifico di ramo (argento a) restituisce solo il suo id (9a),
+un kit di selezione (scelta al riscatto) tutte le alternative (9a e 9b). `altIdsAt` NON
+è unito a `levels`: lì alimenterebbe `wf`/`stepLevelIndex` e metterebbe nello stesso
+pool i kit diretti dei due rami (argento a + oro b, combinazione impossibile).
+Limite noto non corretto: un edificio di un ramo NON principale già in inventario a un
+livello intermedio (es. un GR25C9a) non viene riconosciuto dalla famiglia.
 
 ### 16.5 L'ottimizzazione per famiglia (`optimizeFamily`)
 

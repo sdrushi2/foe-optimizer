@@ -446,7 +446,7 @@ interface LevelInfo {
  * Un selection kit di livello L può sempre sostituire un fabbisogno di
  * livello <= L, perché per costruzione cap(L) ⊇ cap(L-1) ⊇ ... ⊇ cap(0).
  */
-function computeLevels(skInfos: SkInfo[]): LevelInfo {
+function computeLevels(skInfos: SkInfo[], baseBldIds: readonly string[] = []): LevelInfo {
   const capKey = (c: Set<string>): string => [...c].sort().join("\u0001");
   const isProperSubset = (a: Set<string>, b: Set<string>): boolean => {
     if (a.size >= b.size) return false;
@@ -454,10 +454,19 @@ function computeLevels(skInfos: SkInfo[]): LevelInfo {
     return true;
   };
 
-  // Insiemi distinti, ordinati per dimensione crescente.
+  // Insiemi distinti, ordinati per dimensione crescente. A PARITÀ di dimensione
+  // viene prima l'insieme che offre l'edificio base: è il vero kit "di famiglia"
+  // e deve fare da livello 0. Senza questo tie-break il livello 0 dipendeva
+  // dall'ordine dei kit nell'inventario importato: con golden_selection_kit_GR25C
+  // ({oro a, oro b}) prima di selection_kit_GR25C ({base, kit semplice}) il kit
+  // oro diventava livello 0 e, tramite l'alias in optimizeFamily, pagava anche
+  // gli step semplici 1→8 (bug ottobre 2026: GR25C6 → 10b invece di → 7).
+  const baseSet = new Set(baseBldIds);
+  const offersBase = (c: Set<string>): boolean => { for (const x of c) if (baseSet.has(x)) return true; return false; };
   const distinct = new Map<string, Set<string>>();
   for (const { cap } of skInfos) distinct.set(capKey(cap), cap);
-  const sorted = [...distinct.values()].sort((a, b) => a.size - b.size);
+  const sorted = [...distinct.values()].sort((a, b) =>
+    a.size - b.size || Number(offersBase(b)) - Number(offersBase(a)));
 
   // Catena annidata: avanza finché cap(prev) ⊊ cap(cur) (o ==).
   // Gli insiemi che non si "incastrano" nella catena (caso anomalo) restano
@@ -552,6 +561,29 @@ function optimizeFamily(
 
   const mainShape = pathShape(path);
   const mainFinalId = levels[n - 1].ids[0];
+  // Copia difensiva: flattenPath riusa per riferimento gli array `steps` di
+  // kit.json, e qui sotto vi aggiungiamo gli id dei rami paralleli.
+  for (const l of levels) l.ids = [...l.ids];
+  // Id del ramo principale per livello, PRIMA di unire le alternative.
+  const mainIdAt = levels.map(l => l.ids[0]);
+  // Alternative di TUTTI i rami paralleli per livello, solo per la
+  // VISUALIZZAZIONE. Non vanno unite in `levels` ai livelli intermedi: lì
+  // `levels` alimenta wf/stepLevelIndex, e i kit diretti dei due rami
+  // (argento a/b, oro a/b) finirebbero nello stesso pool, permettendo
+  // combinazioni impossibili (argento a + oro b).
+  const altIdsAt: string[][] = levels.map(l => [...l.ids]);
+  // kit specifico di un ramo -> (indice di livello raggiunto -> id di quel ramo).
+  // Serve a risolvere gli id ai livelli INTERMEDI di un ramo (es. 9a/9b), non
+  // solo a quello finale (kitToTargetId). Vedi resolveIdsAt.
+  const kitLevelTarget = new Map<string, Map<number, string>>();
+  const addLevelTargets = (segs: PathSegment[], segIdx: number, idAt: (li: number) => string) => {
+    let start = 0;
+    for (let j = 0; j < segIdx; j++) start += segs[j].steps.length - 1;
+    const kid = segs[segIdx].kit_id;
+    const m = kitLevelTarget.get(kid) ?? new Map<number, string>();
+    for (let t = 1; t < segs[segIdx].steps.length; t++) if (!m.has(start + t)) m.set(start + t, idAt(start + t));
+    kitLevelTarget.set(kid, m);
+  };
 
   for (const p of paths) {
     if (p === path) continue;
@@ -560,7 +592,13 @@ function optimizeFamily(
     const pLevels = flattenPath(p);
     if (pLevels.length !== n) continue;
 
-    // Unisci gli id del livello finale di questo ramo come alternative.
+    // Unisci gli id di questo ramo come alternative a OGNI livello (non solo
+    // al finale): con kit sufficienti solo fino a un livello intermedio del
+    // ramo (es. GR25C8 + kit di selezione argento -> 9a O 9b) prima veniva
+    // mostrato solo l'id del ramo principale (bug ottobre 2026: solo 9b).
+    for (let li = 0; li < n; li++)
+      for (const id of pLevels[li].ids)
+        if (!altIdsAt[li].includes(id)) altIdsAt[li].push(id);
     for (const id of pLevels[n - 1].ids)
       if (!levels[n - 1].ids.includes(id)) levels[n - 1].ids.push(id);
 
@@ -573,6 +611,8 @@ function optimizeFamily(
       const seg = p[i];
       if (i < path.length && seg.kit_id === path[i].kit_id) continue; // segmento condiviso
       kitToTargetId.set(seg.kit_id, pLevels[n - 1].ids[0]);
+      addLevelTargets(p, i, li => pLevels[li].ids[0]);
+      if (i < path.length) addLevelTargets(path, i, li => mainIdAt[li]);
       const segFrom = Array.isArray(seg.steps[0]) ? seg.steps[0] : [seg.steps[0]];
       for (const f of segFrom) if (!fromIdToKit.has(f)) fromIdToKit.set(f, seg.kit_id);
       if (i < path.length && !kitToTargetId.has(path[i].kit_id)) {
@@ -625,7 +665,7 @@ function optimizeFamily(
     if (cap.size > 0) skInfos.push({ sk_id, qty, cap });
   }
 
-  const { numLevels, ws, wsNames, resourceLevel, dedicatedPools, resourceDedicated, level0MaxCapSize } = computeLevels(skInfos);
+  const { numLevels, ws, wsNames, resourceLevel, dedicatedPools, resourceDedicated, level0MaxCapSize } = computeLevels(skInfos, levels[0].ids);
 
   // Selection kit posseduti la cui capability set include DAVVERO un edificio
   // base: solo questi possono materializzare un edificio nuovo a livello 1.
@@ -658,7 +698,14 @@ function optimizeFamily(
   // inventerebbe upgrade fantasma (es. la "Torre Nera" risultava costruibile a
   // livello 2 con soli kit jolly che offrono unicamente la base). La condizione
   // `level0MaxCapSize >= 2` esclude esattamente questo caso.
-  if (numLevels >= 1 && level0MaxCapSize >= 2 && !resourceLevel.has(path[0].kit_id)) {
+  //
+  // Condizione aggiuntiva (ottobre 2026): il livello 0 deve offrire davvero
+  // l'edificio base. Un kit di selezione argento/oro ({argento a, argento b} o
+  // {oro a, oro b}) ha cap.size 2 ma NON è un kit di famiglia: senza questo
+  // controllo, se era l'unico (o il primo) kit posseduto, l'alias gli faceva
+  // pagare gli step semplici della catena, cosa impossibile in gioco.
+  const level0OffersBase = baseBldIds.some(id => resourceLevel.get(id) === 0);
+  if (numLevels >= 1 && level0MaxCapSize >= 2 && level0OffersBase && !resourceLevel.has(path[0].kit_id)) {
     resourceLevel.set(path[0].kit_id, 0);
   }
   const sentinel = numLevels; // "nessun ws annidato può coprire questo fabbisogno"
@@ -919,6 +966,17 @@ function optimizeFamily(
     return levels[n - 1].ids;
   }
   const branching = kitToTargetId.size > 0;
+  // Id possibili al livello intermedio `lv` (1-based) di un ramo: se fra i kit
+  // usati c'è un kit specifico di un ramo che porta a quel livello, l'id è
+  // quello del suo ramo; altrimenti (kit di selezione: scelta al riscatto in
+  // gioco, o livello non ramificato) tutte le alternative del livello.
+  function resolveIdsAt(lv: number, kitsUsed: string[]): string[] {
+    for (let i = kitsUsed.length - 1; i >= 0; i--) {
+      const id = kitLevelTarget.get(kitsUsed[i])?.get(lv - 1);
+      if (id) return [id];
+    }
+    return altIdsAt[lv - 1];
+  }
 
   // Collassa unità inv max level: chiave include kitsUsed per non fondere
   // unità con kit diversi (es. 6 già-Platino + 1 Gold-upgradato-a-Platino).
@@ -937,10 +995,10 @@ function optimizeFamily(
     const freshQty = wb[lv] - units.length;
     if (freshQty > 0) {
       const freshAtLv = freshUnits.get(lv) ?? [];
-      if (lv === n && branching) {
+      if (branching && (lv === n || altIdsAt[lv - 1].length > 1)) {
         const groups = new Map<string, { ids: string[]; kitsUsed: string[]; qty: number }>();
         for (const u of freshAtLv) {
-          const ids = resolveFinalIds(u.kitsUsed);
+          const ids = lv === n ? resolveFinalIds(u.kitsUsed) : resolveIdsAt(lv, u.kitsUsed);
           const key = ids.join(",");
           if (!groups.has(key)) groups.set(key, { ids, kitsUsed: [], qty: 0 });
           const g = groups.get(key)!;
@@ -948,7 +1006,7 @@ function optimizeFamily(
           g.kitsUsed.push(...u.kitsUsed);
         }
         for (const g of groups.values())
-          output.push({ level: lv, qty: g.qty, ids: g.ids, is_max: true, kitsUsed: g.kitsUsed });
+          output.push({ level: lv, qty: g.qty, ids: g.ids, is_max: lv === n, kitsUsed: g.kitsUsed });
       } else {
         const kitsUsed = freshAtLv.flatMap(u => u.kitsUsed);
         output.push({ level: lv, qty: freshQty, ids: levels[lv - 1].ids, is_max: lv === n, kitsUsed });
@@ -957,7 +1015,12 @@ function optimizeFamily(
 
     const grouped = new Map<string, InvUnit>();
     for (const u of units) {
-      const id = (lv === n && branching) ? resolveFinalIds(u.kitsUsed)[0] : levels[lv - 1].ids[0];
+      const id = (lv === n && branching) ? resolveFinalIds(u.kitsUsed)[0]
+        : (branching && altIdsAt[lv - 1].length > 1)
+          // Nessun kit applicato: resta l'edificio d'origine (es. un 9a in
+          // inventario non diventa "9b"); altrimenti il ramo dei kit usati.
+          ? (u.sourceLv === lv ? u.sourceId : resolveIdsAt(lv, u.kitsUsed)[0])
+          : levels[lv - 1].ids[0];
       const row: InvUnit = { ...u, id, level: lv, is_max: lv === n };
       const key = `${row.sourceId}|${row.sourceLv}|${row.level}|${row.id}|${row.kitsUsed.join(",")}`;
       if (!grouped.has(key)) grouped.set(key, { ...row, qty: 0 });
