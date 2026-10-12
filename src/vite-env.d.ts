@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 declare const __BUILD_VERSION__: string;
+/** Feature flag di build (vite.config.ts): include il Planner città. */
+declare const SHOW_PLANNER: boolean;
 
 // Unica dichiarazione asset necessaria: tutti gli import di asset del
 // progetto sono `*.csv?raw` (coperti da questo pattern) o `kit.json`

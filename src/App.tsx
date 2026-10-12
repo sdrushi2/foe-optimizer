@@ -50,6 +50,7 @@ import ProfileHelpModal from "./components/ProfileHelpModal";
 import AboutModal from "./components/AboutModal";
 import { useModalDismiss } from "./utils/useModalDismiss";
 import AllyAdvisorPanel from "./components/AllyAdvisorPanel";
+import PlannerView from "./planner/PlannerView";
 import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
@@ -2107,6 +2108,11 @@ export default function App() {
   // CityStore.cityMapUnlockedAreas per il perché di questo campo separato.
   const [cityMapUnlockedAreas, setCityMapUnlockedAreas] = useState<UnlockedArea[]>(() => getInitCity()?.cityMapUnlockedAreas ?? []);
   const [showCityMap, setShowCityMap] = useState<boolean>(() => localStorage.getItem(SHOW_CITY_MAP_KEY) === "true");
+  // Planner città (flag di build SHOW_PLANNER, vedi vite.config.ts): non persistente.
+  const [showPlanner, setShowPlanner] = useState(false);
+  // Città eliminata (profilo cancellato o svuotato): il Planner si chiude, come
+  // se non fosse mai stata importata una città.
+  useEffect(() => { if (cityMapBuildings.length === 0) setShowPlanner(false); }, [cityMapBuildings]);
   // Filtra gli edifici vecchi nella tab Città
   const [showOnlyOutdated, setShowOnlyOutdated] = useState(false);
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
@@ -6406,6 +6412,18 @@ export default function App() {
                     MAP
                   </button>
                 )}
+                {SHOW_PLANNER && cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
+                  <button
+                    onClick={() => setShowPlanner(v => !v)}
+                    className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
+                      showPlanner
+                        ? "border-fuchsia-500 bg-fuchsia-900/40 text-fuchsia-200"
+                        : "border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
+                    }`}
+                  >
+                    PLANNER
+                  </button>
+                )}
                 {outdatedBuildings.size > 0 && (
                   <button
                     onClick={() => setShowOnlyOutdated(v => !v)}
@@ -6728,6 +6746,18 @@ export default function App() {
                 );
               })()}
             </div>
+          )}
+
+          {/* Solo con una città importata (dopo l'eliminazione del profilo o di
+              tutti i profili sparisce); key = profilo: cambiando profilo il
+              Planner riparte da zero (si fermano le ricerche dell'altro). */}
+          {SHOW_PLANNER && activeTab === "propria_citta" && showPlanner && cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
+            <PlannerView
+              key={activeProfileId}
+              cityMapBuildings={cityMapBuildings}
+              cityMapUnlockedCells={cityMapUnlockedCells}
+              uiLang={uiLang}
+            />
           )}
 
           {activeTab === "propria_citta" && showCityMap && (

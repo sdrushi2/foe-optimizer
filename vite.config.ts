@@ -9,6 +9,13 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ── Feature flag di BUILD ──────────────────────────────────────────────────
+// SHOW_PLANNER: false = il tool viene compilato esattamente com'è (il codice
+// del Planner, src/planner/, viene eliminato dal bundle: il ramo `if
+// (SHOW_PLANNER)` diventa `if (false)` e Rollup lo scarta insieme all'import).
+// true = compare il pulsante PLANNER nella tab Città. Lavori in corso.
+const SHOW_PLANNER = true;
+
 // Versione automatica: v1.<giorno dell'anno>
 const now = new Date();
 const startOfYear = new Date(now.getFullYear(), 0, 1);
@@ -67,6 +74,7 @@ function serviceWorkerPlugin(version: string): Plugin {
 export default defineConfig({
   define: {
     __BUILD_VERSION__: JSON.stringify(BUILD_VERSION),
+    SHOW_PLANNER: JSON.stringify(SHOW_PLANNER),
   },
   plugins: [
     react(),

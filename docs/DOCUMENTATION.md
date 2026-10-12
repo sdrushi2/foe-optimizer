@@ -3899,3 +3899,727 @@ La base è solida per la manutenzione e per l'aggiunta di nuove funzionalità.
 ---
 
 *Fine della documentazione tecnica v1.0 di FoE Optimizer by Sdrushi.*
+
+
+## Planner città (SPERIMENTALE, flag di build `SHOW_PLANNER`, ottobre 2026)
+
+Obiettivo finale: disposizione automatica della città che minimizza le strade
+(NP-hard). Per ora è un **contenitore** con un motore segnaposto.
+
+- **Flag:** `const SHOW_PLANNER = false` in `vite.config.ts`, iniettato come
+  costante globale con `define` (dichiarata in `src/vite-env.d.ts`). Con `false`
+  il ramo `if (SHOW_PLANNER)` diventa `if (false)` e Rollup elimina il Planner e
+  il suo import: il bundle è identico a prima (verificato: nessuna stringa del
+  planner in `dist/index.html`). Con `true` compare il pulsante PLANNER accanto
+  a MAP nella tab Città.
+- **File:** `src/planner/engine.ts` (contratto del motore + algoritmo segnaposto),
+  `src/planner/PlannerView.tsx` (modulo: riepilogo edifici a sinistra, canvas
+  animato a destra con Avvia/Ferma/Reset/velocità). Testi solo in italiano, da
+  tradurre quando la funzione uscirà dallo stato sperimentale.
+- **Contratto:** `buildPlannerProblem(cityMapBuildings, unlockedCells)` →
+  `PlannerProblem`; il motore emette `PlannerFrame` (posizionamenti, strade,
+  posizione in prova, ultimo percorso scavato, contatori) tramite `onFrame`,
+  cedendo il controllo al browser (`scheduler.yield`/`MessageChannel`, come il
+  solver Pirati) o con una pausa per l'animazione; `shouldStop` per fermarlo.
+- **Algoritmo segnaposto:** municipio fermo (radice della rete); edifici con strada
+  dal più grande, posizione con meno strade nuove (BFS multi-sorgente dalla rete),
+  accettata solo se lo spazio libero ancora raggiungibile dalla rete basta agli
+  edifici con strada rimanenti (×1,5); poi edifici senza strada al primo posto
+  libero. Strade sempre 1×1. Test sintetico (griglia 40×40, 61 edifici): 60
+  piazzati, nessuna sovrapposizione, tutti collegati, 99 celle di strada.
+  Opzione `initial` di `RunOptions`: riparte da uno stato dato (municipio,
+  edifici e strade fermi) e piazza solo gli edifici rimasti.
+
+### FoE City Builder integrato (fase 1 + fase 2, port TypeScript)
+
+Port fedele di `D:\FOE\foe-builder` (fase1.py, genera_mapgrid.py + geometria di
+fase2_legacy_dlx.py, fase2.py) in `src/planner/builder/`. fase3 esclusa su
+richiesta dell'utente: dopo fase2 prosegue il motore del Planner.
+
+- `builder/fase1.ts`: passi 1-7, fork raccordo 3/4, passi 8-9-10, retry del
+  Passo 9, riepilogo (buchi, salti) e checkpoint identico a
+  `<città>_rX_fase1.json`. Ogni passo registra un'istantanea (`trace`).
+- `builder/fase2.ts`: mapgrid (area libera a ovest della strada verticale entro
+  i capolinea) + 6 strategie di partizionamento con backtracking per forme e
+  rifinitura; vince copertura, poi meno pezzi piccoli, poi meno edifici.
+- `builder/index.ts`: `runBuilder(problem)` adatta il `PlannerProblem` (celle
+  sbloccate come aree 1×1 = stessa griglia), esegue fase1 + fase2 per r3 e r4,
+  restituisce le tappe da animare e la variante consigliata (meno buchi, poi più
+  edifici).
+- **Differenze volute dal Python:** grafo N/S/E/O non mantenuto (solo
+  diagnostica); bitmask di riga sostituite da controlli per cella; il retry del
+  Passo 9 prova **entrambe** le direzioni con buchi (il Python ne sceglie una
+  dalla prima cella di un `set`, ordine non riproducibile) e tiene il migliore;
+  l'ultimo spareggio di fase2 (il tempo) è sostituito dall'ordine delle
+  strategie; tetto di sicurezza alle combinazioni del Passo 3.
+- **Validazione (test differenziale):** 104 città (beta, city, foe-map,
+  Tacito + 100 varianti con sottoinsiemi casuali di edifici): checkpoint fase1
+  identici al Python su tutte (imponendo la stessa direzione di retry,
+  `Fase1Options.forceRetry`); con la politica "entrambe le direzioni" 4 casi
+  migliorano, nessuno peggiora. fase2: mapgrid e risultati di **ognuna** delle 6
+  strategie identici (piazzamenti compresi) su 96 varianti. End-to-end sulle 4
+  città reali: nessuna sovrapposizione né cella fuori mappa.
+- **UI:** motore fisso (City Builder fase 1+2 + completamento) e velocità
+  massima. Il selettore Raccordo è stato sostituito da **due mappe affiancate**
+  (raccordo a 3 e a 4 celle) calcolate in parallelo: le due esecuzioni sono
+  async e si alternano a ogni pausa (`sleep(0)` ogni ~40 ms nella ricerca).
+  Avvia / ■ Ferma / ⏭ FERMA E COMPLETA / ↺ Reset agiscono su entrambe (stessi
+  `stopRef`/`finishRef`; il pulsante FERMA E COMPLETA è attivo finché almeno
+  una delle due sta cercando). Ogni mappa mostra statistiche e fase; a fine
+  calcolo "Scegli questa" segna la disposizione preferita (per ora solo
+  evidenziata; servirà all'esportazione). Il riepilogo edifici a sinistra è
+  stato rimosso: i comandi e il riepilogo edifici/celle/strade attuali stanno
+  sulla riga del titolo "🧭 Planner sperimentale"; sotto, le due mappe a tutta
+  larghezza, ciascuna con titolo + statistiche (piazzati, strade, non
+  piazzati, ✓ finito) sulla stessa riga. Le righe "fase:" e "fase 1/fase 2"
+  non sono più mostrate (le etichette restano nei fotogrammi). Se
+  il builder non si applica, una sola mappa col motore semplice. Il builder è
+  sincrono: 0,5-1,5 s sulle città reali (messaggio "calcolo in corso").
+- **Nota:** il builder sposta il municipio (lo centra, poi trasla la città verso
+  il bordo), come in foe-builder.
+
+### Completamento dopo fase 2 (`src/planner/completion.ts`, `runCompletion`)
+
+Il builder lascia libera la parte a est della strada verticale. Richiesta
+dell'utente: niente strada che parte dal basso e sfrutta un solo lato; la strada
+laterale parte dal centro come prosecuzione del raccordo est del municipio, e
+gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
+
+1. **Dorsale est** sulla riga `eastMidY` (geometria esportata da `runFase1` in
+   `VariantResult.geometry`): edifici con strada su entrambi i lati, per
+   altezza decrescente, ciascuno sul lato col primo posto libero più vicino al
+   municipio; la strada si allunga solo fino all'inizio dell'ultimo edificio.
+2. **Lato est della verticale** (strada già esistente): edifici impilati, dal
+   più largo, nella posizione libera più vicina al centro.
+3. **Dorsali secondarie**: si simula una dorsale per ogni riga in cui la
+   verticale può diramarsi a est e si applica quella con la resa migliore (area
+   servita ÷ strade nuove); si ripete.
+   **Ricerca (non ci si ferma alla prima soluzione):** i passi 1-3 sono
+   simulati su copie dello stato per molte disposizioni — 80 configurazioni
+   deterministiche (5 ordinamenti × 4 regole di scelta del lato × ordine dei
+   passi 1/2 × criterio delle dorsali secondarie) + ripartenze casuali
+   (spareggi casuali, lunghezza massima della dorsale 30-100%). Vince, in
+   ordine: meno edifici con strada esclusi, meno celle di strada nuove, area
+   occupata più compatta. La ricerca è CONTINUA: ogni miglioramento sostituisce
+   subito la disposizione visualizzata (etichetta con disposizioni provate,
+   strade nuove della migliore e a quale tentativo è stata trovata) e prosegue
+   finché l'utente preme **⏭ FERMA E COMPLETA** (`shouldFinishSearch`, pulsante
+   abilitato solo durante la ricerca via `onSearchActive`), oppure trova 0 strade
+   nuove con tutti inseriti, oppure raggiunge il tetto di sicurezza (2 milioni).
+   "■ Ferma" invece interrompe tutto senza completare.
+   Solo DOPO si passa agli edifici senza strada.
+
+   **Fine strada orizzontali (richiesta dell'utente).** Gli edifici con strada
+   "grandi" rimasti dopo fase2 (entrambi i lati >= 5, `LATO_GRANDE`) sono i
+   candidati fine strada: 1-2 → una dorsale (riga del raccordo est), 3-4 → due
+   dorsali distanziate (oltre 4: le prime 4 coppie, gli altri vanno sui lati
+   come tutti). Un grande senza compagno è abbinato al più grande degli altri.
+   A ogni estremità est: **L** adiacente all'ultima cella di strada a nord o a
+   sud, **C** che tocca il lato EST dell'ultima cella (sfrutta il lato prima
+   inutilizzato). `CAP_VARIANTS` (12): ruoli L/C × lato × L a filo
+   (termina sulla colonna dell'ultima cella) o sporgente (vi inizia) × C verso
+   L o opposto. Con fine strada la strada ha lunghezza fissa (stima =
+   larghezza degli altri edifici / (2 × dorsali) × fattore + larghezza della
+   coppia; si provano lunghezze vicine e tutte le varianti finché la coppia
+   entra), poi gli altri edifici riempiono i lati fino all'ultima cella. Nella
+   ricerca variano coppie (`pairSeed`), righe delle due dorsali (distanza >= 6),
+   fattore di lunghezza (0,4-1,6) e variante iniziale. Ordine di merito: meno
+   esclusi, poi meno fini strada mancati (`finiStradaMancanti`), poi meno
+   strade, poi compattezza. foe-map (11 grandi rimasti): due dorsali con fine
+   strada, 79 strade nuove (83 prima), 127 totali.
+
+   **Lato est della verticale prima delle dorsali (segnalazione dell'utente:
+   edifici sulla dorsale mentre la verticale aveva spazio libero).** Con
+   `vertFirst` il lato est della verticale (strada gratis) si riempie PRIMA
+   delle dorsali, lasciando fuori gli edifici riservati ai fine strada e le
+   righe in cui partiranno le dorsali (`latoEstVerticale(evita)`); prima la
+   dorsale partiva comunque da quella riga e un edificio la bloccava, quindi
+   quelle disposizioni perdevano sempre. Nuova opzione di lunghezza
+   `lenFactor = 0`: la dorsale più CORTA in cui la coppia di fine strada entra
+   (configurazioni deterministiche + 25% delle ripartenze). Test sintetico (2
+   grandi + 18 edifici, verticale libera): 38 → 5 strade nuove, tutti sulla
+   verticale e coppia di fine strada a 5 celle dal raccordo.
+
+   **Pettine (regola dell'utente: edifici alti a nord della dorsale più in
+   alto o a sud di quella più in basso, per lasciare margine fra le strade).**
+   Nuova strategia nella ricerca (`Params.comb` = K dorsali, 2-4,
+   `combAnchor` = quale dorsale sta sulla riga centrale): le 2K fasce (nord e
+   sud di ogni dorsale) si riempiono con gli edifici in altezza decrescente,
+   PRIMA le due esterne, poi le interne (altezze simili nella stessa fascia;
+   capacità di fascia = larghezza totale / 2K × fattore). Distanza fra dorsali
+   = fascia sud della superiore + fascia nord dell'inferiore (+ fini strada);
+   se le righe non sono valide il pettine viene traslato. I fini strada vanno
+   sulla prima e sull'ultima dorsale. `latiDorsale` accetta il lato imposto
+   per edificio (`forza`). Configurazioni deterministiche K=2..4 × ancora ×
+   vertFirst, e metà delle ripartenze casuali. Test sintetico (76 edifici
+   misti con 10 alti 3×6): vince un pettine a 2 dorsali con gli alti nella
+   fascia nord esterna.
+
+   **Vincoli anti-spreco (segnalazioni dell'utente: righe vuote fra le
+   dorsali, edifici che toccano due dorsali, due strade orizzontali
+   affiancate).**
+   - Un edificio con strada non può toccare (perimetro) una strada NUOVA già
+     tracciata da un'altra dorsale (`toccaAltraDorsale`, anche per i fini
+     strada e il lato est della verticale).
+   - Una dorsale si ferma dove una sua cella sarebbe adiacente (nord/sud) a un
+     edificio già piazzato o a un'altra strada nuova (`lunghezzaLibera`): niente
+     strade affiancate. Il lato est della verticale lascia libere anche le righe
+     adiacenti a quelle delle dorsali future.
+   - Nuova metrica `spreco`: celle libere nella zona delle dorsali (da x0
+     all'ultima strada nuova, fra il bordo nord e sud degli edifici delle
+     dorsali, esclusi quelli sul lato est della verticale). Ordine di merito:
+     esclusi → fini strada mancati → `strade + 0,5 × spreco` → compattezza
+     (`PESO_SPRECO`: una cella vuota può ancora ospitare un edificio senza
+     strada, una strada no).
+   - Dorsali secondarie: nuovo criterio `snug` (resa = area / (strade nuove +
+     0,5 × celle vuote attorno alle sue fasce)), accanto a `ratio` e `minRoad`.
+   Test sintetico (152 edifici con strada): 5 dorsali compatte, nessuna strada
+   affiancata, nessun edificio su due dorsali.
+
+   **Lati di strada inutilizzati (regola dell'utente: "non deve esistere
+   mai").** `latiLiberi` = celle delle strade nuove con a nord o a sud una cella
+   libera (né edificio né strada). È il terzo criterio di merito, PRIMA del
+   costo: esclusi → fini strada mancati → `latiLiberi` → strade + 0,5 × spreco →
+   compattezza. Anche le dorsali secondarie pesano ogni lato libero come 2
+   strade (`PESO_LATO_LIBERO`). Mostrato in rosso nella riga di avanzamento se
+   > 0. Test sintetico con altezze miste (118 edifici): 0 lati liberi.
+
+   **Ricompattazione (idea dell'utente: "scambia tutta la fila rosa con la
+   fila rossa").** A fine simulazione (`ricompatta`) le dorsali orizzontali,
+   dall'alto in basso, vengono riaccostate: distanza fra due dorsali = fascia
+   sud della prima + fascia nord della seconda + 1 (minimo 1 per fascia), senza
+   righe vuote fra le fasce; per ogni dorsale senza fine strada si può
+   SCAMBIARE la fascia nord con la sud (gli edifici mantengono la x). Si
+   provano tutte le combinazioni di scambi (fino a 2^6) × ogni dorsale come
+   àncora; valida = righe ammesse, nessuna sovrapposizione, nessun edificio che
+   tocca la strada di un'altra dorsale. Vince quella con meno lati liberi, poi
+   meno celle vuote; si applica solo se non peggiora i lati liberi. Lo spazio
+   liberato viene poi usato (lato est della verticale + dorsali secondarie) per
+   gli edifici rimasti. `Azione` registra riga della dorsale (`sy`) e `cap`.
+   Costo: circa il doppio del tempo per disposizione.
+
+   **Lato corto e verticale senza buchi (regole dell'utente).**
+   - `latiLiberi` conta anche le celle del lato EST della strada verticale
+     rimaste libere: la verticale non deve avere buchi a est, quindi le
+     disposizioni che la riempiono vincono su quelle che allungano le dorsali.
+   - Nuovo criterio `latiLunghi` (dopo `latiLiberi`, prima del costo): edifici
+     attaccati col lato LUNGO, cioè larghi (w > h) su una dorsale orizzontale o
+     alti (h > w) sulla verticale (i fini strada non contano).
+   - `latoEstVerticale` mette prima gli edifici più larghi (w − h decrescente);
+     con `Params.orient` il primo riempimento della verticale prende solo
+     quelli con w ≥ h, gli alti restano alle dorsali. orient = vertFirst nelle
+     configurazioni deterministiche, 60% nelle ripartenze.
+   Test sintetico mappa grande con pochi edifici (6×4, 5×4 sulla verticale,
+   3×6 e 3×5 sulla dorsale): verticale piena, 0 lati liberi, 36 strade.
+
+   **ORDINE DI MERITO DEFINITIVO (segnalazione dell'utente: una soluzione da
+   78 strade sostituita da una da 87).** L'obiettivo principale è il minimo
+   numero di strade: esclusi → **strade nuove** → fini strada mancati → lati
+   liberi → lati lunghi → celle sprecate → compattezza. Gli altri criteri
+   valgono solo a parità di strade; una disposizione con più strade non
+   sostituisce MAI la migliore visualizzata (il numero di strade mostrato può
+   solo scendere). I vincoli di generazione (niente strade affiancate, niente
+   edifici su due dorsali) restano. Questo sostituisce gli ordini precedenti
+   (lati liberi prima delle strade, costo strade + 0,5 × spreco).
+
+   **Fini strada più grandi + dorsale non vincolata al raccordo.**
+   - `scambiaFiniStrada` (a fine simulazione): per ogni fine strada, se un
+     edificio più grande (area) sta sui lati di una dorsale o sulla verticale,
+     si scambiano i posti mantenendo gli ancoraggi (L adiacente all'ultima
+     cella, a filo o sporgente; C sul lato est, allineato in alto o in basso;
+     l'altro allineato alla sua strada o alla verticale), se entrambi entrano
+     e nessuno tocca strade di altre dorsali. Il fine strada è così sempre il
+     più grande possibile e la dorsale si libera di spazio.
+   - La dorsale principale non è più vincolata alla riga del raccordo est del
+     municipio: configurazioni deterministiche con la dorsale a ±1/±2 righe e,
+     nelle ripartenze, metà delle volte uno spostamento di 1-3 righe
+     (`rigaVicina`). Serve per creare fasce di altezza utile (es. 2 righe per
+     edifici 2×2 / 2×3).
+   - **Scambio col builder** (`Params.swapBuilder`): un grande già piazzato dal
+     builder (es. il 6×6/5×6 in fondo alla verticale) cede il posto al più
+     piccolo dei grandi ancora da piazzare (allineato a un angolo del suo
+     posto, purché tocchi una strada) e torna in gioco come candidato fine
+     strada. `Azione.from` (posto liberato) e `Azione.libera` (edificio
+     liberato: se non viene ripiazzato torna fra i da piazzare).
+     Configurazioni deterministiche (riga 0/±1) + 50% delle ripartenze.
+
+   **Compattazione, ribilanciamento e ricerca locale (Rode, raccordo 4).**
+   - `compattaDorsali` (a fine simulazione), per ogni dorsale:
+     `bilancia` ridistribuisce gli edifici (non fine strada) fra fascia nord e
+     sud con un DP subset-sum sulle larghezze (il fine strada L conta sul suo
+     lato), li riposiziona da x0 e cerca l'estremità più corta in cui la
+     coppia di fine strada entra con UNA QUALSIASI delle 12 varianti; se non
+     accorcia la strada si ripristina. Altrimenti gli edifici scivolano verso
+     ovest nei buchi e la coppia si riaccosta. Le celle di strada oltre la
+     nuova estremità contano come libere per il fine strada, poi la strada
+     si accorcia.
+   - `Params.gapN/gapS` (1-3): righe lasciate libere sul lato est della
+     verticale sopra/sotto la dorsale futura, così all'inizio della dorsale
+     entra un edificio piccolo (2×3, 3×3) invece di un buco di 1 riga
+     (configurazioni deterministiche + ripartenze + mutazioni).
+   - Ricerca locale: dopo le configurazioni fisse, metà dei tentativi è una
+     mutazione (1-2 mosse) dei parametri della disposizione migliore (riga
+     ±1, lunghezza, variante del fine strada, lato, ordine, scambio col
+     builder, verticale prima/dopo, gap), l'altra metà una ripartenza casuale.
+   Banco (8 s per raccordo): Rode r3 82 (era 85-86, 0 lati liberi), r4 77 (era
+   78); Claudio 76-77; Sonia 76-80 (era 79-82); tutti piazzati, 0 sovrapposizioni.
+
+   **Fase 2 non intoccabile: allungamento della verticale (`Params.extN/extS`).**
+   All'inizio della simulazione la strada verticale del builder può essere
+   allungata di k righe a nord e/o a sud: i suoi fini strada (il tappo che
+   copre la colonna della strada oltre l'estremità e il laterale a est che
+   tocca l'ultima cella e sporge) scivolano di k righe verso il bordo (passo
+   massimo fattibile ≤ k) e la strada li segue (celle contate come strade
+   nuove). Il lato est guadagna spazio e si sfrutta tutta l'altezza. Gli
+   edifici spostati sono azioni con `from` (posto liberato); lo scambio col
+   builder salta gli edifici già spostati. Configurazioni deterministiche
+   (nord, sud, entrambi fino al bordo), 40% delle ripartenze, mutazione. Il
+   lato est della verticale nei lati liberi conta anche le celle nuove.
+   Sonia r4 dopo 20 s: 75 strade (orig. 84).
+
+   **Città piccole e dense (Avito).**
+   - Pettine "pieno" (`comb = -1`): ogni fascia lunga quanto lo spazio libero
+     verso est (× fattore ≤ 1), numero di dorsali calcolato (+ `combPiu` 0-2).
+     Le fasce si riempiono per altezza decrescente: prima le due esterne
+     (alti), poi le interne in coppie consecutive (sud di una dorsale + nord
+     della successiva, altezze simili: due file di edifici bassi fra due
+     strade, l'idea dell'utente). Configurazioni deterministiche (3 × 3 × 3 ×
+     2) + 30% delle ripartenze.
+   - Nuovo criterio di merito 0 `deficit`: celle libere che mancherebbero per
+     gli edifici senza strada e per gli esclusi (×1,3, +5%); è 0 nelle città
+     con spazio.
+   - `Params.liberaN/liberaS` (rinuncia ai fini strada della verticale): il
+     tappo e il laterale all'estremità della verticale tornano fra i da
+     piazzare (il grande può diventare fine strada di una dorsale), lo spazio
+     si libera e, con `extN/extS`, la verticale scende nello spazio liberato:
+     le dorsali possono partire anche da lì. Le righe valide per pettine e
+     ricompattazione sono ora calcolate per simulazione (`okRigaS`,
+     `haVerticale`). `Piano.liberati`: chi non viene ripiazzato torna fra i
+     da piazzare (motore Planner). Configurazioni deterministiche (nord, sud,
+     entrambi × pettine pieno o no × vertFirst), 15% per lato nelle
+     ripartenze, mutazione.
+   - **Fix strade scollegate** (segnalazione dell'utente): l'allungamento della
+     verticale senza fini strada aggiungeva celle di strada non legate ad
+     alcuna azione, quindi non venivano applicate né mostrate e la dorsale
+     che ne dipendeva risultava staccata. Ora sono in `Piano.stradeExtra`
+     (applicate e mostrate). In più, controllo di connessione a fine
+     simulazione: `scollegate` = celle di strada nuove non raggiungibili dalla
+     rete esistente, **criterio di merito -1** (deve essere 0). Il banco
+     controlla anche le strade scollegate nel risultato finale.
+   - `attaccaAStrade` (dopo il lato est della verticale, prima delle dorsali
+     secondarie): gli edifici con strada rimasti si attaccano a una strada
+     GIÀ esistente a costo zero, nella posizione più incastrata (più lati a
+     contatto con edifici/strade/bordo), mai a contatto con due dorsali.
+     Riempie per esempio il fine strada d'angolo lasciato libero in fondo
+     alla verticale.
+   Banco (10 s): Avito r3 6 non piazzati (solo 3×3 senza strada), r4 3; Claudio
+   74; tutte le città 0 strade scollegate, 0 sovrapposizioni.
+   - **Fix edifici non collegati / sovrapposti** (segnalazione dell'utente su
+     Avito): nella compattazione (`bilancia` e scorrimento) la strada veniva
+     accorciata DOPO aver marcato i fini strada, cancellando dall'occupazione
+     la cella del fine strada C appena oltre la nuova estremità; i passi
+     successivi (`attaccaAStrade`) potevano poi piazzarci sopra un edificio.
+     Ora si accorcia prima e si marca dopo. Reti di sicurezza aggiunte:
+     `riparaScollegati` (ogni edificio con strada piazzato deve toccare una
+     strada: altrimenti viene tolto e riattaccato a una strada esistente, o
+     resta escluso) e una validazione finale delle sovrapposizioni (edifici di
+     partenza non spostati + azioni + strade): se ce n'è una la disposizione
+     è invalida (`scollegate` += 1000). `DEBUG_SOVRAPPOSIZIONI` stampa i
+     conflitti (solo banco). Il banco controlla anche "edifici senza strada".
+   Banco dopo il fix (10 s): 0 sovrapposizioni, 0 strade scollegate, 0 edifici
+   senza strada su tutte le città; Sonia 75-78, Rode 77-83, Claudio 75-77.
+   - `altiFuori` (dopo le dorsali secondarie, prima della ricompattazione):
+     gli edifici con h >= 6 sui lati di una dorsale interna vanno nella fascia
+     esterna (nord della dorsale più in alto o sud di quella più in basso), in
+     un posto libero entro la lunghezza della strada o scambiandosi con un
+     edificio più basso di quella fascia; mai a contatto con altre dorsali.
+     Su Avito l'effetto è limitato: la fascia esterna sud è bassa (bordo della
+     mappa vicino), quindi gli alti entrano solo se la dorsale più in basso
+     sale; servirebbe spostare le dorsali insieme agli alti.
+   - `altiFuori` spostato DOPO tutte le dorsali (prima girava quando ne
+     esistevano solo 1-2, quindi non sapeva quali fasce sarebbero diventate
+     interne) e con lo scambio di GRUPPI (catena di alti adiacenti ↔ sequenza
+     di edifici più bassi della fascia esterna di larghezza ≥). In `bilancia`
+     gli alti (h ≥ 6) sono forzati sul lato esterno della dorsale più in alto
+     (nord) / più in basso (sud); il ribilanciamento si applica anche a
+     strada invariata se mette fuori almeno un alto.
+   - **Fix sovrapposizione strada/edificio**: nell'applicazione del piano le
+     celle del posto lasciato dagli edifici liberati/spostati venivano
+     liberate DOPO aver marcato le strade nuove (es. la verticale allungata
+     dentro il posto del vecchio fine strada), cancellandole; il riempimento
+     senza strada ci metteva sopra un 3×3. Ora prima si liberano i posti, poi
+     si marcano strade ed edifici.
+   - Ordine di merito: gli esclusi tornano PRIMA del deficit di spazio
+     (`scollegate → esclusi → deficit → strade → …`): il deficit stimato
+     faceva vincere disposizioni con un edificio con strada escluso.
+   Banco (Avito 20 s): r3 189 strade, 5 non piazzati (3×3 senza strada); r4
+   187 strade, 1 non piazzato (6×6 senza strada). Altre città invariate, 0
+   sovrapposizioni/scollegamenti ovunque.
+   - **Vincolo "alti sempre esterni" (prova richiesta dall'utente,
+     `ALTI_ESTERNI_VINCOLO = true`)**: `altiInterni` = edifici con strada h ≥ 6
+     appoggiati (col lato inferiore o superiore) a una dorsale ma non nella
+     fascia esterna (nord della più in alto, sud della più in basso); criterio
+     di merito subito dopo gli esclusi, PRIMA delle strade. Generazione:
+     `Params.riservaAlti` trattiene gli alti durante la costruzione e li mette
+     poi solo nelle fasce esterne (`piazzaAltiFuori`, allungando la dorsale se
+     serve); `bilancia` può allungare la strada fino a 8 celle per metterli
+     fuori; nel pettine le righe sono valide solo se le fasce esterne (alte
+     quanto il più alto) stanno dentro la mappa. Mostrato in rosso
+     nell'avanzamento ("N alti interni").
+     Esito su Avito (30 s): r4 0 alti interni, 188 strade (prima 185-187), ma
+     8 edifici senza strada non piazzati (prima 1); r3 1 alto interno, 189
+     strade, 14 non piazzati (prima 5). Altre città: invariate (0 alti
+     interni già prima). Per tornare indietro: `ALTI_ESTERNI_VINCOLO = false`.
+   - **Ritirato il vincolo** (l'utente: "gli spunti devono essere tentativi,
+     non regole tassative"; Avito era passato da 179 a 188 strade):
+     `ALTI_ESTERNI_VINCOLO = false`, `altiInterni` è solo uno spareggio dopo
+     lo spreco. Gli "alti esterni" sono ora uno spunto della ricerca
+     (`Params.altiEsterni`, 40% dei tentativi + mutazione): forzatura in
+     `bilancia` solo se la strada NON si allunga (niente più +8), `altiFuori`
+     e il controllo delle fasce del pettine solo se attivo. `riservaAlti` 25%.
+     **Principio**: ogni idea dell'utente diventa un'opzione della ricerca,
+     mai un criterio sopra il numero di strade.
+   - Prestazioni: `attaccaAStrade` (40% del tempo) considera solo le celle di
+     strada con un vicino libero: +75% disposizioni al secondo (Avito 30 s:
+     3.900 invece di 2.100).
+   Banco (Avito 30 s): r3 187, r4 185 strade (1-4 non piazzati senza
+   strada); Sonia 75-79, Claudio 76, Rode 77-85.
+   - **Pausa e modifiche manuali ("unire le forze")**: ⏸ Pausa ferma la
+     ricerca (diventa ▶ Riprendi); lo stop definitivo è solo ↺ Reset (attivo
+     anche in pausa); ⏭ COMPLETA (ex "FERMA E COMPLETA") è l'UNICO comando
+     che chiude la ricerca e passa al riempimento. `runCompletion` riceve
+     `isPaused` / `waitResume` / `onPaused`: con `isPaused()` vero il ciclo
+     mostra la migliore (" · in pausa") e attende `waitResume()`. In pausa la
+     mappa (bordo azzurro) è modificabile: trascinare un edificio lo sposta
+     (fantasma verde/rosso = valido/non valido: celle sbloccate, niente strade
+     né altri edifici; municipio fisso), click su una strada la elimina, tasto
+     destro su un edificio lo toglie (lo ripiazza l'ottimizzatore); bordo
+     rosso = edificio con strada scollegato; ↶ Annulla per mappa. Mappa non
+     toccata → `null`, la ricerca prosegue invariata.
+     Con modifiche, `ribasa` normalizza lo `StatoManuale` (solo strade
+     raggiungibili dal municipio, rami morti potati, edifici con strada tolti
+     o scollegati di nuovo da piazzare; `ricalcola` aggiorna occupate,
+     `daPiazzare`, `areaSenzaStrada`, `righeValide`) e questo diventa la
+     soluzione corrente S. Da lì **la ricerca CONTINUA** (`cercaDaManuale`)
+     finché l'utente non preme COMPLETA, alternando:
+     1. 50%: un passo della ricerca parametrica dalla base del builder
+        (`ripristinaBase` + `passoPar`: configurazioni fisse, mutazioni della
+        migliore, ripartenze casuali — la stessa ricerca di prima della
+        pausa, che prosegue); se la sua nuova migliore, applicata, batte S,
+        la sostituisce;
+     2. 50%: ricerca a vicinati attorno a S: si tolgono da S gli edifici con
+        strada di un "vicinato" (un gruppo di 1-10 vicini a un edificio a
+        caso, oppure quelli lungo gli ultimi 2-8 metri di un ramo di strada;
+        se mancano edifici, a volte solo quelli) — `ribasa` pota le strade
+        rimaste inutili — e si ripiazzano (3 tentativi `simula` con parametri
+        casuali, si applica il migliore).
+     Punteggio di S (`punteggio`): edifici con strada fuori → deficit di
+     spazio → strade totali; un risultato non peggiore sostituisce S
+     (miglioramento stretto = "trovata alla n."). Le "strade nuove"
+     mostrate sono strade totali di S meno quelle del builder. A COMPLETA si
+     riparte da S (`ribasa`) e si completa.
+     `PlannerView`: `pausedRef`, `resumeRef` (risolutori per mappa), `modRef`,
+     `storia` (Annulla), `framesRef`, `genRef` (fotogrammi di una corsa
+     annullata da Reset ignorati).
+     Prova `bench/pause.ts <Città> <r3|r4> <identica|tolti|solostrada> [ms]`
+     su Beta (pausa a 3 s, ripresa, seconda pausa senza modifiche, COMPLETA a
+     20 s): identica r3 50 → 48, r4 49 → 47; tolti 3 edifici + 1 strada: r3
+     50 → 48, r4 49 → 46; solo 1 strada eliminata: r3 50 → 45, r4 49 → 47;
+     sempre 131/131 piazzati, 0 sovrapposizioni, 0 edifici senza strada.
+   - **Edifici fissi attorno al municipio** (regola dell'utente: "già
+     ottimizzati al massimo, non devono mai essere spostati"): gli edifici
+     di fase 1 di tipo `angolo`, `riempimento` e `blocco_muni` (passi 2-4)
+     sono esportati dal builder in `BuilderVariant.fissi` e passati a
+     `runCompletion` (`opts.fissi`). Esclusi da: scambio col builder
+     (`swapBuilder`), rinuncia ai fini strada (`liberaFine`), allungamento
+     della verticale, vicinati della ricerca dalla disposizione manuale. Rete
+     di sicurezza in `simula`: un piano che sposta o libera un fisso è non
+     valido (+1000). In pausa l'utente può comunque spostarli a mano. Il
+     banco stampa "fissi N, spostati M" (sempre 0 su tutte le città).
+   - **Parte ovest fissa** (regola dell'utente: "tutta la parte a ovest
+     della dorsale verticale, posizionata da fase 1 e fase 2, è già ottima"):
+     tutti gli edifici INTERAMENTE a ovest della strada verticale
+     (`x + w - 1 < stradaVX`) si aggiungono ai fissi (`idOvest`): mai
+     spostati né liberati dalla ricerca (spazio di ricerca ridotto). I fini
+     strada della verticale, che ne occupano la colonna, restano mobili:
+     provato a bloccarli (`<=`), Avito r4 passava da 141 strade nuove / 2
+     edifici fuori a 201 / 7 fuori, r3 da 0 a 2 fuori; con `<` i risultati
+     sono identici a prima. Dopo una ripresa con modifiche manuali i fissi
+     diventano gli edifici a ovest della disposizione dell'utente; se la
+     parte ovest (edifici + strade, `firmaOvest`) è diversa da quella del
+     builder, la ricerca parametrica dalla base del builder si spegne
+     (`parOvestOk`) e restano solo i vicinati attorno a S, così la nuova
+     disposizione ovest non viene mai rimpiazzata. Il banco stampa "ovest N
+     edifici, spostati M" (0 senza modifiche manuali).
+   - **Buchi intermedi e stallo** (segnalazione dell'utente: la ricerca
+     sostituiva una disposizione con pochi buchi con una equivalente con più
+     buchi, e in modalità manuale "spostava edifici senza concludere"):
+     - nuova metrica `buchi` (`contaBuchi`): celle libere che nessun
+       edificio senza strada rimasto con entrambi i lati >= 2 può coprire
+       (fessure larghe 1, angoli, sacche); si usano solo le forme minimali
+       (una cella coperta da una finestra libera w×h lo è anche da una più
+       piccola contenuta), somme prefisse 2D + array differenze, O(celle ×
+       forme). Le decorazioni 1×N sono escluse perché poche e coprirebbero
+       tutto. Forme ricalcolate in `ricalcola`.
+     - Ordine di merito: subito DOPO le strade (prima di fini strada, lati
+       liberi, ecc.): a parità di strade vince chi ha meno buchi.
+     - Il deficit di spazio conta come libere solo le celle non-buco.
+     - Ricerca dalla disposizione manuale: `punteggio` = fuori → deficit →
+       strade → buchi. Separati il cammino (`manuale`, accetta anche
+       soluzioni equivalenti per uscire dagli stalli) e la MIGLIORE
+       (`migliore`, mostrata, usata in pausa e a COMPLETA): cambia solo con
+       un miglioramento stretto. Dopo `STALLO` = 300 tentativi senza
+       miglioramenti il cammino riparte dalla migliore.
+     - UI: "N buchi intermedi" al posto delle celle sprecate.
+     Banco (10 s): Beta 46/46 strade nuove (buchi 15/3), Sonia 21/17,
+     Claudio 11/13, Rode 29/15, tutti piazzati; Avito r3 154 strade nuove con
+     13 edifici senza strada fuori (prima 152 / 4: cambia la traiettoria
+     della ricerca locale, che parte dalla migliore), r4 150 / 1 fuori (prima
+     141-149 / 2). `pause.ts` verifica che la migliore mostrata non
+     peggiori mai ("peggioramenti mostrati: 0").
+   - **Rifinitura delle punte** (`rifinisciPunte`, segnalazione dell'utente:
+     "dovrebbe accorgersi che si può subito eliminare una strada e spostare i
+     due edifici sul fine strada"): per ogni punta di strada nuova (foglia) si
+     prova a togliere le ultime t = 1..3 celle; gli edifici della
+     simulazione che resterebbero senza strada (al più 4, di norma la coppia
+     di fine strada) vengono ripiazzati con una ricerca esaustiva fra le
+     posizioni libere che toccano la strada rimasta entro 12 celle dalla
+     punta (preferite quelle vicine alla posizione attuale: così si
+     scambiano anche i ruoli L/C del fine strada); se tutti trovano posto la
+     strada si accorcia, e si ripete finché migliora. Un edificio di
+     partenza che perderebbe la strada blocca la punta. Gira dopo
+     `riparaScollegati`, prima delle metriche (il riallineamento finale
+     sistema le strade delle azioni).
+     Costo: applicata a OGNI simulazione toglieva il 35% delle disposizioni
+     al secondo e a parità di tempo i risultati peggioravano; ora
+     `simula(p, punte)` la esegue solo sulle disposizioni "promettenti"
+     (nessuna strada scollegata, esclusi <= migliore, strade <= migliore +
+     `MARGINE_PUNTE` = 0), rieseguendo la simulazione (deterministica) con la
+     rifinitura; nella ricerca dalla disposizione manuale sul migliore dei 3
+     tentativi. Misurato: su Sonia accorcia la strada in 122 delle 698
+     disposizioni promettenti (Beta 5/421); banco 10-20 s: Beta 46/46,
+     Claudio 14/17, Sonia 20/17, Rode 33/18, Avito r3 149 (prima 154), r4 146;
+     0 sovrapposizioni, 0 strade scollegate, 0 edifici senza strada.
+   - **Riga di stato e PNG per mappa** (richiesta dell'utente): dopo
+     "Raccordo a N celle" solo `piazzati X/Y` (solo edifici CON strada,
+     municipio escluso; verde se tutti, rosso se ne mancano), `strade N/M`
+     (M = città di partenza `originalRoadCells`; verde se meno, rosso se di
+     più); intestazione del Planner ridotta a "N edifici · M strade" e il numero di disposizioni
+     provate; tolti strade nuove, alti interni, lati liberi, buchi, "trovata
+     alla n.", "consigliato dal builder", "✓ finito". "Scegli questa" (e lo
+     stato `scelta`) sostituito da **⬇ Scarica PNG**: `scaricaPng` costruisce
+     i `CityMapBuilding` della disposizione mostrata (edifici originali con
+     le nuove coordinate + una tessera "street" 1×1 per cella di strada, aree
+     sbloccate come celle 1×1) e chiama `renderCityMapPng` di
+     `CityMapView.tsx` (ora esportata), stessa resa (scala 2) dell'export PNG
+     del pannello MAPPA; file `foe-planner-raccordo3|4-<data>.png`.
+     `PlannerView` riceve `uiLang` da App.tsx (etichetta del municipio).
+     Sulle mappe del Planner i Grandi Edifici sono rossi (`#dc2626`, set
+     `grandiEdifici` da `isGreatBuilding`), come nella mappa.
+   - **Fase C: rifinitura continua degli edifici senza strada**
+     (`rifinisciSenzaStrada`, richiesta dell'utente: dopo COMPLETA il
+     riempimento non deve accontentarsi della prima soluzione, ma ridurre i
+     buchi interni lasciando lo spazio libero fuori dal perimetro occupato,
+     dove entrano edifici più grandi; si possono spostare anche gli edifici
+     senza strada di fase 1 e 2). Parte dopo il riempimento (fillMask +
+     "ultimi rimasti") e continua senza fine (solo Reset la interrompe;
+     opzioni `shouldStopFill` / `onFillActive`, senza `shouldStopFill` la
+     fase C non gira: banco invariato). Si può mettere in **pausa** (⏸ Pausa
+     è attivo anche durante il completamento; niente più pulsante FERMA):
+     in pausa si possono trascinare o togliere col tasto destro SOLO gli
+     edifici senza strada (`MapCanvas` prop `soloSenzaStrada`: edifici con
+     strada e strade bloccati); a ▶ Riprendi le posizioni manuali degli
+     edifici senza strada diventano la disposizione corrente e la migliore,
+     e la rifinitura riparte da lì (i tolti tornano fra i da piazzare). Prova
+     `bench/fillpause.ts` (Beta r4: pausa a 3 s di fase C, tolti 5 edifici
+     senza strada, ripresa: 5/5 ripiazzati, 131/131, 0 sovrapposizioni). Strade, municipio ed edifici con
+     strada fermi. Ricerca a vicinati: finestra 6-14 × 6-14 centrata su un
+     buco interno (70%) o su un edificio senza strada a caso; si tolgono gli
+     edifici senza strada che la toccano e si ririempie la maschera (celle
+     libere della finestra + celle degli edifici tolti) con loro + i non
+     piazzati, con `fillMask(..., 1500, fast)`. Punteggio: area senza strada
+     non piazzata → celle dei buchi interni (zone libere che non toccano il
+     bordo dell'area sbloccata) → numero di zone libere. Cammino che accetta
+     gli equivalenti, migliore (mostrata, restituita) solo con miglioramenti
+     stretti, ripartenza dalla migliore dopo 400 tentativi senza
+     miglioramenti. Il PNG si può scaricare in ogni momento.
+     Banco (`FILL=<ms>`): Beta r4 buchi interni 41 → 11 in 20 s; Avito r3
+     non piazzati 7 → 3 (25 s); Sonia, Rode già a 0 buchi interni; tutti 0
+     sovrapposizioni.
+     **Obiettivi rivisti** (segnalazione dell'utente: pezzi blu staccati dal
+     resto, buchi interni da colmare con pezzi di lato >= 2, i pezzi con un
+     lato = 1 per ultimi come tappabuchi). Punteggio: area non piazzata dei
+     pezzi "veri" (lati >= 2) → area dei pezzi STACCATI (edifici senza strada
+     non collegati, attraverso celle occupate, alla massa del municipio) →
+     celle dei buchi interni → PERIMETRO ESPOSTO (lati cella libera/cella
+     occupata: tiene la massa compatta) → numero di zone libere. I pezzi con
+     un lato = 1 sono tolti dalla ricerca e rimessi per ultimi (`tappabuchi`)
+     sulla migliore: prima nelle celle dei buchi interni, poi dove toccano più
+     celle occupate, mai staccati. Nuova mossa "riloca" (30%): il pezzo
+     staccato o più esposto (o un non piazzato) viene rimesso nel posto
+     libero con più contatto; la finestra ririempita con fillMask parte da un
+     pezzo staccato/esposto o da un buco interno. In pausa i tappabuchi sono
+     ricalcolati alla ripresa. Banco (Beta r3, 25 s): buchi interni 8 → 4,
+     perimetro esposto 82 → 66; Avito r3: non piazzati 7 → 2, buchi interni
+     63 → 45, perimetro 267 → 229; 0 pezzi staccati, 0 sovrapposizioni.
+   - **Revisione del codice e ottimizzazioni (ottobre 2026)**. Tutte le
+     ottimizzazioni della ricerca sono a risultato IDENTICO (verificato col
+     banco a NVAL fisso: stesse strade, stesso "trovata alla n.", stessi
+     finali su Beta/Sonia/Rode):
+     - `GridSet`: insieme di celle su griglia densa (Uint8Array) con stessa
+       interfaccia di Set<string> + `hasXY`/`setRect`; `occupied` è un
+       GridSet e ogni simulazione fa `occupied.clone()` (memcpy) invece di
+       ricopiare migliaia di stringhe; `edif` idem; `fitsS`/`free`/
+       `isFree` numerici (`cellGrid`, `inCella`, `gIdx`); i 14 cicli
+       "occ/edif add/delete cella per cella" sostituiti da `rett(x,y,w,h,v)`.
+     - `attaccaAStrade` numerica (strade su griglia, posizioni viste con
+       timbro, forme senza posto saltate: l'occupazione cresce soltanto).
+     - `provaDorsaleCap`: controlli L/C numerici prima di costruire `extra`.
+     - `ricompatta`/`valuta`: celle e strade della prova con timbro su
+       griglia invece che in Set.
+     - `bilancia`: `ok`/`stradaLibera` numerici.
+     - Validazione delle sovrapposizioni a fine simulazione: parte dalla
+       griglia occupata, libera i posti originali degli edifici mossi e
+       segna azioni + strade nuove (prima: Map di TUTTE le celle della
+       città a ogni simulazione).
+     - `contaBuchi` e il conteggio delle celle libere sulla griglia.
+     Effetto (disposizioni in 8 s, raccordo 4): Beta 2.373 → 6.222, Claudio
+     3.082 → 7.337, Avito 1.226 → 3.931 (×2,4-3,2).
+     - Fase C: `massa` e `analizza` su griglia (`og` aggiornata da
+       `metti`/`togli`), buchi interni come indici: Avito 8.241 → 43.435
+       tentativi in 15 s (×5).
+     - Motore segnaposto, fase "noroad" (ultimi edifici senza strada): ora
+       il posto libero che tocca più celle occupate invece del primo libero
+       in alto a sinistra (lasciava pezzi isolati, poi da recuperare in fase
+       C).
+     - Codice morto rimosso: `ALTI_ESTERNI_VINCOLO` (sempre false) e il suo
+       ramo in `meglio`, `DEBUG_SOVRAPPOSIZIONI`, una funzione inutilizzata
+       in fase C.
+   - **Planner e profili** (bug segnalato: dopo l'eliminazione del profilo
+     il Planner restava visibile). App.tsx: il Planner è montato solo con
+     una città importata (`cityMapBuildings.length > 0` e celle sbloccate),
+     `showPlanner` torna false quando la città si svuota, e `key =
+     activeProfileId`: cambiando profilo il componente si rimonta (lo
+     smontaggio ferma le ricerche e scioglie le pause dell'altro profilo, che
+     prima potevano continuare a scrivere sulle mappe). `PlannerView`: se la
+     città cambia nello stesso profilo (re-import) la corsa in atto si ferma
+     e mappe/ricerca si azzerano.
+   - **Avviso strade a due corsie**: se la città ha edifici con
+     `roadLevel >= 2`, sotto l'intestazione del Planner compare un avviso
+     ambra (non bloccante, `role="alert"`) con il loro numero: il Planner li
+     tratta come se bastasse una strada a una corsia e traccia solo strade a
+     una corsia, quindi per loro il risultato non è accurato. Senza questi
+     edifici l'avviso non compare. Chiudibile con la X (stato non salvato:
+     ricompare a ogni apertura del Planner e cambio di città).
+   - **Edifici militari**: sulle mappe del Planner sono marroni (`#92400e`,
+     come nella mappa città; `PlannerBuilding.isMilitary`, GE esclusi).
+     Alcatraz (`X_ProgressiveEra_Landmark1`) e Nave da guerra stellare
+     (`X_SpaceAgeSpaceHub_Landmark1`) producono ogni 24 ore le truppe di un
+     edificio militare anche se non è collegato alla strada: se uno dei due
+     è in città (`GE_RIFORNIMENTO_MILITARE`, `PlannerProblem.geRifornimento`
+     in `buildPlannerProblem`) gli edifici militari diventano `roadLevel = 0`
+     (trattati come senza strada da builder, ricerca e riempimento) e il
+     Planner mostra un avviso informativo azzurro con il nome del GE e il
+     numero di militari (chiudibile con la X; stato solo del componente,
+     NON salvato: ricompare a ogni apertura del Planner e cambio di città).
+     Senza questi GE i militari restano con la loro
+     strada (collegati come gli altri edifici con strada). Il PNG scaricato
+     usa la resa della mappa città esportata (militari non distinti).
+     Militare = flag `isMilitary` della mappa OPPURE prefisso `M_`
+     (`isMilitaryBuildingId`), così vale anche per profili salvati senza il
+     flag (es. Tana dei furfanti `M_AllAge_EasterBonus1Small`). Verificato
+     sull'export della città dell'utente (`planner-test/Sdrushi.json`: Nave
+     da guerra stellare + Tana dei furfanti → Tana con roadLevel 0).
+   - **Bug fase 1, passo 10 (colonna ovest)**: l'insieme delle celle
+     occupate conteneva strade ed edifici piazzati ma NON il municipio (che
+     non sta in `ctx.placed`); quando la strada verticale passa a una cella
+     dal municipio, un pezzo della colonna ovest poteva sovrapporsi al
+     municipio (città dell'utente, `planner-test/Sdrushi.json`: Fattoria
+     Terrazzata Oro 4×3 su un buco 3×3). Ora le celle del municipio sono in
+     `occ`. `bench/chk.ts <Città>` controlla le sovrapposizioni in ogni tappa
+     del builder: 0 su tutte e 6 le città. Da verificare anche in
+     `fase1.py` di FoE City Builder (stesso passo).
+   - **UI**: rimosse la legenda in fondo al Planner e la X di chiusura
+     (prop `onClose`): il Planner si apre e si chiude col pulsante PLANNER.
+   - **Blocco compattato a ovest** (richiesta dell'utente su
+     `planner-test/Belladonna.json`, città con moltissimi edifici con
+     strada): il passo 7 della fase 1 lasciava il blocco a 4 celle dal bordo
+     ovest perché la regola "distanza dal bordo 0 o >= 4" valeva anche per gli
+     edifici più stretti (Alcatraz 7×10 a filo ⇒ Tempio 6×6 a 1 cella:
+     vietato). Nuova opzione `Fase1Options.compattaOvest` (attiva di default
+     in `runBuilder`): dopo la scelta normale, il blocco scivola ancora a
+     ovest finché tutto (municipio, strade, edifici) resta nell'area
+     sbloccata e le regole valgono sui lati nord/sud/est; sul lato ovest sono
+     ammesse distanze 1-3 (le fessure si riempiono coi pezzi stretti in fase
+     C). Belladonna (12 s): edifici con strada esclusi dalla ricerca 67 → 2,
+     non piazzati 66 → 6 (r3) e 31 → 6 (r4); le altre 6 città invariate (il
+     blocco era già al bordo); 0 sovrapposizioni in tutte le tappe del
+     builder (`bench/chk.ts`). Il banco accetta `COMPATTA=0` per il
+     confronto.
+   - **Sovrapposizioni temporanee in pausa** (città piene come Belladonna:
+     senza spazio libero non si potevano scambiare due edifici): un edificio
+     si può rilasciare anche sopra altri edifici (fantasma arancione; verde =
+     posto libero; grigio = non ammesso: fuori area o su una strada). Gli
+     edifici sovrapposti (`sovrapposti()`) hanno un riquadro rosso pieno; con
+     sovrapposizioni ▶ Riprendi e COMPLETA sono disattivati e l'intestazione
+     mostra "⚠ N edifici sovrapposti: risolvi prima di riprendere".
+     L'edificio spostato passa in cima (delete + set nella Map): è disegnato
+     sopra e il click lo seleziona per primo.
+   - **Fino a 4 scenari in parallelo**: raccordo 3/4 × blocco di fase 1
+     "compattato" (a ovest, `compattaOvest`) o "standard" (regola originale).
+     `VName = "r3c" | "r4c" | "r3" | "r4"`, stato per scenario con `tutte()`,
+     `Scenario { id, v, compatto, raccordo }`. In `start()` il builder gira
+     con `compattaOvest = true`; lo scenario standard si calcola solo se la
+     compattazione ha davvero spostato il blocco (`Fase1Result.compattato` /
+     `BuilderOutcome.compattato`), altrimenti i due coinciderebbero (verificato
+     con `bench/dup.ts`: Belladonna e Rode 4 scenari, le altre 5 città 2). Un
+     badge "compattato"/"standard" appare solo quando esistono entrambi per
+     lo stesso raccordo. Accanto a "Scarica PNG" il cestino 🗑 elimina uno
+     scenario (`elimina`: `eliminatiRef` fa fermare la sua corsa via
+     `shouldStop`, la sua eventuale pausa si scioglie); le altre proseguono,
+     ne resta sempre almeno una. Pausa / COMPLETA / sovrapposizioni contano
+     solo gli scenari visibili; la griglia resta sempre a due colonne (una
+     mappa sola a tutta larghezza diventava troppo alta). PNG `foe-planner-raccordoN[-standard]-<data>.png`.
+   - **Bug corretto: strade applicate ≠ strade valutate.** Alcuni passi della
+     simulazione (compattazione, scambi) aggiornano `rd` ma non sempre le
+     strade delle azioni; si applicava una strada diversa da quella valutata
+     (Beta r4, n. 3312: una cella isolata e un 2×3 senza strada). Ora a fine
+     `simula` le strade delle azioni + `stradeExtra` vengono riallineate
+     ESATTAMENTE a `rd`. `bench.ts` accetta `NVAL=<n>` (ricerca fermata dopo
+     n disposizioni: riproducibile). `applica` (ex blocco "Applica la
+     disposizione migliore") è ora una funzione, difensiva su edifici già
+     liberati.
+   Stato: Avito (151 edifici, 76 con strada da piazzare) resta difficile: 5-9
+   edifici non piazzati con 189-230 strade (la città originale li piazza tutti
+   con 271). Il banco a 8-20 s ha una variabilità di ±3 strade fra prove.
+
+### Banco di prova del Planner (`planner-test/`, escluso da git)
+
+Città di test dell'utente (export JSON della mappa) in `planner-test/`
+(`Avito.json`, `Beta.json`, `Claudio.json`, `Rode.json`, `Sonia.json`; Beta
+15 s: r4 46 strade nuove / 78 totali, r3 50 / 81, orig. 106, tutti piazzati).
+`bench/pause.ts` prova pausa/modifiche/ripresa; `NVAL=<n>` rende il banco riproducibile. `planner-test/bench/`: `sync.sh`
+copia i sorgenti in /tmp/pb con import `.ts`; `bench.ts <Città> [ms] [r3|r4|both]`
+esegue builder + completamento (ricerca fermata dopo ms) e stampa strade,
+esclusi, lati liberi, spreco, piazzati, non piazzati, sovrapposizioni;
+`render.py <Città_rX>` disegna il PNG (strade nuove in giallo, dimensioni sugli
+edifici). Risultati (8 s per raccordo, ottobre 2026): Claudio 77 strade (orig.
+89, tutti piazzati); Sonia 80-82 (orig. 84, tutti piazzati); Rode 78-86 (orig.
+76) con 3-4 edifici senza strada 2×2/2×3 fuori per mancanza di spazio.
+
+   **Avanzamento:** `PlannerFrame.search` (disposizioni valutate, strade nuove
+   della migliore, celle sprecate, tentativo in cui è stata trovata, attiva) è
+   mostrato sulla riga "Raccordo a N celle" di ogni mappa (🔎 durante la
+   ricerca) e resta visibile dopo.
+4. Edifici con strada ancora fuori → motore segnaposto (`phase: "road"`).
+5. **Edifici senza strada** → `fillMask` (il cuore di fase2 esportato da
+   `fase2.ts`) su tutta l'area libera, in modalità `fast` (controllo delle celle
+   non copribili solo attorno al pezzo appena posato: su maschere grandi la
+   scansione completa era proibitiva). Il fase2 del builder resta in modalità
+   esatta (differenziale invariato: 104/104 e 96/96).
+6. Ultimi rimasti → motore segnaposto (`phase: "noroad"`, primo posto libero).
+
+Risultati (variante consigliata, ricerca fermata dopo 10 s): beta 131/131 edifici, 88
+strade (originale 106; 92 senza ricerca); city 395/395, 65 strade (61; 77 senza
+ricerca, ora 0 strade nuove); foe-map 371/371, 131 strade (155; 137 senza ricerca). I miglioramenti arrivano quasi tutti nei primi 50 tentativi (<0,1 s); su foe-map l'ultimo dopo ~0,9 s. Nessuna
+sovrapposizione né cella fuori mappa; 0,25-0,75 s.

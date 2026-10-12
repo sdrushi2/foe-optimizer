@@ -74,7 +74,7 @@ function mapCategory(b: CityMapBuilding): MapCategory {
  * Python: serve una verifica visiva fedele, non un'illustrazione stilizzata
  * (quella resta la vista SVG isometrica/verticale a schermo).
  */
-function renderCityMapPng(
+export function renderCityMapPng(
   canvas: HTMLCanvasElement,
   buildings: CityMapBuilding[],
   unlockedAreas: UnlockedArea[],

@@ -16,3 +16,6 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+
+# Città di test del Planner (dati dei giocatori, non vanno in repo)
+planner-test/
