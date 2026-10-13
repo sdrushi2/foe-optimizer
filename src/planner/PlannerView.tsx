@@ -14,6 +14,8 @@ import type { CityMapBuilding } from "../data/cityMap";
 import { buildPlannerProblem, runPlaceholderPlanner, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { runBuilder, type BuilderVariant } from "./builder";
 import { runCompletion, type StatoManuale } from "./completion";
+import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
+import { smussaBordi } from "./smussa";
 import { renderCityMapPng } from "../components/CityMapView";
 import type { UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -47,6 +49,8 @@ interface Edit {
   move: (id: string, x: number, y: number) => void;
   remove: (id: string) => void;
   deleteRoad: (k: string) => void;
+  /** Nuova cella di strada su una cella libera (solo in pausa durante la ricerca). */
+  addRoad: (k: string) => void;
 }
 
 /** Edifici con strada non collegati alla rete del municipio (bordo rosso in pausa). */
@@ -93,7 +97,7 @@ function scollegati(frame: PlannerFrame, problem: PlannerProblem, byId: Map<stri
   return out;
 }
 
-function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada }: { frame: PlannerFrame | null; problem: PlannerProblem; byId: Map<string, PlannerBuilding>; ge: ReadonlySet<string>; edit?: Edit; soloSenzaStrada?: boolean }) {
+function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia, stradeVuote }: { frame: PlannerFrame | null; problem: PlannerProblem; byId: Map<string, PlannerBuilding>; ge: ReadonlySet<string>; edit?: Edit; soloSenzaStrada?: boolean; evidenzia?: ReadonlySet<string>; stradeVuote?: readonly string[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const width = (problem.maxX - problem.minX + 1) * CELL;
   const height = (problem.maxY - problem.minY + 1) * CELL;
@@ -141,7 +145,8 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada }: { frame:
       const p = frame.placements.get(id)!;
       (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
       setDrag({ id, ox: x - p.x, oy: y - p.y, x: p.x, y: p.y });
-    } else if (frame.roads.has(c) && !soloSenzaStrada) edit.deleteRoad(c);
+    } else if (frame.roads.has(c)) { if (!soloSenzaStrada) edit.deleteRoad(c); }
+    else if (!soloSenzaStrada && problem.cells.has(c)) edit.addRoad(c);
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     if (!drag) return;
@@ -187,6 +192,30 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada }: { frame:
       ctx.fillStyle = b.isTownhall ? "#d97706" : ge.has(id) ? "#dc2626" : b.isMilitary ? "#92400e" : b.roadLevel > 0 ? "#15803d" : "#0e7490";
       ctx.fillRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
     }
+    if (evidenzia?.size) {
+      // DEBUG_PLANNER: edifici con road_eff > 0 (bordo giallo tratteggiato).
+      ctx.save();
+      ctx.strokeStyle = "#fde047";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 2]);
+      for (const id of evidenzia) {
+        const p = frame.placements.get(id), b = byId.get(id);
+        if (p && b) ctx.strokeRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
+      }
+      ctx.restore();
+    }
+    if (stradeVuote?.length) {
+      // DEBUG_PLANNER: strade con un lato libero (bordo rosso tratteggiato).
+      ctx.save();
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([2, 2]);
+      for (const k of stradeVuote) {
+        const [x, y] = k.split(",").map(Number) as [number, number];
+        ctx.strokeRect(px(x) + 0.5, py(y) + 0.5, CELL - 2, CELL - 2);
+      }
+      ctx.restore();
+    }
     if (frame.probe) {
       ctx.strokeStyle = "#f472b6";
       ctx.lineWidth = 2;
@@ -218,7 +247,7 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada }: { frame:
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frame, problem, byId, ge, width, height, drag, edit]);
+  }, [frame, problem, byId, ge, width, height, drag, edit, evidenzia, stradeVuote]);
   return (
     <canvas ref={canvasRef} className={`block h-auto w-full ${edit ? (drag ? "cursor-grabbing" : "cursor-pointer") : ""}`}
       style={edit ? { touchAction: "none" } : undefined}
@@ -228,8 +257,50 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada }: { frame:
   );
 }
 
-export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, uiLang }: Props) {
-  const problem = useMemo(() => buildPlannerProblem(cityMapBuildings, cityMapUnlockedCells), [cityMapBuildings, cityMapUnlockedCells]);
+/** Città esterna importata da un JSON (formato dell'export JSON del pannello
+ *  MAPPA: buildings / roads / unlocked_areas), per provare il Planner sulle
+ *  città che mandano gli utenti. Non viene salvata da nessuna parte. */
+interface CittaEsterna { nome: string; buildings: CityMapBuilding[]; cells: Set<string>; strade: number }
+
+/** Legge l'export JSON della mappa. Errore leggibile se il formato non torna. */
+function leggiCittaJson(nome: string, testo: string): CittaEsterna {
+  const d = JSON.parse(testo) as {
+    buildings?: Array<{ id?: unknown; cityentity_id?: unknown; name?: unknown; width?: unknown; length?: unknown; x?: unknown; y?: unknown; road_requirement?: unknown }>;
+    roads?: { single?: unknown; two_lane?: unknown };
+    unlocked_areas?: Array<{ x?: unknown; y?: unknown; width?: unknown; length?: unknown }>;
+  };
+  if (!Array.isArray(d.buildings) || !Array.isArray(d.unlocked_areas)) throw new Error("mancano 'buildings' o 'unlocked_areas'");
+  const cells = new Set<string>();
+  for (const a of d.unlocked_areas) {
+    const x = Number(a.x ?? 0), y = Number(a.y ?? 0), w = Number(a.width ?? 4), l = Number(a.length ?? 4);
+    for (let i = 0; i < w; i++) for (let j = 0; j < l; j++) cells.add(`${x + i},${y + j}`);
+  }
+  const buildings: CityMapBuilding[] = d.buildings.map((b, i) => {
+    const entityId = String(b.cityentity_id ?? "");
+    return {
+      entityId, mapEntityId: String(b.id ?? `ext-${i}`), name: String(b.name ?? entityId),
+      x: Number(b.x ?? 0), y: Number(b.y ?? 0), w: Number(b.width ?? 1), h: Number(b.length ?? 1),
+      type: entityId.startsWith("H_") ? "main_building" : "building",
+      isGreatBuilding: entityId.startsWith("X_"), isMilitary: entityId.startsWith("M_"),
+      isNeedlessRoad: false, isInactive: false, isSuppliesProducer: false,
+      roadLevel: Number(b.road_requirement ?? 0),
+    };
+  });
+  if (!buildings.some(b => b.type === "main_building")) throw new Error("manca il municipio (cityentity_id H_…)");
+  const strade = Number(d.roads?.single ?? 0) + Number(d.roads?.two_lane ?? 0) * 4;
+  return { nome, buildings, cells, strade };
+}
+
+export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, uiLang }: Props) {
+  const [esterna, setEsterna] = useState<CittaEsterna | null>(null);
+  const [erroreImport, setErroreImport] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const cityMapBuildings: readonly CityMapBuilding[] = esterna?.buildings ?? cittaProfilo;
+  const problem = useMemo(() => {
+    if (!esterna) return buildPlannerProblem(cittaProfilo, celleProfilo);
+    // L'export JSON non ha le posizioni delle strade, solo il loro numero.
+    return { ...buildPlannerProblem(esterna.buildings, esterna.cells), originalRoadCells: esterna.strade };
+  }, [esterna, cittaProfilo, celleProfilo]);
   const [frames, setFrames] = useState<Record<VName, PlannerFrame | null>>(tutte(null));
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
@@ -254,9 +325,8 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
   const [inPausa, setInPausa] = useState<Record<VName, boolean>>(tutte(false));
   /** Risolutori delle attese di ripresa, per mappa. */
   const resumeRef = useRef<Partial<Record<VName, (s: StatoManuale | null) => void>>>({});
-  /** Mappe modificate a mano durante la pausa + cronologia per "Annulla". */
+  /** Mappe modificate a mano durante la pausa. */
   const modRef = useRef<Record<VName, boolean>>(tutte(false));
-  const [storia, setStoria] = useState<Record<VName, PlannerFrame[]>>(tutte<PlannerFrame[]>([]));
   const framesRef = useRef(frames);
   framesRef.current = frames;
   /** Generazione della corsa: i fotogrammi di una corsa annullata (Reset) vengono ignorati. */
@@ -273,6 +343,7 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
     setPaused(false);
     for (const r of Object.values(resumeRef.current)) r?.(null);
     resumeRef.current = {};
+    setCompletando(false);
     setSearching(tutte(false));
     setFilling(tutte(false));
     setInPausa(tutte(false));
@@ -294,9 +365,18 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
   useEffect(() => { setAvvisoMilitariChiuso(false); setAvvisoCorsieChiuso(false); }, [problem]);
   /** Grandi Edifici (colorati in rosso come nella mappa). */
   const grandiEdifici = useMemo(() => new Set(cityMapBuildings.filter(b => b.isGreatBuilding).map(b => b.mapEntityId)), [cityMapBuildings]);
+  const importaJson = async (file: File) => {
+    try {
+      setEsterna(leggiCittaJson(file.name.replace(/\.json$/i, ""), await file.text()));
+      setErroreImport(null);
+    } catch (err) {
+      setErroreImport(`JSON non valido: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
 
   /** Riprende tutte le mappe in pausa, passando le disposizioni modificate a mano. */
   const riprendi = () => {
+    setSmussaInPausa(false);
     pausedRef.current = false;
     setPaused(false);
     for (const v of VARIANTI) {
@@ -307,20 +387,52 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
       res(modRef.current[v] && f ? { placements: f.placements, roads: f.roads } : null);
       modRef.current[v] = false;
     }
-    setStoria(tutte<PlannerFrame[]>([]));
   };
   const pausa = () => { pausedRef.current = true; setPaused(true); };
 
+  /** "Smussa i bordi" (idea dell'utente, solo in pausa): sulle mappe in pausa
+   *  si spostano/scambiano gli edifici con strada per ridurre gli angoli di 90°
+   *  del contorno, finché l'utente non lo ferma. Il risultato conta come
+   *  modifica a mano: Riprendi o COMPLETA ripartono da lì. */
+  const [smussando, setSmussando] = useState(false);
+  /** Smussatura messa in pausa dall'utente (il suo pulsante mostra "Riprendi"). */
+  const [smussaInPausa, setSmussaInPausa] = useState(false);
+  /** Fase 3 avviata (COMPLETA premuto): il suo pulsante diventa Pausa/Riprendi. */
+  const [completando, setCompletando] = useState(false);
+  const stopSmussaRef = useRef(false);
+  const smussa = async () => {
+    stopSmussaRef.current = false;
+    setSmussaInPausa(false);
+    setSmussando(true);
+    const gen = genRef.current;
+    await Promise.all(visibili.filter(sc => inPausa[sc.id] && framesRef.current[sc.id]).map(async sc => {
+      const f0 = framesRef.current[sc.id]!;
+      await smussaBordi(problem, f0, {
+        fissi: new Set(sc.v.fissi),
+        shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current,
+        onFrame: f => {
+          if (gen !== genRef.current) return;
+          const nf: PlannerFrame = { ...f, lastPath: f0.lastPath, done: false };
+          framesRef.current = { ...framesRef.current, [sc.id]: nf };
+          setFrames(prev => ({ ...prev, [sc.id]: nf }));
+          modRef.current[sc.id] = true;
+        },
+      });
+    }));
+    setSmussando(false);
+  };
+
   /** Modifica manuale della mappa v (solo in pausa): aggiorna il fotogramma mostrato. */
-  const modifica = (v: VName, cambia: (pl: Map<string, { x: number; y: number }>, rd: Set<string>) => void) => {
+  const modifica = (v: VName, cambia: (pl: Map<string, { x: number; y: number }>, rd: Set<string>) => void, nuovaStrada?: string) => {
     const f = framesRef.current[v];
     if (!f) return;
     const pl = new Map(f.placements), rd = new Set(f.roads);
     cambia(pl, rd);
-    const nf: PlannerFrame = { ...f, placements: pl, roads: rd, lastPath: f.lastPath.filter(k => rd.has(k)), probe: null, placed: pl.size };
+    // Le strade aggiunte a mano sono nuove: gialle come le altre strade nuove.
+    const lastPath = [...f.lastPath.filter(k => rd.has(k)), ...(nuovaStrada ? [nuovaStrada] : [])];
+    const nf: PlannerFrame = { ...f, placements: pl, roads: rd, lastPath, probe: null, placed: pl.size };
     framesRef.current = { ...framesRef.current, [v]: nf };
     setFrames(prev => ({ ...prev, [v]: nf }));
-    setStoria(s => ({ ...s, [v]: [...s[v], f] }));
     modRef.current[v] = true;
   };
   const editFor = (v: VName): Edit => ({
@@ -328,15 +440,8 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
     move: (id, x, y) => modifica(v, pl => { pl.delete(id); pl.set(id, { x, y }); }),
     remove: (id) => modifica(v, pl => { pl.delete(id); }),
     deleteRoad: (k) => modifica(v, (_pl, rd) => { rd.delete(k); }),
+    addRoad: (k) => modifica(v, (_pl, rd) => { rd.add(k); }, k),
   });
-  const annulla = (v: VName) => {
-    const prec = storia[v][storia[v].length - 1];
-    if (!prec) return;
-    framesRef.current = { ...framesRef.current, [v]: prec };
-    setFrames(p => ({ ...p, [v]: prec }));
-    setStoria(s => ({ ...s, [v]: s[v].slice(0, -1) }));
-    modRef.current[v] = storia[v].length > 1;
-  };
 
   /** Anima le tappe del builder per una variante, poi completamento + ricerca. */
   const eseguiVariante = async (sc: Scenario) => {
@@ -386,6 +491,7 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
     genRef.current++;
     stopRef.current = false;
     finishRef.current = false;
+    setCompletando(false);
     stopFillRef.current = false;
     pausedRef.current = false;
     setPaused(false);
@@ -422,6 +528,8 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
   };
   /** Reset: interrompe anche una corsa in pausa. */
   const reset = () => {
+    setCompletando(false);
+    stopSmussaRef.current = true;
     stopRef.current = true;
     genRef.current++;
     riprendi();
@@ -452,13 +560,17 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
    *  rosso = ne mancano), strade attuali/della città di partenza (verde = meno della città di partenza, rosso = di più)
    *  e disposizioni provate dalla ricerca. */
   const conStrada = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0), [problem]);
+  const senzaStrada = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0), [problem]);
   const stats = (f: PlannerFrame | null, valutate?: number) => {
     if (!f) return null;
     const piazzati = conStrada.filter(b => f.placements.has(b.id)).length;
+    const piazzatiSenza = senzaStrada.filter(b => f.placements.has(b.id)).length;
     return (
     <span className="text-slate-400">
-      piazzati <b className={piazzati >= conStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzati}/{conStrada.length}</b>
+      piazzati: con strada <b className={piazzati >= conStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzati}/{conStrada.length}</b>
+      {" · "}senza strada <b className={piazzatiSenza >= senzaStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzatiSenza}/{senzaStrada.length}</b>
       {" · "}strade <b className={f.roads.size < problem.originalRoadCells ? "text-emerald-400" : f.roads.size > problem.originalRoadCells ? "text-red-400" : "text-slate-100"}>{f.roads.size}/{problem.originalRoadCells}</b>
+      {" · "}<span title="Angoli di 90° del contorno di edifici e strade (esclusi quelli contro il bordo della mappa): meno angoli, riempimento più facile">angoli <b className="text-slate-100">{contaAngoli(problem, f.placements, f.roads)}</b></span>
       {valutate !== undefined && <>{" · "}{valutate.toLocaleString()} disposizioni</>}
     </span>
     );
@@ -500,26 +612,66 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 px-3 py-2">
         <span className="font-bold uppercase tracking-wider text-fuchsia-300">🧭 Planner</span>
         <span className="mr-2 text-slate-500">sperimentale</span>
-        <button type="button" disabled={running} onClick={() => void start()}
-          className="rounded border border-emerald-600 px-3 py-1 font-bold text-emerald-300 hover:bg-emerald-950 disabled:opacity-40">▶ Avvia</button>
-        {paused ? (
-          <button type="button" onClick={riprendi} disabled={nSovrapposti > 0}
+        {/* Tre fasi, ciascuna col suo pulsante che fa da avvio, pausa e
+            ripresa (richiesta dell'utente): 1. ricerca, 2. smussatura dei
+            bordi (solo con la ricerca in pausa), 3. completamento. */}
+        {!running ? (
+          <button type="button" onClick={() => void start()}
+            className="rounded border border-emerald-600 px-3 py-1 font-bold text-emerald-300 hover:bg-emerald-950">▶ Avvia</button>
+        ) : paused && !completando ? (
+          <button type="button" onClick={riprendi} disabled={nSovrapposti > 0 || smussando}
             title={nSovrapposti > 0 ? "Ci sono edifici sovrapposti (riquadro rosso): spostali in un posto libero prima di riprendere"
-              : "La ricerca continua a cercare disposizioni migliori partendo da quelle modificate a mano (si completa solo con COMPLETA)"}
+              : "La ricerca continua a cercare disposizioni migliori partendo da quelle mostrate (anche modificate a mano o smussate)"}
             className="rounded border border-sky-500 bg-sky-950 px-3 py-1 font-bold text-sky-300 hover:bg-sky-900 disabled:opacity-40">▶ Riprendi</button>
         ) : (
-          <button type="button" disabled={!anySearching && !anyFilling} onClick={pausa}
-            title="Mette in pausa la ricerca: puoi spostare gli edifici, eliminare strade e togliere edifici, poi riprendere da lì"
+          <button type="button" disabled={completando || !anySearching} onClick={pausa}
+            title="Mette in pausa la ricerca: puoi spostare gli edifici, eliminare strade e togliere edifici, smussare i bordi o completare"
             className="rounded border border-red-600 px-3 py-1 font-bold text-red-300 hover:bg-red-950 disabled:opacity-40">⏸ Pausa</button>
         )}
-        <button type="button" disabled={!anySearching || nSovrapposti > 0} onClick={() => { finishRef.current = true; if (pausedRef.current) riprendi(); }}
-          title="Chiude la ricerca su TUTTE le mappe (ciascuna tiene la sua migliore, o quella modificata a mano) e passa al riempimento con gli edifici senza strada"
-          className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏭ COMPLETA</button>
+        {smussando ? (
+          <button type="button" onClick={() => { stopSmussaRef.current = true; setSmussaInPausa(true); }}
+            className="rounded border border-violet-500 bg-violet-950 px-3 py-1 font-bold text-violet-300 hover:bg-violet-900">⏸ Pausa</button>
+        ) : (
+          <button type="button" onClick={() => void smussa()} disabled={!paused || completando || !anySearching || nSovrapposti > 0}
+            title="Solo con la ricerca in pausa: sposta e scambia gli edifici con strada (strade invariate) per ridurre gli angoli di 90° del contorno e i buchi: il riempimento finale incastra meglio i pezzi piccoli. Continua finché non lo metti in pausa"
+            className="rounded border border-violet-500 px-3 py-1 font-bold text-violet-300 hover:bg-violet-950 disabled:opacity-40">{smussaInPausa ? "▶ Riprendi" : "✨ Smussa i bordi"}</button>
+        )}
+        {!completando ? (
+          <button type="button" disabled={!paused || !anySearching || nSovrapposti > 0 || smussando}
+            onClick={() => { finishRef.current = true; setCompletando(true); riprendi(); }}
+            title="Solo con la ricerca in pausa: chiude la ricerca su TUTTE le mappe (ciascuna tiene quella mostrata) e passa al riempimento con gli edifici senza strada"
+            className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏭ COMPLETA</button>
+        ) : paused ? (
+          <button type="button" onClick={riprendi} disabled={nSovrapposti > 0}
+            title={nSovrapposti > 0 ? "Ci sono edifici sovrapposti (riquadro rosso): spostali in un posto libero prima di riprendere" : "Riprende il riempimento"}
+            className="rounded border border-amber-500 bg-amber-950 px-3 py-1 font-bold text-amber-300 hover:bg-amber-900 disabled:opacity-40">▶ Riprendi</button>
+        ) : (
+          <button type="button" disabled={!anyFilling} onClick={pausa}
+            title="Mette in pausa il riempimento: puoi spostare o togliere gli edifici senza strada"
+            className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏸ Pausa</button>
+        )}
         <button type="button" disabled={running && !paused} onClick={reset}
           className="rounded border border-slate-600 px-3 py-1 hover:bg-slate-800 disabled:opacity-40">↺ Reset</button>
         <span className="ml-2 text-slate-400">
           {problem.buildings.length} edifici · {problem.originalRoadCells} strade
         </span>
+        {/* Città esterna (export JSON del pannello MAPPA di un altro utente):
+            strumento di test, visibile solo con DEBUG_PLANNER. */}
+        {DEBUG_PLANNER && (<>
+          <input ref={fileRef} type="file" accept=".json,application/json" className="hidden"
+            onChange={e => { const f = e.currentTarget.files?.[0]; if (f) void importaJson(f); e.currentTarget.value = ""; }} />
+          <button type="button" disabled={running && !paused} onClick={() => fileRef.current?.click()}
+            title="Carica l'export JSON della mappa di un'altra città (pulsante JSON del pannello MAPPA) per provarci il Planner. Non viene salvato."
+            className="rounded border border-slate-600 px-2 py-1 text-[12px] hover:bg-slate-800 disabled:opacity-40">📂 Importa JSON</button>
+          {esterna && (
+            <>
+              <span className="rounded bg-violet-900/60 px-2 py-0.5 text-[12px] font-bold text-violet-200" title="Il Planner sta usando questa città importata">🏙 {esterna.nome}</span>
+              <button type="button" disabled={running && !paused} onClick={() => setEsterna(null)}
+                className="rounded border border-slate-600 px-2 py-0.5 text-[12px] hover:bg-slate-800 disabled:opacity-40">↩ Città del profilo</button>
+            </>
+          )}
+          {erroreImport && <span className="text-[12px] text-red-400">{erroreImport}</span>}
+        </>)}
         {paused && nSovrapposti > 0 && <span className="ml-2 font-bold text-red-400">⚠ {nSovrapposti} edifici sovrapposti: risolvi prima di riprendere</span>}
         {computing && <span className="ml-2 text-amber-300">City Builder: calcolo in corso…</span>}
         {outcome === null && <span className="ml-2 text-red-300">City Builder: città non adatta (servono almeno 4 edifici con strada e spazio attorno al municipio) — uso il motore semplice.</span>}
@@ -565,6 +717,8 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
               {visibili.map(sc => {
                 const n = sc.id;
                 const f = frames[n];
+                const eff = DEBUG_PLANNER && f ? calcolaRoadEff(problem.buildings, f.placements, f.roads) : null;
+                const vuote = DEBUG_PLANNER && f ? calcolaStradeVuote(problem.buildings, f.placements, f.roads, problem.cells) : null;
                 const conGemello = (outcome ?? []).some(x => x.raccordo === sc.raccordo && x.id !== n);
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
@@ -585,18 +739,26 @@ export default function PlannerView({ cityMapBuildings, cityMapUnlockedCells, ui
                         title="Elimina questo scenario: la sua ricerca si ferma e le altre proseguono"
                         className="rounded border border-red-700 px-2 py-0.5 text-[12px] text-red-300 hover:bg-red-950 disabled:opacity-40">🗑</button>
                     </div>
-                    {inPausa[n] && (
-                      <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] text-sky-300">
-                        <span>{filling[n]
-                          ? "⏸ In pausa (completamento) · trascina un edificio senza strada (azzurro) per spostarlo, anche sopra un altro (riquadro rosso, temporaneo) · tasto destro per toglierlo (lo ripiazza l'ottimizzatore)"
-                          : "⏸ In pausa · trascina un edificio per spostarlo (anche sopra un altro: riquadro rosso, temporaneo) · click su una strada per eliminarla · tasto destro su un edificio per toglierlo (lo ripiazza l'ottimizzatore) · bordo rosso = senza strada"}</span>
-                        <button type="button" disabled={!storia[n].length} onClick={() => annulla(n)}
-                          className="rounded border border-sky-600 px-2 py-0.5 hover:bg-sky-950 disabled:opacity-40">↶ Annulla</button>
+                    <div className={`overflow-hidden rounded border ${inPausa[n] ? "border-sky-500" : "border-slate-800"}`}>
+                      <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} edit={inPausa[n] && paused && !smussando ? editFor(n) : undefined} soloSenzaStrada={filling[n]}
+                        evidenzia={eff ? new Set(eff.voci.map(v => v.id)) : undefined} stradeVuote={vuote ?? undefined} />
+                    </div>
+                    {eff && (
+                      // DEBUG_PLANNER (roadEff.ts): edifici con road_eff > 0 = celle di strada toccate − lato corto.
+                      <div className="mt-1 rounded border border-yellow-700/60 bg-yellow-950/20 px-2 py-1 text-[11px] text-yellow-100">
+                        <div className="font-bold text-yellow-300">
+                          DEBUG road_eff · num_road_eff_pos <span className="text-white">{eff.num}</span> · sum_road_eff_pos <span className="text-white">{eff.sum}</span>
+                          {" · "}<span className="text-red-300">strade_vuote <span className="text-white">{vuote?.length ?? 0}</span></span>
+                        </div>
+                        {eff.voci.length > 0 && (
+                          <div className="mt-0.5 max-h-32 overflow-y-auto">
+                            {eff.voci.map(v => (
+                              <div key={v.id}>+{v.eff} · {v.name} {v.w}×{v.h} · {v.strade} celle di strada (lato corto {Math.min(v.w, v.h)})</div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
-                    <div className={`overflow-hidden rounded border ${inPausa[n] ? "border-sky-500" : "border-slate-800"}`}>
-                      <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} edit={inPausa[n] && paused ? editFor(n) : undefined} soloSenzaStrada={filling[n]} />
-                    </div>
                   </div>
                 );
               })}

@@ -4294,7 +4294,7 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      (fantasma verde/rosso = valido/non valido: celle sbloccate, niente strade
      né altri edifici; municipio fisso), click su una strada la elimina, tasto
      destro su un edificio lo toglie (lo ripiazza l'ottimizzatore); bordo
-     rosso = edificio con strada scollegato; ↶ Annulla per mappa. Mappa non
+     rosso = edificio con strada scollegato (↶ Annulla e messaggio azzurro di pausa poi rimossi su richiesta dell'utente). Mappa non
      toccata → `null`, la ricerca prosegue invariata.
      Con modifiche, `ribasa` normalizza lo `StatoManuale` (solo strade
      raggiungibili dal municipio, rami morti potati, edifici con strada tolti
@@ -4319,7 +4319,7 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      mostrate sono strade totali di S meno quelle del builder. A COMPLETA si
      riparte da S (`ribasa`) e si completa.
      `PlannerView`: `pausedRef`, `resumeRef` (risolutori per mappa), `modRef`,
-     `storia` (Annulla), `framesRef`, `genRef` (fotogrammi di una corsa
+     `framesRef`, `genRef` (fotogrammi di una corsa
      annullata da Reset ignorati).
      Prova `bench/pause.ts <Città> <r3|r4> <identica|tolti|solostrada> [ms]`
      su Beta (pausa a 3 s, ripresa, seconda pausa senza modifiche, COMPLETA a
@@ -4580,6 +4580,139 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      ne resta sempre almeno una. Pausa / COMPLETA / sovrapposizioni contano
      solo gli scenari visibili; la griglia resta sempre a due colonne (una
      mappa sola a tutta larghezza diventava troppo alta). PNG `foe-planner-raccordoN[-standard]-<data>.png`.
+   - **road_eff** (`src/planner/roadEff.ts`, idea dell'utente): per ogni
+     edificio con strada (municipio escluso) road_eff = celle di strada che
+     toccano il suo perimetro − min(larghezza, altezza) (6×4 attaccato col
+     lato corto 0, col lato lungo +2; 6×6 su una cella di fine strada −5;
+     4×4 nell'angolo di un incrocio +4). `num_road_eff_pos` = edifici con
+     road_eff > 0, `sum_road_eff_pos` = somma. `simula` li calcola sulla
+     disposizione finale (`Piano.effNum/effSum`, strade su griglia +
+     `stradeAdiacenti`); la ricerca manuale li ha in `punteggio`.
+     Posizione nell'ordine di merito: costante `EFF_ORDINE`. Misurato con
+     `bench/cmp3.sh` (10 s, Beta, Sonia, Avito, Rode × r3/r4): "prima" delle
+     strade riduce num_pos (Beta 6 → 2) ma AUMENTA le strade (Beta 78/76 →
+     84/83, Sonia 77 → 81, Avito r3 184 → 187 con 2 edifici in più fuori);
+     quindi `EFF_ORDINE = "dopo"`: primo spareggio a parità di strade (prima
+     dei buchi), strade invariate, meno edifici con road_eff > 0 (Beta r4 6 →
+     4). `DEBUG_PLANNER = true` (roadEff.ts): sotto ogni mappa riquadro
+     giallo con num/sum e l'elenco degli edifici con road_eff > 0 (+eff,
+     nome, dimensioni, celle di strada, lato corto), che sulla mappa hanno un
+     bordo giallo tratteggiato; con false tutto nascosto. Il banco stampa
+     "road_eff: num_pos, sum_pos" e accetta `EFF=prima|dopo|no`.
+     Edifici 1×1 sempre esclusi dal conteggio e 2×2 esclusi quando sono
+     nell'angolo di un incrocio (toccano una strada su un lato nord/sud E su
+     uno est/ovest): `esclusoDaRoadEff(b, x, y, isRoad)`, regola dell'utente
+     (lì sono già ottimi: niente bordo tratteggiato, non contano). In
+     `attaccaAStrade` 1×1 e 2×2 (`piccoloDaAngolo`) preferiscono le
+     posizioni che toccano più celle di strada del loro lato (angolo, +100). L'utente ha poi impostato `EFF_ORDINE =
+     "prima"`; rimisurato con i 1×1 esclusi (10 s): Beta "dopo" 78/79 strade,
+     "prima" 84/83 (num_pos 1/0); Sonia r3 "dopo" 77, "prima" 81: "prima"
+     costa ancora 4-7 strade.
+   - **strade_vuote** (idea dell'utente): celle di strada con almeno un lato
+     (N/S/E/O) su una cella sbloccata libera: strade sprecate.
+     `calcolaStradeVuote` (roadEff.ts) per la UI: con `DEBUG_PLANNER` sono
+     evidenziate con bordo rosso tratteggiato e il riquadro di debug mostra
+     "strade_vuote N". Minimizzate in due punti:
+     - ricerca (fase 3): `Piano.stradeVuote` = celle di strada con un lato su
+       un BUCO (`stradeVuoteSuBuchi`, subito dopo `contaBuchi`): durante la
+       ricerca gli edifici senza strada non sono ancora piazzati, quindi una
+       cella libera copribile verrà riempita, un buco no. Criterio subito
+       dopo le strade (prima di road_eff "dopo" e dei buchi);
+     - fase C: nel punteggio dopo i buchi interni, prima del perimetro
+       (`stradeVuote()` numerico sulle celle di strada fisse).
+     Banco (EFF=prima come impostato dall'utente, 8 s + 6 s di fase C): Beta
+     r4 strade_vuote 12 → 7, r3 11 → 14 (variabilità della traiettoria, stesse
+     strade), Sonia 0; strade invariate. Origine tipica su Beta: la riga
+     libera lasciata accanto all'inizio di una dorsale (gapN/gapS = 1), dove
+     non entra nessun edificio alto almeno 2.
+   - **Concentrare i buchi e togliere la punta** (idea dell'utente: spostare
+     gli edifici fra due dorsali in modo che i buchi finiscano tutti sulla
+     stessa, poi sul fine strada — uno sopra e uno sotto — così l'ultima cella
+     si elimina e i due fini strada arretrano). `rifinisciPunte` esteso:
+     (1) i pezzi tolti dalla punta possono andare in un posto libero accanto a
+     QUALUNQUE strada (prima entro 12 celle), quindi anche nei buchi di
+     un'altra dorsale; (2) se non basta e i pezzi da spostare sono al più 2,
+     "scambio": uno dei 12 edifici con strada più vicini alla punta cede il
+     posto e viene ripiazzato anche lui accanto a una strada (ricerca
+     esaustiva su tutti i pezzi). `posizioni` è numerica (celle di strada
+     con un vicino libero, timbro per le posizioni viste): la prima versione
+     a stringhe costava il 18% del tempo. Misure: sulle stesse prime ~350
+     configurazioni (NVAL, senza effetto traiettoria) strade nuove Beta 52 →
+     50/51, Rode 27 → 26 e 38 → 36, Belladonna r3 231 → 229; a 20 s Rode r4
+     26 → 24, Beta 46/46 → 48/47 (traiettoria diversa della ricerca
+     locale), Belladonna 6 → 5 edifici fuori; 0 sovrapposizioni.
+   - **Penalità quadratica di road_eff** (segnalazione dell'utente su Beta
+     r3: il 6×6 fine strada della verticale toccava 6 celle della dorsale,
+     che andava 2-3 righe più su). Il criterio principale dopo esclusi e
+     deficit è ora il COSTO = strade + min(`TETTO_EFF_QUAD` = 2,
+     `PESO_EFF_QUAD` = 0,1 × Σ road_eff²) (`Piano.effQuad`, edifici di partenza
+     compresi, 1×1 e 2×2 d'angolo esclusi; `SOGLIA_EFF_QUAD` = 0), poi le
+     strade come spareggio. Il quadrato fa pesare un 6×6 a +6 (36) molto più
+     di tanti +1; il TETTO impedisce di pagare più di 2 strade per evitarlo:
+     senza tetto (peso 0,1-0,5) Avito r3 passava da 180 strade / 5 fuori a
+     188 / 15. Misure (10 s, peso 0 → scelto): Beta r3 81 strade, max
+     road_eff 5 → 78, max 3; Beta r4 78 → 79 con road_eff tutti ≤ 0; Rode r3
+     87 → 86; Sonia, Sdrushi, Avito, Rode r4 invariati. Anche la ricerca
+     dalla disposizione manuale usa lo stesso costo. Il banco accetta
+     `PQ`, `QT`, `QC` per peso, soglia e tetto.
+   - **road_eff con più lati** (`roadEffDi`, segnalazione dell'utente: su
+     Beta r3 il 6×6 Himeji Castle, fine strada della verticale, aveva la
+     dorsale lungo tutto il lato nord ma valeva solo +1 = 7 − 6). Ora la
+     connessione "necessaria" è il lato corto min(w,h) ma, se l'edificio
+     tocca strade su PIÙ lati, non più della connessione più piccola fra quei
+     lati (basta quella): Himeji 7 − 1 = +6 → la penalità quadratica (36 ×
+     0,1, tetto 2) lo evita. Invariati i casi a un solo lato (6×4 sul lato
+     lungo +2) e l'angolo 4×4 (+4). Beta (10 s): Himeji sparisce dall'elenco,
+     78/77 strade. Il banco ora costruisce il problema con
+     `buildPlannerProblem` come l'app (militari senza strada con
+     Alcatraz/Nave), quindi i numeri non sono confrontabili con i
+     precedenti; `VOCI=1` stampa l'elenco degli edifici con road_eff > 0.
+   - **Aggiungere strade in pausa**: durante la pausa della ricerca un click
+     su una cella sbloccata libera aggiunge una cella di strada (`Edit.addRoad`,
+     gialla come le strade nuove: entra in `lastPath`); un click su una
+     strada la elimina come prima. Non durante il completamento (lì strade
+     ed edifici con strada sono bloccati). Alla ripresa `ribasa` tiene solo
+     le strade collegate al municipio e pota i rami morti: una cella isolata
+     o che non serve nessun edificio sparisce.
+   - **Verso le soluzioni dell'utente (Beta r3: 77 → 75 a mano spostando la
+     dorsale in basso 2 righe più su)**. Tre aggiunte:
+     1. intensificazione: a ogni nuova migliore della ricerca parametrica si
+        provano subito le varianti con una riga di dorsale a ±1..±3 (anche con
+        lunghezza stimata 0) (`accodaVicini` / `codaVicini`): Beta r3 trova le
+        77 strade alla disposizione n. 3.207 invece che alla 19.074;
+     2. stagnazione: dopo `STAGNAZIONE` = 4.000 disposizioni senza
+        miglioramenti la ricerca passa da sola alla ricerca LOCALE sulla
+        migliore (`statoDi(best)` come ripresa; è la stessa di dopo una
+        modifica manuale: metà tentativi parametrici, metà vicinati; etichetta
+        "Ricerca locale");
+     3. vicinato "dorsale intera": si tolgono tutti gli edifici attaccati a una
+        dorsale (la strada viene potata) e la si ricostruisce su una riga a
+        ±1..±3.
+     Banco: Beta r3 77 → 76 strade (30-90 s; le 75 dell'utente non ancora
+     raggiunte), Rode r4 78 → 76, Sonia/Sdrushi/Avito invariati, 0
+     sovrapposizioni.
+     Provato anche (e scartato, nessun effetto su Beta r3, sempre 76 fino a
+     160 s): accettare nella ricerca locale passi con 1 strada in più con
+     probabilità 2-8% e stagnazione a 1.500. La soluzione da 75 dell'utente
+     ha fra le dorsali una colonna accanto alla verticale tutta piena (3×3,
+     3×3, 4×3, 2×2, 2×2) e tre 5×5 alla fine della dorsale bassa (L sopra, C a
+     est, uno sotto): schema che il generatore non produce ancora.
+   - **Importa JSON** (richiesta dell'utente: provare il Planner sulle città
+     che mandano gli utenti): nell'intestazione del Planner "📂 Importa JSON"
+     carica l'export JSON del pannello MAPPA (`buildings` con cityentity_id /
+     width / length / x / y / road_requirement, `roads` {single, two_lane},
+     `unlocked_areas`); `leggiCittaJson` lo converte in CityMapBuilding (GE
+     da "X_", militari da "M_", municipio da "H_") e celle sbloccate. Il
+     problema del Planner usa la città importata (`esterna`) al posto di
+     quella del profilo; strade di partenza = single + 4 × two_lane (l'export
+     non ha le posizioni delle strade). Etichetta "🏙 nome" e "↩ Città del
+     profilo" per tornare indietro; errore leggibile se il JSON non è valido.
+     Nulla viene salvato. Il Planner resta visibile solo se il profilo ha una
+     città. Prova sul banco con `planner-test/Filanush.json` (172 edifici):
+     255-263 strade contro 276, 0 sovrapposizioni.
+   - **Riga di stato**: "piazzati: con strada X/Y · senza strada X/Y · strade
+     N/M · K disposizioni" (ciascun conteggio verde se completo, rosso se ne
+     mancano; municipio escluso).
    - **Bug corretto: strade applicate ≠ strade valutate.** Alcuni passi della
      simulazione (compattazione, scambi) aggiornano `rd` ma non sempre le
      strade delle azioni; si applicava una strada diversa da quella valutata
@@ -4589,6 +4722,195 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      n disposizioni: riproducibile). `applica` (ex blocco "Applica la
      disposizione migliore") è ora una funzione, difensiva su edifici già
      liberati.
+   - **I grandi sono i fine strada** (segnalazione dell'utente su Diviziaco,
+     raccordo 4 compattato: fini strada 4×5 mentre i 6×6 stavano attaccati
+     alla verticale). Tre parti:
+     1. `Params.liberaGrandi` (configurazioni dedicate, 35% delle casuali,
+        mutazione 9): i grandi (lati >= 5, `LATO_GRANDE`, ora esportato da
+        roadEff.ts) piazzati dal builder sul lato est della verticale
+        (x = x0) tornano nel pool e diventano candidati fine strada.
+     2. `contaFiniStradaErrati` (roadEff.ts): fine strada = edificio
+        collegato da un solo lato con meno celle di strada del lato corto;
+        errore = min(grandi NON fine strada, medi — non grandi, lato corto
+        >= 3 — fine strada), solo a est della verticale e non fissi.
+        `Piano.finiErrati` è spareggio subito dopo le strade; nel punteggio
+        della ricerca locale è l'ultimo (prima dei buchi peggiorava Avito:
+        4 edifici senza strada fuori).
+     3. Scambio grande ↔ medio fine strada sulla disposizione finale, dopo la
+        ricerca e prima della fase B: il grande va sul capolinea del medio
+        (stesso lato di strada, almeno una cella di contatto in comune, deve
+        restare fine strada), il medio nel rettangolo del grande toccando una
+        sua strada con road_eff <= max(1, road_eff del grande) (un 4×5 sulla
+        verticale è +1), fra le posizioni quella con meno buchi. Strade
+        invariate. Si rinuncia se i buchi crescono più di max(w, h) del
+        grande; se il riempimento di fase 2 + primo posto libero lascia fuori
+        edifici senza strada, si riprova senza gli scambi e si tiene il
+        migliore. Prima versione DENTRO `simula`: cambiava deficit/buchi dei
+        piani e quindi il percorso della ricerca (Rode r3 86 → 88 strade su 4
+        semi), quindi spostato dopo: le strade trovate sono identiche a
+        prima. Misure (NVAL 5000, 4 semi, banco con `SEED`): Diviziaco r4
+        fini errati 3/1/1/0 → 0/0/0/0, r3 0 ovunque, tutti piazzati, strade
+        invariate (72 / 75-76); Avito r3 stessi edifici fuori che senza
+        scambi; Rode, Sdrushi, Beta, Sonia invariati. Limite: durante la
+        ricerca la mappa mostrata non ha ancora gli scambi (avvengono a
+        COMPLETA).
+   - **Bordi gialli e verticale accorciata** (regola dell'utente su
+     Diviziaco r4: i problemi di efficienza vengono SOLO dagli edifici col
+     bordo giallo, road_eff > 0, attaccati dal lato sbagliato — i 4×5 sul lato
+     est della verticale toccano 5 celle. Sono loro a doversi spostare; la
+     soluzione ovvia era allungare la dorsale e accorciare la verticale, che
+     il builder fissa e non era mai stata toccata). La verticale di Diviziaco
+     r4 (y 13–62) è usata in ogni cella dalla colonna ovest di fase 1/2:
+     accorciarla richiede di spostare anche pezzi a ovest (concordato con
+     l'utente: "ovest mobile alle estremità", mai i fissi di fase 1
+     `fissiBuilder` = `opts.fissi`).
+     1. Vicinato "bordi gialli" della ricerca locale (15% dei tentativi, fra
+        "fine di un ramo" e "gruppo"): si tolgono tutti gli edifici con strada
+        con road_eff > 0; metà delle volte anche quelli che occupano le celle
+        accanto alle ultime 1-6 celle della verticale (nord o sud, anche a
+        ovest e i fini strada). `ribasa` pota la punta rimasta senza edifici,
+        `simula` li riattacca (es. sulla dorsale allungata).
+     2. Ricerca parametrica: `Params.accN/accS` (verticale accorciata di k
+        celle: le celle tolte vanno in `Piano.stradeTolte`, `strade` = nuove −
+        tolte; gli edifici che restano senza strada tornano in gioco, anche
+        quelli a ovest — eccezione nel controllo dei fissi tramite
+        `daAccorcia`; mai un incrocio né i fissi di fase 1) e
+        `Params.liberaGialli` (i gialli a est della verticale tornano in
+        gioco: utile sulla base della ricerca locale; sulla base del builder
+        non ce ne sono). `simula` lavora su una copia locale delle strade di
+        partenza (`stradeBase()`); `applica`, `statoDi`, `mostra` tolgono
+        `stradeTolte`. 72 configurazioni dedicate, 25% delle casuali, mossa 11
+        di `muta`. Da sole non vincono (deficit e strade più alti): il
+        guadagno arriva dal vicinato.
+     Misure (40 s, r4): Diviziaco 72 → 70 strade, verticale y 13–62 → 20–62
+     (accorciata di 7 a nord, la dorsale più lunga con i 4×5 attaccati col
+     lato corto); Rode r3, Sdrushi r4, Beta r3, Diviziaco r3 invariati
+     (35 s, con/senza `NOACC`). Resta un 5×6 nell'incrocio verticale/dorsale
+     a +6 (meno strade comunque).
+   - **Niente fase 2 nel builder** (richiesta dell'utente: riempire con gli
+     edifici senza strada in fase 1/2 è sbagliato, possono intralciare nuove
+     disposizioni lungo la verticale; il riempimento si fa solo alla fine).
+     `runBuilder` esegue solo fase 1 (che piazza solo edifici con strada);
+     in `fase2.ts` restano `fillMask` e le strategie (usati da fase B e fase C
+     del completamento), rimossi `runFase2`, `generaMapgrid`, `MapGrid`,
+     `Fase2Result` (il pool di `fillMask` è ora `PoolItem[]`);
+     `BuilderVariant` perde `fase2Count/Strategy/Coverage/Area`. Il
+     checkpoint di fase 1 conserva `pool_iniziale_senza_strada` (porting
+     fedele, non più usato). Misure (30 s): Diviziaco r4 70 → 69 strade
+     (road_eff 7/19 → 5/12), Diviziaco r3 75 =, Sdrushi r4 75 =, Rode r3 86 →
+     85 ma 1 edificio senza strada fuori, Beta r3 76 → 77-78 (3 semi), Beta
+     r4 77 → 78. Il differenziale col Python di fase 2 non è più applicabile
+     al builder.
+   - **Grandi problematici** (regola dell'utente: anche gli edifici con lato
+     corto >= 5 attaccati a 2 o più celle di strada sono "problematici", bordo
+     giallo, e vanno spostati sui fini strada con UNA cella, al posto dei
+     fini strada con lato corto <= 4). `roadEffDi`: per i grandi road_eff =
+     celle − 1 se le celle sono >= 2 (6×6 lungo la verticale: +5), altrimenti
+     0. Essendo la stessa funzione, la regola vale ovunque: bordo giallo ed
+     elenco di debug in ogni fase, costo della ricerca (Σ road_eff², tetto 2),
+     vicinato "bordi gialli", `liberaGialli`, spareggi. Scambio finale
+     grande ↔ fine strada: grandi = 2+ celle, il grande deve finire con
+     esattamente 1 cella, i "medi" sono ora tutti i non grandi con lato corto
+     >= 2 (prima >= 3); `contaFiniStradaErrati` allineato. Misure (30-40 s):
+     Diviziaco r4 69 → 67 strade e nessun grande problematico (tutti i fini
+     strada sono 6×6/6×5/5×6/5×5), Diviziaco r3 75 = (resta un 5×6 a +4),
+     Beta r3 77 (un 5×5 a +4), Rode r3 85 tutti piazzati, Sdrushi r4 75 =,
+     Sonia r3 77 = (identico con la regola vecchia), Beta r4 78.
+   - **Parte ovest non più intoccabile nella ricerca locale** (idea
+     dell'utente: gli edifici di fase 1 sono in linea di massima ottimi, ma a
+     volte conviene spostarne alcuni, soprattutto quelli attaccati al lato
+     ovest della verticale, es. un 4×4 sostituito da un 3×4 per abbassare
+     l'altezza). I vicinati della ricerca locale considerano ora tutti gli
+     edifici con strada tranne i fissi di fase 1 attorno al municipio
+     (`fissiBuilder`); nuovo vicinato "colonna ovest" (8%): 2-5 edifici
+     consecutivi attaccati al lato ovest della verticale (metà delle volte
+     anche quelli di fronte, a est) tornano in gioco. La ricerca parametrica
+     dalla base del builder continua a non toccare la parte ovest (`fissi` =
+     `fissiBuilder` ∪ `idOvest`, salvo accorciamento della verticale). Rete
+     di sicurezza in `simula`: invalido se si sposta un fisso di fase 1, o un
+     edificio ovest PRESENTE nella base fuori da `daAccorcia` (quelli tolti
+     dalla ricerca locale non sono nella base). Misure (30 s, con/senza):
+     Diviziaco r4 70 → 68, Rode r3 85 → 86 (1 senza strada fuori), Beta r4 78
+     =, Sdrushi r3 81 = (1 fuori in meno): neutro, variabilità ±2.
+   - **Diviziaco r4: 67 → 66 come la soluzione dell'utente** (verticale
+     corta 17–48 con i fini strada grandi ancora in fondo, una sola dorsale a
+     T, lato est della verticale riempito esattamente: 4×4 + 3 × 4×3 + 4×4).
+     Tre modifiche:
+     1. `accorcia` (Params.accN/accS) ora fa ARRETRARE i fini strada della
+        verticale (tappo e laterale) di K insieme alla strada invece di
+        liberarli; si liberano gli edifici sotto i loro nuovi posti e quelli
+        rimasti senza strada (mai i fissi di fase 1). k fino a 16 per
+        estremità (configurazioni accN 0-8 × accS 0-16, casuali e `muta`).
+     2. `Params.estEsatto`: lato est della verticale "a incastro": per ogni
+        tratto libero, somma di sottoinsieme sulle altezze degli edifici con
+        h <= w (copertura massima, poi meno pezzi); gap attorno alla dorsale
+        anche 0 (edifici d'angolo che toccano verticale e dorsale:
+        `lunghezzaLibera` non si ferma più su `celleVerticale`).
+     3. `MARGINE_DEFICIT` 1,05 → 1: senza fase 2 TUTTI gli edifici senza
+        strada sono da piazzare e il 5% (≈ 128 celle su Diviziaco) dava
+        deficit > 0 a ogni disposizione; il deficit (prima delle strade)
+        sceglieva quella con meno buchi, non con meno strade.
+     Misure (30-75 s): Diviziaco r4 67 → 66, r3 75 → 70; Avito r3 174 → 167
+     tutti piazzati, r4 170 (1 senza strada fuori, come prima); Beta r3 76,
+     r4 78; Rode r3 85 tutti piazzati; Sdrushi r4 75 =; Sonia r3 77 → 76.
+   - **Smussa i bordi** (idea dell'utente: nel riempimento finale meno angoli
+     di 90° nel contorno della città = pezzi piccoli più facili da
+     incastrare). `contaAngoliGriglia` / `contaAngoli` (roadEff.ts): angoli
+     del contorno di edifici + strade, per ogni incrocio della griglia 1 o 3
+     celle occupate = 1 angolo, 2 in diagonale = 2; esclusi gli incroci con
+     una cella libera BLOCCATA (bordo della mappa). UI: "angoli N" nella riga
+     di stato di ogni mappa, in tutte le fasi. `smussa.ts` `smussaBordi`:
+     pulsante "✨ Smussa i bordi" (solo in pausa durante la ricerca; diventa
+     "⏹ Ferma smussatura"; Riprendi/COMPLETA e modifiche a mano disattivati
+     mentre gira). Ciclo continuo su tutte le mappe in pausa: scorrimento di
+     1-3 celle, scambio di due edifici vicini (allineati a un angolo del
+     posto dell'altro), spostamento accanto a una strada qualsiasi. Vincoli:
+     strade invariate, ogni edificio con strada collegato, road_eff degli
+     edifici mossi né più positivi né somma maggiore, municipio / fissi di
+     fase 1 / edifici senza strada fermi. Punteggio: angoli, poi perimetro
+     esposto; il cammino accetta mosse a pari punteggio e riparte dalla
+     migliore dopo 2000 tentativi senza migliorare. Il risultato è una
+     modifica a mano (`modRef`): Riprendi/COMPLETA ripartono da lì (la
+     ricerca locale lo sostituisce solo con un miglioramento stretto). Anche
+     `Piano.angoli` = ultimo spareggio della ricerca (prima della
+     compattezza; costo trascurabile: Beta r4 27 011 disposizioni in 30 s).
+     Banco (`planner-test/bench/smussa_test.ts`: ricerca a NVAL, smussatura
+     8 s, poi riempimento con 8 s di fase C con e senza): Beta r4 angoli
+     63 → 43, dopo il riempimento buchi interni 21 → 5 (angoli finali 43 →
+     24); Diviziaco r4 33 → 29, buchi interni 3 → 4 (variabilità della fase
+     C).
+     Mosse aggiunte dopo il confronto con l'utente (Beta r3: 39 angoli a
+     mano): "spinta" (lo scorrimento di 1-2 celle sposta anche gli edifici
+     che incontra, fino a 6), "posto migliore" (tutti i posti liberi accanto
+     a una strada, si prende il migliore), e accettazione occasionale di
+     mosse peggiori di 1 (2%) o 2 angoli (0,3%) per uscire dai minimi locali
+     (si mostra sempre la migliore; dopo 2000 tentativi senza migliorare si
+     riparte da lei). Beta r3 (partenza 76 strade, 53 angoli): 43 in 20 s,
+     41 in 90 s (la tua da 39 parte da un'altra disposizione a 75 strade).
+     Buchi nel punteggio (segnalazione dell'utente: a 37 angoli restava un
+     2×1 fra due edifici, inutilizzabile — quasi nessun edificio senza
+     strada è 2×1; scambiando un 4×4 con due 2×3 si avevano 37 angoli senza
+     buco). Punteggio = [angoli + celle di buco, perimetro]; buco = cella
+     libera sbloccata che nessuna forma minima (lati >= 2) degli edifici senza
+     strada ancora da piazzare può coprire (prefissi 2D + differenze, come
+     `contaBuchi`). Nuova mossa "ricomposizione" (0,5%, costosa): 2-3 edifici
+     vicini tolti e ripiazzati uno alla volta nel posto migliore entro 7
+     celle, provando tutti gli ordini (il 4×4 ↔ due 2×3). L'etichetta
+     mostra angoli e buchi. Beta r3 (55 s, partenza 53 angoli / 10 buchi):
+     43 angoli + 9 buchi senza ricomposizione, 47 + 6 con (variabilità del
+     caso: Math.random).
+   - **Pulsanti del Planner** (richiesta dell'utente): tre fasi, ciascuna
+     col suo pulsante che fa da avvio, pausa e ripresa. 1. Ricerca: "▶ Avvia"
+     → "⏸ Pausa" ↔ "▶ Riprendi" (a fine corsa torna "▶ Avvia"; disattivato
+     durante il completamento). 2. "✨ Smussa i bordi" (attivo solo con la
+     ricerca in pausa) → "⏸ Pausa" ↔ "▶ Riprendi" (`smussaInPausa`;
+     riprendere la ricerca o completare azzera lo stato). 3. "⏭ COMPLETA"
+     (attivo solo con la ricerca in pausa, senza sovrapposizioni né
+     smussatura in corso) → "⏸ Pausa" ↔ "▶ Riprendi" del riempimento
+     (`completando`).
+   - **DEBUG_PLANNER = false** (roadEff.ts): niente elenco road_eff né bordi
+     tratteggiati (gialli / rossi) e niente "📂 Importa JSON" / "↩ Città del
+     profilo" (strumento di test, visibile solo con DEBUG_PLANNER = true).
    Stato: Avito (151 edifici, 76 con strada da piazzare) resta difficile: 5-9
    edifici non piazzati con 189-230 strade (la città originale li piazza tutti
    con 271). Il banco a 8-20 s ha una variabilità di ±3 strade fra prove.

@@ -1,17 +1,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  planner/builder/index.ts — Adattatore FoE City Builder → Planner
 //
-//  Esegue fase1 (entrambi i raccordi, 3 e 4 celle) e fase2 sul problema del
-//  Planner e restituisce, per ciascuna variante, la sequenza di "tappe"
-//  (istantanee dopo ogni passo di fase1 e dopo ogni edificio di fase2) da
-//  animare, più lo stato finale da cui il motore del Planner riparte per gli
-//  edifici rimasti. La variante proposta è quella con meno buchi (fase1), poi
-//  più area coperta.
+//  Esegue fase1 (entrambi i raccordi, 3 e 4 celle) sul problema del Planner e
+//  restituisce, per ciascuna variante, la sequenza di "tappe" (istantanee dopo
+//  ogni passo di fase1) da animare, più lo stato finale da cui il motore del
+//  Planner riparte per gli edifici rimasti. La variante proposta è quella con
+//  meno buchi, poi più edifici.
+//
+//  Fase 2 (riempimento con gli edifici SENZA strada) NON si esegue più
+//  (richiesta dell'utente): gli edifici senza strada intralciavano le nuove
+//  disposizioni lungo la verticale; li piazza tutti il completamento finale
+//  (fase B + fase C di completion.ts). runFase2 resta in fase2.ts per i test
+//  differenziali col Python; fillMask è usato dal completamento.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { PlannerProblem } from "../engine";
 import { runFase1, unkey, type BuilderInput, type Snapshot } from "./fase1";
-import { runFase2 } from "./fase2";
 
 export interface BuilderStage {
   label: string;
@@ -24,10 +28,6 @@ export interface BuilderVariant {
   /** Lati di strada non sfruttati a fine fase1 (metrica del builder). */
   holes: number;
   fase1Count: number;
-  fase2Count: number;
-  fase2Strategy: string | null;
-  fase2Coverage: number;
-  fase2Area: number;
   /** Strada verticale e riga del raccordo est (coordinate di gioco). */
   geometry: { stradaVX: number; eastMidY: number };
   /** Edifici attorno al municipio messi da fase 1 (angoli, riempimento
@@ -70,25 +70,14 @@ export function runBuilder(problem: PlannerProblem, compattaOvest = true): Build
   const variants: BuilderVariant[] = (["r3", "r4"] as const).map(name => {
     const v = f1[name];
     const stages = v.trace.map(toStage);
-    const f2 = runFase2(v.checkpoint);
-    if (f2) {
-      const last = stages[stages.length - 1]!;
-      const placements = new Map(last.placements);
-      for (const p of f2.placed) {
-        placements.set(p.id, { x: p.x, y: p.y });
-        stages.push({ label: `Fase 2 · ${f2.vincitore.nome}`, placements: new Map(placements), roads: last.roads });
-      }
-    }
     return {
       name, stages, holes: v.riepilogo.celle_buco_totali,
-      fase1Count: v.riepilogo.n_edifici, fase2Count: f2?.placed.length ?? 0,
-      fase2Strategy: f2?.vincitore.nome ?? null,
-      fase2Coverage: f2?.vincitore.copertura ?? 0, fase2Area: f2?.areaTotale ?? 0,
+      fase1Count: v.riepilogo.n_edifici,
       geometry: v.geometry,
       fissi: (v.trace[v.trace.length - 1]?.placed ?? []).filter(p => KIND_FISSI.has(p.kind)).map(p => p.id),
     };
   });
-  const score = (v: BuilderVariant) => [v.holes, -(v.fase1Count + v.fase2Count)];
+  const score = (v: BuilderVariant) => [v.holes, -v.fase1Count];
   const [a, b] = variants as [BuilderVariant, BuilderVariant];
   const sa = score(a), sb = score(b);
   const best = sb[0]! < sa[0]! || (sb[0] === sa[0] && sb[1]! < sa[1]!) ? "r4" : "r3";

@@ -5457,14 +5457,14 @@
         "it": "Kit aggiornamento Statua all'onore"
       },
       "steps": [
-        "R_MultiAge_Battlegrounds1a",
-        "R_MultiAge_Battlegrounds1b",
-        "R_MultiAge_Battlegrounds1c",
-        "R_MultiAge_Battlegrounds1d",
-        "R_MultiAge_Battlegrounds1e",
-        "R_MultiAge_Battlegrounds1f",
-        "R_MultiAge_Battlegrounds1g",
-        "R_MultiAge_Battlegrounds1h"
+        "W_MultiAge_Battlegrounds1a",
+        "W_MultiAge_Battlegrounds1b",
+        "W_MultiAge_Battlegrounds1c",
+        "W_MultiAge_Battlegrounds1d",
+        "W_MultiAge_Battlegrounds1e",
+        "W_MultiAge_Battlegrounds1f",
+        "W_MultiAge_Battlegrounds1g",
+        "W_MultiAge_Battlegrounds1h"
       ]
     },
     "upgrade_kit_suishun_mill": {
@@ -6570,7 +6570,7 @@
         "it": "Kit selezione Statua all'onore"
       },
       "options": [
-        "R_MultiAge_Battlegrounds1a",
+        "W_MultiAge_Battlegrounds1a",
         "upgrade_kit_statue_of_honor"
       ]
     },
@@ -7412,9 +7412,9 @@
         "it": "Kit Statua dei Campi di battaglia della Gilda"
       },
       "options": [
-        "R_MultiAge_Battlegrounds1a",
+        "W_MultiAge_Battlegrounds1a",
         "upgrade_kit_statue_of_honor",
-        "D_MultiAge_Battlegrounds2"
+        "W_MultiAge_Battlegrounds2"
       ]
     },
     "selection_kit_GBG23_2": {

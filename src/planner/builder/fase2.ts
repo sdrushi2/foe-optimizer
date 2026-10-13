@@ -1,10 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  planner/builder/fase2.ts — Port TypeScript di genera_mapgrid.py + fase2.py
+//  planner/builder/fase2.ts — Port TypeScript dell'algoritmo di fase2.py
 //
-//  1. mapgrid (genera_mapgrid.py + geometria di fase2_legacy_dlx.py): l'area
-//     LIBERA a ovest della strada verticale, entro le righe dei capolinea,
-//     ritagliata al bounding box; pool = edifici senza strada.
-//  2. fase2: 6 strategie di partizionamento (righe 2/3/4 settori, rettangoli
+//  Il builder NON esegue più fase 2 dopo fase 1 (richiesta dell'utente: gli
+//  edifici senza strada intralciavano le nuove disposizioni lungo la
+//  verticale); genera_mapgrid e runFase2 sono stati rimossi. Resta fillMask,
+//  usato dal completamento (fase B e fase C di completion.ts) su qualunque
+//  maschera di celle libere: 6 strategie di partizionamento (righe 2/3/4 settori, rettangoli
 //     massimali, ghigliottina mv=2/3), per ciascuna backtracking a forme per
 //     rettangolo (cap 3000 nodi, +4096 di raffinamento dopo il primo 100%) e
 //     rifinitura dei buchi coi pezzi a lato 1; vince la copertura maggiore,
@@ -16,64 +17,8 @@
 //  deterministico) è sostituito dall'ordine delle strategie.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { buildGrid, type Checkpoint, type CheckpointPlaced } from "./fase1";
-
-export interface MapGrid {
-  grid: number[][];
-  grid_x0: number;
-  grid_y0: number;
-  strada_v_x: number;
-  y_min: number;
-  y_max: number;
-  buildings: Array<{ id: string; name: string; width: number; length: number; road_requirement: number }>;
-}
-
-/** genera_mapgrid() a partire dal checkpoint di fase1. null se la maschera è vuota. */
-export function generaMapgrid(ck: Checkpoint): MapGrid | null {
-  const g = buildGrid(ck.unlocked_areas);
-  const { W, H, x0, y0 } = g;
-  // trova_strada_v_x: Counter sulle x di connected_road (già ordinata): a pari conteggio vince la x minore.
-  const cnt = new Map<number, number>();
-  for (const c of ck.connected_road) cnt.set(c.x, (cnt.get(c.x) ?? 0) + 1);
-  let sx = 0, best = -1;
-  for (const [x, n] of cnt) if (n > best) { best = n; sx = x; }
-  const occ = new Uint8Array(W * H);
-  const mark = (x: number, y: number, w: number, l: number) => {
-    for (let yy = y - y0; yy < y - y0 + l; yy++) for (let xx = x - x0; xx < x - x0 + w; xx++)
-      if (yy >= 0 && yy < H && xx >= 0 && xx < W) occ[yy * W + xx] = 1;
-  };
-  for (const p of ck.buildings_placed) mark(p.x, p.y, p.width, p.length);
-  const th = ck.town_hall;
-  mark(th.x, th.y, th.width, th.length);
-  for (const c of ck.connected_road) mark(c.x, c.y, 1, 1);
-  // trova_limiti_v_capolinea: capolinea = fine_strada con x minima (primo a pari x).
-  const minByX = (arr: CheckpointPlaced[]) => arr.reduce<CheckpointPlaced | null>((m, p) => (m === null || p.x < m.x ? p : m), null);
-  const capN = minByX(ck.buildings_placed.filter(p => p.kind === "fine_strada" && p.y < th.y));
-  const capS = minByX(ck.buildings_placed.filter(p => p.kind === "fine_strada" && p.y > th.y));
-  const yMin = capN ? capN.y : th.y;
-  const yMax = capS ? capS.y + capS.length : th.y + th.length;
-  const m = (gx: number, gy: number) => {
-    const y = gy + y0, x = gx + x0;
-    return y >= yMin && y < yMax && x < sx && g.cells[gy * W + gx] === 1 && occ[gy * W + gx] === 0;
-  };
-  const righe: number[] = [];
-  for (let gy = 0; gy < H; gy++) for (let gx = 0; gx < W; gx++) if (m(gx, gy)) { righe.push(gy); break; }
-  if (!righe.length) return null;
-  const colonne: number[] = [];
-  for (let gx = 0; gx < W; gx++) if (righe.some(gy => m(gx, gy))) colonne.push(gx);
-  const gy0 = Math.min(...righe), gy1 = Math.max(...righe) + 1;
-  const gx0 = Math.min(...colonne), gx1 = Math.max(...colonne) + 1;
-  const grid: number[][] = [];
-  for (let gy = gy0; gy < gy1; gy++) {
-    const row: number[] = [];
-    for (let gx = gx0; gx < gx1; gx++) row.push(m(gx, gy) ? 1 : 0);
-    grid.push(row);
-  }
-  return {
-    grid, grid_x0: gx0 + x0, grid_y0: gy0 + y0, strada_v_x: sx, y_min: yMin, y_max: yMax,
-    buildings: ck.pool_iniziale_senza_strada.map(b => ({ id: b.id, name: b.name, width: b.width, length: b.length, road_requirement: b.road_requirement ?? 0 })),
-  };
-}
+/** Edificio del pool di fillMask (solo quelli con road_requirement 0 vengono usati). */
+export interface PoolItem { id: string; name: string; width: number; length: number; road_requirement: number }
 
 // ── fase2 ────────────────────────────────────────────────────────────────────
 const DIM_MINIMA_RETTANGOLO = 3;
@@ -84,7 +29,7 @@ export interface Fase2Placed extends PB { x: number; y: number; w: number; l: nu
 type Rect = [number, number, number, number];
 type Mask = number[][];
 
-function normalizzaPool(raw: MapGrid["buildings"]): [PB[], PB[]] {
+function normalizzaPool(raw: PoolItem[]): [PB[], PB[]] {
   const disp: PB[] = [], picc: PB[] = [];
   raw.forEach((b, idx) => {
     const w = b.width || 0, l = b.length || 0;
@@ -561,19 +506,9 @@ function eseguiPipeline(nome: string, voci: Voce[], raff: number, maxNodi: numbe
   };
 }
 
-export interface Fase2Result {
-  mapgrid: MapGrid;
-  vincitore: StrategyResult;
-  strategie: StrategyResult[];
-  /** Edifici piazzati da fase2, in coordinate di gioco. */
-  placed: Array<{ id: string; name: string; x: number; y: number; width: number; length: number }>;
-  areaTotale: number;
-}
-
-/** fase2 completa (mapgrid + confronto strategie). null se non c'è area o pool. */
 /** Il cuore di fase2 su una maschera qualsiasi (1 = cella libera): le 6
  *  strategie e il vincitore. null se il pool non ha pezzi "grandi" (w>1, l>1). */
-export function fillMask(grid: Mask, pool: MapGrid["buildings"], raffinamento = 4096, maxNodi = 3000, fast = false): { vincitore: StrategyResult; strategie: StrategyResult[] } | null {
+export function fillMask(grid: Mask, pool: PoolItem[], raffinamento = 4096, maxNodi = 3000, fast = false): { vincitore: StrategyResult; strategie: StrategyResult[] } | null {
   const R = grid.length, C = grid.reduce((m, r) => Math.max(m, r.length), 0);
   const [poolGrande, poolPiccolo] = normalizzaPool(pool);
   if (!poolGrande.length) return null;
@@ -582,18 +517,4 @@ export function fillMask(grid: Mask, pool: MapGrid["buildings"], raffinamento = 
   const cmp = (a: StrategyResult, b: StrategyResult) =>
     (b.copertura - a.copertura) || (a.edificiPiccoli - b.edificiPiccoli) || (a.edifici - b.edifici);
   return { vincitore: [...strategie].sort(cmp)[0]!, strategie };
-}
-
-export function runFase2(ck: Checkpoint, raffinamento = 4096, maxNodi = 3000): Fase2Result | null {
-  const mg = generaMapgrid(ck);
-  if (!mg) return null;
-  const grid = mg.grid;
-  const area = grid.reduce((s, r) => s + r.filter(c => c === 1).length, 0);
-  const fm = fillMask(grid, mg.buildings, raffinamento, maxNodi);
-  if (!fm) return null;
-  const { vincitore, strategie } = fm;
-  return {
-    mapgrid: mg, vincitore, strategie, areaTotale: area,
-    placed: vincitore.placed.map(b => ({ id: b.id, name: b.name, x: b.x + mg.grid_x0, y: b.y + mg.grid_y0, width: b.w, length: b.l })),
-  };
 }
