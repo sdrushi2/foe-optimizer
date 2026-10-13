@@ -4958,6 +4958,32 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
        non un errore (né 1,05 né 1 cambiano il risultato).
      `vite build` non si può eseguire nella sandbox Linux (binding nativo di
      rolldown per Windows): tsc ed eslint puliti.
+   - **Smussatura: scambi lontani e discesa esaustiva** (segnalazione
+     dell'utente su Beta r3: ferma a 43 angoli dopo 23 milioni di tentativi,
+     mentre scambiando a mano due edifici lontani si scendeva a 41, poi 37, e
+     scambiando due fini strada di dorsali diverse a 33). Causa: lo scambio
+     cercava il compagno solo entro 14 celle, quindi due fini strada di
+     dorsali diverse non venivano mai provati; e la ricerca casuale non
+     esplorava sistematicamente le coppie. Ora: (1) una volta su tre il
+     compagno dello scambio è un edificio qualsiasi; (2) quando la ricerca
+     è bloccata (2000 tentativi senza migliorare) si fa una discesa
+     ESAUSTIVA dalla migliore: tutti gli scambi di coppie (anche lontane)
+     nei 16 allineamenti agli angoli e tutti gli scorrimenti di 1-3 celle,
+     si applica la mossa migliore e si ripete finché migliora (con pause
+     ogni 40 ms per l'interfaccia). (3) L'etichetta mostra "N mosse valide su
+     M tentativi": i tentativi casuali sono quasi tutti scartati subito
+     (posto occupato o senza strada), le mosse valide sono quelle davvero
+     valutate. Beta r3 (partenza 59 angoli): 41 angoli + 7 buchi in 15 s.
+     Poi (l'utente: "si ferma a 35, non l'ottimo"; la sua da 33 ha un
+     fine strada di una dorsale scambiato con un edificio di un'altra e i
+     vicini riassestati): `ricomponi(gruppo, centri, ordini, soglia)` (la
+     ricomposizione resa funzione) e, nella fase di blocco, dopo la discesa
+     esaustiva, ~2 s di ricomposizioni "lontane": b + il suo vicino più
+     prossimo, c qualsiasi + il suo vicino, ripiazzati in tutti i 24 ordini
+     nel posto migliore entro 7 celle dai due posti (accettate anche a pari
+     punteggio). Beta r3 in 30 s: 31 angoli + 0 buchi (e 33 + 7 in un'altra
+     prova: il caso conta), Beta r4: 37 + 1 (partenza 53 + 14). Validatore:
+     nessuna sovrapposizione, strade uguali, fissi fermi.
    Stato: Avito (151 edifici, 76 con strada da piazzare) resta difficile: 5-9
    edifici non piazzati con 189-230 strade (la città originale li piazza tutti
    con 271). Il banco a 8-20 s ha una variabilità di ±3 strade fra prove.

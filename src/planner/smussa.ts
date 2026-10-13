@@ -200,7 +200,11 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
 
   /** Prova a spostare gli edifici `mosse` (id → nuova posizione); se valida
    *  e non peggiore di `soglia` la applica e restituisce il punteggio. */
-  const prova = (mosse: Array<[PlannerBuilding, number, number]>, soglia: Punti): Punti | null => {
+  /** Mosse realmente valutate (posizioni valide, senza nuovi problematici):
+   *  i "tentativi" casuali sono molti di più, quasi tutti scartati subito
+   *  perché il posto è occupato o non tocca una strada. */
+  let valide = 0;
+  const prova = (mosse: Array<[PlannerBuilding, number, number]>, soglia: Punti, soloValuta = false): Punti | null => {
     let effPrima = 0, nPrima = 0;
     for (const [b] of mosse) { const q = pos.get(b.id)!; const e = eff(b, q.x, q.y); effPrima += e; if (e > 0) nPrima++; }
     // rettangoli toccati (posti vecchi e nuovi) per il punteggio incrementale
@@ -217,14 +221,83 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     }
     let pt: Punti | null = null;
     if (ok && nDopo <= nPrima && effDopo <= effPrima) {
+      valide++;
       const dopo = locale(rett);
       const a = corrente[2] + dopo[0] - prima[0], bu = corrente[3] + dopo[2] - prima[2];
       pt = [a + bu, corrente[1] + dopo[1] - prima[1], a, bu];
       if (cmp(pt, soglia) > 0) pt = null;
     }
-    if (pt) { for (const [b, x, y] of mosse) pos.set(b.id, { x, y }); return pt; }
+    if (pt && !soloValuta) { for (const [b, x, y] of mosse) pos.set(b.id, { x, y }); return pt; }
     for (const [b, x, y] of fatti) rect(x, y, b.w, b.h, 0);
     for (const [b] of mosse) { const q = pos.get(b.id)!; rect(q.x, q.y, b.w, b.h, 1); }
+    return soloValuta ? pt : null;
+  };
+  /** Le 4 posizioni di un rettangolo w×h allineato agli angoli del posto o (ow×oh). */
+  const angoliDi = (o: { x: number; y: number }, ow: number, oh: number, w: number, h: number): Array<[number, number]> =>
+    [[o.x, o.y], [o.x + ow - w, o.y], [o.x, o.y + oh - h], [o.x + ow - w, o.y + oh - h]];
+
+  /** Permutazioni di 0..n-1 (n <= 4). */
+  const permutazioni = (n: number): number[][] => {
+    if (n <= 1) return [[0]];
+    const out: number[][] = [];
+    for (const p of permutazioni(n - 1)) for (let i = 0; i <= p.length; i++) out.push([...p.slice(0, i), n - 1, ...p.slice(i)]);
+    return out;
+  };
+  /** Ricomposizione: gli edifici del gruppo vengono tolti e ripiazzati uno
+   *  alla volta, nell'ordine dato, nel posto migliore accanto a una strada
+   *  entro 7 celle da uno dei centri; si prova ogni ordine e si applica la
+   *  disposizione migliore se non peggiore di `soglia` (e diversa
+   *  dall'attuale). Punteggio incrementale. */
+  const ricomponi = (gruppo: PlannerBuilding[], centri: Array<[number, number]>, ordini: number[][], soglia: Punti): Punti | null => {
+    const orig = gruppo.map(c => ({ c, ...pos.get(c.id)! }));
+    let effPrima = 0, nPrima = 0;
+    for (const o of orig) { const e = eff(o.c, o.x, o.y); effPrima += e; if (e > 0) nPrima++; }
+    const sc: [number, number, number] = [corrente[2], corrente[1], corrente[3]];
+    for (const o of orig) rettSc(o.x, o.y, o.c.w, o.c.h, 0, sc);
+    const strade: Array<[number, number]> = [];
+    for (const kr of roadKeys) {
+      const ci = kr.indexOf(","), rx = Number(kr.slice(0, ci)), ry = Number(kr.slice(ci + 1));
+      if (centri.some(([cx, cy]) => Math.abs(rx - cx) + Math.abs(ry - cy) <= 7)) strade.push([rx, ry]);
+    }
+    let migl: { pt: Punti; posti: Array<[PlannerBuilding, number, number]> } | null = null;
+    for (const ord of ordini) {
+      const posti: Array<[PlannerBuilding, number, number]> = [];
+      for (const i of ord) {
+        const c = gruppo[i]!;
+        let scelto: { x: number; y: number; pt: Punti } | null = null;
+        for (const [rx, ry] of strade) {
+          const cand: Array<[number, number]> = [];
+          for (let o = 0; o < c.w; o++) { cand.push([rx - o, ry + 1], [rx - o, ry - c.h]); }
+          for (let o = 0; o < c.h; o++) { cand.push([rx + 1, ry - o], [rx - c.w, ry - o]); }
+          for (const [x, y] of cand) {
+            if (!libero(x, y, c.w, c.h)) continue;
+            const r: Array<[number, number, number, number]> = [[x, y, c.w, c.h]];
+            const p0 = locale(r);
+            rect(x, y, c.w, c.h, 1);
+            const p1 = locale(r);
+            rect(x, y, c.w, c.h, 0);
+            const pt = comePunti([sc[0] + p1[0] - p0[0], sc[1] + p1[1] - p0[1], sc[2] + p1[2] - p0[2]]);
+            if (!scelto || cmp(pt, scelto.pt) < 0) scelto = { x, y, pt };
+          }
+        }
+        if (!scelto) break;
+        rettSc(scelto.x, scelto.y, c.w, c.h, 1, sc);
+        posti.push([c, scelto.x, scelto.y]);
+      }
+      if (posti.length === gruppo.length) {
+        valide++;
+        let effDopo = 0, nDopo = 0;
+        for (const [c, x, y] of posti) { const e = eff(c, x, y); effDopo += e; if (e > 0) nDopo++; }
+        const pt = comePunti(sc);
+        if (nDopo <= nPrima && effDopo <= effPrima && (!migl || cmp(pt, migl.pt) < 0)) migl = { pt, posti: [...posti] };
+      }
+      for (const [c, x, y] of posti) rettSc(x, y, c.w, c.h, 0, sc);
+    }
+    if (migl && cmp(migl.pt, soglia) <= 0 && orig.some(o => { const n = migl!.posti.find(t => t[0] === o.c)!; return n[1] !== o.x || n[2] !== o.y; })) {
+      for (const [c, x, y] of migl.posti) { rect(x, y, c.w, c.h, 1); pos.set(c.id, { x, y }); }
+      return migl.pt;
+    }
+    for (const o of orig) rect(o.x, o.y, o.c.w, o.c.h, 1);
     return null;
   };
 
@@ -235,7 +308,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   const frame = (stato: string): PlannerFrame => ({
     placements: new Map(migliore.pos), roads: new Set(start.roads), probe: null, lastPath: [],
     placed: migliore.pos.size, unplaced: [], iterations: tentativi, done: false,
-    label: `Smussa i bordi · angoli ${migliore.pt[2]} (all'inizio ${iniziale[2]}) · buchi ${migliore.pt[3]} (all'inizio ${iniziale[3]}) · perimetro ${migliore.pt[1]} · ${tentativi.toLocaleString()} tentativi${stato}`,
+    label: `Smussa i bordi · angoli ${migliore.pt[2]} (all'inizio ${iniziale[2]}) · buchi ${migliore.pt[3]} (all'inizio ${iniziale[3]}) · perimetro ${migliore.pt[1]} · ${valide.toLocaleString()} mosse valide su ${tentativi.toLocaleString()} tentativi${stato}`,
   });
   const ripristina = (m: Map<string, { x: number; y: number }>) => {
     for (const [id, q] of pos) { const b = byId.get(id)!; rect(q.x, q.y, b.w, b.h, 0); }
@@ -249,7 +322,67 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   let lastYield = performance.now(), lastShow = performance.now();
   while (!opts.shouldStop()) {
     tentativi++;
-    if (++senzaMigliorare > 2000) { ripristina(migliore.pos); corrente = migliore.pt; senzaMigliorare = 0; }
+    if (++senzaMigliorare > 2000) {
+      // Bloccato: prima una discesa ESAUSTIVA dalla migliore (tutti gli
+      // scambi di coppie, anche lontane, nei 16 allineamenti agli angoli, e
+      // tutti gli scorrimenti di 1-3 celle); poi si riparte dalla migliore.
+      ripristina(migliore.pos); corrente = migliore.pt; senzaMigliorare = 0;
+      for (let migliorato = true; migliorato && !opts.shouldStop();) {
+        migliorato = false;
+        let top: { pt: Punti; mosse: Array<[PlannerBuilding, number, number]> } | null = null;
+        const valuta = (mosse: Array<[PlannerBuilding, number, number]>) => {
+          tentativi++;
+          const r = prova(mosse, top ? top.pt : corrente, true);
+          if (r && cmp(r, top ? top.pt : corrente) < 0) top = { pt: r, mosse };
+        };
+        for (let i = 0; i < mobili.length; i++) {
+          const b1 = mobili[i]!, p1 = pos.get(b1.id)!;
+          for (let d = 1; d <= 3; d++) for (const [dx, dy] of [[d, 0], [-d, 0], [0, d], [0, -d]] as const) valuta([[b1, p1.x + dx, p1.y + dy]]);
+          for (let j = i + 1; j < mobili.length; j++) {
+            const b2 = mobili[j]!, p2 = pos.get(b2.id)!;
+            for (const [x1, y1] of angoliDi(p2, b2.w, b2.h, b1.w, b1.h)) for (const [x2, y2] of angoliDi(p1, b1.w, b1.h, b2.w, b2.h)) valuta([[b1, x1, y1], [b2, x2, y2]]);
+          }
+          if (performance.now() - lastYield > 40) { await sleep(0); lastYield = performance.now(); if (opts.shouldStop()) break; }
+        }
+        const t = top as { pt: Punti; mosse: Array<[PlannerBuilding, number, number]> } | null;
+        if (t && prova(t.mosse, t.pt)) {
+          corrente = t.pt; migliorato = true;
+          if (cmp(corrente, migliore.pt) < 0) { migliore = { pt: corrente, pos: new Map(pos) }; opts.onFrame(frame("")); lastShow = performance.now(); }
+        }
+      }
+      // Poi ricomposizioni "lontane" per ~2 s (idea dell'utente su Beta r3:
+      // un edificio di una dorsale scambiato con uno di un'altra, con i vicini
+      // che si riassestano): b e il suo vicino più prossimo, c (qualsiasi) e
+      // il suo vicino più prossimo, ripiazzati in tutti i 24 ordini attorno
+      // ai due posti. Si accettano anche le mosse a pari punteggio.
+      const fineRic = performance.now() + 2000;
+      const vicinoDi = (x: PlannerBuilding, salta: Set<PlannerBuilding>) => {
+        const p0 = pos.get(x.id)!;
+        let m: PlannerBuilding | null = null, dm = Infinity;
+        for (const y of mobili) {
+          if (salta.has(y)) continue;
+          const p1 = pos.get(y.id)!, d = Math.abs(p1.x + y.w / 2 - p0.x - x.w / 2) + Math.abs(p1.y + y.h / 2 - p0.y - x.h / 2);
+          if (d < dm) { dm = d; m = y; }
+        }
+        return dm <= 10 ? m : null;
+      };
+      while (performance.now() < fineRic && !opts.shouldStop() && mobili.length >= 2) {
+        const b1 = mobili[rnd(mobili.length)]!, c1 = mobili[rnd(mobili.length)]!;
+        if (b1 === c1) continue;
+        const usati = new Set<PlannerBuilding>([b1, c1]);
+        const nb = vicinoDi(b1, usati); if (nb) usati.add(nb);
+        const nc = vicinoDi(c1, usati); if (nc) usati.add(nc);
+        const gruppo = [...usati];
+        const pb = pos.get(b1.id)!, pc = pos.get(c1.id)!;
+        tentativi++;
+        const r = ricomponi(gruppo, [[pb.x + b1.w / 2, pb.y + b1.h / 2], [pc.x + c1.w / 2, pc.y + c1.h / 2]], permutazioni(gruppo.length), corrente);
+        if (r) {
+          corrente = r;
+          if (cmp(corrente, migliore.pt) < 0) { migliore = { pt: corrente, pos: new Map(pos) }; opts.onFrame(frame("")); lastShow = performance.now(); }
+        }
+        if (performance.now() - lastYield > 40) { await sleep(0); lastYield = performance.now(); }
+      }
+    }
     const b = mobili[rnd(mobili.length)]!;
     const q = pos.get(b.id)!;
     const u = Math.random();
@@ -281,7 +414,10 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
       if (ok && gruppo.size > 1) pt = prova([...gruppo].map(id => { const p = pos.get(id)!; return [byId.get(id)!, p.x + dx, p.y + dy] as [PlannerBuilding, number, number]; }), soglia);
     } else if (u < 0.8) {
       // Scambio con un edificio vicino (allineato a un angolo del posto dell'altro).
-      const vicini = mobili.filter(c => c !== b && Math.abs(pos.get(c.id)!.x - q.x) + Math.abs(pos.get(c.id)!.y - q.y) <= 14);
+      // di solito un vicino; una volta su tre chiunque (es. due fini strada di
+      // dorsali diverse: idea dell'utente su Beta r3, da 37 a 33 angoli)
+      const lontano = Math.random() < 0.33;
+      const vicini = mobili.filter(c => c !== b && (lontano || Math.abs(pos.get(c.id)!.x - q.x) + Math.abs(pos.get(c.id)!.y - q.y) <= 14));
       const c = vicini[rnd(vicini.length)];
       if (c) {
         const p = pos.get(c.id)!;
@@ -299,60 +435,12 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     } else if (u < 0.805) {
       // Ricomposizione: 2-3 edifici vicini (b e i più vicini) tolti e
       // ripiazzati uno alla volta nel posto migliore accanto a una strada
-      // entro 10 celle, provando tutti gli ordini (es. un 4×4 che scambia
-      // posto con due 2×3: idea dell'utente su Beta r3).
+      // (es. un 4×4 che scambia posto con due 2×3: idea dell'utente su Beta r3).
       const k = 2 + rnd(2);
       const cx = q.x + b.w / 2, cy = q.y + b.h / 2;
       const dist = (c: PlannerBuilding) => { const p = pos.get(c.id)!; return Math.abs(p.x + c.w / 2 - cx) + Math.abs(p.y + c.h / 2 - cy); };
       const gruppo = [b, ...mobili.filter(c => c !== b && dist(c) <= 10).sort((c1, c2) => dist(c1) - dist(c2)).slice(0, k - 1)];
-      if (gruppo.length >= 2) {
-        const orig = gruppo.map(c => ({ c, ...pos.get(c.id)! }));
-        let effPrima = 0, nPrima = 0;
-        for (const o of orig) { const e = eff(o.c, o.x, o.y); effPrima += e; if (e > 0) nPrima++; }
-        // punteggio corrente, aggiornato in modo incrementale a ogni rettangolo
-        const sc: [number, number, number] = [corrente[2], corrente[1], corrente[3]];
-        for (const o of orig) rettSc(o.x, o.y, o.c.w, o.c.h, 0, sc);
-        const ordini = gruppo.length === 2 ? [[0, 1], [1, 0]] : [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
-        let migl: { pt: Punti; posti: Array<[PlannerBuilding, number, number]> } | null = null;
-        for (const ord of ordini) {
-          const posti: Array<[PlannerBuilding, number, number]> = [];
-          for (const i of ord) {
-            const c = gruppo[i]!;
-            let scelto: { x: number; y: number; pt: Punti } | null = null;
-            for (const kr of roadKeys) {
-              const ci = kr.indexOf(","), rx = Number(kr.slice(0, ci)), ry = Number(kr.slice(ci + 1));
-              if (Math.abs(rx - cx) + Math.abs(ry - cy) > 7) continue;
-              const cand: Array<[number, number]> = [];
-              for (let o = 0; o < c.w; o++) { cand.push([rx - o, ry + 1], [rx - o, ry - c.h]); }
-              for (let o = 0; o < c.h; o++) { cand.push([rx + 1, ry - o], [rx - c.w, ry - o]); }
-              for (const [x, y] of cand) {
-                if (!libero(x, y, c.w, c.h)) continue;
-                const r: Array<[number, number, number, number]> = [[x, y, c.w, c.h]];
-                const p0 = locale(r);
-                rect(x, y, c.w, c.h, 1);
-                const p1 = locale(r);
-                rect(x, y, c.w, c.h, 0);
-                const pt = comePunti([sc[0] + p1[0] - p0[0], sc[1] + p1[1] - p0[1], sc[2] + p1[2] - p0[2]]);
-                if (!scelto || cmp(pt, scelto.pt) < 0) scelto = { x, y, pt };
-              }
-            }
-            if (!scelto) break;
-            rettSc(scelto.x, scelto.y, c.w, c.h, 1, sc);
-            posti.push([c, scelto.x, scelto.y]);
-          }
-          if (posti.length === gruppo.length) {
-            let effDopo = 0, nDopo = 0;
-            for (const [c, x, y] of posti) { const e = eff(c, x, y); effDopo += e; if (e > 0) nDopo++; }
-            const pt = comePunti(sc);
-            if (nDopo <= nPrima && effDopo <= effPrima && (!migl || cmp(pt, migl.pt) < 0)) migl = { pt, posti: [...posti] };
-          }
-          for (const [c, x, y] of posti) rettSc(x, y, c.w, c.h, 0, sc);
-        }
-        if (migl && cmp(migl.pt, soglia) <= 0 && orig.some(o => { const n = migl!.posti.find(t => t[0] === o.c)!; return n[1] !== o.x || n[2] !== o.y; })) {
-          for (const [c, x, y] of migl.posti) { rect(x, y, c.w, c.h, 1); pos.set(c.id, { x, y }); }
-          pt = migl.pt;
-        } else for (const o of orig) rect(o.x, o.y, o.c.w, o.c.h, 1);
-      }
+      if (gruppo.length >= 2) pt = ricomponi(gruppo, [[cx, cy]], permutazioni(gruppo.length), soglia);
     } else if (u < 0.87) {
       // Il posto MIGLIORE fra tutti quelli liberi accanto a una strada.
       rect(q.x, q.y, b.w, b.h, 0);
