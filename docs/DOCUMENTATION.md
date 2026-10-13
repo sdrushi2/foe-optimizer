@@ -4900,17 +4900,19 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      43 angoli + 9 buchi senza ricomposizione, 47 + 6 con (variabilità del
      caso: Math.random).
    - **Pulsanti del Planner** (richiesta dell'utente): tre fasi, ciascuna
-     col suo pulsante che fa da avvio, pausa e ripresa. 1. Ricerca: "▶ Avvia"
-     → "⏸ Pausa" ↔ "▶ Riprendi" (a fine corsa torna "▶ Avvia"; disattivato
-     durante il completamento). 2. "✨ Smussa i bordi" (attivo solo con la
-     ricerca in pausa) → "⏸ Pausa" ↔ "▶ Riprendi" (`smussaInPausa`;
-     riprendere la ricerca o completare azzera lo stato). 3. "⏭ COMPLETA"
-     (attivo solo con la ricerca in pausa, senza sovrapposizioni né
-     smussatura in corso) → "⏸ Pausa" ↔ "▶ Riprendi" del riempimento
+     col suo pulsante che fa da avvio, pausa e ripresa, e che in pausa
+     riprende il proprio nome (niente "Riprendi", per non confondersi).
+     1. Ricerca: "▶ Ottimizza" → "⏸ Pausa" → "▶ Ottimizza" (riprende)…;
+     disattivato durante il completamento. 2. "✨ Smussa" (attivo solo con la
+     ricerca in pausa) → "⏸ Pausa" → "✨ Smussa"…. 3. "⏭ COMPLETA" (attivo
+     solo con la ricerca in pausa, senza sovrapposizioni né smussatura in
+     corso) → "⏸ Pausa" → "⏭ COMPLETA" (riprende il riempimento)…
      (`completando`).
-   - **DEBUG_PLANNER = false** (roadEff.ts): niente elenco road_eff né bordi
-     tratteggiati (gialli / rossi) e niente "📂 Importa JSON" / "↩ Città del
-     profilo" (strumento di test, visibile solo con DEBUG_PLANNER = true).
+   - **DEBUG_PLANNER = false** (roadEff.ts): niente elenco road_eff sotto le
+     mappe e niente "📂 Importa JSON" / "↩ Città del profilo" (strumenti di
+     test, visibili solo con DEBUG_PLANNER = true). I bordi tratteggiati
+     (gialli = problematici, rossi = strade vuote) restano SEMPRE visibili,
+     senza spiegazione (richiesta dell'utente).
    Stato: Avito (151 edifici, 76 con strada da piazzare) resta difficile: 5-9
    edifici non piazzati con 189-230 strade (la città originale li piazza tutti
    con 271). Il banco a 8-20 s ha una variabilità di ±3 strade fra prove.

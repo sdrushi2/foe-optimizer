@@ -193,7 +193,7 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia,
       ctx.fillRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
     }
     if (evidenzia?.size) {
-      // DEBUG_PLANNER: edifici con road_eff > 0 (bordo giallo tratteggiato).
+      // Edifici problematici, road_eff > 0 (bordo giallo tratteggiato).
       ctx.save();
       ctx.strokeStyle = "#fde047";
       ctx.lineWidth = 2;
@@ -205,7 +205,7 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia,
       ctx.restore();
     }
     if (stradeVuote?.length) {
-      // DEBUG_PLANNER: strade con un lato libero (bordo rosso tratteggiato).
+      // Strade vuote, con un lato libero (bordo rosso tratteggiato).
       ctx.save();
       ctx.strokeStyle = "#ef4444";
       ctx.lineWidth = 2;
@@ -376,7 +376,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
 
   /** Riprende tutte le mappe in pausa, passando le disposizioni modificate a mano. */
   const riprendi = () => {
-    setSmussaInPausa(false);
     pausedRef.current = false;
     setPaused(false);
     for (const v of VARIANTI) {
@@ -395,14 +394,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
    *  del contorno, finché l'utente non lo ferma. Il risultato conta come
    *  modifica a mano: Riprendi o COMPLETA ripartono da lì. */
   const [smussando, setSmussando] = useState(false);
-  /** Smussatura messa in pausa dall'utente (il suo pulsante mostra "Riprendi"). */
-  const [smussaInPausa, setSmussaInPausa] = useState(false);
   /** Fase 3 avviata (COMPLETA premuto): il suo pulsante diventa Pausa/Riprendi. */
   const [completando, setCompletando] = useState(false);
   const stopSmussaRef = useRef(false);
   const smussa = async () => {
     stopSmussaRef.current = false;
-    setSmussaInPausa(false);
     setSmussando(true);
     const gen = genRef.current;
     await Promise.all(visibili.filter(sc => inPausa[sc.id] && framesRef.current[sc.id]).map(async sc => {
@@ -617,24 +613,24 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
             bordi (solo con la ricerca in pausa), 3. completamento. */}
         {!running ? (
           <button type="button" onClick={() => void start()}
-            className="rounded border border-emerald-600 px-3 py-1 font-bold text-emerald-300 hover:bg-emerald-950">▶ Avvia</button>
+            className="rounded border border-emerald-600 px-3 py-1 font-bold text-emerald-300 hover:bg-emerald-950">▶ Ottimizza</button>
         ) : paused && !completando ? (
           <button type="button" onClick={riprendi} disabled={nSovrapposti > 0 || smussando}
             title={nSovrapposti > 0 ? "Ci sono edifici sovrapposti (riquadro rosso): spostali in un posto libero prima di riprendere"
               : "La ricerca continua a cercare disposizioni migliori partendo da quelle mostrate (anche modificate a mano o smussate)"}
-            className="rounded border border-sky-500 bg-sky-950 px-3 py-1 font-bold text-sky-300 hover:bg-sky-900 disabled:opacity-40">▶ Riprendi</button>
+            className="rounded border border-sky-500 bg-sky-950 px-3 py-1 font-bold text-sky-300 hover:bg-sky-900 disabled:opacity-40">▶ Ottimizza</button>
         ) : (
           <button type="button" disabled={completando || !anySearching} onClick={pausa}
             title="Mette in pausa la ricerca: puoi spostare gli edifici, eliminare strade e togliere edifici, smussare i bordi o completare"
             className="rounded border border-red-600 px-3 py-1 font-bold text-red-300 hover:bg-red-950 disabled:opacity-40">⏸ Pausa</button>
         )}
         {smussando ? (
-          <button type="button" onClick={() => { stopSmussaRef.current = true; setSmussaInPausa(true); }}
+          <button type="button" onClick={() => { stopSmussaRef.current = true; }}
             className="rounded border border-violet-500 bg-violet-950 px-3 py-1 font-bold text-violet-300 hover:bg-violet-900">⏸ Pausa</button>
         ) : (
           <button type="button" onClick={() => void smussa()} disabled={!paused || completando || !anySearching || nSovrapposti > 0}
             title="Solo con la ricerca in pausa: sposta e scambia gli edifici con strada (strade invariate) per ridurre gli angoli di 90° del contorno e i buchi: il riempimento finale incastra meglio i pezzi piccoli. Continua finché non lo metti in pausa"
-            className="rounded border border-violet-500 px-3 py-1 font-bold text-violet-300 hover:bg-violet-950 disabled:opacity-40">{smussaInPausa ? "▶ Riprendi" : "✨ Smussa i bordi"}</button>
+            className="rounded border border-violet-500 px-3 py-1 font-bold text-violet-300 hover:bg-violet-950 disabled:opacity-40">✨ Smussa</button>
         )}
         {!completando ? (
           <button type="button" disabled={!paused || !anySearching || nSovrapposti > 0 || smussando}
@@ -644,7 +640,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         ) : paused ? (
           <button type="button" onClick={riprendi} disabled={nSovrapposti > 0}
             title={nSovrapposti > 0 ? "Ci sono edifici sovrapposti (riquadro rosso): spostali in un posto libero prima di riprendere" : "Riprende il riempimento"}
-            className="rounded border border-amber-500 bg-amber-950 px-3 py-1 font-bold text-amber-300 hover:bg-amber-900 disabled:opacity-40">▶ Riprendi</button>
+            className="rounded border border-amber-500 bg-amber-950 px-3 py-1 font-bold text-amber-300 hover:bg-amber-900 disabled:opacity-40">⏭ COMPLETA</button>
         ) : (
           <button type="button" disabled={!anyFilling} onClick={pausa}
             title="Mette in pausa il riempimento: puoi spostare o togliere gli edifici senza strada"
@@ -717,8 +713,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
               {visibili.map(sc => {
                 const n = sc.id;
                 const f = frames[n];
-                const eff = DEBUG_PLANNER && f ? calcolaRoadEff(problem.buildings, f.placements, f.roads) : null;
-                const vuote = DEBUG_PLANNER && f ? calcolaStradeVuote(problem.buildings, f.placements, f.roads, problem.cells) : null;
+                // Bordi tratteggiati (gialli = problematici, rossi = strade vuote):
+                // sempre visibili; l'elenco sotto la mappa solo con DEBUG_PLANNER.
+                const eff = f ? calcolaRoadEff(problem.buildings, f.placements, f.roads) : null;
+                const vuote = f ? calcolaStradeVuote(problem.buildings, f.placements, f.roads, problem.cells) : null;
                 const conGemello = (outcome ?? []).some(x => x.raccordo === sc.raccordo && x.id !== n);
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
@@ -743,7 +741,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                       <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} edit={inPausa[n] && paused && !smussando ? editFor(n) : undefined} soloSenzaStrada={filling[n]}
                         evidenzia={eff ? new Set(eff.voci.map(v => v.id)) : undefined} stradeVuote={vuote ?? undefined} />
                     </div>
-                    {eff && (
+                    {DEBUG_PLANNER && eff && (
                       // DEBUG_PLANNER (roadEff.ts): edifici con road_eff > 0 = celle di strada toccate − lato corto.
                       <div className="mt-1 rounded border border-yellow-700/60 bg-yellow-950/20 px-2 py-1 text-[11px] text-yellow-100">
                         <div className="font-bold text-yellow-300">
