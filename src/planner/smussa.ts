@@ -124,11 +124,89 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   const punti = (): Punti => { const a = contaAngoliGriglia(occ, cell, W, H), b = buchi(); return [a + b, perimetro(), a, b]; };
   const cmp = (a: Punti, b: Punti) => a[0] - b[0] || a[1] - b[1];
 
+  // ── Punteggio incrementale (ottimizzazione): una mossa cambia angoli,
+  // perimetro e buchi solo vicino ai rettangoli toccati (posti vecchi e
+  // nuovi). Si sommano i contributi locali prima e dopo la mossa.
+  /** Angolo all'incrocio (i, j) della griglia (0..W, 0..H): 0, 1 o 2. */
+  const angoloPt = (i: number, j: number) => {
+    const ga = j > 0 && i > 0 ? (j - 1) * W + i - 1 : -1, gb = j > 0 && i < W ? (j - 1) * W + i : -1;
+    const gc = j < H && i > 0 ? j * W + i - 1 : -1, gd = j < H && i < W ? j * W + i : -1;
+    const a = ga >= 0 && occ[ga] === 1, b = gb >= 0 && occ[gb] === 1, c = gc >= 0 && occ[gc] === 1, d = gd >= 0 && occ[gd] === 1;
+    const k = (a ? 1 : 0) + (b ? 1 : 0) + (c ? 1 : 0) + (d ? 1 : 0);
+    if (k === 0 || k === 4) return 0;
+    if ((!a && (ga < 0 || cell[ga] !== 1)) || (!b && (gb < 0 || cell[gb] !== 1)) || (!c && (gc < 0 || cell[gc] !== 1)) || (!d && (gd < 0 || cell[gd] !== 1))) return 0;
+    if (k === 2) return a === d ? 2 : 0;
+    return 1;
+  };
+  const perimCella = (i: number, j: number) => {
+    const g = j * W + i;
+    if (occ[g] !== 1) return 0;
+    let p = 0;
+    if (i > 0 && cell[g - 1] === 1 && occ[g - 1] !== 1) p++;
+    if (i < W - 1 && cell[g + 1] === 1 && occ[g + 1] !== 1) p++;
+    if (j > 0 && cell[g - W] === 1 && occ[g - W] !== 1) p++;
+    if (j < H - 1 && cell[g + W] === 1 && occ[g + W] !== 1) p++;
+    return p;
+  };
+  const liberaC = (i: number, j: number) => i >= 0 && j >= 0 && i < W && j < H && cell[j * W + i] === 1 && occ[j * W + i] !== 1;
+  const finestra = (i0: number, j0: number, w: number, h: number) => {
+    for (let dj = 0; dj < h; dj++) for (let di = 0; di < w; di++) if (!liberaC(i0 + di, j0 + dj)) return false;
+    return true;
+  };
+  /** La cella (i, j) è un buco: libera ma nessuna forma minima la copre. */
+  const bucoC = (i: number, j: number) => {
+    if (!liberaC(i, j)) return 0;
+    for (const [w, h] of minime) for (let j0 = j - h + 1; j0 <= j; j0++) for (let i0 = i - w + 1; i0 <= i; i0++) if (finestra(i0, j0, w, h)) return 0;
+    return 1;
+  };
+  const S = minime.reduce((m, [w, h]) => Math.max(m, w, h), 1);
+  const timbroP = new Int32Array((W + 1) * (H + 1)), timbroC = new Int32Array(W * H), timbroB = new Int32Array(W * H);
+  let timbro = 0;
+  /** Contributi locali [angoli, perimetro, buchi] attorno ai rettangoli (coordinate di gioco). */
+  const locale = (rett: Array<[number, number, number, number]>): [number, number, number] => {
+    timbro++;
+    let a = 0, p = 0, bu = 0;
+    for (const [x, y, w, h] of rett) {
+      const i0 = x - problem.minX, j0 = y - problem.minY;
+      for (let j = Math.max(0, j0); j <= Math.min(H, j0 + h); j++) for (let i = Math.max(0, i0); i <= Math.min(W, i0 + w); i++) {
+        const t = j * (W + 1) + i;
+        if (timbroP[t] === timbro) continue;
+        timbroP[t] = timbro; a += angoloPt(i, j);
+      }
+      for (let j = Math.max(0, j0 - 1); j <= Math.min(H - 1, j0 + h); j++) for (let i = Math.max(0, i0 - 1); i <= Math.min(W - 1, i0 + w); i++) {
+        const g = j * W + i;
+        if (timbroC[g] === timbro) continue;
+        timbroC[g] = timbro; p += perimCella(i, j);
+      }
+      if (minime.length) for (let j = Math.max(0, j0 - S + 1); j <= Math.min(H - 1, j0 + h - 1 + S - 1); j++) for (let i = Math.max(0, i0 - S + 1); i <= Math.min(W - 1, i0 + w - 1 + S - 1); i++) {
+        const g = j * W + i;
+        if (timbroB[g] === timbro) continue;
+        timbroB[g] = timbro; bu += bucoC(i, j);
+      }
+    }
+    return [a, p, bu];
+  };
+
+  /** Cambia un rettangolo (v = 1 occupa, 0 libera) aggiornando il punteggio
+   *  `sc` = [angoli, perimetro, buchi] in modo incrementale. */
+  const rettSc = (x: number, y: number, w: number, h: number, v: 0 | 1, sc: [number, number, number]) => {
+    const r: Array<[number, number, number, number]> = [[x, y, w, h]];
+    const p0 = locale(r);
+    rect(x, y, w, h, v);
+    const p1 = locale(r);
+    sc[0] += p1[0] - p0[0]; sc[1] += p1[1] - p0[1]; sc[2] += p1[2] - p0[2];
+  };
+  const comePunti = (sc: [number, number, number]): Punti => [sc[0] + sc[2], sc[1], sc[0], sc[2]];
+
   /** Prova a spostare gli edifici `mosse` (id → nuova posizione); se valida
    *  e non peggiore di `soglia` la applica e restituisce il punteggio. */
   const prova = (mosse: Array<[PlannerBuilding, number, number]>, soglia: Punti): Punti | null => {
     let effPrima = 0, nPrima = 0;
     for (const [b] of mosse) { const q = pos.get(b.id)!; const e = eff(b, q.x, q.y); effPrima += e; if (e > 0) nPrima++; }
+    // rettangoli toccati (posti vecchi e nuovi) per il punteggio incrementale
+    const rett: Array<[number, number, number, number]> = [];
+    for (const [b, x, y] of mosse) { const q = pos.get(b.id)!; rett.push([q.x, q.y, b.w, b.h], [x, y, b.w, b.h]); }
+    const prima = locale(rett);
     for (const [b] of mosse) { const q = pos.get(b.id)!; rect(q.x, q.y, b.w, b.h, 0); }
     let ok = true, effDopo = 0, nDopo = 0;
     const fatti: Array<[PlannerBuilding, number, number]> = [];
@@ -138,7 +216,12 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
       const e = eff(b, x, y); effDopo += e; if (e > 0) nDopo++;
     }
     let pt: Punti | null = null;
-    if (ok && nDopo <= nPrima && effDopo <= effPrima) { pt = punti(); if (cmp(pt, soglia) > 0) pt = null; }
+    if (ok && nDopo <= nPrima && effDopo <= effPrima) {
+      const dopo = locale(rett);
+      const a = corrente[2] + dopo[0] - prima[0], bu = corrente[3] + dopo[2] - prima[2];
+      pt = [a + bu, corrente[1] + dopo[1] - prima[1], a, bu];
+      if (cmp(pt, soglia) > 0) pt = null;
+    }
     if (pt) { for (const [b, x, y] of mosse) pos.set(b.id, { x, y }); return pt; }
     for (const [b, x, y] of fatti) rect(x, y, b.w, b.h, 0);
     for (const [b] of mosse) { const q = pos.get(b.id)!; rect(q.x, q.y, b.w, b.h, 1); }
@@ -226,7 +309,9 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
         const orig = gruppo.map(c => ({ c, ...pos.get(c.id)! }));
         let effPrima = 0, nPrima = 0;
         for (const o of orig) { const e = eff(o.c, o.x, o.y); effPrima += e; if (e > 0) nPrima++; }
-        for (const o of orig) rect(o.x, o.y, o.c.w, o.c.h, 0);
+        // punteggio corrente, aggiornato in modo incrementale a ogni rettangolo
+        const sc: [number, number, number] = [corrente[2], corrente[1], corrente[3]];
+        for (const o of orig) rettSc(o.x, o.y, o.c.w, o.c.h, 0, sc);
         const ordini = gruppo.length === 2 ? [[0, 1], [1, 0]] : [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
         let migl: { pt: Punti; posti: Array<[PlannerBuilding, number, number]> } | null = null;
         for (const ord of ordini) {
@@ -242,23 +327,26 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
               for (let o = 0; o < c.h; o++) { cand.push([rx + 1, ry - o], [rx - c.w, ry - o]); }
               for (const [x, y] of cand) {
                 if (!libero(x, y, c.w, c.h)) continue;
+                const r: Array<[number, number, number, number]> = [[x, y, c.w, c.h]];
+                const p0 = locale(r);
                 rect(x, y, c.w, c.h, 1);
-                const pt = punti();
+                const p1 = locale(r);
                 rect(x, y, c.w, c.h, 0);
+                const pt = comePunti([sc[0] + p1[0] - p0[0], sc[1] + p1[1] - p0[1], sc[2] + p1[2] - p0[2]]);
                 if (!scelto || cmp(pt, scelto.pt) < 0) scelto = { x, y, pt };
               }
             }
             if (!scelto) break;
-            rect(scelto.x, scelto.y, c.w, c.h, 1);
+            rettSc(scelto.x, scelto.y, c.w, c.h, 1, sc);
             posti.push([c, scelto.x, scelto.y]);
           }
           if (posti.length === gruppo.length) {
             let effDopo = 0, nDopo = 0;
             for (const [c, x, y] of posti) { const e = eff(c, x, y); effDopo += e; if (e > 0) nDopo++; }
-            const pt = punti();
+            const pt = comePunti(sc);
             if (nDopo <= nPrima && effDopo <= effPrima && (!migl || cmp(pt, migl.pt) < 0)) migl = { pt, posti: [...posti] };
           }
-          for (const [c, x, y] of posti) rect(x, y, c.w, c.h, 0);
+          for (const [c, x, y] of posti) rettSc(x, y, c.w, c.h, 0, sc);
         }
         if (migl && cmp(migl.pt, soglia) <= 0 && orig.some(o => { const n = migl!.posti.find(t => t[0] === o.c)!; return n[1] !== o.x || n[2] !== o.y; })) {
           for (const [c, x, y] of migl.posti) { rect(x, y, c.w, c.h, 1); pos.set(c.id, { x, y }); }
@@ -299,7 +387,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     }
     if (pt) {
       corrente = pt;
-      if (cmp(pt, migliore.pt) < 0) { migliore = { pt, pos: new Map(pos) }; senzaMigliorare = 0; opts.onFrame(frame("")); lastShow = performance.now(); }
+      if (cmp(pt, migliore.pt) < 0) { migliore = { pt, pos: new Map(pos) }; senzaMigliorare = 0; if (performance.now() - lastShow > 150) { opts.onFrame(frame("")); lastShow = performance.now(); } }
     }
     const now = performance.now();
     if (now - lastShow > 500) { opts.onFrame(frame("")); lastShow = now; }

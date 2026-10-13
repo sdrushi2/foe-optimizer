@@ -49,14 +49,19 @@ export function roadEffDi(x: number, y: number, w: number, h: number, isRoad: (x
   let n = 0, s = 0, o = 0, e = 0;
   for (let dx = 0; dx < w; dx++) { if (isRoad(x + dx, y - 1)) n++; if (isRoad(x + dx, y + h)) s++; }
   for (let dy = 0; dy < h; dy++) { if (isRoad(x - 1, y + dy)) o++; if (isRoad(x + w, y + dy)) e++; }
-  const lati = [n, s, o, e].filter(v => v > 0);
   const strade = n + s + o + e;
+  const corto = w < h ? w : h;
   // Grandi (lato corto >= 5, regola dell'utente): vanno ai fini strada con UNA
   // sola cella; attaccati a 2 o più celle sono "problematici": road_eff =
   // celle − 1 (un 6×6 lungo la verticale, 6 celle, vale +5).
-  if (Math.min(w, h) >= LATO_GRANDE) return { strade, eff: strade >= 2 ? strade - 1 : 0 };
-  const necessaria = lati.length >= 2 ? Math.min(Math.min(w, h), ...lati) : Math.min(w, h);
-  return { strade, eff: strade - necessaria };
+  if (corto >= LATO_GRANDE) return { strade, eff: strade >= 2 ? strade - 1 : 0 };
+  // (senza array: è nel ciclo caldo della ricerca)
+  let k = 0, minLato = corto;
+  if (n > 0) { k++; if (n < minLato) minLato = n; }
+  if (s > 0) { k++; if (s < minLato) minLato = s; }
+  if (o > 0) { k++; if (o < minLato) minLato = o; }
+  if (e > 0) { k++; if (e < minLato) minLato = e; }
+  return { strade, eff: strade - (k >= 2 ? minLato : corto) };
 }
 
 export interface RoadEffVoce { id: string; name: string; w: number; h: number; strade: number; eff: number }
@@ -146,16 +151,25 @@ export function contaFiniStradaErrati(
  *  mappa: se una delle celle libere attorno all'incrocio è bloccata, lì non
  *  c'è niente da riempire. Griglie: indice j * W + i, 1 = occupata/sbloccata. */
 export function contaAngoliGriglia(occ: ArrayLike<number>, cell: ArrayLike<number>, W: number, H: number): number {
-  const o = (i: number, j: number) => i >= 0 && j >= 0 && i < W && j < H && occ[j * W + i] === 1;
-  const u = (i: number, j: number) => i >= 0 && j >= 0 && i < W && j < H && cell[j * W + i] === 1;
+  // Versione senza closure (ciclo caldo): per ogni incrocio (i, j) le 4 celle
+  // attorno; fuori griglia = libera e bloccata.
   let n = 0;
-  for (let j = 0; j <= H; j++) for (let i = 0; i <= W; i++) {
-    const a = o(i - 1, j - 1), b = o(i, j - 1), c = o(i - 1, j), d = o(i, j);
-    const k = (a ? 1 : 0) + (b ? 1 : 0) + (c ? 1 : 0) + (d ? 1 : 0);
-    if (k === 0 || k === 4) continue;
-    if ((!a && !u(i - 1, j - 1)) || (!b && !u(i, j - 1)) || (!c && !u(i - 1, j)) || (!d && !u(i, j))) continue;
-    if (k === 2) { if (a === d) n += 2; } // diagonale: due angoli; affiancate: lato dritto
-    else n++;
+  for (let j = 0; j <= H; j++) {
+    const su = j - 1, giu = j;
+    const suOk = su >= 0, giuOk = giu < H;
+    for (let i = 0; i <= W; i++) {
+      const sx = i - 1, dx = i;
+      const sxOk = sx >= 0, dxOk = dx < W;
+      const ga = suOk && sxOk ? su * W + sx : -1, gb = suOk && dxOk ? su * W + dx : -1;
+      const gc = giuOk && sxOk ? giu * W + sx : -1, gd = giuOk && dxOk ? giu * W + dx : -1;
+      const a = ga >= 0 && occ[ga] === 1, b = gb >= 0 && occ[gb] === 1, c = gc >= 0 && occ[gc] === 1, d = gd >= 0 && occ[gd] === 1;
+      const k = (a ? 1 : 0) + (b ? 1 : 0) + (c ? 1 : 0) + (d ? 1 : 0);
+      if (k === 0 || k === 4) continue;
+      // una cella libera bloccata (o fuori mappa) attorno all'incrocio: bordo della mappa
+      if ((!a && (ga < 0 || cell[ga] !== 1)) || (!b && (gb < 0 || cell[gb] !== 1)) || (!c && (gc < 0 || cell[gc] !== 1)) || (!d && (gd < 0 || cell[gd] !== 1))) continue;
+      if (k === 2) { if (a === d) n += 2; } // diagonale: due angoli; affiancate: lato dritto
+      else n++;
+    }
   }
   return n;
 }

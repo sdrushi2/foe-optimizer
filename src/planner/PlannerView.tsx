@@ -323,6 +323,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   const [inPausa, setInPausa] = useState<Record<VName, boolean>>(tutte(false));
+  const inPausaRef = useRef<Record<VName, boolean>>(tutte(false));
+  inPausaRef.current = inPausa;
+  /** Stato della smussatura per mappa (etichetta mostrata sotto l'intestazione). */
+  const [statoSmussa, setStatoSmussa] = useState<Partial<Record<VName, string>>>({});
   /** Risolutori delle attese di ripresa, per mappa. */
   const resumeRef = useRef<Partial<Record<VName, (s: StatoManuale | null) => void>>>({});
   /** Mappe modificate a mano durante la pausa. */
@@ -376,6 +380,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
 
   /** Riprende tutte le mappe in pausa, passando le disposizioni modificate a mano. */
   const riprendi = () => {
+    setStatoSmussa({});
     pausedRef.current = false;
     setPaused(false);
     for (const v of VARIANTI) {
@@ -401,17 +406,23 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     stopSmussaRef.current = false;
     setSmussando(true);
     const gen = genRef.current;
-    await Promise.all(visibili.filter(sc => inPausa[sc.id] && framesRef.current[sc.id]).map(async sc => {
+    // Tutte le mappe ancora in ricerca devono essere ferme in pausa (ognuna ci
+    // arriva al suo passo successivo): si aspetta fino a 3 s, così nessuna
+    // resta esclusa e nessuna sovrascrive la mappa che si sta smussando.
+    const inRicerca = visibili.filter(sc => searching[sc.id]);
+    for (let t = 0; t < 60 && inRicerca.some(sc => !inPausaRef.current[sc.id]); t++) await sleep(50);
+    await Promise.all(visibili.filter(sc => inPausaRef.current[sc.id] && framesRef.current[sc.id]).map(async sc => {
       const f0 = framesRef.current[sc.id]!;
       await smussaBordi(problem, f0, {
         fissi: new Set(sc.v.fissi),
-        shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current,
+        shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current || eliminatiRef.current.has(sc.id),
         onFrame: f => {
           if (gen !== genRef.current) return;
           const nf: PlannerFrame = { ...f, lastPath: f0.lastPath, done: false };
           framesRef.current = { ...framesRef.current, [sc.id]: nf };
           setFrames(prev => ({ ...prev, [sc.id]: nf }));
           modRef.current[sc.id] = true;
+          setStatoSmussa(st => ({ ...st, [sc.id]: f.label ?? "" }));
         },
       });
     }));
@@ -478,7 +489,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         if (fermato() || !pausedRef.current) { res(null); return; } // ripresa già avvenuta
         resumeRef.current[id] = res;
       }),
-      onPaused: (p) => setInPausa(s => ({ ...s, [id]: p })),
+      onPaused: (p) => { inPausaRef.current = { ...inPausaRef.current, [id]: p }; setInPausa(s => ({ ...s, [id]: p })); },
     });
     setSearching(s => ({ ...s, [id]: false }));
   };
@@ -737,6 +748,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                         title="Elimina questo scenario: la sua ricerca si ferma e le altre proseguono"
                         className="rounded border border-red-700 px-2 py-0.5 text-[12px] text-red-300 hover:bg-red-950 disabled:opacity-40">🗑</button>
                     </div>
+                    {statoSmussa[n] && paused && <div className="mb-1 text-[11px] text-violet-300">✨ {statoSmussa[n]!.replace(/^Smussa i bordi · /, "")}</div>}
                     <div className={`overflow-hidden rounded border ${inPausa[n] ? "border-sky-500" : "border-slate-800"}`}>
                       <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} edit={inPausa[n] && paused && !smussando ? editFor(n) : undefined} soloSenzaStrada={filling[n]}
                         evidenzia={eff ? new Set(eff.voci.map(v => v.id)) : undefined} stradeVuote={vuote ?? undefined} />

@@ -4913,6 +4913,51 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      test, visibili solo con DEBUG_PLANNER = true). I bordi tratteggiati
      (gialli = problematici, rossi = strade vuote) restano SEMPRE visibili,
      senza spiegazione (richiesta dell'utente).
+   - **Revisione generale (bug, casi particolari, prestazioni)**, a
+     risultato IDENTICO verificato con firma md5 del risultato su 7
+     scenari (Beta r3/r4, Diviziaco r3/r4, Rode r3, Sonia r4, Avito r3) a
+     NVAL fisso. Il banco ora è davvero deterministico: `sync.sh` sostituisce
+     `now - lastShow > 500` con un test su `valutate >= NVAL` (prima lo stop
+     dipendeva dai fotogrammi a tempo e due corse uguali potevano
+     differire). `planner-test/bench/det.sh`-like: firma = md5 di
+     `<città>_<var>.out.json`.
+     Prestazioni:
+     - `ricompatta` → `valuta`: celle vuote della zona con prefissi 2D della
+       base + celle marcate dentro la zona (prima un doppio ciclo sull'area
+       per ognuna delle fino a 64 × K combinazioni): Filanush ~ +40%
+       disposizioni/s.
+     - `RoadSet` (Set<string> + griglia parallela): `rd.hasXY` al posto di
+       `rd.has(key(...))` nei cicli caldi (toccaAltraDorsale, lunghezzaLibera,
+       haVerticale…).
+     - `Riserva` (griglia a timbri condivisa) al posto del Set<string>
+       `extra` di latiDorsale/fitsS.
+     - rifinisciPunte: strade in forma numerica una volta per foglia;
+       ricerca esaustiva con griglia di celle usate (niente stringhe).
+     - connessione delle strade nuove in simula: BFS numerica a timbri.
+     - `Piano.angoli` pigro (getter con cache): calcolato solo se serve allo
+       spareggio.
+     - roadEff.ts: `roadEffDi` senza array (ciclo caldo), `contaAngoliGriglia`
+       senza closure.
+     - smussa.ts: punteggio INCREMENTALE (angoli, perimetro e buchi
+       ricalcolati solo attorno ai rettangoli toccati, verificato contro il
+       calcolo completo: nessuna divergenza), anche nella ricomposizione:
+       2,5-4× tentativi al secondo (Beta r3 96k → 234k in 4 s; Avito r4 buchi
+       104 → 15).
+     Bug / casi particolari:
+     - `accorcia`: i fini strada che arretrano non possono più finire sopra il
+       municipio o un edificio senza strada (prima il municipio non era
+       controllato).
+     - Smussatura: una mappa eliminata col cestino durante la smussatura si
+       ferma.
+     - Verificato con un validatore (`valsm.ts`) che la smussatura non crea
+       sovrapposizioni, non stacca edifici dalla strada, non cambia le strade
+       e non muove i fissi (Beta, Diviziaco, Rode, Avito, Filanush).
+     - Filanush (città piena al 93%: 3991 celle di edifici su 4272, la città
+       originale usa 276 strade e resta con 5 celle libere): 7 edifici senza
+       strada restano fuori con 264 strade; è un limite del deficit stimato,
+       non un errore (né 1,05 né 1 cambiano il risultato).
+     `vite build` non si può eseguire nella sandbox Linux (binding nativo di
+     rolldown per Windows): tsc ed eslint puliti.
    Stato: Avito (151 edifici, 76 con strada da piazzare) resta difficile: 5-9
    edifici non piazzati con 189-230 strade (la città originale li piazza tutti
    con 271). Il banco a 8-20 s ha una variabilità di ±3 strade fra prove.

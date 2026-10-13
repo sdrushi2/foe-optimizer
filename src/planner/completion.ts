@@ -43,6 +43,32 @@ const key = (x: number, y: number) => `${x},${y}`;
  *  delete/clear, più hasXY numerico. Ottimizzazione: ogni simulazione copiava
  *  l'intero Set delle celle occupate (migliaia di stringhe); clone() è una
  *  copia di memoria. */
+/** Insieme di celle di strada (chiavi "x,y") con una griglia parallela per i
+ *  test di appartenenza veloci (`hasXY`, senza costruire stringhe): usato per
+ *  le strade nuove della simulazione, interrogate nei cicli caldi. */
+class RoadSet extends Set<string> {
+  private grid: Uint8Array | null = null;
+  private x0 = 0; private y0 = 0; private W = 0; private H = 0;
+  init(x0: number, y0: number, W: number, H: number): this {
+    this.x0 = x0; this.y0 = y0; this.W = W; this.H = H; this.grid = new Uint8Array(W * H);
+    for (const k of this) this.segna(k, 1);
+    return this;
+  }
+  private segna(k: string, v: 0 | 1) {
+    if (!this.grid) return;
+    const c = k.indexOf(","), i = Number(k.slice(0, c)) - this.x0, j = Number(k.slice(c + 1)) - this.y0;
+    if (i >= 0 && j >= 0 && i < this.W && j < this.H) this.grid[j * this.W + i] = v;
+  }
+  override add(k: string): this { super.add(k); this.segna(k, 1); return this; }
+  override delete(k: string): boolean { const era = super.delete(k); if (era) this.segna(k, 0); return era; }
+  override clear(): void { super.clear(); this.grid?.fill(0); }
+  hasXY(x: number, y: number): boolean {
+    const i = x - this.x0, j = y - this.y0;
+    if (!this.grid || i < 0 || j < 0 || i >= this.W || j >= this.H) return this.has(key(x, y));
+    return this.grid[j * this.W + i] === 1;
+  }
+}
+
 class GridSet {
   constructor(
     readonly x0: number, readonly y0: number, readonly W: number, readonly H: number,
@@ -130,8 +156,10 @@ interface Piano { azioni: Azione[]; altiInterni: number; liberati: string[]; str
   finiErrati: number;
   /** Celle della verticale del builder tolte (Params.accN/accS). */
   stradeTolte: string[];
-  /** Angoli di 90° del contorno (contaAngoliGriglia): ultimo spareggio. */
-  angoli: number }
+  /** Angoli di 90° del contorno (contaAngoliGriglia): ultimo spareggio,
+   *  calcolato in modo pigro (getter, cache in _angoli). */
+  readonly angoli: number;
+  _angoli: number }
 
 type Side = "nearest" | "balance" | "north" | "south";
 interface Params {
@@ -312,6 +340,22 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const gIdx = (x: number, y: number) => { const i = x - problem.minX, j = y - problem.minY; return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };
   const inCella = (x: number, y: number) => { const i = x - problem.minX, j = y - problem.minY; return i >= 0 && j >= 0 && i < GW && j < GH && cellGrid[j * GW + i] === 1; };
   const occupied = new GridSet(problem.minX, problem.minY, GW, GH);
+  /** Celle riservate da un piano di dorsale (latiDorsale): griglia a timbri
+   *  condivisa, un timbro nuovo per ogni piano (i piani non si sovrappongono
+   *  nel tempo). Sostituisce un Set<string> nel ciclo caldo. */
+  const riservaG = new Int32Array(GW * GH);
+  let riservaT = 0;
+  type Riserva = { add: (x: number, y: number) => void; hasXY: (x: number, y: number) => boolean };
+  const nuovaRiserva = (): Riserva => {
+    const t = ++riservaT;
+    return {
+      add: (x, y) => { const i = x - problem.minX, j = y - problem.minY; if (i >= 0 && j >= 0 && i < GW && j < GH) riservaG[j * GW + i] = t; },
+      hasXY: (x, y) => { const i = x - problem.minX, j = y - problem.minY; return i >= 0 && j >= 0 && i < GW && j < GH && riservaG[j * GW + i] === t; },
+    };
+  };
+  /** Timbri per la verifica di connessione delle strade nuove in simula. */
+  const vistiConn = new Int32Array(GW * GH);
+  let timbroConn = 0;
   for (const r of roads) occupied.add(r);
   for (const [id, p] of placements) {
     const b = byId.get(id);
@@ -511,17 +555,17 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const roads = new Set(stradeBase());
     const stradeTolte: string[] = [];
     const occ = occupied.clone();
-    const rd = new Set<string>();
+    const rd = new RoadSet().init(problem.minX, problem.minY, GW, GH);
     const fatti = new Set<string>();
     const azioni: Azione[] = [];
     /** Edifici con strada da piazzare in questa simulazione (può crescere con lo scambio col builder). */
     const pool = daPiazzare.slice();
     const spostati = new Map<string, { x: number; y: number }>();
     const free = (x: number, y: number) => inCella(x, y) && !occ.hasXY(x, y);
-    const fitsS = (x: number, y: number, w: number, h: number, extra?: Set<string>) => {
+    const fitsS = (x: number, y: number, w: number, h: number, extra?: Riserva) => {
       for (let dx = 0; dx < w; dx++) for (let dy = 0; dy < h; dy++) {
         if (!inCella(x + dx, y + dy) || occ.hasXY(x + dx, y + dy)) return false;
-        if (extra?.size && extra.has(key(x + dx, y + dy))) return false;
+        if (extra && extra.hasXY(x + dx, y + dy)) return false;
       }
       return true;
     };
@@ -532,8 +576,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     /** Vero se il rettangolo tocca (perimetro) una strada NUOVA già tracciata:
      *  un edificio non deve toccare due dorsali (lato di strada sprecato). */
     const toccaAltraDorsale = (x: number, y: number, w: number, h: number) => {
-      for (let dx = 0; dx < w; dx++) if (rd.has(key(x + dx, y - 1)) || rd.has(key(x + dx, y + h))) return true;
-      for (let dy = 0; dy < h; dy++) if (rd.has(key(x - 1, y + dy)) || rd.has(key(x + w, y + dy))) return true;
+      for (let dx = 0; dx < w; dx++) if (rd.hasXY(x + dx, y - 1) || rd.hasXY(x + dx, y + h)) return true;
+      for (let dy = 0; dy < h; dy++) if (rd.hasXY(x - 1, y + dy) || rd.hasXY(x + w, y + dy)) return true;
       return false;
     };
     /** Edifici trattenuti (non disponibili per le dorsali) — vedi riservaAlti. */
@@ -552,7 +596,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     };
 
     /** Righe in cui una dorsale può diramarsi dalla verticale in questa simulazione. */
-    const haVerticale = (r: number) => roads.has(key(vx, r)) || rd.has(key(vx, r));
+    const haVerticale = (r: number) => roads.has(key(vx, r)) || rd.hasXY(vx, r);
     const okRigaS = (r: number) => haVerticale(r) && free(x0, r);
     const liberati: string[] = [];
     /** Celle di strada nuove non legate a un edificio (allungamento della verticale senza fini strada). */
@@ -623,9 +667,14 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       };
       const perdono: PlannerBuilding[] = [];
       for (const b of problem.buildings) {
-        if (b.isTownhall || nelGruppo.has(b.id) || spostati.has(b.id) || !placements.has(b.id)) continue;
+        if (nelGruppo.has(b.id) || spostati.has(b.id) || !placements.has(b.id)) continue;
         const q = placements.get(b.id)!;
-        if (sotto(q, b) || (b.roadLevel > 0 && !tocca(q.x, q.y, b.w, b.h))) perdono.push(b);
+        const s0 = sotto(q, b);
+        // (revisione) i fini strada non possono finire sopra il municipio né
+        // sopra un edificio senza strada: niente accorciamento
+        if (s0 && (b.isTownhall || b.roadLevel === 0)) return;
+        if (b.isTownhall) continue;
+        if (s0 || (b.roadLevel > 0 && !tocca(q.x, q.y, b.w, b.h))) perdono.push(b);
       }
       if (perdono.some(b => fissiBuilder.has(b.id))) return;
       for (const c of tolte) { roads.delete(c); occ.delete(c); stradeTolte.push(c); }
@@ -742,7 +791,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     /** Riempie i due lati della dorsale sulla riga sy con gli edifici in
      *  `lista`, da x0 verso est, senza superare la colonna xMax (ultima cella
      *  di strada utilizzabile). `extra` = celle già riservate nel piano. */
-    const latiDorsale = (sy: number, xMax: number, lista: PlannerBuilding[], extra: Set<string>, items: Item[], forza?: Map<string, "n" | "s">) => {
+    const latiDorsale = (sy: number, xMax: number, lista: PlannerBuilding[], extra: Riserva, items: Item[], forza?: Map<string, "n" | "s">) => {
       const cursor = { n: x0, s: x0 };
       let alterna: "n" | "s" = "n";
       let roadEnd = x0 - 1;
@@ -765,7 +814,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         const x = side === "n" ? xn! : xs!;
         const by = side === "n" ? sy - b.h : sy + 1;
         items.push({ b, x, y: by });
-        for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) extra.add(key(x + dx, by + dy));
+        for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) extra.add(x + dx, by + dy);
         cursor[side] = x + b.w;
         roadEnd = Math.max(roadEnd, x);
       }
@@ -779,7 +828,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       let n = 0;
       // (gli edifici del lato est della verticale negli angoli dell'incrocio,
       // gap 0, non la bloccano: toccano la verticale e la dorsale)
-      const bloccata = (x: number, y: number) => (edif.has(key(x, y)) && !celleVerticale.has(key(x, y))) || rd.has(key(x, y));
+      const bloccata = (x: number, y: number) => (edif.has(key(x, y)) && !celleVerticale.has(key(x, y))) || rd.hasXY(x, y);
       while (free(x0 + n, sy) && !bloccata(x0 + n, sy - 1) && !bloccata(x0 + n, sy + 1)) n++;
       return n;
     };
@@ -790,8 +839,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       maxLen = Math.max(1, Math.min(maxLen, Math.ceil(maxLen * cap)));
       const items: Item[] = [];
       if (!free(x0, sy)) return { items, roadEnd: x0 - 1 };
-      const extra = new Set<string>();
-      for (let i = 0; i < maxLen; i++) extra.add(key(x0 + i, sy));
+      const extra = nuovaRiserva();
+      for (let i = 0; i < maxLen; i++) extra.add(x0 + i, sy);
       const roadEnd = latiDorsale(sy, x0 + maxLen - 1, lista ?? pending(), extra, items, forza);
       return { items, roadEnd };
     };
@@ -816,10 +865,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       if (suStrada(lx, ly, L.w, L.h) || !fitsS(lx, ly, L.w, L.h) || toccaAltraDorsale(lx, ly, L.w, L.h)) return null;
       const suL = cx < lx + L.w && cx + C.w > lx && cy < ly + L.h && cy + C.h > ly;
       if (suStrada(cx, cy, C.w, C.h) || suL || !fitsS(cx, cy, C.w, C.h) || toccaAltraDorsale(cx, cy, C.w, C.h)) return null;
-      const extra = new Set<string>();
-      for (let x = x0; x <= xe; x++) extra.add(key(x, sy));
-      for (let dx = 0; dx < L.w; dx++) for (let dy = 0; dy < L.h; dy++) extra.add(key(lx + dx, ly + dy));
-      for (let dx = 0; dx < C.w; dx++) for (let dy = 0; dy < C.h; dy++) extra.add(key(cx + dx, cy + dy));
+      const extra = nuovaRiserva();
+      for (let x = x0; x <= xe; x++) extra.add(x, sy);
+      for (let dx = 0; dx < L.w; dx++) for (let dy = 0; dy < L.h; dy++) extra.add(lx + dx, ly + dy);
+      for (let dx = 0; dx < C.w; dx++) for (let dy = 0; dy < C.h; dy++) extra.add(cx + dx, cy + dy);
       const items: Item[] = [];
       latiDorsale(sy, xe, (lista ?? pending()).filter(b => b.id !== L.id && b.id !== C.id && !riservati.has(b.id)), extra, items, forza);
       items.push({ b: L, x: lx, y: ly, cap: true }, { b: C, x: cx, y: cy, cap: true });
@@ -1047,6 +1096,22 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       const exG = new Int32Array(GW * GH), stG = new Int32Array(GW * GH);
       let st = 0;
       const liberaB = (x: number, y: number) => { const i = gIdx(x, y); return i >= 0 && cellGrid[i] === 1 && base.g[i] !== 1 && exG[i] !== st; };
+      // Prefissi 2D delle celle libere della base (ottimizzazione): le celle
+      // vuote della zona = libere della base nel rettangolo − celle occupate
+      // dalla prova dentro il rettangolo (contate mentre si marcano).
+      const W1 = GW + 1, prefB = new Int32Array(W1 * (GH + 1));
+      for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+        const g = j * GW + i;
+        prefB[(j + 1) * W1 + i + 1] = (cellGrid[g] === 1 && base.g[g] !== 1 ? 1 : 0) + prefB[j * W1 + i + 1]! + prefB[(j + 1) * W1 + i]! - prefB[j * W1 + i]!;
+      }
+      const liberiRett = (xa: number, ya: number, xb: number, yb: number) => {
+        let i0 = xa - problem.minX, j0 = ya - problem.minY, i1 = xb - problem.minX + 1, j1 = yb - problem.minY + 1;
+        i0 = Math.max(0, i0); j0 = Math.max(0, j0); i1 = Math.min(GW, i1); j1 = Math.min(GH, j1);
+        if (i1 <= i0 || j1 <= j0) return 0;
+        return prefB[j1 * W1 + i1]! - prefB[j0 * W1 + i1]! - prefB[j1 * W1 + i0]! + prefB[j0 * W1 + i0]!;
+      };
+      let xRz = x0;
+      for (const s0 of sp) for (const x of s0.strada) xRz = Math.max(xRz, x);
       type Prova = { rows: number[]; swap: boolean[]; liberi: number; vuote: number };
       const valuta = (swap: boolean[], anchor: number): Prova | null => {
         st++;
@@ -1056,11 +1121,14 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         for (let i = anchor + 1; i < K; i++) rows[i] = rows[i - 1]! + hS[i - 1]! + hN[i]! + 1;
         for (let i = anchor - 1; i >= 0; i--) rows[i] = rows[i + 1]! - hN[i + 1]! - hS[i]! - 1;
         if (!rows.every(haVerticale)) return null;
+        const yA = rows[0]! - hN[0]!, yB = rows[K - 1]! + hS[K - 1]!;
+        let dentro = 0;
         const sx: number[] = [], sy: number[] = [];
         for (let i = 0; i < K; i++) for (const x of sp[i]!.strada) {
           if (!liberaB(x, rows[i]!)) return null;
           const g = gIdx(x, rows[i]!);
           exG[g] = st; stG[g] = st; sx.push(x); sy.push(rows[i]!);
+          if (rows[i]! >= yA && rows[i]! <= yB && x >= x0 && x <= xRz) dentro++;
         }
         for (let i = 0; i < K; i++) {
           const s0 = sp[i]!;
@@ -1069,6 +1137,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             for (let dx = 0; dx < a.w; dx++) for (let dy = 0; dy < a.h; dy++) {
               if (!liberaB(a.x + dx, ny + dy)) return null;
               exG[gIdx(a.x + dx, ny + dy)] = st;
+              if (ny + dy >= yA && ny + dy <= yB && a.x + dx >= x0 && a.x + dx <= xRz) dentro++;
             }
             // non deve toccare la strada di un'altra dorsale
             for (let dx = -1; dx <= a.w; dx++) for (let dy = -1; dy <= a.h; dy++) {
@@ -1085,10 +1154,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           if (liberaB(sx[t]!, sy[t]! - 1)) liberi++;
           if (liberaB(sx[t]!, sy[t]! + 1)) liberi++;
         }
-        const yA = rows[0]! - hN[0]!, yB = rows[K - 1]! + hS[K - 1]!;
-        let vuote = 0, xR = x0;
-        for (const s0 of sp) for (const x of s0.strada) xR = Math.max(xR, x);
-        for (let yy = yA; yy <= yB; yy++) for (let xx = x0; xx <= xR; xx++) if (liberaB(xx, yy)) vuote++;
+        const vuote = liberiRett(x0, yA, xRz, yB) - dentro;
         return { rows, swap, liberi, vuote };
       };
       const nonFisse = sp.map((s0, i) => (s0.fissa ? -1 : i)).filter(i => i >= 0).slice(0, 6);
@@ -1302,7 +1368,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
                 for (let dx = 0; dx < w; dx++) for (let dy = 0; dy < h; dy++) {
                   const cx = x + dx, cy = y + dy;
                   if (!inCella(cx, cy)) return false;
-                  if (occ.hasXY(cx, cy) && !(cy === row && cx > t && rd.has(key(cx, cy)))) return false;
+                  if (occ.hasXY(cx, cy) && !(cy === row && cx > t && rd.hasXY(cx, cy))) return false;
                 }
                 return !altraStrada(x, y, w, h);
               };
@@ -1477,6 +1543,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
      *  fine strada). Se tutti trovano posto la strada si accorcia. */
     const vistiPos = new Int32Array(GW * GH);
     let timbroPos = 0;
+    /** Celle usate dalla ricerca esaustiva di rifinisciPunte (contatore per cella). */
+    const usateG = new Uint8Array(GW * GH);
     const rifinisciPunte = () => {
       const vic = (k: string) => { const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); return [key(x + 1, y), key(x - 1, y), key(x, y + 1), key(x, y - 1)]; };
       const isRoad = (k: string) => rd.has(k) || roads.has(k);
@@ -1509,6 +1577,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             if (nx.length !== 1 || !rd.has(nx[0]!)) break;
             prev = cur; cur = nx[0]!; catena.push(cur);
           }
+          // Tutte le strade (nuove e di partenza) in forma numerica, una volta per foglia.
+          const tutteK: string[] = [], tutteX: number[] = [], tutteY: number[] = [];
+          for (const r of rd) { const i = r.indexOf(","); tutteK.push(r); tutteX.push(Number(r.slice(0, i))); tutteY.push(Number(r.slice(i + 1))); }
+          for (const r of roads) { const i = r.indexOf(","); tutteK.push(r); tutteX.push(Number(r.slice(0, i))); tutteY.push(Number(r.slice(i + 1))); }
           for (let t = 1; t <= 3 && t < catena.length; t++) {
             const tratto = new Set(catena.slice(0, t));
             const restaStrada = (k: string) => isRoad(k) && !tratto.has(k);
@@ -1538,10 +1610,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             // Strade rimaste: TUTTE (prima solo entro 12 celle dalla punta): i
             // pezzi tolti possono andare nei buchi di un'altra dorsale.
             const rimX: number[] = [], rimY: number[] = [];
-            for (const r of [...rd, ...roads]) {
-              if (tratto.has(r)) continue;
-              const i = r.indexOf(","), rx = Number(r.slice(0, i)), ry = Number(r.slice(i + 1));
-              rimX.push(rx); rimY.push(ry);
+            for (let t2 = 0; t2 < tutteX.length; t2++) {
+              if (tratto.has(tutteK[t2]!)) continue;
+              rimX.push(tutteX[t2]!); rimY.push(tutteY[t2]!);
             }
             /** Posizioni libere adiacenti alla strada rimasta (versione numerica:
              *  solo celle di strada con un vicino libero, posizioni viste con timbro). */
@@ -1566,22 +1637,31 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             const sistema = (pezzi: Azione[]): Array<[number, number]> | null => {
               const candidati = pezzi.map(posizioni);
               const scelta: Array<[number, number]> = [];
-              const usate = new Set<string>();
+              // celle usate dai pezzi già scelti: griglia numerica (niente stringhe)
+              const segnaU = (x: number, y: number, w: number, h: number, v: 1 | -1) => {
+                for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) { const g = gIdx(x + dx, y + dy); if (g >= 0) usateG[g]! += v; }
+              };
+              const liberaU = (x: number, y: number, w: number, h: number) => {
+                for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) { const g = gIdx(x + dx, y + dy); if (g >= 0 && usateG[g] !== 0) return false; }
+                return true;
+              };
               const prova = (i: number): boolean => {
                 if (i === pezzi.length) return true;
                 const a = pezzi[i]!;
                 for (const [x, y] of candidati[i]!) {
-                  const cc = celleR(x, y, a.w, a.h);
-                  if (cc.some(k => usate.has(k))) continue;
-                  for (const k of cc) usate.add(k);
+                  if (!liberaU(x, y, a.w, a.h)) continue;
+                  segnaU(x, y, a.w, a.h, 1);
                   scelta.push([x, y]);
                   if (prova(i + 1)) return true;
                   scelta.pop();
-                  for (const k of cc) usate.delete(k);
+                  segnaU(x, y, a.w, a.h, -1);
                 }
                 return false;
               };
-              return prova(0) ? scelta : null;
+              const ok = prova(0);
+              // azzera le celle segnate dalla soluzione trovata
+              if (ok) pezzi.forEach((a, i) => segnaU(scelta[i]![0], scelta[i]![1], a.w, a.h, -1));
+              return ok ? scelta : null;
             };
             const applicaPezzi = (pezzi: Azione[], pos: Array<[number, number]>) => {
               for (const c of tratto) rd.delete(c);
@@ -1924,17 +2004,30 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       for (const k of rd) if (!coperte.has(k)) stradeExtra.push(k);
     }
     // Connessione: ogni strada nuova deve essere raggiungibile dalla rete esistente.
-    const raggiunte = new Set<string>();
-    const coda: string[] = [];
-    for (const k of rd) {
-      const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1));
-      if ([key(x + 1, y), key(x - 1, y), key(x, y + 1), key(x, y - 1)].some(n => roads.has(n))) { raggiunte.add(k); coda.push(k); }
+    // (versione numerica: griglia delle strade di partenza + timbro delle raggiunte)
+    let raggiunte = 0;
+    {
+      timbroConn++;
+      const base = new Set<number>();
+      for (const r of roads) { const c = r.indexOf(","), g = gIdx(Number(r.slice(0, c)), Number(r.slice(c + 1))); if (g >= 0) base.add(g); }
+      const coda: number[] = [];
+      const tocca = (x: number, y: number) => { const g = gIdx(x, y); return g >= 0 && base.has(g); };
+      for (const k of rd) {
+        const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1));
+        if (tocca(x + 1, y) || tocca(x - 1, y) || tocca(x, y + 1) || tocca(x, y - 1)) {
+          const g = gIdx(x, y);
+          if (g >= 0 && vistiConn[g] !== timbroConn) { vistiConn[g] = timbroConn; raggiunte++; coda.push(x, y); }
+        }
+      }
+      while (coda.length) {
+        const y = coda.pop()!, x = coda.pop()!;
+        for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]] as const) {
+          const g = gIdx(nx, ny);
+          if (g >= 0 && vistiConn[g] !== timbroConn && rd.hasXY(nx, ny)) { vistiConn[g] = timbroConn; raggiunte++; coda.push(nx, ny); }
+        }
+      }
     }
-    while (coda.length) {
-      const k = coda.pop()!, i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1));
-      for (const n of [key(x + 1, y), key(x - 1, y), key(x, y + 1), key(x, y - 1)]) if (rd.has(n) && !raggiunte.has(n)) { raggiunte.add(n); coda.push(n); }
-    }
-    let scollegate = rd.size - raggiunte.size;
+    let scollegate = rd.size - raggiunte;
     // Validazione finale (rete di sicurezza): nessuna sovrapposizione fra gli
     // edifici di partenza (non spostati), quelli piazzati qui e le strade.
     {
@@ -1977,8 +2070,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         // a quale dorsale si appoggia (col lato inferiore o superiore)?
         let tocca: "n" | "s" | null = null, riga = 0;
         for (let dx = 0; dx < a.w && !tocca; dx++) {
-          if (rs.has(a.y + a.h) && rd.has(key(a.x + dx, a.y + a.h))) { tocca = "n"; riga = a.y + a.h; }
-          else if (rs.has(a.y - 1) && rd.has(key(a.x + dx, a.y - 1))) { tocca = "s"; riga = a.y - 1; }
+          if (rs.has(a.y + a.h) && rd.hasXY(a.x + dx, a.y + a.h)) { tocca = "n"; riga = a.y + a.h; }
+          else if (rs.has(a.y - 1) && rd.hasXY(a.x + dx, a.y - 1)) { tocca = "s"; riga = a.y - 1; }
         }
         if (!tocca) continue; // attaccato solo alla verticale o ad altro: non conta
         const fuori = (tocca === "n" && riga === r[0]) || (tocca === "s" && riga === r[r.length - 1]);
@@ -1986,7 +2079,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
     }
     return {
-      azioni, altiInterni, liberati, stradeExtra, scollegate, deficit, esclusi: pool.filter(b => !fatti.has(b.id)).map(b => b.id), finiStradaMancanti, latiLiberi, latiLunghi, strade: rd.size - stradeTolte.length, stradeTolte, angoli: contaAngoliGriglia(occ.g, cellGrid, GW, GH),
+      azioni, altiInterni, liberati, stradeExtra, scollegate, deficit, esclusi: pool.filter(b => !fatti.has(b.id)).map(b => b.id), finiStradaMancanti, latiLiberi, latiLunghi, strade: rd.size - stradeTolte.length, stradeTolte,
+      // angoli: ultimo spareggio, calcolato solo se serve (occ non cambia più)
+      _angoli: -1, get angoli() { if (this._angoli < 0) this._angoli = contaAngoliGriglia(occ.g, cellGrid, GW, GH); return this._angoli; },
       ...(() => {
         // road_eff sulla disposizione finale: edifici di partenza non mossi + azioni.
         const rg = new Uint8Array(GW * GH);
