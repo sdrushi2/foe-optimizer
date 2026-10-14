@@ -59,7 +59,7 @@ export interface PlannerProblem {
 
 /** GE che producono ogni 24 ore truppe di un edificio militare della città
  *  anche se l'edificio non è collegato alla strada. */
-export const GE_RIFORNIMENTO_MILITARE = ["X_ProgressiveEra_Landmark1", "X_SpaceAgeSpaceHub_Landmark1"];
+const GE_RIFORNIMENTO_MILITARE = ["X_ProgressiveEra_Landmark1", "X_SpaceAgeSpaceHub_Landmark1"];
 
 export interface PlannerFrame {
   placements: Map<string, { x: number; y: number }>;
@@ -75,7 +75,7 @@ export interface PlannerFrame {
   /** Fase in corso (es. "Passo 3 · riempimento centrale"), per la UI. */
   label?: string;
   /** Avanzamento della ricerca degli edifici con strada (completamento). */
-  search?: { valutate: number; strade: number | null; spreco: number; buchi?: number; latiLiberi: number; altiInterni?: number; trovataAl: number; esclusi: number; attiva: boolean };
+  search?: { valutate: number; strade: number | null; spreco: number; buchi?: number; latiLiberi: number; altiInterni?: number; trovataAl: number; esclusi: number; attiva: boolean; deficit?: number };
 }
 
 /** Costruisce il problema dai dati della mappa città già importati. */

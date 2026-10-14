@@ -20,7 +20,7 @@
 //  Ogni passo registra un'istantanea (trace) per l'animazione nel Planner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface BuilderBuilding {
+interface BuilderBuilding {
   id: string;
   cityentity_id: string;
   name: string;
@@ -30,13 +30,13 @@ export interface BuilderBuilding {
   y?: number;
   road_requirement?: number;
 }
-export interface BuilderArea { x?: number; y?: number; width?: number; length?: number }
+interface BuilderArea { x?: number; y?: number; width?: number; length?: number }
 export interface BuilderInput { buildings: BuilderBuilding[]; unlocked_areas: BuilderArea[] }
 
 type B = Required<Pick<BuilderBuilding, "id" | "cityentity_id" | "name" | "width" | "length" | "road_requirement">>;
-export type PlacedKind = "angolo" | "riempimento" | "blocco_muni" | "fine_strada" | "riempimento_rettangolo" | "colonna_ovest";
-export interface Placed { x: number; y: number; w: number; l: number; name: string; id: string; kind: PlacedKind }
-export interface TownHall { width: number; length: number; x: number; y: number }
+type PlacedKind = "angolo" | "riempimento" | "blocco_muni" | "fine_strada" | "riempimento_rettangolo" | "colonna_ovest";
+interface Placed { x: number; y: number; w: number; l: number; name: string; id: string; kind: PlacedKind }
+interface TownHall { width: number; length: number; x: number; y: number }
 
 export interface Snapshot {
   label: string;
@@ -45,7 +45,7 @@ export interface Snapshot {
   roads: string[];
 }
 
-export interface Riepilogo {
+interface Riepilogo {
   n_edifici: number;
   n_celle_strada: number;
   isolate: number;
@@ -61,12 +61,12 @@ export interface Riepilogo {
 }
 
 type PoolEntry = Pick<B, "id" | "cityentity_id" | "name" | "width" | "length" | "road_requirement">;
-export interface CheckpointPlaced {
+interface CheckpointPlaced {
   id: string; cityentity_id: string; name: string;
   x: number; y: number; width: number; length: number;
   road_requirement: number; kind: string;
 }
-export interface Checkpoint {
+interface Checkpoint {
   buildings_placed: CheckpointPlaced[];
   town_hall: TownHall;
   connected_road: Array<{ x: number; y: number }>;
@@ -77,7 +77,7 @@ export interface Checkpoint {
   rect_nord_ids: string[];
   rect_sud_ids: string[];
 }
-export interface VariantResult {
+interface VariantResult {
   riepilogo: Riepilogo;
   checkpoint: Checkpoint;
   trace: Snapshot[];
@@ -87,11 +87,7 @@ export interface VariantResult {
 }
 export interface Fase1Result {
   r3: VariantResult; r4: VariantResult;
-  /** Vero se l'opzione compattaOvest ha spostato davvero il blocco più a ovest. */
-  compattato: boolean;
 }
-/** Esito dell'ultima compattazione del passo 7 (letto da runFase1). */
-let ultimoCompattato = false;
 
 const MAX_CANDIDATI_RIEMPIMENTO_CENTRALE = 50;
 const MAX_VALUTAZIONI_RIEMPIMENTO_CENTRALE = 200_000;
@@ -100,7 +96,7 @@ const MAX_COMBINAZIONI_SICUREZZA = 20_000_000;
 const DISTANZE_BORDO_VIETATE = new Set([1, 2, 3]);
 const SOGLIA_GRANDE = 5;
 
-export const key = (x: number, y: number) => `${x},${y}`;
+const key = (x: number, y: number) => `${x},${y}`;
 export const unkey = (k: string): [number, number] => {
   const i = k.indexOf(",");
   return [Number(k.slice(0, i)), Number(k.slice(i + 1))];
@@ -108,10 +104,10 @@ export const unkey = (k: string): [number, number] => {
 const isGE = (b: { cityentity_id: string }) => b.cityentity_id.startsWith("X_");
 
 // ── Griglia ──────────────────────────────────────────────────────────────────
-export interface Grid { cells: Uint8Array; x0: number; y0: number; W: number; H: number }
+interface Grid { cells: Uint8Array; x0: number; y0: number; W: number; H: number }
 
 /** Stessa normalizzazione di run()/ricostruisci_griglia: x/y mancanti = 0, lati mancanti = 4. */
-export function buildGrid(areasRaw: readonly BuilderArea[]): Grid {
+function buildGrid(areasRaw: readonly BuilderArea[]): Grid {
   const areas = areasRaw.map(a => ({ x: a.x || 0, y: a.y || 0, width: a.width || 4, length: a.length || 4 }));
   const x0 = Math.min(...areas.map(a => a.x));
   const y0 = Math.min(...areas.map(a => a.y));
@@ -515,7 +511,7 @@ function passo6(ctx: Ctx, grandi: B[], sx: number, y0: number, y1: number, okUp:
 }
 
 // ── Passo 7 ──────────────────────────────────────────────────────────────────
-function passo7(ctx: Ctx, sy0: number, sy1: number, compatta = false): [number, number] {
+function passo7(ctx: Ctx, sy0: number, sy1: number): [number, number] {
   const land = ctx.land;
   const W = ctx.g.W;
   const edificiBordo = ctx.placed.filter(p => p.kind === "angolo" || p.kind === "riempimento");
@@ -560,33 +556,6 @@ function passo7(ctx: Ctx, sy0: number, sy1: number, compatta = false): [number, 
       if (best === null || dxDy < best[0] || (dxDy === best[0] && Math.abs(dy) < Math.abs(best[1]))) best = [dxDy, dy];
     }
     [dxS, dyS] = best ?? [0, 0];
-    // Città dense (richiesta dell'utente): tutto il blocco va il più possibile
-    // a ovest, fino al bordo, anche se un edificio resta a 1-3 celle dal bordo
-    // ovest (regola 0-o->=4 ignorata SOLO sul lato ovest): le colonne guadagnate
-    // servono a est per allungare le dorsali. Il blocco intero (municipio,
-    // strade, edifici) deve restare dentro l'area sbloccata.
-    if (compatta) {
-      const validoCompatto = (p: Placed, dx: number) => {
-        const x = p.x + dx, y = p.y + dyS, w = p.w, l = p.l;
-        for (let xx = x; xx < x + w; xx++) for (let yy = y; yy < y + l; yy++) if (!land.inLand(xx, yy)) return false;
-        for (let xx = x; xx < x + w; xx++) {
-          if (vietata(land.dist(xx, y - 1, 0, -1))) return false;
-          if (vietata(land.dist(xx, y + l, 0, 1))) return false;
-        }
-        for (let yy = y; yy < y + l; yy++) if (vietata(land.dist(x + w, yy, 1, 0))) return false;
-        return true;
-      };
-      const bloccoDentro = (dx: number) => {
-        const t = ctx.th;
-        for (let xx = t.x + dx; xx < t.x + dx + t.width; xx++) for (let yy = t.y + dyS; yy < t.y + dyS + t.length; yy++) if (!land.inLand(xx, yy)) return false;
-        for (const k of ctx.road) { const [x, y] = unkey(k); if (!land.inLand(x + dx, y + dyS)) return false; }
-        return ctx.placed.every(p => { for (let xx = p.x + dx; xx < p.x + dx + p.w; xx++) for (let yy = p.y + dyS; yy < p.y + dyS + p.l; yy++) if (!land.inLand(xx, yy)) return false; return true; });
-      };
-      let dxC = dxS;
-      while (edificiBordo.every(p => validoCompatto(p, dxC - 1)) && bloccoDentro(dxC - 1)) dxC--;
-      ultimoCompattato = dxC !== dxS;
-      dxS = dxC;
-    }
   }
 
   if (dxS !== 0 || dyS !== 0) {
@@ -1200,9 +1169,7 @@ export function runFase1(data: BuilderInput, opts: Fase1Options = {}): Fase1Resu
   ctx.snap("Passo 5 · strada verticale");
   passo6(ctx, grandi, p5.sx, p5.y0, p5.y1, p5.okUp, p5.okDown);
   ctx.snap("Passo 6 · fine-strada");
-  ultimoCompattato = false;
-  const [dx, dy] = passo7(ctx, p5.y0, p5.y1, opts.compattaOvest ?? false);
-  const compattato = ultimoCompattato;
+  const [dx, dy] = passo7(ctx, p5.y0, p5.y1);
   ctx.snap("Passo 7 · traslazione al bordo");
   const sx = p5.sx + dx;
   eastEdgeX += dx;
@@ -1247,14 +1214,11 @@ export function runFase1(data: BuilderInput, opts: Fase1Options = {}): Fase1Resu
     }
     return res;
   };
-  return { r3: variante(false), r4: variante(true), compattato };
+  return { r3: variante(false), r4: variante(true) };
 }
 
 export interface Fase1Options {
   /** Solo per i test differenziali: impone la direzione del retry del Passo 9
    *  ([estensione_nord, estensione_sud]) scelta dal Python. */
   forceRetry?: { r3?: [number, number]; r4?: [number, number] };
-  /** Passo 7: sposta il blocco fino al bordo ovest anche se qualche edificio
-   *  resta a 1-3 celle dal bordo ovest (città dense: più spazio a est). */
-  compattaOvest?: boolean;
 }

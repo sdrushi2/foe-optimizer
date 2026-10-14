@@ -25,7 +25,7 @@ const DIM_MINIMA_RETTANGOLO = 3;
 const MAX_NODI_RIFINITURA = 200_000;
 
 interface PB { id: string; name: string; width: number; length: number }
-export interface Fase2Placed extends PB { x: number; y: number; w: number; l: number; daRifinitura?: boolean }
+interface Fase2Placed extends PB { x: number; y: number; w: number; l: number; daRifinitura?: boolean }
 type Rect = [number, number, number, number];
 type Mask = number[][];
 

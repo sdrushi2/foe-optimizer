@@ -4853,6 +4853,75 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      Misure (30-75 s): Diviziaco r4 67 → 66, r3 75 → 70; Avito r3 174 → 167
      tutti piazzati, r4 170 (1 senza strada fuori, come prima); Beta r3 76,
      r4 78; Rode r3 85 tutti piazzati; Sdrushi r4 75 =; Sonia r3 77 → 76.
+   - **Revisione + gruppi di edifici uguali nella rifinitura** (richiesta
+     dell'utente: es. 30 piazze degli scacchi tutte vicine). Codice morto:
+     nessuna variabile inutilizzata (tsc --noUnusedLocals/Parameters); gli
+     export non usati fuori dal file sono tipi usati dal banco. In
+     `rifinisciSenzaStrada`: 7° termine del punteggio `gruppi` = per ogni
+     tipo (entityId) ripetuto, gruppi di edifici uguali che si toccano lungo
+     un lato, meno uno (union-find su una griglia cella → pezzo); è l'ultimo
+     criterio, quindi non peggiora mai fuori/staccati/buchi/strade
+     vuote/perimetro/zone della migliore. Le mosse di riempimento accettano
+     sul cammino col confronto senza gruppi (con i gruppi il cammino
+     esplorava meno: Beta perimetro 76 → 89); nuova mossa "scambio per i
+     gruppi": un edificio fuori dal gruppo più grande del suo tipo prende il
+     posto di uno con la stessa impronta, di tipo diverso, che tocca quel
+     gruppo (le celle occupate non cambiano). 25% dei tentativi quando non
+     ci sono buchi interni, pezzi fuori o staccati, 3% altrimenti. I
+     tappabuchi (lato 1), a parità, vanno accanto a un pezzo uguale. Banco
+     (`bench.ts` con FILL=15000, r3, "gruppi sparsi"): Beta 24 → 14,
+     Sdrushi 86 → 74 (perimetro 23 → 14), Rode 108 → 100 (90 s: 71; Rode ha
+     buchi interni per tutta la rifinitura, quindi scambia di rado); firme
+     standard invariate (la rifinitura non è nel confronto `det.sh`).
+     Variabilità fra prove alta (rifinitura a tempo).
+     knip (eseguito dall'utente): tolto `export` da `key`, `buildGrid`,
+     `GE_RIFORNIMENTO_MILITARE` e dai tipi interni di fase1/fase2/builder/
+     roadEff; `baseGirandola` resta esportata con `@public` (la usano i
+     banchi gir4.ts e girp.ts).
+   - **Scenari compattati rimossi** (richiesta dell'utente: con "Sposta
+     tutto" la compattazione si fa a mano): tolti gli scenari r3c/r4c, il
+     badge compattato/standard, `Fase1Options.compattaOvest` (ramo del passo
+     7 in `fase1.ts`) e `BuilderOutcome.compattato`; `runBuilder(problem)`
+     segue il passo 7 di fase1.py. Restano tre scenari: raccordo a 3, a 4,
+     girandola (`VName = "r3" | "r4" | "gir"`). Nuova base del banco
+     (NVAL 12000): Diviziaco r4 67 (compattato era 66), r3 71; Beta r3 76,
+     r4 77 (invariati); Rode r3 82 (era 83); Sdrushi r4 75 (invariato).
+     Le sezioni più sotto sulla compattazione sono storiche.
+   - **↩ Annulla completamento** (richiesta dell'utente): dopo COMPLETA
+     (completamento in corso o in pausa) il pulsante interrompe il
+     completamento e torna alla ricerca in pausa, su ogni mappa con la
+     disposizione mostrata quando si è premuto COMPLETA (comprese le
+     modifiche a mano) e il conteggio delle disposizioni proseguito; da lì
+     si può ottimizzare, smussare, modificare o completare di nuovo. UI:
+     `primaRef`/`annullaRef`, `completa()`, `annullaCompletamento()`,
+     `corri()` (rilancia `runCompletion` con `riprendiDa`). Motore:
+     `CompletionOptions.riprendiDa { stato, valutate }` prepara la ricerca
+     come una ripresa da modifiche manuali. Banco `annulla.ts Città r3|r4`:
+     Beta r3, Diviziaco r4, Rode r3 validi (nessun overlap né scollegato);
+     la ripresa segue il punteggio della ricerca (prima fuori e deficit, poi
+     strade), quindi le strade possono anche salire di una se il deficit
+     scende, come in una normale ripresa dalla pausa.
+   - **Sposta tutto** (richiesta dell'utente): in pausa, nell'intestazione
+     di ogni mappa, quattro frecce spostano l'intera disposizione (edifici,
+     municipio, strade) di una cella; una freccia è disattivata se qualcosa
+     uscirebbe dall'area sbloccata. Conta come modifica a mano (annullabile
+     con ↶, passata alla ripresa). Il motore riparte dallo stato traslato
+     (`ribasa`); nella girandola i tagli dei bracci restano innocui (solo
+     punte che non servono a edifici). Negli scenari del builder la ricerca
+     parametrica dalla base resta spenta dopo lo spostamento (la parte ovest
+     non coincide più con la base): continua la ricerca locale. Banco:
+     `girp.ts Città tx,ty dx,dy NVAL` e `pause.ts Città r3 sposta`: Rode
+     girandola spostata di 2,1 → 72 strade, 367/367, nessun overlap né
+     scollegato; Beta r3 e Diviziaco r4 validi.
+   - **↶ Annulla modifiche manuali** (richiesta dell'utente): in pausa
+     (ricerca, smussatura ferma o completamento), se almeno una mappa è stata
+     modificata a mano, il pulsante ripristina su quelle mappe l'ultima
+     disposizione trovata dall'ottimizzatore o dallo smussatore (tutti gli
+     scenari, girandola compresa). `PlannerView`: `autoRef[v]` (ultimo
+     fotogramma automatico, con `smussato`), stato `manuali[v]` (impostato da
+     `modifica`, azzerato da ogni fotogramma automatico, da Riprendi, avvio,
+     Reset e cambio città). Dopo il ripristino `modRef[v] = smussato`: uno
+     stato dello smussatore resta una modifica da passare alla ripresa.
    - **Smussa i bordi** (idea dell'utente: nel riempimento finale meno angoli
      di 90° nel contorno della città = pezzi piccoli più facili da
      incastrare). `contaAngoliGriglia` / `contaAngoli` (roadEff.ts): angoli
@@ -4984,6 +5053,96 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      punteggio). Beta r3 in 30 s: 31 angoli + 0 buchi (e 33 + 7 in un'altra
      prova: il caso conta), Beta r4: 37 + 1 (partenza 53 + 14). Validatore:
      nessuna sovrapposizione, strade uguali, fissi fermi.
+   - **Girandola — passo 1: lati di tutte le strade a incastro**
+     (`Params.latiEsatti` = seme, `riempiLatiStrade` in simula, prima dei fini
+     strada delle dorsali). Città dell'utente Sdrushi: girandola a 70 strade
+     (municipio in 16,28; bracci N colonna destra verso l'alto 22, W riga alta
+     verso sinistra 5, E riga bassa verso destra 17, S colonna sinistra verso
+     il basso 26), lo scenario standard ne trova 75. Passi:
+     1. fini strada PRIMA dei lati: a ogni punta (cella di strada con una
+        sola strada vicina e libera davanti; non le punte che danno sul
+        municipio) il più grande che entra oltre la punta e, ai due lati, gli
+        edifici che toccano la punta sporgendo in avanti (fine strada
+        d'angolo: un braccio di una cella regge tre edifici);
+     2. per ogni tratto dritto di strada (orizzontale/verticale) e ogni lato,
+        le "fessure" libere, dalla più lunga (con un po' di caso dal seme):
+        somma di sottoinsieme sulle lunghezze lungo la strada; valore =
+        copertura, poi area (profondità per cella), lato corto sulla strada
+        (−300/cella altrimenti), scarsità (+60/cella a chi va bene solo in
+        quel verso, es. 6×4 su strada verticale), grandi lasciati ai fini
+        strada (−2000); posa dal più profondo; poi un ripasso che riempie i
+        buchi rimasti col primo edificio che entra.
+     Configurazioni: semi 1-16 × vertFirst, 30% delle casuali. Banco
+     (`planner-test/bench/gir.ts Città NVAL "tx,ty,N,W,E,S"`: base =
+     municipio + 4 bracci, poi runCompletion): coi bracci esatti
+     dell'utente restano fuori 2 edifici con strada su 50 (prima 10-13 col
+     prototipo); con il braccio E di 20 (+3) TUTTO piazzato: 71 strade
+     (alcune celle potate), 368/368 edifici, in 10 s. Scenario standard
+     (NVAL 12 000, confronto con la baseline): Beta 76/77 (era 76/78),
+     Diviziaco 70/66 (69/66), Rode r3 83 (85), Sdrushi 81/75 =, Sonia r4 72 =.
+   - **Girandola — passi 2 e 3: scenario nell'app** (`girandola.ts`).
+     `baseGirandola(problem, tx, ty)`: municipio in (tx, ty) e i quattro
+     bracci lunghi fino al bordo (N colonna destra verso l'alto, W riga alta
+     verso sinistra, E riga bassa verso destra, S colonna sinistra verso il
+     basso). `runCompletion` opzione `girandola: { bracci }`: in `simula` si
+     spengono accorcia/allunga/libera*/swapBuilder/estEsatto, `latiEsatti`
+     sempre attivo, `Params.tagli` toglie le punte dei bracci (`stradeTolte`,
+     come l'accorciamento); configurazioni proprie (8 semi coi bracci interi
+     + 160 tagli casuali), `casuale` con tagli casuali, `muta` che allunga o
+     accorcia un braccio di 1-4 celle (metà delle mosse), ricerca locale senza
+     il taglio della verticale. Opzione `soloRicerca`: restituisce subito
+     dopo la ricerca (strade, edifici con strada fuori, deficit) senza
+     completamento. `scegliGirandola`: 28 posizioni del municipio (dal centro
+     verso sinistra a passi di W/24, e ±2/−4 righe), 200 disposizioni
+     ciascuna, poi le 3 migliori rivalutate con 800; vince meno fuori → meno
+     deficit → meno strade → più a sinistra. PlannerView: scenario "gir"
+     (titolo "Girandola", sempre aggiunto agli altri, parte in parallelo;
+     durante la scelta mostra subito ogni prova: municipio e bracci della
+     posizione in esame e i passi della sua breve ricerca, con etichetta
+     "prova della posizione del municipio i/n" e senza statistiche di ricerca
+     — `scegliGirandola` opzione `onFrame`); smussatura,
+     pausa e completamento come gli altri; PNG "foe-planner-girandola-…".
+     Banco (`gir3.ts Città NVAL`): Sdrushi 72 strade, 368/368 (l'utente 70,
+     standard 75), municipio scelto in (33,29) in ~18 s; col municipio
+     dell'utente (16,28, `gir4.ts`) 71; Diviziaco 65 strade ma 3 senza
+     strada fuori (standard 66, tutti dentro); Beta 91 (standard 75): la
+     girandola conviene solo ad alcune città, per questo è uno scenario in
+     più e non un sostituto.
+   - **Sporgenza all'estremo dei tratti** (girandola, idea dell'utente su
+     Rode: due buchi alti 2 accanto al municipio): in `riempiLatiStrade`
+     ogni fessura che arriva all'estremo di un tratto che non prosegue (es.
+     l'inizio di un braccio attaccato al municipio) conta fino a 6 celle
+     libere oltre l'estremo (`Fessura.spA/spB`, la cella sull'asse non deve
+     essere strada). Il DP copre la lunghezza allungata; la parte sporgente
+     (al più lungo−1) va al pezzo più lungo, messo per primo all'estremo
+     sporgente, così tocca ancora la strada e la fila si accosta al
+     municipio: in fondo al braccio la strada si risparmia. Solo con
+     `opts.girandola` (firme standard identiche).
+   - **Scelta del municipio con prova del riempimento**: dopo le 3 finaliste
+     (ordinate come prima), `scegliGirandola` esegue per ognuna, in ordine,
+     ricerca breve + completamento (`completa`) e sceglie la prima che piazza
+     tutti gli edifici (altrimenti quella che ne lascia fuori meno): su Rode
+     tre posizioni a pari strade, la più a sinistra lasciava fuori 4 edifici
+     senza strada. Progresso "i/n" con n = posizioni + 6.
+     Di queste prove si mostra solo la ricerca, non il riempimento di prova
+     (fuorviante, segnalato dall'utente).
+   - Banco (`gir3.ts`, NVAL 4000): Rode 74 → 72 (367/367), Sdrushi 72 → 71,
+     Diviziaco 65 con tutti dentro (prima 3 senza strada fuori).
+   - **Fix tagli nella ricerca locale** (segnalato dall'utente: bracci
+     accorciati con gli edifici rimasti scollegati): `simula` applicava
+     `Params.tagli` anche partendo da una disposizione completa (ricerca
+     locale `cercaDaManuale`), togliendo celle a cui erano attaccati
+     edifici. Ora il taglio parte dalla punta e si ferma alla prima cella
+     che serve a un edificio piazzato o che non è più una punta. Banco
+     `girf.ts Città NVAL`: controlla ogni frame (scelta + ricerca +
+     completamento) e conta quelli con edifici con strada scollegati
+     (prima 70 frame su 651 con NVAL 40000, ora 0).
+   - **Toccare il municipio NON collega** (corretto dall'utente): un
+     edificio con strada deve toccare una strada; il municipio da solo non
+     basta. Una prova che trattava i lati del municipio come strade (in
+     `riparaScollegati`, `ribasa`, `riempiLatiStrade`, `smussa.ts`,
+     `PlannerView.scollegati()`) è stata annullata: piazzava edifici
+     attaccati solo al municipio.
    Stato: Avito (151 edifici, 76 con strada da piazzare) resta difficile: 5-9
    edifici non piazzati con 189-230 strade (la città originale li piazza tutti
    con 271). Il banco a 8-20 s ha una variabilità di ±3 strade fra prove.

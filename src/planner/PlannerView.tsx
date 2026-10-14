@@ -2,8 +2,8 @@
 //  planner/PlannerView.tsx — Modulo Planner della tab Città (SPERIMENTALE)
 //
 //  Compilato SOLO se il flag di build SHOW_PLANNER (vite.config.ts) è true.
-//  Fino a QUATTRO mappe (raccordo 3/4 × compattato/standard), eliminabili col cestino,
-//  una per raccordo est a 3 celle e una a 4 celle, calcolate in parallelo
+//  Tre mappe (raccordo est a 3 celle, a 4 celle, girandola), eliminabili col
+//  cestino, calcolate in parallelo
 //  (FoE City Builder fase 1+2, poi ricerca degli edifici con strada e
 //  riempimento). Avvia / Pausa-Riprendi / COMPLETA / Reset valgono per
 //  entrambe; l'utente sceglie la disposizione che preferisce.
@@ -16,6 +16,7 @@ import { runBuilder, type BuilderVariant } from "./builder";
 import { runCompletion, type StatoManuale } from "./completion";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
+import { scegliGirandola } from "./girandola";
 import { renderCityMapPng } from "../components/CityMapView";
 import type { UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -26,19 +27,15 @@ interface Props {
   uiLang: UiLang;
 }
 
-/** Scenari: raccordo 3/4 celle × blocco di fase 1 compattato a ovest (c) o
- *  standard (regola 0-o->=4 anche sul lato ovest). Partono tutti in
- *  parallelo; l'utente può eliminare quelli che non gli servono. */
-type VName = "r3c" | "r4c" | "r3" | "r4";
-const VARIANTI: VName[] = ["r3c", "r4c", "r3", "r4"];
-const tutte = <T,>(v: T): Record<VName, T> => ({ r3c: v, r4c: v, r3: v, r4: v });
-interface Scenario { id: VName; v: BuilderVariant; compatto: boolean; raccordo: 3 | 4 }
-/** Firma della disposizione finale del builder (per non far girare due scenari identici). */
-const firma = (v: BuilderVariant) => {
-  const s = v.stages[v.stages.length - 1];
-  if (!s) return "";
-  return [...s.placements].map(([id, p]) => `${id}@${p.x},${p.y}`).sort().join(";") + "|" + [...s.roads].sort().join(";");
-};
+/** Scenari: raccordo 3/4 celle e girandola. Partono tutti in parallelo;
+ *  l'utente può eliminare quelli che non gli servono. (Gli scenari
+ *  "compattati" sono stati tolti: si compatta a mano con "Sposta tutto".) */
+type VName = "r3" | "r4" | "gir";
+const VARIANTI: VName[] = ["r3", "r4", "gir"];
+const tutte = <T,>(v: T): Record<VName, T> => ({ r3: v, r4: v, gir: v });
+/** Scenario: base del builder (v) oppure "Girandola" (v = null, raccordo 0:
+ *  municipio e quattro bracci, vedi girandola.ts). */
+interface Scenario { id: VName; v: BuilderVariant | null; raccordo: 0 | 3 | 4 }
 const CELL = 10; // px per cella (il canvas è poi scalato alla larghezza disponibile)
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /** Velocità fissa: massima (nessuna pausa tra i fotogrammi). */
@@ -331,6 +328,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const resumeRef = useRef<Partial<Record<VName, (s: StatoManuale | null) => void>>>({});
   /** Mappe modificate a mano durante la pausa. */
   const modRef = useRef<Record<VName, boolean>>(tutte(false));
+  /** "Annulla modifiche manuali" (richiesta dell'utente): ultimo fotogramma
+   *  prodotto dall'ottimizzatore o dallo smussatore, per mappa; `smussato`
+   *  dice se viene dallo smussatore (conta come modifica per la ripresa). */
+  const autoRef = useRef<Record<VName, { f: PlannerFrame; smussato: boolean } | null>>(tutte(null));
+  /** "Annulla completamento": stato di ogni mappa a COMPLETA e richiesta di annullamento (vedi completa()). */
+  const primaRef = useRef<Record<VName, { f: PlannerFrame; valutate: number } | null>>(tutte(null));
+  const annullaRef = useRef<Record<VName, boolean>>(tutte(false));
+  /** Mappe con modifiche a mano dopo l'ultimo fotogramma automatico. */
+  const [manuali, setManuali] = useState<Record<VName, boolean>>(tutte(false));
   const framesRef = useRef(frames);
   framesRef.current = frames;
   /** Generazione della corsa: i fotogrammi di una corsa annullata (Reset) vengono ignorati. */
@@ -353,6 +359,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     setInPausa(tutte(false));
     framesRef.current = tutte(null);
     setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null));
+    autoRef.current = tutte(null); setManuali(tutte(false));
+    primaRef.current = tutte(null); annullaRef.current = tutte(false);
   }, [problem]);
   useEffect(() => () => { stopRef.current = true; for (const r of Object.values(resumeRef.current)) r?.(null); }, []);
 
@@ -391,6 +399,19 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       res(modRef.current[v] && f ? { placements: f.placements, roads: f.roads } : null);
       modRef.current[v] = false;
     }
+    setManuali(tutte(false));
+  };
+  /** Ripristina, sulle mappe modificate a mano, l'ultimo stato trovato
+   *  dall'ottimizzatore o dallo smussatore. */
+  const annullaManuali = () => {
+    for (const v of VARIANTI) {
+      const a = autoRef.current[v];
+      if (!manuali[v] || !a) continue;
+      framesRef.current = { ...framesRef.current, [v]: a.f };
+      setFrames(prev => ({ ...prev, [v]: a.f }));
+      modRef.current[v] = a.smussato;
+    }
+    setManuali(tutte(false));
   };
   const pausa = () => { pausedRef.current = true; setPaused(true); };
 
@@ -414,7 +435,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     await Promise.all(visibili.filter(sc => inPausaRef.current[sc.id] && framesRef.current[sc.id]).map(async sc => {
       const f0 = framesRef.current[sc.id]!;
       await smussaBordi(problem, f0, {
-        fissi: new Set(sc.v.fissi),
+        fissi: new Set(sc.v?.fissi ?? []),
         shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current || eliminatiRef.current.has(sc.id),
         onFrame: f => {
           if (gen !== genRef.current) return;
@@ -422,6 +443,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           framesRef.current = { ...framesRef.current, [sc.id]: nf };
           setFrames(prev => ({ ...prev, [sc.id]: nf }));
           modRef.current[sc.id] = true;
+          autoRef.current[sc.id] = { f: nf, smussato: true };
+          setManuali(m => (m[sc.id] ? { ...m, [sc.id]: false } : m));
           setStatoSmussa(st => ({ ...st, [sc.id]: f.label ?? "" }));
         },
       });
@@ -441,6 +464,57 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     framesRef.current = { ...framesRef.current, [v]: nf };
     setFrames(prev => ({ ...prev, [v]: nf }));
     modRef.current[v] = true;
+    setManuali(m => (m[v] ? m : { ...m, [v]: true }));
+  };
+  /** "Sposta l'intera città" (richiesta dell'utente, solo in pausa): edifici,
+   *  municipio e strade traslati in blocco di (dx, dy); conta come modifica a
+   *  mano. Null se qualche cella uscirebbe dall'area sbloccata. */
+  const traslato = (f: PlannerFrame, dx: number, dy: number): PlannerFrame | null => {
+    const sp = (k: string) => { const i = k.indexOf(","); return `${Number(k.slice(0, i)) + dx},${Number(k.slice(i + 1)) + dy}`; };
+    const pl = new Map<string, { x: number; y: number }>();
+    for (const [id, p] of f.placements) {
+      const b = byId.get(id);
+      if (!b) continue;
+      for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) if (!problem.cells.has(`${p.x + dx + i},${p.y + dy + j}`)) return null;
+      pl.set(id, { x: p.x + dx, y: p.y + dy });
+    }
+    const rd = new Set<string>();
+    for (const k of f.roads) { const n = sp(k); if (!problem.cells.has(n)) return null; rd.add(n); }
+    return { ...f, placements: pl, roads: rd, lastPath: f.lastPath.map(sp), probe: null };
+  };
+  const spostaTutto = (v: VName, dx: number, dy: number) => {
+    const f = framesRef.current[v];
+    const nf = f && traslato(f, dx, dy);
+    if (!nf) return;
+    framesRef.current = { ...framesRef.current, [v]: nf };
+    setFrames(prev => ({ ...prev, [v]: nf }));
+    modRef.current[v] = true;
+    setManuali(m => (m[v] ? m : { ...m, [v]: true }));
+  };
+  /** "Annulla completamento" (richiesta dell'utente): disposizione e
+   *  disposizioni valutate di ogni mappa quando si è premuto COMPLETA; con
+   *  `annullaRef` la corsa in completamento si ferma e ne riparte una che
+   *  riprende la ricerca (in pausa) da quella disposizione. */
+  const completa = () => {
+    for (const sc of visibili) {
+      const f = framesRef.current[sc.id];
+      primaRef.current[sc.id] = f && searching[sc.id] ? { f, valutate: ricerca[sc.id]?.valutate ?? 0 } : null;
+    }
+    finishRef.current = true;
+    setCompletando(true);
+    riprendi();
+  };
+  const annullaCompletamento = () => {
+    for (const sc of visibili) if (primaRef.current[sc.id]) annullaRef.current[sc.id] = true;
+    finishRef.current = false;
+    setCompletando(false);
+    pausedRef.current = true;
+    setPaused(true);
+    // le corse ferme in pausa nel completamento ripartono e vedono l'annullamento
+    for (const v of VARIANTI) {
+      const res = resumeRef.current[v];
+      if (res && annullaRef.current[v]) { delete resumeRef.current[v]; res(null); }
+    }
   };
   const editFor = (v: VName): Edit => ({
     // delete + set: l'edificio spostato va in cima (disegnato e selezionato per primo se sovrapposto)
@@ -456,11 +530,61 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const fermato = () => stopRef.current || eliminatiRef.current.has(id);
     const gen = genRef.current;
     const setF = (f: PlannerFrame) => {
-      if (gen !== genRef.current) return;
+      if (gen !== genRef.current || annullaRef.current[id]) return;
       framesRef.current = { ...framesRef.current, [id]: f };
       setFrames(prev => ({ ...prev, [id]: f }));
+      autoRef.current[id] = { f, smussato: false };
+      setManuali(m => (m[id] ? { ...m, [id]: false } : m));
       if (f.search) setRicerca(prev => ({ ...prev, [id]: f.search! }));
     };
+    const opzioni = {
+      delayMs, onFrame: setF, shouldStop: () => fermato() || annullaRef.current[id],
+      shouldFinishSearch: () => finishRef.current,
+      onSearchActive: (a: boolean) => setSearching(s => ({ ...s, [id]: a })),
+      shouldStopFill: () => stopFillRef.current,
+      onFillActive: (a: boolean) => setFilling(s => ({ ...s, [id]: a })),
+      isPaused: () => pausedRef.current,
+      waitResume: () => new Promise<StatoManuale | null>(res => {
+        if (fermato() || !pausedRef.current) { res(null); return; } // ripresa già avvenuta
+        resumeRef.current[id] = res;
+      }),
+      onPaused: (p: boolean) => { inPausaRef.current = { ...inPausaRef.current, [id]: p }; setInPausa(s => ({ ...s, [id]: p })); },
+    };
+    /** Ricerca + completamento; se il completamento viene annullato si
+     *  riparte (ricerca in pausa) dalla disposizione di prima di COMPLETA. */
+    const corri = async (args: Pick<Parameters<typeof runCompletion>[1], "initial" | "geometry" | "fissi" | "girandola">) => {
+      let riprendiDa: { stato: StatoManuale; valutate: number } | undefined;
+      for (;;) {
+        await runCompletion(problem, { ...opzioni, ...args, riprendiDa });
+        const prima = primaRef.current[id];
+        if (!annullaRef.current[id] || !prima || fermato() || gen !== genRef.current) break;
+        annullaRef.current[id] = false;
+        primaRef.current[id] = null;
+        modRef.current[id] = false;
+        setFilling(s => ({ ...s, [id]: false }));
+        setF({ ...prima.f, done: false });
+        riprendiDa = { stato: { placements: prima.f.placements, roads: prima.f.roads }, valutate: prima.valutate };
+      }
+      annullaRef.current[id] = false;
+    };
+    if (!v) {
+      // Girandola: scelta della posizione del municipio (brevi ricerche), poi
+      // ricerca e completamento come gli altri scenari.
+      const vuoto = (label: string): PlannerFrame => ({ placements: new Map(), roads: new Set(), probe: null, lastPath: [], placed: 0, unplaced: [], iterations: 0, done: false, label });
+      setF(vuoto("Girandola: scelta della posizione del municipio…"));
+      // Le prove si vedono subito (municipio, bracci e la loro breve ricerca),
+      // senza le statistiche della ricerca (ripartono a ogni posizione).
+      let fase = "Girandola: scelta della posizione del municipio…";
+      const base = await scegliGirandola(problem, {
+        shouldStop: fermato,
+        onProgress: (i, n) => { fase = `Girandola: prova della posizione del municipio ${i + 1}/${n}`; },
+        onFrame: f => setF({ ...f, search: undefined, done: false, label: fase }),
+      });
+      if (!base || fermato()) return;
+      await corri({ initial: { placements: base.placements, roads: base.roads }, geometry: base.geometry, fissi: [], girandola: { bracci: base.bracci } });
+      setSearching(s => ({ ...s, [id]: false }));
+      return;
+    }
     let prev: BuilderVariant["stages"][number] | null = null;
     for (const [i, s] of v.stages.entries()) {
       if (fermato()) return;
@@ -477,20 +601,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       await sleep(0);
     }
     if (!prev || fermato()) return;
-    await runCompletion(problem, {
-      delayMs, onFrame: setF, shouldStop: fermato,
-      initial: { placements: new Map(prev.placements), roads: new Set(prev.roads) }, geometry: v.geometry, fissi: v.fissi,
-      shouldFinishSearch: () => finishRef.current,
-      onSearchActive: (a) => setSearching(s => ({ ...s, [id]: a })),
-      shouldStopFill: () => stopFillRef.current,
-      onFillActive: (a) => setFilling(s => ({ ...s, [id]: a })),
-      isPaused: () => pausedRef.current,
-      waitResume: () => new Promise<StatoManuale | null>(res => {
-        if (fermato() || !pausedRef.current) { res(null); return; } // ripresa già avvenuta
-        resumeRef.current[id] = res;
-      }),
-      onPaused: (p) => { inPausaRef.current = { ...inPausaRef.current, [id]: p }; setInPausa(s => ({ ...s, [id]: p })); },
-    });
+    await corri({ initial: { placements: new Map(prev.placements), roads: new Set(prev.roads) }, geometry: v.geometry, fissi: v.fissi });
     setSearching(s => ({ ...s, [id]: false }));
   };
 
@@ -503,22 +614,17 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     pausedRef.current = false;
     setPaused(false);
     setRicerca(tutte(null));
+    autoRef.current = tutte(null); setManuali(tutte(false));
+    primaRef.current = tutte(null); annullaRef.current = tutte(false);
     setRunning(true);
     let out = outcome;
     if (out === undefined) {
       setComputing(true);
       await sleep(30); // lascia disegnare "calcolo in corso" (il builder è sincrono)
-      const oc = runBuilder(problem, true);
-      // Lo scenario standard serve solo se la compattazione ha spostato il blocco.
-      const os = oc && !oc.compattato ? null : runBuilder(problem, false);
-      const lista: Scenario[] = [];
-      for (const v of oc?.variants ?? []) lista.push({ id: v.name === "r3" ? "r3c" : "r4c", v, compatto: true, raccordo: v.name === "r3" ? 3 : 4 });
-      for (const v of os?.variants ?? []) {
-        // Se il blocco era già al bordo, lo scenario standard coincide con quello compattato: non si duplica.
-        const gemello = lista.find(x => x.raccordo === (v.name === "r3" ? 3 : 4));
-        if (gemello && firma(gemello.v) === firma(v)) continue;
-        lista.push({ id: v.name, v, compatto: false, raccordo: v.name === "r3" ? 3 : 4 });
-      }
+      const os = runBuilder(problem);
+      const lista: Scenario[] = (os?.variants ?? []).map(v => ({ id: v.name, v, raccordo: v.name === "r3" ? 3 : 4 }));
+      // Scenario "Girandola" (municipio con quattro bracci), sempre in più.
+      if (problem.buildings.some(b => b.isTownhall)) lista.push({ id: "gir", v: null, raccordo: 0 });
       out = lista.length ? lista : null;
       setOutcome(out);
       setComputing(false);
@@ -545,6 +651,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     setInPausa(tutte(false));
     framesRef.current = tutte(null);
     setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null));
+    autoRef.current = tutte(null); setManuali(tutte(false));
+    primaRef.current = tutte(null); annullaRef.current = tutte(false);
   };
   /** Scenari visibili (calcolati e non eliminati). */
   const visibili = (outcome ?? []).filter(sc => !eliminati.has(sc.id));
@@ -604,7 +712,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       renderCityMapPng(canvas, edifici, aree, 2, uiLang);
       const link = document.createElement("a");
       const sc = outcome?.find(x => x.id === n);
-      link.download = `foe-planner-raccordo${sc?.raccordo ?? 3}${sc && !sc.compatto ? "-standard" : ""}-${localDateStamp()}.png`;
+      link.download = sc && !sc.raccordo ? `foe-planner-girandola-${localDateStamp()}.png`
+        : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.png`;
       link.href = canvas.toDataURL("image/png");
       document.body.appendChild(link);
       link.click();
@@ -645,7 +754,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         )}
         {!completando ? (
           <button type="button" disabled={!paused || !anySearching || nSovrapposti > 0 || smussando}
-            onClick={() => { finishRef.current = true; setCompletando(true); riprendi(); }}
+            onClick={completa}
             title="Solo con la ricerca in pausa: chiude la ricerca su TUTTE le mappe (ciascuna tiene quella mostrata) e passa al riempimento con gli edifici senza strada"
             className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏭ COMPLETA</button>
         ) : paused ? (
@@ -656,6 +765,16 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           <button type="button" disabled={!anyFilling} onClick={pausa}
             title="Mette in pausa il riempimento: puoi spostare o togliere gli edifici senza strada"
             className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏸ Pausa</button>
+        )}
+        {completando && visibili.some(sc => primaRef.current[sc.id]) && (
+          <button type="button" onClick={annullaCompletamento}
+            title="Interrompe il completamento e torna alla ricerca in pausa, con le disposizioni che c'erano quando hai premuto COMPLETA"
+            className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950">↩ Annulla completamento</button>
+        )}
+        {paused && !smussando && visibili.some(sc => manuali[sc.id]) && (
+          <button type="button" onClick={annullaManuali}
+            title="Ripristina, sulle mappe modificate a mano, l'ultima disposizione trovata dall'ottimizzatore o dallo smussatore"
+            className="rounded border border-slate-500 px-3 py-1 font-bold text-slate-200 hover:bg-slate-800">↶ Annulla modifiche manuali</button>
         )}
         <button type="button" disabled={running && !paused} onClick={reset}
           className="rounded border border-slate-600 px-3 py-1 hover:bg-slate-800 disabled:opacity-40">↺ Reset</button>
@@ -728,18 +847,20 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                 // sempre visibili; l'elenco sotto la mappa solo con DEBUG_PLANNER.
                 const eff = f ? calcolaRoadEff(problem.buildings, f.placements, f.roads) : null;
                 const vuote = f ? calcolaStradeVuote(problem.buildings, f.placements, f.roads, problem.cells) : null;
-                const conGemello = (outcome ?? []).some(x => x.raccordo === sc.raccordo && x.id !== n);
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <b className="text-fuchsia-300">Raccordo a {sc.raccordo} celle</b>
-                      {conGemello && (
-                        <span className={`rounded px-1.5 text-[11px] font-bold ${sc.compatto ? "bg-fuchsia-900/60 text-fuchsia-200" : "bg-slate-700 text-slate-200"}`}
-                          title={sc.compatto ? "Blocco di fase 1 spostato fino al bordo ovest (più spazio a est per le strade)" : "Blocco di fase 1 a 0 o almeno 4 celle dal bordo ovest (regola originale)"}>
-                          {sc.compatto ? "compattato" : "standard"}
+                      <b className="text-fuchsia-300">{sc.raccordo ? `Raccordo a ${sc.raccordo} celle` : "Girandola"}</b>
+                      <span className="text-[12px]">{stats(f, ricerca[n]?.valutate)}</span>
+                      {f && inPausa[n] && paused && !smussando && (
+                        <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title="Sposta l'intera città (edifici e strade) di una cella">
+                          Sposta tutto
+                          {([["←", -1, 0], ["↑", 0, -1], ["↓", 0, 1], ["→", 1, 0]] as const).map(([fr, dx, dy]) => (
+                            <button key={fr} type="button" disabled={!traslato(f, dx, dy)} onClick={() => spostaTutto(n, dx, dy)}
+                              className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
+                          ))}
                         </span>
                       )}
-                      <span className="text-[12px]">{stats(f, ricerca[n]?.valutate)}</span>
                       <button type="button" disabled={!f} onClick={() => f && scaricaPng(f, n)}
                         className="ml-auto rounded border border-emerald-600 px-2 py-0.5 text-[12px] font-bold text-emerald-300 hover:bg-emerald-950 disabled:opacity-40">
                         ⬇ Scarica PNG

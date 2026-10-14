@@ -17,7 +17,7 @@
 import type { PlannerProblem } from "../engine";
 import { runFase1, unkey, type BuilderInput, type Snapshot } from "./fase1";
 
-export interface BuilderStage {
+interface BuilderStage {
   label: string;
   placements: Map<string, { x: number; y: number }>;
   roads: Set<string>;
@@ -36,9 +36,6 @@ export interface BuilderVariant {
 }
 export interface BuilderOutcome {
   variants: BuilderVariant[];
-  /** Vero se la compattazione a ovest ha spostato il blocco (altrimenti il
-   *  risultato coincide con quello standard). */
-  compattato: boolean;
   best: "r3" | "r4";
 }
 
@@ -57,8 +54,8 @@ function toBuilderInput(problem: PlannerProblem): BuilderInput {
 /** Tipi di piazzamento di fase 1 attorno al municipio (passi 2-4). */
 const KIND_FISSI = new Set(["angolo", "riempimento", "blocco_muni"]);
 
-export function runBuilder(problem: PlannerProblem, compattaOvest = true): BuilderOutcome | null {
-  const f1 = runFase1(toBuilderInput(problem), { compattaOvest });
+export function runBuilder(problem: PlannerProblem): BuilderOutcome | null {
+  const f1 = runFase1(toBuilderInput(problem));
   if (!f1) return null;
   const townhallId = problem.buildings.find(b => b.isTownhall)?.id ?? null;
   const toStage = (s: Snapshot): BuilderStage => {
@@ -81,5 +78,5 @@ export function runBuilder(problem: PlannerProblem, compattaOvest = true): Build
   const [a, b] = variants as [BuilderVariant, BuilderVariant];
   const sa = score(a), sb = score(b);
   const best = sb[0]! < sa[0]! || (sb[0] === sa[0] && sb[1]! < sa[1]!) ? "r4" : "r3";
-  return { variants, best, compattato: f1.compattato };
+  return { variants, best };
 }

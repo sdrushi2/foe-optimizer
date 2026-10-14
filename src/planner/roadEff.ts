@@ -64,7 +64,7 @@ export function roadEffDi(x: number, y: number, w: number, h: number, isRoad: (x
   return { strade, eff: strade - (k >= 2 ? minLato : corto) };
 }
 
-export interface RoadEffVoce { id: string; name: string; w: number; h: number; strade: number; eff: number }
+interface RoadEffVoce { id: string; name: string; w: number; h: number; strade: number; eff: number }
 export interface RoadEffRiepilogo { voci: RoadEffVoce[]; num: number; sum: number; quad: number }
 
 /** road_eff di tutti gli edifici con strada (municipio escluso) di una disposizione. */

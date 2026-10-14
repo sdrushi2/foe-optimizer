@@ -4768,17 +4768,17 @@
         "it": "Kit aggiornamento Il Gran elefante"
       },
       "steps": [
-        "R_MultiAge_Battlegrounds3a",
-        "R_MultiAge_Battlegrounds3b",
-        "R_MultiAge_Battlegrounds3c",
-        "R_MultiAge_Battlegrounds3d",
-        "R_MultiAge_Battlegrounds3e",
-        "R_MultiAge_Battlegrounds3f",
-        "R_MultiAge_Battlegrounds3g",
+        "W_MultiAge_Battlegrounds3a",
+        "W_MultiAge_Battlegrounds3b",
+        "W_MultiAge_Battlegrounds3c",
+        "W_MultiAge_Battlegrounds3d",
+        "W_MultiAge_Battlegrounds3e",
+        "W_MultiAge_Battlegrounds3f",
+        "W_MultiAge_Battlegrounds3g",
         [
-          "R_MultiAge_Battlegrounds3hBazaar",
-          "R_MultiAge_Battlegrounds3hCitadel",
-          "R_MultiAge_Battlegrounds3hRoyalty"
+          "W_MultiAge_Battlegrounds3hBazaar",
+          "W_MultiAge_Battlegrounds3hCitadel",
+          "W_MultiAge_Battlegrounds3hRoyalty"
         ]
       ]
     },
@@ -6750,7 +6750,7 @@
         "it": "Kit selezione Il Gran elefante"
       },
       "options": [
-        "R_MultiAge_Battlegrounds3a",
+        "W_MultiAge_Battlegrounds3a",
         "upgrade_kit_great_elephant"
       ]
     },
@@ -7423,9 +7423,9 @@
         "it": "Kit Elefante dei Campi di battaglia della Gilda"
       },
       "options": [
-        "R_MultiAge_Battlegrounds3a",
+        "W_MultiAge_Battlegrounds3a",
         "upgrade_kit_great_elephant",
-        "D_MultiAge_Battlegrounds4"
+        "W_MultiAge_Battlegrounds4"
       ]
     },
     "selection_kit_watchtower_2_gbg": {

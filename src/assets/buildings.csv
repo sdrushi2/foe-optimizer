@@ -43,8 +43,8 @@ A_ModernEra_Culture2;Cinema drive-in;Drive-In Theater;d5858156b;;;;6x4;2;;2800;;
 A_ModernEra_Culture3;Tavola calda;American Diner;167484ef9;;;;3x4;1.5;;1300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_ModernEra_Culture4;Pista di pattinaggio;Roller Derby Track;60e3f33a6;;;;5x4;2;;1910;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_ArcheologyBonus19;Carosello;Carousel;a6ca522ed;1;;;3x3;1.5;;13630;;;;;;;;;;;;;;;;;;9;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-A_MultiAge_ArcheologyBonus20;Globo con fontana;Globe Fountain;ee9fb6a79;;;;3x3;1.5;;13630;;;;;;;;;;;;;;;;;;;;11;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-A_MultiAge_ArcheologyBonus22a;Distesa di fiori di campo;Wildflower Meadow;3e7340bc9;1;;;2x3;1;;8740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A_MultiAge_ArcheologyBonus20;Globo con fontana;Globe Fountain;ee9fb6a79;1;;;3x3;1.5;;13630;;;;;;;;;;;;;;;;;;;;11;11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A_MultiAge_ArcheologyBonus22a;Distesa di fiori di campo;Wildflower Meadow;3e7340bc9;;;;2x3;1;;8740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_BalloonBonus16;Sito di lancio mongolfiere;Balloon Site;9bcdf7bd3;1;;;3x3;1.5;;11800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_CarnivalBonus19a;Liv. 1 - Torre dell'orologio della Piazza;Lv. 1 - Piazza Clock Tower;a9957f78d;;;;3x2;1;;6290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_CarnivalBonus19b;Liv. 2 - Torre dell'orologio della Piazza;Lv. 2 - Piazza Clock Tower;2a00ed82b;;;;3x2;1;;9090;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -71,11 +71,11 @@ A_MultiAge_MayDayBonus17b;Imponente Palo di maggio;Majestic Maypole;33761e631;1;
 A_MultiAge_PatrickBonusSet20a;Salice del druido - Liv. 1;Druid Willow - Lv. 1;c311a4f1f;;;;2x3;1;;6290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_PatrickBonusSet20b;Salice del druido - Liv. 2;Druid Willow - Lv. 2;d35b7e5d9;;;;2x3;1;;9090;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_SportBonus17;Piazza dei Vincitori - Liv. 1;Winners' Plaza - Lv. 1;81f35c6d7;1;;;3x3;1.5;;10490;;;;;;;;;;;;;;;;;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-A_MultiAge_SportBonus17b;Piazza dei Vincitori - Liv. 2;Winners' Plaza - Lv. 2;84d11294a;1;;;3x3;1.5;;10490;;;;;;;;;;;;;;;;;;17;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A_MultiAge_SportBonus17b;Piazza dei Vincitori - Liv. 2;Winners' Plaza - Lv. 2;84d11294a;;;;3x3;1.5;;10490;;;;;;;;;;;;;;;;;;17;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_SportBonus18;Bagni pubblici decorati;Ornate Baths;09cee78e2;1;;;4x3;1.5;;10490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-A_MultiAge_SportBonusSet18;Fontana Giardino classico;Classical Garden Pool;21d33ec3d;;;;4x2;1;;12120;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A_MultiAge_SportBonusSet18;Fontana Giardino classico;Classical Garden Pool;21d33ec3d;1;;;4x2;1;;12120;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_MultiAge_SummerBonus1;Castello di sabbia;Sandcastle;b2de099a4;1;;;3x3;1.5;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-A_MultiAge_SummerBonusSetB17a;Fontana dell'elefante;Elephant Fountain;db29193e8;;;;4x4;2;;20500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A_MultiAge_SummerBonusSetB17a;Fontana dell'elefante;Elephant Fountain;db29193e8;1;;;4x4;2;;20500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_OceanicFuture_Culture1;Ristorante di pesce;Seafood Restaurant;3c4d5203a;;;;6x5;2.5;;14490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_OceanicFuture_Culture2;Generatore a vortice;Maelstrom Dynamo;18aecb50d;;;;6x6;3;;15360;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 A_OceanicFuture_Culture3;Centro di recupero Tartarughe;Turtle Rescue Centre;502f1824b;;;;5x5;2.5;;11000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -177,7 +177,6 @@ D_MultiAge_ArcheologyBonus22a;Giardino di bocche di leone;Snapdragon Bloom;8aeb0
 D_MultiAge_ArcheologyBonus22b;Aiuola di emerocallidi;Daylily Flowerbed;5cbaa1095;;;;2x2;;;4660;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_ArcheologyBonus22c;Campo di calendule;Marigold Patch;39756f983;;;;2x3;;;9090;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_AwardBonus1;Trofeo Premio;Award Trophy;c0d80b7a9;1;;;1x1;;;240;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Battlegrounds4;Giardino iridescente;Iridescent Garden;d45284b24;1;;;2x3;;;6470;;1;;;;;3;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_Bonus;Pozzo dell'accoglienza;Well of Welcome;99d5e6d37;1;;;2x2;;;2850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_CarnivalBonus17;Canale di Venezia;Venice Canal;6811f84ac;1;;;2x1;;;2272;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_CarnivalBonus17b;Statua in maschera;Mask Statue;686b13f10;1;;;1x1;;;1689;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -232,7 +231,7 @@ D_MultiAge_RoyalBonusSet17a;Rovine del Giardino;Garden Ruins;175c33dd9;;;;3x3;;;
 D_MultiAge_RoyalBonusSet17b;Rovine del Giardino;Garden Ruins;623a13791;;;;3x3;;;5600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_SamsungBonus15;Excalibur;Excalibur;4c6a01aa5;1;;;1x1;;;854;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_SportBonus17;Trofeo Forge Bowl;Forge Bowl Trophy;8e95e841b;1;;;1x1;;;1126;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_SportBonusSet18;Statue Giardino classico;Classical Garden Statues;04bc20b3b;;;;2x2;;;2800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+D_MultiAge_SportBonusSet18;Statue Giardino classico;Classical Garden Statues;04bc20b3b;1;;;2x2;;;2800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_SpringBonusSet17a;Lv. 1 - Stagno Nishikigoi;Lv. 1 - Nishikigoi Pond;77b6650f9;;;;2x3;;;3840;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_SpringBonusSet17b;Lv. 1 - Roccia di sakura;Lv. 1 - Sakura Rock;647f8c59a;;;;2x3;;;3840;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 D_MultiAge_SpringBonusSet18a;Lv. 2 - Stagno Nishikigoi;Lv. 2 - Nishikigoi Pond;3fe6c7f03;;;;2x3;;;8740;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -371,7 +370,7 @@ P_MultiAge_SummerBonus16;Luau;Luau;ad29e8d9b;1;;;4x5;2;-2320;3612;;;;;;;10;;;;;;
 P_MultiAge_SummerBonus18;Tesoro sommerso;Sunken Treasure;7d177613a;1;;;2x3;1;-600;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_SummerBonus2;Stregone;Witch Doctor;beb4747b5;1;;;3x2;1;-1;1748;;;;;;;;;;;;;;;16934;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_VanGoghBonus18;Capolavoro;Magnum Opus;16c542f06;1;;;3x2;1;-330;;;;;;;;;;;;;;;;;600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_MultiAge_WildBonus22;Hotel insetto;Insect Hotel;41ef8c452;1;;;2x3;1;-370;;;;;;;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_MultiAge_WildBonus22;Hotel insetto;Insect Hotel;41ef8c452;;;;2x3;1;-370;;;;;;;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_OceanicFuture_Workshop1;Allevatore dei fondali;Deep Sea Breeder;f228ac47b;;;;6x5;2.5;-1170;410;;;;;;;;;;;;;;;64600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_OceanicFuture_Workshop2;Allevamento di molluschi;Shellfish Farm;62cd5e0fe;;;;5x6;2.5;-1390;-100;;;;;;;;;;;;;;;40500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_OceanicFuture_Workshop3;Centrale elettrica geotermica;Geothermal Power Plant;d79a63144;;;;4x4;2;-680;270;;;;;;;;;;;;;;;34560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -475,16 +474,6 @@ R_MultiAge_ArcheologyBonus22b;Casa della farfalla - Liv. 2;Butterfly House - Lv.
 R_MultiAge_ArcheologyBonus22c;Casa della farfalla - Liv. 3;Butterfly House - Lv. 3;e492ebfff;;;;3x4;1.5;6912;13280;;;;;;;4;;;;;;;126300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_ArcheologyBonus22d;Casa della farfalla - Liv. 4;Butterfly House - Lv. 4;f4b811f25;;;;3x4;1.5;7488;15380;;1;;;;;6;;;;;;;143600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_ArcheologyBonus22e;Casa della farfalla - Liv. 5;Butterfly House - Lv. 5;c19931a1c;1;;;3x4;1.5;8064;17480;;14;;;;;40;;;;;;;160800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3a;Il Gran elefante - Liv. 1;The Great Elephant - Lv. 1;c536ec96b;;;;4x3;1.5;;;;;;;;;;;;;;;5;86100;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3b;Il Gran elefante - Liv. 2;The Great Elephant - Lv. 2;e60a42ba8;;;;4x3;1.5;;;;1;;;;;;;;;;;15;97600;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3c;Il Gran elefante - Liv. 3;The Great Elephant - Lv. 3;9996687b5;;;;4x3;1.5;;;;1;;;;;;;;;;;25;109100;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3d;Il Gran elefante - Liv. 4;The Great Elephant - Lv. 4;bf9b9c730;;;;4x3;1.5;;;;2;;;;;;;;;;;35;126300;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3e;Il Gran elefante - Liv. 5;The Great Elephant - Lv. 5;586752e27;;;;4x3;1.5;;;;2;;;;;;;;;;;45;143600;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3f;Il Gran elefante - Liv. 6;The Great Elephant - Lv. 6;dbee7a066;;;;4x3;1.5;;;;3;;;;;;;;;;;55;160800;;;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3g;Il Gran elefante - Liv. 7;The Great Elephant - Lv. 7;9b8bb1589;;;;4x3;1.5;;;;3;;;;;;;;;;;65;178000;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3hBazaar;Il bazar dell'elefante;The Elephant's Bazaar;8e5e1975e;1;;;4x3;1.5;;;;3;;;;;;;;;;;90;195200;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3hCitadel;La cittadella dell'elefante;The Elephant's Citadel;a79785256;1;;;4x3;1.5;;;;3;;;;;;;;;;;65;178000;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Battlegrounds3hRoyalty;La regalità dell'elefante;The Elephant's Royalty;ad9739d1d;1;;;4x3;1.5;;;;6;;;;;;;;;;;70;223900;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_BirthdayBonus1;Il Re;The King;3775d0537;1;;;2x2;1;1;;;;;;;;;;;;;;;71780;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_BirthdayBonus2;La Regina;The Queen;654cdde28;1;;;2x2;1;1;;;;;;;;;;;;;;;71780;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_BirthdayBonus22a;Grande re - Liv. 1;Grand King - Lv. 1;2ca017bea;;;;3x3;1.5;4752;;;2;;;;;;;;;;;;81800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -533,7 +522,7 @@ R_MultiAge_CulturalBuilding8d;Statua di giada - Liv. 4;Jade Statue - Lv. 4;438e2
 R_MultiAge_CulturalBuilding8e;Statua di giada - Liv. 5;Jade Statue - Lv. 5;29f457a3f;1;;;2x2;1;;;;3;;;;;5;;;;;;10;42100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_DoyleBonus17;La Tenuta del Lord;The Lord's Manor;c3ea525e7;;;;4x4;2;9118;;;2;;;;;;;;;;;;153010;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_EasterBonus16;Santuario dell'ispirazione;Shrine of Inspiration;4ae3fffc4;1;;;3x3;1.5;216;;1;;;;;;;;;;;;;43065;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_EasterBonus5;Santuario della conoscenza;Shrine of Knowledge;d7553656d;1;;;2x2;1;96;;;1;;;;;;;;;;;;47850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_EasterBonus5;Santuario della conoscenza;Shrine of Knowledge;d7553656d;;;;2x2;1;96;;;1;;;;;;;;;;;;47850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_EasterBonus5b;Santuario della conoscenza - Liv. 2;Shrine of Knowledge - Lv. 2;820661b5c;1;;;2x2;1;1152;;;2;;;;;;;;;;;;68900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_EasterBonus6;Santuario dell'Ammirazione;Shrine of Awe;04f5e726e;1;;;2x2;1;96;;;;;;;;;;;;;;;47850;;440;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_EinsteinBonus17;Piazza degli scacchi;Checkmate Square;6dc6cf596;1;;;3x3;1.5;3888;;;;;;;;;;;;;;;51680;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -597,7 +586,7 @@ R_MultiAge_PatrickBonusSet20c;Anelli fatati - Liv. 1;Faery Rings - Lv. 1;bcb62bb
 R_MultiAge_PatrickBonusSet20d;Anelli fatati - Liv. 2;Faery Rings - Lv. 2;bda661f20;;;;3x3;1.5;6480;;;4;;;;;10;;;;;;;107700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_RoyalBonusSet17a;Statua del Re;King Statue;810d82f0e;;;;2x2;1;;;;1;;;;;;;;;;;;42110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_RoyalBonusSet17b;Statua della Regina;Queen Statue;cfe049bdd;;;;2x2;1;;;;1;;;;;5;;;;;;;42110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SacajaweaBonus18;Serraglio;Menagerie;29b292ddc;;;;4x5;2;10560;;;;;;;;25;;;;;;;162080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SacajaweaBonus18;Serraglio;Menagerie;29b292ddc;1;;;4x5;2;10560;;;;;;;;25;;;;;;;162080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_ShakespeareBonus18;Teatro all’aperto;Open Air Theater;;1;;;4x4;2;7680;;;;;;;;;;;;;;;114840;;480;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SoccerBonus19a;Giardino dell’altare - Lv. 1;Altar Garden - Lv. 1;e7f3dd0b5;;;;3x2;1;3168;4660;;;;;;;;;;;;;;40200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SoccerBonus19b;Giardino dell’altare - Lv. 2;Altar Garden - Lv. 2;ee614578e;;;;3x2;1;3456;5130;;;;;;;;;;;;;;43100;5590;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -659,7 +648,7 @@ R_MultiAge_SportBonus20g;Tesoreria olimpica - Liv. 7;Olympic Treasury - Lv. 7;a5
 R_MultiAge_SportBonus20h;Tesoreria olimpica - Liv. 8;Olympic Treasury - Lv. 8;324f3d2b8;;;;4x5;2;13920;21670;;6;;;;;20;;;;;;;258400;30290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SportBonus20i;Tesoreria olimpica - Liv. 9;Olympic Treasury - Lv. 9;43b1f1e44;;;;4x5;2;14880;23300;;7;;;;;20;;;;;;;277500;32620;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SportBonus20j;Tesoreria olimpica - Liv. 10;Olympic Treasury - Lv. 10;1571772cf;1;;;4x5;2;15840;24930;;8;;;;;25;;;;;;;301500;34950;;;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonusSet18;Patio Giardino classico;Classical Garden Patio;c11cbe950;;;;2x2;1;;;;;;;;;3;;;;;;;38280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonusSet18;Patio Giardino classico;Classical Garden Patio;c11cbe950;1;;;2x2;1;;;;;;;;;3;;;;;;;38280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SpringBonus17a;Pagoda - Liv. 1;Pagoda - Lv. 1;2fddb8eb8;;;;4x4;2;4238;4238;;;;;;;;;;;;;;119950;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SpringBonus17b;Pagoda - Liv. 2;Pagoda - Lv. 2;688810bf8;;;;4x4;2;5376;5376;;;;;;;;;;;;;;130150;13980;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SpringBonus17c;Pagoda - Liv. 3;Pagoda - Lv. 3;4a7659166;;;;4x4;2;6144;6144;;;;;;;;;;;;;;137810;14910;640;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -797,7 +786,7 @@ R_VirtualFuture_Residential3;Sala da tè;Tea House;7fa785acd;;;;4x4;2;5020;;;;;;
 R_VirtualFuture_Residential4;Dimora in VR modulare;Modular VR Dwelling;18315b987;;;;4x3;1.5;4000;;;;;;;;;;;;;;;63480;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 T_AllAge_EasterBonus1;Faro di guardia - Lv. 1;Watchfire - Lv. 1;ea0c585f6;;;;1x1;;;;;;;;;;;;;;;;;;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 T_AllAge_EasterBonus1b;Faro di guardia - Lv. 2;Watchfire - Lv. 2;1ca8ef63c;1;;;1x1;;;;;;;;;;;;;;;;;;;;;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-T_AllAge_Expedition16;Fiamma rituale;Ritual Flame;a1feb2561;1;;;2x1;;;;;;;;;;;;;;;;;;;;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+T_AllAge_Expedition16;Fiamma rituale;Ritual Flame;a1feb2561;;;;2x1;;;;;;;;;;;;;;;;;;;;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 T_AllAge_Expedition16b;Fiamma rituale - Liv. 2;Ritual Flame - Lv. 2;0dbe04a5e;1;;;2x1;;;;;;;;;;;;;;;;;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 T_AllAge_Expedition16c;Fiamma rituale maggiore;Greater Ritual Flame;34b52d87d;1;;;2x1;;;;;;;;;;;;;;;;;;;;;;;7;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 T_AllAge_SportBonus20a;Insediamento Sentinelle - Liv. 1;Sentinel Outpost - Lv. 1;c81db6d89;;;;1x1;;;;;;;;;;;;;;;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -844,7 +833,7 @@ W_MultiAge_ANNI24A6;Stazione della Metro - Lv. 6;Metro Station - Lv. 6;dde978447
 W_MultiAge_ANNI24A7;Stazione della Metro - Lv. 7;Metro Station - Lv. 7;ed0ec383c;;;19;4x4;;13620;20440;;15;;;;;52;;;;;;;243500;;9660;;20;;22;;10;;;;6;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24A8;Stazione della Metro - Lv. 8;Metro Station - Lv. 8;a11e17b33;;;19;4x4;;14540;21800;;16;;;;;56;;;;;;;262220;;11580;;20;;24;;12;;12;;8;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_ANNI24A9;Stazione della Metro - Lv. 9;Metro Station - Lv. 9;b31aaa963;;;19;4x4;;15440;23160;;17;;;;;60;;;;;;;280960;;13520;;20;;24;;14;;15;;10;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ANNI24B1;Bevande Fusion di Zephy - Lv. 1;Zephy's Fusion Drinks - Lv. 1;caec5e3e3;;;19;2x3;;;;;18;;;;;48;;;;;;40;;;;;24;30;30;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24A:5
+W_MultiAge_ANNI24B1;Bevande Fusion di Zephy - Lv. 1;Zephy's Fusion Drinks - Lv. 1;caec5e3e3;1;;19;2x3;;;;;18;;;;;48;;;;;;40;;;;;24;30;30;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_ANNI24A:5
 W_MultiAge_ANNI24B2;Bevande Fusion di Zephy - Lv. 2;Zephy's Fusion Drinks - Lv. 2;71562d82b;1;;19;2x3;;;;;24;;;;;48;;;;;;55;;;;;24;36;30;42;;;;;;;;;;;;;;;;;;;;;;;;;;;;;silver_selection_kit_ANNI24A:10
 W_MultiAge_ANNI24B3;Bevande Fusion di Zephy - Lv. 3;Zephy's Fusion Drinks - Lv. 3;f77a555f8;1;;19;2x3;;;;;30;;;;;48;;;;;;70;;;;;24;42;30;48;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_selection_kit_ANNI24A:20
 W_MultiAge_ANNI24C1;Arboreto dei Fiori;Flower Arboretum;7da3f024c;1;;19;1x2;0.5;-2840;;;4;;;;;16;;;;;;15;;;;;;;8;10;;;3;5;;;2;4;;;;;;;;;;;;;;;;;;;;;
@@ -990,6 +979,17 @@ W_MultiAge_Battlegrounds1f;;Statue of Honor - Lv. 6;R_MultiAge_Battlegrounds1f-5
 W_MultiAge_Battlegrounds1g;;Statue of Honor - Lv. 7;R_MultiAge_Battlegrounds1g-d864502b9;;;19;3x4;1.5;;;;7;;;;;;;;;;;70;178000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Battlegrounds1h;;Statue of Honor - Lv. 8;R_MultiAge_Battlegrounds1h-4ad8216e7;1;;19;3x4;1.5;;;;7;;;;;;;;;;;80;195200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Battlegrounds2;;Road to Victory;D_MultiAge_Battlegrounds2-b70157dea;1;;19;3x2;;;6470;;;;;;;5;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3a;;The Great Elephant - Lv. 1;R_MultiAge_Battlegrounds3a-c536ec96b;;;19;4x3;1.5;;;;;;;;;;;;;;;5;86100;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3b;;The Great Elephant - Lv. 2;R_MultiAge_Battlegrounds3b-e60a42ba8;;;19;4x3;1.5;;;;1;;;;;;;;;;;15;97600;;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3c;;The Great Elephant - Lv. 3;R_MultiAge_Battlegrounds3c-9996687b5;;;19;4x3;1.5;;;;1;;;;;;;;;;;25;109100;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3d;;The Great Elephant - Lv. 4;R_MultiAge_Battlegrounds3d-bf9b9c730;;;19;4x3;1.5;;;;2;;;;;;;;;;;35;126300;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3e;;The Great Elephant - Lv. 5;R_MultiAge_Battlegrounds3e-586752e27;;;19;4x3;1.5;;;;2;;;;;;;;;;;45;143600;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3f;;The Great Elephant - Lv. 6;R_MultiAge_Battlegrounds3f-dbee7a066;;;19;4x3;1.5;;;;3;;;;;;;;;;;55;160800;;;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3g;;The Great Elephant - Lv. 7;R_MultiAge_Battlegrounds3g-9b8bb1589;;;19;4x3;1.5;;;;3;;;;;;;;;;;65;178000;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3hBazaar;;The Elephant's Bazaar;R_MultiAge_Battlegrounds3hBazaar-8e5e1975e;1;;19;4x3;1.5;;;;3;;;;;;;;;;;90;195200;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3hCitadel;;The Elephant's Citadel;R_MultiAge_Battlegrounds3hCitadel-a79785256;1;;19;4x3;1.5;;;;3;;;;;;;;;;;65;178000;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds3hRoyalty;;The Elephant's Royalty;R_MultiAge_Battlegrounds3hRoyalty-ad9739d1d;1;;19;4x3;1.5;;;;6;;;;;;;;;;;70;223900;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_Battlegrounds4;;Iridescent Garden;D_MultiAge_Battlegrounds4-d45284b24;1;;19;2x3;;;6470;;1;;;;;3;;;;;;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A1;Eco Hub - Lv. 1;Eco Hub - Lv. 1;2523de88a;;;19;6x6;3;-4420;30980;;69;;;;;;;113;;;;;;;9420;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_CARE24A10;Eco Nexus;Eco Nexus;4ec3ba9ec;1;;19;6x6;;-57430;106330;;151;0.04;;;30;;;225;;;;;;;49220;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC:4
 W_MultiAge_CARE24A11;Eco Utopia;Eco Utopia;1e9de1556;1;90;51;6x6;;-90390;212660;;;0.13;;;60;;;450;;;;;;;98440;;;;;;;;;;;;;;;;;;;;;;;;;;;7;;;;;;;selection_kit_CARE24BC:4
@@ -1210,7 +1210,7 @@ W_MultiAge_FALL23A6;Vigneto autunnale - Liv. 6;Autumn Vineyard - Lv. 6;6a10c18b9
 W_MultiAge_FALL23A7;Vigneto autunnale - Liv. 7;Autumn Vineyard - Lv. 7;77ae9e1e1;;;23;3x7;1.5;14047;32870;;11;;;;;50;;;;;;;268600;114800;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A8;Vigneto autunnale - Liv. 8;Autumn Vineyard - Lv. 8;64152d315;;;23;3x7;1.5;15650;36530;;16;;;;;60;;;;;;;288400;130800;;;15;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23A9;Vigneto autunnale - Liv. 9;Autumn Vineyard - Lv. 9;f99bd7441;1;;23;3x7;1.5;17256;40160;3;21;;;;;70;;;;;;;308400;146300;;;30;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;building_W_MultiAge_FALL23E1:1|building_W_MultiAge_FALL23F1:1|silver_upgrade_kit_FALL23A:5
-W_MultiAge_FALL23B1;Festival della Pigiatura dell'uva - Liv. 1;Grape Stompin' Festival - Lv. 1;3fb3c3a23;;;19;3x2;;;;;15;;;;;27;;;;;;;;;;;18;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL23A:10|silver_upgrade_kit_FALL23A:10
+W_MultiAge_FALL23B1;Festival della Pigiatura dell'uva - Liv. 1;Grape Stompin' Festival - Lv. 1;3fb3c3a23;1;;19;3x2;;;;;15;;;;;27;;;;;;;;;;;18;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_FALL23A:10|silver_upgrade_kit_FALL23A:10
 W_MultiAge_FALL23B2;Festival della Pigiatura dell'uva - Liv. 2;Grape Stompin' Festival - Lv. 2;634c54b58;1;;19;3x2;;;;;21;;;;;33;;;;;;;;;;;30;;36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_FALL23A:20|selection_kit_FALL23A:20|silver_upgrade_kit_FALL23A:20
 W_MultiAge_FALL23C1;Zucca balzante;Jumpin' Pumpkin;e3ac9d323;1;;19;2x2;1;-22932;-27830;;;;;;;;;;;;;;;30160;;;13;;10;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL23C2;Zucca Balzante d'élite;Elite Jumpin' Pumpkin;429ee8fb1;1;;19;2x2;1;-26372;-32005;;;;;;;;;;;;;;;34684;;;15;;12;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
