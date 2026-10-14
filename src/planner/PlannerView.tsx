@@ -850,11 +850,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <b className="text-fuchsia-300">{sc.raccordo ? `Raccordo a ${sc.raccordo} celle` : "Girandola"}</b>
+                      <b className="text-fuchsia-300">{sc.raccordo ? `Raccordo a ${sc.raccordo}` : "Girandola"}</b>
                       <span className="text-[12px]">{stats(f, ricerca[n]?.valutate)}</span>
                       {f && inPausa[n] && paused && !smussando && (
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title="Sposta l'intera città (edifici e strade) di una cella">
-                          Sposta tutto
                           {([["←", -1, 0], ["↑", 0, -1], ["↓", 0, 1], ["→", 1, 0]] as const).map(([fr, dx, dy]) => (
                             <button key={fr} type="button" disabled={!traslato(f, dx, dy)} onClick={() => spostaTutto(n, dx, dy)}
                               className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>

@@ -6418,7 +6418,7 @@ export default function App() {
                     className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
                       showPlanner
                         ? "border-fuchsia-500 bg-fuchsia-900/40 text-fuchsia-200"
-                        : "border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
+                        : "border-fuchsia-500 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
                     }`}
                   >
                     PLANNER
