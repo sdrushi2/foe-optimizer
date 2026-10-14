@@ -482,6 +482,36 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     for (const k of f.roads) { const n = sp(k); if (!problem.cells.has(n)) return null; rd.add(n); }
     return { ...f, placements: pl, roads: rd, lastPath: f.lastPath.map(sp), probe: null };
   };
+  /** Città specchiata (richiesta dell'utente, solo in pausa): ribaltata in
+   *  orizzontale ("h") o in verticale ("v") attorno al rettangolo che
+   *  contiene edifici e strade; i contatti fra edifici e strade restano
+   *  gli stessi. Null se qualche cella uscirebbe dall'area sbloccata. */
+  const specchiato = (f: PlannerFrame, asse: "h" | "v"): PlannerFrame | null => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [id, p] of f.placements) { const b = byId.get(id); if (!b) continue; x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x + b.w - 1); y1 = Math.max(y1, p.y + b.h - 1); }
+    for (const k of f.roads) { const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    if (x0 > x1) return null;
+    const mx = (x: number, w: number) => (asse === "h" ? x0 + x1 - x - w + 1 : x), my = (y: number, h: number) => (asse === "v" ? y0 + y1 - y - h + 1 : y);
+    const sp = (k: string) => { const i = k.indexOf(","); return `${mx(Number(k.slice(0, i)), 1)},${my(Number(k.slice(i + 1)), 1)}`; };
+    const pl = new Map<string, { x: number; y: number }>();
+    for (const [id, p] of f.placements) {
+      const b = byId.get(id);
+      if (!b) continue;
+      const q = { x: mx(p.x, b.w), y: my(p.y, b.h) };
+      for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) if (!problem.cells.has(`${q.x + i},${q.y + j}`)) return null;
+      pl.set(id, q);
+    }
+    const rd = new Set<string>();
+    for (const k of f.roads) { const n = sp(k); if (!problem.cells.has(n)) return null; rd.add(n); }
+    return { ...f, placements: pl, roads: rd, lastPath: f.lastPath.map(sp), probe: null };
+  };
+  const applicaManuale = (v: VName, nf: PlannerFrame | null) => {
+    if (!nf) return;
+    framesRef.current = { ...framesRef.current, [v]: nf };
+    setFrames(prev => ({ ...prev, [v]: nf }));
+    modRef.current[v] = true;
+    setManuali(m => (m[v] ? m : { ...m, [v]: true }));
+  };
   const spostaTutto = (v: VName, dx: number, dy: number) => {
     const f = framesRef.current[v];
     const nf = f && traslato(f, dx, dy);
@@ -860,9 +890,18 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                           ))}
                         </span>
                       )}
+                      {f && inPausa[n] && paused && !smussando && (
+                        <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title="Specchia l'intera città (edifici e strade): i collegamenti restano gli stessi">
+                          Specchia
+                          {([["⇋", "h", "Specchia in orizzontale (destra ↔ sinistra)"], ["⇵", "v", "Specchia in verticale (alto ↔ basso)"]] as const).map(([fr, asse, tit]) => (
+                            <button key={asse} type="button" title={tit} disabled={!specchiato(f, asse)} onClick={() => applicaManuale(n, specchiato(f, asse))}
+                              className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
+                          ))}
+                        </span>
+                      )}
                       <button type="button" disabled={!f} onClick={() => f && scaricaPng(f, n)}
                         className="ml-auto rounded border border-emerald-600 px-2 py-0.5 text-[12px] font-bold text-emerald-300 hover:bg-emerald-950 disabled:opacity-40">
-                        ⬇ Scarica PNG
+                        ⬇ PNG
                       </button>
                       <button type="button" disabled={visibili.length <= 1} onClick={() => elimina(n)}
                         title="Elimina questo scenario: la sua ricerca si ferma e le altre proseguono"

@@ -1624,14 +1624,22 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       for (const [id, q] of placements) if (!mossiBase.has(id)) { const b = byId.get(id)!; for (const k of celleR(q.x, q.y, b.w, b.h)) baseDi.set(k, id); }
       for (let giri = 0; giri < 20; giri++) {
         let fatto = false;
-        const foglie = [...rd].filter(k => vic(k).filter(isRoad).length === 1);
+        // Girandola (utente su Dani: una cella in fondo a un braccio si poteva
+        // togliere spostando l'edificio che la toccava): anche le punte dei
+        // bracci, che sono strade di partenza, si rifiniscono.
+        const tagliabile = (k: string) => rd.has(k) || (!!opts.girandola && roads.has(k));
+        // (mai dal lato del municipio: la prima cella di un braccio ha una sola
+        // strada vicina ma è l'attacco al municipio, non una punta)
+        const thR = problem.buildings.find(b => b.isTownhall), thQ = thR ? placements.get(thR.id) : undefined;
+        const sulMunicipio = (k: string) => { if (!thR || !thQ) return false; const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); return x >= thQ.x && x < thQ.x + thR.w && y >= thQ.y && y < thQ.y + thR.h; };
+        const foglie = [...rd, ...(opts.girandola ? roads : [])].filter(k => vic(k).filter(isRoad).length === 1 && !vic(k).some(sulMunicipio));
         for (const foglia of foglie) {
           // tratto finale: risale dalla foglia lungo la catena (solo strade nuove)
           const catena: string[] = [foglia];
           let prev = "", cur = foglia;
           for (let t = 0; t < 4; t++) {
             const nx = vic(cur).filter(n => isRoad(n) && n !== prev);
-            if (nx.length !== 1 || !rd.has(nx[0]!)) break;
+            if (nx.length !== 1 || !tagliabile(nx[0]!)) break;
             prev = cur; cur = nx[0]!; catena.push(cur);
           }
           // Tutte le strade (nuove e di partenza) in forma numerica, una volta per foglia.
@@ -1721,7 +1729,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
               return ok ? scelta : null;
             };
             const applicaPezzi = (pezzi: Azione[], pos: Array<[number, number]>) => {
-              for (const c of tratto) rd.delete(c);
+              for (const c of tratto) { rd.delete(c); if (roads.delete(c)) stradeTolte.push(c); }
               pezzi.forEach((a, i) => {
                 for (const k of celleR(a.x, a.y, a.w, a.h)) { edif.delete(k); azioneDi.delete(k); }
                 [a.x, a.y] = pos[i]!;
@@ -1945,13 +1953,25 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       const thB = problem.buildings.find(b => b.isTownhall), thP = thB ? placements.get(thB.id) : undefined;
       if (!thB || !thP) return;
       const tx = thP.x, ty = thP.y, w = thB.w, h = thB.h;
-      // angolo: cella d'attacco al municipio e versi di crescita
-      const angoli: Array<[number, number, 1 | -1, 1 | -1]> = [
-        [tx + 1, ty + h, 1, 1],          // SE: sotto, a destra del braccio sud
-        [tx + w, ty + h - 2, 1, -1],     // NE: a destra, sopra il braccio est
-        [tx + w - 2, ty - 1, -1, -1],    // NW: sopra, a sinistra del braccio nord
-        [tx - 1, ty + 1, -1, 1],         // SW: a sinistra, sotto il braccio ovest
-      ];
+      // Un angolo per braccio: accanto alla sua prima cella, dalla parte del
+      // municipio (verso orario o speculare): cella d'attacco e versi di
+      // crescita (lungo il braccio verso l'esterno, e verso l'interno del
+      // municipio nell'altro asse).
+      const cx2 = 2 * tx + w - 1, cy2 = 2 * ty + h - 1; // doppio del centro
+      const angoli: Array<[number, number, 1 | -1, 1 | -1]> = [];
+      for (const celle of opts.girandola!.bracci) {
+        const c0 = celle[0];
+        if (!c0) continue;
+        const i0 = c0.indexOf(","), x0 = Number(c0.slice(0, i0)), y0 = Number(c0.slice(i0 + 1));
+        const vert = x0 >= tx && x0 < tx + w; // braccio N o S
+        if (vert) {
+          const dy: 1 | -1 = y0 < ty ? -1 : 1, nx: 1 | -1 = 2 * x0 < cx2 ? 1 : -1;
+          angoli.push([x0 + nx, y0, nx, dy]);
+        } else {
+          const dx: 1 | -1 = x0 < tx ? -1 : 1, ny: 1 | -1 = 2 * y0 < cy2 ? 1 : -1;
+          angoli.push([x0, y0 + ny, dx, ny]);
+        }
+      }
       const tocca = (x: number, y: number, bw: number, bh: number) => {
         for (let d = 0; d < bw; d++) if (isR(x + d, y - 1) || isR(x + d, y + bh)) return true;
         for (let d = 0; d < bh; d++) if (isR(x - 1, y + d) || isR(x + bw, y + d)) return true;

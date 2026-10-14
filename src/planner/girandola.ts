@@ -10,6 +10,7 @@
 //    W: riga alta, verso sinistra
 //    E: riga bassa, verso destra
 //    S: colonna sinistra, verso il basso
+//  Due versi: orario (Sdrushi) e speculare/antiorario (Dani), provati entrambi.
 //  I bracci partono lunghi fino al bordo: è la ricerca (completion.ts,
 //  opzione `girandola`) a tagliarne la punta (Params.tagli) e a riempirne i
 //  lati a incastro (Params.latiEsatti). Un braccio può ridursi a 0 o a una
@@ -26,6 +27,8 @@ const key = (x: number, y: number) => `${x},${y}`;
 
 export interface BaseGirandola {
   tx: number; ty: number;
+  /** Girandola speculare (verso antiorario, come la città di Dani). */
+  specchio: boolean;
   placements: Map<string, { x: number; y: number }>;
   roads: Set<string>;
   /** Celle di ciascun braccio (N, W, E, S) dal municipio verso l'esterno. */
@@ -36,11 +39,18 @@ export interface BaseGirandola {
 
 /** Municipio in (tx, ty) e i quattro bracci lunghi fino al bordo. null se il municipio non entra.
  *  @public (usata anche dal banco di prova: gir4.ts, girp.ts) */
-export function baseGirandola(problem: PlannerProblem, tx: number, ty: number): BaseGirandola | null {
+export function baseGirandola(problem: PlannerProblem, tx: number, ty: number, specchio = false): BaseGirandola | null {
   const th = problem.buildings.find(b => b.isTownhall);
   if (!th) return null;
   for (let i = 0; i < th.w; i++) for (let j = 0; j < th.h; j++) if (!problem.cells.has(key(tx + i, ty + j))) return null;
-  const partenze: Array<[number, number, number, number]> = [
+  // Verso orario (Sdrushi) o speculare/antiorario (Dani: N dalla colonna
+  // sinistra, W dalla riga bassa, E dalla riga alta, S dalla colonna destra).
+  const partenze: Array<[number, number, number, number]> = specchio ? [
+    [tx, ty - 1, 0, -1],                 // N
+    [tx - 1, ty + th.h - 1, -1, 0],      // W
+    [tx + th.w, ty, 1, 0],               // E
+    [tx + th.w - 1, ty + th.h, 0, 1],    // S
+  ] : [
     [tx + th.w - 1, ty - 1, 0, -1], // N
     [tx - 1, ty, -1, 0],            // W
     [tx + th.w, ty + th.h - 1, 1, 0], // E
@@ -53,11 +63,11 @@ export function baseGirandola(problem: PlannerProblem, tx: number, ty: number): 
   });
   if (bracci.every(b => !b.length)) return null;
   return {
-    tx, ty,
+    tx, ty, specchio,
     placements: new Map([[th.id, { x: tx, y: ty }]]),
     roads: new Set(bracci.flat()),
     bracci,
-    geometry: { stradaVX: tx + th.w - 1, eastMidY: ty + th.h - 1 },
+    geometry: specchio ? { stradaVX: tx, eastMidY: ty } : { stradaVX: tx + th.w - 1, eastMidY: ty + th.h - 1 },
   };
 }
 
@@ -65,8 +75,7 @@ export function baseGirandola(problem: PlannerProblem, tx: number, ty: number): 
  *  (soprattutto verso sinistra), ognuna valutata con una breve ricerca
  *  (`valutazioni` disposizioni); vince quella con meno edifici con strada
  *  fuori, poi meno deficit di spazio, poi meno strade, poi più a sinistra;
- *  le 3 migliori sono rivalutate con una ricerca più lunga; vince la prima
- *  (in quell'ordine) il cui completamento piazza tutti gli edifici. */
+ *  le 3 migliori sono rivalutate con una ricerca più lunga. */
 export async function scegliGirandola(problem: PlannerProblem, opts: {
   shouldStop: () => boolean; valutazioni?: number; onProgress?: (i: number, n: number) => void;
   /** Disposizioni provvisorie durante le prove (per mostrare subito qualcosa):
@@ -78,9 +87,12 @@ export async function scegliGirandola(problem: PlannerProblem, opts: {
   const cx = Math.round((problem.minX + problem.maxX + 1 - th.w) / 2), cy = Math.round((problem.minY + problem.maxY + 1 - th.h) / 2);
   const W = problem.maxX - problem.minX + 1;
   const passo = Math.max(2, Math.round(W / 24));
-  // dal centro verso sinistra (fino a metà della metà sinistra), qualche riga su e giù
+  // dal centro verso sinistra (fino a metà della metà sinistra) e un po' a destra, qualche riga su e giù
   const candidati: Array<[number, number]> = [];
-  for (let k = 0; k <= 6; k++) for (const dy of [0, -2, 2, -4]) candidati.push([cx - k * passo, cy + dy]);
+  // (anche un po' a destra: la città di Dani ha il municipio a destra del centro)
+  for (let k = -4; k <= 6; k++) for (const dy of [0, -3, 3]) candidati.push([cx - k * passo, cy + dy]);
+  // ogni posizione in tutti e due i versi (orario e speculare)
+  const prove: Array<[number, number, boolean]> = candidati.flatMap(([x, y]) => [[x, y, false], [x, y, true]] as Array<[number, number, boolean]>);
   const valuta = async (base: BaseGirandola, n: number) => {
     let valutate = 0;
     opts.onFrame?.({ placements: base.placements, roads: base.roads, probe: null, lastPath: [], placed: base.placements.size, unplaced: [], iterations: 0, done: false });
@@ -93,51 +105,27 @@ export async function scegliGirandola(problem: PlannerProblem, opts: {
     });
     return { fuori: fr.search?.esclusi ?? 99, deficit: fr.search?.deficit ?? 0, strade: fr.roads.size };
   };
-  /** Ricerca breve + completamento (riempimento): edifici rimasti fuori. */
-  const completa = async (base: BaseGirandola, n: number) => {
-    let valutate = 0, finita = false;
-    const fr = await runCompletion(problem, {
-      delayMs: 0, shouldStop: opts.shouldStop,
-      // si mostra solo la ricerca: il riempimento di prova è fuorviante (utente)
-      onFrame: f => { if (f.search) valutate = f.search.valutate; if (!finita) opts.onFrame?.(f); },
-      shouldFinishSearch: () => (finita ||= valutate >= n),
-      initial: { placements: base.placements, roads: base.roads }, geometry: base.geometry, fissi: [],
-      girandola: { bracci: base.bracci },
-    });
-    return fr.unplaced.length;
-  };
   type Voto = { base: BaseGirandola; fuori: number; deficit: number; strade: number };
   // a parità vince la più a sinistra (preferenza dell'utente)
   // (il deficit di spazio per gli edifici senza strada conta prima delle strade, come nella ricerca)
   const meglio = (a: Voto, b: Voto) => a.fuori - b.fuori || a.deficit - b.deficit || a.strade - b.strade || a.base.tx - b.base.tx;
-  const n = opts.valutazioni ?? 200;
+  const n = opts.valutazioni ?? 150;
   const voti: Voto[] = [];
-  for (const [i, [tx, ty]] of candidati.entries()) {
+  for (const [i, [tx, ty, sp]] of prove.entries()) {
     if (opts.shouldStop()) break;
-    opts.onProgress?.(i, candidati.length + 6);
-    const base = baseGirandola(problem, tx, ty);
+    opts.onProgress?.(i, prove.length + 3);
+    const base = baseGirandola(problem, tx, ty, sp);
     if (!base) continue;
     voti.push({ base, ...(await valuta(base, n)) });
   }
-  // le 3 migliori rivalutate con una ricerca 4 volte più lunga
+  // le 3 migliori rivalutate con una ricerca 6 volte più lunga
   const finali: Voto[] = [];
   for (const [i, v] of voti.sort(meglio).slice(0, 3).entries()) {
     if (opts.shouldStop()) break;
-    opts.onProgress?.(candidati.length + i, candidati.length + 6);
-    finali.push({ base: v.base, ...(await valuta(v.base, 4 * n)) });
+    opts.onProgress?.(prove.length + i, prove.length + 3);
+    finali.push({ base: v.base, ...(await valuta(v.base, 6 * n)) });
   }
-  // Prova del riempimento (Rode: a parità di strade una posizione lasciava
-  // fuori edifici senza strada): nell'ordine, la prima finalista il cui
-  // completamento piazza tutti gli edifici; altrimenti quella che ne lascia
-  // fuori meno.
-  finali.sort(meglio);
-  let scelta: BaseGirandola | null = null, minFuori = Infinity;
-  for (const [i, v] of finali.entries()) {
-    if (opts.shouldStop()) break;
-    opts.onProgress?.(candidati.length + 3 + i, candidati.length + 6);
-    const fuori = await completa(v.base, 4 * n);
-    if (fuori < minFuori) { minFuori = fuori; scelta = v.base; }
-    if (fuori === 0) break;
-  }
-  return scelta ?? finali[0]?.base ?? voti[0]?.base ?? null;
+  // (niente prova del riempimento: conta solo la disposizione degli edifici
+  // con strada; il riempimento finale si ottimizzerà a parte — utente)
+  return finali.sort(meglio)[0]?.base ?? voti[0]?.base ?? null;
 }

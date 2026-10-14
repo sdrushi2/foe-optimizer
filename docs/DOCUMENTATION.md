@@ -4853,6 +4853,38 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      Misure (30-75 s): Diviziaco r4 67 → 66, r3 75 → 70; Avito r3 174 → 167
      tutti piazzati, r4 170 (1 senza strada fuori, come prima); Beta r3 76,
      r4 78; Rode r3 85 tutti piazzati; Sdrushi r4 75 =; Sonia r3 77 → 76.
+   - **Punte dei bracci rifinite** (utente su Dani: una cella vuota in
+     fondo a un braccio si toglieva spostando l'edificio che la toccava).
+     `rifinisciPunte` lavorava solo sulle strade nuove (`rd`); i bracci
+     della girandola sono strade di partenza (`roads`), quindi le loro punte
+     non venivano mai rifinite. Con `opts.girandola` anche le foglie di
+     `roads` (mai quelle accanto al municipio: la prima cella di un braccio
+     ha una sola strada vicina ma è l'attacco al municipio) e la catena può
+     risalire nei bracci; le celle tolte da `roads` vanno in `stradeTolte`.
+     Banco (VG=150, 6000): Dani 49 (record di Dani 50), Sdrushi 69, Rode 72;
+     nessuna strada staccata né edificio scollegato (`girf.ts` Dani: 0
+     fotogrammi con scollegati). Restano edifici senza strada fuori su Dani
+     (riempimento finale, da ottimizzare a parte).
+   - **Prova del riempimento tolta** dalla scelta del municipio (richiesta
+     dell'utente: ora conta solo la disposizione degli edifici con strada; il
+     riempimento finale si ottimizzerà a parte). `scegliGirandola` sceglie
+     fra le 3 finaliste solo con fuori → deficit → strade → più a sinistra
+     (sostituisce la "prova del riempimento" descritta più sotto).
+   - **Girandola speculare** (città di Dani, 50 strade, `planner-test/
+     Dani.json`): la sua è una girandola in verso antiorario (N dalla colonna
+     sinistra del municipio, W dalla riga bassa, E dalla riga alta, S dalla
+     colonna destra; N ed E di 2 celle). `baseGirandola(…, specchio)`;
+     `scegliGirandola` prova ogni posizione in tutti e due i versi, anche a
+     destra del centro (k = -4..6, dy 0/±3: 66 prove da 150 disposizioni,
+     poi le 3 migliori da 900 e la prova del riempimento). Gli angoli del
+     municipio si ricavano dai bracci (accanto alla prima cella di ognuno,
+     dalla parte del municipio), quindi valgono per entrambi i versi. Banco:
+     col municipio di Dani (39,18, speculare) 50 strade e tutti gli edifici
+     con strada; Dani automatica 50 (prima 51). Restano fuori 3-5 edifici
+     senza strada: la città di Dani ha solo 4 celle libere in tutto, quindi
+     con 50 strade il riempimento finale deve incastrare quasi alla
+     perfezione (20 s di rifinitura nel banco non bastano). Sdrushi 69-70,
+     Rode 72. `gir3.ts`: FILL=ms per la rifinitura come nell'app.
    - **Angoli del municipio** (girandola, richiesta dell'utente dopo il suo
      69 su Sdrushi). Diagnosi: con i bracci dell'utente (municipio 30,29;
      N 23, W 8, E 13, S 25, letti dall'immagine con la griglia) il motore
@@ -4938,6 +4970,15 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      la ripresa segue il punteggio della ricerca (prima fuori e deficit, poi
      strade), quindi le strade possono anche salire di una se il deficit
      scende, come in una normale ripresa dalla pausa.
+   - **Specchia** (richiesta dell'utente): in pausa, accanto a "Sposta
+     tutto", ⇋ (orizzontale) e ⇵ (verticale) ribaltano l'intera disposizione
+     attorno al rettangolo che contiene edifici e strade (`specchiato` in
+     PlannerView): i contatti edificio-strada restano gli stessi. Pulsante
+     disattivato se qualcosa uscirebbe dall'area sbloccata. Conta come
+     modifica a mano (`applicaManuale`: annullabile, passata alla ripresa).
+     Banco `girp.ts … FLIP=h|v`: Rode (h) e Sdrushi (v) validi dopo la
+     ripresa, nessun overlap né scollegato. Il pulsante di download si
+     chiama ora "⬇ PNG".
    - **Sposta tutto** (richiesta dell'utente): in pausa, nell'intestazione
      di ogni mappa, quattro frecce spostano l'intera disposizione (edifici,
      municipio, strade) di una cella; una freccia è disattivata se qualcosa
