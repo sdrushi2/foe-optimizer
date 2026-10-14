@@ -4853,6 +4853,43 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      Misure (30-75 s): Diviziaco r4 67 → 66, r3 75 → 70; Avito r3 174 → 167
      tutti piazzati, r4 170 (1 senza strada fuori, come prima); Beta r3 76,
      r4 78; Rode r3 85 tutti piazzati; Sdrushi r4 75 =; Sonia r3 77 → 76.
+   - **Angoli del municipio** (girandola, richiesta dell'utente dopo il suo
+     69 su Sdrushi). Diagnosi: con i bracci dell'utente (municipio 30,29;
+     N 23, W 8, E 13, S 25, letti dall'immagine con la griglia) il motore
+     arrivava a 69 ma lasciava fuori la Nave da guerra stellare 3×5: l'utente
+     sotto il municipio, a destra del braccio sud, mette Statua 3×2 +
+     Osservatorio 3×3 in pila contro il braccio sud e accanto la Nave che
+     sporge sotto il municipio e tocca la prima cella del braccio est; così
+     le Montagne 6×4 del braccio sud partono una riga più in basso e il
+     braccio si chiude in 25 celle. Il riempimento dei lati (un pezzo alla
+     volta lungo una strada) non costruisce mai quel blocco.
+     `angoliMunicipio(semi, isR)` in simula, chiamata all'inizio di
+     `riempiLatiStrade` con `Params.angoli` (un seme per angolo SE/NE/NW/SW,
+     -1 = angolo lasciato ai lati): per ogni angolo, rettangoli 3-7 × 3-7
+     attaccati al municipio in ordine casuale (al più 8 provati), riempiti
+     ESATTAMENTE con edifici con strada che toccano una strada (DFS sulla
+     prima cella libera, forme distinte con quantità, 400 nodi); al primo che
+     riesce si piazzano i pezzi ("angolo del municipio"). `angoliCasuali()`
+     (un angolo su 4 a -1) nelle configurazioni e in `casuale`; `muta`
+     cambia il seme di un angolo; `accodaVicini` per la girandola prova ogni
+     braccio ±1..±3 celle attorno a ogni nuova migliore. Tagli orientati: i
+     bracci favoriti ora si accorciano di 0-40% uniforme (prima quasi mai
+     oltre il 10%). Banco: con i bracci dell'utente forzati 69, 368/368, già
+     a 1000 disposizioni (prima 69 con la Nave fuori → 73-77); automatica
+     Sdrushi 69 (era 71), 368/368, nessun edificio scollegato in nessun
+     fotogramma (`girf.ts`); Rode 72 (invariato), Diviziaco 63-64 (era 65);
+     scenari standard identici.
+   - **Girandola orientata dalle forme** (idea dell'utente su Sdrushi: 69 a
+     mano sviluppando in altezza). Un edificio largo (w > h) si attacca a
+     una strada verticale col lato corto, uno alto a una orizzontale.
+     `pv` = quota per area dei larghi fra gli edifici con strada da
+     piazzare (Sdrushi 0,72); `tagliCasuali()`: metà dei tagli come prima,
+     metà orientati (bracci del verso sfavorito accorciati del 30-100%, gli
+     altri di poco). Banco: Sdrushi resta 71 (anche con NVAL 20000), Rode
+     72. Prova col municipio dell'utente (30,27, letto dall'immagine) e i
+     bracci della sua disposizione (N 16, W 8, E 20, S 27, tagli forzati
+     con TAGLI=11,18,16,7 nella copia del banco): 71, quindi la differenza
+     non è la forma dei bracci ma l'incastro lungo i lati.
    - **Revisione + gruppi di edifici uguali nella rifinitura** (richiesta
      dell'utente: es. 30 piazze degli scacchi tutte vicine). Codice morto:
      nessuna variabile inutilizzata (tsc --noUnusedLocals/Parameters); gli

@@ -248,6 +248,11 @@ interface Params {
   latiEsatti?: number;
   /** Girandola: celle tolte dalla punta di ciascun braccio. */
   tagli?: number[];
+  /** Girandola: per ciascun angolo del municipio (SE, NE, NW, SW) il seme
+   *  della scelta del rettangolo e dei pezzi (-1 = angolo non riempito a
+   *  parte). Nei parametri, così la ricerca locale lo affina un angolo alla
+   *  volta (muta). */
+  angoli?: number[];
   /** Alti trattenuti (h >= 6): esclusi dalle dorsali durante la costruzione,
    *  poi messi solo nelle fasce esterne (nord della dorsale più in alto, sud
    *  di quella più in basso), allungandole se serve. */
@@ -1924,10 +1929,94 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
     };
 
+    /** Angoli del municipio (girandola, idea dell'utente su Sdrushi: 69 a
+     *  mano). Accanto al municipio si incontrano i lati di due bracci (es.
+     *  sotto il municipio a destra del braccio sud: lato del braccio sud e
+     *  lato inferiore del braccio est). Riempire quell'angolo un pezzo alla
+     *  volta lungo un solo lato spreca spazio; l'utente ci mette pezzi in
+     *  pila (Statua 3×2 + Osservatorio 3×3 contro il braccio sud) e accanto
+     *  uno che tocca l'altro braccio (Nave 3×5 sotto il municipio). Per ogni
+     *  angolo si prova (in ordine casuale) un rettangolo di 3-7 × 3-7 celle
+     *  libere attaccato al municipio e lo si riempie ESATTAMENTE con edifici
+     *  con strada che toccano una strada (ricerca in profondità sulla prima
+     *  cella libera, forme distinte, limite di nodi); al primo che riesce si
+     *  passa all'angolo successivo. I lati dei bracci si riempiono dopo. */
+    const angoliMunicipio = (semi: number[], isR: (x: number, y: number) => boolean) => {
+      const thB = problem.buildings.find(b => b.isTownhall), thP = thB ? placements.get(thB.id) : undefined;
+      if (!thB || !thP) return;
+      const tx = thP.x, ty = thP.y, w = thB.w, h = thB.h;
+      // angolo: cella d'attacco al municipio e versi di crescita
+      const angoli: Array<[number, number, 1 | -1, 1 | -1]> = [
+        [tx + 1, ty + h, 1, 1],          // SE: sotto, a destra del braccio sud
+        [tx + w, ty + h - 2, 1, -1],     // NE: a destra, sopra il braccio est
+        [tx + w - 2, ty - 1, -1, -1],    // NW: sopra, a sinistra del braccio nord
+        [tx - 1, ty + 1, -1, 1],         // SW: a sinistra, sotto il braccio ovest
+      ];
+      const tocca = (x: number, y: number, bw: number, bh: number) => {
+        for (let d = 0; d < bw; d++) if (isR(x + d, y - 1) || isR(x + d, y + bh)) return true;
+        for (let d = 0; d < bh; d++) if (isR(x - 1, y + d) || isR(x + bw, y + d)) return true;
+        return false;
+      };
+      for (const [k, [ax, ay, sx, sy]] of angoli.entries()) {
+        const seme = semi[k] ?? -1;
+        if (seme < 0) continue;
+        const rng = mulberry32(seme);
+        const dims: Array<[number, number]> = [];
+        for (let bw = 3; bw <= 7; bw++) for (let bh = 3; bh <= 7; bh++) dims.push([bw, bh]);
+        for (let i = dims.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [dims[i], dims[j]] = [dims[j]!, dims[i]!]; }
+        let provati = 0;
+        for (const [bw, bh] of dims) {
+          if (provati >= 8) break;
+          const x0 = sx > 0 ? ax : ax - bw + 1, y0 = sy > 0 ? ay : ay - bh + 1;
+          if (!fitsS(x0, y0, bw, bh)) continue;
+          provati++;
+          // forme disponibili (con quantità), ordine casuale
+          const perForma = new Map<string, PlannerBuilding[]>();
+          for (const b of pending()) {
+            if (riservati.has(b.id) || b.w > bw || b.h > bh) continue;
+            const f = `${b.w}x${b.h}`;
+            perForma.set(f, [...(perForma.get(f) ?? []), b]);
+          }
+          const forme = [...perForma.values()].sort(() => rng() - 0.5);
+          if (!forme.length) continue;
+          const pieno = new Uint8Array(bw * bh);
+          const scelta: Array<[PlannerBuilding[], number, number]> = [];
+          const usati = new Map<PlannerBuilding[], number>();
+          let nodi = 0;
+          const dfs = (): boolean => {
+            if (++nodi > 400) return false;
+            let c = 0; while (c < pieno.length && pieno[c]) c++;
+            if (c === pieno.length) return true;
+            const cx = c % bw, cy = (c - cx) / bw;
+            for (const fo of forme) {
+              const u = usati.get(fo) ?? 0;
+              if (u >= fo.length) continue;
+              const b = fo[0]!;
+              if (cx + b.w > bw || cy + b.h > bh) continue;
+              let ok = true;
+              for (let dy = 0; dy < b.h && ok; dy++) for (let dx = 0; dx < b.w; dx++) if (pieno[(cy + dy) * bw + cx + dx]) { ok = false; break; }
+              if (!ok || !tocca(x0 + cx, y0 + cy, b.w, b.h)) continue;
+              for (let dy = 0; dy < b.h; dy++) for (let dx = 0; dx < b.w; dx++) pieno[(cy + dy) * bw + cx + dx] = 1;
+              usati.set(fo, u + 1); scelta.push([fo, x0 + cx, y0 + cy]);
+              if (dfs()) return true;
+              scelta.pop(); usati.set(fo, u);
+              for (let dy = 0; dy < b.h; dy++) for (let dx = 0; dx < b.w; dx++) pieno[(cy + dy) * bw + cx + dx] = 0;
+            }
+            return false;
+          };
+          if (!dfs()) continue;
+          const presi = new Map<PlannerBuilding[], number>();
+          for (const [fo, x, y] of scelta) { const k = presi.get(fo) ?? 0; presi.set(fo, k + 1); place("angolo del municipio", fo[k]!, x, y, []); }
+          break;
+        }
+      }
+    };
+
     /** Lati di tutte le strade a incastro (Params.latiEsatti). */
     const riempiLatiStrade = (seme: number) => {
       const rng = mulberry32(seme);
       const isR = (x: number, y: number) => roads.has(key(x, y)) || rd.hasXY(x, y);
+      if (opts.girandola && p.angoli) angoliMunicipio(p.angoli, isR);
       // tratti dritti: orizzontali e verticali (celle di strada consecutive)
       type Tratto = { vert: boolean; fisso: number; a: number; b: number };
       const tratti: Tratto[] = [];
@@ -2384,6 +2473,30 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     return cand.length ? cand[Math.floor(rnd() * cand.length)]! : sy0;
   };
   /** Parametri casuali (ripartenze): spareggi, lato e lunghezza massima della dorsale casuali. */
+  /** Girandola (idea dell'utente su Sdrushi, 69 a mano sviluppando in
+   *  altezza): un edificio largo (w > h) si attacca a una strada VERTICALE
+   *  col lato corto, uno alto (h > w) a una orizzontale. Con molti larghi
+   *  conviene sviluppare in altezza (bracci N/S lunghi, W/E corti), con molti
+   *  alti in larghezza. `pv` = quota (per area) dei larghi fra gli edifici con
+   *  strada da piazzare; metà dei tagli casuali è orientata di conseguenza:
+   *  i bracci del verso sfavorito si accorciano molto, gli altri poco. */
+  const pv = (() => {
+    let v = 0, h = 0;
+    for (const b of daPiazzare) { if (b.w > b.h) v += b.w * b.h; else if (b.h > b.w) h += b.w * b.h; }
+    return v + h ? v / (v + h) : 0.5;
+  })();
+  /** Angoli del municipio: un seme per angolo, un angolo su 4 lasciato ai lati. */
+  const angoliCasuali = (): number[] => [0, 1, 2, 3].map(() => (rnd() < 0.25 ? -1 : Math.floor(rnd() * 1e6)));
+  const tagliCasuali = (): number[] => {
+    const br = opts.girandola!.bracci;
+    if (rnd() < 0.5) return br.map(c => Math.floor(rnd() * rnd() * c.length));
+    // N (0) e S (3) verticali, W (1) ed E (2) orizzontali
+    const sfavoritoVert = rnd() >= pv; // con pv alto (molti larghi) si accorciano gli orizzontali
+    return br.map((c, k) => {
+      const vert = k === 0 || k === 3;
+      return Math.floor(c.length * (vert === sfavoritoVert ? 0.3 + 0.7 * rnd() : 0.4 * rnd()));
+    });
+  };
   const casuale = (nDors: number, righeCasuali: () => number[]): Params => {
     const jitter = new Map(problem.buildings.map(b => [b.id, rnd()]));
     const base = ordini[Math.floor(rnd() * ordini.length)]!;
@@ -2401,7 +2514,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       capVariant: uno(nDors).map(() => Math.floor(rnd() * CAP_VARIANTS.length)),
       pairSeed: rnd() < 0.3 ? null : Math.floor(rnd() * 1e9),
       ...(() => { const u = rnd(); const K = u < 0.4 ? 0 : u < 0.7 ? -1 : 2 + Math.floor(rnd() * 3); return { comb: K, combPiu: Math.floor(rnd() * 3), combAnchor: K < 0 ? Math.floor(rnd() * 5) - 1 : Math.floor(rnd() * Math.max(1, K)), orient: rnd() < 0.6, swapBuilder: rnd() < 0.5, gapN: rnd() < 0.2 ? 0 : rnd() < 0.5 ? 1 : 2 + Math.floor(rnd() * 2), gapS: rnd() < 0.2 ? 0 : rnd() < 0.5 ? 1 : 2 + Math.floor(rnd() * 2), estEsatto: rnd() < 0.4, latiEsatti: rnd() < 0.3 ? Math.floor(rnd() * 1e6) : undefined, extN: rnd() < 0.6 ? 0 : 1 + Math.floor(rnd() * 4), extS: rnd() < 0.6 ? 0 : 1 + Math.floor(rnd() * 4), liberaN: rnd() < 0.15, liberaS: rnd() < 0.15, riservaAlti: rnd() < 0.25, altiEsterni: rnd() < 0.4, liberaGrandi: rnd() < 0.35, accN: rnd() < 0.25 ? 1 + Math.floor(rnd() * 16) : 0, accS: rnd() < 0.25 ? 1 + Math.floor(rnd() * 16) : 0, liberaGialli: rnd() < 0.3 }; })(),
-      ...(opts.girandola ? { tagli: opts.girandola.bracci.map(c => Math.floor(rnd() * rnd() * c.length)) } : {}),
+      ...(opts.girandola ? { tagli: tagliCasuali(), angoli: angoliCasuali() } : {}),
     };
   };
 
@@ -2472,8 +2585,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const nb = opts.girandola.bracci.map(c => c.length);
     configs.length = 0;
     const base: Params = { order: ordini[0]!, side: "nearest", vertFirst: false, secondary: "snug", spineCap: 1, rows: [sy0], lenFactor: [1], capVariant: [0], pairSeed: null, comb: 0, combAnchor: 0, orient: false };
-    for (let seme = 1; seme <= 8; seme++) configs.push({ ...base, latiEsatti: seme, tagli: nb.map(() => 0) });
-    for (let i = 0; i < 160; i++) configs.push({ ...base, latiEsatti: 100 + i, tagli: nb.map(n => Math.floor(rnd() * rnd() * n)) });
+    for (let seme = 1; seme <= 8; seme++) configs.push({ ...base, latiEsatti: seme, tagli: nb.map(() => 0), angoli: seme % 2 ? angoliCasuali() : undefined });
+    for (let i = 0; i < 160; i++) configs.push({ ...base, latiEsatti: 100 + i, tagli: tagliCasuali(), angoli: i % 4 ? angoliCasuali() : undefined });
   }
   let bestParams: Params | null = null;
   /** Margine (strade) entro cui una disposizione è "promettente": solo a
@@ -2496,6 +2609,19 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const codaVicini: Params[] = [];
   const accodaVicini = (p: Params) => {
     codaVicini.length = 0;
+    if (opts.girandola && p.tagli) {
+      // girandola: ogni braccio ±1..±3 celle, il resto invariato
+      const t0 = p.tagli;
+      opts.girandola.bracci.forEach((c, k) => {
+        for (const d of [-1, 1, -2, 2, -3, 3]) {
+          const v = t0[k]! + d;
+          if (v < 0 || v > c.length) continue;
+          const t = [...t0]; t[k] = v;
+          codaVicini.push({ ...p, tagli: t, rows: [...p.rows], lenFactor: [...p.lenFactor], capVariant: [...p.capVariant] });
+        }
+      });
+      return;
+    }
     for (let i = 0; i < p.rows.length; i++) for (const d of [-1, 1, -2, 2, -3, 3]) {
       const r = p.rows[i]! + d;
       if (!okRiga(r) || p.rows.some((x, j) => j !== i && Math.abs(x - r) < 4)) continue;
@@ -2519,6 +2645,13 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         t[k] = Math.max(0, Math.min(n, t[k]! + (rnd() < 0.5 ? -1 : 1) * (1 + Math.floor(rnd() * 4))));
         q.tagli = t;
         if (rnd() < 0.3) q.latiEsatti = Math.floor(rnd() * 1e6);
+        continue;
+      }
+      if (opts.girandola && rnd() < 0.5) {
+        // girandola: un angolo del municipio con un'altra scelta (o lasciato ai lati)
+        const a = [...(q.angoli ?? [-1, -1, -1, -1])], k = Math.floor(rnd() * 4);
+        a[k] = rnd() < 0.15 ? -1 : Math.floor(rnd() * 1e6);
+        q.angoli = a;
         continue;
       }
       switch (Math.floor(rnd() * 13)) {
