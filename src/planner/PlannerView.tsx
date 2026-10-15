@@ -16,7 +16,7 @@ import { runBuilder, type BuilderVariant } from "./builder";
 import { runCompletion, type StatoManuale } from "./completion";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
-import { scegliGirandola } from "./girandola";
+import { baseCentrale, scegliGirandola, type BaseGirandola } from "./girandola";
 import { renderCityMapPng } from "../components/CityMapView";
 import type { UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -30,12 +30,12 @@ interface Props {
 /** Scenari: raccordo 3/4 celle e girandola. Partono tutti in parallelo;
  *  l'utente può eliminare quelli che non gli servono. (Gli scenari
  *  "compattati" sono stati tolti: si compatta a mano con "Sposta tutto".) */
-type VName = "r3" | "r4" | "gir";
-const VARIANTI: VName[] = ["r3", "r4", "gir"];
-const tutte = <T,>(v: T): Record<VName, T> => ({ r3: v, r4: v, gir: v });
+type VName = "r3" | "r4" | "gir" | "gir2";
+const VARIANTI: VName[] = ["r3", "r4", "gir", "gir2"];
+const tutte = <T,>(v: T): Record<VName, T> => ({ r3: v, r4: v, gir: v, gir2: v });
 /** Scenario: base del builder (v) oppure "Girandola" (v = null, raccordo 0:
  *  municipio e quattro bracci, vedi girandola.ts). */
-interface Scenario { id: VName; v: BuilderVariant | null; raccordo: 0 | 3 | 4 }
+interface Scenario { id: VName; v: BuilderVariant | null; raccordo: 0 | 3 | 4; /** girandola: 0 = migliore posizione, 1 = seconda */ gir?: 0 | 1 }
 const CELL = 10; // px per cella (il canvas è poi scalato alla larghezza disponibile)
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /** Velocità fissa: massima (nessuna pausa tra i fotogrammi). */
@@ -601,15 +601,23 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       // Girandola: scelta della posizione del municipio (brevi ricerche), poi
       // ricerca e completamento come gli altri scenari.
       const vuoto = (label: string): PlannerFrame => ({ placements: new Map(), roads: new Set(), probe: null, lastPath: [], placed: 0, unplaced: [], iterations: 0, done: false, label });
-      setF(vuoto("Girandola: scelta della posizione del municipio…"));
-      // Le prove si vedono subito (municipio, bracci e la loro breve ricerca),
-      // senza le statistiche della ricerca (ripartono a ogni posizione).
-      let fase = "Girandola: scelta della posizione del municipio…";
-      const base = await scegliGirandola(problem, {
-        shouldStop: fermato,
-        onProgress: (i, n) => { fase = `Girandola: prova della posizione del municipio ${i + 1}/${n}`; },
-        onFrame: f => setF({ ...f, search: undefined, done: false, label: fase }),
-      });
+      // Prima girandola: municipio al centro, parte subito. Seconda: la
+      // posizione migliore delle prove brevi (diversa dal centro).
+      let base: BaseGirandola | null | undefined;
+      if (sc.gir !== 1) base = baseCentrale(problem);
+      else {
+        setF(vuoto("Girandola 2: scelta della posizione del municipio…"));
+        // Le prove si vedono subito (municipio, bracci e la loro breve ricerca),
+        // senza le statistiche della ricerca (ripartono a ogni posizione).
+        let fase = "Girandola 2: scelta della posizione del municipio…";
+        const centro = baseCentrale(problem);
+        const scelte = await scegliGirandola(problem, {
+          shouldStop: fermato,
+          onProgress: (i, n) => { fase = `Girandola 2: prova della posizione del municipio ${i + 1}/${n}`; },
+          onFrame: f => setF({ ...f, search: undefined, done: false, label: fase }),
+        });
+        base = scelte.find(b => !centro || b.tx !== centro.tx || b.ty !== centro.ty || b.specchio !== centro.specchio);
+      }
       if (!base || fermato()) return;
       await corri({ initial: { placements: base.placements, roads: base.roads }, geometry: base.geometry, fissi: [], girandola: { bracci: base.bracci } });
       setSearching(s => ({ ...s, [id]: false }));
@@ -654,7 +662,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       const os = runBuilder(problem);
       const lista: Scenario[] = (os?.variants ?? []).map(v => ({ id: v.name, v, raccordo: v.name === "r3" ? 3 : 4 }));
       // Scenario "Girandola" (municipio con quattro bracci), sempre in più.
-      if (problem.buildings.some(b => b.isTownhall)) lista.push({ id: "gir", v: null, raccordo: 0 });
+      // Due girandole (richiesta dell'utente), ognuna con la sua ricerca
+      // lunga: municipio al centro; municipio nella posizione migliore delle
+      // prove brevi.
+      if (problem.buildings.some(b => b.isTownhall)) lista.push({ id: "gir", v: null, raccordo: 0, gir: 0 }, { id: "gir2", v: null, raccordo: 0, gir: 1 });
       out = lista.length ? lista : null;
       setOutcome(out);
       setComputing(false);
@@ -742,7 +753,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       renderCityMapPng(canvas, edifici, aree, 2, uiLang);
       const link = document.createElement("a");
       const sc = outcome?.find(x => x.id === n);
-      link.download = sc && !sc.raccordo ? `foe-planner-girandola-${localDateStamp()}.png`
+      link.download = sc && !sc.raccordo ? `foe-planner-girandola${sc.gir ? "-2" : ""}-${localDateStamp()}.png`
         : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.png`;
       link.href = canvas.toDataURL("image/png");
       document.body.appendChild(link);
@@ -880,7 +891,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <b className="text-fuchsia-300">{sc.raccordo ? `Raccordo a ${sc.raccordo}` : "Girandola"}</b>
+                      <b className="text-fuchsia-300">{sc.raccordo ? `Raccordo a ${sc.raccordo}` : sc.gir ? "Girandola 2" : "Girandola"}</b>
                       <span className="text-[12px]">{stats(f, ricerca[n]?.valutate)}</span>
                       {f && inPausa[n] && paused && !smussando && (
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title="Sposta l'intera città (edifici e strade) di una cella">

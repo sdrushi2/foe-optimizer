@@ -120,6 +120,11 @@ export interface CompletionOptions {
    *  al riempimento con gli edifici senza strada. Senza, la ricerca dura fino
    *  al tetto di sicurezza (usato dai test). */
   shouldFinishSearch?: () => boolean;
+  /** Ricerca chiusa dopo esattamente queste disposizioni (deterministico:
+   *  shouldFinishSearch letto dai fotogrammi dipende dal tempo, perché i
+   *  fotogrammi escono ogni 500 ms). Usato dalla scelta del municipio della
+   *  girandola. */
+  limiteValutate?: number;
   /** Edifici che la ricerca non deve MAI spostare (attorno al municipio, fase 1). */
   fissi?: readonly string[];
   /** Scenario "Girandola": celle di ciascun braccio dal municipio verso
@@ -2606,7 +2611,26 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     configs.length = 0;
     const base: Params = { order: ordini[0]!, side: "nearest", vertFirst: false, secondary: "snug", spineCap: 1, rows: [sy0], lenFactor: [1], capVariant: [0], pairSeed: null, comb: 0, combAnchor: 0, orient: false };
     for (let seme = 1; seme <= 8; seme++) configs.push({ ...base, latiEsatti: seme, tagli: nb.map(() => 0), angoli: seme % 2 ? angoliCasuali() : undefined });
-    for (let i = 0; i < 160; i++) configs.push({ ...base, latiEsatti: 100 + i, tagli: tagliCasuali(), angoli: i % 4 ? angoliCasuali() : undefined });
+    // Griglia sistematica dei tagli (richiesta dell'utente: meno casuale):
+    // 4 livelli per braccio scelti dall'orientamento delle forme (pv): i
+    // bracci del verso favorito poco accorciati, gli altri molto (misto se
+    // le forme sono equilibrate). 256 combinazioni con gli angoli a seme 1;
+    // poi 80 configurazioni casuali.
+    const fav = [0, 0.1, 0.2, 0.3], sfav = [0.4, 0.55, 0.7, 0.85], misto = [0, 0.2, 0.45, 0.7];
+    const vertFav = pv >= 0.5;
+    const livelli = nb.map((_, k) => { const vert = k === 0 || k === 3; return Math.abs(pv - 0.5) < 0.1 ? misto : vert === vertFav ? fav : sfav; });
+    // (in ordine "sparso" — passo 97 su 256 — così anche le prove brevi
+    // della scelta del municipio coprono tutta la griglia)
+    const griglia: Params[] = [];
+    for (const f0 of livelli[0]!) for (const f1 of livelli[1]!) for (const f2 of livelli[2]!) for (const f3 of livelli[3]!) {
+      const fr = [f0, f1, f2, f3];
+      griglia.push({ ...base, latiEsatti: 1, tagli: nb.map((n, k) => Math.floor(n * fr[k]!)), angoli: [1, 1, 1, 1] });
+    }
+    // prima la griglia, poi i semi a bracci interi (quasi mai i migliori)
+    const semi = configs.splice(0);
+    for (let i = 0; i < griglia.length; i++) configs.push(griglia[(i * 97) % griglia.length]!);
+    configs.push(...semi);
+    for (let i = 0; i < 80; i++) configs.push({ ...base, latiEsatti: 100 + i, tagli: tagliCasuali(), angoli: i % 4 ? angoliCasuali() : undefined });
   }
   let bestParams: Params | null = null;
   /** Margine (strade) entro cui una disposizione è "promettente": solo a
@@ -2615,11 +2639,18 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
    *  tempo). simula è deterministica, quindi la si ripete con la rifinitura. */
   const MARGINE_PUNTE = 0;
   const promettente = (q: Piano) => q.scollegate === 0 && (!best || (q.esclusi.length <= best.esclusi.length && q.strade <= best.strade + MARGINE_PUNTE));
-  const prova = (p: Params) => {
+  /** Girandola: discesa con ripartenze (richiesta dell'utente: meno
+   *  casuale). `salita` = punto corrente della discesa: il suo vicinato
+   *  sistematico (accodaVicini) si prova tutto; a ogni disposizione migliore
+   *  DELLA SALITA si riparte dal suo vicinato. (Le ripartenze casuali ai
+   *  minimi locali sono state provate e tolte: peggio su Sdrushi2.) */
+  let salita: { piano: Piano; p: Params } | null = null;
+  const prova = (p: Params, inSalita = false) => {
     let piano = simula(p);
-    if (promettente(piano)) piano = simula(p, true);
+    if (promettente(piano) || (inSalita && salita && piano.scollegate === 0 && piano.strade <= salita.piano.strade)) piano = simula(p, true);
     valutate++;
-    if (!best || meglio(piano, best)) { best = piano; bestParams = p; trovataAl = valutate; accodaVicini(p); return true; }
+    if (!best || meglio(piano, best)) { best = piano; bestParams = p; trovataAl = valutate; salita = { piano, p }; accodaVicini(p); return true; }
+    if (inSalita && salita && meglio(piano, salita.piano)) { salita = { piano, p }; accodaVicini(p); }
     return false;
   };
   /** Intensificazione (idea dell'utente su Beta r3: "spostare la dorsale in
@@ -2630,16 +2661,34 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const accodaVicini = (p: Params) => {
     codaVicini.length = 0;
     if (opts.girandola && p.tagli) {
-      // girandola: ogni braccio ±1..±3 celle, il resto invariato
-      const t0 = p.tagli;
-      opts.girandola.bracci.forEach((c, k) => {
-        for (const d of [-1, 1, -2, 2, -3, 3]) {
+      // Girandola: vicinato SISTEMATICO del punto corrente (richiesta
+      // dell'utente: meno casuale), provato tutto e in ordine fisso.
+      const br = opts.girandola.bracci;
+      const t0 = p.tagli, a0 = p.angoli ?? [-1, -1, -1, -1];
+      const vic = (q: Partial<Params>) => codaVicini.push({ ...p, rows: [...p.rows], lenFactor: [...p.lenFactor], capVariant: [...p.capVariant], ...q });
+      // 1. ogni braccio più corto o più lungo (passi piccoli e grandi)
+      br.forEach((c, k) => {
+        for (const d of [-1, 1, -2, 2, -3, 3, -4, 4, -6, 6, -8, 8]) {
           const v = t0[k]! + d;
           if (v < 0 || v > c.length) continue;
           const t = [...t0]; t[k] = v;
-          codaVicini.push({ ...p, tagli: t, rows: [...p.rows], lenFactor: [...p.lenFactor], capVariant: [...p.capVariant] });
+          vic({ tagli: t });
         }
       });
+      // 2. una cella spostata da un braccio a un altro (lunghezza totale uguale)
+      for (let k = 0; k < br.length; k++) for (let j = 0; j < br.length; j++) {
+        if (k === j || t0[k]! >= br[k]!.length || t0[j]! <= 0) continue;
+        const t = [...t0]; t[k]! += 1; t[j]! -= 1;
+        vic({ tagli: t });
+      }
+      // 3. ogni angolo del municipio: lasciato ai lati o con 10 semi fissi
+      for (let k = 0; k < 4; k++) for (const sm of [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+        if (a0[k] === sm) continue;
+        const a = [...a0]; a[k] = sm;
+        vic({ angoli: a });
+      }
+      // 4. ordine dei lati: 8 semi fissi
+      for (let sm = 1; sm <= 8; sm++) if (p.latiEsatti !== sm) vic({ latiEsatti: sm });
       return;
     }
     for (let i = 0; i < p.rows.length; i++) for (const d of [-1, 1, -2, 2, -3, 3]) {
@@ -2708,7 +2757,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const i = iPar++;
     if (i < configs.length) return prova(configs[i]!);
     const vicino = codaVicini.shift();
-    if (vicino) return prova(vicino);
+    if (vicino) return prova(vicino, true);
     if (bestParams && rnd() < 0.5) return prova(muta(bestParams));
     return prova(casuale(nDors, righeCasuali));
   };
@@ -2807,7 +2856,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const cercaDaManuale = async (): Promise<StatoManuale | null> => {
     opts.onSearchActive?.(true);
     let lastYield = performance.now(), lastShow = 0;
-    while (!opts.shouldStop() && !opts.shouldFinishSearch?.() && valutate < SEARCH_MAX_RUNS) {
+    while (!opts.shouldStop() && !opts.shouldFinishSearch?.() && valutate < SEARCH_MAX_RUNS && !(opts.limiteValutate !== undefined && valutate >= opts.limiteValutate)) {
       // Stallo: troppi tentativi senza migliorare → il cammino riparte dalla migliore.
       if (++senzaMigliorare > STALLO) { const M = migliore!; manuale = { pl: new Map(M.pl), rd: new Set(M.rd), punti: M.punti }; senzaMigliorare = 0; }
       const S = manuale!;
@@ -2988,7 +3037,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   else if (daPiazzare.length) {
     opts.onSearchActive?.(true);
     const ottimo = () => best !== null && best.scollegate === 0 && best.deficit === 0 && best.esclusi.length === 0 && best.strade === 0 && best.finiStradaMancanti === 0 && best.latiLiberi === 0; // non migliorabile
-    const continua = () => !ottimo() && valutate < SEARCH_MAX_RUNS && !opts.shouldStop() && !opts.shouldFinishSearch?.();
+    const continua = () => !ottimo() && valutate < SEARCH_MAX_RUNS && !opts.shouldStop() && !opts.shouldFinishSearch?.() && !(opts.limiteValutate !== undefined && valutate >= opts.limiteValutate);
     // La ricerca prosegue finché l'utente non preme "COMPLETA" (o
     // "Ferma"), oppure trova 0 strade nuove con tutti gli edifici inseriti.
     // Ogni miglioramento sostituisce subito la disposizione visualizzata.

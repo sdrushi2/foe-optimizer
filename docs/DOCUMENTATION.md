@@ -790,6 +790,10 @@ osservato un caso "era successiva"/BeniS sui 3 alleati esistenti). Il valore
 salvato è quello al **livello massimo (100)** della singola rarità — un valore
 GREZZO, non cumulativo: l'ereditarietà fra rarità (vedi §14.3) la somma
 
+> **ID rinominati sulla beta (15 ottobre 2026).** Dal 13 ottobre la beta ha rinominato i premi dei Campi di battaglia (`R_MultiAge_Battlegrounds1a…3h*`, `D_MultiAge_Battlegrounds2/4`: Statua all'onore, Il Gran elefante, Strada per la vittoria, Giardino iridescente) in `W_MultiAge_Battlegrounds*`, con `asset_id` = vecchio ID; il server italiano (live) usa ancora i vecchi ID. Effetti: `NomeIta` vuoto (il nome italiano si cercava per ID) e, peggio, le 20 righe coi vecchi ID sparite da `buildings.csv` (le città del live con questi edifici non venivano riconosciute). Fix in `buildings.py`: `id_live` = `asset_id` quando l'ID beta manca dal MainParser italiano, l'`asset_id` c'è e non è un altro edificio della beta → `NomeIta` dal vecchio ID e una **riga gemella** col vecchio ID e gli stessi dati (contatore "righe gemelle col vecchio ID" nel log). `src/assets/buildings.csv` corretto a mano allo stesso modo (20 nomi + 20 righe, Light copiata dalla riga W_).
+
+> **Nuovo formato `productionRewardData` (15 ottobre 2026).** Inno ha sostituito `productionReward` ({era: {livello: reward}}) con `productionRewardData` = `{base: {era: reward senza quantità}, levelAmounts: [0, liv1, …, liv110], names: {era: {"<valore>": "<valore> Forge Points"/"… Goods"/"… Previous Age Goods"}}}` (i valori sono già i totali mostrati in gioco). `allies.py` non lo leggeva: Val1 vuoto per i leggendari "rare" con premio truppe (Re Artù, Merlino, Morgana, … valore 6) e PF/Beni/BeniP/Val1 vuoti per gli alleati scienza (Fibonacci, Indradevi). Fix: `_con_produzione(rarity_info)` ricostruisce un `productionReward` nel vecchio formato (prima era, livelli 1..110 da `levelAmounts`, nome da `names[era][str(valore)]`), chiamata all'inizio di `resolve_val1_and_flags` e `resolve_production_columns`. Verificato: l'`allies.csv` rigenerato è identico a quello del giorno prima (`alliesOLD.csv`).
+
 > **Livello 100, non max(chiavi) (ottobre 2026).** Dal 2026 le tabelle `productionReward`/`rarityBoosts`/`limitedBonuses` di `Allies.txt` arrivano al livello **110**, ma il cap reale è **100** (`Allies.rarities[*].maxLevel = 100`, `levelUpCosts` si ferma a 100, nessun alleato posseduto ≥ 100). `allies.py` leggeva l'ultima chiave (110): PF/Beni/BeniP erano quelli del 110 (es. Fibonacci rara 215 invece di 200). Ora `ALLY_MAX_LEVEL_KEY = "100"`. Scoperto perché `confronta_allies.py` era cieco sugli alleati science (confrontava solo boost d'esercito, tutti 0): ora `linnun.py` esporta PF/Beni/BeniP da «Value @100» (tipo dal flag raw 11/13/14) e `confronta_allies.py` li confronta; lo script è in `PIPELINE_INFO` di `aggiorna_dati.py` e legge l'`allies.csv` appena generato. Unica discrepanza residua con Linnun: Fibonacci comune 65 → 60.
 `getComputedAllyStats` a runtime, non il CSV. Estratte da
 `allies.py::resolve_production_columns`, che distingue i tre casi dal campo
@@ -4853,6 +4857,36 @@ gli edifici senza strada vanno disposti con l'algoritmo di fase 2.
      Misure (30-75 s): Diviziaco r4 67 → 66, r3 75 → 70; Avito r3 174 → 167
      tutti piazzati, r4 170 (1 senza strada fuori, come prima); Beta r3 76,
      r4 78; Rode r3 85 tutti piazzati; Sdrushi r4 75 =; Sonia r3 77 → 76.
+   - **Ricerca girandola più sistematica e scelta del municipio
+     deterministica** (richiesta dell'utente: meno casuale).
+     *Causa della casualità trovata*: `scegliGirandola` chiudeva ogni prova
+     con `shouldFinishSearch` letto dai fotogrammi, che escono ogni 500 ms:
+     il numero di disposizioni valutate (e quindi la posizione scelta)
+     dipendeva dal carico della CPU. Nuova opzione
+     `CompletionOptions.limiteValutate` (stop esatto nei due cicli di
+     ricerca); la scelta del municipio la usa → stessa città, stesso
+     risultato (verificato: due corse parallele identiche). Anche i banchi
+     gir3/gir4/girf la passano.
+     *Ricerca*: configurazioni iniziali = 8 semi + griglia di 256 tagli
+     orientati (4 livelli per braccio da `pv`: favoriti 0-30%, sfavoriti
+     40-85%, misto se pv ≈ 0,5; angoli a seme 1) + 80 casuali;
+     `accodaVicini` girandola = ogni braccio ±1,2,3,4,6,8, una cella fra due
+     bracci, ogni angolo (-1 o semi 1..10), lati (semi 1..8); `prova(p,
+     inSalita)` con `salita` (discesa dal punto corrente). Ripartenze
+     casuali ai minimi locali provate e tolte.
+     *Due girandole* (scelta dell'utente): con 150 disposizioni per
+     posizione tutte le posizioni valgono quasi uguale (Sdrushi2: tutte 73-74
+     strade), la scelta non distingue. Ora due mappe, ognuna con la sua
+     ricerca lunga: "Girandola" col municipio al CENTRO della mappa, verso
+     orario (`baseCentrale`, parte subito, nessuna scelta); "Girandola 2"
+     (`VName` "gir2", `Scenario.gir = 1`) con la posizione migliore delle
+     prove brevi diversa dal centro (`scegliGirandola` restituisce le 2
+     migliori; a parità vince la più vicina al centro, poi la più a
+     sinistra; fra i candidati anche la posizione attuale del municipio
+     della città importata). Banco (20000 disposizioni, deterministico):
+     centro → Sdrushi2 69, Dani 49, Rode 72, Sdrushi 70. Prima griglia dei
+     tagli in ordine "sparso" (passo 97) e i semi a bracci interi dopo.
+     `gir3.ts`: GIR=0 (centro, default) o GIR=1 (scelta).
    - **Punte dei bracci rifinite** (utente su Dani: una cella vuota in
      fondo a un braccio si toglieva spostando l'edificio che la toccava).
      `rifinisciPunte` lavorava solo sulle strade nuove (`rd`); i bracci
