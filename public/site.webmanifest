@@ -2,7 +2,7 @@
   "id": "/",
   "name": "FoE Optimizer",
   "short_name": "FoE Optimizer",
-  "description": "Free Forge of Empires web app: building database, inventory imports, efficiency scores, and a powerful Inventory Optimizer.",
+  "description": "Free Forge of Empires web app: building database, city and inventory imports, efficiency scores, an Inventory Optimizer and an automatic city layout optimizer.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "/",
