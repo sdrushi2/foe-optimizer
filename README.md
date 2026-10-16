@@ -1,8 +1,9 @@
 # FoE Optimizer
 
 A free web app for **Forge of Empires** players: building database, real-time city
-imports, weighted efficiency scoring, and an inventory optimizer that calculates every
-buildable combination of kits, levels, and upgrades.
+imports, weighted efficiency scoring, an inventory optimizer that calculates every
+buildable combination of kits, levels, and upgrades, and an automatic city layout
+optimizer that searches for the best arrangement of your buildings.
 
 🔗 **[foe-optimizer.com](https://foe-optimizer.com)**
 
@@ -14,9 +15,15 @@ buildable combination of kits, levels, and upgrades.
   era-accurate stats instead of catalog defaults.
 - **Inventory import** — import your inventory and let the optimizer work out every
   buildable combo, including partial upgrades and selection kits.
+- **Automatic city layout optimizer** — starting from your imported city, it searches
+  for the best arrangement of buildings (2D packing) on your grid, taking roads and
+  building chains into account.
 - **Weighted efficiency scoring** — rank buildings by attack/defense weight, tile size,
   and your own priorities (PvP, GBG, Guild Expedition, Quantum Incursions).
-- **Allies manager** — track owned allies and rarity, with database comparison.
+- **Allies manager** — track owned allies and rarity, with database comparison and an
+  ally advisor.
+- **Pirate Outpost planner** — a dedicated building placement solver for the in-game
+  Pirate Outpost map.
 - **Multiple profiles** — keep separate setups for different cities or strategies, all
   stored locally in your browser.
 - **Installable PWA** — works offline once installed, with instant loading on repeat
