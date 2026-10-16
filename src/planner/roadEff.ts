@@ -14,7 +14,7 @@
 //  posto è un fine strada con una sola cella.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { PlannerBuilding } from "./engine";
+import { perimetroCoda, type PlannerBuilding } from "./engine";
 
 /** Edificio "grande" (regola dell'utente): entrambi i lati >= 5. */
 export const LATO_GRANDE = 5;
@@ -108,6 +108,14 @@ export function calcolaStradeVuote(
     for (const n of [`${x + 1},${y}`, `${x - 1},${y}`, `${x},${y + 1}`, `${x},${y - 1}`]) {
       if (cells.has(n) && !occ.has(n)) { vuote.push(r); break; }
     }
+  }
+  // Strade accanto agli anelli di una catena (che non richiedono strada):
+  // sprecate come quelle su una cella libera (segnalazione dell'utente).
+  const gia = new Set(vuote);
+  for (const [id, q] of placements) {
+    const b = byId.get(id);
+    if (!b?.zonaStrada) continue;
+    for (const [cx, cy] of perimetroCoda(b, q.x, q.y)) { const k = `${cx},${cy}`; if (roads.has(k) && !gia.has(k)) { gia.add(k); vuote.push(k); } }
   }
   return vuote;
 }

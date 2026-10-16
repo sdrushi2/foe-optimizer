@@ -32,7 +32,7 @@
 //     veloce; gli ultimi rimasti → primo posto libero.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { runPlaceholderPlanner, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
+import { perimetroCoda, perimetroZona, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { fillMask } from "./builder/fase2";
 import { calcolaRoadEff, contaAngoliGriglia, contaFiniStradaErrati, esclusoDaRoadEff, LATO_GRANDE, piccoloDaAngolo, roadEffDi } from "./roadEff";
 
@@ -334,6 +334,12 @@ const TETTO_EFF_QUAD = 2;
  *  > 0 a TUTTE le disposizioni, che poi vinceva sulle strade (i buchi sono
  *  già esclusi dallo spazio utile). */
 const MARGINE_DEFICIT = 1;
+/** Blocchi di catena: celle di bordo che valgono una strada nuova (piazzaBlocchi). */
+const PESO_BORDO_BLOCCO = 1.5;
+/** Blocchi di catena: costo (in strade) di ogni strada accanto agli anelli. */
+const PESO_CODA_BLOCCO = 2;
+/** Blocchi di catena: costo (in strade) di occupare la cella oltre una punta di strada (fine strada). */
+const PESO_PUNTA_BLOCCO = 40;
 const costo = (p: Piano) => p.strade + Math.min(TETTO_EFF_QUAD, PESO_EFF_QUAD * p.effQuad);
 const effMeglio = (a: Piano, b: Piano): boolean | null =>
   EFF_ORDINE === "no" ? null : a.effNum !== b.effNum ? a.effNum < b.effNum : a.effSum !== b.effSum ? a.effSum < b.effSum : null;
@@ -575,7 +581,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     //    solo il municipio NON collega: serve una strada).
     for (const [id, p] of [...placements]) {
       const b = byId.get(id)!;
-      if (!b.isTownhall && b.roadLevel > 0 && !perimetro(p.x, p.y, b.w, b.h).some(k => roads.has(k))) placements.delete(id);
+      if (!b.isTownhall && b.roadLevel > 0 && !toccaStradaZona(b, p.x, p.y, (x, y) => roads.has(key(x, y)))) placements.delete(id);
     }
     ricalcola();
   };
@@ -1559,6 +1565,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             for (let dx = 0; dx < b.w; dx++) { lato(x + dx, y - 1); lato(x + dx, y + b.h); }
             for (let dy = 0; dy < b.h; dy++) { lato(x - 1, y + dy); lato(x + b.w, y + dy); }
             if (!tocca || piuRighe) continue;
+            // blocco di catena: la strada deve toccare l'inizio
+            if (b.zonaStrada && !toccaStradaZona(b, x, y, (px, py) => { const pi = gi(px, py); return pi >= 0 && rg[pi]! > 0; })) continue;
             // Edifici 1×1 e 2×2: preferibilmente nell'angolo di un incrocio.
             const punti = piccoloDaAngolo(b) && nStrade > Math.min(b.w, b.h) ? contatti + 100 : contatti;
             if (punti > bs) { bs = punti; bx = x; by = y; }
@@ -1574,11 +1582,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
      *  compattazioni) viene tolto e riattaccato a una strada esistente
      *  (attaccaAStrade); se non c'è posto resta escluso. */
     const riparaScollegati = () => {
-      const toccaStrada = (a: Azione) => {
-        for (let dx = 0; dx < a.w; dx++) for (const yy of [a.y - 1, a.y + a.h]) { const k = key(a.x + dx, yy); if (roads.has(k) || rd.has(k)) return true; }
-        for (let dy = 0; dy < a.h; dy++) for (const xx of [a.x - 1, a.x + a.w]) { const k = key(xx, a.y + dy); if (roads.has(k) || rd.has(k)) return true; }
-        return false;
-      };
+      // (blocchi di catena: conta solo l'inizio, vedi toccaStradaZona)
+      const toccaStrada = (a: Azione) => toccaStradaZona(byId.get(a.id)!, a.x, a.y, (x, y) => { const k = key(x, y); return roads.has(k) || rd.has(k); });
       const staccati = azioni.filter(a => byId.get(a.id)!.roadLevel > 0 && !toccaStrada(a));
       if (!staccati.length) return;
       for (const a of staccati) {
@@ -1662,7 +1667,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             for (const c of toccano) {
               const a = azioneDi.get(c);
               if (a) {
-                if (byId.get(a.id)!.roadLevel > 0 && !perim(a.x, a.y, a.w, a.h).some(restaStrada)) movers.add(a);
+                if (byId.get(a.id)!.roadLevel > 0 && !toccaStradaZona(byId.get(a.id)!, a.x, a.y, (x, y) => restaStrada(key(x, y)))) movers.add(a);
                 continue;
               }
               // edificio di partenza (non spostabile): se perderebbe la strada, niente
@@ -1701,7 +1706,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
                 for (let dx = 0; dx < a.w; dx++) { prova1(rx - dx, ry - a.h); prova1(rx - dx, ry + 1); }
                 for (let dy = 0; dy < a.h; dy++) { prova1(rx - a.w, ry - dy); prova1(rx + 1, ry - dy); }
               }
-              return out.sort((p1, p2) => Math.abs(p1[0] - a.x) + Math.abs(p1[1] - a.y) - Math.abs(p2[0] - a.x) - Math.abs(p2[1] - a.y));
+              // blocco di catena: solo le posizioni in cui la strada tocca l'inizio
+              const bz = "id" in a ? byId.get((a as Azione).id) : undefined;
+              const ok = bz?.zonaStrada ? out.filter(([x, y]) => toccaStradaZona(bz, x, y, (px, py) => restaStrada(key(px, py)))) : out;
+              return ok.sort((p1, p2) => Math.abs(p1[0] - a.x) + Math.abs(p1[1] - a.y) - Math.abs(p2[0] - a.x) - Math.abs(p2[1] - a.y));
             };
             /** Ricerca esaustiva: ogni pezzo di `pezzi` in una posizione libera che tocca la strada rimasta. */
             const sistema = (pezzi: Azione[]): Array<[number, number]> | null => {
@@ -2203,6 +2211,65 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         }
       }
     };
+    /** Blocchi di catena (catene.ts) per PRIMI (segnalazione dell'utente su
+     *  Filanush: il treno 3×37 negli scenari a raccordo restava fuori perché a
+     *  fine giro non c'era più una striscia libera così lunga). Per ogni
+     *  blocco: distanza (strade nuove) dalla rete attuale a ogni cella libera
+     *  (BFS), poi la posizione libera in cui la strada arriva all'INIZIO della
+     *  catena (`perimetroZona`) col minimo di strade nuove; a parità quella
+     *  più appoggiata al bordo della mappa. Si scava il percorso e si piazza. */
+    const piazzaBlocchi = () => {
+      const blocchi = pending().filter(b => b.zonaStrada && !riservati.has(b.id)).sort((a, b) => b.w * b.h - a.w * a.h);
+      for (const b of blocchi) {
+        const dist = new Map<string, number>(), padre = new Map<string, string | null>();
+        const coda: Array<[number, number]> = [];
+        for (const k of [...roads, ...rd]) { dist.set(k, 0); padre.set(k, null); const i = k.indexOf(","); coda.push([Number(k.slice(0, i)), Number(k.slice(i + 1))]); }
+        for (let i = 0; i < coda.length; i++) {
+          const [x, y] = coda[i]!, d = dist.get(key(x, y))!;
+          for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]] as Array<[number, number]>) {
+            const nk = key(nx, ny);
+            if (dist.has(nk) || !free(nx, ny)) continue;
+            dist.set(nk, d + 1); padre.set(nk, key(x, y)); coda.push([nx, ny]);
+          }
+        }
+        // Celle "oltre la punta" delle strade (fine strada): riservate agli
+        // edifici grandi; un blocco di catena va sul LATO di una strada, con
+        // l'inizio (lato corto 3 della Statua) attaccato e gli anelli
+        // perpendicolari (segnalazione dell'utente).
+        const oltrePunta = new Set<string>();
+        for (const k of [...roads, ...rd]) {
+          const i = k.indexOf(","), rx = Number(k.slice(0, i)), ry = Number(k.slice(i + 1));
+          const vic = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => roads.has(key(rx + dx!, ry + dy!)) || rd.hasXY(rx + dx!, ry + dy!));
+          if (vic.length === 1) oltrePunta.add(key(rx - vic[0]![0]!, ry - vic[0]![1]!));
+        }
+        let migl: { x: number; y: number; costo: number; bordo: number; via: string; v: number } | null = null;
+        for (let y = problem.minY; y <= problem.maxY; y++) for (let x = problem.minX; x <= problem.maxX; x++) {
+          if (!fitsS(x, y, b.w, b.h)) continue;
+          let via: string | null = null, costo = Infinity;
+          for (const [px, py] of perimetroZona(b, x, y)) { const d = dist.get(key(px, py)); if (d !== undefined && d < costo) { costo = d; via = key(px, py); } }
+          if (via === null) continue;
+          // strade già accanto agli anelli: sprecate (vanno evitate)
+          let coda = 0;
+          for (const [cx, cy] of perimetroCoda(b, x, y)) if (dist.get(key(cx, cy)) === 0) coda++;
+          let bordo = 0;
+          for (let d = 0; d < b.w; d++) { if (!inCella(x + d, y - 1)) bordo++; if (!inCella(x + d, y + b.h)) bordo++; }
+          for (let d = 0; d < b.h; d++) { if (!inCella(x - 1, y + d)) bordo++; if (!inCella(x + b.w, y + d)) bordo++; }
+          // al bordo della mappa, anche a costo di qualche strada in più: un
+          // blocco lungo in mezzo alla città toglie lo spazio a tutto il resto
+          let punta = 0;
+          for (const c of oltrePunta) { const i = c.indexOf(","), cx = Number(c.slice(0, i)), cy = Number(c.slice(i + 1)); if (cx >= x && cx < x + b.w && cy >= y && cy < y + b.h) punta++; }
+          const v = costo + PESO_CODA_BLOCCO * coda + PESO_PUNTA_BLOCCO * punta - PESO_BORDO_BLOCCO * bordo;
+          if (!migl || v < migl.v) migl = { x, y, costo, bordo, via, v };
+        }
+        if (!migl) { riservati.add(b.id); continue; } // nessun posto: non lo prendono i lati delle strade
+        const percorso: string[] = [];
+        for (let k: string | null = migl.via; k !== null && !roads.has(k) && !rd.has(k); k = padre.get(k) ?? null) percorso.push(k);
+        // il percorso non deve passare sotto il blocco
+        if (percorso.some(k => { const i = k.indexOf(","), px = Number(k.slice(0, i)), py = Number(k.slice(i + 1)); return px >= migl!.x && px < migl!.x + b.w && py >= migl!.y && py < migl!.y + b.h; })) continue;
+        place("blocco di catena", b, migl.x, migl.y, percorso);
+      }
+    };
+    piazzaBlocchi();
     if (p.latiEsatti !== undefined) riempiLatiStrade(p.latiEsatti);
 
     // Fine strada: gli edifici grandi rimasti (entrambi i lati >= 5). 1-2 →
@@ -2323,7 +2390,13 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const areaEsclusi = pool.filter(b => !fatti.has(b.id)).reduce((t, b) => t + b.w * b.h, 0);
     // I buchi intermedi non sono spazio utile per gli edifici senza strada.
     const buchi = contaBuchi(occ);
-    const stradeVuote = stradeVuoteSuBuchi([...roads, ...rd]);
+    // + strade accanto agli anelli dei blocchi di catena (sprecate, utente)
+    let stradeCoda = 0;
+    for (const a of azioni) {
+      const b = byId.get(a.id)!;
+      if (b.zonaStrada) for (const [cx, cy] of perimetroCoda(b, a.x, a.y)) if (roads.has(key(cx, cy)) || rd.hasXY(cx, cy)) stradeCoda++;
+    }
+    const stradeVuote = stradeVuoteSuBuchi([...roads, ...rd]) + stradeCoda;
     const deficit = Math.max(0, Math.ceil((areaSenzaStrada + areaEsclusi * 1.3) * MARGINE_DEFICIT) - (libere - buchi));
     // Riallineamento: le strade applicate (azioni + stradeExtra) devono essere
     // ESATTAMENTE rd, su cui si calcolano le metriche. Alcuni passi successivi

@@ -11,12 +11,13 @@
 
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import type { CityMapBuilding } from "../data/cityMap";
-import { buildPlannerProblem, runPlaceholderPlanner, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
+import { buildPlannerProblem, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { runBuilder, type BuilderVariant } from "./builder";
 import { runCompletion, type StatoManuale } from "./completion";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
 import { baseCentrale, scegliGirandola, type BaseGirandola } from "./girandola";
+import { espandiCatene, raggruppaCatene } from "./catene";
 import { renderCityMapPng } from "../components/CityMapView";
 import type { UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -89,7 +90,8 @@ function scollegati(frame: PlannerFrame, problem: PlannerProblem, byId: Map<stri
   const out = new Set<string>();
   for (const [id, p] of frame.placements) {
     const b = byId.get(id);
-    if (b && !b.isTownhall && b.roadLevel > 0 && !per(p.x, p.y, b.w, b.h).some(c => coll.has(c))) out.add(id);
+    // (blocchi di catena: conta solo l'inizio, vedi toccaStradaZona)
+    if (b && !b.isTownhall && b.roadLevel > 0 && !toccaStradaZona(b, p.x, p.y, (x, y) => coll.has(k(x, y)))) out.add(id);
   }
   return out;
 }
@@ -293,11 +295,16 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const [erroreImport, setErroreImport] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cityMapBuildings: readonly CityMapBuilding[] = esterna?.buildings ?? cittaProfilo;
-  const problem = useMemo(() => {
-    if (!esterna) return buildPlannerProblem(cittaProfilo, celleProfilo);
+  // Edifici a catena (catene.ts): ogni inizio con i suoi anelli diventa UN
+  // blocco rettangolare che il Planner sposta intero; tutti gli anelli
+  // collegati (regola dell'utente). `catene.blocchi` serve a riscomporre i
+  // blocchi negli edifici originali (PNG).
+  const catene = useMemo(() => {
+    if (!esterna) return raggruppaCatene(buildPlannerProblem(cittaProfilo, celleProfilo));
     // L'export JSON non ha le posizioni delle strade, solo il loro numero.
-    return { ...buildPlannerProblem(esterna.buildings, esterna.cells), originalRoadCells: esterna.strade };
+    return raggruppaCatene({ ...buildPlannerProblem(esterna.buildings, esterna.cells), originalRoadCells: esterna.strade });
   }, [esterna, cittaProfilo, celleProfilo]);
+  const problem = catene.problem;
   const [frames, setFrames] = useState<Record<VName, PlannerFrame | null>>(tutte(null));
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
@@ -735,9 +742,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */
   const scaricaPng = (f: PlannerFrame, n: VName) => {
     const edifici: CityMapBuilding[] = [];
+    const posizioni = espandiCatene(f.placements, catene.blocchi);
     for (const b of cityMapBuildings) {
       if (b.type === "street") continue;
-      const p = f.placements.get(b.mapEntityId);
+      const p = posizioni.get(b.mapEntityId);
       if (p) edifici.push({ ...b, x: p.x, y: p.y });
     }
     for (const k of f.roads) {

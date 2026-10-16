@@ -42,6 +42,43 @@ export interface PlannerBuilding {
   /** Posizione nella città reale (per il municipio fisso). */
   origX: number;
   origY: number;
+  /** Blocco di una catena (catene.ts): solo questa parte (l'inizio della
+   *  catena, relativa all'angolo in alto a sinistra) conta per il
+   *  collegamento alla strada. Assente = tutto l'edificio. */
+  zonaStrada?: { x: number; y: number; w: number; h: number };
+}
+
+/** L'edificio b in (x, y) tocca una strada? Con `zonaStrada` (blocchi di
+ *  catena) conta solo il contorno della zona dell'inizio, fuori dal blocco:
+ *  una catena attaccata alla strada dalla parte dell'ultimo anello NON è
+ *  collegata (segnalazione dell'utente sul treno di Filanush). */
+export function toccaStradaZona(b: PlannerBuilding, x: number, y: number, isRoad: (x: number, y: number) => boolean): boolean {
+  return perimetroZona(b, x, y).some(([cx, cy]) => isRoad(cx, cy));
+}
+
+/** Contorno esterno di un blocco di catena FUORI dalla zona dell'inizio
+ *  (accanto agli anelli, che non richiedono strada): una strada qui è
+ *  sprecata (segnalazione dell'utente). Vuoto per gli edifici normali. */
+export function perimetroCoda(b: PlannerBuilding, x: number, y: number): Array<[number, number]> {
+  if (!b.zonaStrada) return [];
+  const zona = new Set(perimetroZona(b, x, y).map(([cx, cy]) => cx + "," + cy));
+  const out: Array<[number, number]> = [];
+  const add = (cx: number, cy: number) => { if (!zona.has(cx + "," + cy)) out.push([cx, cy]); };
+  for (let d = 0; d < b.w; d++) { add(x + d, y - 1); add(x + d, y + b.h); }
+  for (let d = 0; d < b.h; d++) { add(x - 1, y + d); add(x + b.w, y + d); }
+  return out;
+}
+
+/** Celle esterne da cui l'edificio b in (x, y) si collega alla strada: il
+ *  contorno della `zonaStrada` (o di tutto l'edificio) fuori dall'edificio. */
+export function perimetroZona(b: PlannerBuilding, x: number, y: number): Array<[number, number]> {
+  const z = b.zonaStrada ?? { x: 0, y: 0, w: b.w, h: b.h };
+  const X = x + z.x, Y = y + z.y;
+  const fuori = (cx: number, cy: number) => cx < x || cx >= x + b.w || cy < y || cy >= y + b.h;
+  const out: Array<[number, number]> = [];
+  for (let d = 0; d < z.w; d++) for (const yy of [Y - 1, Y + z.h]) if (fuori(X + d, yy)) out.push([X + d, yy]);
+  for (let d = 0; d < z.h; d++) for (const xx of [X - 1, X + z.w]) if (fuori(xx, Y + d)) out.push([xx, Y + d]);
+  return out;
 }
 
 export interface PlannerProblem {
@@ -260,7 +297,8 @@ export async function runPlaceholderPlanner(problem: PlannerProblem, opts: RunOp
         iterations++;
         if (!fits(x, y, b.w, b.h)) continue;
         let best: { cost: number; via: string } | null = null;
-        for (const [px, py] of perimeter(x, y, b.w, b.h)) {
+        // (blocchi di catena: la strada deve arrivare all'inizio della catena)
+        for (const [px, py] of perimetroZona(b, x, y)) {
           const pk = key(px, py);
           const d = dist.get(pk);
           if (d !== undefined && (!best || d < best.cost)) best = { cost: d, via: pk };

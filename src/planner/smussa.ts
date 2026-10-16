@@ -27,7 +27,7 @@
 //  arrivava a 39 a mano, il cammino "mai peggio" si fermava a 43).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { PlannerBuilding, PlannerFrame, PlannerProblem } from "./engine";
+import { toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { contaAngoliGriglia, esclusoDaRoadEff, roadEffDi } from "./roadEff";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -215,7 +215,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     let ok = true, effDopo = 0, nDopo = 0;
     const fatti: Array<[PlannerBuilding, number, number]> = [];
     for (const [b, x, y] of mosse) {
-      if (!libero(x, y, b.w, b.h) || !tocca(x, y, b.w, b.h)) { ok = false; break; }
+      if (!libero(x, y, b.w, b.h) || (b.zonaStrada ? !toccaStradaZona(b, x, y, isR) : !tocca(x, y, b.w, b.h))) { ok = false; break; }
       rect(x, y, b.w, b.h, 1); fatti.push([b, x, y]);
       const e = eff(b, x, y); effDopo += e; if (e > 0) nDopo++;
     }

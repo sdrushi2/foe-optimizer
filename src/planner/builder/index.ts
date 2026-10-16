@@ -42,7 +42,12 @@ export interface BuilderOutcome {
 /** Input del builder dal problema del Planner (stesso formato dell'export JSON della mappa). */
 function toBuilderInput(problem: PlannerProblem): BuilderInput {
   return {
-    buildings: problem.buildings.map(b => ({
+    // I blocchi di catena (catene.ts) NON passano dal builder: le sue regole
+    // di piazzamento non sanno che solo l'inizio della catena (la Statua, la
+    // locomotiva) va attaccato alla strada e li attaccava dalla parte
+    // dell'ultimo anello (segnalazione dell'utente su Stralis). Li piazza il
+    // completamento per primi (piazzaBlocchi).
+    buildings: problem.buildings.filter(b => !b.zonaStrada).map(b => ({
       id: b.id, cityentity_id: b.entityId, name: b.name, width: b.w, length: b.h,
       x: b.origX, y: b.origY, road_requirement: b.roadLevel,
     })),
