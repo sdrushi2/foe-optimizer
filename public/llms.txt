@@ -21,6 +21,9 @@ localStorage; it is never sent to any server. Imported data unlocks:
   partial upgrades and multi-step kit chains.
 - Allies import: tracking of owned allies and rarity against the full
   ally database.
+- An automatic city layout optimizer: a solver that searches for
+  the best arrangement of buildings (2D packing) starting from the
+  imported city.
 - A dedicated planner for the in-game Pirate Outpost map (building
   placement solver).
 
