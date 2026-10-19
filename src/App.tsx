@@ -2108,7 +2108,7 @@ export default function App() {
   // CityStore.cityMapUnlockedAreas per il perché di questo campo separato.
   const [cityMapUnlockedAreas, setCityMapUnlockedAreas] = useState<UnlockedArea[]>(() => getInitCity()?.cityMapUnlockedAreas ?? []);
   const [showCityMap, setShowCityMap] = useState<boolean>(() => localStorage.getItem(SHOW_CITY_MAP_KEY) === "true");
-  // Planner città (flag di build SHOW_PLANNER, vedi vite.config.ts): non persistente.
+  // Planner città (sempre disponibile dal 19 ottobre 2026): non persistente.
   const [showPlanner, setShowPlanner] = useState(false);
   // Città eliminata (profilo cancellato o svuotato): il Planner si chiude, come
   // se non fosse mai stata importata una città.
@@ -6412,7 +6412,7 @@ export default function App() {
                     MAP
                   </button>
                 )}
-                {SHOW_PLANNER && cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
+                {cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
                   <button
                     onClick={() => setShowPlanner(v => !v)}
                     className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
@@ -6751,7 +6751,7 @@ export default function App() {
           {/* Solo con una città importata (dopo l'eliminazione del profilo o di
               tutti i profili sparisce); key = profilo: cambiando profilo il
               Planner riparte da zero (si fermano le ricerche dell'altro). */}
-          {SHOW_PLANNER && activeTab === "propria_citta" && showPlanner && cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
+          {activeTab === "propria_citta" && showPlanner && cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
             <PlannerView
               key={activeProfileId}
               cityMapBuildings={cityMapBuildings}

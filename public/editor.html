@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Editor città – FoE Optimizer</title>
+<meta name="description" content="Editor della città di Forge of Empires di FoE Optimizer: sposta, duplica e togli edifici e strade, poi salva la città in JSON o PNG.">
+<meta name="author" content="Sdrushi">
+<meta name="application-name" content="FoE Optimizer">
+<!-- noindex: senza una città caricata la pagina è vuota (si apre dal tool,
+     pulsanti "Editor" della MAPPA e "✏ Modifica" del Planner); per lo stesso
+     motivo NON è in sitemap.xml. "follow" come le altre pagine. -->
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://foe-optimizer.com/editor.html">
+<!-- anteprima quando il link viene condiviso (stessa immagine delle altre pagine) -->
+<meta property="og:title" content="Editor città – FoE Optimizer">
+<meta property="og:description" content="Sposta, duplica e togli edifici e strade della tua città di Forge of Empires, poi salvala in JSON o PNG.">
+<meta property="og:url" content="https://foe-optimizer.com/editor.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FoE Optimizer">
+<meta property="og:locale" content="it_IT">
+<meta property="og:image" content="https://foe-optimizer.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<!--
+  Editor della città (idea e prima versione: Sdrushi), ottobre 2026.
+  - Da solo: "Apri JSON" (export JSON del pannello MAPPA / del Planner, payload
+    del bookmarklet o vecchio formato buildings/unlocked_areas), modifica,
+    "Salva JSON" (stesso formato dell'export: CityMapData / CityEntities /
+    UnlockedAreas).
+  - Aperto dal pannello MAPPA (pulsante "Editor"): riceve la città con
+    {tipo:"carica", planner:false}; niente "Applica al Planner".
+  - "Salva PNG": stesso codice dell'export PNG del tool (renderCityMapPng),
+    caricato da /editor-condiviso.js (src/editor/condiviso.ts compilato).
+  - Aperto dal Planner (pulsante "✏ Modifica"): canale bidirezionale con
+    postMessage (stessa origine). Il Planner manda {tipo:"carica"} con la
+    soluzione; "Applica al Planner" rimanda {tipo:"applica"} e il Planner
+    risponde {tipo:"esito", ok, msg} (rifiuta sovrapposizioni, edifici fuori
+    dall'area, duplicati, catene spezzate).
+  Palette: quella della vista MAPPA di FoE Optimizer.
+-->
+<style>
+  /* colori di FoE Optimizer (Tailwind slate/amber) */
+  :root{
+    --bg:#020617;                       /* slate-950 */
+    --line:rgba(245,158,11,.1);         /* amber-500/10, linea sotto l'header */
+    --text:#f1f5f9;                     /* slate-100 */
+    --muted:#94a3b8;                    /* slate-400 */
+    --danger:#ff6b81;
+  }
+
+  *{ box-sizing:border-box; }
+  /* l'attributo hidden deve vincere su display:inline-flex di .btn */
+  [hidden]{ display:none !important; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font:13px ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  }
+
+  /* ---------------- Toolbar ---------------- */
+  #bar{
+    position:sticky; top:0; z-index:1000;
+    display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px;
+    padding:8px 16px 8px 12px;
+    background:rgba(15,23,42,.6);       /* slate-900/60 */
+    -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+    border-bottom:1px solid var(--line);
+  }
+  /* marchio come nell'header di FoE Optimizer */
+  .brand{ display:flex; align-items:center; gap:12px; margin-right:8px; }
+  .logo{
+    display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; flex-shrink:0;
+    border-radius:14px; border:1.5px solid rgba(245,158,11,.8);
+    background:rgba(2,6,23,.8); color:#fbbf24;
+    box-shadow:0 0 15px rgba(245,158,11,.15);
+  }
+  .brand h1{
+    margin:0; font-size:20px; line-height:1.25; font-weight:900;
+    text-transform:uppercase; letter-spacing:.025em; white-space:nowrap;
+    background:linear-gradient(to right,#fcd34d,#fbbf24,#f59e0b);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  #dettaglio{ font-size:11px; font-weight:700; font-style:italic; letter-spacing:.025em; color:var(--muted); }
+  #dettaglio:empty{ display:none; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:7px 14px; border-radius:9px;
+    background:#1e293b; color:#cbd5e1;  /* slate-800 / slate-300 */
+    border:1px solid #334155;           /* slate-700 */
+    font:inherit; font-weight:700; font-size:12px;
+    cursor:pointer; user-select:none;
+  }
+  .btn:hover{ background:#334155; }
+  .btn:disabled{ opacity:.4; cursor:default; }
+  .btn.primary{ border-color:#0ea5e9; color:#7dd3fc; background:#082f49; }
+  .btn.primary:hover:not(:disabled){ background:#0c4a6e; }
+  #stato{ font-size:12px; color:var(--muted); }
+  #stato.ok{ color:#34d399; }
+  #stato.err{ color:#f87171; font-weight:600; }
+
+  /* ---------------- Mappa ---------------- */
+  main{ padding:18px; }
+
+  #map{
+    position:relative;
+    width:640px; height:340px;          /* default, sovrascritti da JS */
+    overflow:hidden;
+    isolation:isolate;                  /* i z-index interni non passano sopra la barra */
+    background:#000;                    /* fuori mappa: nero, come nella vista MAPPA */
+  }
+  #map:empty{ background:transparent; }
+  #map:empty::after{
+    content:attr(data-vuoto);           /* testo nella lingua del tool (applicaLingua) */
+    position:absolute; inset:0;
+    display:grid; place-items:center;
+    color:var(--muted);
+  }
+
+  /* terreno libero: giallino con la griglia della vista MAPPA */
+  .area{
+    position:absolute; z-index:1;
+    background-color:#fffead;
+    background-image:
+      linear-gradient(#a89b3f 1px, transparent 1px),
+      linear-gradient(90deg, #a89b3f 1px, transparent 1px);
+  }
+
+  /* ---------------- Edifici ---------------- */
+  .b{
+    position:absolute; z-index:10;
+    display:flex; align-items:center; justify-content:center;
+    padding:1px 2px;
+    text-align:center; font-size:9px; font-weight:600; line-height:1.1;
+    color:#0f172a;
+    border:1px solid #1e293b;
+    overflow:hidden;
+    cursor:grab; user-select:none; touch-action:none;
+  }
+  .b:hover{ filter:brightness(1.08); }
+  .b.drag{ cursor:grabbing; opacity:.92; box-shadow:0 8px 20px rgba(0,0,0,.5); }
+  .b.selected{ outline:2px dashed var(--danger); outline-offset:-2px; }
+  .b.bad{ box-shadow:inset 0 0 0 3px #ef4444; }
+  .b.light{ color:#f1f5f9; }
+
+  /* rettangolo di selezione */
+  .selbox{
+    position:absolute; z-index:999999; pointer-events:none;
+    border:1px dashed rgba(90,169,255,.9);
+    background:rgba(90,169,255,.13);
+  }
+
+  /* ---------------- Colori (palette della vista MAPPA) ---------------- */
+  .main_building { background:#ffb300; }
+  .greatbuilding { background:#e6542f; }
+  .military      { background:#92400E; color:#f1f5f9; }
+  .street        { background:#8B7355; }
+  .road          { background:#5dd15d; }  /* richiede strada */
+  .noroad        { background:#7abaff; }  /* non richiede strada */
+
+  /* ---------------- Scorciatoie (nella barra) ---------------- */
+  #hints{
+    display:flex; flex-wrap:wrap; gap:4px 16px;
+    flex-basis:100%;                    /* riga propria, allineata a sinistra */
+    color:var(--muted); font-size:11.5px;
+  }
+  kbd{
+    font:inherit; font-weight:600;
+    padding:1px 5px; border-radius:4px;
+    background:#1e293b; color:var(--text);
+  }
+</style>
+</head>
+<body>
+
+<header id="bar">
+  <div class="brand">
+    <div class="logo">
+      <!-- icona "swords" (lucide), la stessa del logo di FoE Optimizer -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m13 19 6-6"/>
+        <path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5"/>
+        <path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586"/>
+        <path d="m16 16 4 4"/><path d="m19 21 2-2"/><path d="m5 14 4 4"/><path d="m5 21-2-2"/><path d="M7.5 16.5 4 20"/>
+      </svg>
+    </div>
+    <div>
+      <h1 data-t="titolo">Editor città</h1>
+      <div id="dettaglio"></div>
+    </div>
+  </div>
+
+  <label class="btn" for="file">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <span data-t="apri">Apri JSON</span>
+  </label>
+  <input type="file" id="file" accept=".json,application/json" hidden>
+  <button type="button" class="btn" id="salva" disabled>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span data-t="salvaJson">Salva JSON</span>
+  </button>
+  <button type="button" class="btn" id="png" disabled>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span data-t="salvaPng">Salva PNG</span>
+  </button>
+  <button type="button" class="btn primary" id="applica" hidden data-t="applica">✔ Applica al Planner</button>
+  <span id="stato"></span>
+  <div id="hints"></div>   <!-- riempito da applicaLingua -->
+</header>
+
+<main><div id="map" data-vuoto="Carica un file .json per visualizzare la città"></div></main>
+
+
+<script>
+const TILE = 20;
+const MIN_SIZE = 72;
+const PAD = 24;            // celle libere in più oltre l'ultimo edificio
+let mapSize = MIN_SIZE;
+
+// Dati della città caricata (servono a "Salva JSON" / "Applica al Planner")
+// ---- Lingua: quella del tool (messaggio "carica"); aperto da solo, la scelta
+// salvata dal tool o la lingua del browser (FoeCondiviso.linguaUi) ----
+const TESTI = {
+  it: {
+    titolo: 'Editor città', apri: 'Apri JSON', salvaJson: 'Salva JSON', salvaPng: 'Salva PNG',
+    applica: '✔ Applica al Planner', vuoto: 'Carica un file .json per visualizzare la città',
+    hints: ['<kbd>Trascina</kbd> sposta', '<kbd>Trascina sul vuoto</kbd> seleziona',
+            '<kbd>Ctrl</kbd> + <kbd>Trascina</kbd> duplica selezione', '<kbd>Shift</kbd> aggiungi alla selezione',
+            '<kbd>Ctrl</kbd> + <kbd>A</kbd> seleziona tutto', '<kbd>Doppio clic</kbd> aggiungi / togli strada',
+            '<kbd>Canc</kbd> elimina edifici selezionati', '<kbd>Ctrl</kbd> + <kbd>Z</kbd> annulla'],
+    badTitle: "Ci sono edifici sovrapposti o fuori dall'area (bordo rosso): sistemali prima di applicare",
+    okTitle: 'Rimanda la città modificata al Planner',
+    bad: n => n + " edifici sovrapposti o fuori dall'area",
+    municipio: 'Municipio',
+    noPng: 'Export PNG non disponibile (manca /editor-condiviso.js)', pngErr: 'Export PNG non riuscito: ',
+    jsonErr: 'JSON non valido: ', plannerChiuso: 'Il Planner è stato chiuso: usa "Salva JSON"',
+    inviata: 'Inviata al Planner…'
+  },
+  en: {
+    titolo: 'City editor', apri: 'Open JSON', salvaJson: 'Save JSON', salvaPng: 'Save PNG',
+    applica: '✔ Apply to Planner', vuoto: 'Load a .json file to show the city',
+    hints: ['<kbd>Drag</kbd> move', '<kbd>Drag on empty space</kbd> select',
+            '<kbd>Ctrl</kbd> + <kbd>Drag</kbd> duplicate selection', '<kbd>Shift</kbd> add to selection',
+            '<kbd>Ctrl</kbd> + <kbd>A</kbd> select all', '<kbd>Double click</kbd> add / remove road',
+            '<kbd>Del</kbd> delete selected buildings', '<kbd>Ctrl</kbd> + <kbd>Z</kbd> undo'],
+    badTitle: 'Some buildings overlap or are outside the area (red border): fix them before applying',
+    okTitle: 'Send the edited city back to the Planner',
+    bad: n => n + ' buildings overlapping or outside the area',
+    municipio: 'Town Hall',
+    noPng: 'PNG export not available (/editor-condiviso.js missing)', pngErr: 'PNG export failed: ',
+    jsonErr: 'Invalid JSON: ', plannerChiuso: 'The Planner has been closed: use "Save JSON"',
+    inviata: 'Sent to the Planner…'
+  }
+};
+let lingua = (navigator.language || '').toLowerCase().startsWith('it') ? 'it' : 'en';
+let linguaDaTool = false;
+const tr = k => TESTI[lingua][k];
+function applicaLingua(l) {
+  lingua = l === 'it' ? 'it' : 'en';
+  document.documentElement.lang = lingua;
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = tr(el.dataset.t); });
+  // testi statici scritti da noi (con <kbd>), non dati esterni
+  document.getElementById('hints').innerHTML = tr('hints').map(h => '<span>' + h + '</span>').join('');
+  document.getElementById('map').dataset.vuoto = tr('vuoto');
+  if (!document.getElementById('dettaglio').textContent) document.title = tr('titolo') + ' – FoE Optimizer';
+  if (!nomeMunicipioDaTool) nomeMunicipio = tr('municipio');
+  if (fonte) verifica();
+}
+let nomeMunicipio = 'Municipio';   // dal tool arriva la traduzione nella sua lingua
+let nomeMunicipioDaTool = false;
+
+let fonte = null;          // { ents, areeRaw, celle:Set, strada:{eid,name,w,h}|null }
+// Canale col Planner: token dell'apertura (null = editor usato da solo)
+let token = null;
+
+// Imposta la dimensione (in celle) della mappa
+function setMapSize(n) {
+  mapSize = n;
+  const map = document.getElementById('map');
+  map.style.width = map.style.height = n * TILE + 'px';
+}
+
+// Larghezza/lunghezza di una definizione: components.AllAge.placement.size
+// (formato nuovo, come FoE Optimizer) oppure i campi diretti width/length
+function dims(e) {
+  if (!e) return null;
+  const s = e.components && e.components.AllAge && e.components.AllAge.placement && e.components.AllAge.placement.size;
+  if (s && s.x && s.y) return [s.x, s.y];
+  if (e.width != null && e.length != null) return [e.width, e.length];
+  return null;
+}
+
+// true se l'edificio NON richiede strada
+function noRoad(e) {
+  if (!e) return false;
+  const lv = (e.requirements && e.requirements.street_connection_level) || 0;
+  const c = e.components && e.components.AllAge && e.components.AllAge.streetConnectionRequirement;
+  return Math.max(lv, (c && c.requiredLevel) || 0) < 1;
+}
+
+// Edifici fissi del gioco: non si spostano né si modificano, vengono sempre scartati
+const FIXED = new Set(['hub_main', 'hub_part', 'off_grid', 'outpost_ship', 'friends_tavern']);
+// Tipi con un colore proprio; tutti gli altri sono verdi (richiedono strada) o azzurri (no)
+const SPECIAL = new Set(['main_building', 'greatbuilding', 'military', 'street']);
+const colorClass = (type, noRoad) => SPECIAL.has(type) ? type : (noRoad ? 'noroad' : 'road');
+
+// Trasforma il JSON in { areas, items }. Accetta il formato dell'export
+// (CityMapData / CityEntities / UnlockedAreas, anche il payload intero del
+// bookmarklet) e il vecchio formato semplificato (buildings / unlocked_areas).
+// `colori` (opzionale, dal Planner): id → colore esatto della vista MAPPA.
+function parse(data, colori) {
+  if (data.data) data = data.data;
+  const ents = data.CityEntities || {};
+  const areeRaw = data.UnlockedAreas || data.unlocked_areas || [];
+  const areas = [], items = [];
+
+  areeRaw.forEach(a =>
+    areas.push({ x: a.x || 0, y: a.y || 0, w: a.width || 4, h: a.length || 4 }));
+
+  Object.entries(data.CityMapData || {}).forEach(([k, b]) => {
+    const e = ents[b.cityentity_id], d = dims(e);
+    if (!d || FIXED.has(e.type)) return;
+    const type = (b.type || e.type || '').toString();
+    const id = b.id != null ? b.id : k;
+    const nr = noRoad(e);
+    items.push({ id, eid: b.cityentity_id, x: b.x || 0, y: b.y || 0, w: d[0], h: d[1], type, noRoad: nr,
+                 cls: colorClass(type, nr), colore: colori && colori[id], name: e.name || b.cityentity_id });
+  });
+
+  (data.buildings || []).forEach(b => {
+    const e = ents[b.cityentity_id];
+    if (!(b.width > 0 && b.length > 0)) return;
+    let type = e && e.type ? e.type : '';
+    if (!type && String(b.cityentity_id || '').startsWith('H_')) type = 'main_building';
+    if (FIXED.has(type)) return;
+    const nr = b.road_requirement === 0;
+    items.push({ id: b.id, eid: b.cityentity_id || b.name, x: b.x || 0, y: b.y || 0, w: b.width, h: b.length,
+                 type, noRoad: nr, cls: colorClass(type, nr), name: b.name || b.cityentity_id });
+  });
+
+  // celle sbloccate (per le strade col doppio clic e il controllo delle posizioni)
+  const celle = new Set();
+  areas.forEach(a => { for (let i = 0; i < a.w; i++) for (let j = 0; j < a.h; j++) celle.add((a.x + i) + ',' + (a.y + j)); });
+  // tipo di strada per il doppio clic: la strada 1×1 della città (o la prima che c'è)
+  const strade = items.filter(i => i.type === 'street');
+  const s = strade.find(i => i.w === 1 && i.h === 1) || strade[0] || null;
+  fonte = { ents, areeRaw, celle, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h } };
+  return { areas, items };
+}
+
+function draw({ areas, items }) {
+  const map = document.getElementById('map');
+  map.innerHTML = '';
+  entries = [];
+  undoStack = [];
+  topZ = 10;
+  sel.clear();
+  let size = MIN_SIZE;
+  areas.forEach(a => size = Math.max(size, a.x + a.w, a.y + a.h));
+  items.forEach(i => size = Math.max(size, i.x + i.w, i.y + i.h));
+  setMapSize(size + PAD);
+
+  const place = (el, x, y, w, h) => {
+    Object.assign(el.style, { left: x * TILE + 'px', top: y * TILE + 'px', width: w * TILE + 'px', height: h * TILE + 'px' });
+    map.appendChild(el);
+  };
+
+  areas.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'area';
+    el.style.backgroundSize = TILE + 'px ' + TILE + 'px';
+    place(el, a.x, a.y, a.w, a.h);
+  });
+
+  items.forEach(i => addBuilding(i));
+  document.getElementById('salva').disabled = false;
+  document.getElementById('png').disabled = false;
+  verifica();
+}
+
+// Testo chiaro sugli sfondi scuri (militari, inattivi)
+function chiaro(c) {
+  if (!c) return false;
+  if (c.startsWith('rgba')) return true;
+  const n = parseInt(c.slice(1), 16);
+  return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) < 120;
+}
+
+// Crea l'elemento di un edificio, lo mette in mappa e lo rende trascinabile
+function addBuilding(i, zIndex) {
+  const map = document.getElementById('map');
+  const el = document.createElement('div');
+  el.className = 'b ' + i.cls + (chiaro(i.colore) ? ' light' : '');
+  if (i.colore) el.style.background = i.colore;
+  el.title = i.name;
+  if (i.type !== 'street') el.innerHTML = '<span></span>', el.firstChild.textContent = i.name;
+  Object.assign(el.style, { left: i.x * TILE + 'px', top: i.y * TILE + 'px', width: i.w * TILE + 'px', height: i.h * TILE + 'px' });
+  if (zIndex) el.style.zIndex = zIndex;
+  map.appendChild(el);
+  const entry = { item: i, el };
+  entries.push(entry);
+  bindBuilding(entry);
+  return entry;
+}
+
+// Edifici sovrapposti o fuori dall'area sbloccata: bordo rosso (il Planner li rifiuta)
+function verifica() {
+  if (!fonte) return 0;
+  const occ = new Map();
+  const bad = new Set();
+  entries.forEach(e => {
+    const i = e.item;
+    for (let dx = 0; dx < i.w; dx++) for (let dy = 0; dy < i.h; dy++) {
+      const k = (i.x + dx) + ',' + (i.y + dy);
+      if (!fonte.celle.has(k)) bad.add(e);
+      const o = occ.get(k);
+      if (o && o !== e) { bad.add(e); bad.add(o); } else occ.set(k, e);
+    }
+  });
+  entries.forEach(e => e.el.classList.toggle('bad', bad.has(e)));
+  const ap = document.getElementById('applica');
+  ap.disabled = bad.size > 0;
+  ap.title = bad.size ? tr('badTitle') : tr('okTitle');
+  if (bad.size) stato(tr('bad')(bad.size), 'err');
+  else if (document.getElementById('stato').className === 'err') stato('');
+  return bad.size;
+}
+
+function stato(msg, cls) {
+  const s = document.getElementById('stato');
+  s.textContent = msg;
+  s.className = cls || '';
+}
+
+// ---- Selezione e trascinamento ----
+let entries = [];
+let topZ = 10;
+let undoStack = [];   // voci: { type:'move'|'dup', moves, clones } oppure { type:'delete', items }
+const sel = new Set();
+
+function setSel(entry, on) {
+  if (on) sel.add(entry); else sel.delete(entry);
+  entry.el.classList.toggle('selected', on);
+}
+function clearSel() {
+  sel.forEach(e => e.el.classList.remove('selected'));
+  sel.clear();
+}
+
+// Trascinamento di tutti gli edifici selezionati, agganciato alla griglia
+function bindBuilding(entry) {
+  const el = entry.el;
+  let drag = null;
+
+  el.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const dup = ev.ctrlKey || ev.metaKey;       // Ctrl: trascinando duplica
+    if (ev.shiftKey && !dup) {                  // Maiusc: aggiunge o toglie dalla selezione
+      setSel(entry, !sel.has(entry));
+      if (!sel.has(entry)) return;
+    } else if (!sel.has(entry)) {               // clic su non selezionato: solo lui
+      clearSel();
+      setSel(entry, true);
+    }
+    el.setPointerCapture(ev.pointerId);
+    const starts = [...sel].map(e => ({ e, x: e.item.x, y: e.item.y }));
+    drag = {
+      px: ev.clientX, py: ev.clientY, starts, dup, clones: null,
+      minX: Math.min(...starts.map(s => s.x)),
+      minY: Math.min(...starts.map(s => s.y)),
+      maxR: Math.max(...starts.map(s => s.x + s.e.item.w)),
+      maxB: Math.max(...starts.map(s => s.y + s.e.item.h))
+    };
+    sel.forEach(e => { e.el.classList.add('drag'); e.el.style.zIndex = ++topZ; });  // porta in primo piano
+  });
+
+  el.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    let dx = Math.round((ev.clientX - drag.px) / TILE);
+    let dy = Math.round((ev.clientY - drag.py) / TILE);
+    dx = Math.max(-drag.minX, dx);                      // non si esce a sinistra
+    dy = Math.max(-drag.minY, dy);                      // né in alto
+    const need = Math.max(drag.maxR + dx, drag.maxB + dy) + PAD;
+    if (need > mapSize) setMapSize(need);               // a destra/in basso la mappa si allarga
+    if (drag.dup && !drag.clones && (dx || dy)) {      // prima mossa: lascia le copie sul posto
+      drag.clones = drag.starts.map(s => addBuilding({ ...s.e.item, x: s.x, y: s.y }, +s.e.el.style.zIndex || 10));
+      drag.starts.forEach(s => { s.e.el.style.zIndex = ++topZ; });   // gli originali restano sopra le copie
+    }
+    drag.starts.forEach(s => {
+      s.e.item.x = s.x + dx;
+      s.e.item.y = s.y + dy;
+      s.e.el.style.left = s.e.item.x * TILE + 'px';
+      s.e.el.style.top = s.e.item.y * TILE + 'px';
+    });
+  });
+
+  const end = () => {
+    if (drag) {
+      const moves = drag.starts
+        .filter(s => s.e.item.x !== s.x || s.e.item.y !== s.y)
+        .map(s => ({ e: s.e, x: s.x, y: s.y }));      // posizione di partenza
+      if (drag.clones) undoStack.push({ type: 'dup', clones: drag.clones, moves });
+      else if (moves.length) undoStack.push({ type: 'move', moves });
+      verifica();
+    }
+    drag = null;
+    sel.forEach(e => e.el.classList.remove('drag'));
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+
+  // Doppio clic su una strada: la toglie
+  el.addEventListener('dblclick', ev => {
+    if (entry.item.type !== 'street') return;
+    ev.stopPropagation();
+    cancella([entry]);
+  });
+}
+
+function cancella(items) {
+  items.forEach(e => e.el.remove());
+  entries = entries.filter(e => !items.includes(e));
+  items.forEach(e => sel.delete(e));
+  undoStack.push({ type: 'delete', items });
+  verifica();
+}
+
+// Rettangolo di selezione trascinando su un punto libero della mappa
+(function () {
+  const map = document.getElementById('map');
+  let rb = null;
+
+  map.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0) return;
+    if (ev.target !== map && !ev.target.classList.contains('area')) return;
+    ev.preventDefault();
+    const additive = ev.ctrlKey || ev.shiftKey;
+    if (!additive) clearSel();
+    const r = map.getBoundingClientRect();
+    const box = document.createElement('div');
+    box.className = 'selbox';
+    map.appendChild(box);
+    map.setPointerCapture(ev.pointerId);
+    rb = { ox: ev.clientX - r.left - map.clientLeft, oy: ev.clientY - r.top - map.clientTop,
+           box, base: new Set(additive ? sel : []) };
+  });
+
+  map.addEventListener('pointermove', ev => {
+    if (!rb) return;
+    const r = map.getBoundingClientRect();
+    const cx = ev.clientX - r.left - map.clientLeft, cy = ev.clientY - r.top - map.clientTop;
+    const x0 = Math.min(rb.ox, cx), y0 = Math.min(rb.oy, cy);
+    const x1 = Math.max(rb.ox, cx), y1 = Math.max(rb.oy, cy);
+    Object.assign(rb.box.style, { left: x0 + 'px', top: y0 + 'px', width: x1 - x0 + 'px', height: y1 - y0 + 'px' });
+    entries.forEach(e => {
+      const i = e.item;
+      const hit = i.x * TILE < x1 && (i.x + i.w) * TILE > x0 && i.y * TILE < y1 && (i.y + i.h) * TILE > y0;
+      setSel(e, hit || rb.base.has(e));
+    });
+  });
+
+  const end = () => { if (rb) { rb.box.remove(); rb = null; } };
+  map.addEventListener('pointerup', end);
+  map.addEventListener('pointercancel', end);
+
+  // Doppio clic su una cella libera dell'area sbloccata: nuova strada
+  map.addEventListener('dblclick', ev => {
+    if (!fonte || !fonte.strada) return;
+    if (ev.target !== map && !ev.target.classList.contains('area')) return;
+    const r = map.getBoundingClientRect();
+    const x = Math.floor((ev.clientX - r.left - map.clientLeft) / TILE);
+    const y = Math.floor((ev.clientY - r.top - map.clientTop) / TILE);
+    const s = fonte.strada;
+    for (let dx = 0; dx < s.w; dx++) for (let dy = 0; dy < s.h; dy++) if (!fonte.celle.has((x + dx) + ',' + (y + dy))) return;
+    if (entries.some(e => x < e.item.x + e.item.w && e.item.x < x + s.w && y < e.item.y + e.item.h && e.item.y < y + s.h)) return;
+    const nuova = addBuilding({ id: null, eid: s.eid, x, y, w: s.w, h: s.h, type: 'street', noRoad: true, cls: 'street', name: s.name });
+    undoStack.push({ type: 'dup', clones: [nuova], moves: [] });
+    verifica();
+  });
+})();
+
+// Ctrl+Z (Cmd+Z su Mac): annulla l'ultima azione (spostamento, duplica, strada o cancellazione)
+// Canc / Backspace: cancella gli edifici selezionati
+document.addEventListener('keydown', ev => {
+  const map = document.getElementById('map');
+
+  if ((ev.key === 'Delete' || ev.key === 'Backspace') && sel.size) {
+    ev.preventDefault();
+    const items = [...sel];
+    clearSel();
+    cancella(items);
+    return;
+  }
+  if (ev.key === 'Escape') { clearSel(); return; }
+  // Ctrl+A: seleziona tutti gli edifici (strade comprese)
+  if ((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && ev.key.toLowerCase() === 'a' && entries.length) {
+    ev.preventDefault();
+    entries.forEach(e => setSel(e, true));
+    return;
+  }
+
+  if (!(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.key.toLowerCase() !== 'z') return;
+  ev.preventDefault();
+  const action = undoStack.pop();
+  if (!action) return;
+
+  if (action.type === 'move' || action.type === 'dup') {
+    if (action.type === 'dup') {                  // elimina le copie create
+      action.clones.forEach(c => c.el.remove());
+      entries = entries.filter(e => !action.clones.includes(e));
+      action.clones.forEach(c => sel.delete(c));
+    }
+    action.moves.forEach(m => {
+      m.e.item.x = m.x;
+      m.e.item.y = m.y;
+      m.e.el.style.left = m.x * TILE + 'px';
+      m.e.el.style.top = m.y * TILE + 'px';
+    });
+  } else {                                        // ripristina gli edifici cancellati
+    action.items.forEach(e => { map.appendChild(e.el); entries.push(e); });
+  }
+  verifica();
+});
+
+// ---- Esportazione: stesso formato dell'export di FoE Optimizer ----
+// { CityMapData, CityEntities (solo quelli usati), UnlockedAreas }. Le copie
+// (Ctrl+trascina) e le strade nuove ricevono un id numerico nuovo.
+function esporta() {
+  const CityMapData = {}, CityEntities = {};
+  const usati = new Set();
+  let prossimo = 1 + Math.max(0, ...entries.map(e => (/^\d+$/.test(String(e.item.id)) ? Number(e.item.id) : 0)));
+  // ordine di creazione: a parità di id lo tiene l'originale, non la copia
+  entries.forEach(e => {
+    const i = e.item;
+    let id = i.id;
+    if (id == null || usati.has(String(id))) id = prossimo++;
+    usati.add(String(id));
+    CityMapData[id] = { id, cityentity_id: i.eid, type: i.type, x: i.x, y: i.y };
+    if (!CityEntities[i.eid]) {
+      const orig = fonte.ents[i.eid];
+      CityEntities[i.eid] = orig || Object.assign({ id: i.eid, name: i.name, type: i.type, width: i.w, length: i.h },
+        i.noRoad || i.type === 'street' || i.type === 'main_building' ? {} : { requirements: { street_connection_level: 1 } });
+    }
+  });
+  return { CityMapData, CityEntities, UnlockedAreas: fonte.areeRaw };
+}
+
+document.getElementById('salva').addEventListener('click', () => {
+  if (!fonte) return;
+  const blob = new Blob([JSON.stringify(esporta(), null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  a.href = url;
+  a.download = 'foe-editor-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+// ---- Export PNG: lo STESSO codice del tool (renderCityMapPng di
+// src/components/cityMapPng.ts), caricato da /editor-condiviso.js ----
+document.getElementById('png').addEventListener('click', () => {
+  const C = window.FoeCondiviso;
+  if (!fonte) return;
+  if (!C) { alert(tr('noPng')); return; }
+  const edifici = entries.map(e => {
+    const i = e.item;
+    return { x: i.x, y: i.y, w: i.w, h: i.h, type: i.type, name: i.name, colore: i.colore,
+             isGreatBuilding: i.type === 'greatbuilding' || String(i.eid).startsWith('X_'),
+             isMilitary: i.type === 'military', roadLevel: i.noRoad ? 0 : 1 };
+  });
+  try {
+    const canvas = document.createElement('canvas');
+    C.renderCityMapPng(canvas, edifici, fonte.areeRaw, 2, nomeMunicipio);
+    const a = document.createElement('a');
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    a.download = 'foe-editor-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.png';
+    a.href = canvas.toDataURL('image/png');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    alert(tr('pngErr') + err.message);
+  }
+});
+
+document.getElementById('file').addEventListener('change', ev => {
+  const f = ev.target.files[0];
+  ev.target.value = '';                      // permette di ricaricare lo stesso file
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { draw(parse(JSON.parse(r.result))); stato(''); }
+    catch (err) { alert(tr('jsonErr') + err.message); }
+  };
+  r.readAsText(f);
+});
+
+// ---- Canale col Planner (postMessage, stessa origine) ----
+const planner = window.opener && window.opener !== window ? window.opener : null;
+window.addEventListener('message', ev => {
+  if (ev.origin !== location.origin || !planner || ev.source !== planner) return;
+  const m = ev.data || {};
+  if (m.tipo === 'carica') {
+    // planner:false = aperto dal pannello MAPPA: solo visualizzazione e
+    // "Salva JSON", niente "Applica al Planner" né dettaglio nel titolo
+    const dalPlanner = m.planner !== false;
+    token = dalPlanner ? m.token : null;
+    document.getElementById('dettaglio').textContent = dalPlanner ? 'Planner · ' + (m.titolo || '') : '';
+    if (m.lang) { linguaDaTool = true; applicaLingua(m.lang); }
+    document.title = (dalPlanner ? 'Editor · ' + (m.titolo || 'Planner') : tr('titolo')) + ' – FoE Optimizer';
+    document.getElementById('applica').hidden = !dalPlanner;
+    draw(parse(m.json, m.colori));
+    if (m.nomeMunicipio) { nomeMunicipio = String(m.nomeMunicipio); nomeMunicipioDaTool = true; }
+    stato('');
+  } else if (m.tipo === 'esito' && m.token === token) {
+    stato(m.msg, m.ok ? 'ok' : 'err');
+    if (!m.ok) alert(m.msg);
+  }
+});
+document.getElementById('applica').addEventListener('click', () => {
+  if (!fonte || !planner || token == null) return;
+  if (planner.closed) { stato(tr('plannerChiuso'), 'err'); return; }
+  if (verifica()) return;
+  planner.postMessage({ tipo: 'applica', token, json: esporta() }, location.origin);
+  stato(tr('inviata'));
+});
+applicaLingua(lingua);
+// aperto da solo: lingua del tool (codice condiviso, caricato come modulo dopo questo script)
+document.addEventListener('DOMContentLoaded', () => {
+  const C = window.FoeCondiviso;
+  if (!linguaDaTool && C && C.linguaUi) applicaLingua(C.linguaUi());
+});
+if (planner) planner.postMessage({ tipo: 'pronto' }, location.origin);
+</script>
+<!-- codice condiviso col tool (export PNG): src/editor/condiviso.ts compilato -->
+<script type="module" src="/editor-condiviso.js"></script>
+</body>
+</html>

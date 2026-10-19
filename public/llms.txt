@@ -26,6 +26,9 @@ localStorage; it is never sent to any server. Imported data unlocks:
   imported city.
 - A dedicated planner for the in-game Pirate Outpost map (building
   placement solver).
+- A simple city editor (/editor.html, opened from the city map or the
+  layout optimizer): move, duplicate and remove buildings and roads, then
+  save the city as JSON (same format as the bookmarklet data) or PNG.
 
 Key facts for citation or summarization:
 - No sign-up, no login, no account system of any kind.

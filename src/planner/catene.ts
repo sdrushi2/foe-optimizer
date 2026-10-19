@@ -32,7 +32,7 @@ interface InfoCatena { catena: string; ruolo: "inizio" | "anello"; aggancio: num
 const EDIFICI = (dati as unknown as { edifici: Record<string, InfoCatena> }).edifici;
 
 /** Prefisso dell'id dei blocchi (id = prefisso + id dell'inizio). */
-export const PREFISSO_BLOCCO = "catena:";
+const PREFISSO_BLOCCO = "catena:";
 
 export interface Blocco {
   id: string;
@@ -137,7 +137,7 @@ export function raggruppaCatene(
 }
 
 /** Anelli in parti uguali fra gli inizi (i primi ne prendono uno in più). */
-export function parti(_catena: string, nInizi: number, nAnelli: number): number[] {
+function parti(_catena: string, nInizi: number, nAnelli: number): number[] {
   return Array.from({ length: nInizi }, (_, i) => Math.floor(nAnelli / nInizi) + (i < nAnelli % nInizi ? 1 : 0));
 }
 

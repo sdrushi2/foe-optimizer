@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  planner/PlannerView.tsx — Modulo Planner della tab Città (SPERIMENTALE)
 //
-//  Compilato SOLO se il flag di build SHOW_PLANNER (vite.config.ts) è true.
+//  Sempre incluso nel tool (il flag di build SHOW_PLANNER è stato tolto il 19 ottobre 2026).
 //  Tre mappe (raccordo est a 3 celle, a 4 celle, girandola), eliminabili col
 //  cestino, calcolate in parallelo
 //  (FoE City Builder fase 1+2, poi ricerca degli edifici con strada e
@@ -9,7 +9,7 @@
 //  entrambe; l'utente sceglie la disposizione che preferisce.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CityMapBuilding } from "../data/cityMap";
 import { buildPlannerProblem, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { runBuilder, type BuilderVariant } from "./builder";
@@ -18,9 +18,11 @@ import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "
 import { smussaBordi } from "./smussa";
 import { baseCentrale, scegliGirandola, type BaseGirandola } from "./girandola";
 import { espandiCatene, raggruppaCatene } from "./catene";
-import { renderCityMapPng } from "../components/CityMapView";
-import type { UiLang } from "../data/ui-strings";
+import { coloreEdificioMappa, renderCityMapPng } from "../components/cityMapPng";
+import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
+import { esportaCittaJson, leggiCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
+import { cittaDaEditor } from "./editorPonte";
 
 interface Props {
   cityMapBuildings: readonly CityMapBuilding[];
@@ -42,34 +44,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /** Velocità fissa: massima (nessuna pausa tra i fotogrammi). */
 const delayMs = 0;
 
-/** Modifiche manuali durante la pausa. */
-interface Edit {
-  move: (id: string, x: number, y: number) => void;
-  remove: (id: string) => void;
-  deleteRoad: (k: string) => void;
-  /** Nuova cella di strada su una cella libera (solo in pausa durante la ricerca). */
-  addRoad: (k: string) => void;
-}
-
 /** Edifici con strada non collegati alla rete del municipio (bordo rosso in pausa). */
-/** Edifici sovrapposti ad altri edifici (ammessi temporaneamente in pausa,
- *  per poter scambiare due edifici in una città piena): vanno risolti prima
- *  di riprendere. */
-function sovrapposti(frame: PlannerFrame | null, byId: Map<string, PlannerBuilding>): Set<string> {
-  const out = new Set<string>();
-  if (!frame) return out;
-  const cella = new Map<string, string>();
-  for (const [id, p] of frame.placements) {
-    const b = byId.get(id);
-    if (b) for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) {
-      const k = `${p.x + dx},${p.y + dy}`;
-      const o = cella.get(k);
-      if (o && o !== id) { out.add(o); out.add(id); } else cella.set(k, id);
-    }
-  }
-  return out;
-}
-
 function scollegati(frame: PlannerFrame, problem: PlannerProblem, byId: Map<string, PlannerBuilding>): Set<string> {
   const k = (x: number, y: number) => `${x},${y}`;
   const per = (x: number, y: number, w: number, h: number) => {
@@ -96,81 +71,18 @@ function scollegati(frame: PlannerFrame, problem: PlannerProblem, byId: Map<stri
   return out;
 }
 
-function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia, stradeVuote }: { frame: PlannerFrame | null; problem: PlannerProblem; byId: Map<string, PlannerBuilding>; ge: ReadonlySet<string>; edit?: Edit; soloSenzaStrada?: boolean; evidenzia?: ReadonlySet<string>; stradeVuote?: readonly string[] }) {
+/** Mappa di uno scenario (solo visualizzazione: le modifiche a mano si fanno
+ *  nell'editor esterno, pulsante "✏ Modifica"). */
+function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote }: { frame: PlannerFrame | null; problem: PlannerProblem; byId: Map<string, PlannerBuilding>; ge: ReadonlySet<string>; pausa?: boolean; evidenzia?: ReadonlySet<string>; stradeVuote?: readonly string[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const width = (problem.maxX - problem.minX + 1) * CELL;
   const height = (problem.maxY - problem.minY + 1) * CELL;
-  /** Trascinamento in corso: edificio, presa (offset nella cella) e posizione fantasma. */
-  const [drag, setDrag] = useState<{ id: string; ox: number; oy: number; x: number; y: number } | null>(null);
-  /** Cella → id dell'edificio che la occupa. */
-  const cellaEdificio = useMemo(() => {
-    const m = new Map<string, string>();
-    if (frame) for (const [id, p] of frame.placements) {
-      const b = byId.get(id);
-      if (b) for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) m.set(`${p.x + dx},${p.y + dy}`, id);
-    }
-    return m;
-  }, [frame, byId]);
-  /** Posizione di rilascio: "libera", "sopra" (sovrapposta ad altri edifici:
-   *  ammessa temporaneamente, per gli scambi in città piene) o null (fuori
-   *  dall'area sbloccata o su una strada: non ammessa). */
-  const valido = (id: string, x: number, y: number): "libera" | "sopra" | null => {
-    const b = byId.get(id);
-    if (!b || !frame) return null;
-    let sopra = false;
-    for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) {
-      const c = `${x + dx},${y + dy}`;
-      if (!problem.cells.has(c) || frame.roads.has(c)) return null;
-      const o = cellaEdificio.get(c);
-      if (o && o !== id) sopra = true;
-    }
-    return sopra ? "sopra" : "libera";
-  };
-  const cella = (e: { clientX: number; clientY: number }) => {
-    const r = canvasRef.current!.getBoundingClientRect();
-    return {
-      x: Math.floor(((e.clientX - r.left) / r.width) * (width / CELL)) + problem.minX,
-      y: Math.floor(((e.clientY - r.top) / r.height) * (height / CELL)) + problem.minY,
-    };
-  };
-  const onPointerDown = (e: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (!edit || !frame || e.button !== 0) return;
-    const { x, y } = cella(e);
-    const c = `${x},${y}`;
-    const id = cellaEdificio.get(c);
-    if (id) {
-      if (byId.get(id)?.isTownhall) return;
-      if (soloSenzaStrada && (byId.get(id)?.roadLevel ?? 0) > 0) return; // fase di completamento: solo edifici senza strada
-      const p = frame.placements.get(id)!;
-      (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
-      setDrag({ id, ox: x - p.x, oy: y - p.y, x: p.x, y: p.y });
-    } else if (frame.roads.has(c)) { if (!soloSenzaStrada) edit.deleteRoad(c); }
-    else if (!soloSenzaStrada && problem.cells.has(c)) edit.addRoad(c);
-  };
-  const onPointerMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (!drag) return;
-    const { x, y } = cella(e);
-    const nx = x - drag.ox, ny = y - drag.oy;
-    if (nx !== drag.x || ny !== drag.y) setDrag({ ...drag, x: nx, y: ny });
-  };
-  const onPointerUp = () => {
-    if (!drag || !edit || !frame) { setDrag(null); return; }
-    const p = frame.placements.get(drag.id);
-    if (p && (p.x !== drag.x || p.y !== drag.y) && valido(drag.id, drag.x, drag.y) !== null) edit.move(drag.id, drag.x, drag.y);
-    setDrag(null);
-  };
-  const onContextMenu = (e: ReactMouseEvent<HTMLCanvasElement>) => {
-    if (!edit || !frame) return;
-    e.preventDefault();
-    const id = cellaEdificio.get(`${cella(e).x},${cella(e).y}`);
-    if (id && !byId.get(id)?.isTownhall && !(soloSenzaStrada && (byId.get(id)?.roadLevel ?? 0) > 0)) edit.remove(id);
-  };
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx || !Number.isFinite(width)) return;
     const px = (x: number) => (x - problem.minX) * CELL;
     const py = (y: number) => (y - problem.minY) * CELL;
-    ctx.fillStyle = "#020617";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#1e293b";
     for (const k of problem.cells) {
@@ -178,17 +90,18 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia,
       ctx.fillRect(px(x), py(y), CELL - 1, CELL - 1);
     }
     if (!frame) return;
-    const lastPath = new Set(frame.lastPath);
+    // strade tutte col colore della vista MAPPA (niente più giallo per le nuove)
+    ctx.fillStyle = coloreEdificioMappa({ isStreet: true });
     for (const k of frame.roads) {
       const [x, y] = k.split(",").map(Number) as [number, number];
-      ctx.fillStyle = lastPath.has(k) ? "#facc15" : "#94a3b8";
       ctx.fillRect(px(x), py(y), CELL - 1, CELL - 1);
     }
     for (const [id, p] of frame.placements) {
       const b = byId.get(id);
       if (!b) continue;
-      // Grandi Edifici in rosso, come nella mappa del pannello MAPPA.
-      ctx.fillStyle = b.isTownhall ? "#d97706" : ge.has(id) ? "#dc2626" : b.isMilitary ? "#92400e" : b.roadLevel > 0 ? "#15803d" : "#0e7490";
+      // Palette della vista MAPPA (unica fonte: coloreEdificioMappa), senza la
+      // zebra dei collegati senza bisogno.
+      ctx.fillStyle = coloreEdificioMappa({ ...b, isGreatBuilding: ge.has(id) });
       ctx.fillRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
     }
     if (evidenzia?.size) {
@@ -220,7 +133,7 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia,
       ctx.lineWidth = 2;
       ctx.strokeRect(px(frame.probe.x), py(frame.probe.y), frame.probe.w * CELL - 1, frame.probe.h * CELL - 1);
     }
-    if (edit) {
+    if (pausa) {
       // In pausa: bordo rosso sugli edifici con strada non collegati.
       ctx.strokeStyle = "#ef4444";
       ctx.lineWidth = 2;
@@ -228,67 +141,18 @@ function MapCanvas({ frame, problem, byId, ge, edit, soloSenzaStrada, evidenzia,
         const p = frame.placements.get(id)!, b = byId.get(id)!;
         ctx.strokeRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
       }
-      // Edifici sovrapposti (spostamento temporaneo): riquadro rosso pieno.
-      ctx.lineWidth = 3;
-      for (const id of sovrapposti(frame, byId)) {
-        const p = frame.placements.get(id)!, b = byId.get(id)!;
-        ctx.fillStyle = "rgba(239,68,68,0.35)";
-        ctx.fillRect(px(p.x), py(p.y), b.w * CELL - 1, b.h * CELL - 1);
-        ctx.strokeRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
-      }
     }
-    if (drag) {
-      const b = byId.get(drag.id);
-      if (b) {
-        const v = valido(drag.id, drag.x, drag.y);
-        ctx.fillStyle = v === "libera" ? "rgba(52,211,153,0.55)" : v === "sopra" ? "rgba(249,115,22,0.6)" : "rgba(100,116,139,0.6)";
-        ctx.fillRect(px(drag.x), py(drag.y), b.w * CELL - 1, b.h * CELL - 1);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frame, problem, byId, ge, width, height, drag, edit, evidenzia, stradeVuote]);
+  }, [frame, problem, byId, ge, width, height, pausa, evidenzia, stradeVuote]);
   return (
-    <canvas ref={canvasRef} className={`block h-auto w-full ${edit ? (drag ? "cursor-grabbing" : "cursor-pointer") : ""}`}
-      style={edit ? { touchAction: "none" } : undefined}
-      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => setDrag(null)}
-      onContextMenu={onContextMenu}
+    <canvas ref={canvasRef} className="block h-auto w-full"
       width={Number.isFinite(width) ? width : 0} height={Number.isFinite(height) ? height : 0} />
   );
 }
 
-/** Città esterna importata da un JSON (formato dell'export JSON del pannello
- *  MAPPA: buildings / roads / unlocked_areas), per provare il Planner sulle
+/** Città esterna importata da un JSON (export JSON del pannello MAPPA, vecchio
+ *  o nuovo formato, o payload del bookmarklet), per provare il Planner sulle
  *  città che mandano gli utenti. Non viene salvata da nessuna parte. */
-interface CittaEsterna { nome: string; buildings: CityMapBuilding[]; cells: Set<string>; strade: number }
-
-/** Legge l'export JSON della mappa. Errore leggibile se il formato non torna. */
-function leggiCittaJson(nome: string, testo: string): CittaEsterna {
-  const d = JSON.parse(testo) as {
-    buildings?: Array<{ id?: unknown; cityentity_id?: unknown; name?: unknown; width?: unknown; length?: unknown; x?: unknown; y?: unknown; road_requirement?: unknown }>;
-    roads?: { single?: unknown; two_lane?: unknown };
-    unlocked_areas?: Array<{ x?: unknown; y?: unknown; width?: unknown; length?: unknown }>;
-  };
-  if (!Array.isArray(d.buildings) || !Array.isArray(d.unlocked_areas)) throw new Error("mancano 'buildings' o 'unlocked_areas'");
-  const cells = new Set<string>();
-  for (const a of d.unlocked_areas) {
-    const x = Number(a.x ?? 0), y = Number(a.y ?? 0), w = Number(a.width ?? 4), l = Number(a.length ?? 4);
-    for (let i = 0; i < w; i++) for (let j = 0; j < l; j++) cells.add(`${x + i},${y + j}`);
-  }
-  const buildings: CityMapBuilding[] = d.buildings.map((b, i) => {
-    const entityId = String(b.cityentity_id ?? "");
-    return {
-      entityId, mapEntityId: String(b.id ?? `ext-${i}`), name: String(b.name ?? entityId),
-      x: Number(b.x ?? 0), y: Number(b.y ?? 0), w: Number(b.width ?? 1), h: Number(b.length ?? 1),
-      type: entityId.startsWith("H_") ? "main_building" : "building",
-      isGreatBuilding: entityId.startsWith("X_"), isMilitary: entityId.startsWith("M_"),
-      isNeedlessRoad: false, isInactive: false, isSuppliesProducer: false,
-      roadLevel: Number(b.road_requirement ?? 0),
-    };
-  });
-  if (!buildings.some(b => b.type === "main_building")) throw new Error("manca il municipio (cityentity_id H_…)");
-  const strade = Number(d.roads?.single ?? 0) + Number(d.roads?.two_lane ?? 0) * 4;
-  return { nome, buildings, cells, strade };
-}
+interface CittaEsterna extends CittaJson { nome: string }
 
 export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, uiLang }: Props) {
   const [esterna, setEsterna] = useState<CittaEsterna | null>(null);
@@ -329,8 +193,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const [inPausa, setInPausa] = useState<Record<VName, boolean>>(tutte(false));
   const inPausaRef = useRef<Record<VName, boolean>>(tutte(false));
   inPausaRef.current = inPausa;
-  /** Stato della smussatura per mappa (etichetta mostrata sotto l'intestazione). */
-  const [statoSmussa, setStatoSmussa] = useState<Partial<Record<VName, string>>>({});
   /** Risolutori delle attese di ripresa, per mappa. */
   const resumeRef = useRef<Partial<Record<VName, (s: StatoManuale | null) => void>>>({});
   /** Mappe modificate a mano durante la pausa. */
@@ -386,7 +248,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const grandiEdifici = useMemo(() => new Set(cityMapBuildings.filter(b => b.isGreatBuilding).map(b => b.mapEntityId)), [cityMapBuildings]);
   const importaJson = async (file: File) => {
     try {
-      setEsterna(leggiCittaJson(file.name.replace(/\.json$/i, ""), await file.text()));
+      setEsterna({ nome: file.name.replace(/\.json$/i, ""), ...leggiCittaJson(await file.text()) });
       setErroreImport(null);
     } catch (err) {
       setErroreImport(`JSON non valido: ${err instanceof Error ? err.message : String(err)}`);
@@ -395,7 +257,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
 
   /** Riprende tutte le mappe in pausa, passando le disposizioni modificate a mano. */
   const riprendi = () => {
-    setStatoSmussa({});
     pausedRef.current = false;
     setPaused(false);
     for (const v of VARIANTI) {
@@ -452,27 +313,12 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           modRef.current[sc.id] = true;
           autoRef.current[sc.id] = { f: nf, smussato: true };
           setManuali(m => (m[sc.id] ? { ...m, [sc.id]: false } : m));
-          setStatoSmussa(st => ({ ...st, [sc.id]: f.label ?? "" }));
         },
       });
     }));
     setSmussando(false);
   };
 
-  /** Modifica manuale della mappa v (solo in pausa): aggiorna il fotogramma mostrato. */
-  const modifica = (v: VName, cambia: (pl: Map<string, { x: number; y: number }>, rd: Set<string>) => void, nuovaStrada?: string) => {
-    const f = framesRef.current[v];
-    if (!f) return;
-    const pl = new Map(f.placements), rd = new Set(f.roads);
-    cambia(pl, rd);
-    // Le strade aggiunte a mano sono nuove: gialle come le altre strade nuove.
-    const lastPath = [...f.lastPath.filter(k => rd.has(k)), ...(nuovaStrada ? [nuovaStrada] : [])];
-    const nf: PlannerFrame = { ...f, placements: pl, roads: rd, lastPath, probe: null, placed: pl.size };
-    framesRef.current = { ...framesRef.current, [v]: nf };
-    setFrames(prev => ({ ...prev, [v]: nf }));
-    modRef.current[v] = true;
-    setManuali(m => (m[v] ? m : { ...m, [v]: true }));
-  };
   /** "Sposta l'intera città" (richiesta dell'utente, solo in pausa): edifici,
    *  municipio e strade traslati in blocco di (dx, dy); conta come modifica a
    *  mano. Null se qualche cella uscirebbe dall'area sbloccata. */
@@ -553,14 +399,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (res && annullaRef.current[v]) { delete resumeRef.current[v]; res(null); }
     }
   };
-  const editFor = (v: VName): Edit => ({
-    // delete + set: l'edificio spostato va in cima (disegnato e selezionato per primo se sovrapposto)
-    move: (id, x, y) => modifica(v, pl => { pl.delete(id); pl.set(id, { x, y }); }),
-    remove: (id) => modifica(v, pl => { pl.delete(id); }),
-    deleteRoad: (k) => modifica(v, (_pl, rd) => { rd.delete(k); }),
-    addRoad: (k) => modifica(v, (_pl, rd) => { rd.add(k); }, k),
-  });
-
   /** Anima le tappe del builder per una variante, poi completamento + ricerca. */
   const eseguiVariante = async (sc: Scenario) => {
     const { id, v } = sc;
@@ -705,8 +543,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Scenari visibili (calcolati e non eliminati). */
   const visibili = (outcome ?? []).filter(sc => !eliminati.has(sc.id));
   const anySearching = visibili.some(sc => searching[sc.id]);
-  /** Edifici sovrapposti sulle mappe in pausa: finché ce ne sono non si può riprendere. */
-  const nSovrapposti = visibili.reduce((t, sc) => t + (inPausa[sc.id] ? sovrapposti(frames[sc.id], byId).size : 0), 0);
   const anyFilling = visibili.some(sc => filling[sc.id]);
   /** Cestino: ferma ed elimina uno scenario (resta almeno uno). */
   const elimina = (id: VName) => {
@@ -739,8 +575,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     );
   };
 
-  /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */
-  const scaricaPng = (f: PlannerFrame, n: VName) => {
+  /** Edifici (catene riscomposte) e strade di una soluzione, come cityMapBuildings. */
+  const edificiFrame = (f: PlannerFrame): CityMapBuilding[] => {
     const edifici: CityMapBuilding[] = [];
     const posizioni = espandiCatene(f.placements, catene.blocchi);
     for (const b of cityMapBuildings) {
@@ -748,21 +584,44 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       const p = posizioni.get(b.mapEntityId);
       if (p) edifici.push({ ...b, x: p.x, y: p.y });
     }
+    // strade tracciate dal Planner: sempre a una corsia, col tipo di strada 1×1 della città
+    const s1 = cityMapBuildings.find(b => b.type === "street" && b.w === 1 && b.h === 1);
     for (const k of f.roads) {
       const [x, y] = k.split(",").map(Number) as [number, number];
       edifici.push({
-        entityId: "street", mapEntityId: `planner-road-${k}`, name: "", x, y, w: 1, h: 1, type: "street",
+        entityId: s1?.entityId ?? "street", mapEntityId: `planner-road-${k}`, name: s1?.name ?? "", x, y, w: 1, h: 1, type: "street",
         isGreatBuilding: false, isMilitary: false, isNeedlessRoad: false, isInactive: false, isSuppliesProducer: false, roadLevel: 0,
       });
     }
-    const aree = [...problem.cells].map(k => { const [x, y] = k.split(",").map(Number) as [number, number]; return { x, y, width: 1, length: 1 }; });
+    return edifici;
+  };
+  /** Terreno sbloccato come strisce orizzontali di celle contigue (UnlockedAreas). */
+  const areeProblema = () => {
+    const aree: Array<{ x: number; y: number; width: number; length: number }> = [];
+    const pts = [...problem.cells].map(k => k.split(",").map(Number) as [number, number]).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    for (const [x, y] of pts) {
+      const u = aree[aree.length - 1];
+      if (u && u.y === y && u.x + u.width === x) u.width++;
+      else aree.push({ x, y, width: 1, length: 1 });
+    }
+    return aree;
+  };
+  const nomeFile = (n: VName, ext: string) => {
+    const sc = outcome?.find(x => x.id === n);
+    return sc && !sc.raccordo ? `foe-planner-girandola${sc.gir ? "-2" : ""}-${localDateStamp()}.${ext}`
+      : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.${ext}`;
+  };
+  /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
+  const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f), areeProblema()), nomeFile(n, "json"));
+  /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */
+  const scaricaPng = (f: PlannerFrame, n: VName) => {
+    const edifici = edificiFrame(f);
+    const aree = areeProblema();
     try {
       const canvas = document.createElement("canvas");
-      renderCityMapPng(canvas, edifici, aree, 2, uiLang);
+      renderCityMapPng(canvas, edifici, aree, 2, t("legendTownHall", uiLang));
       const link = document.createElement("a");
-      const sc = outcome?.find(x => x.id === n);
-      link.download = sc && !sc.raccordo ? `foe-planner-girandola${sc.gir ? "-2" : ""}-${localDateStamp()}.png`
-        : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.png`;
+      link.download = nomeFile(n, "png");
       link.href = canvas.toDataURL("image/png");
       document.body.appendChild(link);
       link.click();
@@ -771,6 +630,79 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       console.error("[FOE] Planner PNG export failed:", err);
     }
   };
+
+  // ── Editor esterno (public/editor.html): canale bidirezionale con postMessage ──
+  // "✏ Modifica" apre l'editor in una nuova scheda; l'editor risponde
+  // {tipo:"pronto"} e riceve {tipo:"carica"} con la soluzione (formato
+  // dell'export JSON + colori della vista MAPPA); "Applica al Planner"
+  // rimanda {tipo:"applica"}, il Planner controlla e risponde {tipo:"esito"}.
+  // Le modifiche a mano nel Planner (trascina, tasto destro, clic sulle
+  // strade) sono state tolte: si modifica solo nell'editor.
+  /** Scenario modificabile: in pausa (come le vecchie modifiche a mano) o a corsa finita. */
+  const modificabile = (n: VName) => !!frames[n] && !eliminati.has(n) && (!running || (inPausa[n] && paused && !smussando));
+  const titoloScenario = (n: VName) => {
+    const sc = outcome?.find(x => x.id === n);
+    return sc?.raccordo ? `Raccordo a ${sc.raccordo}` : sc?.gir ? "Girandola 2" : "Girandola";
+  };
+  /** Finestre dell'editor aperte: scenario, token dell'apertura, generazione
+   *  della corsa all'invio e id del JSON → id degli edifici della città. */
+  type InfoEditor = { n: VName; token: number; gen: number; idMap: Map<string, string> };
+  const editorRef = useRef(new Map<Window, InfoEditor>());
+  const tokenRef = useRef(0);
+  const apriEditor = (n: VName) => {
+    const w = window.open("/editor.html", `foe-editor-${n}`);
+    if (!w) { alert("Il browser ha bloccato la finestra dell'editor: consenti i popup per questo sito."); return; }
+    for (const x of [...editorRef.current.keys()]) if (x.closed) editorRef.current.delete(x);
+    editorRef.current.set(w, { n, token: ++tokenRef.current, gen: genRef.current, idMap: new Map() });
+    w.focus();
+  };
+  const inviaAEditor = (w: Window, e: InfoEditor) => {
+    const f = framesRef.current[e.n];
+    if (!f) return;
+    const edifici = edificiFrame(f);
+    e.idMap = new Map();
+    e.gen = genRef.current;
+    const json = esportaCittaJson(edifici, areeProblema(), e.idMap);
+    const perId = new Map(edifici.map(b => [b.mapEntityId, b]));
+    const colori: Record<string, string> = {};
+    for (const [jid, mid] of e.idMap) {
+      const b = perId.get(mid);
+      if (b) colori[jid] = coloreEdificioMappa({
+        ...b, isTownhall: b.type === "main_building", isStreet: b.type === "street",
+        isGreatBuilding: b.isGreatBuilding || grandiEdifici.has(mid), roadLevel: byId.get(mid)?.roadLevel ?? b.roadLevel,
+      });
+    }
+    w.postMessage({ tipo: "carica", token: e.token, titolo: titoloScenario(e.n), json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang }, location.origin);
+  };
+  /** Applica la città rimandata dall'editor; restituisce gli errori (vuoto = applicata). */
+  const applicaDaEditor = (e: InfoEditor, dati: unknown): string[] => {
+    if (e.gen !== genRef.current) return ["Il Planner è stato azzerato o riavviato dopo l'apertura dell'editor: riaprilo con ✏ Modifica."];
+    if (!modificabile(e.n)) return ["Metti in pausa il Planner (⏸ Pausa) prima di applicare le modifiche."];
+    const f = framesRef.current[e.n]!;
+    const r = cittaDaEditor(dati, { problem, blocchi: catene.blocchi, idMap: e.idMap, frame: f, soloSenzaStrada: filling[e.n] });
+    if (r.errori.length) return r.errori;
+    const { placements: pl, roads } = r;
+    applicaManuale(e.n, { ...f, placements: pl, roads, lastPath: [...roads].filter(k => !f.roads.has(k)), probe: null, placed: pl.size });
+    return [];
+  };
+  const onMessageRef = useRef<(ev: MessageEvent) => void>(() => {});
+  onMessageRef.current = (ev: MessageEvent) => {
+    if (ev.origin !== location.origin) return;
+    const w = ev.source as Window | null;
+    const e = w ? editorRef.current.get(w) : undefined;
+    if (!w || !e) return;
+    const m = (ev.data ?? {}) as { tipo?: string; token?: number; json?: unknown };
+    if (m.tipo === "pronto") inviaAEditor(w, e);
+    else if (m.tipo === "applica" && m.token === e.token) {
+      const errori = applicaDaEditor(e, m.json);
+      w.postMessage({ tipo: "esito", token: e.token, ok: !errori.length, msg: errori.length ? errori.join("\n") : `Applicata a ${titoloScenario(e.n)}` }, location.origin);
+    }
+  };
+  useEffect(() => {
+    const h = (ev: MessageEvent) => onMessageRef.current(ev);
+    window.addEventListener("message", h);
+    return () => window.removeEventListener("message", h);
+  }, []);
 
   return (
     <div className="mb-3 rounded border border-fuchsia-700/50 bg-slate-900/40 text-[13px] text-slate-300">
@@ -784,35 +716,34 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           <button type="button" onClick={() => void start()}
             className="rounded border border-emerald-600 px-3 py-1 font-bold text-emerald-300 hover:bg-emerald-950">▶ Ottimizza</button>
         ) : paused && !completando ? (
-          <button type="button" onClick={riprendi} disabled={nSovrapposti > 0 || smussando}
-            title={nSovrapposti > 0 ? "Ci sono edifici sovrapposti (riquadro rosso): spostali in un posto libero prima di riprendere"
-              : "La ricerca continua a cercare disposizioni migliori partendo da quelle mostrate (anche modificate a mano o smussate)"}
+          <button type="button" onClick={riprendi} disabled={smussando}
+            title="La ricerca continua a cercare disposizioni migliori partendo da quelle mostrate (anche modificate a mano nell'editor o smussate)"
             className="rounded border border-sky-500 bg-sky-950 px-3 py-1 font-bold text-sky-300 hover:bg-sky-900 disabled:opacity-40">▶ Ottimizza</button>
         ) : (
           <button type="button" disabled={completando || !anySearching} onClick={pausa}
-            title="Mette in pausa la ricerca: puoi spostare gli edifici, eliminare strade e togliere edifici, smussare i bordi o completare"
+            title="Mette in pausa la ricerca: puoi modificare le mappe nell'editor (✏ Modifica), smussare i bordi o completare"
             className="rounded border border-red-600 px-3 py-1 font-bold text-red-300 hover:bg-red-950 disabled:opacity-40">⏸ Pausa</button>
         )}
         {smussando ? (
           <button type="button" onClick={() => { stopSmussaRef.current = true; }}
             className="rounded border border-violet-500 bg-violet-950 px-3 py-1 font-bold text-violet-300 hover:bg-violet-900">⏸ Pausa</button>
         ) : (
-          <button type="button" onClick={() => void smussa()} disabled={!paused || completando || !anySearching || nSovrapposti > 0}
+          <button type="button" onClick={() => void smussa()} disabled={!paused || completando || !anySearching}
             title="Solo con la ricerca in pausa: sposta e scambia gli edifici con strada (strade invariate) per ridurre gli angoli di 90° del contorno e i buchi: il riempimento finale incastra meglio i pezzi piccoli. Continua finché non lo metti in pausa"
             className="rounded border border-violet-500 px-3 py-1 font-bold text-violet-300 hover:bg-violet-950 disabled:opacity-40">✨ Smussa</button>
         )}
         {!completando ? (
-          <button type="button" disabled={!paused || !anySearching || nSovrapposti > 0 || smussando}
+          <button type="button" disabled={!paused || !anySearching || smussando}
             onClick={completa}
             title="Solo con la ricerca in pausa: chiude la ricerca su TUTTE le mappe (ciascuna tiene quella mostrata) e passa al riempimento con gli edifici senza strada"
             className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏭ COMPLETA</button>
         ) : paused ? (
-          <button type="button" onClick={riprendi} disabled={nSovrapposti > 0}
-            title={nSovrapposti > 0 ? "Ci sono edifici sovrapposti (riquadro rosso): spostali in un posto libero prima di riprendere" : "Riprende il riempimento"}
+          <button type="button" onClick={riprendi}
+            title="Riprende il riempimento"
             className="rounded border border-amber-500 bg-amber-950 px-3 py-1 font-bold text-amber-300 hover:bg-amber-900 disabled:opacity-40">⏭ COMPLETA</button>
         ) : (
           <button type="button" disabled={!anyFilling} onClick={pausa}
-            title="Mette in pausa il riempimento: puoi spostare o togliere gli edifici senza strada"
+            title="Mette in pausa il riempimento: nell'editor (✏ Modifica) puoi spostare o togliere gli edifici senza strada"
             className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">⏸ Pausa</button>
         )}
         {completando && visibili.some(sc => primaRef.current[sc.id]) && (
@@ -820,7 +751,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
             title="Interrompe il completamento e torna alla ricerca in pausa, con le disposizioni che c'erano quando hai premuto COMPLETA"
             className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950">↩ Annulla completamento</button>
         )}
-        {paused && !smussando && visibili.some(sc => manuali[sc.id]) && (
+        {(paused || !running) && !smussando && visibili.some(sc => manuali[sc.id]) && (
           <button type="button" onClick={annullaManuali}
             title="Ripristina, sulle mappe modificate a mano, l'ultima disposizione trovata dall'ottimizzatore o dallo smussatore"
             className="rounded border border-slate-500 px-3 py-1 font-bold text-slate-200 hover:bg-slate-800">↶ Annulla modifiche manuali</button>
@@ -847,7 +778,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           )}
           {erroreImport && <span className="text-[12px] text-red-400">{erroreImport}</span>}
         </>)}
-        {paused && nSovrapposti > 0 && <span className="ml-2 font-bold text-red-400">⚠ {nSovrapposti} edifici sovrapposti: risolvi prima di riprendere</span>}
         {computing && <span className="ml-2 text-amber-300">City Builder: calcolo in corso…</span>}
         {outcome === null && <span className="ml-2 text-red-300">City Builder: città non adatta (servono almeno 4 edifici con strada e spazio attorno al municipio) — uso il motore semplice.</span>}
       </div>
@@ -901,6 +831,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <b className="text-fuchsia-300">{sc.raccordo ? `Raccordo a ${sc.raccordo}` : sc.gir ? "Girandola 2" : "Girandola"}</b>
                       <span className="text-[12px]">{stats(f, ricerca[n]?.valutate)}</span>
+                    </div>
+                    {/* Riga dei pulsanti (sotto il titolo e le statistiche) */}
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
                       {f && inPausa[n] && paused && !smussando && (
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title="Sposta l'intera città (edifici e strade) di una cella">
                           {([["←", -1, 0], ["↑", 0, -1], ["↓", 0, 1], ["→", 1, 0]] as const).map(([fr, dx, dy]) => (
@@ -918,17 +851,27 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                           ))}
                         </span>
                       )}
+                      <button type="button" disabled={!modificabile(n)} onClick={() => apriEditor(n)}
+                        title={modificabile(n) ? "Apre la mappa nell'editor (nuova scheda): sposta, duplica, togli edifici e strade, poi \"Applica al Planner\""
+                          : "Metti in pausa il Planner (⏸ Pausa) per modificare la mappa nell'editor"}
+                        className="ml-auto rounded border border-sky-600 px-2 py-0.5 text-[12px] font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-40">
+                        ✏ Modifica
+                      </button>
                       <button type="button" disabled={!f} onClick={() => f && scaricaPng(f, n)}
-                        className="ml-auto rounded border border-emerald-600 px-2 py-0.5 text-[12px] font-bold text-emerald-300 hover:bg-emerald-950 disabled:opacity-40">
+                        className="rounded border border-emerald-600 px-2 py-0.5 text-[12px] font-bold text-emerald-300 hover:bg-emerald-950 disabled:opacity-40">
                         ⬇ PNG
+                      </button>
+                      <button type="button" disabled={!f} onClick={() => f && scaricaJsonFrame(f, n)}
+                        title="Scarica la soluzione in JSON (formato del bookmarklet: CityMapData / CityEntities / UnlockedAreas, strade comprese)"
+                        className="rounded border border-emerald-600 px-2 py-0.5 text-[12px] font-bold text-emerald-300 hover:bg-emerald-950 disabled:opacity-40">
+                        ⬇ JSON
                       </button>
                       <button type="button" disabled={visibili.length <= 1} onClick={() => elimina(n)}
                         title="Elimina questo scenario: la sua ricerca si ferma e le altre proseguono"
                         className="rounded border border-red-700 px-2 py-0.5 text-[12px] text-red-300 hover:bg-red-950 disabled:opacity-40">🗑</button>
                     </div>
-                    {statoSmussa[n] && paused && <div className="mb-1 text-[11px] text-violet-300">✨ {statoSmussa[n]!.replace(/^Smussa i bordi · /, "")}</div>}
                     <div className={`overflow-hidden rounded border ${inPausa[n] ? "border-sky-500" : "border-slate-800"}`}>
-                      <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} edit={inPausa[n] && paused && !smussando ? editFor(n) : undefined} soloSenzaStrada={filling[n]}
+                      <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} pausa={inPausa[n] && paused}
                         evidenzia={eff ? new Set(eff.voci.map(v => v.id)) : undefined} stradeVuote={vuote ?? undefined} />
                     </div>
                     {DEBUG_PLANNER && eff && (

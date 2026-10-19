@@ -1,45 +1,41 @@
-import { RotateCcw, Download } from "lucide-react";
+import { RotateCcw, Download, Pencil } from "lucide-react";
 import type { CityMapBuilding, CityMapBounds } from "../data/cityMap";
 import type { UnlockedArea } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
 import { parseNumberPair } from "../data/piratiBuildings";
 import { localDateStamp } from "../utils/format";
+import { esportaCittaJson, scaricaJson } from "../data/cityMapJson";
+import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_GREAT_BUILDING, MAP_COLOR_TOWN_HALL, MAP_COLOR_ROAD_REQUIRED, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_STREET, MAP_COLOR_MILITARY, MAP_COLOR_INACTIVE, PNG_COLOR_FREE } from "./cityMapPng";
 
-/** Colori per categoria edificio: condivisi tra il render PNG "a griglia"
- *  (renderCityMapPng) e il rendering SVG a schermo (getBuildingColor) —
- *  stessa palette in entrambe le viste, richiesta esplicita dell'utente.
- *  I 3 colori "PNG_*" restano usati solo dal render PNG (sfondo/celle
- *  libere/celle strada, che l'SVG a schermo gestisce diversamente con la
- *  griglia di sfondo e le celle di cityMapUnlockedCells). */
-const MAP_COLOR_GREAT_BUILDING = "#e6542f";
-const MAP_COLOR_TOWN_HALL = "#ffb300";
-const MAP_COLOR_ROAD_REQUIRED = "#5dd15d";
-const MAP_COLOR_NO_ROAD_REQUIRED = "#7abaff";
-const PNG_COLOR_FREE = "#fffead";
-const PNG_COLOR_UNAVAILABLE = "#29190d";
-const PNG_COLOR_ROAD = "#888888";
-const PNG_CELL = 24;
 
-/** Spezza `name` su più righe per stare nella larghezza di un edificio
- *  (in celle), replicando textwrap.fill di render_json.py: circa 2.8
- *  caratteri per cella, minimo 10 caratteri per riga. */
-function wrapBuildingName(name: string, widthCells: number): string[] {
-  const maxChars = Math.max(10, Math.round(widthCells * 2.8));
-  const words = name.split(" ");
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length > maxChars && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = candidate;
-    }
+/** Ascoltatore del canale con l'editor aperto dal pannello MAPPA (uno solo alla volta). */
+let ascoltoEditorMappa: ((ev: MessageEvent) => void) | null = null;
+/** Apre l'editor esterno (public/editor.html) con la città della mappa: quando
+ *  l'editor è pronto riceve {tipo:"carica", planner:false} (export JSON +
+ *  colori della vista MAPPA). Senza ritorno: dalla MAPPA si salva solo il JSON. */
+function apriEditorMappa(buildings: readonly CityMapBuilding[], aree: readonly UnlockedArea[], uiLang: UiLang): void {
+  const w = window.open("/editor.html", "foe-editor-mappa");
+  if (!w) {
+    alert(uiLang === "it" ? "Il browser ha bloccato la finestra dell'editor: consenti i popup per questo sito." : "The browser blocked the editor window: allow pop-ups for this site.");
+    return;
   }
-  if (current) lines.push(current);
-  return lines;
+  if (ascoltoEditorMappa) window.removeEventListener("message", ascoltoEditorMappa);
+  ascoltoEditorMappa = (ev: MessageEvent) => {
+    if (ev.origin !== location.origin || ev.source !== w || (ev.data as { tipo?: string } | null)?.tipo !== "pronto") return;
+    const idMap = new Map<string, string>();
+    const json = esportaCittaJson(buildings, aree, idMap);
+    const perId = new Map(buildings.map(b => [b.mapEntityId, b]));
+    const colori: Record<string, string> = {};
+    for (const [jid, mid] of idMap) {
+      const b = perId.get(mid);
+      if (b) colori[jid] = coloreEdificioMappa({ ...b, isTownhall: b.type === "main_building", isStreet: b.type === "street" });
+    }
+    w.postMessage({ tipo: "carica", planner: false, json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang }, location.origin);
+  };
+  window.addEventListener("message", ascoltoEditorMappa);
+  w.focus();
 }
+
 
 /** Categoria con cui un edificio viene disegnato nella mappa SVG a schermo:
  *  unica fonte sia per il colore (getBuildingColor) sia per i conteggi della
@@ -62,134 +58,6 @@ function mapCategory(b: CityMapBuilding): MapCategory {
   if (b.isMilitary) return "military";
   if (b.isNeedlessRoad) return "needless";
   return b.roadLevel === 0 ? "noRoad" : "road";
-}
-
-/**
- * Disegna la mappa città su un canvas già dimensionato, con lo stesso layout
- * "a griglia" di render_json.py (progetto FoE City Builder): sfondo grigio
- * scuro fuori dall'area sbloccata, celle libere bianco crema, celle strada
- * grigie, edifici colorati per categoria (municipio/Grandi Edifici/senza
- * strada/altri) con nome a capo al centro. Coordinate SEMPRE quelle reali
- * del payload (nessun ricalcolo/traslazione), stessa filosofia dello script
- * Python: serve una verifica visiva fedele, non un'illustrazione stilizzata
- * (quella resta la vista SVG isometrica/verticale a schermo).
- */
-export function renderCityMapPng(
-  canvas: HTMLCanvasElement,
-  buildings: CityMapBuilding[],
-  unlockedAreas: UnlockedArea[],
-  scale: number,
-  uiLang: UiLang
-): void {
-  const areas = unlockedAreas.map((a) => ({
-    x: Number(a.x ?? 0),
-    y: Number(a.y ?? 0),
-    width: Number(a.width ?? 4),
-    length: Number(a.length ?? 4),
-  }));
-  const placedBuildings = buildings.filter((b) => b.type !== "street");
-  const roadTiles = buildings.filter((b) => b.type === "street");
-
-  const gridX0 = Math.min(...areas.map((a) => a.x));
-  const gridY0 = Math.min(...areas.map((a) => a.y));
-  const gridX1 = Math.max(...areas.map((a) => a.x + a.width));
-  const gridY1 = Math.max(...areas.map((a) => a.y + a.length));
-  const W = gridX1 - gridX0;
-  const H = gridY1 - gridY0;
-
-  const CELL = PNG_CELL * scale;
-  const PAD = CELL; // mezzo margine di respiro attorno alla griglia
-  canvas.width = (W + 2) * CELL + PAD * 2;
-  canvas.height = (H + 2) * CELL + PAD * 2;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const toPx = (gx: number, gy: number) => ({
-    px: PAD + (gx - gridX0 + 1) * CELL,
-    py: PAD + (gy - gridY0 + 1) * CELL,
-  });
-
-  // Sfondo: tutto "non disponibile", poi le celle libere sopra.
-  ctx.fillStyle = PNG_COLOR_UNAVAILABLE;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const occupied = new Set<string>();
-  for (const b of placedBuildings) {
-    for (let gx = b.x; gx < b.x + b.w; gx++) {
-      for (let gy = b.y; gy < b.y + b.h; gy++) {
-        occupied.add(`${gx},${gy}`);
-      }
-    }
-  }
-  // Celle strada: TUTTE quelle di ogni tessera, non solo l'angolo in alto a
-  // sinistra — una strada a 2 corsie è una tessera 2x2. Prima si disegnava una
-  // sola cella per tessera e le altre 3 celle di una strada a 2 corsie uscivano
-  // color "spazio libero" (bug corretto settembre 2026). Contate anche come
-  // occupate, così non vengono prima dipinte come libere.
-  const roadCells: Array<[number, number]> = [];
-  for (const road of roadTiles) {
-    for (let gx = road.x; gx < road.x + road.w; gx++) {
-      for (let gy = road.y; gy < road.y + road.h; gy++) {
-        occupied.add(`${gx},${gy}`);
-        roadCells.push([gx, gy]);
-      }
-    }
-  }
-
-  ctx.strokeStyle = "#dddddd";
-  ctx.lineWidth = 0.5 * scale;
-  for (const a of areas) {
-    for (let gx = a.x; gx < a.x + a.width; gx++) {
-      for (let gy = a.y; gy < a.y + a.length; gy++) {
-        if (occupied.has(`${gx},${gy}`)) continue;
-        const { px, py } = toPx(gx, gy);
-        ctx.fillStyle = PNG_COLOR_FREE;
-        ctx.fillRect(px, py, CELL, CELL);
-        ctx.strokeRect(px, py, CELL, CELL);
-      }
-    }
-  }
-
-  // Celle strada, una per una (stessa griglia delle celle libere), sotto gli edifici.
-  for (const [gx, gy] of roadCells) {
-    const { px, py } = toPx(gx, gy);
-    ctx.fillStyle = PNG_COLOR_ROAD;
-    ctx.fillRect(px, py, CELL, CELL);
-    ctx.strokeRect(px, py, CELL, CELL);
-  }
-
-  // Edifici: municipio, poi Grandi Edifici/altri, colore per categoria.
-  for (const b of placedBuildings) {
-    const { px, py } = toPx(b.x, b.y);
-    const w = b.w * CELL;
-    const h = b.h * CELL;
-    const color =
-      b.type === "main_building"
-        ? MAP_COLOR_TOWN_HALL
-        : b.isGreatBuilding
-        ? MAP_COLOR_GREAT_BUILDING
-        : b.roadLevel === 0
-        ? MAP_COLOR_NO_ROAD_REQUIRED
-        : MAP_COLOR_ROAD_REQUIRED;
-    ctx.fillStyle = color;
-    ctx.fillRect(px, py, w, h);
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1 * scale;
-    ctx.strokeRect(px, py, w, h);
-
-    const label = b.type === "main_building" ? t("legendTownHall", uiLang) : b.name;
-    const fontSize = (b.w >= 3 ? 11 : b.w === 2 ? 9 : 7) * scale;
-    ctx.fillStyle = "#000000";
-    ctx.font = `bold ${fontSize}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const lines = wrapBuildingName(label, b.w);
-    const lineHeight = fontSize * 1.15;
-    const startY = py + h / 2 - ((lines.length - 1) * lineHeight) / 2;
-    lines.forEach((line, i) => {
-      ctx.fillText(line, px + w / 2, startY + i * lineHeight, w - 2 * scale);
-    });
-  }
 }
 
 export type CityMapDragState = {
@@ -261,11 +129,11 @@ export default function CityMapView({
 
   const getBuildingColor = (b: CityMapBuilding): string => {
     switch (mapCategory(b)) {
-      case "street": return "#8B7355";
+      case "street": return MAP_COLOR_STREET;
       case "townhall": return MAP_COLOR_TOWN_HALL;
-      case "inactive": return "rgba(88,28,135,0.45)";
+      case "inactive": return MAP_COLOR_INACTIVE;
       case "great": return MAP_COLOR_GREAT_BUILDING;
-      case "military": return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : "#92400E";
+      case "military": return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : MAP_COLOR_MILITARY;
       case "needless": return "url(#needlessPattern)";
       case "noRoad": return MAP_COLOR_NO_ROAD_REQUIRED;
       case "road": return MAP_COLOR_ROAD_REQUIRED;
@@ -446,7 +314,7 @@ export default function CityMapView({
                     }
                     try {
                       const canvas = document.createElement("canvas");
-                      renderCityMapPng(canvas, cityMapBuildings, cityMapUnlockedAreas, 2, uiLang);
+                      renderCityMapPng(canvas, cityMapBuildings, cityMapUnlockedAreas, 2, t("legendTownHall", uiLang));
                       const link = document.createElement("a");
                       link.download = `foe-map-${localDateStamp()}.png`;
                       link.href = canvas.toDataURL("image/png");
@@ -464,66 +332,22 @@ export default function CityMapView({
                 </button>
                 <button
                   onClick={() => {
-                    // Elenco edifici visualizzati (esclude le tessere strada,
-                    // raggruppate a parte in "roads"): stesso set di
-                    // cityMapBuildings già filtrato/mostrato sulla mappa SVG,
-                    // così l'export riflette esattamente ciò che si vede
-                    // (inclusi eventuali filtri highlightedCityEntityIds a
-                    // monte — cityMapBuildings arriva già pronto da App.tsx).
-                    const buildings = cityMapBuildings
-                      .filter((b) => b.type !== "street")
-                      .map((b) => ({
-                        id: b.mapEntityId,
-                        cityentity_id: b.entityId,
-                        name: b.name,
-                        width: b.w,
-                        length: b.h,
-                        x: b.x,
-                        y: b.y,
-                        // ?? 0: roadLevel è undefined nei profili salvati PRIMA
-                        // dell'introduzione di questo campo (vedi contratto di
-                        // persistenza in cityMap.ts) — senza fallback l'export
-                        // conterrebbe "road_requirement": undefined, JSON non
-                        // valido per quella chiave.
-                        road_requirement: b.roadLevel ?? 0,
-                      }));
-                    // Tessere strada: single = 1×1 (area 1), two_lane = 2×2
-                    // (area 4) — le uniche due dimensioni di strada nel gioco.
-                    const roadTiles = cityMapBuildings.filter((b) => b.type === "street");
-                    const roads = {
-                      single: roadTiles.filter((b) => b.w * b.h === 1).length,
-                      two_lane: roadTiles.filter((b) => b.w * b.h === 4).length,
-                    };
-                    // Espansioni sbloccate: rettangoli ORIGINALI dal payload
-                    // (x/y/width?/length?), non le singole celle già espanse
-                    // (cityMapUnlockedCells, usate invece per il rendering).
-                    // width/length inclusi solo se presenti nel dato originale
-                    // (il default implicito è 4×4, stesso comportamento del
-                    // parsing in App.tsx) — evita di scrivere valori ridondanti
-                    // quando l'area è quella standard.
-                    const unlockedAreas = cityMapUnlockedAreas.map((a) => {
-                      const area: { x: number; y: number; width?: number; length?: number } = {
-                        x: Number(a.x ?? 0),
-                        y: Number(a.y ?? 0),
-                      };
-                      if (a.width != null) area.width = Number(a.width);
-                      if (a.length != null) area.length = Number(a.length);
-                      return area;
-                    });
-                    const json = JSON.stringify({ buildings, roads, unlocked_areas: unlockedAreas }, null, 2);
-                    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `foe-map-${localDateStamp()}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
+                    // Sottoinsieme del payload del bookmarklet (CityMapData /
+                    // CityEntities / UnlockedAreas), strade comprese: si apre
+                    // nei planner esterni che leggono il payload intero (vedi
+                    // data/cityMapJson.ts).
+                    scaricaJson(esportaCittaJson(cityMapBuildings, cityMapUnlockedAreas), `foe-map-${localDateStamp()}.json`);
                   }}
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >
                   <Download size={13} /> JSON
+                </button>
+                <button
+                  onClick={() => apriEditorMappa(cityMapBuildings, cityMapUnlockedAreas, uiLang)}
+                  title={uiLang === "it" ? "Apre la città nell'editor (nuova scheda): sposta, duplica, togli edifici e strade, poi salva il JSON" : "Opens the city in the editor (new tab): move, duplicate, remove buildings and roads, then save the JSON"}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
+                >
+                  <Pencil size={13} /> Editor
                 </button>
               </div>
             </div>

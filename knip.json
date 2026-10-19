@@ -8,6 +8,7 @@
     "react-dom"
   ],
   "ignore": [
-    "sw-template.js"
+    "sw-template.js",
+    "src/editor/condiviso.ts"
   ]
 }

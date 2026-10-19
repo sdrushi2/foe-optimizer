@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  planner/engine.ts — Motore del Planner città (SEGNAPOSTO, ottobre 2026)
 //
-//  Compilato SOLO se il flag di build SHOW_PLANNER (vite.config.ts) è true.
+//  Sempre incluso nel tool (il flag di build SHOW_PLANNER è stato tolto il 19 ottobre 2026).
 //
 //  Obiettivo finale: la disposizione della città che minimizza le strade
 //  (problema NP-hard). Questo file definisce il CONTRATTO del motore
@@ -39,6 +39,8 @@ export interface PlannerBuilding {
   isTownhall: boolean;
   /** Edificio militare (colore marrone sulle mappe del Planner). */
   isMilitary?: boolean;
+  /** Inattivo nella città (colore viola, come nella vista MAPPA). */
+  isInactive?: boolean;
   /** Posizione nella città reale (per il municipio fisso). */
   origX: number;
   origY: number;
@@ -139,6 +141,7 @@ export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[]
       roadLevel,
       isTownhall: b.type === "main_building",
       isMilitary: militare,
+      isInactive: b.isInactive,
       origX: b.x, origY: b.y,
     });
   }

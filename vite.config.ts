@@ -3,18 +3,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { build, defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// ── Feature flag di BUILD ──────────────────────────────────────────────────
-// SHOW_PLANNER: false = il tool viene compilato esattamente com'è (il codice
-// del Planner, src/planner/, viene eliminato dal bundle: il ramo `if
-// (SHOW_PLANNER)` diventa `if (false)` e Rollup lo scarta insieme all'import).
-// true = compare il pulsante PLANNER nella tab Città. Lavori in corso.
-const SHOW_PLANNER = true;
 
 // Versione automatica: v1.<giorno dell'anno>
 const now = new Date();
@@ -71,10 +64,50 @@ function serviceWorkerPlugin(version: string): Plugin {
   };
 }
 
+// Plugin: codice del tool condiviso con l'editor esterno (public/editor.html).
+// L'editor carica /editor-condiviso.js = src/editor/condiviso.ts compilato
+// (export PNG e palette della vista MAPPA: UN SOLO codice per tool ed editor).
+// - dev: /editor-condiviso.js è rediretto al sorgente, compilato da Vite al volo;
+// - build: compilato a parte (libreria ES, un solo file) in dist/editor-condiviso.js.
+function editorCondivisoPlugin(): Plugin {
+  const entry = path.resolve(__dirname, "src/editor/condiviso.ts");
+  let outDir = path.resolve(__dirname, "dist");
+  return {
+    name: "foe-editor-condiviso",
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir);
+    },
+    configureServer(server) {
+      server.middlewares.use("/editor-condiviso.js", (_req, res) => {
+        res.statusCode = 302;
+        res.setHeader("Location", "/src/editor/condiviso.ts");
+        res.end();
+      });
+    },
+    async closeBundle() {
+      if (process.env.FOE_EDITOR_BUILD) return; // nessuna ricorsione
+      process.env.FOE_EDITOR_BUILD = "1";
+      try {
+        await build({
+          configFile: false,
+          logLevel: "warn",
+          build: {
+            outDir,
+            emptyOutDir: false,
+            copyPublicDir: false,
+            lib: { entry, formats: ["es"], fileName: () => "editor-condiviso.js" },
+          },
+        });
+      } finally {
+        delete process.env.FOE_EDITOR_BUILD;
+      }
+    },
+  };
+}
+
 export default defineConfig({
   define: {
     __BUILD_VERSION__: JSON.stringify(BUILD_VERSION),
-    SHOW_PLANNER: JSON.stringify(SHOW_PLANNER),
   },
   plugins: [
     react(),
@@ -82,6 +115,7 @@ export default defineConfig({
     viteSingleFile(), // meglio come ultimo plugin
     serviceWorkerPlugin(SW_CACHE_VERSION),
     sitemapPlugin(BUILD_DATE),
+    editorCondivisoPlugin(),
   ],
   resolve: {
     alias: {
