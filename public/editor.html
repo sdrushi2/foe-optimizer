@@ -59,7 +59,10 @@
   *{ box-sizing:border-box; }
   /* l'attributo hidden deve vincere su display:inline-flex di .btn */
   [hidden]{ display:none !important; }
+  /* pagina a tutta altezza: l'header resta fermo, scorre solo la mappa (main) */
+  html, body{ height:100%; }
   body{
+    display:flex; flex-direction:column; overflow:hidden;
     margin:0;
     background:var(--bg);
     color:var(--text);
@@ -68,7 +71,7 @@
 
   /* ---------------- Toolbar ---------------- */
   #bar{
-    position:sticky; top:0; z-index:1000;
+    position:relative; z-index:1000; flex:none;
     display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px;
     padding:8px 16px 8px 12px;
     background:rgba(15,23,42,.6);       /* slate-900/60 */
@@ -106,11 +109,15 @@
   .btn.primary{ border-color:#0ea5e9; color:#7dd3fc; background:#082f49; }
   .btn.primary:hover:not(:disabled){ background:#0c4a6e; }
   #stato{ font-size:12px; color:var(--muted); }
+  /* zoom: tre pulsanti quadrati e la percentuale */
+  .zoom{ display:inline-flex; align-items:center; gap:4px; }
+  .zoom .btn{ padding:7px 10px; min-width:34px; justify-content:center; }
+  #zoomPct{ min-width:42px; text-align:center; font-size:12px; font-weight:700; color:var(--muted); }
   #stato.ok{ color:#34d399; }
   #stato.err{ color:#f87171; font-weight:600; }
 
   /* ---------------- Mappa ---------------- */
-  main{ padding:18px; }
+  main{ flex:1; min-height:0; overflow:auto; padding:18px; }
 
   #map{
     position:relative;
@@ -141,7 +148,7 @@
     position:absolute; z-index:10;
     display:flex; align-items:center; justify-content:center;
     padding:1px 2px;
-    text-align:center; font-size:9px; font-weight:600; line-height:1.1;
+    text-align:center; font-size:var(--fs,9px); font-weight:600; line-height:1.1;  /* --fs scala con lo zoom */
     color:#0f172a;
     border:1px solid #1e293b;
     overflow:hidden;
@@ -229,6 +236,17 @@
     </svg>
     <span data-t="salvaPng">Salva PNG</span>
   </button>
+  <span class="zoom">
+    <button type="button" class="btn" id="zoomOut" data-tt="zoomOut">−</button>
+    <span id="zoomPct">100%</span>
+    <button type="button" class="btn" id="zoomIn" data-tt="zoomIn">+</button>
+    <button type="button" class="btn" id="zoomReset" data-tt="zoomReset">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/>
+      </svg>
+    </button>
+  </span>
   <button type="button" class="btn primary" id="applica" hidden data-t="applica">✔ Applica al Planner</button>
   <span id="stato"></span>
   <div id="hints"></div>   <!-- riempito da applicaLingua -->
@@ -238,7 +256,13 @@
 
 
 <script>
-const TILE = 20;
+// Lato di una cella in pixel: cambia con lo zoom (pulsanti − / + / reset)
+// 100% = 16 px per cella (prima 20: la mappa partiva troppo grande); il testo
+// degli edifici al 100% resta 9 px e scala con lo zoom (--fs)
+const TILE_BASE = 16;
+const ZOOM = [4, 5, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40];
+let TILE = TILE_BASE;
+let areeEl = [];          // [{ el, a }] per riposizionare le aree allo zoom
 const MIN_SIZE = 72;
 const PAD = 24;            // celle libere in più oltre l'ultimo edificio
 let mapSize = MIN_SIZE;
@@ -260,7 +284,8 @@ const TESTI = {
     municipio: 'Municipio',
     noPng: 'Export PNG non disponibile (manca /editor-condiviso.js)', pngErr: 'Export PNG non riuscito: ',
     jsonErr: 'JSON non valido: ', plannerChiuso: 'Il Planner è stato chiuso: usa "Salva JSON"',
-    inviata: 'Inviata al Planner…'
+    inviata: 'Inviata al Planner…',
+    zoomIn: 'Ingrandisci', zoomOut: 'Rimpicciolisci', zoomReset: 'Zoom 100%'
   },
   en: {
     titolo: 'City editor', apri: 'Open JSON', salvaJson: 'Save JSON', salvaPng: 'Save PNG',
@@ -275,7 +300,8 @@ const TESTI = {
     municipio: 'Town Hall',
     noPng: 'PNG export not available (/editor-condiviso.js missing)', pngErr: 'PNG export failed: ',
     jsonErr: 'Invalid JSON: ', plannerChiuso: 'The Planner has been closed: use "Save JSON"',
-    inviata: 'Sent to the Planner…'
+    inviata: 'Sent to the Planner…',
+    zoomIn: 'Zoom in', zoomOut: 'Zoom out', zoomReset: 'Zoom 100%'
   }
 };
 let lingua = (navigator.language || '').toLowerCase().startsWith('it') ? 'it' : 'en';
@@ -285,6 +311,7 @@ function applicaLingua(l) {
   lingua = l === 'it' ? 'it' : 'en';
   document.documentElement.lang = lingua;
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = tr(el.dataset.t); });
+  document.querySelectorAll('[data-tt]').forEach(el => { el.title = tr(el.dataset.tt); });
   // testi statici scritti da noi (con <kbd>), non dati esterni
   document.getElementById('hints').innerHTML = tr('hints').map(h => '<span>' + h + '</span>').join('');
   document.getElementById('map').dataset.vuoto = tr('vuoto');
@@ -391,11 +418,13 @@ function draw({ areas, items }) {
     map.appendChild(el);
   };
 
+  areeEl = [];
   areas.forEach(a => {
     const el = document.createElement('div');
     el.className = 'area';
     el.style.backgroundSize = TILE + 'px ' + TILE + 'px';
     place(el, a.x, a.y, a.w, a.h);
+    areeEl.push({ el, a });
   });
 
   items.forEach(i => addBuilding(i));
@@ -713,6 +742,35 @@ document.getElementById('png').addEventListener('click', () => {
     alert(tr('pngErr') + err.message);
   }
 });
+
+// ---- Zoom: ridisegna tutto con un nuovo lato di cella. La vista non si
+// sposta: la cella che era nell'angolo in alto a sinistra resta lì (scorre
+// solo <main>, l'header non si muove) ----
+const PAD_MAIN = 18;      // padding di <main> (vedi CSS)
+function zoomA(nuovo) {
+  if (nuovo === TILE) return;
+  const map = document.getElementById('map');
+  const main = document.querySelector('main');
+  const vecchio = TILE;
+  const sx = main.scrollLeft, sy = main.scrollTop;
+  TILE = nuovo;
+  map.style.setProperty('--fs', (9 * TILE / TILE_BASE).toFixed(2) + 'px');
+  setMapSize(mapSize);
+  const pos = (el, x, y, w, h) => Object.assign(el.style, { left: x * TILE + 'px', top: y * TILE + 'px', width: w * TILE + 'px', height: h * TILE + 'px' });
+  areeEl.forEach(({ el, a }) => { pos(el, a.x, a.y, a.w, a.h); el.style.backgroundSize = TILE + 'px ' + TILE + 'px'; });
+  entries.forEach(e => pos(e.el, e.item.x, e.item.y, e.item.w, e.item.h));
+  document.getElementById('zoomPct').textContent = Math.round(100 * TILE / TILE_BASE) + '%';
+  const scala = v => (v <= PAD_MAIN ? v : PAD_MAIN + (v - PAD_MAIN) * TILE / vecchio);
+  main.scrollLeft = scala(sx);
+  main.scrollTop = scala(sy);
+}
+const passoZoom = d => {
+  const i = ZOOM.indexOf(TILE);
+  zoomA(ZOOM[Math.max(0, Math.min(ZOOM.length - 1, (i < 0 ? ZOOM.indexOf(TILE_BASE) : i) + d))]);
+};
+document.getElementById('zoomIn').addEventListener('click', () => passoZoom(1));
+document.getElementById('zoomOut').addEventListener('click', () => passoZoom(-1));
+document.getElementById('zoomReset').addEventListener('click', () => zoomA(TILE_BASE));
 
 document.getElementById('file').addEventListener('change', ev => {
   const f = ev.target.files[0];
