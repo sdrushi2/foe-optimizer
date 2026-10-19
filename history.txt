@@ -1,7 +1,7 @@
 FoE OPTIMIZER - NOVITA' E AGGIORNAMENTI
 =======================================
 
-19/10  EDITOR della città: dalla mappa e dal Planner: sposta, duplica e togli edifici e strade, salva in JSON o PNG, zoom.
+19/10  EDITOR della città: dalla mappa e dal Planner: sposta, duplica e togli edifici e strade, zoom. Gli edifici che richiedono una strada a 2 corsie sono in verde scuro.
 16/10  Planner: supporto alle "catene" di edifici.
 15/10  Planner: nuova rifinitura e correzioni di bug.
 14/10  Planner: nuovo layout "girandola", correzioni, nuovo colore dei pulsanti.

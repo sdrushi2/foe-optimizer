@@ -912,6 +912,10 @@ const UI_STRINGS = {
     it: "Richiede strada",
     en: "Requires road",
   },
+  legendRoad2Required: {
+    it: "Richiede strada a 2 corsie",
+    en: "Requires 2-lane road",
+  },
   legendNoRoadRequired: {
     it: "Non richiede strada",
     en: "Doesn't require road",

@@ -28,6 +28,8 @@ export interface PngEdificio {
 export const MAP_COLOR_GREAT_BUILDING = "#e6542f";
 export const MAP_COLOR_TOWN_HALL = "#ffb300";
 export const MAP_COLOR_ROAD_REQUIRED = "#5dd15d";
+/** Edifici che richiedono una strada a 2 corsie: verde più scuro (ottobre 2026). */
+export const MAP_COLOR_ROAD2_REQUIRED = "#237a34";
 export const MAP_COLOR_NO_ROAD_REQUIRED = "#7abaff";
 export const MAP_COLOR_STREET = "#8B7355";
 export const MAP_COLOR_MILITARY = "#92400E";
@@ -38,14 +40,18 @@ const PNG_COLOR_UNAVAILABLE = "#000000";
 /** Colore "piatto" di un edificio con la palette della vista MAPPA (unica
  *  fonte, richiesta dell'utente: MAPPA, PNG e Planner con gli stessi colori),
  *  stessa priorità di mapCategory ma SENZA la "zebra" dei collegati senza
- *  bisogno (nel PNG e nel Planner restano col colore della loro categoria). */
+ *  bisogno (nel PNG e nel Planner restano col colore della loro categoria) e
+ *  SENZA il viola degli inattivi (richiesta dell'utente, 19/10/2026): nel PNG,
+ *  nel Planner e nell'editor un edificio inattivo è verde o azzurro secondo la
+ *  strada richiesta; il viola resta solo nella vista MAPPA (getBuildingColor).
+ *  `isInactive` resta nella firma perché gli oggetti passati lo contengono. */
 export function coloreEdificioMappa(b: { isTownhall?: boolean; isInactive?: boolean; isGreatBuilding?: boolean; isMilitary?: boolean; roadLevel?: number; isStreet?: boolean }): string {
   if (b.isStreet) return MAP_COLOR_STREET;
   if (b.isTownhall) return MAP_COLOR_TOWN_HALL;
-  if (b.isInactive) return MAP_COLOR_INACTIVE;
   if (b.isGreatBuilding) return MAP_COLOR_GREAT_BUILDING;
   if (b.isMilitary) return MAP_COLOR_MILITARY;
-  return b.roadLevel === 0 ? MAP_COLOR_NO_ROAD_REQUIRED : MAP_COLOR_ROAD_REQUIRED;
+  if (b.roadLevel === 0) return MAP_COLOR_NO_ROAD_REQUIRED;
+  return (b.roadLevel ?? 1) >= 2 ? MAP_COLOR_ROAD2_REQUIRED : MAP_COLOR_ROAD_REQUIRED;
 }
 const PNG_CELL = 24;
 

@@ -5,7 +5,7 @@ import { t, type UiLang } from "../data/ui-strings";
 import { parseNumberPair } from "../data/piratiBuildings";
 import { localDateStamp } from "../utils/format";
 import { esportaCittaJson, scaricaJson } from "../data/cityMapJson";
-import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_GREAT_BUILDING, MAP_COLOR_TOWN_HALL, MAP_COLOR_ROAD_REQUIRED, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_STREET, MAP_COLOR_MILITARY, MAP_COLOR_INACTIVE, PNG_COLOR_FREE } from "./cityMapPng";
+import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_GREAT_BUILDING, MAP_COLOR_TOWN_HALL, MAP_COLOR_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_STREET, MAP_COLOR_MILITARY, MAP_COLOR_INACTIVE, PNG_COLOR_FREE } from "./cityMapPng";
 
 
 /** Ascoltatore del canale con l'editor aperto dal pannello MAPPA (uno solo alla volta). */
@@ -48,7 +48,7 @@ function apriEditorMappa(buildings: readonly CityMapBuilding[], aree: readonly U
  *  Edifici, militari (a righe se collegati senza bisogno), collegati senza
  *  bisogno, infine strada richiesta sì/no — roadLevel diverso da 0, incluso
  *  undefined, conta come "richiede strada", esattamente come il colore verde. */
-type MapCategory = "street" | "townhall" | "inactive" | "great" | "military" | "needless" | "noRoad" | "road";
+type MapCategory = "street" | "townhall" | "inactive" | "great" | "military" | "needless" | "noRoad" | "road" | "road2";
 
 function mapCategory(b: CityMapBuilding): MapCategory {
   if (b.type === "street") return "street";
@@ -57,7 +57,8 @@ function mapCategory(b: CityMapBuilding): MapCategory {
   if (b.isGreatBuilding) return "great";
   if (b.isMilitary) return "military";
   if (b.isNeedlessRoad) return "needless";
-  return b.roadLevel === 0 ? "noRoad" : "road";
+  if (b.roadLevel === 0) return "noRoad";
+  return (b.roadLevel ?? 1) >= 2 ? "road2" : "road";
 }
 
 export type CityMapDragState = {
@@ -137,11 +138,12 @@ export default function CityMapView({
       case "needless": return "url(#needlessPattern)";
       case "noRoad": return MAP_COLOR_NO_ROAD_REQUIRED;
       case "road": return MAP_COLOR_ROAD_REQUIRED;
+      case "road2": return MAP_COLOR_ROAD2_REQUIRED;
     }
   };
 
   // Conteggi della legenda per categoria di disegno (vedi mapCategory).
-  const categoryCounts: Record<MapCategory, number> = { street: 0, townhall: 0, inactive: 0, great: 0, military: 0, needless: 0, noRoad: 0, road: 0 };
+  const categoryCounts: Record<MapCategory, number> = { street: 0, townhall: 0, inactive: 0, great: 0, military: 0, needless: 0, noRoad: 0, road: 0, road2: 0 };
   cityMapBuildings.forEach((b) => { categoryCounts[mapCategory(b)]++; });
 
   // Celle libere (sbloccate ma non occupate)
@@ -363,6 +365,9 @@ export default function CityMapView({
                 <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#78350F]" style={{ background: "#92400E" }} /> {t("legendMilitaryBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{categoryCounts.military}</span></div>
               )}
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_ROAD_REQUIRED, borderColor: MAP_COLOR_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{categoryCounts.road}</span></div>
+              {categoryCounts.road2 > 0 && (
+                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_ROAD2_REQUIRED, borderColor: MAP_COLOR_ROAD2_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendRoad2Required", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{categoryCounts.road2}</span></div>
+              )}
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_NO_ROAD_REQUIRED, borderColor: MAP_COLOR_NO_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendNoRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-sky-400 bg-sky-950/40 px-1.5 py-0.5 rounded">{categoryCounts.noRoad}</span></div>
 
               {categoryCounts.needless > 0 && (

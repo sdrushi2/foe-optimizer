@@ -117,7 +117,7 @@
   #stato.err{ color:#f87171; font-weight:600; }
 
   /* ---------------- Mappa ---------------- */
-  main{ flex:1; min-height:0; overflow:auto; padding:18px; }
+  main{ flex:1; min-height:0; overflow:auto; padding:18px; background:#000; }  /* tutto nero sotto l'header: niente stacco con il fuori mappa */
 
   #map{
     position:relative;
@@ -173,6 +173,7 @@
   .military      { background:#92400E; color:#f1f5f9; }
   .street        { background:#8B7355; }
   .road          { background:#5dd15d; }  /* richiede strada */
+  .road2         { background:#237a34; color:#f1f5f9; }  /* richiede strada a 2 corsie */
   .noroad        { background:#7abaff; }  /* non richiede strada */
 
   /* ---------------- Scorciatoie (nella barra) ---------------- */
@@ -343,19 +344,19 @@ function dims(e) {
   return null;
 }
 
-// true se l'edificio NON richiede strada
-function noRoad(e) {
-  if (!e) return false;
+// Livello di strada richiesto: 0 = nessuna, 1 = una corsia, 2 = due corsie
+function livelloStrada(e) {
+  if (!e) return 1;
   const lv = (e.requirements && e.requirements.street_connection_level) || 0;
   const c = e.components && e.components.AllAge && e.components.AllAge.streetConnectionRequirement;
-  return Math.max(lv, (c && c.requiredLevel) || 0) < 1;
+  return Math.max(lv, (c && c.requiredLevel) || 0);
 }
 
 // Edifici fissi del gioco: non si spostano né si modificano, vengono sempre scartati
 const FIXED = new Set(['hub_main', 'hub_part', 'off_grid', 'outpost_ship', 'friends_tavern']);
 // Tipi con un colore proprio; tutti gli altri sono verdi (richiedono strada) o azzurri (no)
 const SPECIAL = new Set(['main_building', 'greatbuilding', 'military', 'street']);
-const colorClass = (type, noRoad) => SPECIAL.has(type) ? type : (noRoad ? 'noroad' : 'road');
+const colorClass = (type, lv) => SPECIAL.has(type) ? type : (lv < 1 ? 'noroad' : lv >= 2 ? 'road2' : 'road');
 
 // Trasforma il JSON in { areas, items }. Accetta il formato dell'export
 // (CityMapData / CityEntities / UnlockedAreas, anche il payload intero del
@@ -375,9 +376,9 @@ function parse(data, colori) {
     if (!d || FIXED.has(e.type)) return;
     const type = (b.type || e.type || '').toString();
     const id = b.id != null ? b.id : k;
-    const nr = noRoad(e);
-    items.push({ id, eid: b.cityentity_id, x: b.x || 0, y: b.y || 0, w: d[0], h: d[1], type, noRoad: nr,
-                 cls: colorClass(type, nr), colore: colori && colori[id], name: e.name || b.cityentity_id });
+    const lv = livelloStrada(e);
+    items.push({ id, eid: b.cityentity_id, x: b.x || 0, y: b.y || 0, w: d[0], h: d[1], type, noRoad: lv < 1, livello: lv,
+                 cls: colorClass(type, lv), colore: colori && colori[id], name: e.name || b.cityentity_id });
   });
 
   (data.buildings || []).forEach(b => {
@@ -386,9 +387,9 @@ function parse(data, colori) {
     let type = e && e.type ? e.type : '';
     if (!type && String(b.cityentity_id || '').startsWith('H_')) type = 'main_building';
     if (FIXED.has(type)) return;
-    const nr = b.road_requirement === 0;
+    const lv = b.road_requirement == null ? 1 : Number(b.road_requirement) || 0;
     items.push({ id: b.id, eid: b.cityentity_id || b.name, x: b.x || 0, y: b.y || 0, w: b.width, h: b.length,
-                 type, noRoad: nr, cls: colorClass(type, nr), name: b.name || b.cityentity_id });
+                 type, noRoad: lv < 1, livello: lv, cls: colorClass(type, lv), name: b.name || b.cityentity_id });
   });
 
   // celle sbloccate (per le strade col doppio clic e il controllo delle posizioni)
@@ -696,7 +697,7 @@ function esporta() {
     if (!CityEntities[i.eid]) {
       const orig = fonte.ents[i.eid];
       CityEntities[i.eid] = orig || Object.assign({ id: i.eid, name: i.name, type: i.type, width: i.w, length: i.h },
-        i.noRoad || i.type === 'street' || i.type === 'main_building' ? {} : { requirements: { street_connection_level: 1 } });
+        i.noRoad || i.type === 'street' || i.type === 'main_building' ? {} : { requirements: { street_connection_level: i.livello || 1 } });
     }
   });
   return { CityMapData, CityEntities, UnlockedAreas: fonte.areeRaw };
@@ -726,7 +727,7 @@ document.getElementById('png').addEventListener('click', () => {
     const i = e.item;
     return { x: i.x, y: i.y, w: i.w, h: i.h, type: i.type, name: i.name, colore: i.colore,
              isGreatBuilding: i.type === 'greatbuilding' || String(i.eid).startsWith('X_'),
-             isMilitary: i.type === 'military', roadLevel: i.noRoad ? 0 : 1 };
+             isMilitary: i.type === 'military', roadLevel: i.noRoad ? 0 : (i.livello || 1) };
   });
   try {
     const canvas = document.createElement('canvas');
