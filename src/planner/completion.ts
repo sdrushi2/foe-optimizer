@@ -35,6 +35,7 @@
 import { perimetroCoda, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { fillMask } from "./builder/fase2";
 import { compattaCitta } from "./compatta";
+import { smussaBordi } from "./smussa";
 import { calcolaRoadEff, contaAngoliGriglia, contaFiniStradaErrati, esclusoDaRoadEff, LATO_GRANDE, piccoloDaAngolo, roadEffDi } from "./roadEff";
 
 const key = (x: number, y: number) => `${x},${y}`;
@@ -3028,6 +3029,18 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   /** Tentativi senza migliorare la migliore: oltre STALLO il cammino riparte dalla migliore. */
   let senzaMigliorare = 0;
   const STALLO = 300;
+  /** "Scossa" (idea dell'utente: in pausa, Smussa per 2-3 s e poi Riprendi
+   *  sblocca la ricerca ferma): dopo SCOSSA_DOPO disposizioni senza
+   *  togliere strade (o edifici fuori), la migliore viene smussata per SCOSSA_MS (stesse strade,
+   *  edifici spostati/scambiati per ridurre angoli e buchi) e il cammino
+   *  riparte da lì; la migliore mostrata resta quella finché non si trova di
+   *  meglio. */
+  const SCOSSA_DOPO = 6000, SCOSSA_MS = 1500;
+  let ultimaScossa = 0;
+  /** Ultima disposizione in cui la migliore ha tolto strade o edifici fuori. */
+  let ultimoGuadagno = 0;
+  /** La ripresa viene da una scossa (non dall'utente né dalla squadra). */
+  let scossa: boolean;
   /** Punteggio dello stato corrente: edifici con strada fuori, deficit di
    *  spazio, strade totali, buchi intermedi. */
   const punteggio = (): Punti => {
@@ -3051,6 +3064,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const fotografa = (azzera = false, punti?: Punti): boolean => {
     manuale = { pl: new Map(placements), rd: new Set(roads), punti: punti ?? punteggio() };
     if (azzera || !migliore || confronta(manuale.punti, migliore.punti) < 0) {
+      // strade o edifici fuori migliorati (non solo i criteri secondari): per la scossa
+      if (!migliore || manuale.punti[0] < migliore.punti[0] || manuale.punti[3] < migliore.punti[3]) ultimoGuadagno = valutate;
       migliore = { pl: new Map(manuale.pl), rd: new Set(manuale.rd), punti: manuale.punti };
       senzaMigliorare = 0;
       return !azzera;
@@ -3235,6 +3250,16 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
       const ad = opts.adotta?.();
       if (ad) { adottata = true; return ad; }
+      if (valutate - ultimoGuadagno >= SCOSSA_DOPO && valutate - ultimaScossa >= SCOSSA_DOPO && !opts.limiteValutate) {
+        ultimaScossa = valutate;
+        const M = migliore!, t0 = performance.now();
+        const r = await smussaBordi(problem, { placements: M.pl, roads: M.rd }, {
+          fissi: new Set([...(opts.girandola ? [] : fissi), ...fissiBuilder]), onFrame: () => {},
+          shouldStop: () => performance.now() - t0 > SCOSSA_MS || opts.shouldStop() || !!opts.shouldFinishSearch?.() || !!opts.isPaused?.(),
+        });
+        lastYield = performance.now();
+        if (!opts.shouldStop() && !opts.shouldFinishSearch?.()) { scossa = true; return { placements: r.placements, roads: r.roads }; }
+      }
     }
     // ultima occasione (es. dopo COMPLETA): si completa la migliore della squadra
     if (!opts.shouldStop()) { const ad = opts.adotta?.(); if (ad) { adottata = true; return ad; } }
@@ -3259,6 +3284,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   for (;;) {
   let ripresa: StatoManuale | null = null;
   adottata = false;
+  scossa = false;
   if (manuale) ripresa = await cercaDaManuale();
   else if (daPiazzare.length) {
     opts.onSearchActive?.(true);
@@ -3311,8 +3337,15 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   fissi.clear();
   for (const id of idOvest(placements)) fissi.add(id);
   parOvestOk = firmaOvest(placements, roads) === firmaBase0;
-  trovataAl = valutate;
-  fotografa(true);
+  if (scossa && migliore) {
+    // il cammino riparte dalla disposizione smussata; la migliore resta se è meglio
+    const precM = migliore as StatoS;
+    fotografa(true);
+    if (confronta(precM.punti, (migliore as StatoS).punti) < 0) migliore = precM;
+  } else {
+    trovataAl = valutate;
+    fotografa(true);
+  }
   }
   // Dopo la ricerca dalla disposizione manuale: si riparte dalla migliore trovata.
   if (migliore) { const M = migliore as StatoS; ribasa(compattato(M, () => ({ placements: M.pl, roads: M.rd }), true)!); best = null; }
