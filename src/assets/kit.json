@@ -11695,10 +11695,6 @@
     }
   },
   "requiredFragmentsByBuilding": {
-    "W_MultiAge_FALL23E1": 100,
-    "W_MultiAge_FALL23F1": 100,
-    "W_MultiAge_FALL23E2": 100,
-    "W_MultiAge_FALL23F2": 100,
     "W_MultiAge_FALL23C1": 100,
     "W_MultiAge_FALL23C2": 100,
     "W_MultiAge_FALL23D1": 100,
@@ -11709,7 +11705,11 @@
     "W_MultiAge_PAT23C1": 100,
     "W_MultiAge_PAT23D1": 100,
     "W_MultiAge_SUM23A1": 150,
-    "W_MultiAge_WIN22B1": 200
+    "W_MultiAge_WIN22B1": 200,
+    "W_MultiAge_FALL23E1": 100,
+    "W_MultiAge_FALL23F1": 100,
+    "W_MultiAge_FALL23E2": 100,
+    "W_MultiAge_FALL23F2": 100
   },
   "fragmentBuildingId": {
     "guild_arena": "W_MultiAge_GBG2023A",

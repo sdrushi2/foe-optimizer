@@ -2113,8 +2113,8 @@ W_MultiAge_WIN25F1;Corriere Northwind;Northwind Courier;5ecd45942;1;;19;3x2;1;;;
 W_MultiAge_WIN26A1;WIN26A;Tidings Press Tower - Lv. 1;1ca18c3db;;;19;4x4;2;5330;8000;;58;;;;;;41;;;;;;43430;84710;;;5;5;5;5;5;5;5;5;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A10;WIN26A Gold;Gilded Tidings Press Tower;a41aeb30e;1;;19;4x4;2;40530;60800;;207;;;;;;286;;;;;;325710;635290;;;71;71;71;71;71;71;71;71;;;;;;;;;;;;;;;;;M;;1.1;;;;;;selection_kit_WIN26BC:3
 W_MultiAge_WIN26A11;WIN26A Platinum;Majestic Tidings Press Tower;0f81f3113;1;;19;4x4;;42670;64000;;230;;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;;;;;;;;;;;M;;1.5;;;;;;selection_kit_WIN26BC:4
-W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;Tidings Broadcasting Tower;dddf6b76c;1;90;51;4x4;;42670;64000;;230;0.02;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC:6
-W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;Tidings Globe Tower;b9c6373c6;1;90;51;4x4;;42670;64000;;230;;;;;;306;;;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC:6
+W_MultiAge_WIN26A12a;WIN26A Platinum Ascended A;Tidings Broadcasting Tower;b9c6373c6;1;90;51;4x4;;42670;64000;;230;0.02;;;;;306;;;;;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;30;;;;;;;;;;;8000;M;2;1.5;;;;;;selection_kit_WIN26BC:6
+W_MultiAge_WIN26A12b;WIN26A Platinum Ascended B;Tidings Globe Tower;dddf6b76c;1;90;51;4x4;;42670;64000;;230;;;;;;306;;;;0.01;;347430;677650;;;81;81;81;81;81;81;81;81;;;;;;;30;;;;;;;;200;;M;2.6;1.5;;;;;;selection_kit_WIN26BC:6
 W_MultiAge_WIN26A2;WIN26A;Tidings Press Tower - Lv. 2;W_MultiAge_WIN26A1-1ca18c3db;;;19;4x4;2;8530;12800;;69;;;;;;62;;;;;;65140;127060;;;10;10;10;10;10;10;10;10;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A3;WIN26A;Tidings Press Tower - Lv. 3;W_MultiAge_WIN26A1-1ca18c3db;;;19;4x4;2;11730;17600;;81;;;;;;82;;;;;;86860;169410;;;15;15;15;15;15;15;15;15;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN26A4;WIN26A;Tidings Press Tower - Lv. 4;W_MultiAge_WIN26A1-1ca18c3db;;;19;4x4;2;14930;22400;;92;;;;;;103;;;;;;108570;211760;;;20;20;20;20;20;20;20;20;;;;;;;;;;;;;;;;;;;;;;;;;

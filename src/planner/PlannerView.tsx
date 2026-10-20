@@ -13,10 +13,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { CityMapBuilding } from "../data/cityMap";
 import { buildPlannerProblem, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { runBuilder, type BuilderVariant } from "./builder";
-import { runCompletion, type StatoManuale } from "./completion";
+import type { CompletionOptions, StatoManuale } from "./completion";
+import { runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
-import { baseCentrale, scegliGirandola, type BaseGirandola } from "./girandola";
+import { baseCentrale, type BaseGirandola } from "./girandola";
 import { espandiCatene, raggruppaCatene } from "./catene";
 import { coloreEdificioMappa, renderCityMapPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
@@ -38,7 +39,26 @@ const VARIANTI: VName[] = ["r3", "r4", "gir", "gir2"];
 const tutte = <T,>(v: T): Record<VName, T> => ({ r3: v, r4: v, gir: v, gir2: v });
 /** Scenario: base del builder (v) oppure "Girandola" (v = null, raccordo 0:
  *  municipio e quattro bracci, vedi girandola.ts). */
-interface Scenario { id: VName; v: BuilderVariant | null; raccordo: 0 | 3 | 4; /** girandola: 0 = migliore posizione, 1 = seconda */ gir?: 0 | 1 }
+interface Scenario {
+  id: VName; v: BuilderVariant | null; raccordo: 0 | 3 | 4; /** girandola: 0 = migliore posizione, 1 = seconda */ gir?: 0 | 1;
+  /** Raccordi: partenza del builder SENZA margine vietato dal bordo (Passo 7),
+   *  se diversa da `v`. All'avvio si confrontano le due con una breve ricerca
+   *  e si tiene la migliore (Stralis 150 → 133 strade; Filanush senza margine
+   *  lascerebbe fuori edifici con strada). */
+  alt?: BuilderVariant;
+}
+/** Disposizioni della breve ricerca che sceglie la partenza (con o senza margine dal bordo). */
+const VALUTATE_SCELTA_MARGINE = 800;
+/** Squadra di ricerca (ottobre 2026): ogni scenario fa girare più ricerche con
+ *  semi diversi, ognuna nel suo worker. La ricerca locale si blocca presto in
+ *  un minimo locale e il risultato dipende molto dal seme (Avito r4 a 15.000
+ *  disposizioni: da 166 a 171 strade secondo il seme), quindi più semi in
+ *  parallelo valgono più di tante prove su un solo seme. La ricerca
+ *  "principale" (seme 12345, quella mostrata, che si mette in pausa e si
+ *  completa) adotta la disposizione di un'aiutante appena questa è migliore.
+ *  Semi per scenario: core disponibili / scenari, fra 1 e SEMI_MAX. */
+const SEMI = [12345, 5, 99, 2024];
+const SEMI_MAX = SEMI.length;
 const CELL = 10; // px per cella (il canvas è poi scalato alla larghezza disponibile)
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /** Velocità fissa: massima (nessuna pausa tra i fotogrammi). */
@@ -172,6 +192,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const [frames, setFrames] = useState<Record<VName, PlannerFrame | null>>(tutte(null));
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
+  /** Ricerche per scenario (squadra di ricerca, vedi SEMI). */
+  const semiRef = useRef(1);
   const finishRef = useRef(false); // "COMPLETA": chiude la ricerca degli edifici con strada (entrambe le mappe)
   const [searching, setSearching] = useState<Record<VName, boolean>>(tutte(false));
   /** Fase C (dopo COMPLETA): rifinitura continua degli edifici senza strada, fino a FERMA. */
@@ -401,7 +423,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   /** Anima le tappe del builder per una variante, poi completamento + ricerca. */
   const eseguiVariante = async (sc: Scenario) => {
-    const { id, v } = sc;
+    const { id } = sc;
+    let v = sc.v;
     const fermato = () => stopRef.current || eliminatiRef.current.has(id);
     const gen = genRef.current;
     const setF = (f: PlannerFrame) => {
@@ -427,10 +450,77 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     };
     /** Ricerca + completamento; se il completamento viene annullato si
      *  riparte (ricerca in pausa) dalla disposizione di prima di COMPLETA. */
-    const corri = async (args: Pick<Parameters<typeof runCompletion>[1], "initial" | "geometry" | "fissi" | "girandola">) => {
+    const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola">) => {
       let riprendiDa: { stato: StatoManuale; valutate: number } | undefined;
       for (;;) {
-        await runCompletion(problem, { ...opzioni, ...args, riprendiDa });
+        // ── Squadra di ricerca (vedi SEMI): aiutanti con altri semi, solo
+        // ricerca. Si fermano a COMPLETA, a Ferma (pausa) e a fine corsa; alla
+        // ripresa ripartono dalla disposizione della principale (con le
+        // eventuali modifiche a mano). La principale adotta la migliore.
+        let principale: PlannerFrame | null = null;
+        const aiuti: Array<{ f: PlannerFrame | null; inviato: PlannerFrame | null }> = [];
+        let corsa = 0, chiusa = false, passate = 0;
+        const basta = () => chiusa || fermato() || annullaRef.current[id] || finishRef.current || gen !== genRef.current;
+        const lanciaAiuti = (da?: StatoManuale) => {
+          const g = ++corsa;
+          for (const a of aiuti) passate += a.f?.search?.valutate ?? 0; // disposizioni delle corse precedenti
+          aiuti.length = 0;
+          for (let i = 1; i < semiRef.current; i++) {
+            const a: (typeof aiuti)[number] = { f: null, inviato: null };
+            aiuti.push(a);
+            runCompletionParallela(problem, {
+              ...args, delayMs: 0, soloRicerca: true, seme: SEMI[i]!,
+              onFrame: f => { if (g === corsa) a.f = f; },
+              shouldStop: () => basta() || pausedRef.current || g !== corsa,
+              ...(da ? { riprendiDa: { stato: da, valutate: 0 } } : {}),
+            }).catch(() => {}); // un aiutante che fallisce non ferma lo scenario
+          }
+        };
+        /** Voto di una disposizione mostrata: fuori → deficit → strade → buchi. */
+        const voto = (f: PlannerFrame) => [f.search?.esclusi ?? 99, f.search?.deficit ?? 0, f.roads.size, f.search?.buchi ?? 0];
+        const meglio = (a: PlannerFrame, b: PlannerFrame) => {
+          const [x, y] = [voto(a), voto(b)];
+          for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i]! < y[i]!;
+          return false;
+        };
+        const adotta = (): StatoManuale | null => {
+          if (!principale?.search || basta() || pausedRef.current) return null;
+          let mig: (typeof aiuti)[number] | null = null;
+          for (const a of aiuti) {
+            const f = a.f;
+            if (!f?.search || f === a.inviato || (f.search.scollegate ?? 0) > 0) continue;
+            if (meglio(f, mig?.f ?? principale)) mig = a;
+          }
+          if (!mig?.f) return null;
+          mig.inviato = mig.f;
+          return { placements: mig.f.placements, roads: mig.f.roads };
+        };
+        const somma = (f: PlannerFrame): PlannerFrame => {
+          principale = f;
+          if (!f.search || semiRef.current < 2) return f;
+          // disposizioni provate da tutta la squadra
+          let n = f.search.valutate + passate;
+          for (const a of aiuti) n += a.f?.search?.valutate ?? 0;
+          return { ...f, search: { ...f.search, valutate: n } };
+        };
+        if (semiRef.current > 1) lanciaAiuti(riprendiDa?.stato);
+        try {
+          // in un Web Worker (parallelo.ts): ogni ricerca su un core suo
+          await runCompletionParallela(problem, {
+            ...opzioni, ...args, ...(riprendiDa ? { riprendiDa } : {}),
+            onFrame: f => setF(somma(f)),
+            ...(semiRef.current > 1 ? {
+              adotta,
+              waitResume: () => opzioni.waitResume().then(s => {
+                const f = principale;
+                if (!basta()) lanciaAiuti(s ?? (f ? { placements: f.placements, roads: f.roads } : undefined));
+                return s;
+              }),
+            } : {}),
+          });
+        } finally {
+          chiusa = true;
+        }
         const prima = primaRef.current[id];
         if (!annullaRef.current[id] || !prima || fermato() || gen !== genRef.current) break;
         annullaRef.current[id] = false;
@@ -456,7 +546,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         // senza le statistiche della ricerca (ripartono a ogni posizione).
         let fase = "Girandola 2: scelta della posizione del municipio…";
         const centro = baseCentrale(problem);
-        const scelte = await scegliGirandola(problem, {
+        const scelte = await scegliGirandolaParallela(problem, {
           shouldStop: fermato,
           onProgress: (i, n) => { fase = `Girandola 2: prova della posizione del municipio ${i + 1}/${n}`; },
           onFrame: f => setF({ ...f, search: undefined, done: false, label: fase }),
@@ -467,6 +557,25 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       await corri({ initial: { placements: base.placements, roads: base.roads }, geometry: base.geometry, fissi: [], girandola: { bracci: base.bracci } });
       setSearching(s => ({ ...s, [id]: false }));
       return;
+    }
+    if (sc.alt) {
+      // Partenza con o senza margine vietato dal bordo: breve ricerca su
+      // entrambe (in parallelo, nei worker) e si tiene la migliore: meno
+      // edifici con strada fuori, poi meno deficit di spazio, poi meno strade
+      // (a parità quella col margine, come prima).
+      const fine = (b: BuilderVariant) => b.stages[b.stages.length - 1]!;
+      setF({ ...fine(v), probe: null, lastPath: [], placed: fine(v).placements.size, unplaced: [], iterations: 0, done: false,
+        label: "Scelta della partenza: con o senza margine dal bordo della mappa…" });
+      const prova = (b: BuilderVariant) => runCompletionParallela(problem, {
+        delayMs: 0, onFrame: () => {}, shouldStop: fermato, limiteValutate: VALUTATE_SCELTA_MARGINE, soloRicerca: true,
+        initial: { placements: fine(b).placements, roads: fine(b).roads }, geometry: b.geometry, fissi: b.fissi,
+      });
+      const [ra, rb] = await Promise.all([prova(v), prova(sc.alt)]);
+      if (fermato()) return;
+      const voto = (f: PlannerFrame) => [f.search?.esclusi ?? 99, f.search?.deficit ?? 0, f.roads.size];
+      const [a, b] = [voto(ra), voto(rb)];
+      const meglioAlt = b[0]! - a[0]! || b[1]! - a[1]! || b[2]! - a[2]!;
+      if (meglioAlt < 0) v = sc.alt;
     }
     let prev: BuilderVariant["stages"][number] | null = null;
     for (const [i, s] of v.stages.entries()) {
@@ -505,7 +614,14 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       setComputing(true);
       await sleep(30); // lascia disegnare "calcolo in corso" (il builder è sincrono)
       const os = runBuilder(problem);
-      const lista: Scenario[] = (os?.variants ?? []).map(v => ({ id: v.name, v, raccordo: v.name === "r3" ? 3 : 4 }));
+      // stessa costruzione senza le distanze dal bordo vietate (Passo 7): se la
+      // partenza cambia, all'avvio dello scenario si sceglie la migliore
+      const osL = os ? runBuilder(problem, { margineLibero: true }) : null;
+      const firma = (b: BuilderVariant) => { const f = b.stages[b.stages.length - 1]!; return JSON.stringify([[...f.placements].sort((p, q) => (p[0] < q[0] ? -1 : 1)), [...f.roads].sort()]); };
+      const lista: Scenario[] = (os?.variants ?? []).map(v => {
+        const alt = osL?.variants.find(t => t.name === v.name);
+        return { id: v.name, v, raccordo: v.name === "r3" ? 3 : 4, ...(alt && firma(alt) !== firma(v) ? { alt } : {}) };
+      });
       // Scenario "Girandola" (municipio con quattro bracci), sempre in più.
       // Due girandole (richiesta dell'utente), ognuna con la sua ricerca
       // lunga: municipio al centro; municipio nella posizione migliore delle
@@ -518,6 +634,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     eliminatiRef.current = new Set();
     setEliminati(new Set());
     if (out) {
+      const core = typeof navigator !== "undefined" && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
+      semiRef.current = Math.max(1, Math.min(SEMI_MAX, Math.floor(core / out.length)));
       // Tutti gli scenari procedono in parallelo (si alternano a ogni pausa).
       await Promise.all(out.map(sc => eseguiVariante(sc)));
     } else if (!stopRef.current) {

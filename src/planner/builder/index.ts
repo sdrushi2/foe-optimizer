@@ -59,8 +59,9 @@ function toBuilderInput(problem: PlannerProblem): BuilderInput {
 /** Tipi di piazzamento di fase 1 attorno al municipio (passi 2-4). */
 const KIND_FISSI = new Set(["angolo", "riempimento", "blocco_muni"]);
 
-export function runBuilder(problem: PlannerProblem): BuilderOutcome | null {
-  const f1 = runFase1(toBuilderInput(problem));
+/** `margineLibero`: Passo 7 senza le distanze dal bordo vietate (vedi Fase1Options.distanzeVietate). */
+export function runBuilder(problem: PlannerProblem, opzioni: { margineLibero?: boolean } = {}): BuilderOutcome | null {
+  const f1 = runFase1(toBuilderInput(problem), opzioni.margineLibero ? { distanzeVietate: new Set<number>() } : {});
   if (!f1) return null;
   const townhallId = problem.buildings.find(b => b.isTownhall)?.id ?? null;
   const toStage = (s: Snapshot): BuilderStage => {
@@ -69,14 +70,31 @@ export function runBuilder(problem: PlannerProblem): BuilderOutcome | null {
     for (const p of s.placed) placements.set(p.id, { x: p.x, y: p.y });
     return { label: s.label, placements, roads: new Set(s.roads) };
   };
+  const byId = new Map(problem.buildings.map(b => [b.id, b]));
+  /** Edifici con strada che non toccano nessuna strada (es. il laterale di
+   *  una coppia fine-strada lungo quanto il capolinea: tocca la fine della
+   *  strada solo in diagonale; Dani r3, ottobre 2026). Tolti dalla tappa
+   *  finale: li ripiazza la ricerca come gli altri rimasti fuori (prima la
+   *  ricerca locale li toglieva comunque, ma la parametrica li lasciava lì). */
+  const togliScollegati = (s: BuilderStage) => {
+    for (const [id, q] of [...s.placements]) {
+      const b = byId.get(id);
+      if (!b || b.isTownhall || b.roadLevel <= 0) continue;
+      let ok = false;
+      for (let i = 0; i < b.w && !ok; i++) ok = s.roads.has(`${q.x + i},${q.y - 1}`) || s.roads.has(`${q.x + i},${q.y + b.h}`);
+      for (let j = 0; j < b.h && !ok; j++) ok = s.roads.has(`${q.x - 1},${q.y + j}`) || s.roads.has(`${q.x + b.w},${q.y + j}`);
+      if (!ok) s.placements.delete(id);
+    }
+  };
   const variants: BuilderVariant[] = (["r3", "r4"] as const).map(name => {
     const v = f1[name];
     const stages = v.trace.map(toStage);
+    if (stages.length) togliScollegati(stages[stages.length - 1]!);
     return {
       name, stages, holes: v.riepilogo.celle_buco_totali,
       fase1Count: v.riepilogo.n_edifici,
       geometry: v.geometry,
-      fissi: (v.trace[v.trace.length - 1]?.placed ?? []).filter(p => KIND_FISSI.has(p.kind)).map(p => p.id),
+      fissi: (v.trace[v.trace.length - 1]?.placed ?? []).filter(p => KIND_FISSI.has(p.kind) && stages[stages.length - 1]!.placements.has(p.id)).map(p => p.id),
     };
   });
   const score = (v: BuilderVariant) => [v.holes, -v.fase1Count];

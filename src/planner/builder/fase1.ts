@@ -511,11 +511,11 @@ function passo6(ctx: Ctx, grandi: B[], sx: number, y0: number, y1: number, okUp:
 }
 
 // ── Passo 7 ──────────────────────────────────────────────────────────────────
-function passo7(ctx: Ctx, sy0: number, sy1: number): [number, number] {
+function passo7(ctx: Ctx, sy0: number, sy1: number, vietate: ReadonlySet<number> = DISTANZE_BORDO_VIETATE): [number, number] {
   const land = ctx.land;
   const W = ctx.g.W;
   const edificiBordo = ctx.placed.filter(p => p.kind === "angolo" || p.kind === "riempimento");
-  const vietata = (d: number) => DISTANZE_BORDO_VIETATE.has(d);
+  const vietata = (d: number) => vietate.has(d);
   const edificioValido = (p: Placed, dx: number, dy: number) => {
     const x = p.x + dx, y = p.y + dy, w = p.w, l = p.l;
     for (let xx = x; xx < x + w; xx++) if (!land.inLand(xx, y) || !land.inLand(xx, y + l - 1)) return false;
@@ -1169,7 +1169,7 @@ export function runFase1(data: BuilderInput, opts: Fase1Options = {}): Fase1Resu
   ctx.snap("Passo 5 · strada verticale");
   passo6(ctx, grandi, p5.sx, p5.y0, p5.y1, p5.okUp, p5.okDown);
   ctx.snap("Passo 6 · fine-strada");
-  const [dx, dy] = passo7(ctx, p5.y0, p5.y1);
+  const [dx, dy] = passo7(ctx, p5.y0, p5.y1, opts.distanzeVietate);
   ctx.snap("Passo 7 · traslazione al bordo");
   const sx = p5.sx + dx;
   eastEdgeX += dx;
@@ -1221,4 +1221,9 @@ export interface Fase1Options {
   /** Solo per i test differenziali: impone la direzione del retry del Passo 9
    *  ([estensione_nord, estensione_sud]) scelta dal Python. */
   forceRetry?: { r3?: [number, number]; r4?: [number, number] };
+  /** Distanze dal bordo vietate al Passo 7 (default DISTANZE_BORDO_VIETATE =
+   *  {1, 2, 3}: margine 0 oppure >= 4). Il Planner prova anche la partenza
+   *  SENZA vincolo (insieme vuoto) e tiene la migliore (Stralis: 150 → 133
+   *  strade; Filanush: senza vincolo restano fuori edifici con strada). */
+  distanzeVietate?: ReadonlySet<number>;
 }

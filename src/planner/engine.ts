@@ -114,7 +114,9 @@ export interface PlannerFrame {
   /** Fase in corso (es. "Passo 3 · riempimento centrale"), per la UI. */
   label?: string;
   /** Avanzamento della ricerca degli edifici con strada (completamento). */
-  search?: { valutate: number; strade: number | null; spreco: number; buchi?: number; latiLiberi: number; altiInterni?: number; trovataAl: number; esclusi: number; attiva: boolean; deficit?: number };
+  search?: { valutate: number; strade: number | null; spreco: number; buchi?: number; latiLiberi: number; altiInterni?: number; trovataAl: number; esclusi: number; attiva: boolean; deficit?: number;
+    /** Edifici con strada non collegati al municipio (ricerca parametrica): una disposizione così non si adotta. */
+    scollegate?: number };
 }
 
 /** Costruisce il problema dai dati della mappa città già importati. */
