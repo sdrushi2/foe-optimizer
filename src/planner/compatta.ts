@@ -451,14 +451,43 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
     const salvaOcc = occ.slice(), salvaPl = new Map(pl);
     const ripristina = (o: Uint8Array, p: Map<string, Pos>) => { occ.set(o); pl.clear(); for (const [id, q] of p) pl.set(id, q); };
     /** Impila i lati (`via`: edifici che passano all'altro lato) e toglie la punta; vero se riuscito (stato applicato). */
-    const prova = (via: ReadonlySet<string>): boolean => {
+    /** Celle accanto al ramo (sui due lati): un edificio esiliato non deve occuparle. */
+    const lateraliRamo = new Set<number>();
+    for (const c of ramo) for (const sl of [1, -1]) lateraliRamo.add(gi(c.x + sl * px, c.y + sl * py));
+    /** Posto per un edificio esiliato: libero, che tocca una strada, lontano dal
+     *  ramo; fra quelli possibili il più "incastrato" (più lati del contorno
+     *  occupati), come farebbe l'utente con un buco della sua misura. */
+    const postoEsilio = (b: PlannerBuilding): Pos | null => {
+      let mig: Pos | null = null, migC = -1;
+      for (let y = minY; y <= problem.maxY; y++) for (let x = minX; x <= problem.maxX; x++) {
+        if (!rettLibero(x, y, b.w, b.h) || !toccaStradaZona(b, x, y, strada)) continue;
+        let vicino = false;
+        for (let dx = 0; dx < b.w && !vicino; dx++) for (let dy = 0; dy < b.h && !vicino; dy++) if (lateraliRamo.has(gi(x + dx, y + dy))) vicino = true;
+        if (vicino) continue;
+        let c = 0;
+        for (let d = 0; d < b.w; d++) { if (!libera(x + d, y - 1)) c++; if (!libera(x + d, y + b.h)) c++; }
+        for (let d = 0; d < b.h; d++) { if (!libera(x - 1, y + d)) c++; if (!libera(x + b.w, y + d)) c++; }
+        if (c > migC) { migC = c; mig = { x, y }; }
+      }
+      return mig;
+    };
+    /** `esilio`: edificio di lato portato in un buco altrove (Sdrushi3, Girandola 2:
+     *  una Statua 2×3 in fondo alla strada spostata in un buco 2×3 lontano). */
+    const prova = (via: ReadonlySet<string>, esilio?: string): boolean => {
       const assegna = new Map<1 | -1, string[]>();
       for (const s of [1, -1] as const) {
         if (latoFermo.has(s)) continue;
-        const l = [...lati.get(s)!.filter(id => !via.has(id)), ...lati.get(s === 1 ? -1 : 1)!.filter(id => via.has(id))];
+        const l = [...lati.get(s)!.filter(id => !via.has(id)), ...lati.get(s === 1 ? -1 : 1)!.filter(id => via.has(id))].filter(id => id !== esilio);
         assegna.set(s, l.sort((a, b) => bordoRadice(b) - bordoRadice(a)));
       }
       for (const ids of assegna.values()) for (const id of ids) segnaB(byId.get(id)!, pl.get(id)!, 0);
+      if (esilio) {
+        const b = byId.get(esilio)!;
+        segnaB(b, pl.get(esilio)!, 0);
+        const q = postoEsilio(b);
+        if (!q) { ripristina(salvaOcc, salvaPl); return false; }
+        pl.set(esilio, q); segnaB(b, q, 2);
+      }
       let ok = true;
       for (const [s, ids] of assegna) {
         for (const id of ids) {
@@ -538,6 +567,12 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
       return false;
     };
     if (prova(new Set())) return true;
+    // Un edificio di lato va in un buco altrove (anche con un lato fermo)
+    let esili = 0;
+    for (const a of [...lati.get(1)!, ...lati.get(-1)!]) {
+      if (!mobile(a) || ++esili > 20) continue;
+      if (prova(new Set(), a)) return true;
+    }
     // Un lato pieno e l'altro con buchi: un edificio passa dall'altra parte
     // (nei buchi), oppure due edifici di lunghezza diversa si scambiano di lato
     // (Girandola: un 3 sopra con un 4 sotto). Così i buchi finiscono in fondo
