@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Editor città – FoE Optimizer</title>
-<meta name="description" content="Editor della città di Forge of Empires di FoE Optimizer: sposta, duplica e togli edifici e strade, poi salva la città in JSON o PNG.">
+<meta name="description" content="Editor della città di Forge of Empires di FoE Optimizer: sposta e togli edifici e strade, poi salva la città in JSON o PNG.">
 <meta name="author" content="Sdrushi">
 <meta name="application-name" content="FoE Optimizer">
 <!-- noindex: senza una città caricata la pagina è vuota (si apre dal tool,
@@ -22,7 +22,7 @@
 <link rel="canonical" href="https://foe-optimizer.com/editor.html">
 <!-- anteprima quando il link viene condiviso (stessa immagine delle altre pagine) -->
 <meta property="og:title" content="Editor città – FoE Optimizer">
-<meta property="og:description" content="Sposta, duplica e togli edifici e strade della tua città di Forge of Empires, poi salvala in JSON o PNG.">
+<meta property="og:description" content="Sposta e togli edifici e strade della tua città di Forge of Empires, poi salvala in JSON o PNG.">
 <meta property="og:url" content="https://foe-optimizer.com/editor.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FoE Optimizer">
@@ -276,12 +276,12 @@ const TESTI = {
     titolo: 'Editor città', apri: 'Apri JSON', salvaJson: 'Salva JSON', salvaPng: 'Salva PNG',
     applica: '✔ Applica al Planner', vuoto: 'Carica un file .json per visualizzare la città',
     hints: ['<kbd>Trascina</kbd> sposta', '<kbd>Trascina sul vuoto</kbd> seleziona',
-            '<kbd>Ctrl</kbd> + <kbd>Trascina</kbd> duplica selezione', '<kbd>Shift</kbd> aggiungi alla selezione',
-            '<kbd>Ctrl</kbd> + <kbd>A</kbd> seleziona tutto', '<kbd>Doppio clic</kbd> aggiungi / togli strada',
+            '<kbd>Shift</kbd> aggiungi alla selezione',
+            '<kbd>Ctrl</kbd> + <kbd>A</kbd> seleziona tutto', '<kbd>Doppio clic</kbd> aggiungi / togli strada', '<kbd>Shift</kbd> + <kbd>Doppio clic</kbd> strada a due corsie',
             '<kbd>Canc</kbd> elimina edifici selezionati', '<kbd>Ctrl</kbd> + <kbd>Z</kbd> annulla'],
-    badTitle: "Ci sono edifici sovrapposti o fuori dall'area (bordo rosso): sistemali prima di applicare",
+    badTitle: "Ci sono edifici sovrapposti, fuori dall'area o strade a due corsie sfalsate (bordo rosso): sistemali prima di applicare",
     okTitle: 'Rimanda la città modificata al Planner',
-    bad: n => n + " edifici sovrapposti o fuori dall'area",
+    bad: n => n + " elementi sovrapposti, fuori dall'area o strade a due corsie sfalsate",
     municipio: 'Municipio',
     noPng: 'Export PNG non disponibile (manca /editor-condiviso.js)', pngErr: 'Export PNG non riuscito: ',
     jsonErr: 'JSON non valido: ', plannerChiuso: 'Il Planner è stato chiuso: usa "Salva JSON"',
@@ -292,12 +292,12 @@ const TESTI = {
     titolo: 'City editor', apri: 'Open JSON', salvaJson: 'Save JSON', salvaPng: 'Save PNG',
     applica: '✔ Apply to Planner', vuoto: 'Load a .json file to show the city',
     hints: ['<kbd>Drag</kbd> move', '<kbd>Drag on empty space</kbd> select',
-            '<kbd>Ctrl</kbd> + <kbd>Drag</kbd> duplicate selection', '<kbd>Shift</kbd> add to selection',
-            '<kbd>Ctrl</kbd> + <kbd>A</kbd> select all', '<kbd>Double click</kbd> add / remove road',
+            '<kbd>Shift</kbd> add to selection',
+            '<kbd>Ctrl</kbd> + <kbd>A</kbd> select all', '<kbd>Double click</kbd> add / remove road', '<kbd>Shift</kbd> + <kbd>Double click</kbd> two-lane road',
             '<kbd>Del</kbd> delete selected buildings', '<kbd>Ctrl</kbd> + <kbd>Z</kbd> undo'],
-    badTitle: 'Some buildings overlap or are outside the area (red border): fix them before applying',
+    badTitle: 'Some buildings overlap, are outside the area or two-lane roads are misaligned (red border): fix them before applying',
     okTitle: 'Send the edited city back to the Planner',
-    bad: n => n + ' buildings overlapping or outside the area',
+    bad: n => n + ' items overlapping, outside the area or misaligned two-lane roads',
     municipio: 'Town Hall',
     noPng: 'PNG export not available (/editor-condiviso.js missing)', pngErr: 'PNG export failed: ',
     jsonErr: 'Invalid JSON: ', plannerChiuso: 'The Planner has been closed: use "Save JSON"',
@@ -323,7 +323,7 @@ function applicaLingua(l) {
 let nomeMunicipio = 'Municipio';   // dal tool arriva la traduzione nella sua lingua
 let nomeMunicipioDaTool = false;
 
-let fonte = null;          // { ents, areeRaw, celle:Set, strada:{eid,name,w,h}|null }
+let fonte = null;          // { ents, areeRaw, celle:Set, strada:{eid,name,w,h}|null, strada2 (2×2)|null }
 // Canale col Planner: token dell'apertura (null = editor usato da solo)
 let token = null;
 
@@ -398,7 +398,15 @@ function parse(data, colori) {
   // tipo di strada per il doppio clic: la strada 1×1 della città (o la prima che c'è)
   const strade = items.filter(i => i.type === 'street');
   const s = strade.find(i => i.w === 1 && i.h === 1) || strade[0] || null;
-  fonte = { ents, areeRaw, celle, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h } };
+  // strada a due corsie (Shift + doppio clic): un 2×2 della città o, se non ce
+  // n'è nessuno piazzato, la definizione 2×2 di tipo strada fra le entità
+  let s2 = strade.find(i => i.w === 2 && i.h === 2) || null;
+  if (!s2) {
+    const e2 = Object.entries(ents).find(([, e]) => e && e.type === 'street' && String(dims(e)) === '2,2');
+    if (e2) s2 = { eid: e2[0], name: e2[1].name || e2[0], w: 2, h: 2 };
+  }
+  fonte = { ents, areeRaw, celle, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h },
+            strada2: s2 && { eid: s2.eid, name: s2.name, w: 2, h: 2 } };
   return { areas, items };
 }
 
@@ -473,6 +481,12 @@ function verifica() {
       if (o && o !== e) { bad.add(e); bad.add(o); } else occ.set(k, e);
     }
   });
+  // strade a due corsie sfalsate: due 2×2 che si toccano lungo un lato devono essere allineati
+  const d2 = entries.filter(e => e.item.type === 'street' && e.item.w === 2 && e.item.h === 2);
+  for (let i = 0; i < d2.length; i++) for (let j = i + 1; j < d2.length; j++) {
+    const a = d2[i].item, b = d2[j].item, dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y);
+    if ((dx === 2 && dy === 1) || (dy === 2 && dx === 1)) { bad.add(d2[i]); bad.add(d2[j]); }
+  }
   entries.forEach(e => e.el.classList.toggle('bad', bad.has(e)));
   const ap = document.getElementById('applica');
   ap.disabled = bad.size > 0;
@@ -491,7 +505,7 @@ function stato(msg, cls) {
 // ---- Selezione e trascinamento ----
 let entries = [];
 let topZ = 10;
-let undoStack = [];   // voci: { type:'move'|'dup', moves, clones } oppure { type:'delete', items }
+let undoStack = [];   // voci: { type:'move'|'dup' (strada aggiunta), moves, clones } oppure { type:'delete', items }
 const sel = new Set();
 
 function setSel(entry, on) {
@@ -512,8 +526,8 @@ function bindBuilding(entry) {
     if (ev.button !== 0) return;
     ev.preventDefault();
     ev.stopPropagation();
-    const dup = ev.ctrlKey || ev.metaKey;       // Ctrl: trascinando duplica
-    if (ev.shiftKey && !dup) {                  // Maiusc: aggiunge o toglie dalla selezione
+    // (niente duplicazione con Ctrl+trascina: il Planner usa solo gli edifici della città)
+    if (ev.shiftKey) {                          // Maiusc: aggiunge o toglie dalla selezione
       setSel(entry, !sel.has(entry));
       if (!sel.has(entry)) return;
     } else if (!sel.has(entry)) {               // clic su non selezionato: solo lui
@@ -523,7 +537,7 @@ function bindBuilding(entry) {
     el.setPointerCapture(ev.pointerId);
     const starts = [...sel].map(e => ({ e, x: e.item.x, y: e.item.y }));
     drag = {
-      px: ev.clientX, py: ev.clientY, starts, dup, clones: null,
+      px: ev.clientX, py: ev.clientY, starts,
       minX: Math.min(...starts.map(s => s.x)),
       minY: Math.min(...starts.map(s => s.y)),
       maxR: Math.max(...starts.map(s => s.x + s.e.item.w)),
@@ -540,10 +554,6 @@ function bindBuilding(entry) {
     dy = Math.max(-drag.minY, dy);                      // né in alto
     const need = Math.max(drag.maxR + dx, drag.maxB + dy) + PAD;
     if (need > mapSize) setMapSize(need);               // a destra/in basso la mappa si allarga
-    if (drag.dup && !drag.clones && (dx || dy)) {      // prima mossa: lascia le copie sul posto
-      drag.clones = drag.starts.map(s => addBuilding({ ...s.e.item, x: s.x, y: s.y }, +s.e.el.style.zIndex || 10));
-      drag.starts.forEach(s => { s.e.el.style.zIndex = ++topZ; });   // gli originali restano sopra le copie
-    }
     drag.starts.forEach(s => {
       s.e.item.x = s.x + dx;
       s.e.item.y = s.y + dy;
@@ -557,8 +567,7 @@ function bindBuilding(entry) {
       const moves = drag.starts
         .filter(s => s.e.item.x !== s.x || s.e.item.y !== s.y)
         .map(s => ({ e: s.e, x: s.x, y: s.y }));      // posizione di partenza
-      if (drag.clones) undoStack.push({ type: 'dup', clones: drag.clones, moves });
-      else if (moves.length) undoStack.push({ type: 'move', moves });
+      if (moves.length) undoStack.push({ type: 'move', moves });
       verifica();
     }
     drag = null;
@@ -622,13 +631,15 @@ function cancella(items) {
   map.addEventListener('pointercancel', end);
 
   // Doppio clic su una cella libera dell'area sbloccata: nuova strada
+  // (Shift + doppio clic: strada a due corsie 2×2, la cella è l'angolo in alto a sinistra)
   map.addEventListener('dblclick', ev => {
-    if (!fonte || !fonte.strada) return;
+    if (!fonte) return;
+    const s = ev.shiftKey ? fonte.strada2 : fonte.strada;
+    if (!s) return;
     if (ev.target !== map && !ev.target.classList.contains('area')) return;
     const r = map.getBoundingClientRect();
     const x = Math.floor((ev.clientX - r.left - map.clientLeft) / TILE);
     const y = Math.floor((ev.clientY - r.top - map.clientTop) / TILE);
-    const s = fonte.strada;
     for (let dx = 0; dx < s.w; dx++) for (let dy = 0; dy < s.h; dy++) if (!fonte.celle.has((x + dx) + ',' + (y + dy))) return;
     if (entries.some(e => x < e.item.x + e.item.w && e.item.x < x + s.w && y < e.item.y + e.item.h && e.item.y < y + s.h)) return;
     const nuova = addBuilding({ id: null, eid: s.eid, x, y, w: s.w, h: s.h, type: 'street', noRoad: true, cls: 'street', name: s.name });
@@ -637,7 +648,7 @@ function cancella(items) {
   });
 })();
 
-// Ctrl+Z (Cmd+Z su Mac): annulla l'ultima azione (spostamento, duplica, strada o cancellazione)
+// Ctrl+Z (Cmd+Z su Mac): annulla l'ultima azione (spostamento, strada o cancellazione)
 // Canc / Backspace: cancella gli edifici selezionati
 document.addEventListener('keydown', ev => {
   const map = document.getElementById('map');

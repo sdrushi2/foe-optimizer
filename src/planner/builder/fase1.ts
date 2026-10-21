@@ -87,6 +87,9 @@ interface VariantResult {
 }
 export interface Fase1Result {
   r3: VariantResult; r4: VariantResult;
+  /** Raccordo a 5 celle (idea dell'utente su Avito: la colonna a ovest della
+   *  verticale diventa larga abbastanza per edifici 3×3/2×2). */
+  r5: VariantResult;
 }
 
 const MAX_CANDIDATI_RIEMPIMENTO_CENTRALE = 50;
@@ -704,13 +707,13 @@ function passo8(ctx: Ctx): number {
 
 // ── Passo 9 ──────────────────────────────────────────────────────────────────
 function passo9(ctx: Ctx, eastEdgeX: number, sx: number, eastMidY: number, okUp: boolean, okDown: boolean,
-  raccordoEsteso: boolean, estNord: number, estSud: number) {
+  raccordoEsteso: number, estNord: number, estSud: number) {
   const th = ctx.th;
   const road = ctx.road;
   const bm = ctx.placed.filter(p => p.kind === "blocco_muni");
   const x0r = bm.length ? Math.min(...bm.map(p => p.x)) + Math.max(...bm.map(p => p.w)) : eastEdgeX;
   const larg = sx - x0r;
-  const lim = raccordoEsteso ? 4 : 3;
+  const lim = 3 + raccordoEsteso; // raccordo a 3/4/5 celle: pezzi fino a 3/4/5
   const usatiRect = new Set(ctx.placed.map(p => p.id));
   const poolR = ctx.b1.filter(b => !usatiRect.has(b.id) && b.width <= lim && b.length <= lim);
   const MAX_NODI = 1_000_000;
@@ -1175,10 +1178,12 @@ export function runFase1(data: BuilderInput, opts: Fase1Options = {}): Fase1Resu
   eastEdgeX += dx;
   eastMidY += dy;
 
-  const variante = (esteso: boolean): VariantResult => {
+  /** `esteso`: celle in più del raccordo (0 = 3 celle, 1 = 4, 2 = 5). */
+  const variante = (esteso: number): VariantResult => {
     const c = ctx.clone();
-    const sxV = biforcaRaccordo(c, sx, eastMidY, esteso);
-    c.snap(esteso ? "Raccordo a 4 celle" : "Raccordo a 3 celle");
+    let sxV = sx;
+    for (let e = 0; e < esteso; e++) sxV = biforcaRaccordo(c, sxV, eastMidY, true);
+    c.snap(`Raccordo a ${3 + esteso} celle`);
     const stradaX = passo8(c);
     c.snap("Passo 8 · allungamento strada");
     const pre9 = c.clone();
@@ -1200,7 +1205,7 @@ export function runFase1(data: BuilderInput, opts: Fase1Options = {}): Fase1Resu
       // cui ci sono buchi e si tiene il risultato con meno buchi (mai peggio
       // del Python, a volte meglio).
       const thY = c.th.y;
-      const forced = opts.forceRetry?.[esteso ? "r4" : "r3"];
+      const forced = esteso <= 1 ? opts.forceRetry?.[esteso ? "r4" : "r3"] : undefined;
       const dirs: Array<[number, number]> = forced ? [forced] : [];
       if (!forced) {
         const cys = res.riepilogo.celle_buco_coordinate.map(([, cy]) => cy);
@@ -1214,7 +1219,7 @@ export function runFase1(data: BuilderInput, opts: Fase1Options = {}): Fase1Resu
     }
     return res;
   };
-  return { r3: variante(false), r4: variante(true) };
+  return { r3: variante(0), r4: variante(1), r5: variante(2) };
 }
 
 export interface Fase1Options {

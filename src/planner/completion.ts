@@ -36,6 +36,7 @@ import { perimetroCoda, runPlaceholderPlanner, toccaStradaZona, type PlannerBuil
 import { fillMask } from "./builder/fase2";
 import { compattaCitta } from "./compatta";
 import { smussaBordi } from "./smussa";
+import { celleBlocchi, richiedeDueCorsie, verificaDueCorsie } from "./dueCorsie";
 import { calcolaRoadEff, contaAngoliGriglia, contaFiniStradaErrati, esclusoDaRoadEff, LATO_GRANDE, piccoloDaAngolo, roadEffDi } from "./roadEff";
 
 const key = (x: number, y: number) => `${x},${y}`;
@@ -179,9 +180,20 @@ export interface CompletionOptions {
    *  ricerca della squadra) la ricerca la adotta e prosegue da lì, come dopo
    *  una ripresa da modifiche manuali. */
   adotta?: () => StatoManuale | null;
+  /** Celle di strada che la ricerca non toglie mai (blocchi a due corsie del
+   *  nucleo, vedi dueCorsie.ts). */
+  stradeFisse?: readonly string[];
+  /** Potenza della CPU (MIN/MED/MAX del Planner): pausa dopo ogni fetta di
+   *  lavoro, in proporzione al tempo di lavoro appena fatto (0 = nessuna
+   *  pausa, 1 = pausa lunga quanto il lavoro → metà CPU). Misurare la fetta
+   *  vera e non supporre 40 ms: alcune fette (compattazione, ripiazzamenti)
+   *  durano molto di più e con una pausa fissa MED restava al 75-80%. */
+  riposo?: () => number;
 }
 /** Disposizione completa (edifici + strade) modificata a mano durante la pausa. */
-export interface StatoManuale { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string> }
+export interface StatoManuale { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string>;
+  /** Strade a due corsie (blocchi 2×2) della disposizione: diventano le nuove strade fisse (spostate a mano). */
+  blocchi?: readonly string[] }
 
 /** Un passo della disposizione: un edificio piazzato e le strade nuove che richiede. */
 interface Azione { label: string; id: string; x: number; y: number; w: number; h: number; road: string[]; sy?: number; cap?: boolean; from?: { x: number; y: number }; libera?: string }
@@ -400,6 +412,30 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const fissi = new Set(opts.fissi ?? []);
   /** Fissi di fase 1 (angoli, riempimento, blocco del municipio): mai spostati, neanche accorciando la verticale. */
   const fissiBuilder = new Set(opts.fissi ?? []);
+  /** Strade fisse (due corsie): mai tolte, né potate né accorciate. */
+  const fisse = new Set(opts.stradeFisse ?? []);
+  /** Blocchi 2×2 correnti (angolo in alto a sinistra), dalle celle fisse:
+   *  la ricerca locale può spostarli (vicinato "nucleo"); ogni stato del
+   *  cammino ricorda i suoi (StatoS.bl). */
+  let blocchiCorr: string[] = (() => {
+    const out: string[] = [], usate = new Set<string>();
+    const xy = [...fisse].map(k => k.split(",").map(Number) as [number, number]).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    for (const [x, y] of xy) {
+      const c = [key(x, y), key(x + 1, y), key(x, y + 1), key(x + 1, y + 1)];
+      if (c.every(k => fisse.has(k) && !usate.has(k))) { for (const k of c) usate.add(k); out.push(key(x, y)); }
+    }
+    return out;
+  })();
+  const impostaBlocchi = (bl: readonly string[]) => {
+    fisse.clear();
+    for (const c of celleBlocchi(bl)) fisse.add(c);
+    blocchiCorr = [...bl];
+  };
+  // i fotogrammi portano i blocchi correnti (disegno ed export in PlannerView)
+  {
+    const onFrame0 = opts.onFrame;
+    opts = { ...opts, onFrame: f => onFrame0(f.due || !blocchiCorr.length ? f : { ...f, due: [...blocchiCorr] }) };
+  }
   const placements = new Map(opts.initial.placements);
   const GW = problem.maxX - problem.minX + 1, GH = problem.maxY - problem.minY + 1;
   /** Strade (insieme di chiavi "x,y" + griglia per hasXY: ottimizzazione). */
@@ -463,7 +499,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const vx = opts.geometry.stradaVX;
   const sy0 = opts.geometry.eastMidY;
   const x0 = vx + 1;
-  const daPiazzare = problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0 && !placements.has(b.id));
+  // (gli edifici a due corsie li piazza solo il nucleo: dueCorsie.ts)
+  const daPiazzare = problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0 && !richiedeDueCorsie(b) && !placements.has(b.id));
   /** Area degli edifici senza strada ancora da piazzare (per il deficit di spazio). */
   let areaSenzaStrada = problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0 && !placements.has(b.id)).reduce((t, b) => t + b.w * b.h, 0);
   /** "Buchi intermedi": celle libere che nessun edificio senza strada ancora
@@ -557,7 +594,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     for (const r of roads) occupied.add(r);
     for (const [id, p] of placements) { const b = byId.get(id)!; occupy(p.x, p.y, b.w, b.h); }
     daPiazzare.length = 0;
-    daPiazzare.push(...problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0 && !placements.has(b.id)));
+    daPiazzare.push(...problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0 && !richiedeDueCorsie(b) && !placements.has(b.id)));
     areaSenzaStrada = problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0 && !placements.has(b.id)).reduce((t, b) => t + b.w * b.h, 0);
     calcolaRighe();
     calcolaForme();
@@ -606,13 +643,13 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const coda = th && pth ? perimetro(pth.x, pth.y, th.w, th.h).filter(k => roads.has(k)) : [];
     for (const k of coda) coll.add(k);
     while (coda.length) for (const n of vicini(coda.pop()!)) if (roads.has(n) && !coll.has(n)) { coll.add(n); coda.push(n); }
-    if (th && pth) for (const r of [...roads]) if (!coll.has(r)) roads.delete(r);
+    if (th && pth) for (const r of [...roads]) if (!coll.has(r) && !fisse.has(r)) roads.delete(r);
     // 2. Rami morti: foglie della rete che non toccano edifici con strada (né il municipio).
     const serve = new Set<string>();
     for (const [id, p] of placements) { const b = byId.get(id)!; if (b.isTownhall || b.roadLevel > 0) for (const k of perimetro(p.x, p.y, b.w, b.h)) serve.add(k); }
     for (let cambiato = true; cambiato;) {
       cambiato = false;
-      for (const r of [...roads]) if (!serve.has(r) && vicini(r).filter(n => roads.has(n)).length <= 1) { roads.delete(r); cambiato = true; }
+      for (const r of [...roads]) if (!serve.has(r) && !fisse.has(r) && vicini(r).filter(n => roads.has(n)).length <= 1) { roads.delete(r); cambiato = true; }
     }
     // 3. Edifici con strada non collegati → di nuovo da piazzare (toccare
     //    solo il municipio NON collega: serve una strada).
@@ -655,7 +692,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         for (let i = celle.length - 1; i >= celle.length - t; i--) {
           const c = celle[i]!;
           if (!roads.has(c)) continue; // già tolta (o mai messa): la punta è più indietro
-          if (serve.has(c) || !punta(c)) break;
+          if (serve.has(c) || !punta(c) || fisse.has(c)) break;
           roads.delete(c); occ.delete(c); stradeTolte.push(c);
         }
       });
@@ -758,7 +795,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       for (let t = 0; t < k; t++) {
         const y = yE - dir * t, c = key(vx, y);
         // Mai un incrocio (raccordo del municipio, dorsali) né la cella oltre.
-        if (!roads.has(c) || roads.hasXY(vx - 1, y) || roads.hasXY(vx + 1, y) || !roads.hasXY(vx, y - dir)) break;
+        if (!roads.has(c) || fisse.has(c) || roads.hasXY(vx - 1, y) || roads.hasXY(vx + 1, y) || !roads.hasXY(vx, y - dir)) break;
         tolte.push(c);
       }
       if (!tolte.length) return;
@@ -1700,14 +1737,14 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         // strada vicina ma è l'attacco al municipio, non una punta)
         const thR = problem.buildings.find(b => b.isTownhall), thQ = thR ? placements.get(thR.id) : undefined;
         const sulMunicipio = (k: string) => { if (!thR || !thQ) return false; const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); return x >= thQ.x && x < thQ.x + thR.w && y >= thQ.y && y < thQ.y + thR.h; };
-        const foglie = [...rd, ...(opts.girandola ? roads : [])].filter(k => vic(k).filter(isRoad).length === 1 && !vic(k).some(sulMunicipio));
+        const foglie = [...rd, ...(opts.girandola ? roads : [])].filter(k => !fisse.has(k) && vic(k).filter(isRoad).length === 1 && !vic(k).some(sulMunicipio));
         for (const foglia of foglie) {
           // tratto finale: risale dalla foglia lungo la catena (solo strade nuove)
           const catena: string[] = [foglia];
           let prev = "", cur = foglia;
           for (let t = 0; t < 4; t++) {
             const nx = vic(cur).filter(n => isRoad(n) && n !== prev);
-            if (nx.length !== 1 || !tagliabile(nx[0]!)) break;
+            if (nx.length !== 1 || !tagliabile(nx[0]!) || fisse.has(nx[0]!)) break;
             prev = cur; cur = nx[0]!; catena.push(cur);
           }
           // Tutte le strade (nuove e di partenza) in forma numerica, una volta per foglia.
@@ -2645,7 +2682,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     // Girandola: niente "parte ovest" (la verticale è solo un braccio: il
     // braccio a ovest del municipio restava tutto fermo; Sdrushi3, Girandola 2).
     const ovest = new Set(opts.girandola ? [] : idOvest(st.placements));
-    const c = compattaCitta(problem, st.placements, st.roads, new Set([...[...fissi].filter(id => ovest.has(id)), ...fissiBuilder]));
+    const c = compattaCitta(problem, st.placements, st.roads, new Set([...[...fissi].filter(id => ovest.has(id)), ...fissiBuilder]), fisse);
     return { placements: c.placements, roads: c.roads };
   };
   const cacheCompatta = new WeakMap<object, StatoManuale>();
@@ -3019,7 +3056,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   // il risultato sostituisce S se non è peggiore (meno edifici con strada
   // fuori → meno deficit di spazio → meno strade totali).
   type Punti = [number, number, number, number, number, number, number, number];
-  type StatoS = { pl: Map<string, { x: number; y: number }>; rd: Set<string>; punti: Punti };
+  type StatoS = { pl: Map<string, { x: number; y: number }>; rd: Set<string>; punti: Punti; /** blocchi a due corsie */ bl: string[] };
   /** Stato corrente del cammino (può muoversi fra soluzioni equivalenti). */
   let manuale: StatoS | null = null;
   /** Migliore trovata finora: è quella MOSTRATA e quella che si completa.
@@ -3062,11 +3099,11 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const confronta = (a: Punti, b: Punti) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3] || a[4] - b[4] || a[5] - b[5] || a[6] - b[6] || a[7] - b[7];
   /** Lo stato globale diventa il corrente; se batte la migliore, anche la migliore. Vero se migliora. */
   const fotografa = (azzera = false, punti?: Punti): boolean => {
-    manuale = { pl: new Map(placements), rd: new Set(roads), punti: punti ?? punteggio() };
+    manuale = { pl: new Map(placements), rd: new Set(roads), punti: punti ?? punteggio(), bl: [...blocchiCorr] };
     if (azzera || !migliore || confronta(manuale.punti, migliore.punti) < 0) {
       // strade o edifici fuori migliorati (non solo i criteri secondari): per la scossa
       if (!migliore || manuale.punti[0] < migliore.punti[0] || manuale.punti[3] < migliore.punti[3]) ultimoGuadagno = valutate;
-      migliore = { pl: new Map(manuale.pl), rd: new Set(manuale.rd), punti: manuale.punti };
+      migliore = { pl: new Map(manuale.pl), rd: new Set(manuale.rd), punti: manuale.punti, bl: manuale.bl };
       senzaMigliorare = 0;
       return !azzera;
     }
@@ -3074,17 +3111,102 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   };
   const mostraS = (stato: string) => {
     const S = migliore!;
+    // (la compattazione deve proteggere i blocchi della migliore, non quelli dell'ultimo tentativo)
+    if (S.bl.length || blocchiCorr.length) impostaBlocchi(S.bl);
     const fuori = problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0 && !S.pl.has(b.id)).map(b => b.id);
     // versione compattata (vedi compattato), se già calcolata o se è il momento
     const c = compattato(S, () => ({ placements: S.pl, roads: S.rd }), stato !== "");
     const pl = c ? c.placements : S.pl, rd = c ? c.roads : S.rd;
     opts.onFrame({
       placements: new Map(pl), roads: new Set(rd), probe: null, lastPath: [...rd].filter(r => !opts.initial.roads.has(r)),
-      placed: pl.size, unplaced: fuori, iterations: valutate, done: false,
+      placed: pl.size, unplaced: fuori, iterations: valutate, done: false, ...(S.bl.length ? { due: S.bl } : {}),
       search: { valutate, strade: S.punti[3] - stradeIniziali, spreco: 0, buchi: S.punti[6], latiLiberi: 0, altiInterni: 0, trovataAl, esclusi: S.punti[0], attiva: stato === "", deficit: S.punti[1] },
       label: `Ricerca locale · ${valutate.toLocaleString()} disposizioni · migliore: ${S.punti[3] - stradeIniziali} strade nuove`
         + `${S.punti[0] ? ` · ${S.punti[0]} edifici con strada da piazzare` : ""}${stato}`,
     });
+  };
+  /** Mossa sul nucleo a due corsie (vedi vicinato "nucleo"): modifica `pl`
+   *  (sposta gli edifici a due corsie, toglie quelli sui nuovi posti) e
+   *  imposta i nuovi blocchi; restituisce le strade nuove, o null (niente fatto). */
+  const mossaNucleo = (S: StatoS, pl: Map<string, { x: number; y: number }>, togli: (id: string) => void): Set<string> | null => {
+    const bl = S.bl;
+    if (!bl.length) return null;
+    const pos = bl.map(k => { const i = k.indexOf(","); return { x: Number(k.slice(0, i)), y: Number(k.slice(i + 1)) }; });
+    const due2 = [...pl.keys()].filter(id => richiedeDueCorsie(byId.get(id)!));
+    const adiac = (a: { x: number; y: number }, b: { x: number; y: number }) => (Math.abs(a.x - b.x) === 2 && a.y === b.y) || (Math.abs(a.y - b.y) === 2 && a.x === b.x);
+    const tocca = (id: string, q: { x: number; y: number }, celle: ReadonlySet<string>) => {
+      const b = byId.get(id)!;
+      for (let i = 0; i < b.w; i++) if (celle.has(key(q.x + i, q.y - 1)) || celle.has(key(q.x + i, q.y + b.h))) return true;
+      for (let j = 0; j < b.h; j++) if (celle.has(key(q.x - 1, q.y + j)) || celle.has(key(q.x + b.w, q.y + j))) return true;
+      return false;
+    };
+    const DIR: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    let nuovo: Array<{ x: number; y: number }>;
+    const sposta = new Map<string, { x: number; y: number }>();
+    const t = rnd();
+    if (t < 0.5) {
+      const [dx, dy] = DIR[Math.floor(rnd() * 4)]!;
+      nuovo = pos.map(p => ({ x: p.x + dx, y: p.y + dy }));
+      for (const id of due2) { const q = pl.get(id)!; sposta.set(id, { x: q.x + dx, y: q.y + dy }); }
+    } else {
+      const punte = pos.filter(p => pos.filter(q => adiac(p, q)).length <= 1);
+      const L = punte[Math.floor(rnd() * punte.length)];
+      if (!L) return null;
+      const N = pos.find(q => adiac(L, q));
+      if (t < 0.8 && N) {
+        // accorcia: via la punta L; chi tocca solo L arretra verso N
+        nuovo = pos.filter(p => p !== L);
+        const resto = new Set(celleBlocchi(nuovo.map(p => key(p.x, p.y))));
+        const dx = N.x - L.x, dy = N.y - L.y;
+        for (const id of due2) { const q = pl.get(id)!; if (!tocca(id, q, resto)) sposta.set(id, { x: q.x + dx, y: q.y + dy }); }
+      } else {
+        // allunga oltre la punta L (lontano da N, o in un verso a caso); il fine strada avanza
+        const [ux, uy] = N ? [Math.sign(L.x - N.x), Math.sign(L.y - N.y)] : DIR[Math.floor(rnd() * 4)]!;
+        const nb = { x: L.x + 2 * ux, y: L.y + 2 * uy };
+        nuovo = [...pos, nb];
+        const celleNb = new Set(celleBlocchi([key(nb.x, nb.y)]));
+        for (const id of due2) {
+          const q = pl.get(id)!, b = byId.get(id)!;
+          let sopra = false;
+          for (let i = 0; i < b.w && !sopra; i++) for (let j = 0; j < b.h && !sopra; j++) if (celleNb.has(key(q.x + i, q.y + j))) sopra = true;
+          if (sopra) sposta.set(id, { x: q.x + 2 * ux, y: q.y + 2 * uy });
+        }
+      }
+    }
+    const nuoviK = nuovo.map(p => key(p.x, p.y));
+    const celleN = celleBlocchi(nuoviK);
+    const th = problem.buildings.find(b => b.isTownhall);
+    const rd = new Set(S.rd);
+    for (const c of celleBlocchi(bl)) rd.delete(c);
+    for (const c of celleN) { if (!problem.cells.has(c)) return null; rd.add(c); }
+    // celle occupate dai nuovi posti (blocchi + edifici a due corsie spostati)
+    const prese = new Set<string>(celleN);
+    for (const [id, q] of sposta) {
+      const b = byId.get(id)!;
+      for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) {
+        const k = key(q.x + i, q.y + j);
+        if (!problem.cells.has(k) || rd.has(k) || prese.has(k)) return null;
+        prese.add(k);
+      }
+    }
+    const via: string[] = [];
+    for (const [id, q] of pl) {
+      if (sposta.has(id)) continue;
+      const b = byId.get(id)!;
+      let sopra = false;
+      for (let i = 0; i < b.w && !sopra; i++) for (let j = 0; j < b.h && !sopra; j++) if (prese.has(key(q.x + i, q.y + j))) sopra = true;
+      if (!sopra) continue;
+      if (b.isTownhall || id === th?.id || richiedeDueCorsie(b) || fissiBuilder.has(id)) return null;
+      via.push(id);
+    }
+    const prova = new Map(pl);
+    for (const id of via) prova.delete(id);
+    for (const [id, q] of sposta) prova.set(id, q);
+    if (verificaDueCorsie(problem, prova, nuoviK).length) return null;
+    for (const id of via) togli(id);
+    for (const [id, q] of sposta) pl.set(id, q);
+    impostaBlocchi(nuoviK);
+    return rd;
   };
   const vicini4 = (k: string) => { const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); return [key(x + 1, y), key(x - 1, y), key(x, y + 1), key(x, y - 1)]; };
   const cercaDaManuale = async (): Promise<StatoManuale | null> => {
@@ -3092,8 +3214,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     let lastYield = performance.now(), lastShow = 0;
     while (!opts.shouldStop() && !opts.shouldFinishSearch?.() && valutate < SEARCH_MAX_RUNS && !(opts.limiteValutate !== undefined && valutate >= opts.limiteValutate)) {
       // Stallo: troppi tentativi senza migliorare → il cammino riparte dalla migliore.
-      if (++senzaMigliorare > STALLO) { const M = migliore!; manuale = { pl: new Map(M.pl), rd: new Set(M.rd), punti: M.punti }; senzaMigliorare = 0; }
+      if (++senzaMigliorare > STALLO) { const M = migliore!; manuale = { pl: new Map(M.pl), rd: new Set(M.rd), punti: M.punti, bl: M.bl }; senzaMigliorare = 0; }
       const S = manuale!;
+      if (S.bl.length || blocchiCorr.length) impostaBlocchi(S.bl);
       const pl = new Map(S.pl);
       let migliorata = false;
       if (conPar && parOvestOk && rnd() < 0.5) {
@@ -3113,10 +3236,57 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       // fermi solo i fissi attorno al municipio (fissiBuilder).
       const conStrada = [...pl.keys()].filter(id => { const b = byId.get(id)!; return !b.isTownhall && !fissiBuilder.has(id) && b.roadLevel > 0; });
       const togli = (id: string) => pl.delete(id);
-      const u = rnd();
+      // Vicinato "prolungamento" (richiesta dell'utente su Avito: la ricerca
+      // non provava mai a prolungare la strada a due corsie con un tratto a
+      // una corsia): da una cella di strada che prosegue dritta in una cella
+      // libera (di preferenza dal tratto a due corsie) si traccia una strada a
+      // una corsia di 2-11 celle, si tolgono 1-8 edifici vicini alla sua punta
+      // e si ripiazzano anche lungo i lati delle strade (latiEsatti); la parte
+      // che non serve viene potata. Solo con strade fisse (due corsie): così
+      // le altre città restano identiche.
+      let prolunga: string[] | null = null;
+      // (solo con tutti gli edifici con strada dentro: altrimenti il prolungamento
+      // diventa una scorciatoia costosa per farli entrare, Avito r3 da 188 a 220)
+      if (fisse.size && S.punti[0] === 0 && rnd() < 0.15) {
+        const occS = new Set<string>(S.rd);
+        for (const [id, q] of pl) { const b = byId.get(id)!; for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) occS.add(key(q.x + dx, q.y + dy)); }
+        const lib = (x: number, y: number) => problem.cells.has(key(x, y)) && !occS.has(key(x, y));
+        const cand: Array<[number, number, number, number]> = [];
+        for (const r of S.rd) {
+          const i = r.indexOf(","), x = Number(r.slice(0, i)), y = Number(r.slice(i + 1));
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) if (S.rd.has(key(x - dx, y - dy)) && lib(x + dx, y + dy)) cand.push([x, y, dx, dy]);
+        }
+        const daFisse = cand.filter(c => fisse.has(key(c[0], c[1])));
+        const scelte = daFisse.length && rnd() < 0.7 ? daFisse : cand;
+        if (scelte.length) {
+          const [x, y, dx, dy] = scelte[Math.floor(rnd() * scelte.length)]!;
+          const L = 2 + Math.floor(rnd() * 10);
+          const ext: string[] = [];
+          for (let t = 1; t <= L && lib(x + dx * t, y + dy * t); t++) ext.push(key(x + dx * t, y + dy * t));
+          if (ext.length) {
+            prolunga = ext;
+            const fx = x + dx * ext.length, fy = y + dy * ext.length;
+            const dist = (id: string) => { const q = pl.get(id)!, b = byId.get(id)!; return Math.abs(q.x + b.w / 2 - fx) + Math.abs(q.y + b.h / 2 - fy); };
+            const k = 1 + Math.floor(rnd() * 8);
+            for (const id of conStrada.filter(id => !fisse.size || !richiedeDueCorsie(byId.get(id)!)).sort((a, b) => dist(a) - dist(b)).slice(0, k)) togli(id);
+          }
+        }
+      }
+      // Vicinato "nucleo" (richiesta dell'utente: anche l'ottimizzatore deve
+      // poter allineare/spostare la strada a due corsie): con blocchi a due
+      // corsie, nel 12% dei giri si trasla tutto il nucleo di una cella (con i
+      // suoi edifici a due corsie), si accorcia una punta di un blocco (gli
+      // edifici a due corsie rimasti senza blocco arretrano di 2) o si allunga
+      // una punta (il fine strada avanza di 2); gli edifici sui nuovi posti
+      // tornano in gioco. Si tiene se il punteggio non peggiora.
+      let nucleoRd: Set<string> | null = null;
+      if (!prolunga && blocchiCorr.length && rnd() < 0.12) nucleoRd = mossaNucleo(S, pl, togli);
+      const u = prolunga || nucleoRd ? 0 : rnd();
       /** Righe proposte per la dorsale ricostruita (vicinato "dorsale intera"). */
       let righeNuove: number[] | null = null;
-      if (S.punti[0] > 0 && u < 0.25) {
+      if (prolunga || nucleoRd) {
+        // (edifici già tolti sopra)
+      } else if (S.punti[0] > 0 && u < 0.25) {
         // solo i da piazzare
       } else if (u < 0.45 && conStrada.length) {
         // Vicinato "dorsale intera" (idea dell'utente su Beta r3: spostare la
@@ -3215,7 +3385,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         const dist = (id: string) => { const q = pl.get(id)!, b = byId.get(id)!; return Math.abs(q.x + b.w / 2 - c.x) + Math.abs(q.y + b.h / 2 - c.y); };
         for (const id of conStrada.sort((a, b) => dist(a) - dist(b)).slice(0, k)) togli(id);
       }
-      ribasa({ placements: pl, roads: S.rd });
+      // il prolungamento non va potato prima di ripiazzare: fisso per un attimo
+      if (prolunga) for (const c of prolunga) fisse.add(c);
+      ribasa({ placements: pl, roads: nucleoRd ?? (prolunga ? new Set([...S.rd, ...prolunga]) : S.rd) });
+      let valutato = false;
       if (daPiazzare.length) {
         // Alcuni tentativi di ripiazzamento sulla stessa base: si applica il migliore.
         let mig: Piano | null = null, migP: Params | null = null;
@@ -3223,23 +3396,37 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         for (let t = 0; t < 3; t++) {
           const pp = casuale(1, () => [sy0]);
           if (righeOk.length) { pp.rows = [righeOk[Math.floor(rnd() * righeOk.length)]!]; pp.comb = 0; }
+          if (prolunga) pp.latiEsatti = Math.floor(rnd() * 1e6); // edifici anche lungo il prolungamento
           const piano = simula(pp);
           valutate++;
           if (!mig || meglio(piano, mig)) { mig = piano; migP = pp; }
         }
         if (mig && migP && mig.scollegate === 0) mig = simula(migP, true);
         if (mig && mig.scollegate === 0) {
+          valutato = true;
           applica(mig);
+          if (prolunga) {
+            // la parte del prolungamento che non serve si pota
+            for (const c of prolunga) fisse.delete(c);
+            ribasa({ placements: new Map(placements), roads: new Set(roads) });
+          }
           const pt = punteggio();
           // Il cammino accetta anche soluzioni equivalenti (per uscire dagli
           // stalli), ma la migliore mostrata cambia solo se migliora davvero.
           if (confronta(pt, S.punti) <= 0 && fotografa(false, pt)) { migliorata = true; trovataAl = valutate; }
         }
       }
+      if (nucleoRd && !valutato) {
+        // nucleo spostato senza edifici da ripiazzare: si valuta così com'è
+        valutate++;
+        const pt = punteggio();
+        if (confronta(pt, S.punti) <= 0 && fotografa(false, pt)) { migliorata = true; trovataAl = valutate; }
+      }
+      if (prolunga) for (const c of prolunga) fisse.delete(c);
       }
       const now = performance.now();
       if (migliorata || now - lastShow > 500) { mostraS(""); lastShow = now; }
-      if (now - lastYield > 40) { await sleep(0); lastYield = performance.now(); }
+      if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); lastYield = performance.now(); }
       if (opts.isPaused?.() && opts.waitResume) {
         mostraS(" · in pausa");
         opts.onPaused?.(true);
@@ -3270,9 +3457,11 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   if (opts.riprendiDa) {
     // Ritorno dal completamento annullato: stessa preparazione di una ripresa.
     valutate = opts.riprendiDa.valutate;
+    if (opts.riprendiDa.stato.blocchi) impostaBlocchi(opts.riprendiDa.stato.blocchi);
     ribasa(opts.riprendiDa.stato);
     fissi.clear();
     for (const id of idOvest(placements)) fissi.add(id);
+    for (const id of fissiBuilder) fissi.add(id); // (anche il nucleo a due corsie)
     parOvestOk = firmaOvest(placements, roads) === firmaBase0;
     trovataAl = valutate;
     fotografa(true);
@@ -3306,7 +3495,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         ripresa = compattato(best, () => statoDi(best!), true)!;
         break;
       }
-      if (now - lastYield > 40) { await sleep(0); lastYield = performance.now(); }
+      if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); lastYield = performance.now(); }
       if (opts.isPaused?.() && opts.waitResume) {
         mostra(" · in pausa");
         opts.onPaused?.(true);
@@ -3329,6 +3518,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   // soluzione corrente e la ricerca prosegue a partire da lei.
   // Disposizione adottata dalla squadra: se ribasa la trova con edifici
   // scollegati (li toglie), non la si adotta e si resta sulla propria migliore.
+  // blocchi a due corsie spostati a mano: nuove strade fisse
+  if (ripresa.blocchi) impostaBlocchi(ripresa.blocchi);
   const prec: StatoManuale | null = !adottata ? null
     : migliore ? { placements: (migliore as StatoS).pl, roads: (migliore as StatoS).rd } : (() => { const b = best as Piano | null; return b && b.scollegate === 0 ? statoDi(b) : null; })();
   ribasa(ripresa);
@@ -3336,6 +3527,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   // La parte ovest (anche se modificata a mano) diventa la nuova parte fissa.
   fissi.clear();
   for (const id of idOvest(placements)) fissi.add(id);
+  for (const id of fissiBuilder) fissi.add(id); // (anche il nucleo a due corsie)
   parOvestOk = firmaOvest(placements, roads) === firmaBase0;
   if (scossa && migliore) {
     // il cammino riparte dalla disposizione smussata; la migliore resta se è meglio
@@ -3348,7 +3540,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   }
   }
   // Dopo la ricerca dalla disposizione manuale: si riparte dalla migliore trovata.
-  if (migliore) { const M = migliore as StatoS; ribasa(compattato(M, () => ({ placements: M.pl, roads: M.rd }), true)!); best = null; }
+  if (migliore) { const M = migliore as StatoS; if (M.bl.length || blocchiCorr.length) impostaBlocchi(M.bl); ribasa(compattato(M, () => ({ placements: M.pl, roads: M.rd }), true)!); best = null; }
   if (opts.shouldStop()) return finalFrame();
   if (opts.soloRicerca) {
     // Valutazione veloce di una base: strade totali ed edifici con strada fuori.
@@ -3952,7 +4144,7 @@ async function rifinisciSenzaStrada(
     }
     const now = performance.now();
     if (migliorata || now - lastShow > 500) { mostra(""); lastShow = now; }
-    if (now - lastYield > 40) { await sleep(0); lastYield = performance.now(); }
+    if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); lastYield = performance.now(); }
     // Pausa: l'utente può spostare o togliere gli edifici senza strada; alla
     // ripresa la sua disposizione diventa la corrente e la migliore.
     if (opts.isPaused?.() && opts.waitResume) {
@@ -3963,6 +4155,10 @@ async function rifinisciSenzaStrada(
       lastYield = performance.now();
       if (man) {
         for (const id of [...pl.keys()]) if (mobile(id)) togli(id);
+        // edifici con strada spostati o scambiati a mano (strade ferme: editorPonte)
+        const mossi = [...man.placements].filter(([id, q]) => { const b = byId.get(id); const p = pl.get(id); return !!b && !mobile(id) && !tappo(id) && !!p && (p.x !== q.x || p.y !== q.y); });
+        for (const [id] of mossi) togli(id);
+        for (const [id, q] of mossi) metti(id, { x: q.x, y: q.y });
         for (const [id, q] of man.placements) {
           if (!mobile(id)) continue;
           const cc = celle(id, q);

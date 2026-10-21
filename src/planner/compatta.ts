@@ -59,15 +59,15 @@ const MAX_PASSATE = 4;
  * strada est, chiusi dallo scambio di 2b solo alla passata successiva; la
  * pagina restava ferma a 70 strade invece di 69).
  */
-export function compattaCitta(problem: PlannerProblem, placements0: ReadonlyMap<string, Pos>, roads0: ReadonlySet<string>, fissi: ReadonlySet<string>): Compattazione {
+export function compattaCitta(problem: PlannerProblem, placements0: ReadonlyMap<string, Pos>, roads0: ReadonlySet<string>, fissi: ReadonlySet<string>, stradeFisse: ReadonlySet<string> = new Set()): Compattazione {
   const somma = (a: Compattazione, n: Compattazione): Compattazione => ({ ...n, raddrizzati: a.raddrizzati + n.raddrizzati, fasce: a.fasce + n.fasce, catene: a.catene + n.catene, scorsi: a.scorsi + n.scorsi, potate: a.potate + n.potate, buchiPrima: a.buchiPrima });
   const fermo = (a: Compattazione) => a.raddrizzati + a.fasce + a.catene + a.scorsi + a.potate === 0;
-  let cur = compattaUnaVolta(problem, placements0, roads0, fissi);
+  let cur = compattaUnaVolta(problem, placements0, roads0, fissi, stradeFisse);
   let mig = cur;
   // si ripete finché una passata cambia qualcosa (anche senza guadagno: può
   // aprire la mossa della passata dopo); si tiene la migliore (strade, buchi)
   for (let i = 1; i < MAX_PASSATE && !fermo(cur); i++) {
-    const n = compattaUnaVolta(problem, cur.placements, cur.roads, fissi);
+    const n = compattaUnaVolta(problem, cur.placements, cur.roads, fissi, stradeFisse);
     cur = somma(cur, n);
     if (n.roads.size < mig.roads.size || (n.roads.size === mig.roads.size && n.buchiDopo < mig.buchiDopo)) mig = cur;
     if (fermo(n)) break;
@@ -75,7 +75,7 @@ export function compattaCitta(problem: PlannerProblem, placements0: ReadonlyMap<
   return mig;
 }
 
-function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<string, Pos>, roads0: ReadonlySet<string>, fissi: ReadonlySet<string>): Compattazione {
+function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<string, Pos>, roads0: ReadonlySet<string>, fissi: ReadonlySet<string>, stradeFisse: ReadonlySet<string>): Compattazione {
   const { minX, minY } = problem;
   const GW = problem.maxX - minX + 1, GH = problem.maxY - minY + 1, N = GW * GH;
   const gi = (x: number, y: number) => { const i = x - minX, j = y - minY; return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };
@@ -86,6 +86,9 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
   /** occupazione: 0 libera, 1 strada, 2 edificio */
   const occ = new Uint8Array(N);
   const strada = (x: number, y: number) => { const g = gi(x, y); return g >= 0 && occ[g] === 1; };
+  /** Strade fisse (blocchi a due corsie): mai spostate né tolte. */
+  const fissaG = new Uint8Array(N);
+  for (const k of stradeFisse) { const c = k.indexOf(","), g = gi(Number(k.slice(0, c)), Number(k.slice(c + 1))); if (g >= 0) fissaG[g] = 1; }
   const segnaB = (b: PlannerBuilding, p: Pos, v: 0 | 2) => {
     for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) { const g = gi(p.x + dx, p.y + dy); if (g >= 0) occ[g] = v; }
   };
@@ -185,7 +188,7 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
             if (pp) { if (tratti[tratti.length - 1]!.length) tratti.push([]); } else tratti[tratti.length - 1]!.push(at(a, t));
           }
           for (const celle of tratti) {
-            if (celle.length < 2) continue;
+            if (celle.length < 2 || celle.some(g => fissaG[g])) continue;
             const set = new Set(celle);
             const edifici: string[] = [];
             let bloccata = false;
@@ -313,7 +316,7 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
         ];
         let migl: { occ: Uint8Array; pl: Map<string, Pos>; buchi: number } | null = null;
         for (const m of mosse) {
-          if (!m.celle.length) continue;
+          if (!m.celle.length || [...m.celle, ...m.togli].some(g => fissaG[g])) continue;
           const ed = attaccati(new Set([...m.celle, ...m.togli]));
           if (!ed) continue;
           const salva = occ.slice(), vecchie = new Map(pl);
@@ -526,7 +529,7 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
       }
       const liberaLat = (j: number, sl: number) => { const g = gi(ramo[j]!.x + sl * px, ramo[j]!.y + sl * py); return g < 0 || occ[g] !== 2 || cellePunta.has(g); };
       let k = 0;
-      while (k < m - 1 && liberaLat(k, 1) && liberaLat(k, -1)) k++;
+      while (k < m - 1 && liberaLat(k, 1) && liberaLat(k, -1) && !fissaG[gi(ramo[k]!.x, ramo[k]!.y)]) k++;
       const impO = occ.slice(), impP = new Map(pl);
       /** Ripiazza tappo e compagni: prima traslati con la punta; se non va, nel
        *  posto libero più vicino (spostamento fino a RAGGIO per asse) che tocca
@@ -594,7 +597,7 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
   for (let giro = 0; giro < 60; giro++) {
     let fatto = false;
     for (let g = 0; g < N && !fatto; g++) {
-      if (occ[g] !== 1) continue;
+      if (occ[g] !== 1 || fissaG[g]) continue;
       const x = g % GW + minX, y = (g - (g % GW)) / GW + minY;
       if (tentaRamo(x, y)) { scorsi++; fatto = true; }
     }
@@ -612,7 +615,7 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
   for (let cambiato = true; cambiato;) {
     cambiato = false;
     for (let g = 0; g < N; g++) {
-      if (occ[g] !== 1) continue;
+      if (occ[g] !== 1 || fissaG[g]) continue;
       const x = g % GW + minX, y = (g - (g % GW)) / GW + minY;
       const vicine = (strada(x + 1, y) ? 1 : 0) + (strada(x - 1, y) ? 1 : 0) + (strada(x, y + 1) ? 1 : 0) + (strada(x, y - 1) ? 1 : 0);
       if (vicine > 1) continue;

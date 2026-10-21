@@ -346,7 +346,7 @@ export default function CityMapView({
                 </button>
                 <button
                   onClick={() => apriEditorMappa(cityMapBuildings, cityMapUnlockedAreas, uiLang)}
-                  title={uiLang === "it" ? "Apre la città nell'editor (nuova scheda): sposta, duplica, togli edifici e strade, poi salva il JSON" : "Opens the city in the editor (new tab): move, duplicate, remove buildings and roads, then save the JSON"}
+                  title={uiLang === "it" ? "Apre la città nell'editor (nuova scheda): sposta e togli edifici e strade, poi salva il JSON" : "Opens the city in the editor (new tab): move and remove buildings and roads, then save the JSON"}
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >
                   <Pencil size={13} /> Editor

@@ -810,7 +810,7 @@
     "golden_upgrade_kit_WIN26A": {
       "names": {
         "en": "Gilded Tidings Press Tower Golden Upgrade Kit",
-        "it": "WIN26A Gold Golden Upgrade Kit"
+        "it": "Kit Aggiornamento Oro Torre della Stampa di Notizie Gilded"
       },
       "steps": [
         "W_MultiAge_WIN26A9",
@@ -1109,7 +1109,7 @@
     "platinum_upgrade_kit_WIN26A": {
       "names": {
         "en": "Majestic Tidings Press Tower Platinum Upgrade Kit",
-        "it": "WIN26A Platinum Platinum Upgrade Kit"
+        "it": "Kit di Aggiornamento Platino Torre della Stampa di Notizie Maestose"
       },
       "steps": [
         "W_MultiAge_WIN26A10",
@@ -1680,7 +1680,7 @@
     "silver_upgrade_kit_WIN26A": {
       "names": {
         "en": "Radiant Tidings Press Tower Silver Upgrade Kit",
-        "it": "WIN26A Silver Silver Upgrade Kit"
+        "it": "Kit Aggiornamento Argento Torre della Stampa di Notizie Radiose"
       },
       "steps": [
         "W_MultiAge_WIN26A8",
@@ -2763,7 +2763,8 @@
     },
     "upgrade_kit_GR27A": {
       "names": {
-        "en": "Neo Carousel Upgrade Kit"
+        "en": "Neo Carousel Upgrade Kit",
+        "it": "Kit Aggiornamento Neo Carosello"
       },
       "steps": [
         "W_MultiAge_GR27A1",
@@ -2772,7 +2773,8 @@
     },
     "upgrade_kit_GR27B": {
       "names": {
-        "en": "Neo Harmony Arbor Upgrade Kit"
+        "en": "Neo Harmony Arbor Upgrade Kit",
+        "it": "Kit Aggiornamento Neo Pergola dell'Armonia"
       },
       "steps": [
         "W_MultiAge_GR27B1",
@@ -3430,7 +3432,7 @@
     "upgrade_kit_WIN26A": {
       "names": {
         "en": "Tidings Press Tower Upgrade Kit",
-        "it": "WIN26A Upgrade Kit"
+        "it": "Kit Aggiornamento Torre della Stampa di Notizie"
       },
       "steps": [
         "W_MultiAge_WIN26A1",
@@ -4266,7 +4268,7 @@
     "upgrade_kit_ascended_WIN26A": {
       "names": {
         "en": "Ascended Tidings Press Tower Upgrade Kit",
-        "it": "WIN26A Platinum Ascended Upgrade Kit"
+        "it": "Kit Aggiornamento Torre della Stampa dei Regali Ascesa"
       },
       "steps": [
         "W_MultiAge_WIN26A11",
@@ -4280,7 +4282,7 @@
     "upgrade_kit_ascended_WIN26B": {
       "names": {
         "en": "Ascended Peppermint Confectionery Upgrade Kit",
-        "it": "Ascended WIN26B Upgrade Kit"
+        "it": "Kit Aggiornamento Fabbrica di Dolciumi alla Menta Ascesa"
       },
       "steps": [
         "W_MultiAge_WIN26B1",
@@ -4290,7 +4292,7 @@
     "upgrade_kit_ascended_WIN26C": {
       "names": {
         "en": "Ascended Mistletoe Mansion Upgrade Kit",
-        "it": "Ascended WIN26C Upgrade Kit"
+        "it": "Kit Aggiornamento Dimora del Vischio Ascesa"
       },
       "steps": [
         "W_MultiAge_WIN26C1",
@@ -11493,7 +11495,7 @@
     "selection_kit_WIN26A": {
       "names": {
         "en": "Tidings Press Tower Selection Kit",
-        "it": "WIN26A Selection Kit"
+        "it": "Kit Selezione Torre della Stampa di Notizie"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -11503,7 +11505,7 @@
     "silver_selection_kit_WIN26A": {
       "names": {
         "en": "Radiant Tidings Press Tower Silver Selection Kit",
-        "it": "WIN26A Silver Silver Selection Kit"
+        "it": "Kit Selezione Argento Torre della Stampa di Notizie Radiose"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -11514,7 +11516,7 @@
     "golden_selection_kit_WIN26A": {
       "names": {
         "en": "Gilded Tidings Press Tower Golden Selection Kit",
-        "it": "WIN26A Gold Golden Selection Kit"
+        "it": "Kit Selezione Oro Torre della Stampa di Notizie Gilded"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -11527,7 +11529,7 @@
     "platinum_selection_kit_WIN26A": {
       "names": {
         "en": "Majestic Tidings Press Tower Platinum Selection Kit",
-        "it": "WIN26A Platinum Platinum Selection Kit"
+        "it": "Kit di Selezione Platino Torre della Stampa di Notizie Maestose"
       },
       "options": [
         "W_MultiAge_WIN26A1",
@@ -11540,7 +11542,7 @@
     "selection_kit_WIN26BC": {
       "names": {
         "en": "Mint & Mistletoe Selection Kit",
-        "it": "WIN26BC Selection Kit"
+        "it": "Kit Selezione Menta e Vischio"
       },
       "options": [
         "W_MultiAge_WIN26B1",
@@ -11650,7 +11652,8 @@
     },
     "selection_kit_GR27A": {
       "names": {
-        "en": "Neo Carousel Selection Kit"
+        "en": "Neo Carousel Selection Kit",
+        "it": "Kit Selezione Neo Carosello"
       },
       "options": [
         "W_MultiAge_GR27A1",
@@ -11659,7 +11662,8 @@
     },
     "selection_kit_GR27B": {
       "names": {
-        "en": "Neo Harmony Arbor Selection Kit"
+        "en": "Neo Harmony Arbor Selection Kit",
+        "it": "Kit Selezione Neo Pergola dell'Armonia"
       },
       "options": [
         "W_MultiAge_GR27B1",
@@ -11668,7 +11672,8 @@
     },
     "selection_kit_epic_GR27_MA_1": {
       "names": {
-        "en": "QI 2027 Middle Ages Epic Selection Kit 1"
+        "en": "QI 2027 Middle Ages Epic Selection Kit 1",
+        "it": "Kit Selezione Epico 1 IQ Medioevo 2027"
       },
       "options": [
         "W_MultiAge_GR25I1",
@@ -11695,6 +11700,10 @@
     }
   },
   "requiredFragmentsByBuilding": {
+    "W_MultiAge_FALL23E1": 100,
+    "W_MultiAge_FALL23F1": 100,
+    "W_MultiAge_FALL23E2": 100,
+    "W_MultiAge_FALL23F2": 100,
     "W_MultiAge_FALL23C1": 100,
     "W_MultiAge_FALL23C2": 100,
     "W_MultiAge_FALL23D1": 100,
@@ -11705,11 +11714,7 @@
     "W_MultiAge_PAT23C1": 100,
     "W_MultiAge_PAT23D1": 100,
     "W_MultiAge_SUM23A1": 150,
-    "W_MultiAge_WIN22B1": 200,
-    "W_MultiAge_FALL23E1": 100,
-    "W_MultiAge_FALL23F1": 100,
-    "W_MultiAge_FALL23E2": 100,
-    "W_MultiAge_FALL23F2": 100
+    "W_MultiAge_WIN22B1": 200
   },
   "fragmentBuildingId": {
     "guild_arena": "W_MultiAge_GBG2023A",

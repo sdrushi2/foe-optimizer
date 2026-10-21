@@ -23,7 +23,7 @@ interface BuilderStage {
   roads: Set<string>;
 }
 export interface BuilderVariant {
-  name: "r3" | "r4";
+  name: "r3" | "r4" | "r5";
   stages: BuilderStage[];
   /** Lati di strada non sfruttati a fine fase1 (metrica del builder). */
   holes: number;
@@ -36,7 +36,7 @@ export interface BuilderVariant {
 }
 export interface BuilderOutcome {
   variants: BuilderVariant[];
-  best: "r3" | "r4";
+  best: "r3" | "r4" | "r5";
 }
 
 /** Input del builder dal problema del Planner (stesso formato dell'export JSON della mappa). */
@@ -47,7 +47,8 @@ function toBuilderInput(problem: PlannerProblem): BuilderInput {
     // locomotiva) va attaccato alla strada e li attaccava dalla parte
     // dell'ultimo anello (segnalazione dell'utente su Stralis). Li piazza il
     // completamento per primi (piazzaBlocchi).
-    buildings: problem.buildings.filter(b => !b.zonaStrada).map(b => ({
+    // Gli edifici a due corsie li piazza il nucleo (dueCorsie.ts), non il builder.
+    buildings: problem.buildings.filter(b => !b.zonaStrada && b.roadLevel < 2).map(b => ({
       id: b.id, cityentity_id: b.entityId, name: b.name, width: b.w, length: b.h,
       x: b.origX, y: b.origY, road_requirement: b.roadLevel,
     })),
@@ -86,7 +87,7 @@ export function runBuilder(problem: PlannerProblem, opzioni: { margineLibero?: b
       if (!ok) s.placements.delete(id);
     }
   };
-  const variants: BuilderVariant[] = (["r3", "r4"] as const).map(name => {
+  const variants: BuilderVariant[] = (["r3", "r4", "r5"] as const).map(name => {
     const v = f1[name];
     const stages = v.trace.map(toStage);
     if (stages.length) togliScollegati(stages[stages.length - 1]!);
@@ -98,6 +99,7 @@ export function runBuilder(problem: PlannerProblem, opzioni: { margineLibero?: b
     };
   });
   const score = (v: BuilderVariant) => [v.holes, -v.fase1Count];
+  // (r5 non entra nella scelta "best", usata solo dai test: resta fra r3 e r4)
   const [a, b] = variants as [BuilderVariant, BuilderVariant];
   const sa = score(a), sb = score(b);
   const best = sb[0]! < sa[0]! || (sb[0] === sa[0] && sb[1]! < sa[1]!) ? "r4" : "r3";

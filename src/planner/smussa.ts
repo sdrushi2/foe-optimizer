@@ -50,7 +50,9 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   const pos = new Map<string, { x: number; y: number }>();
   const rect = (x: number, y: number, w: number, h: number, v: 0 | 1) => { for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) { const g = gi(x + dx, y + dy); if (g >= 0) occ[g] = v; } };
   for (const [id, q] of start.placements) { const b = byId.get(id); if (!b) continue; pos.set(id, { x: q.x, y: q.y }); rect(q.x, q.y, b.w, b.h, 1); }
-  const mobili = [...pos.keys()].map(id => byId.get(id)!).filter(b => !b.isTownhall && b.roadLevel > 0 && !opts.fissi.has(b.id));
+  // (mai gli edifici a due corsie: devono restare accanto ai blocchi 2×2 — Smussa
+  // ne spostava uno su una strada semplice, segnalazione dell'utente)
+  const mobili = [...pos.keys()].map(id => byId.get(id)!).filter(b => !b.isTownhall && b.roadLevel > 0 && b.roadLevel < 2 && !opts.fissi.has(b.id));
   const mobile = new Set(mobili.map(b => b.id));
   /** Edifici (id) che occupano celle del rettangolo, esclusi quelli in `salta`. */
   const sotto = (x: number, y: number, w: number, h: number, salta: Set<string>): string[] | null => {

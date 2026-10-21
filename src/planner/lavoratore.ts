@@ -18,7 +18,7 @@ const ambito = self as unknown as { postMessage: (m: unknown) => void; onmessage
 const invia = (m: unknown) => ambito.postMessage(m);
 
 /** Stato dei comandi della pagina (aggiornato dai messaggi "flag"). */
-const flag = { stop: false, finish: false, paused: false, stopFill: false };
+const flag = { stop: false, finish: false, paused: false, stopFill: false, riposo: 0 };
 let attesa: ((s: StatoManuale | null) => void) | null = null;
 /** Disposizione migliore della squadra da adottare (messaggio "adotta"). */
 let adozione: StatoManuale | null = null;
@@ -36,7 +36,7 @@ type Ha = { adotta?: boolean; finish?: boolean; stopFill?: boolean; paused?: boo
 export type AvvioCompletion = {
   tipo: "completion";
   problem: Parameters<typeof runCompletion>[0];
-  opts: Pick<CompletionOptions, "delayMs" | "initial" | "geometry" | "limiteValutate" | "fissi" | "girandola" | "soloRicerca" | "riprendiDa" | "seme">;
+  opts: Pick<CompletionOptions, "delayMs" | "initial" | "geometry" | "limiteValutate" | "fissi" | "girandola" | "soloRicerca" | "riprendiDa" | "seme" | "stradeFisse">;
   ha: Ha;
   flag: typeof flag;
 };
@@ -49,6 +49,7 @@ async function eseguiCompletion(m: AvvioCompletion) {
       ...m.opts,
       onFrame: f => invia({ tipo: "frame", f }),
       shouldStop: () => flag.stop,
+      riposo: () => flag.riposo,
       ...(m.ha.adotta ? { adotta: () => { const a = adozione; adozione = null; return a; } } : {}),
       ...(m.ha.finish ? { shouldFinishSearch: () => flag.finish } : {}),
       ...(m.ha.stopFill ? { shouldStopFill: () => flag.stopFill } : {}),

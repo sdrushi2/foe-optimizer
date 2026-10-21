@@ -111,6 +111,8 @@ export interface PlannerFrame {
   unplaced: string[];
   iterations: number;
   done: boolean;
+  /** Strade a due corsie: blocchi 2×2 (angolo in alto a sinistra), messi dal Planner (PlannerView). */
+  due?: readonly string[];
   /** Fase in corso (es. "Passo 3 · riempimento centrale"), per la UI. */
   label?: string;
   /** Avanzamento della ricerca degli edifici con strada (completamento). */
@@ -119,8 +121,25 @@ export interface PlannerFrame {
     scollegate?: number };
 }
 
-/** Costruisce il problema dai dati della mappa città già importati. */
-export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[], unlockedCells: ReadonlySet<string>): PlannerProblem {
+/** Edificio militare (flag della mappa oppure prefisso "M_"), esclusi i Grandi Edifici. */
+const eMilitare = (b: CityMapBuilding) => (b.isMilitary || isMilitaryBuildingId(b.entityId)) && !b.isGreatBuilding;
+
+/** Tipi di edificio militare della città (per gli interruttori del Planner):
+ *  entità, nome, quanti, livello di strada richiesto (1 = una corsia, 2 = due). */
+export function tipiMilitari(cityMapBuildings: readonly CityMapBuilding[]): Array<{ entityId: string; name: string; n: number; roadLevel: number }> {
+  const m = new Map<string, { entityId: string; name: string; n: number; roadLevel: number }>();
+  for (const b of cityMapBuildings) {
+    if (b.type === "street" || !eMilitare(b)) continue;
+    const t = m.get(b.entityId);
+    if (t) t.n++; else m.set(b.entityId, { entityId: b.entityId, name: b.name, n: 1, roadLevel: b.roadLevel ?? 1 });
+  }
+  return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Costruisce il problema dai dati della mappa città già importati.
+ *  `militariCollegati`: entità militari da collegare comunque alla strada
+ *  anche con Alcatraz / Nave da guerra stellare (scelta dell'utente). */
+export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[], unlockedCells: ReadonlySet<string>, militariCollegati: ReadonlySet<string> = new Set()): PlannerProblem {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const k of unlockedCells) {
     const [x, y] = k.split(",").map(Number) as [number, number];
@@ -134,10 +153,11 @@ export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[]
     if (b.type === "street") { originalRoadCells += b.w * b.h; continue; }
     // Profili vecchi senza roadLevel: trattati come "richiede strada", come la mappa.
     let roadLevel = b.roadLevel ?? 1;
-    // Con Alcatraz / Nave da guerra stellare i militari non hanno bisogno di strada.
+    // Con Alcatraz / Nave da guerra stellare i militari non hanno bisogno di
+    // strada, salvo quelli che l'utente sceglie di collegare (interruttori).
     // Militare: flag della mappa oppure prefisso "M_" (profili salvati senza il flag).
-    const militare = (b.isMilitary || isMilitaryBuildingId(b.entityId)) && !b.isGreatBuilding;
-    if (militare && geRifornimento.length) roadLevel = 0;
+    const militare = eMilitare(b);
+    if (militare && geRifornimento.length && !militariCollegati.has(b.entityId)) roadLevel = 0;
     buildings.push({
       id: b.mapEntityId, entityId: b.entityId, name: b.name, w: b.w, h: b.h,
       roadLevel,

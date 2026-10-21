@@ -2099,6 +2099,172 @@ const UI_STRINGS = {
   piratiBuildingBrigantinoShort: { it: "Brigantino", en: "Red Sailed Brig" },
   piratiBuildingGaleoneName: { it: "Galeone", en: "Galleon" },
   piratiBuildingGaleoneShort: { it: "Galeone", en: "Galleon" },
+  // ── Planner (PlannerView, editorPonte, dueCorsie) ───────────────────
+  plannerExperimental: { it: "sperimentale", en: "experimental" },
+  plannerOptimize: { it: "▶ Ottimizza", en: "▶ Optimize" },
+  plannerResumeTitle: {
+    it: "La ricerca continua a cercare disposizioni migliori partendo da quelle mostrate (anche modificate a mano nell'editor o smussate)",
+    en: "The search keeps looking for better layouts starting from the ones shown (also edited by hand in the editor or smoothed)",
+  },
+  plannerPause: { it: "⏸ Pausa", en: "⏸ Pause" },
+  plannerPauseTitle: {
+    it: "Mette in pausa la ricerca: puoi modificare le mappe nell'editor (✏ Modifica), smussare i bordi o completare",
+    en: "Pauses the search: you can edit the maps in the editor (✏ Edit), smooth the edges or complete",
+  },
+  plannerSmooth: { it: "✨ Smussa", en: "✨ Smooth" },
+  plannerSmoothTitle: {
+    it: "Solo con la ricerca in pausa: sposta e scambia gli edifici con strada (strade invariate) per ridurre gli angoli di 90° del contorno e i buchi: il riempimento finale incastra meglio i pezzi piccoli. Continua finché non lo metti in pausa",
+    en: "Only while the search is paused: moves and swaps road buildings (roads unchanged) to reduce the 90° corners of the outline and the holes, so the final fill fits small pieces better. Runs until you pause it",
+  },
+  plannerComplete: { it: "⏭ COMPLETA", en: "⏭ COMPLETE" },
+  plannerCompleteTitle: {
+    it: "Solo con la ricerca in pausa: chiude la ricerca su TUTTE le mappe (ciascuna tiene quella mostrata) e passa al riempimento con gli edifici senza strada",
+    en: "Only while the search is paused: ends the search on ALL maps (each keeps the one shown) and moves on to filling with the buildings that need no road",
+  },
+  plannerFillResumeTitle: { it: "Riprende il riempimento", en: "Resumes the filling" },
+  plannerFillPauseTitle: {
+    it: "Mette in pausa il riempimento: nell'editor (✏ Modifica) puoi spostare gli edifici (le strade restano dove sono)",
+    en: "Pauses the filling: in the editor (✏ Edit) you can move buildings (roads stay where they are)",
+  },
+  plannerUndoComplete: { it: "↩ Annulla completamento", en: "↩ Undo completion" },
+  plannerUndoCompleteTitle: {
+    it: "Interrompe il completamento e torna alla ricerca in pausa, con le disposizioni che c'erano quando hai premuto COMPLETA",
+    en: "Stops the completion and goes back to the paused search, with the layouts there were when you pressed COMPLETE",
+  },
+  plannerUndoManual: { it: "↶ Annulla modifiche manuali", en: "↶ Undo manual edits" },
+  plannerUndoManualTitle: {
+    it: "Ripristina, sulle mappe modificate a mano, l'ultima disposizione trovata dall'ottimizzatore o dallo smussatore",
+    en: "Restores, on the maps edited by hand, the last layout found by the optimizer or by the smoother",
+  },
+  plannerReset: { it: "↺ Reset", en: "↺ Reset" },
+  plannerCpuGroup: { it: "Potenza del processore", en: "Processor power" },
+  plannerCpuTitle: {
+    it: (core: number, n: number, semi: number, lav: number, perc: number) => `Potenza del processore usata dal Planner: MAX ≈ 100%, MED ≈ 50%, MIN ≈ 25%.\nCore visti dal browser: ${core} · scenari: ${n} · ricerche per scenario: ${semi} · lavoro di ogni ricerca: ${lav}% → ricerche su ${perc}% dei core (più i thread del browser, es. la raccolta della memoria)`,
+    en: (core: number, n: number, semi: number, lav: number, perc: number) => `Processor power used by the Planner: MAX ≈ 100%, MED ≈ 50%, MIN ≈ 25%.\nCores seen by the browser: ${core} · scenarios: ${n} · searches per scenario: ${semi} · work of each search: ${lav}% → searches on ${perc}% of the cores (plus the browser's threads, e.g. garbage collection)`,
+  },
+  plannerCityInfo: {
+    it: (b: number, r: number) => `${b} edifici · ${r} strade`,
+    en: (b: number, r: number) => `${b} buildings · ${r} roads`,
+  },
+  plannerImportJson: { it: "📂 Importa JSON", en: "📂 Import JSON" },
+  plannerImportJsonTitle: {
+    it: "Carica l'export JSON della mappa di un'altra città (pulsante JSON del pannello MAPPA) per provarci il Planner. Non viene salvato.",
+    en: "Loads the JSON map export of another city (JSON button of the MAP panel) to try the Planner on it. It is not saved.",
+  },
+  plannerImportedTitle: { it: "Il Planner sta usando questa città importata", en: "The Planner is using this imported city" },
+  plannerProfileCity: { it: "↩ Città del profilo", en: "↩ Profile city" },
+  plannerInvalidJson: { it: (m: string) => `JSON non valido: ${m}`, en: (m: string) => `Invalid JSON: ${m}` },
+  plannerComputing: { it: "City Builder: calcolo in corso…", en: "City Builder: computing…" },
+  plannerUnsuitable: {
+    it: "City Builder: città non adatta (servono almeno 4 edifici con strada e spazio attorno al municipio) — uso il motore semplice.",
+    en: "City Builder: city not suitable (at least 4 road buildings and space around the town hall are needed) — using the simple engine.",
+  },
+  plannerClose: { it: "Chiudi", en: "Close" },
+  plannerCloseNotice: { it: "Chiudi avviso", en: "Close notice" },
+  plannerMilitaryTitle: { it: "Edifici militari.", en: "Military buildings." },
+  plannerMilitaryIn: { it: "In città c'è", en: "Your city has" },
+  plannerAnd: { it: "e", en: "and" },
+  plannerMilitaryBody: {
+    it: "che produce ogni 24 ore le truppe di un edificio militare anche se non è collegato alla strada. Scegli quali edifici militari collegare comunque alla strada (gli altri vengono trattati come edifici senza strada); cambiare una scelta riavvia il Planner.",
+    en: "which produces the units of a military building every 24 hours even if it is not connected to a road. Choose which military buildings to connect to the road anyway (the others are treated as buildings without road); changing a choice restarts the Planner.",
+  },
+  plannerSwitchLocked: { it: "Ferma o azzera il Planner per cambiare", en: "Pause or reset the Planner to change it" },
+  plannerSwitchOn: { it: "Collegato alla strada", en: "Connected to the road" },
+  plannerSwitchOff: { it: "Senza strada", en: "No road" },
+  plannerTwoLaneTag: { it: " (due corsie)", en: " (two lanes)" },
+  plannerScenarioConnector: { it: (n: number) => `Raccordo a ${n}`, en: (n: number) => `Connector ${n}` },
+  plannerScenarioPinwheel: { it: "Girandola", en: "Pinwheel" },
+  plannerScenarioPinwheel2: { it: "Girandola 2", en: "Pinwheel 2" },
+  plannerStatsPlaced: { it: "piazzati: con strada", en: "placed: with road" },
+  plannerStatsNoRoad: { it: "senza strada", en: "without road" },
+  plannerStatsRoads: { it: "strade", en: "roads" },
+  plannerStatsCorners: { it: "angoli", en: "corners" },
+  plannerStatsCornersTitle: {
+    it: "Angoli di 90° del contorno di edifici e strade (esclusi quelli contro il bordo della mappa): meno angoli, riempimento più facile",
+    en: "90° corners of the outline of buildings and roads (excluding those against the map border): fewer corners, easier filling",
+  },
+  plannerStatsLayouts: { it: "disposizioni", en: "layouts" },
+  plannerMoveAllTitle: { it: "Sposta l'intera città (edifici e strade) di una cella", en: "Moves the whole city (buildings and roads) by one cell" },
+  plannerMirror: { it: "Specchia", en: "Mirror" },
+  plannerMirrorTitle: {
+    it: "Specchia l'intera città (edifici e strade): i collegamenti restano gli stessi",
+    en: "Mirrors the whole city (buildings and roads): connections stay the same",
+  },
+  plannerMirrorH: { it: "Specchia in orizzontale (destra ↔ sinistra)", en: "Mirror horizontally (right ↔ left)" },
+  plannerMirrorV: { it: "Specchia in verticale (alto ↔ basso)", en: "Mirror vertically (top ↔ bottom)" },
+  plannerEdit: { it: "✏ Modifica", en: "✏ Edit" },
+  plannerEditTitle: {
+    it: "Apre la mappa nell'editor (nuova scheda): sposta e togli edifici e strade, poi \"Applica al Planner\"",
+    en: "Opens the map in the editor (new tab): move and remove buildings and roads, then \"Apply to Planner\"",
+  },
+  plannerEditLockedTitle: {
+    it: "Metti in pausa il Planner (⏸ Pausa) per modificare la mappa nell'editor",
+    en: "Pause the Planner (⏸ Pause) to edit the map in the editor",
+  },
+  plannerJsonTitle: {
+    it: "Scarica la soluzione in JSON (formato del bookmarklet: CityMapData / CityEntities / UnlockedAreas, strade comprese)",
+    en: "Downloads the solution as JSON (bookmarklet format: CityMapData / CityEntities / UnlockedAreas, roads included)",
+  },
+  plannerDeleteTitle: {
+    it: "Elimina questo scenario: la sua ricerca si ferma e le altre proseguono",
+    en: "Deletes this scenario: its search stops and the others continue",
+  },
+  plannerPopupBlocked: {
+    it: "Il browser ha bloccato la finestra dell'editor: consenti i popup per questo sito.",
+    en: "The browser blocked the editor window: allow popups for this site.",
+  },
+  plannerEditorRestarted: {
+    it: "Il Planner è stato azzerato o riavviato dopo l'apertura dell'editor: riaprilo con ✏ Modifica.",
+    en: "The Planner was reset or restarted after the editor was opened: open it again with ✏ Edit.",
+  },
+  plannerEditorPauseFirst: {
+    it: "Metti in pausa il Planner (⏸ Pausa) prima di applicare le modifiche.",
+    en: "Pause the Planner (⏸ Pause) before applying the changes.",
+  },
+  plannerAppliedTo: { it: (n: string) => `Applicata a ${n}`, en: (n: string) => `Applied to ${n}` },
+  // errori delle modifiche dall'editor (editorPonte.ts, dueCorsie.ts)
+  plannerErrInvalidData: { it: (m: string) => `Dati non validi: ${m}`, en: (m: string) => `Invalid data: ${m}` },
+  plannerErrNewBuilding: {
+    it: (n: string) => `${n}: edificio nuovo o duplicato (il Planner usa solo gli edifici della città)`,
+    en: (n: string) => `${n}: new or duplicated building (the Planner only uses the city's buildings)`,
+  },
+  plannerErrTownHallRemoved: { it: "Il municipio non si può togliere.", en: "The town hall cannot be removed." },
+  plannerErrChainBroken: {
+    it: (n: string) => `${n}: catena spezzata, sposta o togli tutti i suoi pezzi insieme.`,
+    en: (n: string) => `${n}: broken chain, move or remove all its pieces together.`,
+  },
+  plannerErrRoad: { it: "strada", en: "road" },
+  plannerErrOthers: { it: (n: number) => ` e altri ${n}`, en: (n: number) => ` and ${n} more` },
+  plannerErrOutside: { it: (l: string) => `Fuori dall'area sbloccata: ${l}.`, en: (l: string) => `Outside the unlocked area: ${l}.` },
+  plannerErrOverlap: { it: (l: string) => `Sovrapposti: ${l}.`, en: (l: string) => `Overlapping: ${l}.` },
+  plannerErrFillRoads: {
+    it: "Durante il completamento le strade devono restare dove sono.",
+    en: "During the completion the roads must stay where they are.",
+  },
+  plannerErrFillTownHall: {
+    it: "Durante il completamento il municipio deve restare dov'è.",
+    en: "During the completion the town hall must stay where it is.",
+  },
+  plannerErrFillMissing: {
+    it: "Durante il completamento gli edifici con strada si possono spostare ma non togliere o aggiungere.",
+    en: "During the completion road buildings can be moved but not removed or added.",
+  },
+  plannerErrDetached: {
+    it: (l: string) => `Edifici con strada non attaccati a una strada: ${l}.`,
+    en: (l: string) => `Road buildings not attached to a road: ${l}.`,
+  },
+  plannerErrTwoLaneMisaligned: {
+    it: "Strade a due corsie sfalsate: due blocchi 2×2 che si toccano devono essere allineati.",
+    en: "Misaligned two-lane roads: two touching 2×2 blocks must be aligned.",
+  },
+  plannerErrTwoLaneDisconnected: {
+    it: "Strade a due corsie non collegate al municipio (direttamente o tramite altri blocchi 2×2 allineati).",
+    en: "Two-lane roads not connected to the town hall (directly or through other aligned 2×2 blocks).",
+  },
+  plannerErrTwoLaneDetached: {
+    it: (l: string) => `Edifici che richiedono due corsie senza una strada 2×2 collegata accanto: ${l}.`,
+    en: (l: string) => `Buildings requiring two lanes without a connected 2×2 road next to them: ${l}.`,
+  },
 } as const;
 
 /** Stringhe identiche in italiano e inglese: una sola entry, niente da
