@@ -18,7 +18,7 @@ import { runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
 import { baseCentrale, type BaseGirandola } from "./girandola";
-import { espandiCatene, raggruppaCatene } from "./catene";
+import { espandiCatene, raggruppaCatene, SET_DI_EDIFICI } from "./catene";
 import { coloreEdificioMappa, renderCityMapPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -315,8 +315,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Avviso militari chiuso con la X: solo stato del componente (NON salvato),
    *  quindi ricompare a ogni apertura del Planner e a ogni cambio di città. */
   const [avvisoMilitariChiuso, setAvvisoMilitariChiuso] = useState(false);
+  /** Edifici dei vecchi set a bonus di adiacenza (non gestiti: solo avviso). */
+  const edificiSet = useMemo(() => problem.buildings.filter(b => SET_DI_EDIFICI.has(b.entityId)), [problem]);
+  const [avvisoSetChiuso, setAvvisoSetChiuso] = useState(false);
   // (non a ogni interruttore dei militari: il riquadro resta aperto mentre si sceglie)
-  useEffect(() => { setAvvisoMilitariChiuso(false); }, [cityMapBuildings]);
+  useEffect(() => { setAvvisoMilitariChiuso(false); setAvvisoSetChiuso(false); }, [cityMapBuildings]);
   /** Grandi Edifici (colorati in rosso come nella mappa). */
   const grandiEdifici = useMemo(() => new Set(cityMapBuildings.filter(b => b.isGreatBuilding).map(b => b.mapEntityId)), [cityMapBuildings]);
   const importaJson = async (file: File) => {
@@ -1055,6 +1058,19 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         {computing && <span className="ml-2 text-amber-300">{t("plannerComputing", uiLang)}</span>}
         {outcome === null && <span className="ml-2 text-red-300">{t("plannerUnsuitable", uiLang)}</span>}
       </div>
+      {edificiSet.length > 0 && !avvisoSetChiuso && (
+        // Avviso: i vecchi set a bonus di adiacenza non sono gestiti (decisione dell'utente).
+        <div role="alert" className="relative mx-3 mt-3 flex items-start gap-2 rounded border-2 border-amber-500 bg-amber-950/60 py-2 pl-3 pr-9 text-[13px] text-amber-100">
+          <button type="button" onClick={() => setAvvisoSetChiuso(true)} title={t("plannerClose", uiLang)} aria-label={t("plannerCloseNotice", uiLang)}
+            className="absolute right-1.5 top-1.5 rounded px-1.5 leading-none text-amber-300 hover:bg-amber-900 hover:text-white">✕</button>
+          <span className="text-lg leading-none">⚠️</span>
+          <span>
+            <b className="text-amber-300">{t("plannerSetsTitle", uiLang)}</b>{" "}
+            {t("plannerSetsBody", uiLang, edificiSet.length)}{" "}
+            {t("plannerSetsList", uiLang)} <b>{[...new Set(edificiSet.map(b => b.name))].sort().join(", ")}</b>.
+          </span>
+        </div>
+      )}
       {problem.geRifornimento.length > 0 && militari > 0 && !avvisoMilitariChiuso && (
         // Avviso informativo con Alcatraz / Nave: i militari non hanno bisogno di
         // strada; con gli interruttori l'utente sceglie quali collegare lo stesso.

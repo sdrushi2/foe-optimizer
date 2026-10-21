@@ -31,6 +31,14 @@ import type { PlannerBuilding, PlannerProblem } from "./engine";
 interface InfoCatena { catena: string; ruolo: "inizio" | "anello"; aggancio: number[][] }
 const EDIFICI = (dati as unknown as { edifici: Record<string, InfoCatena> }).edifici;
 
+/** Set di edifici a bonus di adiacenza (catene.json "set"): il Planner NON li
+ *  gestisce (decisione dell'utente: set vecchi), mostra solo un avviso.
+ *  Entità → nome del set. */
+export const SET_DI_EDIFICI: ReadonlyMap<string, string> = new Map(
+  Object.entries((dati as unknown as { set?: Record<string, { edifici: string[] }> }).set ?? {})
+    .flatMap(([nome, s]) => s.edifici.map(e => [e, nome] as const)),
+);
+
 /** Prefisso dell'id dei blocchi (id = prefisso + id dell'inizio). */
 const PREFISSO_BLOCCO = "catena:";
 

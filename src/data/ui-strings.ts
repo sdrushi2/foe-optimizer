@@ -2159,6 +2159,12 @@ const UI_STRINGS = {
     it: "City Builder: città non adatta (servono almeno 4 edifici con strada e spazio attorno al municipio) — uso il motore semplice.",
     en: "City Builder: city not suitable (at least 4 road buildings and space around the town hall are needed) — using the simple engine.",
   },
+  plannerSetsTitle: { it: "Set di edifici non gestiti.", en: "Building sets not supported." },
+  plannerSetsBody: {
+    it: (n: number) => `La città ha ${n === 1 ? "un edificio" : `${n} edifici`} di vecchi set a bonus di adiacenza (il bonus cresce con i pezzi diversi del set che si toccano): il Planner non li tiene vicini fra loro, quindi ${n === 1 ? "verrà disposto" : "verranno disposti"} come edifici normali e il bonus del set può andare perso.`,
+    en: (n: number) => `Your city has ${n === 1 ? "a building" : `${n} buildings`} from old adjacency-bonus sets (the bonus grows with the different set pieces touching each other): the Planner does not keep them together, so ${n === 1 ? "it will be placed" : "they will be placed"} as normal buildings and the set bonus may be lost.`,
+  },
+  plannerSetsList: { it: "Edifici:", en: "Buildings:" },
   plannerClose: { it: "Chiudi", en: "Close" },
   plannerCloseNotice: { it: "Chiudi avviso", en: "Close notice" },
   plannerMilitaryTitle: { it: "Edifici militari.", en: "Military buildings." },
