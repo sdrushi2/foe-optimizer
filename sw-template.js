@@ -86,6 +86,10 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Video (tutorial): richieste a intervalli (Range → 206) e file grandi, da
+  // non mettere in cache (cache.put rifiuta le 206 e il seek si romperebbe).
+  if (request.headers.has("range") || url.pathname.endsWith(".mp4")) return;
+
   // Navigazioni (richiesta di un documento HTML): STALE-WHILE-REVALIDATE.
   // Serviamo subito la cache (istantaneo), e in parallelo aggiorniamo la cache
   // con la versione di rete per la prossima volta.

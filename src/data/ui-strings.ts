@@ -2146,6 +2146,8 @@ const UI_STRINGS = {
     it: (b: number, r: number) => `${b} edifici · ${r} strade`,
     en: (b: number, r: number) => `${b} buildings · ${r} roads`,
   },
+  plannerVideo: { it: "🎬 VIDEO TUTORIAL", en: "🎬 VIDEO TUTORIAL" },
+  plannerVideoTitle: { it: "Video tutorial del Planner", en: "Planner video tutorial (in Italian)" },
   plannerImportJson: { it: "📂 Importa JSON", en: "📂 Import JSON" },
   plannerImportJsonTitle: {
     it: "Carica l'export JSON della mappa di un'altra città (pulsante JSON del pannello MAPPA) per provarci il Planner. Non viene salvato.",

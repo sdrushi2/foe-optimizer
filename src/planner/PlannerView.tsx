@@ -24,6 +24,7 @@ import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
 import { esportaCittaJson, leggiCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
 import { cittaDaEditor } from "./editorPonte";
+import VideoTutorial from "./VideoTutorial";
 import { celleBlocchi, nucleiDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
 
 interface Props {
@@ -320,6 +321,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Edifici dei vecchi set a bonus di adiacenza (non gestiti: solo avviso). */
   const edificiSet = useMemo(() => problem.buildings.filter(b => SET_DI_EDIFICI.has(b.entityId)), [problem]);
   const [avvisoSetChiuso, setAvvisoSetChiuso] = useState(false);
+  const [videoAperto, setVideoAperto] = useState(false);
   // (non a ogni interruttore dei militari: il riquadro resta aperto mentre si sceglie)
   useEffect(() => { setAvvisoMilitariChiuso(false); setAvvisoSetChiuso(false); }, [cityMapBuildings]);
   /** Grandi Edifici (colorati in rosso come nella mappa). */
@@ -1067,7 +1069,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         </>)}
         {computing && <span className="ml-2 text-amber-300">{t("plannerComputing", uiLang)}</span>}
         {outcome === null && <span className="ml-2 text-red-300">{t("plannerUnsuitable", uiLang)}</span>}
+        {/* Video tutorial: sempre a destra, ben visibile */}
+        <button type="button" onClick={() => setVideoAperto(true)} title={t("plannerVideoTitle", uiLang)}
+          className="ml-auto rounded border border-rose-400 bg-rose-600 px-3 py-1 font-bold text-white shadow hover:bg-rose-500">{t("plannerVideo", uiLang)}</button>
       </div>
+      {videoAperto && <VideoTutorial onClose={() => setVideoAperto(false)} uiLang={uiLang} />}
       {edificiSet.length > 0 && !avvisoSetChiuso && (
         // Avviso: i vecchi set a bonus di adiacenza non sono gestiti (decisione dell'utente).
         <div role="alert" className="relative mx-3 mt-3 flex items-start gap-2 rounded border-2 border-amber-500 bg-amber-950/60 py-2 pl-3 pr-9 text-[13px] text-amber-100">
