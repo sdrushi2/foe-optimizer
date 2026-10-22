@@ -272,7 +272,9 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
           for (let o = 0; o < c.w; o++) { cand.push([rx - o, ry + 1], [rx - o, ry - c.h]); }
           for (let o = 0; o < c.h; o++) { cand.push([rx + 1, ry - o], [rx - c.w, ry - o]); }
           for (const [x, y] of cand) {
-            if (!libero(x, y, c.w, c.h)) continue;
+            // blocchi di catena: la strada deve toccare l'INIZIO, non gli anelli
+            // (Smussa attaccava le Statue del serpente dalla parte degli Anelli)
+            if (!libero(x, y, c.w, c.h) || (c.zonaStrada && !toccaStradaZona(c, x, y, isR))) continue;
             const r: Array<[number, number, number, number]> = [[x, y, c.w, c.h]];
             const p0 = locale(r);
             rect(x, y, c.w, c.h, 1);
