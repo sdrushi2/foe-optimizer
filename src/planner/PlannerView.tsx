@@ -60,6 +60,8 @@ const VALUTATE_SCELTA_MARGINE = 800;
  *  Semi per scenario: core disponibili / scenari, fra 1 e SEMI_MAX; quando
  *  si elimina uno scenario i suoi core passano agli altri (nuove aiutanti). */
 const SEMI = [12345, 5, 99, 2024];
+/** Entità della strada a due corsie (2×2) quando la città non ne ha ancora una piazzata. */
+const STRADA_2X2_DEFAULT = "S_ProgressiveEra_CarStreet1";
 const SEMI_MAX = 8;
 const seme = (i: number) => SEMI[i] ?? 7919 * i + 13;
 /** Potenza della CPU scelta nella toolbar (richiesta dell'utente):
@@ -504,7 +506,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       onFillActive: (a: boolean) => setFilling(s => ({ ...s, [id]: a })),
       isPaused: () => pausedRef.current,
       waitResume: () => new Promise<StatoManuale | null>(res => {
-        if (fermato() || !pausedRef.current) { res(null); return; } // ripresa già avvenuta
+        // ripresa già avvenuta, oppure "Annulla completamento": quel pulsante mette
+        // in pausa, e un riempimento che arriva ora alla pausa restava fermo per
+        // sempre (la corsa non finiva, non ripartiva la ricerca: completati ancora
+        // visibili e Smussa spento — segnalazione dell'utente)
+        if (fermato() || !pausedRef.current || annullaRef.current[id]) { res(null); return; }
         resumeRef.current[id] = res;
       }),
       onPaused: (p: boolean) => { inPausaRef.current = { ...inPausaRef.current, [id]: p }; setInPausa(s => ({ ...s, [id]: p })); },
@@ -563,7 +569,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           }
           if (!mig?.f) return null;
           mig.inviato = mig.f;
-          return { placements: mig.f.placements, roads: mig.f.roads };
+          // (con i blocchi a due corsie dell'aiutante: può averli spostati; senza,
+          // la principale teneva i suoi e il 2×2 si vedeva come 4 strade semplici)
+          return { placements: mig.f.placements, roads: mig.f.roads, ...(mig.f.due ? { blocchi: mig.f.due } : {}) };
         };
         const somma = (f: PlannerFrame): PlannerFrame => {
           principale = f;
@@ -832,13 +840,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     // strade a due corsie: un blocco 2×2 (tipo di strada 2×2 della città) per
     // ogni blocco del nucleo; tutte le altre strade a una corsia (tipo 1×1)
     const s1 = cityMapBuildings.find(b => b.type === "street" && b.w === 1 && b.h === 1);
-    const s2 = cityMapBuildings.find(b => b.type === "street" && b.w === 2 && b.h === 2);
-    const blocchi = s2 ? (f.due ?? (n ? dueRef.current[n] : [])).filter(k => celleBlocchi([k]).every(c => f.roads.has(c))) : [];
+    // (se la città non ha ancora strade a due corsie piazzate: la Strada asfaltata del gioco)
+    const s2 = cityMapBuildings.find(b => b.type === "street" && b.w === 2 && b.h === 2)
+      ?? { entityId: STRADA_2X2_DEFAULT, name: t("plannerTwoLaneRoad", uiLang) };
+    const blocchi = (f.due ?? (n ? dueRef.current[n] : [])).filter(k => celleBlocchi([k]).every(c => f.roads.has(c)));
     const in2 = new Set(celleBlocchi(blocchi));
     for (const k of blocchi) {
       const [x, y] = k.split(",").map(Number) as [number, number];
       edifici.push({
-        entityId: s2!.entityId, mapEntityId: `planner-road2-${k}`, name: s2!.name, x, y, w: 2, h: 2, type: "street",
+        entityId: s2.entityId, mapEntityId: `planner-road2-${k}`, name: s2.name, x, y, w: 2, h: 2, type: "street",
         isGreatBuilding: false, isMilitary: false, isNeedlessRoad: false, isInactive: false, isSuppliesProducer: false, roadLevel: 0,
       });
     }

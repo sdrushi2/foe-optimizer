@@ -200,4 +200,12 @@ export function renderCityMapPng(
       ctx.fillText(line, px + w / 2, startY + i * lineHeight, w - 2 * scale);
     });
   }
+
+  // Firma in basso a destra, nel margine nero (fuori dalla griglia): fa capire
+  // che il PNG è stato generato dal tool. Vale per MAPPA, Planner ed editor.
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.font = `bold ${Math.round(18 * scale)}px sans-serif`;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  ctx.fillText("foe-optimizer.com", canvas.width - PAD * 0.5, canvas.height - PAD * 0.5);
 }

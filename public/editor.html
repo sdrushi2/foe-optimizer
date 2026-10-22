@@ -405,6 +405,8 @@ function parse(data, colori) {
     const e2 = Object.entries(ents).find(([, e]) => e && e.type === 'street' && String(dims(e)) === '2,2');
     if (e2) s2 = { eid: e2[0], name: e2[1].name || e2[0], w: 2, h: 2 };
   }
+  // nessuna strada 2×2 nella città: la Strada asfaltata del gioco (prima strada a due corsie)
+  if (!s2) s2 = { eid: 'S_ProgressiveEra_CarStreet1', name: lingua === 'en' ? 'Two-lane road' : 'Strada asfaltata', w: 2, h: 2 };
   fonte = { ents, areeRaw, celle, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h },
             strada2: s2 && { eid: s2.eid, name: s2.name, w: 2, h: 2 } };
   return { areas, items };

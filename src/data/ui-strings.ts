@@ -2178,6 +2178,7 @@ const UI_STRINGS = {
   plannerSwitchOn: { it: "Collegato alla strada", en: "Connected to the road" },
   plannerSwitchOff: { it: "Senza strada", en: "No road" },
   plannerTwoLaneTag: { it: " (due corsie)", en: " (two lanes)" },
+  plannerTwoLaneRoad: { it: "Strada asfaltata", en: "Two-lane road" },
   plannerScenarioConnector: { it: (n: number) => `Raccordo a ${n}`, en: (n: number) => `Connector ${n}` },
   plannerScenarioPinwheel: { it: "Girandola", en: "Pinwheel" },
   plannerScenarioPinwheel2: { it: "Girandola 2", en: "Pinwheel 2" },
