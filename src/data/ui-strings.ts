@@ -2146,6 +2146,10 @@ const UI_STRINGS = {
     it: (b: number, r: number) => `${b} edifici · ${r} strade`,
     en: (b: number, r: number) => `${b} buildings · ${r} roads`,
   },
+  plannerMirrorChain: {
+    it: "Non disponibile: in città ci sono edifici a catena in questa direzione (specchiati resterebbero scollegati dalla strada)",
+    en: "Not available: the city has chain buildings in this direction (mirrored, they would be cut off from the road)",
+  },
   plannerVideo: { it: "🎬 VIDEO TUTORIAL", en: "🎬 VIDEO TUTORIAL" },
   plannerVideoTitle: { it: "Video tutorial del Planner", en: "Planner video tutorial (in Italian)" },
   plannerImportJson: { it: "📂 Importa JSON", en: "📂 Import JSON" },

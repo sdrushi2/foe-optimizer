@@ -422,7 +422,24 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
    *  orizzontale ("h") o in verticale ("v") attorno al rettangolo che
    *  contiene edifici e strade; i contatti fra edifici e strade restano
    *  gli stessi. Null se qualche cella uscirebbe dall'area sbloccata. */
+  /** Specchio vietato dalle catene: il blocco si sposta rigido (gli anelli
+   *  restano dal lato giusto, il gioco non li accetta specchiati), ma la sua
+   *  zona di strada (l'inizio) finirebbe dal lato opposto della strada
+   *  specchiata e la catena resterebbe scollegata. Vietato sull'asse in cui
+   *  l'inizio non è centrato nel blocco: catene orizzontali → specchio
+   *  orizzontale, verticali → verticale, entrambe → entrambi. */
+  const specchioCatene = useMemo(() => {
+    const no = { h: false, v: false };
+    for (const b of problem.buildings) {
+      const z = b.zonaStrada;
+      if (!z || b.roadLevel <= 0) continue;
+      if (z.x !== b.w - z.x - z.w) no.h = true;
+      if (z.y !== b.h - z.y - z.h) no.v = true;
+    }
+    return no;
+  }, [problem]);
   const specchiato = (f: PlannerFrame, asse: "h" | "v"): PlannerFrame | null => {
+    if (specchioCatene[asse]) return null;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const [id, p] of f.placements) { const b = byId.get(id); if (!b) continue; x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x + b.w - 1); y1 = Math.max(y1, p.y + b.h - 1); }
     for (const k of f.roads) { const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
@@ -1153,7 +1170,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title={t("plannerMirrorTitle", uiLang)}>
                           {t("plannerMirror", uiLang)}
                           {([["⇋", "h", "plannerMirrorH"], ["⇵", "v", "plannerMirrorV"]] as const).map(([fr, asse, tit]) => (
-                            <button key={asse} type="button" title={t(tit, uiLang)} disabled={!specchiato(f, asse)} onClick={() => applicaManuale(n, specchiato(f, asse))}
+                            <button key={asse} type="button" title={specchioCatene[asse] ? t("plannerMirrorChain", uiLang) : t(tit, uiLang)}disabled={!specchiato(f, asse)} onClick={() => applicaManuale(n, specchiato(f, asse))}
                               className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
                           ))}
                         </span>
