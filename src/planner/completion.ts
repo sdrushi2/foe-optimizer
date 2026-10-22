@@ -676,10 +676,16 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       // si simula da una disposizione completa, e tagliare lì staccava gli
       // edifici del braccio (bug segnalato dall'utente: bracci accorciati con
       // gli edifici rimasti scollegati).
+      // (anche il contorno del MUNICIPIO: è la radice dei bracci. I bracci sono
+      // quelli della girandola di partenza; dopo una modifica a mano o uno
+      // specchio possono attraversare il municipio, e il taglio arrivava alla
+      // prima cella accanto al municipio, che vista da lì è una punta: tolta,
+      // tutto il braccio restava scollegato — Corriere Northwind sulla strada,
+      // segnalazione dell'utente.)
       const serve = new Set<string>();
       for (const [id, q] of placements) {
         const b = byId.get(id);
-        if (!b || b.isTownhall || b.roadLevel <= 0) continue;
+        if (!b || (b.roadLevel <= 0 && !b.isTownhall)) continue;
         for (let dx = 0; dx < b.w; dx++) serve.add(key(q.x + dx, q.y - 1)).add(key(q.x + dx, q.y + b.h));
         for (let dy = 0; dy < b.h; dy++) serve.add(key(q.x - 1, q.y + dy)).add(key(q.x + b.w, q.y + dy));
       }
