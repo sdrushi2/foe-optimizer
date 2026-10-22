@@ -591,6 +591,24 @@ export type BookmarkletValidationError =
  *          un {@link BookmarkletValidationError} con codice stabile da tradurre
  *          lato chiamante.
  */
+/**
+ * Perché gli appunti non sono JSON (messaggio "Dati non validi" più preciso,
+ * senza toccare il bookmarklet). Il contenuto NON viene mostrato all'utente
+ * (potrebbe essere una password o altro di privato): solo categoria e lunghezza.
+ *  - "script":   il testo del bookmarklet stesso (copiato invece di eseguito);
+ *  - "troncato": inizia come il payload ({"_v": …) ma è interrotto o rovinato;
+ *  - "url":      un indirizzo web;
+ *  - "altro":    qualunque altro testo → la copia del bookmarklet non è avvenuta.
+ */
+export type ClipboardNonJson = "script" | "troncato" | "url" | "altro";
+export function diagnosiClipboard(text: string): ClipboardNonJson {
+  const s = text.trim();
+  if (/^javascript:/i.test(s) || (s.includes("MainParser") && s.includes("function("))) return "script";
+  if (/^\{\s*"_v"\s*:/.test(s) || (s.startsWith("{") && s.includes("CityEntities"))) return "troncato";
+  if (/^https?:\/\//i.test(s)) return "url";
+  return "altro";
+}
+
 export function validateBookmarkletData(parsed: unknown): BookmarkletValidationError | null {
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     return { code: "INVALID_FORMAT" };

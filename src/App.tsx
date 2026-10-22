@@ -28,7 +28,7 @@ import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, t
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
 import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
@@ -3610,7 +3610,14 @@ export default function App() {
       try {
         parsed = JSON.parse(text);
       } catch {
-        alert(t("clipboardNotJsonAlert", uiLang));
+        // Causa precisa (senza mostrare il contenuto degli appunti): vedi diagnosiClipboard.
+        const tipo = diagnosiClipboard(text);
+        alert(
+          tipo === "script" ? t("clipboardNotJsonScript", uiLang)
+          : tipo === "troncato" ? t("clipboardNotJsonTruncated", uiLang, text.length)
+          : tipo === "url" ? t("clipboardNotJsonUrl", uiLang)
+          : t("clipboardNotJsonOther", uiLang, text.length)
+        );
         return;
       }
     } catch (err: unknown) {

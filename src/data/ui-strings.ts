@@ -1596,9 +1596,21 @@ const UI_STRINGS = {
     it: "Dati non validi: la clipboard è vuota. Se hai appena cliccato la bacchetta magica e hai visto un errore JavaScript sulla pagina del gioco, il tuo bookmarklet è una versione precedente: trascinane uno nuovo dai pulsanti profilo qui sopra, poi riprova.",
     en: "Invalid data: the clipboard is empty. If you just clicked the magic wand and saw a JavaScript error on the game page, your bookmarklet is an older version: drag a new one from the profile buttons above, then try again.",
   },
-  clipboardNotJsonAlert: {
-    it: "Dati non validi: il contenuto della clipboard non è JSON valido. Se hai appena cliccato la bacchetta magica e hai visto un errore JavaScript sulla pagina del gioco, il tuo bookmarklet è una versione precedente: trascinane uno nuovo dai pulsanti profilo qui sopra, poi riprova.",
-    en: "Invalid data: the clipboard content is not valid JSON. If you just clicked the magic wand and saw a JavaScript error on the game page, your bookmarklet is an older version: drag a new one from the profile buttons above, then try again.",
+  clipboardNotJsonScript: {
+    it: "Dati non validi: negli appunti c'è il codice del bookmarklet, non i dati della città. Il bookmarklet va CLICCATO dalla barra dei preferiti mentre sei nel gioco, non copiato. Se lo hai creato incollando il codice a mano, ricrealo trascinandolo dai pulsanti profilo qui sopra.",
+    en: "Invalid data: the clipboard contains the bookmarklet code, not the city data. The bookmarklet must be CLICKED from the bookmarks bar while you are in the game, not copied. If you created it by pasting the code by hand, recreate it by dragging it from the profile buttons above.",
+  },
+  clipboardNotJsonTruncated: {
+    it: (n: number) => `Dati non validi: negli appunti ci sono i dati del bookmarklet, ma incompleti o rovinati (${n.toLocaleString("it-IT")} caratteri). Chiudi il browser, riapri sia il gioco sia il tool e importa di nuovo la città (bookmarklet nel gioco, poi subito la bacchetta magica).`,
+    en: (n: number) => `Invalid data: the clipboard contains the bookmarklet data, but incomplete or damaged (${n.toLocaleString("en-US")} characters). Close the browser, reopen both the game and the tool and import the city again (bookmarklet in the game, then the magic wand right away).`,
+  },
+  clipboardNotJsonUrl: {
+    it: "Dati non validi: negli appunti c'è un indirizzo web, non i dati della città: il bookmarklet non ha copiato niente. Vai sulla pagina del gioco (con FoE Helper o Forge Hammer attivo), clicca il bookmarklet dalla barra dei preferiti e poi subito la bacchetta magica.",
+    en: "Invalid data: the clipboard contains a web address, not the city data: the bookmarklet did not copy anything. Go to the game page (with FoE Helper or Forge Hammer active), click the bookmarklet from the bookmarks bar and then the magic wand right away.",
+  },
+  clipboardNotJsonOther: {
+    it: (n: number) => `Dati non validi: negli appunti c'è un altro testo (${n.toLocaleString("it-IT")} caratteri), non i dati della città: il bookmarklet non ha copiato niente. Possibili cause: il bookmarklet non è stato cliccato sulla pagina del gioco; il browser ha bloccato la copia (clicca prima un punto qualsiasi della pagina del gioco, poi il bookmarklet); un altro programma ha cambiato gli appunti nel frattempo. Per verificare: dopo il bookmarklet incolla in un Blocco note, deve comparire un testo che inizia con {"_v":`,
+    en: (n: number) => `Invalid data: the clipboard contains some other text (${n.toLocaleString("en-US")} characters), not the city data: the bookmarklet did not copy anything. Possible causes: the bookmarklet was not clicked on the game page; the browser blocked the copy (click anywhere on the game page first, then the bookmarklet); another program changed the clipboard in the meantime. To check: after the bookmarklet, paste into a text editor, you should see text starting with {"_v":`,
   },
   clipboardPermissionDeniedAlert: {
     it: "Import fallito: il browser ha negato a questo sito il permesso di leggere gli appunti. Alcuni browser (es. Vivaldi, Brave) lo bloccano di default. Prova a: 1) ricaricare la pagina e riprovare; 2) controllare le autorizzazioni del sito nelle impostazioni del browser (di solito in Impostazioni > Privacy/Sicurezza > Autorizzazioni sito, voce \"Appunti\") e abilitare manualmente l'accesso per foe-optimizer.com; 3) ricaricare e riprovare.",
