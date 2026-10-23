@@ -2489,6 +2489,24 @@
         "W_MultiAge_GBG26H2"
       ]
     },
+    "upgrade_kit_GBG27A": {
+      "names": {
+        "en": "Air Corps Hangar Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_GBG27A1",
+        "W_MultiAge_GBG27A2"
+      ]
+    },
+    "upgrade_kit_GBG27B": {
+      "names": {
+        "en": "Air Corps Parachute School Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_GBG27B1",
+        "W_MultiAge_GBG27B2"
+      ]
+    },
     "upgrade_kit_GR23A": {
       "names": {
         "en": "Neo Colossus Upgrade Kit",
@@ -11696,6 +11714,24 @@
         "upgrade_kit_GR26G",
         "W_MultiAge_GR26H1",
         "upgrade_kit_GR26H"
+      ]
+    },
+    "selection_kit_GBG27A": {
+      "names": {
+        "en": "Air Corps Hangar Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_GBG27A1",
+        "upgrade_kit_GBG27A"
+      ]
+    },
+    "selection_kit_GBG27B": {
+      "names": {
+        "en": "Air Corps Parachute School Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_GBG27B1",
+        "upgrade_kit_GBG27B"
       ]
     }
   },
