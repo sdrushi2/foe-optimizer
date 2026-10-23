@@ -25,7 +25,7 @@ import { localDateStamp } from "../utils/format";
 import { esportaCittaJson, leggiCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
 import { cittaDaEditor } from "./editorPonte";
 import VideoTutorial from "./VideoTutorial";
-import { celleBlocchi, nucleiDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
+import { celleBlocchi, nucleiDueCorsie, richiedeDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
 
 interface Props {
   cityMapBuildings: readonly CityMapBuilding[];
@@ -36,13 +36,15 @@ interface Props {
 /** Scenari: raccordo 3/4 celle e girandola. Partono tutti in parallelo;
  *  l'utente può eliminare quelli che non gli servono. (Gli scenari
  *  "compattati" sono stati tolti: si compatta a mano con "Sposta tutto".) */
-type VName = "r3" | "r4" | "r5" | "gir" | "gir2";
-const VARIANTI: VName[] = ["r3", "r4", "r5", "gir", "gir2"];
-const tutte = <T,>(v: T): Record<VName, T> => ({ r3: v, r4: v, r5: v, gir: v, gir2: v });
+type VName = "r3" | "r4" | "r5" | "gir" | "gir2" | "att";
+const VARIANTI: VName[] = ["r3", "r4", "r5", "gir", "gir2", "att"];
+const tutte = <T,>(v: T): Record<VName, T> => ({ r3: v, r4: v, r5: v, gir: v, gir2: v, att: v });
 /** Scenario: base del builder (v) oppure "Girandola" (v = null, raccordo 0:
  *  municipio e quattro bracci, vedi girandola.ts). */
 interface Scenario {
   id: VName; v: BuilderVariant | null; raccordo: 0 | 3 | 4 | 5; /** girandola: 0 = migliore posizione, 1 = seconda */ gir?: 0 | 1;
+  /** "Configurazione attuale": la ricerca parte dalla città così com'è (vedi statoAttuale). */
+  attuale?: true;
   /** Raccordi: partenza del builder SENZA margine vietato dal bordo (Passo 7),
    *  se diversa da `v`. All'avvio si confrontano le due con una breve ricerca
    *  e si tiene la migliore (Stralis 150 → 133 strade; Filanush senza margine
@@ -238,6 +240,32 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   }, [esterna, cittaProfilo, celleProfilo, militariCollegati]);
   const militariTipi = useMemo(() => tipiMilitari(cityMapBuildings), [cityMapBuildings]);
   const problem = catene.problem;
+  /** Scenario "Configurazione attuale" (richiesta dell'utente): strade ed
+   *  edifici con strada (catene e militari scelti compresi) dove sono ora in
+   *  città. Una catena entra solo se i suoi pezzi sono montati come il blocco
+   *  del Planner (stessa distribuzione degli anelli), altrimenti la ripiazza la
+   *  ricerca. null se la città non ha strade (es. export JSON senza strade). */
+  const statoAttuale = useMemo((): { placements: Map<string, { x: number; y: number }>; roads: Set<string>; blocchi: string[] } | null => {
+    const roads = new Set<string>(), blocchi: string[] = [];
+    const pos = new Map<string, { x: number; y: number }>();
+    for (const b of cityMapBuildings) {
+      if (b.type !== "street") { pos.set(b.mapEntityId, { x: b.x, y: b.y }); continue; }
+      if (b.w === 2 && b.h === 2) blocchi.push(`${b.x},${b.y}`);
+      for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) roads.add(`${b.x + i},${b.y + j}`);
+    }
+    if (!roads.size) return null;
+    const placements = new Map<string, { x: number; y: number }>();
+    for (const b of problem.buildings) {
+      if (!b.isTownhall && b.roadLevel <= 0) continue;
+      const bl = catene.blocchi.get(b.id);
+      if (!bl) { placements.set(b.id, { x: b.origX, y: b.origY }); continue; }
+      const m0 = bl.membri[0]!, p0 = pos.get(m0.id);
+      if (!p0) continue;
+      const x0 = p0.x - m0.dx, y0 = p0.y - m0.dy;
+      if (bl.membri.every(m => { const p = pos.get(m.id); return p && p.x - m.dx === x0 && p.y - m.dy === y0; })) placements.set(b.id, { x: x0, y: y0 });
+    }
+    return { placements, roads, blocchi };
+  }, [cityMapBuildings, problem, catene]);
   const [frames, setFrames] = useState<Record<VName, PlannerFrame | null>>(tutte(null));
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
@@ -536,8 +564,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     };
     /** Ricerca + completamento; se il completamento viene annullato si
      *  riparte (ricerca in pausa) dalla disposizione di prima di COMPLETA. */
-    const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse">) => {
-      let riprendiDa: { stato: StatoManuale; valutate: number } | undefined;
+    const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse">, partenza?: StatoManuale) => {
+      let riprendiDa: { stato: StatoManuale; valutate: number } | undefined = partenza ? { stato: partenza, valutate: 0 } : undefined;
       for (;;) {
         // ── Squadra di ricerca (vedi SEMI): aiutanti con altri semi, solo
         // ricerca. Si fermano a COMPLETA, a Ferma (pausa) e a fine corsa; alla
@@ -645,6 +673,25 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const conNucleo = (n: Nucleo | undefined) => {
       dueRef.current = { ...dueRef.current, [id]: n ? n.blocchi : [] };
     };
+    if (sc.attuale) {
+      // Configurazione attuale: la città com'è è la base (anche della ricerca
+      // parametrica) e la disposizione da cui riparte la ricerca locale, come
+      // dopo una modifica nell'editor. Verticale "fuori mappa" (stradaVX a
+      // sinistra di tutto): nessun edificio è nella parte ovest intoccabile.
+      const st = statoAttuale;
+      const th = problem.buildings.find(b => b.isTownhall);
+      if (!st || !th) return;
+      dueRef.current = { ...dueRef.current, [id]: st.blocchi };
+      setF({ placements: new Map(st.placements), roads: new Set(st.roads), probe: null, lastPath: [], placed: st.placements.size, unplaced: [], iterations: 0, done: false, label: t("plannerScenarioCurrent", uiLang) });
+      const due = problem.buildings.filter(b => richiedeDueCorsie(b) && st.placements.has(b.id)).map(b => b.id);
+      await corri({
+        initial: { placements: st.placements, roads: st.roads },
+        geometry: { stradaVX: problem.minX - 1, eastMidY: th.origY + Math.floor(th.h / 2) },
+        fissi: due, ...(st.blocchi.length ? { stradeFisse: celleBlocchi(st.blocchi) } : {}),
+      }, st);
+      setSearching(s => ({ ...s, [id]: false }));
+      return;
+    }
     if (!v) {
       // Girandola: scelta della posizione del municipio (brevi ricerche), poi
       // ricerca e completamento come gli altri scenari.
@@ -762,6 +809,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       // lunga: municipio al centro; municipio nella posizione migliore delle
       // prove brevi.
       if (problem.buildings.some(b => b.isTownhall)) lista.push({ id: "gir", v: null, raccordo: 0, gir: 0 }, { id: "gir2", v: null, raccordo: 0, gir: 1 });
+      if (statoAttuale && problem.buildings.some(b => b.isTownhall)) lista.push({ id: "att", v: null, raccordo: 0, attuale: true });
       out = lista.length ? lista : null;
       setOutcome(out);
       setComputing(false);
@@ -928,6 +976,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const modificabile = (n: VName) => !!frames[n] && !eliminati.has(n) && (!running || (inPausa[n] && paused && !smussando));
   const titoloScenario = (n: VName) => {
     const sc = outcome?.find(x => x.id === n);
+    if (sc?.attuale) return t("plannerScenarioCurrent", uiLang);
     return sc?.raccordo ? t("plannerScenarioConnector", uiLang, sc.raccordo) : t(sc?.gir ? "plannerScenarioPinwheel2" : "plannerScenarioPinwheel", uiLang);
   };
   /** Finestre dell'editor aperte: scenario, token dell'apertura, generazione

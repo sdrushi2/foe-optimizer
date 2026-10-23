@@ -2198,6 +2198,7 @@ const UI_STRINGS = {
   plannerTwoLaneTag: { it: " (due corsie)", en: " (two lanes)" },
   plannerTwoLaneRoad: { it: "Strada asfaltata", en: "Two-lane road" },
   plannerScenarioConnector: { it: (n: number) => `Raccordo a ${n}`, en: (n: number) => `Connector ${n}` },
+  plannerScenarioCurrent: { it: "Configurazione attuale", en: "Current layout" },
   plannerScenarioPinwheel: { it: "Girandola", en: "Pinwheel" },
   plannerScenarioPinwheel2: { it: "Girandola 2", en: "Pinwheel 2" },
   plannerStatsPlaced: { it: "piazzati: con strada", en: "placed: with road" },
