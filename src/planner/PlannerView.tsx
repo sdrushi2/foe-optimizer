@@ -429,7 +429,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current || eliminatiRef.current.has(sc.id),
         onFrame: f => {
           if (gen !== genRef.current) return;
-          const nf: PlannerFrame = { ...f, lastPath: f0.lastPath, done: false };
+          // (Smussa non tocca le strade: i blocchi a due corsie restano quelli di
+          // partenza. Senza `due` la mappa ricadeva sul nucleo iniziale dello
+          // scenario e, se il 2×2 era stato spostato, lo mostrava come 4 strade
+          // a una corsia — segnalazione dell'utente)
+          const nf: PlannerFrame = { ...f, lastPath: f0.lastPath, done: false, ...(f0.due ? { due: f0.due } : {}) };
           framesRef.current = { ...framesRef.current, [sc.id]: nf };
           setFrames(prev => ({ ...prev, [sc.id]: nf }));
           modRef.current[sc.id] = true;
