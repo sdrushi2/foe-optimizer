@@ -17,6 +17,8 @@ export interface PngEdificio {
   type: string; name: string;
   isGreatBuilding?: boolean; isMilitary?: boolean; isInactive?: boolean; roadLevel?: number;
   colore?: string;
+  /** Edificio aggiunto con "Modifica città" del Planner: bordo bianco. */
+  nuovo?: boolean;
 }
 
 /** Colori per categoria edificio: condivisi tra il render PNG "a griglia"
@@ -93,7 +95,9 @@ export function renderCityMapPng(
   unlockedAreas: readonly UnlockedArea[],
   scale: number,
   /** Etichetta del municipio (il tool passa t("legendTownHall", uiLang)). */
-  nomeMunicipio: string
+  nomeMunicipio: string,
+  /** Nota in basso a sinistra (Planner con "Modifica città": edifici tolti/aggiunti). */
+  nota?: string
 ): void {
   const areas = unlockedAreas.map((a) => ({
     x: Number(a.x ?? 0),
@@ -186,6 +190,12 @@ export function renderCityMapPng(
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1 * scale;
     ctx.strokeRect(px, py, w, h);
+    if (b.nuovo) {
+      // aggiunto con "Modifica città": bordo bianco spesso, dentro l'edificio
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3 * scale;
+      ctx.strokeRect(px + 2.5 * scale, py + 2.5 * scale, w - 5 * scale, h - 5 * scale);
+    }
 
     const label = b.type === "main_building" ? nomeMunicipio : b.name;
     const fontSize = (b.w >= 3 ? 11 : b.w === 2 ? 9 : 7) * scale;
@@ -208,4 +218,11 @@ export function renderCityMapPng(
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
   ctx.fillText("foe-optimizer.com", canvas.width - PAD * 0.5, canvas.height - PAD * 0.5);
+  if (nota) {
+    // nota in basso a sinistra, compressa per non arrivare alla firma
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.font = `${Math.round(13 * scale)}px sans-serif`;
+    ctx.textAlign = "left";
+    ctx.fillText(nota, PAD * 0.5, canvas.height - PAD * 0.5, canvas.width - PAD - 190 * scale);
+  }
 }

@@ -25,11 +25,15 @@ import { localDateStamp } from "../utils/format";
 import { esportaCittaJson, leggiCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
 import { cittaDaEditor } from "./editorPonte";
 import VideoTutorial from "./VideoTutorial";
+import ModificaCitta from "./ModificaCitta";
+import { applicaModifiche, contaModifiche, eNuovo, NESSUNA_MODIFICA, type CandidatiPlanner, type Modifiche } from "./modificheCitta";
 import { celleBlocchi, nucleiDueCorsie, richiedeDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
 
 interface Props {
   cityMapBuildings: readonly CityMapBuilding[];
   cityMapUnlockedCells: ReadonlySet<string>;
+  /** Edifici aggiungibili con "Modifica città" (inventario, database). */
+  candidati: CandidatiPlanner;
   uiLang: UiLang;
 }
 
@@ -170,6 +174,8 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
       // zebra dei collegati senza bisogno.
       ctx.fillStyle = coloreEdificioMappa({ ...b, isGreatBuilding: ge.has(id) });
       ctx.fillRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
+      // aggiunto con "Modifica città": bordo bianco
+      if (eNuovo(id)) { ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.strokeRect(px(p.x) + 2, py(p.y) + 2, b.w * CELL - 5, b.h * CELL - 5); }
     }
     if (evidenzia?.size) {
       // Edifici problematici, road_eff > 0 (bordo giallo tratteggiato).
@@ -221,11 +227,16 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
  *  città che mandano gli utenti. Non viene salvata da nessuna parte. */
 interface CittaEsterna extends CittaJson { nome: string }
 
-export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, uiLang }: Props) {
+export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang }: Props) {
   const [esterna, setEsterna] = useState<CittaEsterna | null>(null);
   const [erroreImport, setErroreImport] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const cityMapBuildings: readonly CityMapBuilding[] = esterna?.buildings ?? cittaProfilo;
+  /** Città vera (profilo o JSON esterno) e modifiche temporanee ("Modifica città"):
+   *  il Planner lavora sulla città modificata. */
+  const cittaVera: readonly CityMapBuilding[] = esterna?.buildings ?? cittaProfilo;
+  const [modifiche, setModifiche] = useState<Modifiche>(NESSUNA_MODIFICA);
+  const [pannelloModifica, setPannelloModifica] = useState(false);
+  const cityMapBuildings = useMemo(() => applicaModifiche(cittaVera, modifiche), [cittaVera, modifiche]);
   /** Entità militari da collegare comunque alla strada con Alcatraz / Nave
    *  (interruttori nel riquadro informativo; di default nessuna). */
   const [militariCollegati, setMilitariCollegati] = useState<ReadonlySet<string>>(new Set());
@@ -234,10 +245,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   // collegati (regola dell'utente). `catene.blocchi` serve a riscomporre i
   // blocchi negli edifici originali (PNG).
   const catene = useMemo(() => {
-    if (!esterna) return raggruppaCatene(buildPlannerProblem(cittaProfilo, celleProfilo, militariCollegati));
+    if (!esterna) return raggruppaCatene(buildPlannerProblem(cityMapBuildings, celleProfilo, militariCollegati));
     // L'export JSON non ha le posizioni delle strade, solo il loro numero.
-    return raggruppaCatene({ ...buildPlannerProblem(esterna.buildings, esterna.cells, militariCollegati), originalRoadCells: esterna.strade });
-  }, [esterna, cittaProfilo, celleProfilo, militariCollegati]);
+    return raggruppaCatene({ ...buildPlannerProblem(cityMapBuildings, esterna.cells, militariCollegati), originalRoadCells: esterna.strade });
+  }, [esterna, cityMapBuildings, celleProfilo, militariCollegati]);
   const militariTipi = useMemo(() => tipiMilitari(cityMapBuildings), [cityMapBuildings]);
   const problem = catene.problem;
   /** Scenario "Configurazione attuale" (richiesta dell'utente): strade ed
@@ -249,14 +260,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const roads = new Set<string>(), blocchi: string[] = [];
     const pos = new Map<string, { x: number; y: number }>();
     for (const b of cityMapBuildings) {
-      if (b.type !== "street") { pos.set(b.mapEntityId, { x: b.x, y: b.y }); continue; }
+      // (gli edifici aggiunti con "Modifica città" non hanno posizione: li piazza la ricerca)
+      if (b.type !== "street") { if (!eNuovo(b.mapEntityId)) pos.set(b.mapEntityId, { x: b.x, y: b.y }); continue; }
       if (b.w === 2 && b.h === 2) blocchi.push(`${b.x},${b.y}`);
       for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) roads.add(`${b.x + i},${b.y + j}`);
     }
     if (!roads.size) return null;
     const placements = new Map<string, { x: number; y: number }>();
     for (const b of problem.buildings) {
-      if (!b.isTownhall && b.roadLevel <= 0) continue;
+      if ((!b.isTownhall && b.roadLevel <= 0) || eNuovo(b.id)) continue;
       const bl = catene.blocchi.get(b.id);
       if (!bl) { placements.set(b.id, { x: b.origX, y: b.origY }); continue; }
       const m0 = bl.membri[0]!, p0 = pos.get(m0.id);
@@ -841,6 +853,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null));
     autoRef.current = tutte(null); setManuali(tutte(false));
     primaRef.current = tutte(null); annullaRef.current = tutte(false);
+    // come alla prima apertura: niente riquadri degli scenari (si ricalcolano a
+    // Ottimizza) e scenari eliminati di nuovo disponibili
+    setOutcome(undefined); setComputing(false);
+    eliminatiRef.current = new Set(); setEliminati(new Set());
+    dueRef.current = tutte([]);
+    // avvisi (set non gestiti, militari) di nuovo visibili
+    setAvvisoSetChiuso(false); setAvvisoMilitariChiuso(false);
+    // città vera: via le modifiche temporanee ("Modifica città")
+    setModifiche(NESSUNA_MODIFICA); setPannelloModifica(false);
   };
   /** Scenari visibili (calcolati e non eliminati). */
   const visibili = (outcome ?? []).filter(sc => !eliminati.has(sc.id));
@@ -953,7 +974,12 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const aree = areeProblema();
     try {
       const canvas = document.createElement("canvas");
-      renderCityMapPng(canvas, edifici, aree, 2, t("legendTownHall", uiLang));
+      // "Modifica città": edifici aggiunti col bordo bianco, tolti elencati in basso
+      const tolti = cittaVera.filter(b => modifiche.tolti.has(b.mapEntityId)).map(b => b.name);
+      const nota = contaModifiche(modifiche)
+        ? [modifiche.aggiunti.length ? t("plannerPngAdded", uiLang, modifiche.aggiunti.length) : "", tolti.length ? t("plannerPngRemoved", uiLang, tolti.join(", ")) : ""].filter(Boolean).join(" · ")
+        : undefined;
+      renderCityMapPng(canvas, edifici.map(b => (eNuovo(b.mapEntityId) ? { ...b, nuovo: true } : b)), aree, 2, t("legendTownHall", uiLang), nota);
       const link = document.createElement("a");
       link.download = nomeFile(n, "png");
       link.href = canvas.toDataURL("image/png");
@@ -1099,6 +1125,14 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         )}
         <button type="button" disabled={running && !paused} onClick={reset}
           className="rounded border border-slate-600 px-3 py-1 hover:bg-slate-800 disabled:opacity-40">{t("plannerReset", uiLang)}</button>
+        {/* Modifica città (prima di ottimizzare): togli / aggiungi edifici */}
+        {!esterna && (
+          <button type="button" onClick={() => setPannelloModifica(v => !v)} disabled={running && !paused}
+            title={t(running && !paused ? "plannerEditCityLocked" : "plannerEditCityTitle", uiLang)}
+            className={`rounded border px-3 py-1 font-bold disabled:opacity-40 ${contaModifiche(modifiche) ? "border-amber-400 bg-amber-950 text-amber-200 hover:bg-amber-900" : "border-teal-500 text-teal-300 hover:bg-teal-950"}`}>
+            {t("plannerEditCity", uiLang)}{contaModifiche(modifiche) ? ` · ${contaModifiche(modifiche)}` : ""}
+          </button>
+        )}
         {/* Potenza della CPU (vedi carico): si può cambiare anche durante la corsa */}
         <span className="ml-1 inline-flex overflow-hidden rounded border border-slate-600" role="group" aria-label={t("plannerCpuGroup", uiLang)}
           title={(() => {
@@ -1140,6 +1174,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           className="ml-auto rounded border border-rose-400 bg-rose-600 px-3 py-1 font-bold text-white shadow hover:bg-rose-500">{t("plannerVideo", uiLang)}</button>
       </div>
       {videoAperto && <VideoTutorial onClose={() => setVideoAperto(false)} uiLang={uiLang} />}
+      {pannelloModifica && !esterna && (
+        <ModificaCitta citta={cittaVera} cittaModificata={cityMapBuildings} modifiche={modifiche} setModifiche={setModifiche}
+          candidati={candidati} celleSbloccate={problem.cells.size} bloccato={running && !paused} inCorsa={running}
+          onChiudi={() => setPannelloModifica(false)} uiLang={uiLang} />
+      )}
       {edificiSet.length > 0 && !avvisoSetChiuso && (
         // Avviso: i vecchi set a bonus di adiacenza non sono gestiti (decisione dell'utente).
         <div role="alert" className="relative mx-3 mt-3 flex items-start gap-2 rounded border-2 border-amber-500 bg-amber-950/60 py-2 pl-3 pr-9 text-[13px] text-amber-100">

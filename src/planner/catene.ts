@@ -39,6 +39,20 @@ export const SET_DI_EDIFICI: ReadonlyMap<string, string> = new Map(
     .flatMap(([nome, s]) => s.edifici.map(e => [e, nome] as const)),
 );
 
+/** Nomi degli anelli di catena rimasti senza nessun inizio della loro catena
+ *  (es. tolto l'unico inizio con "Modifica città"): il Planner li tratta come
+ *  edifici normali. */
+export function anelliSenzaInizio(edifici: ReadonlyArray<{ entityId: string; name: string }>): string[] {
+  const inizi = new Set<string>(), anelli = new Map<string, string[]>();
+  for (const b of edifici) {
+    const info = EDIFICI[b.entityId];
+    if (!info) continue;
+    if (info.ruolo === "inizio") inizi.add(info.catena);
+    else anelli.set(info.catena, [...(anelli.get(info.catena) ?? []), b.name]);
+  }
+  return [...anelli].filter(([c]) => !inizi.has(c)).flatMap(([, n]) => [...new Set(n)]);
+}
+
 /** Prefisso dell'id dei blocchi (id = prefisso + id dell'inizio). */
 const PREFISSO_BLOCCO = "catena:";
 

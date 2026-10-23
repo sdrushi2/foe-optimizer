@@ -51,6 +51,7 @@ import AboutModal from "./components/AboutModal";
 import { useModalDismiss } from "./utils/useModalDismiss";
 import AllyAdvisorPanel from "./components/AllyAdvisorPanel";
 import PlannerView from "./planner/PlannerView";
+import { dimensioniDaSize, senzaLivello, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner } from "./planner/modificheCitta";
 import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
@@ -462,6 +463,24 @@ function chainOffset(chain: UpgradeChain): number {
   }
   CHAIN_OFFSET_CACHE.set(chain, maxOffset);
   return maxOffset;
+}
+
+/** Primo edificio (livello 1) della catena di upgrade che contiene `id`,
+ *  risalendo anche le catene concatenate (l'ultimo livello di una è il primo
+ *  della successiva): chiave della "famiglia" nel Planner (Modifica città). */
+const RADICE_CACHE = new Map<string, string>();
+function radiceCatena(id: string): string {
+  const c = RADICE_CACHE.get(id);
+  if (c) return c;
+  RADICE_CACHE.set(id, id); // (prevenzione cicli)
+  const primo = (chain: UpgradeChain) => { const s = chain[0]; return Array.isArray(s) ? s[0] : s; };
+  let r = id;
+  const tutte = BLD_ALL_CHAINS.get(id) ?? [];
+  // catena in cui id NON è il primo (la più lunga): si risale al suo primo
+  const dentro = tutte.filter(e => e.local_index > 0).sort((a, b) => b.chain_length - a.chain_length)[0];
+  if (dentro) { const p = primo(dentro.chain); if (p && p !== id) r = radiceCatena(p); }
+  RADICE_CACHE.set(id, r);
+  return r;
 }
 
 function chainInfo(cityEntityId: string): { kit_id: string; level: number; max_level: number } | null {
@@ -4131,6 +4150,60 @@ export default function App() {
 
   // Lista "raw": edifici così come sono nell'inventario, senza ottimizzazione kit.
   // Usata quando "SOLO EDIFICI PRONTI" è attivo.
+  // ── Planner, "Modifica città": edifici aggiungibili ────────────────────────
+  // Inventario: le righe della tab Inventario (edifici posseduti e costruibili
+  // dai kit, al livello calcolato dall'ottimizzatore), una per edificio con le
+  // copie sommate. Database: tutto il catalogo raggruppato per famiglia (catena
+  // di upgrade di kit.json → livelli). Strada: dal catalogo (richiede / non
+  // richiede); "due corsie" solo se lo stesso edificio in città lo dice (il
+  // catalogo non ha il livello di strada).
+  const plannerCandidati = useMemo<CandidatiPlanner>(() => {
+    const dueCorsie = new Map<string, number>();
+    for (const b of cityMapBuildings) if ((b.roadLevel ?? 0) >= 2) dueCorsie.set(b.entityId, b.roadLevel ?? 2);
+    const roadDi = (id: string, road: number) => dueCorsie.get(id) ?? (road > 0 ? 1 : 0);
+    const militare = (id: string, flag?: boolean) => !!flag || id.startsWith("M_");
+    const inv = new Map<string, CandidatoPlanner>();
+    for (const b of processedInventoryKitBuildings as InventoryRowBuilding[]) {
+      const d = dimensioniDaSize(b.size);
+      if (!d || !b.cityEntityId || b.isUnresolved) continue;
+      const q = b.kitCount ?? 1;
+      const c = inv.get(b.cityEntityId);
+      if (c) { c.qty = (c.qty ?? 0) + q; continue; }
+      inv.set(b.cityEntityId, {
+        entityId: b.cityEntityId, name: displayName(b.cityEntityId, b.name, gameLang), ...d, roadLevel: roadDi(b.cityEntityId, b.road),
+        isGreatBuilding: !!b.isGreatBuilding, isMilitary: militare(b.cityEntityId, b.isMilitary), qty: q,
+        ...(b._invLevel ? { level: b._invLevel } : {}),
+      });
+    }
+    const famiglie = new Map<string, FamigliaPlanner>();
+    for (const b of BUILDINGS_FROM_CSV) {
+      const id = b.cityEntityId;
+      if (!id || id.startsWith("H_") || id.startsWith("S_")) continue;
+      const d = dimensioniDaSize(b.size);
+      if (!d) continue;
+      const level = chainInfo(id)?.level;
+      const c: CandidatoPlanner = {
+        entityId: id, name: displayName(id, b.name, uiLang), ...d, roadLevel: roadDi(id, b.road),
+        isGreatBuilding: !!b.isGreatBuilding, isMilitary: militare(id, b.isMilitary), ...(level ? { level } : {}),
+      };
+      const key = level ? radiceCatena(id) : id;
+      const f = famiglie.get(key);
+      if (f) f.livelli.push(c);
+      else famiglie.set(key, { key, name: "", livelli: [c], isGreatBuilding: c.isGreatBuilding });
+    }
+    for (const f of famiglie.values()) {
+      f.livelli.sort((a, b) => (a.level ?? 1) - (b.level ?? 1) || a.name.localeCompare(b.name));
+      f.name = senzaLivello(f.livelli[f.livelli.length - 1]!.name);
+    }
+    const efficienza = new Map<string, number>();
+    for (const b of [...processedBuildings, ...processedGreatBuildings]) if (b.cityEntityId) efficienza.set(b.cityEntityId, b.currentEff);
+    return {
+      inventario: [...inv.values()].sort((a, b) => a.name.localeCompare(b.name)),
+      database: [...famiglie.values()].sort((a, b) => a.name.localeCompare(b.name)),
+      efficienza,
+    };
+  }, [cityMapBuildings, processedInventoryKitBuildings, processedBuildings, processedGreatBuildings, gameLang, uiLang]);
+
   const processedInventoryRawBuildings = useMemo<ProcessedBuilding[]>(() => {
     const rows: InventoryRowBuilding[] = [];
     const addRaw = (entry: InventoryEntry) => {
@@ -6763,6 +6836,7 @@ export default function App() {
               key={activeProfileId}
               cityMapBuildings={cityMapBuildings}
               cityMapUnlockedCells={cityMapUnlockedCells}
+              candidati={plannerCandidati}
               uiLang={uiLang}
             />
           )}
