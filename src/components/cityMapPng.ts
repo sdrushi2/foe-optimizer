@@ -12,6 +12,15 @@ import type { UnlockedArea } from "../data/bookmarklet";
 
 /** Edificio o tessera strada da disegnare (CityMapBuilding è compatibile).
  *  `colore` (facoltativo) sostituisce il colore calcolato dalle categorie. */
+/** Riquadro delle modifiche (Planner, "Modifica città"): testi già tradotti. */
+export interface RiepilogoPng {
+  titolo: string;
+  tolti: { titolo: string; voci: string[] };
+  aggiunti: { titolo: string; voci: string[] };
+  /** Riga in fondo (es. "sulla mappa gli aggiunti hanno il bordo bianco"). */
+  nota?: string;
+}
+
 export interface PngEdificio {
   x: number; y: number; w: number; h: number;
   type: string; name: string;
@@ -96,8 +105,8 @@ export function renderCityMapPng(
   scale: number,
   /** Etichetta del municipio (il tool passa t("legendTownHall", uiLang)). */
   nomeMunicipio: string,
-  /** Nota in basso a sinistra (Planner con "Modifica città": edifici tolti/aggiunti). */
-  nota?: string
+  /** Planner con "Modifica città": riquadro sotto la mappa con edifici tolti e aggiunti. */
+  riepilogo?: RiepilogoPng
 ): void {
   const areas = unlockedAreas.map((a) => ({
     x: Number(a.x ?? 0),
@@ -118,7 +127,14 @@ export function renderCityMapPng(
   const CELL = PNG_CELL * scale;
   const PAD = CELL; // mezzo margine di respiro attorno alla griglia
   canvas.width = (W + 2) * CELL + PAD * 2;
-  canvas.height = (H + 2) * CELL + PAD * 2;
+  // riquadro delle modifiche sotto la mappa (solo se ci sono modifiche)
+  const u = scale; // unità dei testi del riquadro
+  // dimensioni del riquadro: titolo 30, colonne 24, elenco 18, nota 16 (× scala)
+  const RIGA = 26 * u, TITOLO = 42 * u, INTESTAZIONE = 34 * u, NOTA = 30 * u;
+  const righe = riepilogo ? Math.max(riepilogo.tolti.voci.length, riepilogo.aggiunti.voci.length, 1) : 0;
+  const altezzaRiquadro = riepilogo ? 16 * u + TITOLO + INTESTAZIONE + righe * RIGA + 12 * u + (riepilogo.nota ? NOTA : 0) + 14 * u : 0;
+  const topRiquadro = (H + 2) * CELL + PAD;
+  canvas.height = riepilogo ? topRiquadro + altezzaRiquadro + PAD * 2 : (H + 2) * CELL + PAD * 2;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
@@ -211,6 +227,40 @@ export function renderCityMapPng(
     });
   }
 
+  if (riepilogo) {
+    // Riquadro "Modifiche alla città": due colonne, tolti (rosso) e aggiunti (verde)
+    const x0 = PAD, larg = canvas.width - 2 * PAD, y0 = topRiquadro;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+    ctx.fillRect(x0, y0, larg, altezzaRiquadro);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.lineWidth = 2 * u;
+    ctx.strokeRect(x0, y0, larg, altezzaRiquadro);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    let y = y0 + 16 * u;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold ${Math.round(30 * u)}px sans-serif`;
+    ctx.fillText(riepilogo.titolo, x0 + 16 * u, y, larg - 32 * u);
+    y += TITOLO;
+    const colonna = (larg - 48 * u) / 2;
+    const scrivi = (c: RiepilogoPng["tolti"], x: number, colore: string) => {
+      ctx.fillStyle = colore;
+      ctx.font = `bold ${Math.round(24 * u)}px sans-serif`;
+      ctx.fillText(c.titolo, x, y, colonna);
+      ctx.font = `${Math.round(18 * u)}px sans-serif`;
+      ctx.fillStyle = "#e5e7eb";
+      c.voci.forEach((v, i) => ctx.fillText(v, x, y + INTESTAZIONE + i * RIGA, colonna));
+      if (!c.voci.length) { ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.fillText("—", x, y + INTESTAZIONE, colonna); }
+    };
+    scrivi(riepilogo.tolti, x0 + 16 * u, "#f87171");
+    scrivi(riepilogo.aggiunti, x0 + 32 * u + colonna, "#4ade80");
+    if (riepilogo.nota) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.font = `italic ${Math.round(16 * u)}px sans-serif`;
+      ctx.fillText(riepilogo.nota, x0 + 16 * u, y + INTESTAZIONE + righe * RIGA + 12 * u, larg - 32 * u);
+    }
+  }
+
   // Firma in basso a destra, nel margine nero (fuori dalla griglia): fa capire
   // che il PNG è stato generato dal tool. Vale per MAPPA, Planner ed editor.
   ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
@@ -218,11 +268,4 @@ export function renderCityMapPng(
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
   ctx.fillText("foe-optimizer.com", canvas.width - PAD * 0.5, canvas.height - PAD * 0.5);
-  if (nota) {
-    // nota in basso a sinistra, compressa per non arrivare alla firma
-    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.font = `${Math.round(13 * scale)}px sans-serif`;
-    ctx.textAlign = "left";
-    ctx.fillText(nota, PAD * 0.5, canvas.height - PAD * 0.5, canvas.width - PAD - 190 * scale);
-  }
 }

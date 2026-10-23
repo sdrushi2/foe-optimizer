@@ -2228,8 +2228,19 @@ const UI_STRINGS = {
     it: (n: number) => `…e altri ${n}: affina la ricerca.`,
     en: (n: number) => `…and ${n} more: refine the search.`,
   },
-  plannerPngAdded: { it: (n: number) => `Bordo bianco: ${n} edifici aggiunti`, en: (n: number) => `White border: ${n} buildings added` },
-  plannerPngRemoved: { it: (l: string) => `Tolti: ${l}`, en: (l: string) => `Removed: ${l}` },
+  plannerPngChangesTitle: { it: "Modifiche alla città", en: "City changes" },
+  plannerPngRemovedTitle: {
+    it: (n: number, c: number) => `Tolti: ${n} ${n === 1 ? "edificio" : "edifici"} (−${c} celle)`,
+    en: (n: number, c: number) => `Removed: ${n} ${n === 1 ? "building" : "buildings"} (−${c} cells)`,
+  },
+  plannerPngAddedTitle: {
+    it: (n: number, c: number) => `Aggiunti: ${n} ${n === 1 ? "edificio" : "edifici"} (+${c} celle)`,
+    en: (n: number, c: number) => `Added: ${n} ${n === 1 ? "building" : "buildings"} (+${c} cells)`,
+  },
+  plannerPngChangesNote: {
+    it: "Sulla mappa gli edifici aggiunti hanno il bordo bianco.",
+    en: "On the map, added buildings have a white border.",
+  },
   plannerLevel: { it: (n: number) => `Liv. ${n}`, en: (n: number) => `Lv. ${n}` },
   plannerVideo: { it: "🎬 VIDEO TUTORIAL", en: "🎬 VIDEO TUTORIAL" },
   plannerVideoTitle: { it: "Video tutorial del Planner", en: "Planner video tutorial (in Italian)" },

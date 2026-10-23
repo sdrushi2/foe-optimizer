@@ -19,7 +19,7 @@ import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "
 import { smussaBordi } from "./smussa";
 import { baseCentrale, type BaseGirandola } from "./girandola";
 import { espandiCatene, raggruppaCatene, SET_DI_EDIFICI } from "./catene";
-import { coloreEdificioMappa, renderCityMapPng } from "../components/cityMapPng";
+import { coloreEdificioMappa, renderCityMapPng, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
 import { esportaCittaJson, leggiCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
@@ -969,17 +969,32 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
   const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema()), nomeFile(n, "json"));
   /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */
+  /** Riquadro delle modifiche per il PNG (Planner ed editor): undefined se la
+   *  città non è modificata ("Modifica città"). */
+  const riepilogoPng = (): RiepilogoPng | undefined => {
+    const voci = (l: Array<{ name: string; w: number; h: number; extra?: string }>) => {
+      const m = new Map<string, { v: (typeof l)[number]; n: number }>();
+      for (const v of l) { const k = `${v.name}|${v.w}x${v.h}|${v.extra ?? ""}`; const e = m.get(k); if (e) e.n++; else m.set(k, { v, n: 1 }); }
+      return [...m.values()].sort((a, b) => a.v.name.localeCompare(b.v.name))
+        .map(({ v, n }) => `${n > 1 ? `${n}× ` : ""}${v.name}  (${v.w}×${v.h})${v.extra ? ` · ${v.extra}` : ""}`);
+    };
+    const tolti = cittaVera.filter(b => modifiche.tolti.has(b.mapEntityId));
+    const celle = (l: Array<{ w: number; h: number }>) => l.reduce((t, b) => t + b.w * b.h, 0);
+    const aggiunti = modifiche.aggiunti.map(a => ({ ...a.c, extra: t(a.fonte === "inv" ? "plannerEditFromInventory" : "plannerEditFromDatabase", uiLang) }));
+    return contaModifiche(modifiche) ? {
+      titolo: t("plannerPngChangesTitle", uiLang),
+      tolti: { titolo: t("plannerPngRemovedTitle", uiLang, tolti.length, celle(tolti)), voci: voci(tolti) },
+      aggiunti: { titolo: t("plannerPngAddedTitle", uiLang, aggiunti.length, celle(aggiunti)), voci: voci(aggiunti) },
+      nota: t("plannerPngChangesNote", uiLang),
+    } : undefined;
+  };
   const scaricaPng = (f: PlannerFrame, n: VName) => {
     const edifici = edificiFrame(f, n);
     const aree = areeProblema();
     try {
       const canvas = document.createElement("canvas");
-      // "Modifica città": edifici aggiunti col bordo bianco, tolti elencati in basso
-      const tolti = cittaVera.filter(b => modifiche.tolti.has(b.mapEntityId)).map(b => b.name);
-      const nota = contaModifiche(modifiche)
-        ? [modifiche.aggiunti.length ? t("plannerPngAdded", uiLang, modifiche.aggiunti.length) : "", tolti.length ? t("plannerPngRemoved", uiLang, tolti.join(", ")) : ""].filter(Boolean).join(" · ")
-        : undefined;
-      renderCityMapPng(canvas, edifici.map(b => (eNuovo(b.mapEntityId) ? { ...b, nuovo: true } : b)), aree, 2, t("legendTownHall", uiLang), nota);
+      // "Modifica città": edifici aggiunti col bordo bianco e riquadro delle modifiche (riepilogoPng)
+      renderCityMapPng(canvas, edifici.map(b => (eNuovo(b.mapEntityId) ? { ...b, nuovo: true } : b)), aree, 2, t("legendTownHall", uiLang), riepilogoPng());
       const link = document.createElement("a");
       link.download = nomeFile(n, "png");
       link.href = canvas.toDataURL("image/png");
@@ -1033,7 +1048,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         isGreatBuilding: b.isGreatBuilding || grandiEdifici.has(mid), roadLevel: byId.get(mid)?.roadLevel ?? b.roadLevel,
       });
     }
-    w.postMessage({ tipo: "carica", token: e.token, titolo: titoloScenario(e.n), json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang }, location.origin);
+    // edifici aggiunti con "Modifica città" (id del JSON) e riquadro delle modifiche, per il PNG dell'editor
+    const nuovi = [...e.idMap].filter(([, mid]) => eNuovo(mid)).map(([jid]) => jid);
+    w.postMessage({ tipo: "carica", token: e.token, titolo: titoloScenario(e.n), json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang, nuovi, riepilogo: riepilogoPng() }, location.origin);
   };
   /** Applica la città rimandata dall'editor; restituisce gli errori (vuoto = applicata). */
   const applicaDaEditor = (e: InfoEditor, dati: unknown): string[] => {

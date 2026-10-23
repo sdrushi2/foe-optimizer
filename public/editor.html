@@ -322,6 +322,10 @@ function applicaLingua(l) {
 }
 let nomeMunicipio = 'Municipio';   // dal tool arriva la traduzione nella sua lingua
 let nomeMunicipioDaTool = false;
+// "Modifica città" del Planner: id (del JSON) degli edifici aggiunti e riquadro
+// delle modifiche per il PNG, come il PNG del Planner (vuoti se aperto da file)
+let nuoviDalPlanner = new Set();
+let riepilogoPng = null;
 
 let fonte = null;          // { ents, areeRaw, celle:Set, strada:{eid,name,w,h}|null, strada2 (2×2)|null }
 // Canale col Planner: token dell'apertura (null = editor usato da solo)
@@ -740,11 +744,12 @@ document.getElementById('png').addEventListener('click', () => {
     const i = e.item;
     return { x: i.x, y: i.y, w: i.w, h: i.h, type: i.type, name: i.name, colore: i.colore,
              isGreatBuilding: i.type === 'greatbuilding' || String(i.eid).startsWith('X_'),
-             isMilitary: i.type === 'military', roadLevel: i.noRoad ? 0 : (i.livello || 1) };
+             isMilitary: i.type === 'military', roadLevel: i.noRoad ? 0 : (i.livello || 1),
+             nuovo: nuoviDalPlanner.has(String(i.id)) };
   });
   try {
     const canvas = document.createElement('canvas');
-    C.renderCityMapPng(canvas, edifici, fonte.areeRaw, 2, nomeMunicipio);
+    C.renderCityMapPng(canvas, edifici, fonte.areeRaw, 2, nomeMunicipio, riepilogoPng || undefined);
     const a = document.createElement('a');
     const d = new Date(), p = n => String(n).padStart(2, '0');
     a.download = 'foe-editor-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.png';
@@ -792,7 +797,7 @@ document.getElementById('file').addEventListener('change', ev => {
   if (!f) return;
   const r = new FileReader();
   r.onload = () => {
-    try { draw(parse(JSON.parse(r.result))); stato(''); }
+    try { nuoviDalPlanner = new Set(); riepilogoPng = null; draw(parse(JSON.parse(r.result))); stato(''); }
     catch (err) { alert(tr('jsonErr') + err.message); }
   };
   r.readAsText(f);
@@ -812,6 +817,8 @@ window.addEventListener('message', ev => {
     if (m.lang) { linguaDaTool = true; applicaLingua(m.lang); }
     document.title = (dalPlanner ? 'Editor · ' + (m.titolo || 'Planner') : tr('titolo')) + ' – FoE Optimizer';
     document.getElementById('applica').hidden = !dalPlanner;
+    nuoviDalPlanner = new Set((m.nuovi || []).map(String));
+    riepilogoPng = m.riepilogo || null;
     draw(parse(m.json, m.colori));
     if (m.nomeMunicipio) { nomeMunicipio = String(m.nomeMunicipio); nomeMunicipioDaTool = true; }
     stato('');
