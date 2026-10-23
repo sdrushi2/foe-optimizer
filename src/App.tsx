@@ -4313,6 +4313,10 @@ export default function App() {
     const deferredSearchLower = isIdSearch
       ? deferredSearch.slice(1).toLowerCase()
       : deferredSearch.toLowerCase();
+    // Più ricerche separate da virgola (OR): "boutique, provviste" mostra gli
+    // edifici che contengono l'una O l'altra (per confrontarli). Vale anche per
+    // gli id: "\W_A, \W_B" (il "\" davanti a ogni parte è facoltativo).
+    const searchTerms = deferredSearchLower.split(",").map(t => t.trim().replace(/^\\/, "")).filter(Boolean);
     const prodFilterKeys = currentFilters.prodFilter.size > 0 ? [...currentFilters.prodFilter] : null;
 
     // Pre-compute minEff once outside the loop
@@ -4362,11 +4366,10 @@ export default function App() {
       const visibleNameForSearch = b.searchName;
 
       // 2. Search: per nome (default) o per CityEntityId (prefisso \).
-      if (deferredSearchLower && (
-        isIdSearch
-          ? !b.cityEntityId?.toLowerCase().includes(deferredSearchLower)
-          : !visibleNameForSearch.includes(deferredSearchLower)
-      )) continue;
+      if (searchTerms.length) {
+        const testo = isIdSearch ? (b.cityEntityId?.toLowerCase() ?? "") : visibleNameForSearch;
+        if (!searchTerms.some(t => testo.includes(t))) continue;
+      }
 
       // 3. Filtered outdated (solo tab Città). Le righe merged da Inventario
       // non sono istanze piazzate: non hanno un'era da confrontare, quindi

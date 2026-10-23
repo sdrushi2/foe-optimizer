@@ -1,7 +1,7 @@
 FoE OPTIMIZER - NOVITA' E AGGIORNAMENTI
 =======================================
 
-23/10  Planner: nuovo scenario "Configurazione attuale"; "Modifica città" per provare la città togliendo e aggiungendo edifici.
+23/10  Planner: nuovo scenario "Configurazione attuale"; "Modifica città" per provare la città togliendo e aggiungendo edifici. Ricerca di più edifici separati da virgola.
 22/10  Video tutorial del Planner.
 21/10  Planner: supporto alle strade a due corsie; scelta degli edifici militari da collegare; nuovo scenario Raccordo a 5; scelta della potenza della CPU (MIN/MED/MAX); Planner in inglese.
 20/10  Planner: più ricerche in parallelo, meno strade.
