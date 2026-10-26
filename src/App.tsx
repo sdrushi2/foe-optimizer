@@ -4466,12 +4466,16 @@ export default function App() {
   }, [activeTab, filteredBuildings, selectedIds]);
 
   const filteredAllies = useMemo(() => {
-    const searchLower = deferredSearch.toLowerCase();
+    // Come per gli edifici: più ricerche separate da virgola (OR).
+    const searchParts = deferredSearch.toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
     const result: Array<Allies.ComputedAllyStats & typeof ALLIES_FROM_CSV[0] & { level: number; currentEff: number }> = [];
 
     for (const ally of ALLIES_FROM_CSV) {
       // Search filter (hoisted out of inner loops)
-      if (!allyName(ally.id, gameLang).toLowerCase().includes(searchLower)) continue;
+      if (searchParts.length) {
+        const nome = allyName(ally.id, gameLang).toLowerCase();
+        if (!searchParts.some(s => nome.includes(s))) continue;
+      }
 
       // Rarity filter
       if (allyRarityFilters[ally.rarity] === false) continue;
@@ -4524,7 +4528,7 @@ export default function App() {
   const processedImportedAllies = useMemo(() => {
     if (importedAllies.length === 0) return [];
 
-    const searchLower = deferredSearch.toLowerCase();
+    const searchParts = deferredSearch.toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
     const result: Array<
       Allies.ComputedAllyStats & typeof ALLIES_FROM_CSV[0] & {
@@ -4544,7 +4548,7 @@ export default function App() {
       // Search filter (hoisted — avoids .toLowerCase() per ally inside .filter())
       const nameLC = allyName(csvAlly.id, gameLang).toLowerCase();
       const idLC = csvAlly.id.toLowerCase();
-      if (!nameLC.includes(searchLower) && !idLC.includes(searchLower)) continue;
+      if (searchParts.length && !searchParts.some(s => nameLC.includes(s) || idLC.includes(s))) continue;
 
       // Rarity filter
       if (allyRarityFilters[csvAlly.rarity] !== true) continue;

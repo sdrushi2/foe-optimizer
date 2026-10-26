@@ -54,8 +54,19 @@ export interface RibbonGroup {
   label: string;
   icon: LucideIcon;
   rows: RibbonItem[][];
+  /** Spiegazione facoltativa: un "?" accanto all'etichetta, col testo nel suggerimento. */
+  help?: string;
   /** Più è alta, più a lungo il gruppo resta grande (predefinita 0). */
   priority?: number;
+}
+
+/** Il "?" dell'etichetta di un gruppo: spiegazione nel suggerimento al passaggio del mouse. */
+function Aiuto({ testo }: { testo?: string }) {
+  if (!testo) return null;
+  return (
+    <span title={testo} aria-label={testo} role="img"
+      className="ml-1 inline-flex h-3 w-3 cursor-help items-center justify-center rounded-full border border-slate-600 align-[1px] text-[8px] leading-none font-bold text-slate-400 hover:border-sky-500 hover:text-sky-300">?</span>
+  );
 }
 
 const ORDINE: ModoGruppo[] = ["L", "M", "S", "C"];
@@ -201,7 +212,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
                   <ContenutoGruppo g={g} modo={modo} />
                 )}
               </div>
-              <div className="h-4 shrink-0 leading-4 whitespace-nowrap text-slate-500">{modo === "C" ? " " : g.label}</div>
+              <div className="h-4 shrink-0 leading-4 whitespace-nowrap text-slate-500">{modo === "C" ? " " : <>{g.label}<Aiuto testo={g.help} /></>}</div>
             </div>
           );
         })}
@@ -210,7 +221,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
         <div ref={rifPannello} style={{ left: Math.max(0, aperto.left), top: aperto.top }}
           className="absolute z-50 flex flex-col items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl">
           <ContenutoGruppo g={groups[aperto.indice]!} modo="L" />
-          <div className="text-[11px] text-slate-500">{groups[aperto.indice]!.label}</div>
+          <div className="text-[11px] text-slate-500">{groups[aperto.indice]!.label}<Aiuto testo={groups[aperto.indice]!.help} /></div>
         </div>
       )}
     </div>

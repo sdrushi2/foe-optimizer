@@ -118,7 +118,10 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         </label>
       ),
   };
-  const ricerca: RibbonGroup = { id: "ricerca", label: L("r2GrpSearch"), icon: Search, priority: 2, rows: [[campoRicerca]] };
+  // Il "?" spiega come cercare: gli alleati non hanno la ricerca per id con "\".
+  const sonoAlleati = scheda === "alleati" || (scheda === "database" && c.catalogo === "alleati");
+  const ricerca: RibbonGroup = { id: "ricerca", label: L("r2GrpSearch"), icon: Search, priority: 2,
+    help: L(sonoAlleati ? "r2SearchHelpAllies" : "r2SearchHelp"), rows: [[campoRicerca]] };
   const inArrivo = L("r2Soon");
   const interruttore = (k: keyof ContestoNastri["vista"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], titolo?: Parameters<typeof t>[0]): RibbonItem => ({
     kind: "button", id: k, icon, label: L(etichetta), title: titolo ? L(titolo) : undefined,

@@ -122,6 +122,14 @@ const UI_STRINGS = {
   r2Bookmarklet: { it: "Bacchetta magica", en: "Magic wand" },
   r2About: { it: "Informazioni", en: "About" },
   r2Search: { it: "Cerca…", en: "Search…" },
+  r2SearchHelp: {
+    it: "Come cercare:\n• Per nome: scrivi una parte del nome (maiuscole e minuscole sono uguali), es. \"boutique\".\n• Per id: metti \"\\\" davanti, es. \"\\W_MultiAge_SUM24\".\n• Più ricerche insieme: separale con la virgola, es. \"boutique, provviste\" mostra gli edifici che contengono l'una o l'altra.\n  Vale anche per gli id: \"\\W_A, W_B\".",
+    en: "How to search:\n• By name: type part of the name (case doesn't matter), e.g. \"boutique\".\n• By id: put \"\\\" in front, e.g. \"\\W_MultiAge_SUM24\".\n• Several searches at once: separate them with a comma, e.g. \"boutique, supplies\" shows the buildings matching either.\n  Works for ids too: \"\\W_A, W_B\".",
+  },
+  r2SearchHelpAllies: {
+    it: "Come cercare:\n• Scrivi una parte del nome dell'alleato (maiuscole e minuscole sono uguali).\n• Più ricerche insieme: separale con la virgola, es. \"falco, regina\" mostra gli alleati che contengono l'una o l'altra.",
+    en: "How to search:\n• Type part of the ally's name (case doesn't matter).\n• Several searches at once: separate them with a comma, e.g. \"falcon, queen\" shows the allies matching either.",
+  },
   // Nastro Database (2.0): Filtri, Visualizza; Opzioni: Pesi statistiche
   r2GrpFilters: { it: "Filtri", en: "Filters" },
   r2GrpView: { it: "Visualizza", en: "View" },
