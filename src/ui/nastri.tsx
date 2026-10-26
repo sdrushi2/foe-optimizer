@@ -11,7 +11,7 @@
 //  Opzioni (Pesi).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, type LucideIcon } from "lucide-react";
+import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, type LucideIcon } from "lucide-react";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -268,6 +268,15 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       ]] }, { id: "tema", label: L("r2GrpTheme"), icon: Moon, rows: [[
         { kind: "button", id: "scuro", icon: Moon, label: L("r2Dark"), active: c.tema === "dark", onClick: () => c.setTema("dark") },
         { kind: "button", id: "chiaro", icon: Sun, label: L("r2Light"), active: c.tema === "light", onClick: () => c.setTema("light") },
+      ]] }, { id: "azzera", label: L("r2GrpReset"), icon: Eraser, rows: [[
+        // Svuota TUTTO il localStorage del sito (città, impostazioni, pesi,
+        // tema, lingua, qualunque chiave) e ricarica: l'app riparte da zero.
+        { kind: "button", id: "azzera", icon: Eraser, label: L("r2ResetAll"), title: L("r2ResetAllTitle"), danger: true,
+          onClick: () => {
+            if (!window.confirm(L("r2ResetAllConfirm"))) return;
+            try { localStorage.clear(); } catch { /* storage non disponibile */ }
+            window.location.reload();
+          } },
       ]] }];
     case "guida":
       return [
