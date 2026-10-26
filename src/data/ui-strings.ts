@@ -2080,6 +2080,7 @@ const UI_STRINGS = {
     it: "Scelta:",
     en: "Choice:",
   },
+  r2JsonCityTip: { it: "Città importata da JSON", en: "City imported from JSON" },
   r2AvatarJson: { it: "Città da file JSON: l'avatar non è salvato nel file", en: "City from a JSON file: the avatar is not stored in the file" },
   avatarOutdatedTitle: {
     it: "Avatar non disponibile: stai usando una versione vecchia della bacchetta magica. Aggiorna il bookmarklet e reimporta i dati per vedere il tuo avatar.",

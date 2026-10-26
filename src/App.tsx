@@ -5829,7 +5829,9 @@ export default function App() {
         avatar: portraitUrl || null,
         era: currentEra ? ageName(currentEra, gameLang) : null,
         id: p?.playerId ?? null,
-        visitata: tipoAttiva === "visitata",
+        // città da JSON: è "visitata" per il modello, ma nel suggerimento si dice che viene da un file
+        visitata: tipoAttiva === "visitata" && p?.origine !== "json",
+        daJson: p?.origine === "json",
       };
     })(),
     tri: { stati: currentFilters.tri, gira: giraTri },

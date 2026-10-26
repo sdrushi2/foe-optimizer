@@ -28,7 +28,7 @@ const AVATAR_SCONOSCIUTO = "https://foezz.innogamescdn.com/assets/shared/avatars
 
 export function BloccoGiocatore({ g, modo, uiLang }: { g: DatiGiocatore; modo: ModoGruppo; uiLang: UiLang }) {
   const dettagli = g.id !== null ? `ID ${g.id}` : "";
-  const titolo = [g.nome, g.era, dettagli, g.visitata ? t("r2VisitedCity", uiLang) : null].filter(Boolean).join("\n");
+  const titolo = [g.nome, g.era, dettagli, g.daJson ? t("r2JsonCityTip", uiLang) : g.visitata ? t("r2VisitedCity", uiLang) : null].filter(Boolean).join("\n");
   const avatar = (
     <img src={g.avatar ?? AVATAR_SCONOSCIUTO} alt=""
       title={g.avatar ? undefined : t(g.daJson ? "r2AvatarJson" : "avatarOutdatedTitle", uiLang)}
