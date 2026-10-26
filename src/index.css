@@ -398,6 +398,10 @@ html { scrollbar-gutter: stable; }
   .building-table tbody td.cell-name.unique {
     color: gold;
   }
+  /* tema chiaro: "gold" su bianco non si legge → oro scuro */
+  :root[data-theme="light"] .building-table tbody td.cell-name.unique {
+    color: #a16207;
+  }
 
   /* Variante flex: SOLO <td> del body della tabella principale edifici
      (.has-name-divider, sempre presente su di essa, mai sulle tabelle

@@ -13,8 +13,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Anchor, BookOpen, Building2, Check, Database, Map as MapIcon, Package, Settings, Swords, Users, Wand2, X, type LucideIcon } from "lucide-react";
 import { BOOKMARKLET_JS } from "../data/bookmarklet";
 import Ribbon, { type RibbonGroup } from "./ribbon/Ribbon";
-import { t, UI_LANGUAGES, type UiLang } from "../data/ui-strings";
+import { t, type UiLang } from "../data/ui-strings";
 import SelettoreCitta, { type VoceCitta } from "./SelettoreCitta";
+import SelettoreLingua from "./SelettoreLingua";
 
 export type Scheda = "database" | "citta" | "inventario" | "planner" | "alleati" | "insediamenti" | "opzioni" | "guida";
 
@@ -140,10 +141,8 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
         {/* Versione: sempre visibile, in grigio, accanto alla lingua. */}
         <span className="ml-auto flex shrink-0 items-center gap-2 self-center pl-2">
           <span className="font-mono text-[12px] text-slate-500" title={t("r2VersionTitle", uiLang)}>{versione}</span>
-          <select value={uiLang} onChange={(e) => onLingua(e.currentTarget.value as UiLang)} title={t("r2LangTitle", uiLang)}
-            className="h-7 rounded-md border border-slate-700 bg-slate-950 px-1.5 text-slate-200 hover:border-slate-600">
-            {UI_LANGUAGES.map(l => <option key={l.code} value={l.code} title={l.nativeName}>{l.code.toUpperCase()}</option>)}
-          </select>
+          {/* lingua con le bandiere, come nella 1.x */}
+          <SelettoreLingua uiLang={uiLang} onLingua={onLingua} />
         </span>
       </div>
       <Ribbon groups={gruppi} />
