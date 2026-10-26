@@ -1099,16 +1099,14 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const puoAnnullaMan = (paused || !running) && !smussando && visibili.some(sc => manuali[sc.id]);
   const nModifiche = contaModifiche(modifiche);
   // "Statistiche attuali" (gruppo del nastro, in fondo): la città com'è ora.
+  // Stessi conteggi delle righe degli scenari ("Con strada x/N", "Senza
+  // strada x/N"): edifici del problema, municipio escluso, militari che
+  // Alcatraz / Nave rendono senza strada già tra i "senza strada".
   const statistiche = useMemo(() => {
-    let conStrada = 0, senzaStrada = 0;
-    for (const b of cityMapBuildings) {
-      if (b.type === "street") continue;
-      if ((b.roadLevel ?? 1) > 0) conStrada++; else senzaStrada++;
-    }
     let aCatena = 0;
     for (const bl of catene.blocchi.values()) aCatena += bl.membri.length;
-    return { conStrada, senzaStrada, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
-  }, [cityMapBuildings, catene, problem, edificiSet]);
+    return { conStrada: conStrada.length, senzaStrada: senzaStrada.length, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
+  }, [conStrada, senzaStrada, catene, problem, edificiSet]);
   const nomiSet = [...new Set(edificiSet.map(b => b.name))].sort().join(", ");
   const titoloCpu = (() => {
     // diagnostica: quanti core vede il browser, ricerche e pause calcolate
