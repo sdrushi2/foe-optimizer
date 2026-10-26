@@ -9,19 +9,23 @@ import { manifestDati, verificaDati } from "./scripts/dati-pubblici.ts";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Versione automatica: v1.<giorno dell'anno>
+// Versione automatica (2.0): v2.<giorni dal 26/10/2026>, a tre cifre.
+// Il 26 ottobre 2026 è v2.000, il giorno dopo v2.001, e così via (conteggio
+// continuo, non riparte a inizio anno). Giorni di calendario locali, contati
+// in UTC per non sbagliare di un giorno al cambio dell'ora legale.
 const now = new Date();
-const startOfYear = new Date(now.getFullYear(), 0, 1);
-const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+const GIORNO_ZERO = Date.UTC(2026, 9, 26);
+const oggi = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+const giorni = Math.max(0, Math.round((oggi - GIORNO_ZERO) / 86_400_000));
 
-// Versione VISIBILE nell'header dell'app: leggibile, stabile per giorno (es. v1.178).
-const BUILD_VERSION = `v1.${dayOfYear}`;
+// Versione VISIBILE nell'header dell'app: leggibile, stabile per giorno (es. v2.000).
+const BUILD_VERSION = `v2.${String(giorni).padStart(3, "0")}`;
 
 // Versione del NOME CACHE del service worker: deve essere unica ad OGNI build,
 // non solo ogni giorno, altrimenti due build nello stesso giorno avrebbero lo
 // stesso nome cache e il SW non invaliderebbe la cache vecchia (gli utenti
 // resterebbero su una versione obsoleta). Aggiungiamo il timestamp di build.
-const SW_CACHE_VERSION = `v1.${dayOfYear}-${now.getTime()}`;
+const SW_CACHE_VERSION = `${BUILD_VERSION}-${now.getTime()}`;
 const BUILD_DATE = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
 // Plugin: genera dist/sw.js dal template sw-template.js, iniettando la versione
