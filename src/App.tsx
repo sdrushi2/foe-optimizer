@@ -33,8 +33,9 @@ import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats 
 import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import { esportaCittaJson, scaricaJson } from "./data/cityMapJson";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
-import ProfileHelpModal from "./components/ProfileHelpModal";
-import AboutModal from "./components/AboutModal";
+import PannelloImporta from "./ui/PannelloImporta";
+import VideoTutorial from "./planner/VideoTutorial";
+import PannelloInformazioni from "./ui/PannelloInformazioni";
 import { infoImport, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
@@ -2127,8 +2128,8 @@ export default function App() {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [isInventoryDebugOpen, setIsInventoryDebugOpen] = useState(false);
   const [isEfficiencyHelpOpen, setIsEfficiencyHelpOpen] = useState(false);
-  const [isProfileHelpOpen, setIsProfileHelpOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  // 2.0: pannelli della scheda Guida (aperti dal nastro, come Statistiche e Debug)
+  const [pannelloGuida, setPannelloGuida] = useState<"info" | "importa" | "planner" | null>(null);
   // 2.0: scheda Opzioni/Guida aperta (solo nastro), tema chiaro/scuro
   const [schedaExtra, setSchedaExtra] = useState<"opzioni" | "guida" | null>(null);
   // 2.0: catalogo scelto nel Database. Il catalogo Alleati usa la vista
@@ -5768,7 +5769,9 @@ export default function App() {
     haCitteSalvate: profiles.length > 0,
     haCitta, mappa: showCityMap,
     onMappa: () => { const v = !showCityMap; setShowCityMap(v); localStorage.setItem(SHOW_CITY_MAP_KEY, String(v)); },
-    tema, setTema, onInformazioni: () => setIsAboutOpen(true), onAiutoBacchetta: () => setIsProfileHelpOpen(true),
+    tema, setTema, informazioni: { attivo: pannelloGuida === "info", cambia: () => setPannelloGuida(p => (p === "info" ? null : "info")) },
+    comeImportare: { attivo: pannelloGuida === "importa", cambia: () => setPannelloGuida(p => (p === "importa" ? null : "importa")) },
+    comeUsarePlanner: { attivo: pannelloGuida === "planner", cambia: () => setPannelloGuida(p => (p === "planner" ? null : "planner")) },
     filtri: {
       uiLang,
       eventi: EVENTS_LIST.map(ev => ({ id: ev.id, nome: eventName(ev, uiLang), gruppo: ev.isGroup })),
@@ -5924,6 +5927,15 @@ export default function App() {
       <main className={`flex-1 px-2 ${activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario" || (activeTab === "alleati" && alleatiDaDb) ? "pt-0" : "pt-1"} pb-4 flex flex-col gap-4 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
 
         <section className={`flex-1 flex flex-col gap-2 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
+
+          {/* 2.0: pannelli della Guida (sopra il contenuto dell'ultima scheda di lavoro) */}
+          {schedaCorrente === "guida" && pannelloGuida !== null && (
+            <div className="px-3 py-2">
+              {pannelloGuida === "info" ? <PannelloInformazioni uiLang={uiLang} versione={__BUILD_VERSION__} />
+                : pannelloGuida === "importa" ? <PannelloImporta uiLang={uiLang} />
+                : <VideoTutorial uiLang={uiLang} />}
+            </div>
+          )}
           
           {/* 2.0: avatar ed era sono nel gruppo "Giocatore" del nastro; il riquadro
               compare solo con un pannello aperto (Statistiche, Debug, Cambio era). */}
@@ -6757,19 +6769,6 @@ export default function App() {
         </section>
       </main>
 
-      {/* ── Modale Help Profili & Bacchetta Magica ──────────────────────── */}
-      {/* ── Modale Chi sono · Contatti ───────────────────────────────────── */}
-      <AboutModal
-        isOpen={isAboutOpen}
-        onClose={() => setIsAboutOpen(false)}
-        uiLang={uiLang}
-      />
-
-      <ProfileHelpModal
-        isOpen={isProfileHelpOpen}
-        onClose={() => setIsProfileHelpOpen(false)}
-        uiLang={uiLang}
-      />
 
       {/* ── Modale Import Sessione ────────────────────────────────────────── */}
       {isImportModalOpen && (

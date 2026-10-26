@@ -1115,7 +1115,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     return t("plannerCpuTitle", uiLang, core, n, c.semi, Math.round(lavoro * 100), Math.round((100 * n * c.semi * lavoro) / core));
   })();
   const firmaNastro = [running, paused, completando, anySearching, anyFilling, smussando, puoAnnullaCompl, puoAnnullaMan,
-    !!esterna, nModifiche, pannelloModifica, potenza, titoloCpu, uiLang,
+    !!esterna, nModifiche, pannelloModifica, videoAperto, potenza, titoloCpu, uiLang,
     mappa?.attiva ?? "-", statistiche.conStrada, statistiche.senzaStrada, statistiche.strade, statistiche.aCatena, statistiche.set, nomiSet].join("|");
   const mappaRef = useRef(mappa);
   mappaRef.current = mappa;
@@ -1158,7 +1158,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           ))}
         </span>
       ) }]] },
-      { id: "pl-aiuto", label: L("r2GrpHelp"), icon: Clapperboard, rows: [[b("video", Clapperboard, L("r2PlVideo"), () => setVideoAperto(true), { title: L("plannerVideoTitle") })]] },
+      { id: "pl-aiuto", label: L("r2GrpHelp"), icon: Clapperboard, rows: [[b("video", Clapperboard, L("r2PlVideo"), () => setVideoAperto(v => !v), { title: L("plannerVideoTitle"), active: videoAperto })]] },
       { id: "pl-statistiche", label: L("r2GrpCurrentStats"), icon: ChartColumn, rows: [[{ kind: "custom", id: "statistiche", render: () => {
         const voce = (etichetta: string, valore: number, avviso?: string) => (
           <span className={`flex items-center justify-between gap-2 whitespace-nowrap ${avviso ? "rounded border border-amber-500/70 bg-amber-950/60 px-1 text-amber-200" : ""}`} title={avviso}>
@@ -1191,7 +1191,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           <span className="text-red-300">{t("plannerUnsuitable", uiLang)}</span>
         </div>
       )}
-      {videoAperto && <VideoTutorial onClose={() => setVideoAperto(false)} uiLang={uiLang} />}
+      {videoAperto && <div className="px-3 pt-2"><VideoTutorial uiLang={uiLang} /></div>}
       {pannelloModifica && !esterna && (
         <ModificaCitta citta={cittaVera} cittaModificata={cityMapBuildings} modifiche={modifiche} setModifiche={setModifiche}
           candidati={candidati} celleSbloccate={problem.cells.size} bloccato={running && !paused} inCorsa={running}

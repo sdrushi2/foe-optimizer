@@ -30,8 +30,12 @@ export interface ContestoNastri {
   onMappa: () => void;
   tema: Tema;
   setTema: (t: Tema) => void;
-  onInformazioni: () => void;
-  onAiutoBacchetta: () => void;
+  /** Guida › Informazioni: pannello che si apre e si chiude (non più popup). */
+  informazioni: Interruttore;
+  /** Guida › Come importare la città: pannello che si apre e si chiude (non più popup). */
+  comeImportare: Interruttore;
+  /** Guida › Come usare il planner: pannello col video (lo stesso della scheda Planner). */
+  comeUsarePlanner: Interruttore;
   onEliminaTutte: () => void;
   /** 2.0: città "ridotta" da un file JSON (nostro export, Planner, Forge Hammer). */
   onImportaCittaJson: () => void;
@@ -282,10 +286,11 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       return [
         { id: "impara", label: L("r2GrpLearn"), icon: BookOpen, rows: [[
           { kind: "button", id: "guida", icon: BookOpen, label: L("r2Guide"), onClick: () => window.open(c.uiLang === "it" ? "/guida.html" : "/guide.html", "_blank", "noopener") },
-          { kind: "button", id: "bacchetta", icon: Wand2, label: L("r2Bookmarklet"), onClick: c.onAiutoBacchetta },
+          tasto("bacchetta", c.comeImportare, Wand2, "r2ImportHow"),
+          tasto("planner", c.comeUsarePlanner, MapIcon, "r2PlannerHow"),
         ]] },
         { id: "info", label: L("r2GrpInfo"), icon: Info, rows: [[
-          { kind: "button", id: "info", icon: Info, label: L("r2About"), onClick: c.onInformazioni },
+          tasto("info", c.informazioni, Info, "r2About"),
         ]] },
       ];
   }

@@ -36,8 +36,8 @@ const UI_STRINGS = {
     en: "Delete profile",
   },
   wandTitle: {
-    it: "Trascina nella barra indirizzi per creare un bookmark da premere sul gioco · Click per importare tutti i dati della città in un nuovo profilo",
-    en: "Drag to the bookmarks bar to create a bookmark you can click in-game · Click to import all city data into a new profile",
+    it: "Clic: importa la città copiata dal segnalibro · Trascinala nella barra dei preferiti per creare il segnalibro da usare nel gioco",
+    en: "Click: import the city copied by the bookmark · Drag it to the bookmarks bar to create the bookmark to use in the game",
   },
   exportNoProfiles: {
     it: "Nessun profilo da salvare",
@@ -58,10 +58,6 @@ const UI_STRINGS = {
   deleteAllNoProfiles: {
     it: "Nessun profilo da eliminare",
     en: "No profiles to delete",
-  },
-  profileHelpTitle: {
-    it: "Guida ai profili e all'importazione della città",
-    en: "Guide to profiles and city import",
   },
 
   // ── Tab di navigazione ────────────────────────────────────────────────
@@ -123,8 +119,107 @@ const UI_STRINGS = {
   r2Dark: { it: "Scuro", en: "Dark" },
   r2Light: { it: "Chiaro", en: "Light" },
   r2Guide: { it: "Guida", en: "Guide" },
-  r2Bookmarklet: { it: "Bacchetta magica", en: "Magic wand" },
+  r2ImportHow: { it: "Come importare la città", en: "How to import your city" },
+  r2PlannerHow: { it: "Come usare il planner", en: "How to use the planner" },
+  r2PlannerHowIntro: {
+    it: "Il video tutorial mostra passo passo come usare il Planner.",
+    en: "The video tutorial shows step by step how to use the Planner (video in Italian).",
+  },
+  r2ImpIntro: {
+    it: "La bacchetta magica porta qui la tua città dal gioco con due clic: un segnalibro copia i dati mentre giochi, la bacchetta li legge e li importa. Si prepara una volta sola.",
+    en: "The magic wand brings your city here from the game in two clicks: a bookmark copies the data while you play, the wand reads and imports it. You only set it up once.",
+  },
+  r2ImpSteps: { it: "I passi", en: "Steps" },
+  r2ImpStep1: { it: "Installa FoE Helper o Forge Hammer", en: "Install FoE Helper or Forge Hammer" },
+  r2ImpStep1Body: {
+    it: "Sono estensioni gratuite del browser, non fanno parte di questo progetto: leggono i dati di Forge of Empires mentre giochi. Ne basta una.",
+    en: "These are free browser extensions, not part of this project: they read Forge of Empires data while you play. One is enough.",
+  },
+  r2ImpStep2: { it: "Trascina la bacchetta nella barra dei preferiti", en: "Drag the wand to your bookmarks bar" },
+  r2ImpStep2Body: {
+    it: "Tieni premuto sul pulsante verde (questo qui o quello in alto, accanto al nome del tool) e lascialo nella barra dei preferiti: diventa un segnalibro, che puoi rinominare come vuoi.",
+    en: "Press and hold the green button (this one or the one at the top, next to the tool's name) and drop it on your bookmarks bar: it becomes a bookmark you can rename as you like.",
+  },
+  r2ImpStep2Tip: {
+    it: "La barra dei preferiti non si vede? Mostrala con Ctrl+Maiusc+B (Cmd+Maiusc+B su Mac).",
+    en: "Can't see the bookmarks bar? Show it with Ctrl+Shift+B (Cmd+Shift+B on Mac).",
+  },
+  r2ImpDragTitle: { it: "Trascinami nella barra dei preferiti", en: "Drag me to the bookmarks bar" },
+  r2ImpStep3: { it: "Nel gioco, clicca il segnalibro", en: "In the game, click the bookmark" },
+  r2ImpStep3Body: {
+    it: "Con Forge of Empires aperto e l'estensione attiva, clicca il segnalibro: copia in silenzio i dati negli appunti del computer. Se qualcosa non va, compare un messaggio.",
+    en: "With Forge of Empires open and the extension active, click the bookmark: it silently copies the data to your computer's clipboard. If something goes wrong, a message appears.",
+  },
+  r2ImpStep4: { it: "Torna qui e clicca la bacchetta", en: "Come back here and click the wand" },
+  r2ImpStep4Body: {
+    it: "FoE Optimizer legge gli appunti e importa la città. La prima volta il browser può chiederti il permesso di leggere gli appunti: concedilo.",
+    en: "FoE Optimizer reads the clipboard and imports the city. The first time, your browser may ask for permission to read the clipboard: allow it.",
+  },
+  r2ImpUpdateTitle: { it: "Per aggiornare:", en: "To update:" },
+  r2ImpUpdateBody: {
+    it: "ripeti i passi 3 e 4. La città viene riconosciuta dall'id del giocatore e aggiornata, senza crearne una copia.",
+    en: "repeat steps 3 and 4. The city is recognised by the player id and updated, without creating a copy.",
+  },
+  r2ImpVideo: { it: "Video tutorial", en: "Video tutorial" },
+  r2ImpVideoNote: {
+    it: "Il video mostra l'interfaccia della versione 1: i passi sono gli stessi.",
+    en: "The video shows the version 1 interface: the steps are the same.",
+  },
+  r2ImpWhat: { it: "Cosa viene importato", en: "What gets imported" },
+  r2ImpWhatMine: { it: "La tua città:", en: "Your city:" },
+  r2ImpWhatMineBody: {
+    it: "mappa ed edifici, inventario, alleati e magazzino.",
+    en: "map and buildings, inventory, allies and storage.",
+  },
+  r2ImpWhatVisited: { it: "La città di un altro giocatore:", en: "Another player's city:" },
+  r2ImpWhatVisitedBody: {
+    it: "clicca il segnalibro mentre la visiti; entra come città visitata (solo la mappa: il gioco non mostra inventario e alleati degli altri).",
+    en: "click the bookmark while visiting it; it is added as a visited city (map only: the game doesn't show other players' inventory and allies).",
+  },
+  r2ImpWhatPirates: { it: "L'Insediamento dei Pirati:", en: "The Pirate Settlement:" },
+  r2ImpWhatPiratesBody: {
+    it: "se l'hai aperto nella sessione di gioco, arriva insieme alla città e lo trovi nella scheda Insediamenti.",
+    en: "if you opened it during the game session, it comes along with the city and you'll find it in the Settlements tab.",
+  },
+  r2ImpOther: { it: "Altri modi", en: "Other ways" },
+  r2ImpOtherJson: { it: "Da un file JSON:", en: "From a JSON file:" },
+  r2ImpOtherJsonBody: {
+    it: "Opzioni › Importa da JSON (o dal selettore delle città) legge l'export di FoE Optimizer o il piano di Forge Hammer.",
+    en: "Options › Import from JSON (or the city selector) reads a FoE Optimizer export or a Forge Hammer plan.",
+  },
+  r2ImpOtherBackup: { it: "Backup:", en: "Backup:" },
+  r2ImpOtherBackupBody: {
+    it: "Opzioni › Esporta tutto salva tutte le città in un file; Ripristina le riporta qui, anche su un altro computer.",
+    en: "Options › Export all saves every city to a file; Restore brings them back, even on another computer.",
+  },
+  r2ImpPrivacy: {
+    it: "Il segnalibro copia solo i dati che l'estensione mette a disposizione, e solo negli appunti del tuo computer: non viene inviato nulla a nessun server.",
+    en: "The bookmark copies only the data the extension provides, and only to your computer's clipboard: nothing is sent to any server.",
+  },
   r2About: { it: "Informazioni", en: "About" },
+  r2InfoProject: { it: "Il progetto", en: "The project" },
+  r2InfoAmateur: {
+    it: "FoE Optimizer è un progetto amatoriale e gratuito, nato e sviluppato nel tempo libero da un giocatore di Forge of Empires per gli altri giocatori.",
+    en: "FoE Optimizer is a free hobby project, built in spare time by a Forge of Empires player for other players.",
+  },
+  r2InfoNotAffiliated: {
+    it: "Non è affiliato, sponsorizzato né approvato da InnoGames GmbH. Forge of Empires, i suoi nomi, le immagini e i marchi appartengono a InnoGames GmbH.",
+    en: "It is not affiliated with, sponsored or endorsed by InnoGames GmbH. Forge of Empires, its names, images and trademarks belong to InnoGames GmbH.",
+  },
+  r2InfoLocal: {
+    it: "Funziona interamente nel tuo browser: non c'è nessun server che riceva i tuoi dati, e le città importate restano salvate solo sul tuo computer.",
+    en: "It runs entirely in your browser: no server receives your data, and imported cities are saved only on your computer.",
+  },
+  r2InfoData: {
+    it: "I dati del gioco vengono aggiornati con regolarità, ma possono contenere errori: segnalazioni e suggerimenti sono sempre benvenuti.",
+    en: "Game data is updated regularly but may contain mistakes: reports and suggestions are always welcome.",
+  },
+  r2InfoContacts: { it: "Contatti", en: "Contact" },
+  r2InfoEmailNote: { it: "Segnalazioni, idee, domande", en: "Bug reports, ideas, questions" },
+  r2InfoSourcePrivacy: { it: "Codice sorgente e privacy", en: "Source code and privacy" },
+  r2InfoSourceNote: { it: "Codice sorgente pubblico su GitHub", en: "Public source code on GitHub" },
+  r2InfoSourceV2: { it: "Codice della versione 2.0", en: "Version 2.0 source code" },
+  r2InfoPrivacyNote: { it: "Quali dati usa il tool e come", en: "Which data the tool uses and how" },
   r2Search: { it: "Cerca…", en: "Search…" },
   r2SearchHelp: {
     it: "Come cercare:\n• Per nome: scrivi una parte del nome (maiuscole e minuscole sono uguali), es. \"boutique\".\n• Per id: metti \"\\\" davanti, es. \"\\W_MultiAge_SUM24\".\n• Più ricerche insieme: separale con la virgola, es. \"boutique, provviste\" mostra gli edifici che contengono l'una o l'altra.\n  Vale anche per gli id: \"\\W_A, W_B\".",
@@ -1428,110 +1523,6 @@ const UI_STRINGS = {
   },
 
   // ── Modale "Profili e Bacchetta Magica" ───────────────────────────────
-  profileHelpModalTitle: {
-    it: "Profili e Bacchetta magica",
-    en: "Profiles and Magic Wand",
-  },
-  profileHelpStep1Title: {
-    it: "Cosa sono i Profili?",
-    en: "What are Profiles?",
-  },
-  profileHelpStep1Intro: {
-    it: "Un profilo è come una scheda personale: contiene la città, l'inventario e gli alleati di un giocatore. Puoi crearne quanti vuoi.",
-    en: "A profile is like a personal save file: it stores a player's city, inventory, and allies. You can create as many profiles as you like.",
-  },
-  profileHelpIndependent: {
-    it: "Ogni profilo è indipendente; i dati di un profilo non influenzano gli altri.",
-    en: "Each profile is independent; data in one profile does not affect the others.",
-  },
-  profileHelpDoubleClick: {
-    it: "Doppio click sul nome di un profilo per rinominarlo (es. \"Live\", \"Beta\").",
-    en: "Double-click a profile's name to rename it (e.g. \"Live\", \"Beta\").",
-  },
-  profileHelpSingleClick: {
-    it: "Click singolo per passare da un profilo all'altro.",
-    en: "Click a profile's name to switch to it.",
-  },
-  profileHelpDeleteOne: {
-    it: "Click sulla × accanto al nome per cancellare quel profilo e tutti i suoi dati.",
-    en: "The × next to the name deletes that profile and all its data.",
-  },
-  profileHelpDeleteAllBody: {
-    it: "Il pulsante elimina tutti i profili dopo una conferma. La barra torna vuota, pronta per un nuovo import con la bacchetta.",
-    en: "The button deletes all profiles after a confirmation. The bar becomes empty again, ready for a new import with the wand.",
-  },
-  profileHelpStep2Title: {
-    it: "La Bacchetta Magica",
-    en: "The Magic Wand",
-  },
-  profileHelpStep2Intro: {
-    it: "La bacchetta magica importa tutti i dati di gioco - città, inventario e alleati storici - con un solo click.",
-    en: "The magic wand imports all your game data - city, inventory, and historical allies - in one step.",
-  },
-  profileHelpVideoTitle: {
-    it: "Tutorial: come importare la città",
-    en: "Tutorial: how to import your city",
-  },
-  profileHelpStep2_1Title: {
-    it: "Installa FoE Helper o Forge Hammer nel tuo browser",
-    en: "Install FoE Helper or Forge Hammer in your browser",
-  },
-  profileHelpStep2_1Body: {
-    it: "Sono estensioni gratuite per il browser che leggono i dati di Forge of Empires mentre giochi. Basta una delle due.",
-    en: "These are free browser extensions that read Forge of Empires data while you play. Either one works.",
-  },
-  profileHelpStep2_2Title: {
-    it: "Trascina nella barra dei preferiti",
-    en: "Drag it to your bookmarks bar",
-  },
-  profileHelpStep2_2Body: {
-    it: "Tieni premuto il pulsante bacchetta e trascinalo nella barra dei preferiti. Verrà creato un segnalibro speciale che puoi rinominare come vuoi.",
-    en: "Click and hold the wand button, then drag it up to your browser's bookmarks bar. A new bookmark will be created (you can rename it if you wish).",
-  },
-  profileHelpBookmarkHint: {
-    it: "← vedrai questo \"indirizzo\"",
-    en: "← you'll see this \"address\"",
-  },
-  profileHelpStep2_3Title: {
-    it: "Vai nel gioco e clicca quel segnalibro",
-    en: "Go to the game and click that bookmark",
-  },
-  profileHelpStep2_3Body: {
-    it: "Con Forge of Empires aperto nel browser e FoE Helper (o Forge Hammer) funzionante clicca il segnalibro che hai creato. Copierà in silenzio tutti i dati di gioco negli appunti del computer.",
-    en: "While the game is open and FoE Helper (or Forge Hammer) is active, click that bookmark. It will silently copy your data to your computer's clipboard.",
-  },
-  profileHelpStep2_4Title: {
-    it: "Torna qui e clicca",
-    en: "Come back here and click",
-  },
-  profileHelpStep2_4Body: {
-    it: "FoE Optimizer leggerà gli appunti, creerà automaticamente un nuovo profilo e importerà città, inventario e alleati in un colpo solo. I profili già esistenti non verranno mai toccati.",
-    en: "FoE Optimizer will read the clipboard, automatically create a new profile, and import your city, inventory, and allies in one go. Existing profiles are never touched.",
-  },
-  profileHelpUpdateNote: {
-    it: (action: string) => `${action} basta ripetere i passi 3 e 4: viene creato un profilo nuovo con i dati aggiornati senza sovrascrivere i profili esistenti.`,
-    en: (action: string) => `${action} simply repeat steps 3 and 4: a new profile is created with the latest data without overwriting existing profiles.`,
-  },
-  profileHelpUpdateNoteEmphasis: {
-    it: "Ogni volta che vuoi aggiornare i dati",
-    en: "Every time you want to refresh your data,",
-  },
-  profileHelpStep3Title: {
-    it: "Pulsanti SAVE e LOAD",
-    en: "SAVE and LOAD buttons",
-  },
-  profileHelpSaveBody: {
-    it: "Esporta tutti i profili in un file JSON. Utile come backup o per trasferire i dati tra diversi dispositivi (es. da un PC a un tablet).",
-    en: "Exports all profiles to a JSON file. Use this for backups or to transfer data between devices (e.g., from PC to tablet).",
-  },
-  profileHelpLoadBody: {
-    it: "Importa i profili da un file JSON precedentemente salvato e li aggiunge a quelli esistenti senza sovrascrivere i profili esistenti.",
-    en: "Imports profiles from a previously saved JSON file. These will be added to your current list without overwriting existing profiles.",
-  },
-  gotItExclamationButton: {
-    it: "Ho capito!",
-    en: "Got it!",
-  },
 
   // ── Contatore "Alleati posseduti" (riga header tabella alleati) ──────
   alliesPlacedInCity: {
@@ -1980,15 +1971,7 @@ const UI_STRINGS = {
     it: "Da inventario:",
     en: "From inventory:",
   },
-  // ── Modale "Chi sono · Contatti" ─────────────────────────────────────────────────────
-  aboutTitle: {
-    it: "Chi sono · Contatti",
-    en: "About · Contact",
-  },
-  aboutContactLabel: {
-    it: "Trovami su FoE:",
-    en: "Find me on FoE:",
-  },
+  // ── Guida › Informazioni (prima modale "Chi sono · Contatti") ─────────────────────────────────────────────────────
   aboutServerItLabel: {
     it: "Server Italiano",
     en: "Italian Server",
@@ -2010,10 +1993,6 @@ const UI_STRINGS = {
   aboutWorldLabel: {
     it: "Mondo",
     en: "World",
-  },
-  aboutGithubLabel: {
-    it: "Codice sorgente",
-    en: "Source code",
   },
   aboutPrivacyLabel: {
     it: "Informativa sulla privacy",
