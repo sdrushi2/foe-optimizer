@@ -23,6 +23,10 @@
     ">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
+    <!-- Tema chiaro salvato (2.0) applicato prima del primo disegno: la
+         schermata di caricamento qui sotto ha già il colore giusto. -->
+    <script>try{if(localStorage.getItem("foe2-tema")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
+
     <!-- Primary Meta -->
     <title>FoE Optimizer – Free tools for Forge of Empires</title>
     <meta name="description" content="Building and ally database, city imports, efficiency scores, inventory optimizer, and automatic city layout optimizer. No sign-up. Updated daily.">
@@ -109,7 +113,9 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Schermata di caricamento (2.0): visibile mentre main.tsx scarica i
+         dati di gioco da /data/; avvio.tsx la sostituisce con l'app. -->
+    <div id="root"><div class="avvio"><p class="avvio-titolo">FoE Optimizer</p><div class="avvio-rotella"></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

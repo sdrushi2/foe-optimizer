@@ -70,6 +70,15 @@ export function localDateStamp(date: Date = new Date()): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
+/** Prefisso dei file esportati dal nome del giocatore (2.0): minuscolo, solo
+ *  lettere/cifre/`_`/`-` (accenti tolti, il resto diventa `-`).
+ *  Es. "Sdrushi" → "sdrushi"; senza nome → "foe". */
+export function prefissoFile(nome: string | null | undefined): string {
+  const s = (nome ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return s || "foe";
+}
+
 /** Formatta produzioni con valori grandi (es. Monete, Materiali, CAP IQ):
  *  "-" se zero, "k" arrotondato all'intero per valori >= 1000 (es. 632750 ->
  *  "633k", non "632,8k"), altrimenti il numero con separatore delle migliaia. */

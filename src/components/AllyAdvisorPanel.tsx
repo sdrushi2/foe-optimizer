@@ -24,7 +24,6 @@ import { computeAllyAdvice, allyEffAt100, isScienceAlly, VALOR_RESOURCE, MAX_TAR
 import type { Weights } from "../utils/calculator";
 import type { Lang } from "../data/languages";
 import { t, type UiLang } from "../data/ui-strings";
-import { ALLY_ADVISOR_OPEN_KEY } from "../utils/storage";
 
 interface Props {
   owned: readonly ImportedAlly[];
@@ -70,9 +69,8 @@ export default function AllyAdvisorPanel({
   owned, byIdRarity, inherited, weights, resources, uiLang, gameLang, allyName,
   groupHeaders, statHeaders, renderBoostCells,
 }: Props) {
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem(ALLY_ADVISOR_OPEN_KEY) !== "false"; } catch { return true; }
-  });
+  // 2.0: niente apri/chiudi nel pannello: lo mostra o nasconde il pulsante
+  // "Potenziale e gettoni" del nastro (Analisi), spento di default.
   const [sortKey, setSortKey] = useState<SortKey>("priority");
   const [sortDesc, setSortDesc] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
@@ -129,12 +127,6 @@ export default function AllyAdvisorPanel({
 
   if (rows.length === 0 && advice.science.length === 0) return null;
 
-  const toggle = () => {
-    setOpen(v => {
-      try { localStorage.setItem(ALLY_ADVISOR_OPEN_KEY, String(!v)); } catch { /* best-effort */ }
-      return !v;
-    });
-  };
   const sortBy = (k: SortKey) => {
     if (k === sortKey) setSortDesc(d => !d);
     else { setSortKey(k); setSortDesc(typeof k === "number"); }
@@ -164,19 +156,14 @@ export default function AllyAdvisorPanel({
 
   return (
     <div className="mb-3 rounded border border-amber-700/50 bg-slate-900/40">
-      <button
-        type="button"
-        onClick={toggle}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold uppercase tracking-wider text-amber-300 hover:bg-slate-800/40"
-      >
-        <span>{open ? "▼" : "▶"}</span>
+      <div className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold uppercase tracking-wider text-amber-300">
         <span>🎖️ {t("allyAdvisorTitle", uiLang)}</span>
         <span className="ml-auto normal-case font-normal tracking-normal text-slate-300">
           {t("allyAdvisorValorOwned", uiLang)}: <span className="font-bold text-amber-300">{fmt0(valor)}</span>
         </span>
-      </button>
+      </div>
 
-      {open && (
+      {(
         <div className="space-y-3 border-t border-slate-800 px-3 py-3 text-[13px] text-slate-300">
           <p className="text-slate-400">{t("allyAdvisorIntro", uiLang, rarityName(MAX_TARGET_RARITY, lang))}</p>
           <p className="text-slate-400">{t("allyAdvisorLegend", uiLang)}</p>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./theme-light.css";
 
 /* ============================================================
    MAPPA CITTÀ – hover sui bordi dell'edificio sotto il cursore.
@@ -18,6 +19,54 @@
 
 body {
   @apply bg-slate-950 text-slate-100 font-sans;
+}
+
+/* Schermata di caricamento e di errore all'avvio (2.0: index.html e
+   main.tsx, mentre si scaricano i dati di gioco da /data/). */
+.avvio {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+  text-align: center;
+}
+.avvio-titolo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-amber-400);
+}
+.avvio-rotella {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-slate-700);
+  border-top-color: var(--color-amber-400);
+  border-radius: 50%;
+  animation: avvio-giro 0.8s linear infinite;
+}
+@keyframes avvio-giro { to { transform: rotate(360deg); } }
+.avvio-errore { font-weight: 600; color: var(--color-red-400); }
+.avvio-dettaglio { font-size: 12px; color: var(--color-slate-400); }
+.avvio button {
+  border: 1px solid var(--color-slate-600);
+  border-radius: 6px;
+  padding: 4px 14px;
+  color: var(--color-slate-100);
+}
+.avvio button:hover { background: var(--color-slate-800); }
+
+/* Colori di riga "a tinta" che non sono nella scala di Tailwind (Grandi
+   Edifici, militari): variabili, con la versione chiara per il tema chiaro
+   (2.0; il resto del tema chiaro è in theme-light.css, generato). */
+:root {
+  --row-great-bg: #191900;
+  --row-military-bg: #190F05;
+}
+:root[data-theme="light"] {
+  --row-great-bg: #fdf9e1;
+  --row-military-bg: #fdf0e6;
 }
 
 /* Scrollbar custom */
@@ -81,9 +130,9 @@ body {
      riproducibile a comando). Un background-color singolo non ha layer da
      perdere. */
   .building-table {
-    --bt-ambient-solid: color-mix(in srgb, theme(colors.slate.900) 20%, theme(colors.slate.950));
-    --bt-header-row1-solid: color-mix(in srgb, theme(colors.slate.900) 80%, var(--bt-ambient-solid));
-    --bt-header-row2-solid: color-mix(in srgb, theme(colors.slate.900) 60%, var(--bt-ambient-solid));
+    --bt-ambient-solid: color-mix(in srgb, var(--color-slate-900) 20%, var(--color-slate-950));
+    --bt-header-row1-solid: color-mix(in srgb, var(--color-slate-900) 80%, var(--bt-ambient-solid));
+    --bt-header-row2-solid: color-mix(in srgb, var(--color-slate-900) 60%, var(--bt-ambient-solid));
     /* Zebra striping: UNICO parametro di taratura per lo schiarimento delle
        righe pari (.row-even, applicata insieme alla classe di categoria in
        App.tsx). Percentuale di bianco mescolato SOPRA il colore già
@@ -130,37 +179,37 @@ body {
      OPACO (le celle sticky lo ereditano); una nuova categoria
      semi-trasparente reintrodurrebbe il ghosting. */
   .row-goods {
-    background-color: color-mix(in srgb, theme(colors.sky.950) 40%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-sky-950) 40%, var(--bt-ambient-solid));
   }
   .row-goods:hover {
-    background-color: color-mix(in srgb, theme(colors.sky.950) 60%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-sky-950) 60%, var(--bt-ambient-solid));
   }
   .row-inactive {
-    background-color: color-mix(in srgb, theme(colors.violet.950) 30%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-violet-950) 30%, var(--bt-ambient-solid));
   }
   .row-inactive:hover {
-    background-color: color-mix(in srgb, theme(colors.violet.950) 50%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-violet-950) 50%, var(--bt-ambient-solid));
   }
   .row-fallback {
-    background-color: color-mix(in srgb, theme(colors.slate.800) 60%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-slate-800) 60%, var(--bt-ambient-solid));
   }
   .row-fallback:hover {
-    background-color: color-mix(in srgb, theme(colors.slate.800) 80%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-slate-800) 80%, var(--bt-ambient-solid));
   }
   /* Anche "normal" vive qui per lo STESSO motivo, ma solo per l'hover: il
      colore a riposo (slate-950) era già opaco, l'hover però era
      bg-slate-900/40 (semi-trasparente) — bastava passare il mouse su una
      riga normale in modalità sticky per far riapparire il ghosting. */
   .row-normal {
-    background-color: theme(colors.slate.950);
+    background-color: var(--color-slate-950);
   }
   .row-normal:hover {
-    background-color: color-mix(in srgb, theme(colors.slate.900) 40%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-slate-900) 40%, var(--bt-ambient-solid));
   }
   /* Riga selezionata/evidenziata nella tab Città (sostituisce il colore di
      categoria; era bg-amber-500/10, semi-trasparente — stesso ghosting). */
   .row-highlighted {
-    background-color: color-mix(in srgb, theme(colors.amber.500) 10%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-amber-500) 10%, var(--bt-ambient-solid));
   }
   /* Righe iniettate in tab Città dal toggle "Mostra anche Inventario"
      (App.tsx, ProcessedBuilding._isMergedInventory / BUILDING_ROW_COLORS
@@ -169,10 +218,10 @@ body {
      che attiva il merge. Priorità massima sulla classificazione normale
      (great/military/goods/...), applicata PRIMA in App.tsx. */
   .row-merged-inventory {
-    background-color: color-mix(in srgb, theme(colors.emerald.950) 55%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-emerald-950) 55%, var(--bt-ambient-solid));
   }
   .row-merged-inventory:hover {
-    background-color: color-mix(in srgb, theme(colors.emerald.950) 75%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-emerald-950) 75%, var(--bt-ambient-solid));
   }
   /* great/military: stessi hex già usati come utility Tailwind arbitraria
      (bg-[#191900]/bg-[#190F05]) in BUILDING_ROW_COLORS, spostati qui come
@@ -181,13 +230,13 @@ body {
      classi custom). Stesso colore, stesso hover — nessun cambio visivo
      per le righe dispari. */
   .row-great {
-    background-color: #191900;
+    background-color: var(--row-great-bg);
   }
   .row-great:hover {
     filter: brightness(1.25);
   }
   .row-military {
-    background-color: #190F05;
+    background-color: var(--row-military-bg);
   }
   .row-military:hover {
     filter: brightness(1.25);
@@ -215,7 +264,7 @@ body {
      una volta schiarite). Ogni riga even ridichiara anche l'hover della
      propria classe base (vedi commento sotto sul perché è necessario). */
   .row-goods.row-even {
-    background-color: color-mix(in srgb, theme(colors.sky.700) var(--row-even-lighten), color-mix(in srgb, theme(colors.sky.950) 40%, var(--bt-ambient-solid)));
+    background-color: color-mix(in srgb, var(--color-sky-700) var(--row-even-lighten), color-mix(in srgb, var(--color-sky-950) 40%, var(--bt-ambient-solid)));
   }
   /* ⚠️ .row-even ha la STESSA specificità di .row-*:hover (due classi vs
      una classe + una pseudo-classe) — a parità di specificità vince chi
@@ -224,40 +273,40 @@ body {
      striping, settembre 2026). Ogni riga even ridichiara esplicitamente lo
      STESSO colore hover della classe base, così l'ordine non conta più. */
   .row-goods.row-even:hover {
-    background-color: color-mix(in srgb, theme(colors.sky.950) 60%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-sky-950) 60%, var(--bt-ambient-solid));
   }
   .row-inactive.row-even {
-    background-color: color-mix(in srgb, theme(colors.violet.700) var(--row-even-lighten), color-mix(in srgb, theme(colors.violet.950) 30%, var(--bt-ambient-solid)));
+    background-color: color-mix(in srgb, var(--color-violet-700) var(--row-even-lighten), color-mix(in srgb, var(--color-violet-950) 30%, var(--bt-ambient-solid)));
   }
   .row-inactive.row-even:hover {
-    background-color: color-mix(in srgb, theme(colors.violet.950) 50%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-violet-950) 50%, var(--bt-ambient-solid));
   }
   .row-fallback.row-even {
-    background-color: color-mix(in srgb, theme(colors.slate.500) var(--row-even-lighten), color-mix(in srgb, theme(colors.slate.800) 60%, var(--bt-ambient-solid)));
+    background-color: color-mix(in srgb, var(--color-slate-500) var(--row-even-lighten), color-mix(in srgb, var(--color-slate-800) 60%, var(--bt-ambient-solid)));
   }
   .row-fallback.row-even:hover {
-    background-color: color-mix(in srgb, theme(colors.slate.800) 80%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-slate-800) 80%, var(--bt-ambient-solid));
   }
   .row-normal.row-even {
-    background-color: color-mix(in srgb, theme(colors.slate.500) var(--row-even-lighten), theme(colors.slate.950));
+    background-color: color-mix(in srgb, var(--color-slate-500) var(--row-even-lighten), var(--color-slate-950));
   }
   .row-normal.row-even:hover {
-    background-color: color-mix(in srgb, theme(colors.slate.900) 40%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-slate-900) 40%, var(--bt-ambient-solid));
   }
   .row-merged-inventory.row-even {
-    background-color: color-mix(in srgb, theme(colors.emerald.700) var(--row-even-lighten), color-mix(in srgb, theme(colors.emerald.950) 55%, var(--bt-ambient-solid)));
+    background-color: color-mix(in srgb, var(--color-emerald-700) var(--row-even-lighten), color-mix(in srgb, var(--color-emerald-950) 55%, var(--bt-ambient-solid)));
   }
   .row-merged-inventory.row-even:hover {
-    background-color: color-mix(in srgb, theme(colors.emerald.950) 75%, var(--bt-ambient-solid));
+    background-color: color-mix(in srgb, var(--color-emerald-950) 75%, var(--bt-ambient-solid));
   }
   .row-great.row-even {
-    background-color: color-mix(in srgb, theme(colors.amber.700) var(--row-even-lighten), #191900);
+    background-color: color-mix(in srgb, var(--color-amber-700) var(--row-even-lighten), var(--row-great-bg));
   }
   .row-great.row-even:hover {
     filter: brightness(1.25);
   }
   .row-military.row-even {
-    background-color: color-mix(in srgb, theme(colors.red.700) var(--row-even-lighten), #190F05);
+    background-color: color-mix(in srgb, var(--color-red-700) var(--row-even-lighten), var(--row-military-bg));
   }
   .row-military.row-even:hover {
     filter: brightness(1.25);
@@ -416,7 +465,7 @@ body {
   .has-name-divider tbody td.cell-name,
   .has-name-divider thead th.cell-name,
   .has-name-divider thead th.th-name-summary {
-    box-shadow: inset -1px 0 0 0 theme(colors.slate.800);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800);
   }
 
   .has-sticky-name tbody td.cell-name {
@@ -425,14 +474,14 @@ body {
     width: 260px;
     background-color: inherit;
     background-image: inherit;
-    box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800), 4px 0 10px rgba(0,0,0,0.5);
   }
   .has-sticky-name thead th.cell-name {
     @apply sticky z-20;
     left: 46px;
     width: 260px;
     background-color: inherit;
-    box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800), 4px 0 10px rgba(0,0,0,0.5);
   }
 
   /* Riga 1 dell'header (bg-slate-900/80): th "Export" (colSpan checkbox+
@@ -456,7 +505,7 @@ body {
     left: 46px;
     width: 260px;
     background-color: inherit;
-    box-shadow: inset -1px 0 0 0 theme(colors.slate.800), 4px 0 10px rgba(0,0,0,0.5);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800), 4px 0 10px rgba(0,0,0,0.5);
   }
 
   /* Padding orizzontale intermedio (es. colonna frammenti alleati) */
@@ -527,7 +576,7 @@ body {
 
   /* Bordo sinistro per separare le macro sezioni della tabella */
   .section-divider {
-    border-left: 1px solid theme(colors.slate.800);
+    border-left: 1px solid var(--color-slate-800);
   }
 
   /* Sfondo per gli header di gruppo (Generali/Campi/Spedizioni/Incursioni/
@@ -541,46 +590,46 @@ body {
      "più tendente al rosso", coerente con lo screenshot originale. */
   .group-header-amber {
     background: linear-gradient(to right,
-      color-mix(in srgb, theme(colors.red.900) 45%, var(--bt-ambient-solid)) 0%,
-      color-mix(in srgb, theme(colors.red.950) 55%, var(--bt-ambient-solid)) 25%,
-      color-mix(in srgb, theme(colors.red.950) 55%, var(--bt-ambient-solid)) 75%,
-      color-mix(in srgb, theme(colors.red.900) 45%, var(--bt-ambient-solid)) 100%);
+      color-mix(in srgb, var(--color-red-900) 45%, var(--bt-ambient-solid)) 0%,
+      color-mix(in srgb, var(--color-red-950) 55%, var(--bt-ambient-solid)) 25%,
+      color-mix(in srgb, var(--color-red-950) 55%, var(--bt-ambient-solid)) 75%,
+      color-mix(in srgb, var(--color-red-900) 45%, var(--bt-ambient-solid)) 100%);
     border-left: 1px solid theme(colors.red.500 / 70%);
     border-right: 1px solid theme(colors.red.500 / 70%);
   }
   .group-header-emerald {
     background: linear-gradient(to right,
-      color-mix(in srgb, theme(colors.emerald.900) 45%, var(--bt-ambient-solid)) 0%,
-      color-mix(in srgb, theme(colors.emerald.950) 55%, var(--bt-ambient-solid)) 25%,
-      color-mix(in srgb, theme(colors.emerald.950) 55%, var(--bt-ambient-solid)) 75%,
-      color-mix(in srgb, theme(colors.emerald.900) 45%, var(--bt-ambient-solid)) 100%);
+      color-mix(in srgb, var(--color-emerald-900) 45%, var(--bt-ambient-solid)) 0%,
+      color-mix(in srgb, var(--color-emerald-950) 55%, var(--bt-ambient-solid)) 25%,
+      color-mix(in srgb, var(--color-emerald-950) 55%, var(--bt-ambient-solid)) 75%,
+      color-mix(in srgb, var(--color-emerald-900) 45%, var(--bt-ambient-solid)) 100%);
     border-left: 1px solid theme(colors.emerald.500 / 70%);
     border-right: 1px solid theme(colors.emerald.500 / 70%);
   }
   .group-header-violet {
     background: linear-gradient(to right,
-      color-mix(in srgb, theme(colors.violet.900) 45%, var(--bt-ambient-solid)) 0%,
-      color-mix(in srgb, theme(colors.violet.950) 55%, var(--bt-ambient-solid)) 25%,
-      color-mix(in srgb, theme(colors.violet.950) 55%, var(--bt-ambient-solid)) 75%,
-      color-mix(in srgb, theme(colors.violet.900) 45%, var(--bt-ambient-solid)) 100%);
+      color-mix(in srgb, var(--color-violet-900) 45%, var(--bt-ambient-solid)) 0%,
+      color-mix(in srgb, var(--color-violet-950) 55%, var(--bt-ambient-solid)) 25%,
+      color-mix(in srgb, var(--color-violet-950) 55%, var(--bt-ambient-solid)) 75%,
+      color-mix(in srgb, var(--color-violet-900) 45%, var(--bt-ambient-solid)) 100%);
     border-left: 1px solid theme(colors.violet.500 / 70%);
     border-right: 1px solid theme(colors.violet.500 / 70%);
   }
   .group-header-blue {
     background: linear-gradient(to right,
-      color-mix(in srgb, theme(colors.blue.900) 45%, var(--bt-ambient-solid)) 0%,
-      color-mix(in srgb, theme(colors.blue.950) 55%, var(--bt-ambient-solid)) 25%,
-      color-mix(in srgb, theme(colors.blue.950) 55%, var(--bt-ambient-solid)) 75%,
-      color-mix(in srgb, theme(colors.blue.900) 45%, var(--bt-ambient-solid)) 100%);
+      color-mix(in srgb, var(--color-blue-900) 45%, var(--bt-ambient-solid)) 0%,
+      color-mix(in srgb, var(--color-blue-950) 55%, var(--bt-ambient-solid)) 25%,
+      color-mix(in srgb, var(--color-blue-950) 55%, var(--bt-ambient-solid)) 75%,
+      color-mix(in srgb, var(--color-blue-900) 45%, var(--bt-ambient-solid)) 100%);
     border-left: 1px solid theme(colors.blue.500 / 70%);
     border-right: 1px solid theme(colors.blue.500 / 70%);
   }
   .group-header-orange {
     background: linear-gradient(to right,
-      color-mix(in srgb, theme(colors.orange.900) 45%, var(--bt-ambient-solid)) 0%,
-      color-mix(in srgb, theme(colors.orange.950) 55%, var(--bt-ambient-solid)) 25%,
-      color-mix(in srgb, theme(colors.orange.950) 55%, var(--bt-ambient-solid)) 75%,
-      color-mix(in srgb, theme(colors.orange.900) 45%, var(--bt-ambient-solid)) 100%);
+      color-mix(in srgb, var(--color-orange-900) 45%, var(--bt-ambient-solid)) 0%,
+      color-mix(in srgb, var(--color-orange-950) 55%, var(--bt-ambient-solid)) 25%,
+      color-mix(in srgb, var(--color-orange-950) 55%, var(--bt-ambient-solid)) 75%,
+      color-mix(in srgb, var(--color-orange-900) 45%, var(--bt-ambient-solid)) 100%);
     border-left: 1px solid theme(colors.orange.500 / 70%);
     border-right: 1px solid theme(colors.orange.500 / 70%);
   }
@@ -690,7 +739,7 @@ body {
 }
 
 .building-floating-scrollbar {
-  scrollbar-color: theme(colors.slate.600) theme(colors.slate.900);
+  scrollbar-color: var(--color-slate-600) var(--color-slate-900);
 }
 
 .building-floating-scrollbar::-webkit-scrollbar {

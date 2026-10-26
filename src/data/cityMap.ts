@@ -41,6 +41,13 @@ export interface CityMapBuilding {
    *  profili salvati prima dell'introduzione del campo arriva `undefined`:
    *  colore e legenda lo trattano come "richiede strada", l'export JSON come 0. */
   roadLevel: number;
+  /** 2.0: era DI QUESTA COPIA (es. "ProgressiveEra"), dal campo `level` della
+   *  voce del gioco (id dell'era). Assente per i Grandi Edifici e nelle città
+   *  importate prima di ottobre 2026 (serve ripremere la bacchetta). */
+  era?: string;
+  /** 2.0: solo Grandi Edifici, livello e livello massimo (export JSON / Hammer). */
+  livello?: number;
+  livelloMax?: number;
 }
 
 export interface CityMapBounds {

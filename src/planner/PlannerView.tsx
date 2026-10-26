@@ -22,7 +22,9 @@ import { espandiCatene, raggruppaCatene, SET_DI_EDIFICI } from "./catene";
 import { coloreEdificioMappa, renderCityMapPng, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
-import { esportaCittaJson, leggiCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
+import { esportaCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
+import { ChartColumn, Clapperboard, Cpu, Map as MapIcon, Pause, Pencil, Play, RotateCcw, SkipForward, Sparkles, Undo2, type LucideIcon } from "lucide-react";
+import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
 import { cittaDaEditor } from "./editorPonte";
 import VideoTutorial from "./VideoTutorial";
 import ModificaCitta from "./ModificaCitta";
@@ -35,6 +37,19 @@ interface Props {
   /** Edifici aggiungibili con "Modifica città" (inventario, database). */
   candidati: CandidatiPlanner;
   uiLang: UiLang;
+  /** 2.0: città da un JSON importato dal nastro (sorgente "Importa JSON"):
+   *  se presente sostituisce la città selezionata. Non salvata. */
+  esterna?: CittaEsterna | null;
+  /** 2.0: i comandi del Planner stanno nel nastro: il Planner consegna qui i
+   *  suoi gruppi (Ricerca, Disposizione, Città, Processore, Aiuto) a ogni
+   *  cambio di stato, e [] quando si smonta. */
+  onNastro?: (gruppi: RibbonGroup[]) => void;
+  /** 2.0: tipi militari collegati alla strada nella città vera (almeno una
+   *  copia collegata): valore iniziale degli interruttori dei militari. */
+  militariCollegatiIniziali?: ReadonlySet<string>;
+  /** 2.0: mappa della città (la stessa della scheda Città, mostrata da App
+   *  sopra il Planner): pulsante "Mappa" nel gruppo Città del nastro. */
+  mappa?: { attiva: boolean; cambia: () => void };
 }
 
 /** Scenari: raccordo 3/4 celle e girandola. Partono tutti in parallelo;
@@ -225,12 +240,11 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
 /** Città esterna importata da un JSON (export JSON del pannello MAPPA, vecchio
  *  o nuovo formato, o payload del bookmarklet), per provare il Planner sulle
  *  città che mandano gli utenti. Non viene salvata da nessuna parte. */
-interface CittaEsterna extends CittaJson { nome: string }
+export interface CittaEsterna extends CittaJson { nome: string }
 
-export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang }: Props) {
-  const [esterna, setEsterna] = useState<CittaEsterna | null>(null);
-  const [erroreImport, setErroreImport] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang, esterna: esternaProp, onNastro, militariCollegatiIniziali, mappa }: Props) {
+  // 2.0: la città da JSON arriva dal nastro (App), non più da un pulsante qui.
+  const esterna = esternaProp ?? null;
   /** Città vera (profilo o JSON esterno) e modifiche temporanee ("Modifica città"):
    *  il Planner lavora sulla città modificata. */
   const cittaVera: readonly CityMapBuilding[] = esterna?.buildings ?? cittaProfilo;
@@ -239,16 +253,19 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const cityMapBuildings = useMemo(() => applicaModifiche(cittaVera, modifiche), [cittaVera, modifiche]);
   /** Entità militari da collegare comunque alla strada con Alcatraz / Nave
    *  (interruttori nel riquadro informativo; di default nessuna). */
-  const [militariCollegati, setMilitariCollegati] = useState<ReadonlySet<string>>(new Set());
+  const [militariCollegati, setMilitariCollegati] = useState<ReadonlySet<string>>(() => new Set(militariCollegatiIniziali ?? []));
   // Edifici a catena (catene.ts): ogni inizio con i suoi anelli diventa UN
   // blocco rettangolare che il Planner sposta intero; tutti gli anelli
   // collegati (regola dell'utente). `catene.blocchi` serve a riscomporre i
   // blocchi negli edifici originali (PNG).
+  // Con la città da JSON le celle del profilo non servono (e non devono far
+  // ricalcolare il problema: il ricalcolo azzera gli scenari).
+  const celle = esterna ? esterna.cells : celleProfilo;
   const catene = useMemo(() => {
-    if (!esterna) return raggruppaCatene(buildPlannerProblem(cityMapBuildings, celleProfilo, militariCollegati));
+    if (!esterna) return raggruppaCatene(buildPlannerProblem(cityMapBuildings, celle, militariCollegati));
     // L'export JSON non ha le posizioni delle strade, solo il loro numero.
-    return raggruppaCatene({ ...buildPlannerProblem(cityMapBuildings, esterna.cells, militariCollegati), originalRoadCells: esterna.strade });
-  }, [esterna, cityMapBuildings, celleProfilo, militariCollegati]);
+    return raggruppaCatene({ ...buildPlannerProblem(cityMapBuildings, celle, militariCollegati), originalRoadCells: esterna.strade });
+  }, [esterna, cityMapBuildings, celle, militariCollegati]);
   const militariTipi = useMemo(() => tipiMilitari(cityMapBuildings), [cityMapBuildings]);
   const problem = catene.problem;
   /** Scenario "Configurazione attuale" (richiesta dell'utente): strade ed
@@ -301,7 +318,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Scenari eliminati dall'utente (cestino): la loro corsa si ferma. */
   const [eliminati, setEliminati] = useState<Set<VName>>(new Set());
   const eliminatiRef = useRef<Set<VName>>(new Set());
-  const [computing, setComputing] = useState(false);
   /** Ultimo avanzamento della ricerca per mappa (resta visibile anche dopo). */
   const [ricerca, setRicerca] = useState<Record<VName, NonNullable<PlannerFrame["search"]> | null>>(tutte(null));
   /** Ripiego quando il City Builder non si applica: una sola mappa col motore segnaposto. */
@@ -355,25 +371,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const byId = useMemo(() => new Map(problem.buildings.map(b => [b.id, b])), [problem]);
   /** Edifici militari della città (senza strada se c'è Alcatraz / Nave da guerra stellare). */
   const militari = useMemo(() => problem.buildings.filter(b => b.isMilitary).length, [problem]);
-  /** Avviso militari chiuso con la X: solo stato del componente (NON salvato),
-   *  quindi ricompare a ogni apertura del Planner e a ogni cambio di città. */
-  const [avvisoMilitariChiuso, setAvvisoMilitariChiuso] = useState(false);
-  /** Edifici dei vecchi set a bonus di adiacenza (non gestiti: solo avviso). */
+  /** Edifici dei vecchi set a bonus di adiacenza (non gestiti: evidenziati in "Statistiche attuali"). */
   const edificiSet = useMemo(() => problem.buildings.filter(b => SET_DI_EDIFICI.has(b.entityId)), [problem]);
-  const [avvisoSetChiuso, setAvvisoSetChiuso] = useState(false);
   const [videoAperto, setVideoAperto] = useState(false);
-  // (non a ogni interruttore dei militari: il riquadro resta aperto mentre si sceglie)
-  useEffect(() => { setAvvisoMilitariChiuso(false); setAvvisoSetChiuso(false); }, [cityMapBuildings]);
   /** Grandi Edifici (colorati in rosso come nella mappa). */
   const grandiEdifici = useMemo(() => new Set(cityMapBuildings.filter(b => b.isGreatBuilding).map(b => b.mapEntityId)), [cityMapBuildings]);
-  const importaJson = async (file: File) => {
-    try {
-      setEsterna({ nome: file.name.replace(/\.json$/i, ""), ...leggiCittaJson(await file.text()) });
-      setErroreImport(null);
-    } catch (err) {
-      setErroreImport(t("plannerInvalidJson", uiLang, err instanceof Error ? err.message : String(err)));
-    }
-  };
 
   /** Riprende tutte le mappe in pausa, passando le disposizioni modificate a mano. */
   const riprendi = () => {
@@ -809,8 +811,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     setRunning(true);
     let out = outcome;
     if (out === undefined) {
-      setComputing(true);
-      await sleep(30); // lascia disegnare "calcolo in corso" (il builder è sincrono)
+      await sleep(30); // lascia disegnare lo stato "in esecuzione" (il builder è sincrono)
       const os = runBuilder(problem);
       // stessa costruzione senza le distanze dal bordo vietate (Passo 7): se la
       // partenza cambia, all'avvio dello scenario si sceglie la migliore
@@ -828,7 +829,6 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (statoAttuale && problem.buildings.some(b => b.isTownhall)) lista.push({ id: "att", v: null, raccordo: 0, attuale: true });
       out = lista.length ? lista : null;
       setOutcome(out);
-      setComputing(false);
     }
     eliminatiRef.current = new Set();
     setEliminati(new Set());
@@ -859,11 +859,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     primaRef.current = tutte(null); annullaRef.current = tutte(false);
     // come alla prima apertura: niente riquadri degli scenari (si ricalcolano a
     // Ottimizza) e scenari eliminati di nuovo disponibili
-    setOutcome(undefined); setComputing(false);
+    setOutcome(undefined);
     eliminatiRef.current = new Set(); setEliminati(new Set());
     dueRef.current = tutte([]);
-    // avvisi (set non gestiti, militari) di nuovo visibili
-    setAvvisoSetChiuso(false); setAvvisoMilitariChiuso(false);
     // città vera: via le modifiche temporanee ("Modifica città")
     setModifiche(NESSUNA_MODIFICA); setPannelloModifica(false);
   };
@@ -971,7 +969,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.${ext}`;
   };
   /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
-  const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema()), nomeFile(n, "json"));
+  const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema(), undefined, esterna ? null : undefined), nomeFile(n, "json"));
   /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */
   /** Riquadro delle modifiche per il PNG (Planner ed editor): undefined se la
    *  città non è modificata ("Modifica città"). */
@@ -1042,7 +1040,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const edifici = edificiFrame(f, e.n);
     e.idMap = new Map();
     e.gen = genRef.current;
-    const json = esportaCittaJson(edifici, areeProblema(), e.idMap);
+    const json = esportaCittaJson(edifici, areeProblema(), e.idMap, esterna ? null : undefined);
     const perId = new Map(edifici.map(b => [b.mapEntityId, b]));
     const colori: Record<string, string> = {};
     for (const [jid, mid] of e.idMap) {
@@ -1092,154 +1090,135 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     return () => window.removeEventListener("message", h);
   }, []);
 
-  return (
-    <div className="mb-3 rounded border border-fuchsia-700/50 bg-slate-900/40 text-[13px] text-slate-300">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 px-3 py-2">
-        <span className="font-bold uppercase tracking-wider text-fuchsia-300">🧭 Planner</span>
-        <span className="mr-2 text-slate-500">{t("plannerExperimental", uiLang)}</span>
-        {/* Tre fasi, ciascuna col suo pulsante che fa da avvio, pausa e
-            ripresa (richiesta dell'utente): 1. ricerca, 2. smussatura dei
-            bordi (solo con la ricerca in pausa), 3. completamento. */}
-        {!running ? (
-          <button type="button" onClick={() => void start()}
-            className="rounded border border-emerald-600 px-3 py-1 font-bold text-emerald-300 hover:bg-emerald-950">{t("plannerOptimize", uiLang)}</button>
-        ) : paused && !completando ? (
-          <button type="button" onClick={riprendi} disabled={smussando}
-            title={t("plannerResumeTitle", uiLang)}
-            className="rounded border border-sky-500 bg-sky-950 px-3 py-1 font-bold text-sky-300 hover:bg-sky-900 disabled:opacity-40">{t("plannerOptimize", uiLang)}</button>
-        ) : (
-          <button type="button" disabled={completando || !anySearching} onClick={pausa}
-            title={t("plannerPauseTitle", uiLang)}
-            className="rounded border border-red-600 px-3 py-1 font-bold text-red-300 hover:bg-red-950 disabled:opacity-40">{t("plannerPause", uiLang)}</button>
-        )}
-        {smussando ? (
-          <button type="button" onClick={() => { stopSmussaRef.current = true; }}
-            className="rounded border border-violet-500 bg-violet-950 px-3 py-1 font-bold text-violet-300 hover:bg-violet-900">{t("plannerPause", uiLang)}</button>
-        ) : (
-          <button type="button" onClick={() => void smussa()} disabled={!paused || completando || !anySearching}
-            title={t("plannerSmoothTitle", uiLang)}
-            className="rounded border border-violet-500 px-3 py-1 font-bold text-violet-300 hover:bg-violet-950 disabled:opacity-40">{t("plannerSmooth", uiLang)}</button>
-        )}
-        {!completando ? (
-          <button type="button" disabled={!paused || !anySearching || smussando}
-            onClick={completa}
-            title={t("plannerCompleteTitle", uiLang)}
-            className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">{t("plannerComplete", uiLang)}</button>
-        ) : paused ? (
-          <button type="button" onClick={riprendi}
-            title={t("plannerFillResumeTitle", uiLang)}
-            className="rounded border border-amber-500 bg-amber-950 px-3 py-1 font-bold text-amber-300 hover:bg-amber-900 disabled:opacity-40">{t("plannerComplete", uiLang)}</button>
-        ) : (
-          <button type="button" disabled={!anyFilling} onClick={pausa}
-            title={t("plannerFillPauseTitle", uiLang)}
-            className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950 disabled:opacity-40">{t("plannerPause", uiLang)}</button>
-        )}
-        {completando && visibili.some(sc => primaRef.current[sc.id]) && (
-          <button type="button" onClick={annullaCompletamento}
-            title={t("plannerUndoCompleteTitle", uiLang)}
-            className="rounded border border-amber-500 px-3 py-1 font-bold text-amber-300 hover:bg-amber-950">{t("plannerUndoComplete", uiLang)}</button>
-        )}
-        {(paused || !running) && !smussando && visibili.some(sc => manuali[sc.id]) && (
-          <button type="button" onClick={annullaManuali}
-            title={t("plannerUndoManualTitle", uiLang)}
-            className="rounded border border-slate-500 px-3 py-1 font-bold text-slate-200 hover:bg-slate-800">{t("plannerUndoManual", uiLang)}</button>
-        )}
-        <button type="button" disabled={running && !paused} onClick={reset}
-          className="rounded border border-slate-600 px-3 py-1 hover:bg-slate-800 disabled:opacity-40">{t("plannerReset", uiLang)}</button>
-        {/* Modifica città (prima di ottimizzare): togli / aggiungi edifici */}
-        {!esterna && (
-          <button type="button" onClick={() => setPannelloModifica(v => !v)} disabled={running && !paused}
-            title={t(running && !paused ? "plannerEditCityLocked" : "plannerEditCityTitle", uiLang)}
-            className={`rounded border px-3 py-1 font-bold disabled:opacity-40 ${contaModifiche(modifiche) ? "border-amber-400 bg-amber-950 text-amber-200 hover:bg-amber-900" : "border-teal-500 text-teal-300 hover:bg-teal-950"}`}>
-            {t("plannerEditCity", uiLang)}{contaModifiche(modifiche) ? ` · ${contaModifiche(modifiche)}` : ""}
-          </button>
-        )}
-        {/* Potenza della CPU (vedi carico): si può cambiare anche durante la corsa */}
-        <span className="ml-1 inline-flex overflow-hidden rounded border border-slate-600" role="group" aria-label={t("plannerCpuGroup", uiLang)}
-          title={(() => {
-            // diagnostica: quanti core vede il browser, ricerche e pause calcolate
-            const n = Math.max(1, visibili.length), c = carico(n, potenza), core = coreDisponibili();
-            const lavoro = 1 / (1 + c.riposo);
-            return t("plannerCpuTitle", uiLang, core, n, c.semi, Math.round(lavoro * 100), Math.round((100 * n * c.semi * lavoro) / core));
-          })()}>
-          <span className="px-2 py-1 text-[11px] font-bold text-slate-400">CPU</span>
+  // ── Nastro (2.0) ─────────────────────────────────────────────────────────
+  // I gruppi si ricostruiscono quando cambia lo stato che mostrano (firma);
+  // i click passano da azioniRef, così chiamano sempre le funzioni correnti.
+  const azioniRef = useRef({ start, riprendi, pausa, smussa, completa, annullaCompletamento, annullaManuali, reset });
+  azioniRef.current = { start, riprendi, pausa, smussa, completa, annullaCompletamento, annullaManuali, reset };
+  const puoAnnullaCompl = completando && visibili.some(sc => primaRef.current[sc.id]);
+  const puoAnnullaMan = (paused || !running) && !smussando && visibili.some(sc => manuali[sc.id]);
+  const nModifiche = contaModifiche(modifiche);
+  // "Statistiche attuali" (gruppo del nastro, in fondo): la città com'è ora.
+  const statistiche = useMemo(() => {
+    let conStrada = 0, senzaStrada = 0;
+    for (const b of cityMapBuildings) {
+      if (b.type === "street") continue;
+      if ((b.roadLevel ?? 1) > 0) conStrada++; else senzaStrada++;
+    }
+    let aCatena = 0;
+    for (const bl of catene.blocchi.values()) aCatena += bl.membri.length;
+    return { conStrada, senzaStrada, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
+  }, [cityMapBuildings, catene, problem, edificiSet]);
+  const nomiSet = [...new Set(edificiSet.map(b => b.name))].sort().join(", ");
+  const titoloCpu = (() => {
+    // diagnostica: quanti core vede il browser, ricerche e pause calcolate
+    const n = Math.max(1, visibili.length), c = carico(n, potenza), core = coreDisponibili();
+    const lavoro = 1 / (1 + c.riposo);
+    return t("plannerCpuTitle", uiLang, core, n, c.semi, Math.round(lavoro * 100), Math.round((100 * n * c.semi * lavoro) / core));
+  })();
+  const firmaNastro = [running, paused, completando, anySearching, anyFilling, smussando, puoAnnullaCompl, puoAnnullaMan,
+    !!esterna, nModifiche, pannelloModifica, potenza, titoloCpu, uiLang,
+    mappa?.attiva ?? "-", statistiche.conStrada, statistiche.senzaStrada, statistiche.strade, statistiche.aCatena, statistiche.set, nomiSet].join("|");
+  const mappaRef = useRef(mappa);
+  mappaRef.current = mappa;
+  const onNastroRef = useRef(onNastro);
+  onNastroRef.current = onNastro;
+  useEffect(() => {
+    const a = () => azioniRef.current;
+    const L = (k: Parameters<typeof t>[0]) => t(k, uiLang) as string;
+    const bloccato = running && !paused;
+    const b = (id: string, icon: LucideIcon, label: string, onClick: () => void, extra: Partial<Extract<RibbonItem, { kind: "button" }>> = {}): RibbonItem =>
+      ({ kind: "button", id, icon, label, onClick, ...extra });
+    const ottimizza = !running ? b("ottimizza", Play, L("r2PlOptimize"), () => void a().start())
+      : paused && !completando ? b("ottimizza", Play, L("r2PlOptimize"), () => a().riprendi(), { disabled: smussando, title: L("plannerResumeTitle") })
+      : b("ottimizza", Pause, L("r2PlPause"), () => a().pausa(), { disabled: completando || !anySearching, title: L("plannerPauseTitle"), active: true });
+    const smussaB = smussando ? b("smussa", Pause, L("r2PlPause"), () => { stopSmussaRef.current = true; }, { active: true })
+      : b("smussa", Sparkles, L("r2PlSmooth"), () => void a().smussa(), { disabled: !paused || completando || !anySearching, title: L("plannerSmoothTitle") });
+    const completaB = !completando ? b("completa", SkipForward, L("r2PlComplete"), () => a().completa(), { disabled: !paused || !anySearching || smussando, title: L("plannerCompleteTitle") })
+      : paused ? b("completa", Play, L("r2PlComplete"), () => a().riprendi(), { title: L("plannerFillResumeTitle") })
+      : b("completa", Pause, L("r2PlPause"), () => a().pausa(), { disabled: !anyFilling, title: L("plannerFillPauseTitle"), active: true });
+    const disposizione: RibbonItem[] = [smussaB, completaB];
+    if (puoAnnullaCompl) disposizione.push(b("annullaCompl", Undo2, L("r2PlUndoComplete"), () => a().annullaCompletamento(), { title: L("plannerUndoCompleteTitle") }));
+    if (puoAnnullaMan) disposizione.push(b("annullaMan", Undo2, L("r2PlUndoManual"), () => a().annullaManuali(), { title: L("plannerUndoManualTitle") }));
+    disposizione.push(b("reset", RotateCcw, L("r2PlReset"), () => a().reset(), { disabled: bloccato }));
+    const gruppi: RibbonGroup[] = [
+      { id: "pl-ricerca", label: L("r2GrpSearch"), icon: Play, priority: 3, rows: [[ottimizza]] },
+      { id: "pl-disposizione", label: L("r2GrpLayout"), icon: Sparkles, priority: 2, rows: [disposizione] },
+    ];
+    // 2.0: Mappa anche con la città da JSON (Modifica solo con la città selezionata)
+    if (mappa || !esterna) gruppi.push({ id: "pl-citta", label: L("r2GrpCity"), icon: MapIcon, priority: 1, rows: [[
+      ...(mappa ? [b("mappa", MapIcon, L("r2Map"), () => mappaRef.current?.cambia(), { active: mappa.attiva })] : []),
+      ...(!esterna ? [b("modifica", Pencil, nModifiche ? `${L("r2PlEditCity")} · ${nModifiche}` : L("r2PlEditCity"), () => setPannelloModifica(v => !v),
+        { active: pannelloModifica, disabled: bloccato, title: L(bloccato ? "plannerEditCityLocked" : "plannerEditCityTitle") })] : []),
+    ]] });
+    gruppi.push(
+      { id: "pl-cpu", label: L("r2GrpCpu"), icon: Cpu, rows: [[{ kind: "custom", id: "cpu", render: () => (
+        <span className="inline-flex overflow-hidden rounded-md border border-slate-700" role="group" aria-label={L("plannerCpuGroup")} title={titoloCpu}>
           {(["min", "med", "max"] as const).map(p => (
             <button key={p} type="button" aria-pressed={potenza === p} onClick={() => setPotenza(p)}
               className={`px-2 py-1 text-[11px] font-bold ${potenza === p ? "bg-sky-700 text-white" : "text-slate-300 hover:bg-slate-800"}`}>{p.toUpperCase()}</button>
           ))}
         </span>
-        <span className="ml-2 text-slate-400">
-          {t("plannerCityInfo", uiLang, problem.buildings.length, problem.originalRoadCells)}
-        </span>
-        {/* Città esterna (export JSON del pannello MAPPA di un altro utente):
-            strumento di test, visibile solo con DEBUG_PLANNER. */}
-        {DEBUG_PLANNER && (<>
-          <input ref={fileRef} type="file" accept=".json,application/json" className="hidden"
-            onChange={e => { const f = e.currentTarget.files?.[0]; if (f) void importaJson(f); e.currentTarget.value = ""; }} />
-          <button type="button" disabled={running && !paused} onClick={() => fileRef.current?.click()}
-            title={t("plannerImportJsonTitle", uiLang)}
-            className="rounded border border-slate-600 px-2 py-1 text-[12px] hover:bg-slate-800 disabled:opacity-40">{t("plannerImportJson", uiLang)}</button>
-          {esterna && (
-            <>
-              <span className="rounded bg-violet-900/60 px-2 py-0.5 text-[12px] font-bold text-violet-200" title={t("plannerImportedTitle", uiLang)}>🏙 {esterna.nome}</span>
-              <button type="button" disabled={running && !paused} onClick={() => setEsterna(null)}
-                className="rounded border border-slate-600 px-2 py-0.5 text-[12px] hover:bg-slate-800 disabled:opacity-40">{t("plannerProfileCity", uiLang)}</button>
-            </>
-          )}
-          {erroreImport && <span className="text-[12px] text-red-400">{erroreImport}</span>}
-        </>)}
-        {computing && <span className="ml-2 text-amber-300">{t("plannerComputing", uiLang)}</span>}
-        {outcome === null && <span className="ml-2 text-red-300">{t("plannerUnsuitable", uiLang)}</span>}
-        {/* Video tutorial: sempre a destra, ben visibile */}
-        <button type="button" onClick={() => setVideoAperto(true)} title={t("plannerVideoTitle", uiLang)}
-          className="ml-auto rounded border border-rose-400 bg-rose-600 px-3 py-1 font-bold text-white shadow hover:bg-rose-500">{t("plannerVideo", uiLang)}</button>
-      </div>
+      ) }]] },
+      { id: "pl-aiuto", label: L("r2GrpHelp"), icon: Clapperboard, rows: [[b("video", Clapperboard, L("r2PlVideo"), () => setVideoAperto(true), { title: L("plannerVideoTitle") })]] },
+      { id: "pl-statistiche", label: L("r2GrpCurrentStats"), icon: ChartColumn, rows: [[{ kind: "custom", id: "statistiche", render: () => {
+        const voce = (etichetta: string, valore: number, avviso?: string) => (
+          <span className={`flex items-center justify-between gap-2 whitespace-nowrap ${avviso ? "rounded border border-amber-500/70 bg-amber-950/60 px-1 text-amber-200" : ""}`} title={avviso}>
+            <span className={avviso ? "" : "text-slate-400"}>{etichetta}</span>
+            <span className={`font-mono font-semibold ${avviso ? "" : "text-slate-100"}`}>{valore.toLocaleString(uiLang === "it" ? "it-IT" : "en-US")}</span>
+          </span>
+        );
+        return (
+          <div className="grid grid-flow-col grid-rows-3 gap-x-4 gap-y-[3px] text-[11px] leading-[22px]">
+            {voce(L("r2StWithRoad"), statistiche.conStrada)}
+            {voce(L("r2StNoRoad"), statistiche.senzaStrada)}
+            {voce(L("r2StRoads"), statistiche.strade)}
+            {voce(L("r2StChains"), statistiche.aCatena)}
+            {voce(L("r2StSets"), statistiche.set, statistiche.set > 0 ? `${L("plannerSetsTitle")} ${t("plannerSetsBody", uiLang, statistiche.set)} ${L("plannerSetsList")} ${nomiSet}.` : undefined)}
+          </div>
+        );
+      } }]] },
+    );
+    onNastroRef.current?.(gruppi);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firmaNastro]);
+  useEffect(() => () => onNastroRef.current?.([]), []);
+
+  return (
+    // 2.0: niente più riquadro viola: comandi e statistiche sono nel nastro.
+    <div className="mb-3 text-[13px] text-slate-300">
+      {/* 2.0: niente più "City builder: calcolo in corso…" dopo Ottimizza (richiesta utente). */}
+      {outcome === null && (
+        <div className="flex flex-wrap items-center gap-2 px-3 pt-2">
+          <span className="text-red-300">{t("plannerUnsuitable", uiLang)}</span>
+        </div>
+      )}
       {videoAperto && <VideoTutorial onClose={() => setVideoAperto(false)} uiLang={uiLang} />}
       {pannelloModifica && !esterna && (
         <ModificaCitta citta={cittaVera} cittaModificata={cityMapBuildings} modifiche={modifiche} setModifiche={setModifiche}
           candidati={candidati} celleSbloccate={problem.cells.size} bloccato={running && !paused} inCorsa={running}
           onChiudi={() => setPannelloModifica(false)} uiLang={uiLang} />
       )}
-      {edificiSet.length > 0 && !avvisoSetChiuso && (
-        // Avviso: i vecchi set a bonus di adiacenza non sono gestiti (decisione dell'utente).
-        <div role="alert" className="relative mx-3 mt-3 flex items-start gap-2 rounded border-2 border-amber-500 bg-amber-950/60 py-2 pl-3 pr-9 text-[13px] text-amber-100">
-          <button type="button" onClick={() => setAvvisoSetChiuso(true)} title={t("plannerClose", uiLang)} aria-label={t("plannerCloseNotice", uiLang)}
-            className="absolute right-1.5 top-1.5 rounded px-1.5 leading-none text-amber-300 hover:bg-amber-900 hover:text-white">✕</button>
-          <span className="text-lg leading-none">⚠️</span>
-          <span>
-            <b className="text-amber-300">{t("plannerSetsTitle", uiLang)}</b>{" "}
-            {t("plannerSetsBody", uiLang, edificiSet.length)}{" "}
-            {t("plannerSetsList", uiLang)} <b>{[...new Set(edificiSet.map(b => b.name))].sort().join(", ")}</b>.
-          </span>
-        </div>
-      )}
-      {problem.geRifornimento.length > 0 && militari > 0 && !avvisoMilitariChiuso && (
-        // Avviso informativo con Alcatraz / Nave: i militari non hanno bisogno di
-        // strada; con gli interruttori l'utente sceglie quali collegare lo stesso.
-        <div role="status" className="relative mx-3 mt-3 flex items-start gap-2 rounded border-2 border-sky-500 bg-sky-950/60 py-2 pl-3 pr-9 text-[13px] text-sky-100">
-          <button type="button" onClick={() => setAvvisoMilitariChiuso(true)} title={t("plannerClose", uiLang)} aria-label={t("plannerCloseNotice", uiLang)}
-            className="absolute right-1.5 top-1.5 rounded px-1.5 leading-none text-sky-300 hover:bg-sky-900 hover:text-white">✕</button>
-          <span className="text-lg leading-none">ℹ️</span>
-          <span>
-            <b className="text-sky-300">{t("plannerMilitaryTitle", uiLang)}</b>{" "}
-            {t("plannerMilitaryIn", uiLang)} <b>{[...new Set(problem.geRifornimento)].join(` ${t("plannerAnd", uiLang)} `)}</b>, {t("plannerMilitaryBody", uiLang)}
-            <span className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+      {problem.geRifornimento.length > 0 && militari > 0 && (
+        // Militari da collegare comunque alla strada (solo con Alcatraz / Nave,
+        // gli unici casi in cui si può scegliere): sempre visibile, senza
+        // spiegazione; valore iniziale = come sono collegati ora in città.
+        <div className="mx-3 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded border border-slate-700 bg-slate-950 px-3 py-1.5 text-[12px]">
+          <span className="font-semibold text-slate-300">{t("r2PlMilitaryRoad", uiLang)}</span>
               {militariTipi.map(m => {
-                const on = militariCollegati.has(m.entityId);
-                return (
-                  <label key={m.entityId} className={`flex items-center gap-1.5 ${running && !paused ? "opacity-50" : "cursor-pointer"}`}
-                    title={t(running && !paused ? "plannerSwitchLocked" : on ? "plannerSwitchOn" : "plannerSwitchOff", uiLang)}>
-                    <button type="button" role="switch" aria-checked={on} disabled={running && !paused}
-                      onClick={() => setMilitariCollegati(prev => { const n = new Set(prev); if (n.has(m.entityId)) n.delete(m.entityId); else n.add(m.entityId); return n; })}
-                      className={`relative h-4 w-7 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-slate-600"}`}>
-                      <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-3.5" : "left-0.5"}`} />
-                    </button>
-                    <span>{m.name}{m.n > 1 ? ` ×${m.n}` : ""}{m.roadLevel >= 2 ? t("plannerTwoLaneTag", uiLang) : ""}</span>
-                  </label>
-                );
-              })}
-            </span>
-          </span>
+            const on = militariCollegati.has(m.entityId);
+            return (
+              <label key={m.entityId} className={`flex items-center gap-1.5 ${running && !paused ? "opacity-50" : "cursor-pointer"}`}
+                title={t(running && !paused ? "plannerSwitchLocked" : on ? "plannerSwitchOn" : "plannerSwitchOff", uiLang)}>
+                <button type="button" role="switch" aria-checked={on} disabled={running && !paused}
+                  onClick={() => setMilitariCollegati(prev => { const n = new Set(prev); if (n.has(m.entityId)) n.delete(m.entityId); else n.add(m.entityId); return n; })}
+                  className={`relative h-4 w-7 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-slate-600"}`}>
+                  <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-3.5" : "left-0.5"}`} />
+                </button>
+                <span>{m.name}{m.n > 1 ? ` ×${m.n}` : ""}{m.roadLevel >= 2 ? t("plannerTwoLaneTag", uiLang) : ""}</span>
+              </label>
+            );
+          })}
         </div>
       )}
       <div className="p-3">
@@ -1249,9 +1228,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
               <div className="overflow-hidden rounded border border-slate-800"><MapCanvas frame={soloFrame} problem={problem} byId={byId} ge={grandiEdifici} /></div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {/* Sempre due colonne: una mappa sola resta a metà larghezza (a tutta
-                  larghezza diventava troppo alta). */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* Sempre tre colonne (2.0, richiesta utente; prima due): mappe più
+                  piccole, tutti gli scenari affiancati. */}
               {visibili.map(sc => {
                 const n = sc.id;
                 const f = frames[n];

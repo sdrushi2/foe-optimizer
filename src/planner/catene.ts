@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  planner/catene.ts — Edifici a catena nel Planner (ottobre 2026)
 //
-//  Dati: src/assets/catene.json (generato da catene.py nella pipeline dati:
+//  Dati: catene.json (2.0: public/data/, scaricato all'avvio) (generato da catene.py nella pipeline dati:
 //  per ogni edificio di una catena il ruolo — "inizio" o "anello" — e i
 //  rettangoli di aggancio del pezzo successivo, relativi al suo angolo in
 //  alto a sinistra, estremi inclusi; x = larghezza, y = altezza).
@@ -25,8 +25,10 @@
 //  (`zonaStrada`, `toccaStradaZona` in engine.ts).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import dati from "../assets/catene.json";
+import { datiGioco } from "../data/datiGioco";
 import type { PlannerBuilding, PlannerProblem } from "./engine";
+
+const dati = datiGioco().catene;
 
 interface InfoCatena { catena: string; ruolo: "inizio" | "anello"; aggancio: number[][] }
 const EDIFICI = (dati as unknown as { edifici: Record<string, InfoCatena> }).edifici;

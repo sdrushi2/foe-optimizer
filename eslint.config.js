@@ -1,5 +1,5 @@
 // eslint.config.js — Flat config per ESLint 9+ (testato con ESLint 10).
-// Stack: TypeScript + Preact/React (JSX) + Vite, output single-file.
+// Stack: TypeScript + Preact/React (JSX) + Vite, build a più file (2.0).
 //
 // Filosofia di questa config: rispecchia lo stesso standard già seguito a
 // mano nel progetto (zero errori tsc con noUnusedLocals/noUnusedParameters,

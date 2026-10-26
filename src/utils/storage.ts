@@ -3,7 +3,15 @@ import type { InventoryStore } from "../data/inventory";
 import type { ImportedAlly } from "../data/allies";
 import type { CityStore } from "../data/cityStore";
 
-export type Profile = { id: string; name: string };
+/** Profilo = città salvata. 2.0: in più tipo (mia/visitata), id del giocatore
+ *  e mondo, tutti facoltativi (lo storage resta leggibile dalla 1.x; vedi
+ *  data/citta.ts). */
+/** Città salvata (2.0: ex "profilo"). `avatar` = URL dell'avatar del giocatore,
+ *  copiato qui all'import per mostrarlo nell'elenco delle città senza aprire
+ *  lo slot (compresso) della città. */
+export type Profile = { id: string; name: string; tipo?: "mia" | "visitata"; playerId?: number; mondo?: string; avatar?: string;
+  /** 2.0: città "ridotta" importata da un file JSON (data/cittaDaJson.ts). */
+  origine?: "json" };
 
 // Versione del formato di storage. Incrementarla (key rotation) invalida
 // automaticamente tutte le chiavi delle versioni precedenti: i dati vecchi
@@ -21,6 +29,8 @@ export const POP_COLUMN_KEY = `foe_global_show_pop_column_${V}`;
 export const FEL_COLUMN_KEY = `foe_global_show_fel_column_${V}`;
 export const IQ_PROD_COLUMNS_KEY = `foe_global_show_iq_prod_columns_${V}`;
 export const PROD_COLUMNS_KEY = `foe_global_show_prod_columns_${V}`;
+// 2.0: colonne Spedizioni della tabella edifici (Visualizza), separate dal peso.
+export const SPED_COLUMNS_KEY = `foe_global_show_sped_columns_${V}`;
 export const SHOW_CITY_MAP_KEY = `foe_global_show_city_map_${V}`;
 // Vista database tab Info: "light" (solo edifici principali, Light=1) o "full".
 export const DB_VIEW_KEY = `foe_global_db_view_${V}`;
@@ -28,8 +38,6 @@ export const DB_VIEW_KEY = `foe_global_db_view_${V}`;
 // Diversa da gameLang: quella è rilevata dal payload importato, questa è una
 // scelta esplicita dell'utente, indipendente dal profilo attivo.
 export const UI_LANG_KEY = `foe_global_ui_lang_${V}`;
-// Consigliere Gettoni Valore (tab Alleati): pannello aperto/chiuso.
-export const ALLY_ADVISOR_OPEN_KEY = `foe_global_ally_advisor_open_${V}`;
 
 /** Slot di dati per profilo. `resources` (ottobre 2026) = magazzino risorse
  *  importato dalla bacchetta v6; assente per i profili importati prima. */
@@ -318,7 +326,15 @@ export function mergeImportedProfiles(
     while (usedIds.has(id)) id = makeFallbackId(index);
     usedIds.add(id);
     idMap.set(index, id);
-    return { id, name: profile.name || fallbackProfileName(currentProfiles.length + index + 1) };
+    // 2.0: tipo / id del giocatore / mondo conservati se validi (file di terzi: dati non fidati)
+    const extra: Pick<Profile, "tipo" | "playerId" | "mondo" | "avatar" | "origine"> = {};
+    if (profile.origine === "json") extra.origine = "json";
+    if (profile.tipo === "mia" || profile.tipo === "visitata") extra.tipo = profile.tipo;
+    if (typeof profile.playerId === "number" && Number.isFinite(profile.playerId)) extra.playerId = profile.playerId;
+    if (typeof profile.mondo === "string" && profile.mondo.length <= 20) extra.mondo = profile.mondo;
+    // avatar: solo https e lunghezza ragionevole; chi lo mostra lo rivalida (sanitizePortraitUrl)
+    if (typeof profile.avatar === "string" && profile.avatar.startsWith("https://") && profile.avatar.length <= 300) extra.avatar = profile.avatar;
+    return { id, name: profile.name || fallbackProfileName(currentProfiles.length + index + 1), ...extra };
   });
 
   const failedKeys: string[] = [];

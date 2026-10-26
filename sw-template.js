@@ -5,8 +5,10 @@
 // Strategia: CACHE-FIRST con aggiornamento in background (stale-while-revalidate
 // per il documento HTML).
 //
-// - Prima visita: scarica e mette in cache l'app (l'index.html single-file e gli
-//   asset statici come icone/manifest).
+// - Prima visita: scarica e mette in cache l'app (index.html, tutti i file di
+//   dist/assets/ con hash, i dati di gioco di /data/ e le icone/manifest).
+//   2.0: non più single-file; l'elenco dei file lo inietta la build
+//   (__SW_PRECACHE__, plugin serviceWorkerPlugin in vite.config.ts).
 // - Visite successive: l'app viene servita ISTANTANEAMENTE dalla cache, mentre in
 //   background si controlla se c'e' una versione nuova. Se c'e', viene scaricata e
 //   il nuovo SW si installa; alla visita/refresh successivo l'utente ha la nuova
@@ -23,10 +25,12 @@
 const VERSION = "__SW_VERSION__";
 const CACHE_NAME = `foe-optimizer-${VERSION}`;
 
-// Risorse da pre-cachare all'installazione. L'app e' single-file, quindi la root
-// "/" (index.html) e' il pezzo fondamentale; gli altri sono asset statici leggeri.
+// Risorse da pre-cachare all'installazione: la root "/" (index.html), i file
+// della build (codice/stile con hash e dati con ?v=hash, iniettati dalla build)
+// e gli asset statici leggeri.
 const PRECACHE_URLS = [
   "/",
+  "__SW_PRECACHE__",
   "/site.webmanifest",
   "/favicon.png",
   "/apple-touch-icon.png",
@@ -95,7 +99,7 @@ self.addEventListener("fetch", (event) => {
   // con la versione di rete per la prossima volta.
   //
   // IMPORTANTE: la chiave di cache usata e' l'URL RICHIESTO (request), non
-  // sempre "/". L'app e' single-file quindi la root "/" resta il caso
+  // sempre "/". La root "/" (l'app) resta il caso
   // principale, ma il sito ha anche pagine statiche indipendenti fuori dal
   // bundle (es. /guida.html, /guide.html): usare sempre "/" come chiave
   // faceva si' che navigare verso una di queste pagine mostrasse comunque
@@ -123,7 +127,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Altri asset same-origin (icone, manifest): CACHE-FIRST con fallback rete.
+  // Manifest dei dati (2.0): NETWORK-FIRST, la cache solo offline. E' lui a
+  // dire quale versione (?v=hash) di ogni file di dati usare: deve arrivare
+  // dalla rete appena c'e', cosi' un dato aggiornato si vede subito.
+  if (url.pathname === "/data/manifest.json") {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
+        try {
+          const response = await fetch(request);
+          if (response && response.ok) cache.put(url.pathname, response.clone());
+          return response;
+        } catch (err) {
+          return (await cache.match(url.pathname)) || Response.error();
+        }
+      })()
+    );
+    return;
+  }
+
+  // Altri asset same-origin: CACHE-FIRST con fallback rete. Vale anche per i
+  // file con hash nel nome (/assets/) e per i dati con ?v=hash: un URL non
+  // cambia mai contenuto, un dato aggiornato ha un URL nuovo.
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE_NAME);

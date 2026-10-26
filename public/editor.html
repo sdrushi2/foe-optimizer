@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Editor città – FoE Optimizer</title>
-<meta name="description" content="Editor della città di Forge of Empires di FoE Optimizer: sposta e togli edifici e strade, poi salva la città in JSON o PNG.">
+<meta name="description" content="Editor della città di Forge of Empires di FoE Optimizer: sposta e togli edifici e strade, poi salva la città in PNG.">
 <meta name="author" content="Sdrushi">
 <meta name="application-name" content="FoE Optimizer">
 <!-- noindex: senza una città caricata la pagina è vuota (si apre dal tool,
@@ -22,7 +22,7 @@
 <link rel="canonical" href="https://foe-optimizer.com/editor.html">
 <!-- anteprima quando il link viene condiviso (stessa immagine delle altre pagine) -->
 <meta property="og:title" content="Editor città – FoE Optimizer">
-<meta property="og:description" content="Sposta e togli edifici e strade della tua città di Forge of Empires, poi salvala in JSON o PNG.">
+<meta property="og:description" content="Sposta e togli edifici e strade della tua città di Forge of Empires, poi salvala in PNG.">
 <meta property="og:url" content="https://foe-optimizer.com/editor.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FoE Optimizer">
@@ -31,10 +31,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <!--
   Editor della città (idea e prima versione: Sdrushi), ottobre 2026.
-  - Da solo: "Apri JSON" (export JSON del pannello MAPPA / del Planner, payload
-    del bookmarklet o vecchio formato buildings/unlocked_areas), modifica,
-    "Salva JSON" (stesso formato dell'export: CityMapData / CityEntities /
-    UnlockedAreas).
+  - 2.0: niente più "Apri JSON" / "Salva JSON": l'editor si apre solo dal
+    tool (pannello MAPPA o Planner), che gli manda la città.
   - Aperto dal pannello MAPPA (pulsante "Editor"): riceve la città con
     {tipo:"carica", planner:false}; niente "Applica al Planner".
   - "Salva PNG": stesso codice dell'export PNG del tool (renderCityMapPng),
@@ -80,15 +78,16 @@
   }
   /* marchio come nell'header di FoE Optimizer */
   .brand{ display:flex; align-items:center; gap:12px; margin-right:8px; }
+  /* 2.0: logo e titolo identici alla testata del tool (ui/Testata.tsx) */
   .logo{
     display:flex; align-items:center; justify-content:center;
-    width:40px; height:40px; flex-shrink:0;
-    border-radius:14px; border:1.5px solid rgba(245,158,11,.8);
+    width:28px; height:28px; flex-shrink:0;
+    border-radius:11px; border:1.5px solid rgba(245,158,11,.8);
     background:rgba(2,6,23,.8); color:#fbbf24;
-    box-shadow:0 0 15px rgba(245,158,11,.15);
+    box-shadow:0 0 12px rgba(245,158,11,.15);
   }
   .brand h1{
-    margin:0; font-size:20px; line-height:1.25; font-weight:900;
+    margin:0; font-size:20px; line-height:1; font-weight:900;
     text-transform:uppercase; letter-spacing:.025em; white-space:nowrap;
     background:linear-gradient(to right,#fcd34d,#fbbf24,#f59e0b);
     -webkit-background-clip:text; background-clip:text; color:transparent;
@@ -195,7 +194,7 @@
   <div class="brand">
     <div class="logo">
       <!-- icona "swords" (lucide), la stessa del logo di FoE Optimizer -->
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="m13 19 6-6"/>
         <path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5"/>
@@ -209,25 +208,6 @@
     </div>
   </div>
 
-  <label class="btn" for="file">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="17 8 12 3 7 8"/>
-      <line x1="12" y1="3" x2="12" y2="15"/>
-    </svg>
-    <span data-t="apri">Apri JSON</span>
-  </label>
-  <input type="file" id="file" accept=".json,application/json" hidden>
-  <button type="button" class="btn" id="salva" disabled>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="7 10 12 15 17 10"/>
-      <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-    <span data-t="salvaJson">Salva JSON</span>
-  </button>
   <button type="button" class="btn" id="png" disabled>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -253,7 +233,7 @@
   <div id="hints"></div>   <!-- riempito da applicaLingua -->
 </header>
 
-<main><div id="map" data-vuoto="Carica un file .json per visualizzare la città"></div></main>
+<main><div id="map" data-vuoto="Apri l'editor dal tool (Mappa o Planner) per visualizzare la città"></div></main>
 
 
 <script>
@@ -268,13 +248,13 @@ const MIN_SIZE = 72;
 const PAD = 24;            // celle libere in più oltre l'ultimo edificio
 let mapSize = MIN_SIZE;
 
-// Dati della città caricata (servono a "Salva JSON" / "Applica al Planner")
+// Dati della città caricata (servono a "Applica al Planner" e al PNG)
 // ---- Lingua: quella del tool (messaggio "carica"); aperto da solo, la scelta
 // salvata dal tool o la lingua del browser (FoeCondiviso.linguaUi) ----
 const TESTI = {
   it: {
-    titolo: 'Editor città', apri: 'Apri JSON', salvaJson: 'Salva JSON', salvaPng: 'Salva PNG',
-    applica: '✔ Applica al Planner', vuoto: 'Carica un file .json per visualizzare la città',
+    titolo: 'Editor città', salvaPng: 'Salva PNG',
+    applica: '✔ Applica al Planner', vuoto: 'Apri l\'editor dal tool (Mappa o Planner) per visualizzare la città',
     hints: ['<kbd>Trascina</kbd> sposta', '<kbd>Trascina sul vuoto</kbd> seleziona',
             '<kbd>Shift</kbd> aggiungi alla selezione',
             '<kbd>Ctrl</kbd> + <kbd>A</kbd> seleziona tutto', '<kbd>Doppio clic</kbd> aggiungi / togli strada', '<kbd>Shift</kbd> + <kbd>Doppio clic</kbd> strada a due corsie',
@@ -284,13 +264,13 @@ const TESTI = {
     bad: n => n + " elementi sovrapposti, fuori dall'area o strade a due corsie sfalsate",
     municipio: 'Municipio',
     noPng: 'Export PNG non disponibile (manca /editor-condiviso.js)', pngErr: 'Export PNG non riuscito: ',
-    jsonErr: 'JSON non valido: ', plannerChiuso: 'Il Planner è stato chiuso: usa "Salva JSON"',
+    plannerChiuso: 'Il Planner è stato chiuso: riaprilo dal tool',
     inviata: 'Inviata al Planner…',
     zoomIn: 'Ingrandisci', zoomOut: 'Rimpicciolisci', zoomReset: 'Zoom 100%'
   },
   en: {
-    titolo: 'City editor', apri: 'Open JSON', salvaJson: 'Save JSON', salvaPng: 'Save PNG',
-    applica: '✔ Apply to Planner', vuoto: 'Load a .json file to show the city',
+    titolo: 'City editor', salvaPng: 'Save PNG',
+    applica: '✔ Apply to Planner', vuoto: 'Open the editor from the tool (Map or Planner) to show the city',
     hints: ['<kbd>Drag</kbd> move', '<kbd>Drag on empty space</kbd> select',
             '<kbd>Shift</kbd> add to selection',
             '<kbd>Ctrl</kbd> + <kbd>A</kbd> select all', '<kbd>Double click</kbd> add / remove road', '<kbd>Shift</kbd> + <kbd>Double click</kbd> two-lane road',
@@ -300,7 +280,7 @@ const TESTI = {
     bad: n => n + ' items overlapping, outside the area or misaligned two-lane roads',
     municipio: 'Town Hall',
     noPng: 'PNG export not available (/editor-condiviso.js missing)', pngErr: 'PNG export failed: ',
-    jsonErr: 'Invalid JSON: ', plannerChiuso: 'The Planner has been closed: use "Save JSON"',
+    plannerChiuso: 'The Planner has been closed: open it again from the tool',
     inviata: 'Sent to the Planner…',
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', zoomReset: 'Zoom 100%'
   }
@@ -443,7 +423,6 @@ function draw({ areas, items }) {
   });
 
   items.forEach(i => addBuilding(i));
-  document.getElementById('salva').disabled = false;
   document.getElementById('png').disabled = false;
   verifica();
 }
@@ -720,20 +699,6 @@ function esporta() {
   return { CityMapData, CityEntities, UnlockedAreas: fonte.areeRaw };
 }
 
-document.getElementById('salva').addEventListener('click', () => {
-  if (!fonte) return;
-  const blob = new Blob([JSON.stringify(esporta(), null, 2)], { type: 'application/json;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const d = new Date(), p = n => String(n).padStart(2, '0');
-  a.href = url;
-  a.download = 'foe-editor-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-});
-
 // ---- Export PNG: lo STESSO codice del tool (renderCityMapPng di
 // src/components/cityMapPng.ts), caricato da /editor-condiviso.js ----
 document.getElementById('png').addEventListener('click', () => {
@@ -791,18 +756,6 @@ document.getElementById('zoomIn').addEventListener('click', () => passoZoom(1));
 document.getElementById('zoomOut').addEventListener('click', () => passoZoom(-1));
 document.getElementById('zoomReset').addEventListener('click', () => zoomA(TILE_BASE));
 
-document.getElementById('file').addEventListener('change', ev => {
-  const f = ev.target.files[0];
-  ev.target.value = '';                      // permette di ricaricare lo stesso file
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try { nuoviDalPlanner = new Set(); riepilogoPng = null; draw(parse(JSON.parse(r.result))); stato(''); }
-    catch (err) { alert(tr('jsonErr') + err.message); }
-  };
-  r.readAsText(f);
-});
-
 // ---- Canale col Planner (postMessage, stessa origine) ----
 const planner = window.opener && window.opener !== window ? window.opener : null;
 window.addEventListener('message', ev => {
@@ -810,7 +763,7 @@ window.addEventListener('message', ev => {
   const m = ev.data || {};
   if (m.tipo === 'carica') {
     // planner:false = aperto dal pannello MAPPA: solo visualizzazione e
-    // "Salva JSON", niente "Applica al Planner" né dettaglio nel titolo
+    // "Salva PNG", niente "Applica al Planner" né dettaglio nel titolo
     const dalPlanner = m.planner !== false;
     token = dalPlanner ? m.token : null;
     document.getElementById('dettaglio').textContent = dalPlanner ? 'Planner · ' + (m.titolo || '') : '';

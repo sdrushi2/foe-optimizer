@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { build, defineConfig, type Plugin } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
+import { manifestDati, verificaDati } from "./scripts/dati-pubblici.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,11 +46,65 @@ function sitemapPlugin(date: string): Plugin {
   };
 }
 
+// Plugin (2.0): dati di gioco in public/data/ (vedi src/data/datiGioco.ts e
+// scripts/dati-pubblici.ts).
+// - build: prima di tutto controlla i dati (un file malformato ferma la build,
+//   come nella 1.x quando i dati erano nel bundle); alla fine scrive
+//   dist/data/manifest.json con l'hash di ogni file;
+// - dev: /data/manifest.json calcolato al volo a ogni richiesta.
+const DIR_DATI = path.resolve(__dirname, "public", "data");
+function datiPlugin(): Plugin {
+  return {
+    name: "foe-dati",
+    buildStart() {
+      if (process.env.FOE_EDITOR_BUILD) return;
+      const errori = verificaDati(DIR_DATI);
+      if (errori.length) this.error(`Dati di gioco non validi (public/data):\n  - ${errori.join("\n  - ")}`);
+    },
+    configureServer(server) {
+      server.middlewares.use("/data/manifest.json", (_req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-cache");
+        res.end(JSON.stringify(manifestDati(DIR_DATI)));
+      });
+    },
+    // Il codice dell'app (avvio.tsx) si esegue solo dopo i dati, ma si può
+    // SCARICARE subito, in parallelo: modulepreload in index.html.
+    transformIndexHtml: {
+      order: "post",
+      handler(_html, ctx) {
+        const chunk = Object.values(ctx.bundle ?? {}).find(c => c.type === "chunk" && c.facadeModuleId?.endsWith("/src/avvio.tsx"));
+        return chunk ? [{ tag: "link", attrs: { rel: "modulepreload", crossorigin: true, href: `/${chunk.fileName}` }, injectTo: "head" }] : [];
+      },
+    },
+    closeBundle() {
+      if (process.env.FOE_EDITOR_BUILD) return;
+      const out = path.resolve(__dirname, "dist", "data", "manifest.json");
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      fs.writeFileSync(out, JSON.stringify(manifestDati(DIR_DATI)), "utf-8");
+    },
+  };
+}
+
+// Elenco dei file da mettere in cache all'installazione del service worker
+// (2.0, build a più file): tutto dist/assets/ (codice e stile con hash, anche
+// i pezzi caricati a richiesta come il Planner) e i dati con il loro ?v=hash.
+// Senza, la prima visita non resterebbe usabile offline: la prima pagina non
+// passa dal service worker, che quindi non vedrebbe quei file.
+function filePrecache(): string[] {
+  const dirAssets = path.resolve(__dirname, "dist", "assets");
+  const assets = fs.existsSync(dirAssets) ? fs.readdirSync(dirAssets).map(f => `/assets/${f}`) : [];
+  const { file } = manifestDati(DIR_DATI);
+  const dati = Object.entries(file).map(([f, h]) => `/data/${f}?v=${h}`);
+  return [...assets, "/data/manifest.json", ...dati];
+}
+
 function serviceWorkerPlugin(version: string): Plugin {
   return {
     name: "foe-service-worker",
     apply: "build",
     closeBundle() {
+      if (process.env.FOE_EDITOR_BUILD) return;
       const templatePath = path.resolve(__dirname, "sw-template.js");
       const outPath = path.resolve(__dirname, "dist", "sw.js");
       if (!fs.existsSync(templatePath)) {
@@ -58,7 +112,9 @@ function serviceWorkerPlugin(version: string): Plugin {
         return;
       }
       const template = fs.readFileSync(templatePath, "utf-8");
-      const output = template.replace(/__SW_VERSION__/g, version);
+      const output = template
+        .replace(/__SW_VERSION__/g, version)
+        .replace('"__SW_PRECACHE__"', JSON.stringify(filePrecache()).slice(1, -1));
       fs.writeFileSync(outPath, output, "utf-8");
     },
   };
@@ -112,11 +168,14 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    viteSingleFile(), // meglio come ultimo plugin
+    datiPlugin(),
     serviceWorkerPlugin(SW_CACHE_VERSION),
     sitemapPlugin(BUILD_DATE),
     editorCondivisoPlugin(),
   ],
+  // 2.0: il codice principale (App) supera i 500 kB minificati; il Planner
+  // è già un pezzo a parte. Soglia dell'avviso alzata di conseguenza.
+  build: { chunkSizeWarningLimit: 900 },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

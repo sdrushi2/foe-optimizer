@@ -1,61 +1,65 @@
-import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, type ReactNode } from "react";
 import {
-  Swords,
-  Trash2,
-  Search,
-  Download,
   X as XIcon,
   RotateCcw,
-  Info,
-  Home,
-  Package,
-  Users,
   Upload,
   Check,
   Wand2,
-  ChevronDown,
-  HelpCircle,
-  Anchor
 } from "lucide-react";
 
 import type { Building } from "./data/buildings";
 import { getImageUrl, noRush, isEraMutable } from "./data/buildings";
 import type { Weights } from "./utils/calculator";
 import { calculateEfficiency } from "./utils/calculator";
-import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, isStaleField, localDateStamp } from "./utils/format";
+import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, isStaleField, localDateStamp, prefissoFile } from "./utils/format";
 import * as Allies from "./data/allies";
 import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, type UpgradeKitEntry, type SpecialKits, type InventoryStore } from "./data/inventory";
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { BOOKMARKLET_JS, CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, DB_VIEW_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
   isStorageOutdated, PROFILE_SLOTS
 } from "./utils/storage";
 
-import buildingsCsv from "./assets/buildings.csv?raw";
-import alliesCsv from "./assets/allies.csv?raw";
+import { caricaBuildingsExtra, datiGioco } from "./data/datiGioco";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
-import eventsCsv from "./assets/events.csv?raw";
-import kitData from "./assets/kit.json";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
 import CityMapView, { type CityMapDragState } from "./components/CityMapView";
+import { esportaCittaJson, scaricaJson } from "./data/cityMapJson";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import ProfileHelpModal from "./components/ProfileHelpModal";
 import AboutModal from "./components/AboutModal";
+import { infoImport, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
+import Testata, { type Scheda } from "./ui/Testata";
+import { costruisciNastri } from "./ui/nastri";
+import { useTema } from "./ui/theme";
+import type { RibbonGroup } from "./ui/ribbon/Ribbon";
+import type { CittaEsterna } from "./planner/PlannerView";
+import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/cityMapJson";
+import { cittaDaJson } from "./data/cittaDaJson";
+
+/** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
+const NESSUN_ID = new Set<string>();
+/** Città vuota passata al Planner con la sorgente JSON: costanti STABILI. Un
+ *  array / Set nuovo a ogni render di App ricalcolava il problema del Planner
+ *  e il suo effetto di reset cancellava gli scenari appena avviati
+ *  (bug: "Ottimizza" con un JSON mostrava i riquadri e poi spariva tutto). */
+const NESSUN_EDIFICIO: CityMapBuilding[] = [];
+const NESSUNA_CELLA = new Set<string>();
+import type { Categoria, OpzioneProduzione } from "./ui/FiltriEdifici";
 import { useModalDismiss } from "./utils/useModalDismiss";
 import AllyAdvisorPanel from "./components/AllyAdvisorPanel";
-import PlannerView from "./planner/PlannerView";
 import { dimensioniDaSize, senzaLivello, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner } from "./planner/modificheCitta";
 import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
-import { t, UI_LANGUAGES, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
+import { t, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
 import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilitaryCampBuildingId,
   isBattlegroundsPrizeId, isQuantumIncursionsPrizeId, getSettlementInfo,
   isAscendedUpgradeKit, isAllAgeBuildingId,
@@ -72,13 +76,20 @@ import {
   iconSpedAtk_D as iconSpedAtkD, iconSpedDef_D as iconSpedDefD,
   iconIQAtk_A as iconIQAtkA, iconIQDef_A as iconIQDefA,
   iconIQAtk_D as iconIQAtkD, iconIQDef_D as iconIQDefD,
-  iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, iconIQProd,
+  iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, 
   iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap, iconFUR, iconBP, iconTR, iconTRNE,
   iconOneUp, iconImm, iconRinn, iconAiuto, iconFragment, allies_slot_empty, allies_slot_full,
 } from "./assets/icons";
 
 // I nomi (NomeIta/NomeEng) sono ora colonne dirette di buildings.csv/allies.csv,
 // quindi il parsing non richiede più una mappa di traduzione esterna.
+// Dati di gioco: scaricati da main.tsx PRIMA di importare questo modulo
+// (2.0: public/data/, vedi data/datiGioco.ts).
+// Planner (motore, editor, Modifica città): caricato solo quando lo si apre
+// (2.0, build a più file: un pezzo di codice a parte).
+const PlannerView = lazy(() => import("./planner/PlannerView"));
+
+const { buildings: buildingsCsv, allies: alliesCsv, events: eventsCsv, kit: kitData } = datiGioco();
 const BUILDINGS_FROM_CSV: Building[] = parseBuildingsCsv(buildingsCsv);
 const ALLIES_FROM_CSV: Allies.Ally[] = Allies.parseAlliesCsv(alliesCsv);
 
@@ -647,136 +658,6 @@ const SortableHeader = memo(function SortableHeader({
   );
 });
 
-/** Bandiera italiana, SVG vettoriale (non emoji: rendering coerente su ogni
- *  sistema/browser). Tre bande verticali, angoli leggermente arrotondati. */
-const FlagIT = memo(function FlagIT({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size * 0.72} viewBox="0 0 24 17.3" className="rounded-[2px] shadow-sm shrink-0">
-      <rect width="24" height="17.3" rx="2" fill="#F4F9FF" />
-      <path d="M2 0h6v17.3H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2Z" fill="#008C45" />
-      <rect x="16" width="8" height="17.3" fill="#CD212A" />
-      <path d="M16 0h6a2 2 0 0 1 2 2v13.3a2 2 0 0 1-2 2h-6Z" fill="#CD212A" />
-      <rect width="24" height="17.3" rx="2" fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" />
-    </svg>
-  );
-});
-
-/** Bandiera del Regno Unito, SVG vettoriale semplificato ma riconoscibile
- *  (Union Jack: croci di San Giorgio + Sant'Andrea su fondo blu navy). */
-const FlagGB = memo(function FlagGB({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size * 0.72} viewBox="0 0 24 17.3" className="rounded-[2px] shadow-sm shrink-0">
-      <defs>
-        <clipPath id="flagGbClip"><rect width="24" height="17.3" rx="2" /></clipPath>
-      </defs>
-      <g clipPath="url(#flagGbClip)">
-        <rect width="24" height="17.3" fill="#012169" />
-        <path d="M0 0 24 17.3 M24 0 0 17.3" stroke="#FFFFFF" strokeWidth="3.4" />
-        <path d="M0 0 24 17.3 M24 0 0 17.3" stroke="#C8102E" strokeWidth="1.3" />
-        <path d="M12 0v17.3 M0 8.65h24" stroke="#FFFFFF" strokeWidth="5.7" />
-        <path d="M12 0v17.3 M0 8.65h24" stroke="#C8102E" strokeWidth="3.4" />
-      </g>
-      <rect width="24" height="17.3" rx="2" fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" />
-    </svg>
-  );
-});
-
-/** Bandiera corrispondente a ciascun codice lingua GUI. Mappa centralizzata:
- *  aggiungere una lingua significa aggiungere una entry qui (oltre a
- *  UI_LANGUAGES in ui-strings.ts) — il dropdown sotto non cambia. */
-const FLAG_BY_LANG: Record<UiLang, React.ComponentType<{ size?: number }>> = {
-  it: FlagIT,
-  en: FlagGB,
-};
-
-/** Selettore lingua GUI: un solo pulsante con la bandiera attiva (grande,
- *  ben visibile) che apre un piccolo menu con tutte le lingue disponibili.
- *  A differenza di due bandiere affiancate, la larghezza dell'header non
- *  cresce se in futuro si aggiungono altre lingue — cresce solo il menu,
- *  che è verticale e scrollabile se necessario. Si chiude al click fuori
- *  o su Escape. */
-const LanguageSwitch = memo(function LanguageSwitch({ uiLang, onChange }: { uiLang: UiLang; onChange: (lang: UiLang) => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const ActiveFlag = FLAG_BY_LANG[uiLang];
-
-  // position:fixed con coordinate calcolate dal pulsante, invece di
-  // position:absolute nel normale flusso del documento: il pulsante vive
-  // dentro una barra con overflow-x-auto (la barra profili), che taglierebbe
-  // un menu absolute non appena uscisse dall'area visibile scrollabile.
-  // Fixed invece non viene mai tagliato dagli antenati con overflow, ed è
-  // lo stesso pattern già usato altrove nel progetto per tooltip/popup
-  // (fabTooltip, imagePopup) per la stessa ragione.
-  const toggleOpen = () => {
-    if (!isOpen && buttonRef.current) {
-      const r = buttonRef.current.getBoundingClientRect();
-      setMenuPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
-    }
-    setIsOpen((v) => !v);
-  };
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handlePointerDown = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (buttonRef.current?.contains(target)) return;
-      if (menuRef.current?.contains(target)) return;
-      setIsOpen(false);
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen]);
-
-  return (
-    <div className="relative shrink-0">
-      <button
-        ref={buttonRef}
-        onClick={toggleOpen}
-        title={t("languageSwitchTitle", uiLang)}
-        aria-label={t("languageSwitchTitle", uiLang)}
-        aria-expanded={isOpen}
-        className="flex h-7 items-center gap-1 rounded border border-slate-700/60 bg-slate-800/40 px-1 hover:border-amber-500/50 hover:bg-amber-500/10 transition-all"
-      >
-        <ActiveFlag size={24} />
-        <ChevronDown size={13} className={`text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </button>
-      {isOpen && menuPos && (
-        <div
-          ref={menuRef}
-          style={{ position: "fixed", top: menuPos.top, right: menuPos.right }}
-          className="z-50 min-w-[190px] overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl shadow-black/60"
-        >
-          {UI_LANGUAGES.map(({ code, nativeName }) => {
-            const Flag = FLAG_BY_LANG[code];
-            const isActive = code === uiLang;
-            return (
-              <button
-                key={code}
-                onClick={() => { setIsOpen(false); onChange(code); }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
-                  isActive ? "bg-amber-500/10 text-amber-300 font-semibold" : "text-slate-200 hover:bg-slate-800"
-                }`}
-              >
-                <Flag size={18} />
-                {nativeName}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-});
-
 /** Badge quantità per i pannelli Debug (Città/Inventario): "×N" col colore
  *  della sezione, omesso quando N === 1 (es. i Grandi Edifici sono sempre
  *  univoci, non serve mostrare "×1" su ognuno). */
@@ -887,18 +768,20 @@ function Boost4({ values, uiLang }: { values: [number, number, number, number]; 
  *  [AttAtt, DifAtt, AttDif, DifDif] della rispettiva fonte (Building.general
  *  o ComputedAllyStats.computedGeneral, ecc.). */
 type TabType = "database" | "alleati" | "propria_citta" | "inventario";
-type FilterType = "all" | "incursioni" | "alleati" | "insediamenti" | "premi_campi" | "premi_iq";
+
+/** Voci a tre stati del gruppo "Nascondi / Mostra solo". */
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "aiuto" | "immagazzina" | "ge";
+type StatoTri = 0 | 1 | 2;
+const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, aiuto: 0, immagazzina: 0, ge: 0 };
+/** true = riga da scartare: stato 1 scarta chi ha la caratteristica, stato 2 chi non ce l'ha. */
+const scartaTri = (stato: StatoTri, ha: boolean) => (stato === 1 ? ha : stato === 2 ? !ha : false);
 
 type TabFilters = {
-  showOnlyFilter: FilterType;
+  /** Caselle di categoria del nastro (2.0): OR tra quelle spuntate, vuoto = tutti. */
+  categorie: Set<Categoria>;
   showEventFilter: string;
-  showIncursionBuildings: boolean;
-  showAllyBuildings: boolean;
-  showMassAidBuildings: boolean;
-  showStoreBuildingBuildings: boolean;
-  showGreatBuildings: boolean;
-  showLimitedAscended: boolean;
-  showTimeColumn: boolean;
+  /** "Nascondi / Mostra solo" del nastro (2.0): 0 tutti, 1 nascosti, 2 solo questi. */
+  tri: Record<VoceTri, StatoTri>;
   prodFilter: Set<string>;
   prodFilterMode: "AND" | "OR";
   minEff: string;
@@ -1016,7 +899,6 @@ interface BuildingRowProps {
   uiLang: UiLang;
   gameLang: Lang;
   currentEraId: number;
-  currentFilters: TabFilters;
   showSigmaColumns: boolean;
   spedizioniEnabled: boolean;
   showPopColumn: boolean;
@@ -1069,7 +951,7 @@ interface BuildingRowProps {
  *  altre righe. Nessuna modifica alla logica originale: solo trasloco di
  *  codice + lookup nelle Map fatti dal genitore invece che qui dentro. */
 const BuildingRow = memo(function BuildingRow({
-  b, activeTab, uiLang, gameLang, currentEraId, currentFilters, showSigmaColumns, spedizioniEnabled,
+  b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
   greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
@@ -1638,19 +1520,18 @@ const BuildingRow = memo(function BuildingRow({
             return <>{qtyBadge}</>;
          })()}
       </td>
-      {currentFilters.showTimeColumn && (
-        <td>
-          {(() => {
-            const propDisplay = getPropDisplay(b, uiLang);
-            if (!propDisplay) return null;
-            return (
-              <span className="badge-value badge-value-purple">
-                {propDisplay}
-              </span>
-            );
-          })()}
-        </td>
-      )}
+      {/* Colonna ⏱ (limitati / ascesi): 2.0, sempre visibile. */}
+      <td>
+        {(() => {
+          const propDisplay = getPropDisplay(b, uiLang);
+          if (!propDisplay) return null;
+          return (
+            <span className="badge-value badge-value-purple">
+              {propDisplay}
+            </span>
+          );
+        })()}
+      </td>
       <td className="cell-icons">
         <div className="flex flex-row flex-nowrap items-center justify-center gap-0.5">
           {/* Un'icona per carattere di allyType (oggi sempre 0 o 1 carattere,
@@ -1953,13 +1834,13 @@ export default function App() {
   const [activeProfileId, setActiveProfileId] = useState<string>(() =>
     getActiveProfileId(loadProfiles())
   );
-  const [renamingProfileId, setRenamingProfileId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState("");
 
   // ── Export/Import Sessione ──────────────────────────────────────────────
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [importLoading, setImportLoading] = useState(false);
+  // (2.0: lo stato "in corso" di export/import non è più mostrato: i pulsanti
+  // sono in Opzioni → Backup.)
+  const [, setExportLoading] = useState(false);
+  const [, setImportLoading] = useState(false);
   const [importError, setImportError] = useState<string>("");
   const [importSuccess, setImportSuccess] = useState<string>("");
 
@@ -2019,10 +1900,11 @@ export default function App() {
     loadProfileData(profileId);
   };
 
-  const deleteProfile = (profileId: string) => {
+  /** `chiedi` false: la conferma l'ha già data il selettore della città (2.0). */
+  const deleteProfile = (profileId: string, chiedi = true) => {
     const profile = profiles.find(p => p.id === profileId);
     const name = profile?.name ?? t("genericProfileFallback", uiLang);
-    if (!confirm(t("confirmDeleteProfile", uiLang, name))) {
+    if (chiedi && !confirm(t("confirmDeleteProfile", uiLang, name))) {
       return;
     }
     const updated = profiles.filter(p => p.id !== profileId);
@@ -2062,18 +1944,12 @@ export default function App() {
     setProfiles([]);
     setActiveProfileId("");
     loadProfileData("");
-    setRenamingProfileId(null);
-    setRenameValue("");
+    // 2.0: via anche la città importata da JSON nel Planner
+    setPlannerJson(null);
+    setPlannerErrore(null);
   };
 
-  const commitRename = (profileId: string, newName: string) => {
-    const trimmed = newName.trim();
-    if (!trimmed) { setRenamingProfileId(null); return; }
-    const updated = profiles.map(p => p.id === profileId ? { ...p, name: trimmed } : p);
-    setProfiles(updated);
-    writeStoredJson(PROFILES_KEY, updated);
-    setRenamingProfileId(null);
-  };
+
 
   const [activeTab, setActiveTab] = useState<"database" | "alleati" | "propria_citta" | "inventario" | "pirati">("database");
   const buildingTableWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -2129,14 +2005,23 @@ export default function App() {
   const [showCityMap, setShowCityMap] = useState<boolean>(() => localStorage.getItem(SHOW_CITY_MAP_KEY) === "true");
   // Planner città (sempre disponibile dal 19 ottobre 2026): non persistente.
   const [showPlanner, setShowPlanner] = useState(false);
-  // Città eliminata (profilo cancellato o svuotato): il Planner si chiude, come
-  // se non fosse mai stata importata una città.
-  useEffect(() => { if (cityMapBuildings.length === 0) setShowPlanner(false); }, [cityMapBuildings]);
+  // 2.0: sorgente del Planner (scheda Planner, gruppo Sorgente del nastro):
+  // la città selezionata o una città da file JSON (temporanea, non salvata).
+  const [plannerSorgente, setPlannerSorgente] = useState<"citta" | "json">("citta");
+  const [plannerJson, setPlannerJson] = useState<{ citta: CittaEsterna; n: number } | null>(null);
+  const [plannerErrore, setPlannerErrore] = useState<string | null>(null);
+  const plannerFileRef = useRef<HTMLInputElement>(null);
+  /** 2.0: file JSON da importare come città "ridotta" (Opzioni › Città salvate). */
+  const cittaJsonRef = useRef<HTMLInputElement>(null);
+  // Gruppi del nastro consegnati dal Planner (Ricerca, Disposizione, …).
+  const [gruppiPlanner, setGruppiPlanner] = useState<RibbonGroup[]>([]);
+  // Gruppi del nastro consegnati dallo strumento Pirati (Calcolo, Espansioni).
+  const [gruppiPirati, setGruppiPirati] = useState<RibbonGroup[]>([]);
+  // (2.0: il Planner resta aperto anche senza città: usa la sorgente JSON.)
   // Filtra gli edifici vecchi nella tab Città
   const [showOnlyOutdated, setShowOnlyOutdated] = useState(false);
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
   const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
-  const [showOnlyWithAllySlot, setShowOnlyWithAllySlot] = useState(false);
   // Merge Città+Inventario: quando attivo, la tabella Città mostra anche le
   // righe dell'ottimizzatore inventario (stesso identico set che si vede in
   // tab Inventario), marcate con ProcessedBuilding._isMergedInventory per
@@ -2144,10 +2029,8 @@ export default function App() {
   // di esse (vedi filterSourceBuildings/handleCityRowClick più sotto). Non
   // persistito, stesso pattern di showOnlyOutdated/showOnlyDeclassable.
   const [showInventoryInCity, setShowInventoryInCity] = useState(false);
-  // Filtra nella tab Città: mostra solo gli edifici che PRODUCONO frammenti
-  // (stesso meccanismo del filtro slot alleati sopra, stessa fonte dati del
-  // badge iconFragment: FRAGMENTS_PRODUCED).
-  const [showOnlyWithFragments, setShowOnlyWithFragments] = useState(false);
+  // 2.0: "solo con slot alleato" e "solo che producono frammenti" sono ora le
+  // caselle di categoria "alleati"/"frammenti" (TabFilters.categorie).
   // Filtra nella tab Inventario: mostra solo gli edifici fisicamente già in inventario
   const [showOnlyReadyBuildings, setShowOnlyReadyBuildings] = useState(false);
   const [cityMapCellSize, setCityMapCellSize] = useState(9);
@@ -2246,8 +2129,26 @@ export default function App() {
   const [isEfficiencyHelpOpen, setIsEfficiencyHelpOpen] = useState(false);
   const [isProfileHelpOpen, setIsProfileHelpOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  // 2.0: scheda Opzioni/Guida aperta (solo nastro), tema chiaro/scuro
+  const [schedaExtra, setSchedaExtra] = useState<"opzioni" | "guida" | null>(null);
+  // 2.0: catalogo scelto nel Database. Il catalogo Alleati usa la vista
+  // alleati di sempre (activeTab "alleati") in modalità database
+  // (alleatiDaDb): niente pannello consigliere né tabella dei posseduti.
+  const [catalogo, setCatalogoStato] = useState<"edifici" | "alleati">("edifici");
+  const [alleatiDaDb, setAlleatiDaDb] = useState(false);
+  // Tipi di alleato mostrati (colonna Tipo di allies.csv; "" = come militare).
+  const [mostraMilitari, setMostraMilitari] = useState(true);
+  const [mostraScienza, setMostraScienza] = useState(true);
+  // Pannello "Potenziale e gettoni" (AllyAdvisorPanel) nella scheda Alleati:
+  // spento di default, lo accende il pulsante del nastro (Analisi).
+  const [mostraConsigliere, setMostraConsigliere] = useState(false);
+  /** Avviso dopo l'import ("Aggiornata …", "Aggiunta …"), mostrato dalla testata. */
+  const [avvisoCitta, setAvvisoCitta] = useState<string | null>(null);
+  const [tema, setTema] = useTema();
   const [isProdSummaryOpen, setIsProdSummaryOpen] = useState(false);
   const [isRoadSummaryOpen, setIsRoadSummaryOpen] = useState(false);
+  // 2.0: seconda metà del vecchio PROD + STAT (valori militari), pannello a sé.
+  const [isMilSummaryOpen, setIsMilSummaryOpen] = useState(false);
   const [isOutdatedSummaryOpen, setIsOutdatedSummaryOpen] = useState(false);
   const [isCityUpgradeableOpen, setIsCityUpgradeableOpen] = useState(false);
   const [isOutdatedModalOpen, setIsOutdatedModalOpen] = useState(false);
@@ -2258,10 +2159,8 @@ export default function App() {
   // modale durante una selezione di testo. Non per i due avvisi a z-200
   // (storage obsoleto, bacchetta obsoleta): richiedono il loro pulsante.
   const closeImportModal = useCallback(() => setIsImportModalOpen(false), []);
-  const closeCityUpgradeable = useCallback(() => setIsCityUpgradeableOpen(false), []);
   const closeJsonEntry = useCallback(() => setSelectedJsonEntry(null), []);
   const importModalBackdrop = useModalDismiss(isImportModalOpen, closeImportModal);
-  const cityUpgradeableBackdrop = useModalDismiss(isCityUpgradeableOpen, closeCityUpgradeable);
   // Solo Esc: questo modale non si chiudeva col click sullo sfondo e resta così.
   useModalDismiss(selectedJsonEntry !== null, closeJsonEntry);
 
@@ -2284,19 +2183,6 @@ export default function App() {
     });
     return map;
   }, [cityEntityIds]);
-
-  const totalCityEntityInstances = useMemo(() => {
-    let total = 0;
-    cityEntityIds.forEach((count) => { total += count; });
-    return total;
-  }, [cityEntityIds]);
-
-  const totalInventoryInstances = useMemo(() => {
-    let total = 0;
-    inventoryMatched.forEach((e) => { total += e.inStock; });
-    inventoryUnmatched.forEach((e) => { total += e.inStock; });
-    return total;
-  }, [inventoryMatched, inventoryUnmatched]);
 
   // csvCityEntityIds was a useMemo but buildings === BUILDINGS_FROM_CSV (stable module constant)
   // so CSV_ENTITY_IDS and CSV_ENTITY_IDS_SET are pre-computed at module level instead.
@@ -2482,7 +2368,8 @@ export default function App() {
         if (!entityId) continue;
         const entity = cityEntities?.[entityId] ?? {};
         // Skip edifici che richiedono strada: il check "needless road" vale solo per quelli che NON la richiedono.
-        if (!entity?.components || BuildingModel.requiresRoad(entity)) continue;
+        // (2.0: anche le CityEntities ridotte delle città da JSON, con width ma senza components)
+        if ((!entity?.components && entity?.width == null) || BuildingModel.requiresRoad(entity)) continue;
         const [w, l] = getEntitySize(entityId);
         let touchesStreet = false;
         for (let dx = 0; dx < w && !touchesStreet; dx++) {
@@ -2614,7 +2501,13 @@ export default function App() {
         }
         bMinX = Math.min(bMinX, x); bMinY = Math.min(bMinY, y);
         bMaxX = Math.max(bMaxX, x + w); bMaxY = Math.max(bMaxY, y + l);
-        mapBuildings.push({ entityId, mapEntityId: key, name: entityName, x, y, w, h: l, type: entryType, isGreatBuilding: isGE, isMilitary, isNeedlessRoad: isNeedless, isInactive: isInactiveBuilding, isSuppliesProducer, roadLevel });
+        // 2.0: era della copia (level = id dell'era) e, per i Grandi Edifici,
+        // livello/livello massimo: servono all'export JSON (Forge Hammer, città ridotta).
+        const livelloVoce = typeof entry.level === "number" ? entry.level : undefined;
+        const eraCopia = !isGE && livelloVoce !== undefined ? AGES_BY_ID.get(livelloVoce)?.age : undefined;
+        mapBuildings.push({ entityId, mapEntityId: key, name: entityName, x, y, w, h: l, type: entryType, isGreatBuilding: isGE, isMilitary, isNeedlessRoad: isNeedless, isInactive: isInactiveBuilding, isSuppliesProducer, roadLevel,
+          ...(eraCopia ? { era: eraCopia } : {}),
+          ...(isGE && livelloVoce !== undefined ? { livello: livelloVoce, ...(typeof entry.max_level === "number" ? { livelloMax: entry.max_level } : {}) } : {}) });
       }
 
       const unlockedCells = new Set<string>();
@@ -2889,7 +2782,7 @@ export default function App() {
   // 3) CityMapData → edifici piazzati in città
   // 4) allies → alleati posseduti (placement letto da CityEntities/CityMapData)
   // 5) inventory → oggetti, kit e frammenti in inventario
-  const handleImportAll = async (parsed: BookmarkletData, targetProfileId?: string) => {
+  const handleImportAll = async (parsed: BookmarkletData, targetProfileId?: string, soloCitta = false) => {
     const pid = targetProfileId ?? activeProfileId;
     const inventoryKey = profileStorageKey(pid, "inventory");
     const alliesKey = profileStorageKey(pid, "allies");
@@ -2897,6 +2790,9 @@ export default function App() {
     // ── Fase Città: UnlockedAreas + CityEntities + CityMapData ──────────────
     // handleImportCityMap processa i 3 blocchi insieme (sono interdipendenti)
     await handleImportCityMap(parsed, pid);
+    // 2.0: città visitata = solo la mappa (inventario, alleati e magazzino della
+    // città, se è una città mia, restano quelli che c'erano)
+    if (soloCitta) { bumpStorage(); return; }
 
     // ── Fase Alleati ────────────────────────────────────────────────────────
     const allImportedAllies: Allies.ImportedAlly[] = [];
@@ -2956,6 +2852,12 @@ export default function App() {
   const [spedizioniEnabled, setSpedizioniEnabled] = useState<boolean>(() => {
     return localStorage.getItem(SPED_ENABLED_KEY) === "true";
   });
+  // 2.0: colonne Spedizioni della tabella edifici (Visualizza), separate dal
+  // peso nell'efficienza (Opzioni). Senza valore salvato si parte come il peso.
+  const [showSpedColumns, setShowSpedColumns] = useState<boolean>(() => {
+    const v = localStorage.getItem(SPED_COLUMNS_KEY);
+    return v === null ? localStorage.getItem(SPED_ENABLED_KEY) === "true" : v === "true";
+  });
   const [spedizioniAttack, setSpedizioniAttack] = useState<number>(() => {
     const saved = localStorage.getItem(SPED_ATTACK_KEY);
     if (!saved) return 0.2;
@@ -2979,19 +2881,8 @@ export default function App() {
   // la visibilità del pannello è resa globale e persistente, non la
   // selezione dei filtri al suo interno.
   const [showProdColumns, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
-  // Nasconde tutte le righe con badge NoRush (🚫), applicato dentro
-  // filteredBuildings insieme agli altri filtri.
-  // ⚠️ NON persistente (a differenza di showProdColumns e degli altri toggle
-  // globali qui sopra): riparte sempre spento a ogni caricamento. È un filtro
-  // che RIMUOVE righe dalla tabella, e ritrovarlo attivo da una sessione
-  // precedente faceva sembrare mancanti degli edifici che invece ci sono.
-  const [hideNoRush, setHideNoRush] = useState(false);
-  // Nasconde tutte le righe con badge auto-aging (^): stesso identico
-  // pattern di hideNoRush sopra, non persistente per lo stesso motivo.
-  const [hideEraMutable, setHideEraMutable] = useState(false);
-  // Vista database tab Info: false = LIGHT (solo edifici principali Light=1,
-  // default), true = FULL (tutti, inclusi livelli intermedi/varianti).
-  const [dbViewFull, setDbViewFull] = useState<boolean>(() => localStorage.getItem(DB_VIEW_KEY) === "full");
+  // (2.0: "Non accelerabili" e "Auto aggiornabili" sono voci a tre stati di
+  // TabFilters.tri; come prima non persistenti: ripartono da "tutti".)
   // Lingua della GUI (etichette/tooltip statici): scelta esplicita
   // dell'utente, persistente, indipendente da gameLang (che segue invece i
   // dati del profilo importato). Il cambio fa un reload: centinaia di
@@ -3014,15 +2905,9 @@ export default function App() {
   };
 
   const DEFAULT_FILTERS: TabFilters = {
-    showOnlyFilter: "all",
+    categorie: new Set(),
     showEventFilter: "",
-    showIncursionBuildings: true,
-    showAllyBuildings: true,
-    showMassAidBuildings: true,
-    showStoreBuildingBuildings: true,
-    showGreatBuildings: true,
-    showLimitedAscended: true,
-    showTimeColumn: true,
+    tri: TRI_ZERO,
     prodFilter: new Set(),
     prodFilterMode: "OR",
     minEff: "",
@@ -3048,18 +2933,6 @@ export default function App() {
   );
 
   const updateFilter = <K extends keyof TabFilters>(key: K, value: TabFilters[K]) => {
-    // ⏱ è globale: si sincronizza su tutte le tab contemporaneamente.
-    // 📦 (showProdColumns) è ora un useState globale indipendente (vedi
-    // sopra), non passa più da qui.
-    if (key === "showTimeColumn") {
-      setTabFilters(prev => ({
-        database:      { ...prev.database,      [key]: value },
-        alleati:       { ...prev.alleati,        [key]: value },
-        propria_citta: { ...prev.propria_citta,  [key]: value },
-        inventario:    { ...prev.inventario,     [key]: value },
-      }));
-      return;
-    }
     // updateFilter è chiamata solo da controlli UI presenti esclusivamente
     // nelle tab con filtri reali (mai renderizzati in "pirati", pagina
     // placeholder priva di TabFilters) — il cast è sicuro per costruzione.
@@ -3073,6 +2946,16 @@ export default function App() {
     }));
   };
 
+  // Voce a tre stati: tutti → nascosti → solo questi → tutti.
+  const giraTri = (voce: VoceTri) => {
+    const tab = activeTab as TabType;
+    setTabFilters(prev => {
+      const stato = ((prev[tab].tri[voce] + 1) % 3) as StatoTri;
+      const tri = { ...prev[tab].tri, [voce]: stato };
+      return { ...prev, [tab]: { ...prev[tab], tri } };
+    });
+  };
+
   const toggleProdFilter = (key: string) => {
     // Stesso ragionamento di updateFilter sopra: mai chiamata da "pirati".
     const tab = activeTab as TabType;
@@ -3083,12 +2966,21 @@ export default function App() {
     });
   };
 
+  const toggleCategoria = (c: Categoria) => {
+    const tab = activeTab as TabType;
+    setTabFilters(prev => {
+      const current = new Set(prev[tab].categorie);
+      if (current.has(c)) current.delete(c); else current.add(c);
+      return { ...prev, [tab]: { ...prev[tab], categorie: current } };
+    });
+  };
+
   const resetFilters = () => {
     setTabFilters({
-      database: { ...DEFAULT_FILTERS, prodFilter: new Set() },
-      alleati: { ...DEFAULT_FILTERS, prodFilter: new Set() },
-      propria_citta: { ...DEFAULT_FILTERS, prodFilter: new Set() },
-      inventario: { ...DEFAULT_FILTERS, prodFilter: new Set() },
+      database: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
+      alleati: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
+      propria_citta: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
+      inventario: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
     });
     setAllyRarityFilters({
       1: true, 2: true, 3: true, 4: true, 5: true,
@@ -3112,11 +3004,6 @@ export default function App() {
     // highlightedCityEntityIds — senza questo, il reset filtri lasciava le
     // righe cliccate ancora evidenziate (bug segnalato luglio 2026).
     setSelectedIds(new Set());
-    // hideNoRush/hideEraMutable sono toggle globali (come showSigmaColumns
-    // ecc.), non fanno parte di TabFilters — ma l'utente si aspetta che
-    // "Reset filtri" li azzeri comunque, essendo filtri a tutti gli effetti.
-    setHideNoRush(false);
-    setHideEraMutable(false);
   };
 
 
@@ -3175,8 +3062,25 @@ export default function App() {
   const [allyRarityFilters, setAllyRarityFilters] = useState<Record<number, boolean>>({
     1: true, 2: true, 3: true, 4: true, 5: true,
   });
-  const [showOnlyOwnedAllies, setShowOnlyOwnedAllies] = useState(false);
-  const [isMyAlliesTableOpen, setIsMyAlliesTableOpen] = useState(true);
+  // 2.0: scheda Alleati = solo i tuoi alleati (il database è nel catalogo
+  // Alleati del Database). Opzione "Livello 100": statistiche dei tuoi alleati
+  // come se fossero portati a livello 100 (stesso livello del database).
+  const [alleatiLivello100, setAlleatiLivello100] = useState(false);
+  // Conteggi dei tuoi alleati per i pulsanti dei Filtri (scheda Alleati):
+  // militari e scienza (copie intere) e frammentati, indipendenti dai filtri.
+  const conteggiAlleati = useMemo(() => {
+    let militari = 0, scienza = 0, frammenti = 0;
+    for (const imp of importedAllies) {
+      const csv = ALLIES_BY_ID_RARITY.get(`${imp.allyId}__${imp.rarity}`);
+      if (!csv) continue;
+      if (imp.isFragment) frammenti++;
+      else if (csv.allyType === "S") scienza++;
+      else militari++;
+    }
+    return { militari, scienza, frammenti };
+  }, [importedAllies]);
+  // Filtro Frammenti (scheda Alleati): mostra/nasconde gli alleati frammentati.
+  const [mostraFrammentiAlleati, setMostraFrammentiAlleati] = useState(true);
   const toggleRarityFilter = (rarity: number) => {
     setAllyRarityFilters((prev) => {
       // L'utente può nascondere anche tutte le rarità (tabella vuota): è una
@@ -3184,14 +3088,6 @@ export default function App() {
       return { ...prev, [rarity]: !prev[rarity] };
     });
   };
-
-  const ownedAllyLookup = useMemo(() => {
-    const set = new Set<string>();
-    importedAllies.forEach((ally) => {
-      set.add(`${ally.allyId}__${ally.rarity}`);
-    });
-    return set;
-  }, [importedAllies]);
 
 
   // Per ogni cityEntityId con slot alleato (b.ally > 0) e presente in città,
@@ -3279,28 +3175,6 @@ export default function App() {
     }
     return result;
   }, [cityEntityIds, cityMapBuildings, importedAllies, gameLang, fallbackBuildings]);
-
-  const unplacedAllyLookup = useMemo(() => {
-    const set = new Set<string>();
-    importedAllies.forEach((ally) => {
-      // Priorità: solo non posizionati NON frammentati
-      if (!ally.isPlaced && !ally.isFragment) set.add(`${ally.allyId}__${ally.rarity}`);
-    });
-    return set;
-  }, [importedAllies]);
-
-  const fragmentAllyLookup = useMemo(() => {
-    const set = new Set<string>();
-    const countMap = new Map<string, number>();
-    importedAllies.forEach((ally) => {
-      if (ally.isFragment) {
-        const key = `${ally.allyId}__${ally.rarity}`;
-        set.add(key);
-        countMap.set(key, (countMap.get(key) ?? 0) + ally.fragmentCount);
-      }
-    });
-    return { set, countMap };
-  }, [importedAllies]);
 
   // Criteri di ordinamento INDIPENDENTI per ambito (SortScope): prima era un
   // unico array condiviso da tutte e 5 le tabelle (edifici Database/Città/
@@ -3401,11 +3275,11 @@ export default function App() {
   // Riga dei titoli di gruppo (⚔️ Generali / 🔰 Campi / ⚡ Spedizioni) sopra le
   // colonne icona: stesso blocco identico nelle 3 tabelle, un livello sopra
   // renderMilitaryHeaders. Anche questo legge solo state già in scope.
-  const renderMilitaryGroupHeaders = () => (
+  const renderMilitaryGroupHeaders = (sped: boolean = showSpedColumns) => (
     <>
       {!showSigmaColumns && <th className="py-2 px-2 text-center group-header-amber text-amber-400/80" colSpan={4}>{t("groupGenerals", uiLang)}</th>}
       <th className="py-2 px-2 text-center group-header-emerald text-emerald-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGbg", uiLang) : t("groupGbg", uiLang)}</th>
-      {spedizioniEnabled && <th className="py-2 px-2 text-center group-header-violet text-violet-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGe", uiLang) : t("groupGe", uiLang)}</th>}
+      {sped && <th className="py-2 px-2 text-center group-header-violet text-violet-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGe", uiLang) : t("groupGe", uiLang)}</th>}
     </>
   );
 
@@ -3413,7 +3287,7 @@ export default function App() {
   // Σ/Spedizioni), per il Consigliere Gettoni Valore: lì le colonne mostrano
   // variazioni dei boost, ordinarle non ha senso e agganciare uno SortScope
   // esistente riordinerebbe un'altra tabella.
-  const renderMilitaryIconHeaders = () => {
+  const renderMilitaryIconHeaders = (sped: boolean = showSpedColumns) => {
     type Col = [string, "atk" | "def", "red" | "blue"];
     const block = (icons: [string, string, string, string], section: string, sigma: boolean) => {
       const cols: Col[] = [[icons[0], "atk", "red"], [icons[1], "def", "red"], [icons[2], "atk", "blue"], [icons[3], "def", "blue"]];
@@ -3426,7 +3300,7 @@ export default function App() {
       <>
         {!showSigmaColumns && block([iconGenAtkA, iconGenDefA, iconGenAtkD, iconGenDefD], t("sectionGeneral", uiLang), false)}
         {block([iconCampiAtkA, iconCampiDefA, iconCampiAtkD, iconCampiDefD], showSigmaColumns ? t("sectionGenPlusGbg", uiLang) : t("sectionGbg", uiLang), showSigmaColumns)}
-        {spedizioniEnabled && block([iconSpedAtkA, iconSpedDefA, iconSpedAtkD, iconSpedDefD], showSigmaColumns ? t("sectionGenPlusGe", uiLang) : t("sectionGe", uiLang), showSigmaColumns)}
+        {sped && block([iconSpedAtkA, iconSpedDefA, iconSpedAtkD, iconSpedDefD], showSigmaColumns ? t("sectionGenPlusGe", uiLang) : t("sectionGe", uiLang), showSigmaColumns)}
       </>
     );
   };
@@ -3436,7 +3310,7 @@ export default function App() {
   // SortScope indipendente — quindi la funzione ora richiede lo scope
   // esplicito invece di leggere sortBy/sortOrder/handleSort dallo scope
   // chiuso di App (che oggi rappresentano solo la tabella edifici).
-  const renderMilitaryHeaders = (scope: SortScope) => {
+  const renderMilitaryHeaders = (scope: SortScope, sped: boolean = showSpedColumns) => {
     const criteria = sortCriteriaByScope[scope];
     const activeSortBy = criteria[0]?.key ?? "eff";
     const activeSortOrder = criteria[0]?.order ?? "desc";
@@ -3469,7 +3343,7 @@ export default function App() {
         </>
       )}
 
-      {spedizioniEnabled && !showSigmaColumns && (
+      {sped && !showSigmaColumns && (
         <>
           <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />} sortKey="sped_atk_a" onClick={() => onSort("sped_atk_a")} active={activeSortBy === "sped_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />
           <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_a" onClick={() => onSort("sped_def_a")} active={activeSortBy === "sped_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />
@@ -3477,7 +3351,7 @@ export default function App() {
           <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => onSort("sped_def_d")} active={activeSortBy === "sped_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />
         </>
       )}
-      {spedizioniEnabled && showSigmaColumns && (
+      {sped && showSigmaColumns && (
         <>
           {/* Σ Gen + Sped/GE: icone Spedizioni (rosse/blu) */}
           <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGe", uiLang), true)} />} sortKey="sig_gen_sped_atk_a" onClick={() => onSort("sig_gen_sped_atk_a")} active={activeSortBy === "sig_gen_sped_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGenPlusGe", uiLang), true)} />
@@ -3566,10 +3440,8 @@ export default function App() {
     localStorage.setItem(FEL_COLUMN_KEY, showFelColumn.toString());
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
     localStorage.setItem(PROD_COLUMNS_KEY, showProdColumns.toString());
-    // hideNoRush/hideEraMutable NON vengono salvati: ripartono spenti a ogni
-    // caricamento (vedi il commento sulla loro dichiarazione).
-    localStorage.setItem(DB_VIEW_KEY, dbViewFull ? "full" : "light");
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, dbViewFull]);
+    localStorage.setItem(SPED_COLUMNS_KEY, showSpedColumns.toString());
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, showSpedColumns]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -3658,29 +3530,41 @@ export default function App() {
       return;
     }
     // A questo punto `parsed` rispetta lo schema BookmarkletData (validato sopra).
-    const data = parsed as BookmarkletData;
+    await importaPayload(parsed as BookmarkletData);
+  };
 
-    // 2) Dati validi: crea il nuovo profilo, lo attiva e svuota gli stati.
-    const id = `p_${Date.now()}`;
-    // Se il bookmarklet ha catturato il nome del giocatore visitato (playerName),
-    // lo usiamo come nome profilo proposto invece del generico "Profilo N".
-    // In caso di collisione con un nome già esistente, appendiamo un numero
-    // progressivo ("Nome 2", "Nome 3", ...) finché non troviamo un nome libero.
-    const existingNames = new Set(profiles.map(p => p.name));
+  /** Crea o aggiorna una città dal payload (bacchetta o, 2.0, file JSON:
+   *  `daJson` = città "ridotta", vedi data/cittaDaJson.ts). */
+  const importaPayload = async (data: BookmarkletData, daJson = false) => {
+    // 2) Dati validi (2.0): crea o AGGIORNA la città (data/citta.ts). Stessa
+    // città = stesso player_id (o, per quelle salvate prima della 2.0, stesso
+    // nome): si aggiorna invece di crearne una nuova. Città visitata = solo la
+    // mappa; se corrisponde a una città MIA (es. la propria città vista da un
+    // altro giocatore), si aggiorna solo la mappa e resta "mia".
+    const info = infoImport(data);
+    // Città da JSON (città "ridotta"): aggiorna solo un'altra città da JSON
+    // dello stesso giocatore, mai una città importata con la bacchetta.
+    const trovata = trovaCitta(profiles, info);
+    const esistente = daJson && trovata && trovata.origine !== "json" ? undefined : trovata;
+    const haInventario = (pid: string) => !!localStorage.getItem(profileStorageKey(pid, "inventory"));
+    const tipoFinale: TipoCitta = !daJson && esistente && tipoCitta(esistente, haInventario) === "mia" ? "mia" : info.tipo;
+    const soloCitta = info.tipo === "visitata";
+    const id = esistente?.id ?? `p_${Date.now()}`;
     let name: string;
-    if (typeof data.playerName === "string" && data.playerName.trim() !== "") {
-      const base = data.playerName.trim();
-      name = base;
-      let suffix = 2;
-      while (existingNames.has(name)) {
-        name = `${base} ${suffix}`;
-        suffix += 1;
-      }
-    } else {
-      name = t("defaultProfileName", uiLang, profiles.length + 1);
-    }
-    const newProfile = { id, name };
-    const updated = [...profiles, newProfile];
+    if (esistente) name = info.nome ?? esistente.name;
+    else if (info.nome) {
+      // collisione col nome di un'altra città: "Nome 2", "Nome 3", ...
+      const existingNames = new Set(profiles.map(p => p.name));
+      name = info.nome;
+      for (let suffix = 2; existingNames.has(name); suffix++) name = `${info.nome} ${suffix}`;
+    } else name = t("defaultProfileName", uiLang, profiles.length + 1);
+    const newProfile: Profile = { id, name, tipo: tipoFinale, ...(daJson ? { origine: "json" as const } : {}),
+      ...(info.playerId !== null ? { playerId: info.playerId } : esistente?.playerId !== undefined ? { playerId: esistente.playerId } : {}),
+      ...(info.mondo ? { mondo: info.mondo } : esistente?.mondo ? { mondo: esistente.mondo } : {}),
+      ...(() => { const a = sanitizePortraitUrl(data.portraitUrl) || esistente?.avatar; return a ? { avatar: a } : {}; })() };
+    const updated = esistente ? profiles.map(p => (p.id === id ? newProfile : p)) : [...profiles, newProfile];
+    // copia degli slot di una città esistente, per ripristinarla se l'import fallisce
+    const slotPrima = esistente ? PROFILE_SLOTS.map(slot => [slot, localStorage.getItem(profileStorageKey(id, slot))] as const) : null;
     setProfiles(updated);
     writeStoredJson(PROFILES_KEY, updated);
     // Ricorda il profilo precedente per il rollback in caso di errore.
@@ -3691,7 +3575,8 @@ export default function App() {
 
     // 3) Importa nel nuovo profilo nell'ordine: città → alleati → inventario.
     try {
-      await handleImportAll(data, id);
+      await handleImportAll(data, id, soloCitta);
+      setAvvisoCitta(esistente ? t("r2CityUpdated", uiLang, name) : t(tipoFinale === "visitata" ? "r2CityAddedVisited" : "r2CityAdded", uiLang, name));
       // Import riuscito: se il bookmarklet usato è più vecchio di quello
       // attuale (_v assente = versione "pre-versionamento", trattata come 0),
       // mostriamo un modale (non un semplice alert, dalla v3 in poi: c'è
@@ -3700,7 +3585,9 @@ export default function App() {
       // richiesto" invece di un alert nativo del browser) che spiega di
       // eliminare la vecchia bacchetta e trascinarne una nuova.
       const usedVersion = typeof data._v === "number" ? data._v : 0;
-      if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
+      if (daJson) {
+        // città da JSON: niente avvisi sulla bacchetta
+      } else if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
         setIsBookmarkletOutdatedModalOpen(true);
       } else {
         // v5+: l'helper non ha esposto alcune sezioni (struttura cambiata dopo un
@@ -3723,10 +3610,11 @@ export default function App() {
       const rolledBack = profiles; // `profiles` è ancora quello pre-creazione (closure)
       setProfiles(rolledBack);
       writeStoredJson(PROFILES_KEY, rolledBack);
-      // Rimuovi le eventuali chiavi parziali del profilo fallito
+      // Città nuova: via le chiavi parziali. Città esistente: si rimettono i suoi dati di prima.
       PROFILE_SLOTS.forEach(slot => {
         try { localStorage.removeItem(profileStorageKey(id, slot)); } catch { /* ignorato: pulizia best-effort */ }
       });
+      slotPrima?.forEach(([slot, v]) => { if (v !== null) try { localStorage.setItem(profileStorageKey(id, slot), v); } catch { /* best-effort */ } });
       // Ripristina il profilo precedente
       setActiveProfileId(previousProfileId);
       if (previousProfileId) {
@@ -3739,34 +3627,25 @@ export default function App() {
     }
   };
 
-  const profileDataCache = useMemo(() => {
-    const cache = new Map<string, boolean>();
-    profiles.forEach(p => {
-      const hasCity = !!localStorage.getItem(profileStorageKey(p.id, "city"));
-      const hasInv = !!localStorage.getItem(profileStorageKey(p.id, "inventory"));
-      cache.set(p.id, hasCity || hasInv);
-    });
-    return cache;
-    // activeProfileId e storageVersion non sono usati nel corpo ma fungono da
-    // trigger: il memo legge da localStorage (non reattivo), quindi va ricalcolato
-    // quando cambia il profilo attivo o quando storageVersion segnala una modifica.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, activeProfileId, storageVersion]);
 
-  const totalStorageStr = useMemo(() => {
-    let totalBytes = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("foe_")) {
-        totalBytes += (key.length + (localStorage.getItem(key)?.length ?? 0)) * 2;
-      }
-    }
-    if (totalBytes === 0) return "";
-    if (totalBytes >= 1024 * 1024) return `${(totalBytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${Math.round(totalBytes / 1024)} KB`;
-    // storageVersion è un trigger per rileggere localStorage (non reattivo).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageVersion]);
+  // 2.0: elenco delle città per il selettore (tipo dedotto per quelle salvate prima della 2.0)
+  const vociCitta = useMemo(() => profiles.map(p => ({ id: p.id, nome: p.name, daJson: p.origine === "json",
+    tipo: tipoCitta(p, (pid) => !!localStorage.getItem(profileStorageKey(pid, "inventory"))),
+    avatar: sanitizePortraitUrl(p.avatar) || null })),
+  // storageVersion: il tipo legge localStorage (non reattivo)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [profiles, storageVersion]);
+  const chiudiAvviso = useCallback(() => setAvvisoCitta(null), []);
+  // Città salvate prima di questa versione: l'avatar non è nell'elenco. Quando
+  // la città è aperta (avatar letto dal suo slot) lo si copia nell'elenco.
+  useEffect(() => {
+    if (!portraitUrl) return;
+    const p = profiles.find(x => x.id === activeProfileId);
+    if (!p || p.avatar === portraitUrl) return;
+    const updated = profiles.map(x => (x.id === p.id ? { ...x, avatar: portraitUrl } : x));
+    setProfiles(updated);
+    writeStoredJson(PROFILES_KEY, updated);
+  }, [portraitUrl, activeProfileId, profiles]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -4027,7 +3906,7 @@ export default function App() {
   const placeholderBuilding = useCallback((bldId: string, name: string): InventoryRowBuilding => {
     return {
       id: `placeholder-${bldId}`, name, names: { it: name, en: name }, hash: "", light: false, cityEntityId: bldId,
-      time: 0, size: "?", area: 0, road: 0, pop: 0, fel: 0,
+      time: 0, size: "?", area: 0, road: 0, roadLvl: 0, pop: 0, fel: 0,
       general: [0,0,0,0], gbg: [0,0,0,0], sped: [0,0,0,0], iq: [0,0,0,0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "",
@@ -4328,23 +4207,16 @@ export default function App() {
     // Pre-compute boolean flags once to avoid repeated property access in the hot loop
     const isPropriacitta = activeTab === "propria_citta";
     const isInventario = activeTab === "inventario";
-    const showOnlyIncursioni = currentFilters.showOnlyFilter === "incursioni";
-    const showOnlyAlleati = currentFilters.showOnlyFilter === "alleati";
-    const showOnlyInsediamenti = currentFilters.showOnlyFilter === "insediamenti";
-    const showOnlyPremiCampi = currentFilters.showOnlyFilter === "premi_campi";
-    const showOnlyPremiIq = currentFilters.showOnlyFilter === "premi_iq";
+    // Caselle di categoria (2.0): basta soddisfarne UNA (OR); nessuna = tutti.
+    const categorie = currentFilters.categorie;
     const hasEventFilter = !!(currentFilters.showEventFilter && currentEventFilter);
     const isAndMode = currentFilters.prodFilterMode === "AND";
 
     // Single-pass filter — avoids 4 intermediate arrays from chained .filter()
     const filtered: ProcessedBuilding[] = [];
-    const isDatabase = activeTab === "database";
     for (const b of sourceBuildings) {
-      // 0. Vista LIGHT (solo tab Info/database): mostra solo gli edifici
-      // "principali" (light=true, i 823 storici), nascondendo livelli intermedi
-      // e varianti. In FULL si vedono tutti. Negli altri tab non si applica:
-      // lì la lista è già ristretta agli edifici effettivamente posseduti.
-      if (isDatabase && !dbViewFull && !b.light) continue;
+      // (2.0: niente più LIGHT/FULL, il Database mostra tutti gli edifici.)
+
 
       // 1. Tab-specific membership check
       if (isPropriacitta) {
@@ -4378,36 +4250,36 @@ export default function App() {
       // fuorviante, non un'informazione utile sulla riga merged stessa).
       if (isPropriacitta && showOnlyOutdated && (b._isMergedInventory || (b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)))) continue;
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
-      // Pulsante "Nascondi 🚫" nella toolbar Produzioni: filtro globale,
-      // applicato in tutte le tab (stesso pattern di showSigmaColumns ecc.).
-      if (hideNoRush && noRush(b)) continue;
-      // Pulsante "Nascondi ^" nella toolbar Produzioni: stesso identico
-      // pattern di hideNoRush sopra, per il badge auto-aging.
-      if (hideEraMutable && isEraMutable(b)) continue;
+      // "Nascondi / Mostra solo" (2.0, tre stati): non accelerabili 🚫 e
+      // auto aggiornabili ^.
+      const tri = currentFilters.tri;
+      if (scartaTri(tri.nonAcc, noRush(b))) continue;
+      if (scartaTri(tri.autoAge, isEraMutable(b))) continue;
       // Filtri slot alleati / frammenti: disponibili anche in tab Inventario
       // (pulsanti presenti in entrambe le barre), non solo in Città.
-      if ((isPropriacitta || isInventario) && showOnlyWithAllySlot && b.cityEntityId && !allySlotsPerBuilding.has(b.cityEntityId)) continue;
-      if ((isPropriacitta || isInventario) && showOnlyWithFragments && b.cityEntityId && !FRAGMENTS_PRODUCED.has(b.cityEntityId)) continue;
 
       // 4. Limited ascended filter
-      if (!currentFilters.showLimitedAscended && b.time > 0) continue;
+      if (scartaTri(tri.limitati, b.time > 0)) continue;
 
       // 5. Toggle filters (no array spread — direct property checks)
       const hasIQ = b.iq[0] !== 0 || b.iq[1] !== 0 || b.iq[2] !== 0 || b.iq[3] !== 0 || b.iqMonB !== 0 || b.iqMatB !== 0 || b.iqMon !== 0 || b.iqMat !== 0 || b.iqBeni !== 0 || b.iqTruppe !== 0 || b.iqAzioni !== 0 || b.iqCap !== 0;
-      if (!currentFilters.showIncursionBuildings && hasIQ) continue;
-      if (!currentFilters.showAllyBuildings && b.ally > 0) continue;
-      if (!currentFilters.showMassAidBuildings && b.adm > 0) continue;
-      if (!currentFilters.showStoreBuildingBuildings && b.imm > 0) continue;
-      if (!currentFilters.showGreatBuildings && b.isGreatBuilding) continue;
+      if (scartaTri(tri.iq, hasIQ)) continue;
+      // Slot alleato: in Città/Inventario gli slot reali dell'edificio
+      // (allySlotsPerBuilding), nel Database la colonna Ally del CSV.
+      if (scartaTri(tri.alleati, (isPropriacitta || isInventario) ? !!b.cityEntityId && allySlotsPerBuilding.has(b.cityEntityId) : b.ally > 0)) continue;
+      if (scartaTri(tri.frammenti, !!b.cityEntityId && FRAGMENTS_PRODUCED.has(b.cityEntityId))) continue;
+      if (scartaTri(tri.aiuto, b.adm > 0)) continue;
+      if (scartaTri(tri.immagazzina, b.imm > 0)) continue;
+      if (scartaTri(tri.ge, !!b.isGreatBuilding)) continue;
 
       // 6. Advanced filters
       if (hasMinEff && b.currentEff <= minEffVal) continue;
 
-      if (showOnlyIncursioni && !hasIQ) continue;
-      if (showOnlyAlleati && b.ally <= 0) continue;
-      if (showOnlyInsediamenti && !isSettlementPrize(b.cityEntityId)) continue;
-      if (showOnlyPremiCampi && !isBattlegroundsPrizeId(b.cityEntityId)) continue;
-      if (showOnlyPremiIq && !isQuantumIncursionsPrizeId(b.cityEntityId)) continue;
+      if (categorie.size > 0 && !(
+        (categorie.has("insediamenti") && isSettlementPrize(b.cityEntityId)) ||
+        (categorie.has("premi_campi") && isBattlegroundsPrizeId(b.cityEntityId)) ||
+        (categorie.has("premi_iq") && isQuantumIncursionsPrizeId(b.cityEntityId))
+      )) continue;
       if (hasEventFilter && !buildingMatchesEvent(b.cityEntityId, currentEventFilter)) continue;
 
       if (prodFilterKeys) {
@@ -4449,7 +4321,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, showOnlyWithAllySlot, allySlotsPerBuilding, showOnlyWithFragments, hideNoRush, hideEraMutable, dbViewFull]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, allySlotsPerBuilding]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -4535,8 +4407,7 @@ export default function App() {
     showProdColumns,
     showPopColumn,
     showFelColumn,
-    currentFilters.showTimeColumn,
-    spedizioniEnabled,
+    showSpedColumns,
     // Anche questi due cambiano il numero di colonne (e quindi scrollWidth):
     // il ResizeObserver sul <table> coprirebbe comunque il cambio di
     // larghezza, ma tenerli allineati agli altri toggle di colonne evita
@@ -4605,8 +4476,9 @@ export default function App() {
       // Rarity filter
       if (allyRarityFilters[ally.rarity] === false) continue;
 
-      // Owned-only filter
-      if (showOnlyOwnedAllies && !ownedAllyLookup.has(`${ally.id}__${ally.rarity}`)) continue;
+      // Tipo (2.0): militare / scienza
+      if (ally.allyType === "S" ? !mostraScienza : !mostraMilitari) continue;
+
 
       const level = ALLY_DB_LEVEL;
       const { computedGeneral, computedGbg, computedSped, computedIq, computedPf, computedBeni, computedBeniP } = Allies.getComputedAllyStats(ally, level, INHERITED_ALLIES_MAP);
@@ -4645,7 +4517,7 @@ export default function App() {
     result.sort((a, b) => compareAllies(a, b, sortCriteriaAlleatiDb, getName));
 
     return result;
-  }, [deferredSearch, sortCriteriaAlleatiDb, weights, allyRarityFilters, showOnlyOwnedAllies, ownedAllyLookup, gameLang]);
+  }, [deferredSearch, sortCriteriaAlleatiDb, weights, allyRarityFilters, mostraMilitari, mostraScienza, gameLang]);
 
 
 
@@ -4676,8 +4548,13 @@ export default function App() {
 
       // Rarity filter
       if (allyRarityFilters[csvAlly.rarity] !== true) continue;
+      // Tipo (2.0): militare / scienza; Frammenti: alleati frammentati
+      if (csvAlly.allyType === "S" ? !mostraScienza : !mostraMilitari) continue;
+      if (imp.isFragment && !mostraFrammentiAlleati) continue;
 
-      const { computedGeneral, computedGbg, computedSped, computedIq, computedPf, computedBeni, computedBeniP } = Allies.getComputedAllyStats(csvAlly, imp.level, INHERITED_ALLIES_MAP);
+      // Opzione "Livello 100" (2.0): statistiche come a livello massimo.
+      const livello = alleatiLivello100 ? ALLY_DB_LEVEL : imp.level;
+      const { computedGeneral, computedGbg, computedSped, computedIq, computedPf, computedBeni, computedBeniP } = Allies.getComputedAllyStats(csvAlly, livello, INHERITED_ALLIES_MAP);
 
       // Inline efficiency — avoids second getComputedAllyStats call inside calculateAllyEfficiency
       const currentEff =
@@ -4708,7 +4585,7 @@ export default function App() {
       result.push({
         ...csvAlly,
         jsonId: imp.jsonId,
-        level: imp.level,
+        level: livello,
         isPlaced: imp.isPlaced,
         isFragment,
         fragmentCount: imp.fragmentCount ?? 0,
@@ -4743,7 +4620,7 @@ export default function App() {
     });
 
     return result;
-  }, [importedAllies, deferredSearch, sortCriteriaAlleatiOwn, weights, allyRarityFilters, gameLang]);
+  }, [importedAllies, deferredSearch, sortCriteriaAlleatiOwn, weights, allyRarityFilters, mostraMilitari, mostraScienza, mostraFrammentiAlleati, alleatiLivello100, gameLang]);
 
   // Larghezza minima della tabella edifici in base alle colonne attive.
   // Con table-fixed il browser può comprimere le colonne sotto il loro min-w
@@ -4914,7 +4791,7 @@ export default function App() {
       return Math.abs(v) >= 1000 ? formatInt(Math.round(v)) : formatDecimal(v, 1);
     };
     return (
-      <div className="flex flex-col rounded-lg bg-slate-950 border border-red-500/20">
+      <div className="flex flex-col bg-slate-950 border border-red-500/20">
         <div className="px-3 pt-2 pb-1.5 border-b border-slate-800 flex items-baseline gap-1 flex-wrap uppercase">
           <span className="text-xs font-bold text-red-400">{t(titleKey, uiLang)}</span>
           <span className="text-xs font-bold text-white">{t("outdatedSummaryCount", uiLang, totalCopies)}</span>
@@ -4991,14 +4868,14 @@ export default function App() {
   // (vedi invariante #12 in docs/SKILL.md), aggiornare anche qui.
   const tableMinWidth = useMemo(() => {
     const base = 32 + 14 + 260 + 32 + 50 + 48 + 44; // checkbox+occhio+nome+❔+eff+size+road
-    const time = currentFilters.showTimeColumn ? 50 : 0;
+    const time = 50; // colonna ⏱ sempre visibile (2.0)
     const pop = showPopColumn ? 66 : 0;
     const fel = showFelColumn ? 66 : 0;
-    const milCols = showSigmaColumns ? (spedizioniEnabled ? 8 : 4) : (spedizioniEnabled ? 12 : 8); // gen+gbg+(sped) | sig-gc+(sig-gs)
+    const milCols = showSigmaColumns ? (showSpedColumns ? 8 : 4) : (showSpedColumns ? 12 : 8); // gen+gbg+(sped) | sig-gc+(sig-gs)
     const iq = (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
     const prod = showProdColumns ? 22 * 36 : 0; // Mon+Mat + le 20 colonne esistenti (incl. BeniSp, BeniSpB)
     return base + time + pop + fel + milCols * 42 + iq + prod;
-  }, [currentFilters, showSigmaColumns, spedizioniEnabled, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
+  }, [showSigmaColumns, showSpedColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
 
   // Sticky solo quando serve DAVVERO lo scroll orizzontale (scrollWidth >
   // clientWidth, stesso confronto già usato per la scrollbar flottante
@@ -5035,10 +4912,10 @@ export default function App() {
     const base = 240 + 64 + 50; // nome + Lvl (solo tab Posseduti) + EFF (max delle due tabelle)
     const genCols = showSigmaColumns ? 0 : 4;
     const gbgCols = 4;
-    const spedCols = spedizioniEnabled ? 4 : 0;
+    const spedCols = 4; // 2.0: le tabelle alleati mostrano sempre le Spedizioni
     const prodCols = 3; // sezione 📦 PRODUZIONI: PF/Beni/BeniP, sempre visibile
     return base + (genCols + gbgCols + spedCols + prodCols) * 42;
-  }, [showSigmaColumns, spedizioniEnabled]);
+  }, [showSigmaColumns]);
 
   // Memoize city buildings list — avoids O(n) filter on every render
   // I valori att/dif riflettono l'era corrente (override da eraStats).
@@ -5327,29 +5204,14 @@ export default function App() {
     // a "100,00" invece di "100" — si arrotonda qui prima di delegare.
     const formatEfficiency = (value: number): string => formatDecimal(Math.round(value * 100) / 100, 2);
 
+    // 2.0: pannello nel riquadro della città (aperto da Statistiche → Efficienza
+    // strade nel nastro), non più a comparsa sotto un pulsante.
     return (
-      <div className="relative">
-        <button
-          onClick={() => {
-            // Chiude PROD+STAT se aperto: i due pannelli sono entrambi
-            // absolute left-0 rispetto al proprio bottone e, essendo
-            // affiancati nella toolbar, si sovrappongono se aperti insieme.
-            // Un solo pannello alla volta evita la sovrapposizione senza
-            // dover gestire posizionamenti dinamici più complessi.
-            setIsProdSummaryOpen(false);
-            setIsRoadSummaryOpen(v => !v);
-          }}
-          className={`toggle-icon-btn-wide ${
-            isRoadSummaryOpen ? "border-amber-500 bg-amber-950/40 text-amber-300" : ""
-          }`}
-          title={t("roadEfficiencyTitle", uiLang)}
-        >
-          <img src={iconRoad} alt="" className="h-6 w-6 object-contain" />
-        </button>
+      <>
         {isRoadSummaryOpen && (
-          <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-max min-w-[420px] rounded border border-slate-800 bg-slate-950 p-2 shadow-2xl space-y-2 text-xs">
+          <div className="border border-slate-800 bg-slate-950 p-2 space-y-2 text-xs w-max min-w-[420px] max-w-full overflow-x-auto">
             <div className="font-bold text-slate-200 uppercase tracking-wide">{t("roadEfficiencyTitle", uiLang)}</div>
-            <div className="rounded border border-slate-800 bg-slate-900/60 px-2 py-1.5 text-slate-400 italic">
+            <div className="border border-slate-800 bg-slate-900/60 px-2 py-1.5 text-slate-400 italic">
               {t("roadEfficiencyFormula", uiLang)}
             </div>
             <table className="w-full">
@@ -5387,7 +5249,7 @@ export default function App() {
             )}
           </div>
         )}
-      </div>
+      </>
     );
   };
 
@@ -5461,27 +5323,11 @@ export default function App() {
         aA: getAllySum(2, "computedIq"), aD: getAllySum(3, "computedIq") },
     ];
 
+    // 2.0: il vecchio PROD + STAT diviso in due pannelli nel riquadro della
+    // città, aperti da Statistiche nel nastro: Produzione (kit e produzioni
+    // giornaliere) e Valori militari (totali per sezione).
     return (
-      <div className={`relative h-7 border rounded text-[11px] shrink-0 w-auto ${
-        isProdSummaryOpen ? "border-amber-500 bg-amber-950/40" : "border-slate-700"
-      }`}>
-        <button
-          onClick={() => {
-            // Chiude il pannello efficienza strade se aperto: entrambi i
-            // pannelli sono absolute left-0 rispetto al proprio bottone e,
-            // essendo affiancati nella toolbar, si sovrappongono se aperti
-            // insieme. Un solo pannello alla volta evita la sovrapposizione.
-            setIsRoadSummaryOpen(false);
-            setIsProdSummaryOpen(v => !v);
-          }}
-          className={`h-full px-2.5 font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
-            isProdSummaryOpen
-              ? "text-amber-300"
-              : "text-orange-400 hover:text-orange-300 hover:bg-slate-800/60"
-          }`}
-        >
-          PROD + STAT
-        </button>
+      <>
         {isProdSummaryOpen && (() => {
           // Calcola il totale esatto di un campo di produzione per un edificio,
           // tenendo conto delle copie in ere diverse (se presenti).
@@ -5564,7 +5410,7 @@ export default function App() {
             + processedGreatBuildings.reduce((sum, b) => sum + b.benig, 0);
 
           return (
-            <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-max min-w-[420px] rounded border border-slate-800 bg-slate-950 p-2 shadow-2xl space-y-2">
+            <div className="border border-slate-800 bg-slate-950 p-2 space-y-2 text-xs w-max min-w-[420px] max-w-full overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="text-slate-400 border-b border-slate-800">
@@ -5632,8 +5478,12 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-
-              <div className="border-t border-slate-800 pt-1.5">
+            </div>
+          );
+        })()}
+        {isMilSummaryOpen && (
+            <div className="border border-slate-800 bg-slate-950 p-2 space-y-2 text-xs w-max min-w-[420px] max-w-full overflow-x-auto">
+              <div>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-slate-400 border-b border-slate-800">
@@ -5667,9 +5517,8 @@ export default function App() {
 
               <p className="text-[9px] text-slate-400 italic text-center pt-0.5">{t("statTotalsFootnote", uiLang)}</p>
             </div>
-          );
-        })()}
-      </div>
+        )}
+      </>
     );
   };
 
@@ -5681,7 +5530,7 @@ export default function App() {
     if (rows.length === 0) return null;
 
     return (
-      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80">
+      <div className="overflow-hidden border border-slate-800 bg-slate-900/80">
         <div className="flex items-center gap-3 border-b border-slate-800 bg-slate-950/40 px-4 py-2">
           <h4 className="text-sm font-black uppercase tracking-[0.15em] text-amber-400">{title}</h4>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-slate-700 bg-slate-950 px-1.5 text-[10px] font-bold text-slate-400">
@@ -5726,7 +5575,7 @@ export default function App() {
                       {r.breakdown.map((k) => {
                         const hasProducers = k.producers.length > 0;
                         return (
-                          <div key={`${r.bld_id}-${r.kit_id}-${k.id}`} className="flex items-center gap-2 rounded border border-slate-800/80 bg-slate-950/40 px-2 py-1">
+                          <div key={`${r.bld_id}-${r.kit_id}-${k.id}`} className="flex items-center gap-2 border border-slate-800/80 bg-slate-950/40 px-2 py-1">
                             <div className="min-w-0 flex-1 truncate">
                               {hasProducers ? (
                                 <span
@@ -5767,55 +5616,258 @@ export default function App() {
   // I 5 pulsanti azione profilo (🪄 💾 📤 🗑️ ?). Estratti in una funzione per
   // riusarli sia nella riga del logo (mobile) sia nella barra profili (desktop)
   // senza duplicare il markup.
-  const renderProfileButtons = () => (
-    <>
-      <button
-        onClick={handleWandClick}
-        draggable
-        onDragStart={e => {
-          e.dataTransfer.setData("text/uri-list", BOOKMARKLET_JS);
-          e.dataTransfer.setData("text/x-moz-url", `${BOOKMARKLET_JS}\nFoE COPY`);
-          e.dataTransfer.setData("text/plain", BOOKMARKLET_JS);
-        }}
-        className="relative flex items-center justify-center w-7 h-7 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 hover:border-emerald-400/70 transition-all shrink-0 cursor-grab active:cursor-grabbing"
-        title={t("wandTitle", uiLang)}
-      >
-        <Wand2 size={13} />
-      </button>
-      <button
-        onClick={handleExportSession}
-        disabled={exportLoading || profiles.length === 0}
-        className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 hover:bg-slate-700/40 hover:text-slate-100 transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-700/20 disabled:hover:text-slate-400"
-        title={profiles.length === 0 ? t("exportNoProfiles", uiLang) : t("exportProfiles", uiLang)}
-      >
-        {exportLoading ? <RotateCcw size={13} className="animate-spin" /> : <Download size={13} />}
-      </button>
-      <button
-        onClick={() => { setImportError(""); setImportSuccess(""); setIsImportModalOpen(true); }}
-        disabled={importLoading}
-        className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 hover:bg-slate-700/40 hover:text-slate-100 transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-        title={t("importProfiles", uiLang)}
-      >
-        {importLoading ? <RotateCcw size={13} className="animate-spin" /> : <Upload size={13} />}
-      </button>
-      <button
-        onClick={deleteAllProfiles}
-        disabled={profiles.length === 0}
-        className="flex items-center justify-center w-7 h-7 rounded border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 hover:border-red-400/60 transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500/10 disabled:hover:text-red-300 disabled:hover:border-red-500/30"
-        title={profiles.length === 0 ? t("deleteAllNoProfiles", uiLang) : t("deleteAllProfiles", uiLang)}
-      >
-        <Trash2 size={13} />
-      </button>
-      <button
-        onClick={() => setIsProfileHelpOpen(true)}
-        className="flex items-center justify-center w-7 h-7 rounded border border-slate-600 bg-slate-700/20 text-slate-400 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-500/50 transition-all shrink-0 font-bold text-xs"
-        title={t("profileHelpTitle", uiLang)}
-      >
-        ?
-      </button>
-      <LanguageSwitch uiLang={uiLang} onChange={handleUiLangChange} />
-    </>
-  );
+  // ── FoE Optimizer 2.0: testata a schede + nastro (ui/Testata.tsx) ──────────
+  // Le schede guidano lo stato di sempre (activeTab, showPlanner); Opzioni e
+  // Guida hanno solo il nastro (il contenuto sotto resta quello dell'ultima
+  // scheda di lavoro). Le vecchie barre restano sotto finché ogni scheda non
+  // avrà il suo nastro completo.
+  const schedaCorrente: Scheda = schedaExtra ?? (activeTab === "database" ? "database"
+    : activeTab === "propria_citta" ? (showPlanner ? "planner" : "citta")
+    : activeTab === "inventario" ? "inventario" : activeTab === "alleati" ? (alleatiDaDb ? "database" : "alleati") : "insediamenti");
+  const scegliScheda = (sc: Scheda) => {
+    if (sc === "opzioni" || sc === "guida") { setSchedaExtra(sc); return; }
+    setSchedaExtra(null);
+    if (sc === "database") {
+      if (catalogo === "alleati") { setAlleatiDaDb(true); setActiveTab("alleati"); } else setActiveTab("database");
+    }
+    else if (sc === "citta") { setActiveTab("propria_citta"); setShowPlanner(false); }
+    else if (sc === "planner") { setActiveTab("propria_citta"); setShowPlanner(true); }
+    else if (sc === "inventario") setActiveTab("inventario");
+    else if (sc === "alleati") { setAlleatiDaDb(false); setActiveTab("alleati"); }
+    else setActiveTab("pirati");
+  };
+  const setCatalogo = (c: "edifici" | "alleati") => {
+    setCatalogoStato(c);
+    if (c === "alleati") { setAlleatiDaDb(true); setActiveTab("alleati"); } else { setAlleatiDaDb(false); setActiveTab("database"); }
+  };
+  const haCitta = cityMapBuildings.length > 0;
+  // Intestazione Forge Hammer dei JSON esportati (player, region dalla lingua
+  // del gioco, era): quella della città selezionata.
+  useEffect(() => {
+    const p = profiles.find(x => x.id === activeProfileId);
+    impostaMetaExport(haCitta ? {
+      player: { id: p?.playerId ?? null, name: p?.name ?? "" },
+      region: gameLang,
+      ...(currentEra ? { currentEra } : {}),
+      cittaReale: cityMapBuildings,
+      grandiEdifici: new Map([...greatBuildingsJson].map(([id, gb]) => [id, (gb.rawEntry ?? {}) as Record<string, unknown>])),
+    } : {});
+  }, [haCitta, profiles, activeProfileId, gameLang, currentEra, cityMapBuildings, greatBuildingsJson]);
+  // Planner: tipi militari con almeno una copia collegata alla strada in città
+  // (valore iniziale degli interruttori "Edifici militari da collegare a strada").
+  const militariCollegatiOra = useMemo(() => {
+    const out = new Set<string>();
+    for (const b of cityMapBuildings) {
+      if (!b.isMilitary || out.has(b.entityId)) continue;
+      const tot = cityEntityIds.get(b.entityId) ?? 0;
+      if (tot - (cityEntityDisconnected.get(b.entityId) ?? 0) > 0) out.add(b.entityId);
+    }
+    return out;
+  }, [cityMapBuildings, cityEntityIds, cityEntityDisconnected]);
+  // Il Planner può usare la città selezionata solo se ha mappa e aree sbloccate.
+  const haCittaPlanner = haCitta && cityMapUnlockedCells.size > 0;
+  // 2.0: Mappa della città importata da JSON nel Planner (stessi dati che
+  // CityMapView riceve per la città selezionata, calcolati dal file).
+  const mappaJson = useMemo(() => {
+    if (!plannerJson) return null;
+    const { buildings, cells, aree } = plannerJson.citta;
+    const grid = new Set<string>();
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const b of buildings) {
+      for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) grid.add(`${b.x + dx},${b.y + dy}`);
+      minX = Math.min(minX, b.x); minY = Math.min(minY, b.y); maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
+    }
+    for (const c of cells) {
+      const [x, y] = c.split(",").map(Number) as [number, number];
+      minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x + 1); maxY = Math.max(maxY, y + 1);
+    }
+    const bounds = minX < Infinity ? { minX: minX - 1, minY: minY - 1, maxX: maxX + 1, maxY: maxY + 1 } : null;
+    return { buildings, cells, aree, grid, bounds, nome: plannerJson.citta.nome };
+  }, [plannerJson]);
+  /** 2.0: città "ridotta" da un file JSON → nel selettore come città visitata. */
+  const importaCittaJson = async (file: File) => {
+    let conv: ReturnType<typeof cittaDaJson>;
+    try {
+      impostaCatalogoExtra(await caricaBuildingsExtra());
+      conv = cittaDaJson(await file.text());
+    } catch (err) {
+      alert(t("plannerInvalidJson", uiLang, err instanceof Error ? err.message : String(err)));
+      return;
+    }
+    // senza nome del giocatore nel file: il nome del file
+    if (!conv.data.playerName) conv.data.playerName = file.name.replace(/\.json$/i, "");
+    await importaPayload(conv.data, true);
+    if (conv.ignorati.length) {
+      const ids = [...new Set(conv.ignorati)];
+      alert(t("plannerJsonIgnored", uiLang, conv.ignorati.length, ids.join(", ")));
+    }
+  };
+  const importaJsonPlanner = async (file: File) => {
+    try {
+      // catalogo degli edifici fuori Database (militari, municipi, strade...):
+      // serve ai file senza CityEntities, es. l'export di Forge Hammer
+      impostaCatalogoExtra(await caricaBuildingsExtra());
+      const citta = { nome: file.name.replace(/\.json$/i, ""), ...leggiCittaJson(await file.text()) };
+      setPlannerJson(prev => ({ citta, n: (prev?.n ?? 0) + 1 }));
+      setPlannerSorgente("json");
+      setPlannerErrore(null);
+    } catch (err) {
+      setPlannerErrore(t("plannerInvalidJson", uiLang, err instanceof Error ? err.message : String(err)));
+    }
+  };
+  const importaDaNastro = () => { void handleWandClick({ preventDefault() {} } as unknown as React.MouseEvent); };
+  // Schede spente (2.0): senza città restano Database (con il catalogo
+  // Alleati), Planner (con la sorgente JSON), Insediamenti (l'avamposto si
+  // importa a parte), Opzioni e Guida; città visitata = solo mappa (niente
+  // Inventario e Alleati).
+  const tipoAttiva = vociCitta.find(c => c.id === activeProfileId)?.tipo;
+  const soloMie = t("r2OnlyMine", uiLang), serveCitta = t("r2NeedCity", uiLang);
+  const spente: Partial<Record<Scheda, string>> = !haCitta
+    ? { citta: serveCitta, inventario: serveCitta, alleati: serveCitta }
+    : tipoAttiva === "visitata" ? { inventario: soloMie, alleati: soloMie } : {};
+  // se la scheda aperta si spegne (città eliminata, città visitata scelta) si torna su Città o Database
+  const schedaSpenta = !!spente[schedaCorrente];
+  useEffect(() => {
+    if (schedaSpenta) scegliScheda(haCitta ? "citta" : "database");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedaSpenta]);
+  // Le 22 produzioni filtrabili (nastro: menu Produzione; vecchia barra: icone).
+  const opzioniProduzione: OpzioneProduzione[] = [
+    { key: "mon", icon: <img src={iconMon} alt={t("prodCoins", uiLang)} className="icon-16" />, title: t("prodCoins", uiLang) },
+    { key: "mat", icon: <img src={iconMat} alt={t("prodMaterials", uiLang)} className="icon-16" />, title: t("prodMaterials", uiLang) },
+    { key: "fp", icon: <img src={iconFP} alt={t("prodForgePoints", uiLang)} className="icon-16" />, title: t("prodForgePoints", uiLang) },
+    { key: "fpb", icon: <img src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} className="icon-16" />, title: t("prodForgePointsBoost", uiLang) },
+    { key: "fur", icon: <img src={iconFUR} alt={t("prodRogues", uiLang)} className="icon-16" />, title: t("prodRogues", uiLang) },
+    { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
+    { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
+    { key: "beni", icon: <img src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="icon-16" />, title: t("prodGoodsCurrent", uiLang) },
+    { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
+    { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
+    { key: "benis", icon: <img src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="icon-16" />, title: t("prodGoodsNext", uiLang) },
+    { key: "benisp", icon: "🌟", title: t("prodGoodsSpecial", uiLang) },
+    { key: "benispb", icon: "🌠", title: t("prodGoodsSpecialBoost", uiLang) },
+    { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
+    { key: "bp", icon: <img src={iconBP} alt={t("prodBlueprints", uiLang)} className="icon-16" />, title: t("prodBlueprints", uiLang) },
+    { key: "fsp", icon: "⏳", title: t("prodRushSpecial", uiLang) },
+    { key: "tpm", icon: "🛠", title: t("prodRushMaterials", uiLang) },
+    { key: "tpb", icon: "📦", title: t("prodRushGoods", uiLang) },
+    { key: "adm", icon: <img src={iconAiuto} alt={t("prodMassAid", uiLang)} className="icon-16" />, title: t("prodMassAid", uiLang) },
+    { key: "mod", icon: <img src={iconOneUp} alt={t("prodOneUpKit", uiLang)} className="icon-16" />, title: t("prodOneUpKit", uiLang) },
+    { key: "rin", icon: <img src={iconRinn} alt={t("prodRenovationKit", uiLang)} className="icon-16" />, title: t("prodRenovationKit", uiLang) },
+    { key: "imm", icon: <img src={iconImm} alt={t("prodStoreBuilding", uiLang)} className="icon-16" />, title: t("prodStoreBuilding", uiLang) },
+    
+  ];
+
+  const gruppiNastro = costruisciNastri(schedaCorrente, {
+    uiLang, ricerca: searchTerm, setRicerca: setSearchTerm,
+    onEliminaTutte: deleteAllProfiles, onImportaCittaJson: () => cittaJsonRef.current?.click(), onEsporta: () => { void handleExportSession(); }, onRipristina: () => { setImportError(""); setImportSuccess(""); setIsImportModalOpen(true); },
+    haCitteSalvate: profiles.length > 0,
+    haCitta, mappa: showCityMap,
+    onMappa: () => { const v = !showCityMap; setShowCityMap(v); localStorage.setItem(SHOW_CITY_MAP_KEY, String(v)); },
+    tema, setTema, onInformazioni: () => setIsAboutOpen(true), onAiutoBacchetta: () => setIsProfileHelpOpen(true),
+    filtri: {
+      uiLang,
+      eventi: EVENTS_LIST.map(ev => ({ id: ev.id, nome: eventName(ev, uiLang), gruppo: ev.isGroup })),
+      evento: currentFilters.showEventFilter, setEvento: (id) => updateFilter("showEventFilter", id),
+      produzioni: opzioniProduzione, prodSel: currentFilters.prodFilter, toggleProd: toggleProdFilter,
+      azzeraProd: () => updateFilter("prodFilter", new Set()),
+      prodModo: currentFilters.prodFilterMode, setProdModo: (m) => updateFilter("prodFilterMode", m),
+      effMin: currentFilters.minEff, setEffMin: (v) => updateFilter("minEff", v),
+      categorie: currentFilters.categorie, toggleCategoria,
+      azzera: resetFilters,
+      extra: schedaCorrente === "citta" ? [
+        { id: "vecchi", label: t("r2Outdated", uiLang), title: t("showOnlyOldBuildingsTitle", uiLang), checked: showOnlyOutdated,
+          toggle: () => setShowOnlyOutdated(v => !v), disabled: outdatedBuildings.size === 0 && !showOnlyOutdated },
+        { id: "declassabili", label: t("r2Declassable", uiLang), title: t("showOnlyDeclassableTitle", uiLang), checked: showOnlyDeclassable,
+          toggle: () => setShowOnlyDeclassable(v => !v), disabled: declassableBuildings.size === 0 && !showOnlyDeclassable },
+      ] : schedaCorrente === "inventario" ? [
+        { id: "pronti", label: t("r2ReadyOnly", uiLang), title: t("onlyReadyBuildingsTitle", uiLang), checked: showOnlyReadyBuildings,
+          toggle: () => setShowOnlyReadyBuildings(v => !v) },
+      ] : undefined,
+    },
+    catalogo, setCatalogo,
+    alleati: {
+      rarita: Allies.RARITY_LEVELS.map(rarity => {
+        const d = Allies.RARITY_DISPLAY[rarity]!;
+        const attiva = allyRarityFilters[rarity] !== false;
+        return {
+          id: rarity, etichetta: d.label, attiva, classiOn: d.badgeOn, classiOff: d.badgeOff, cambia: () => toggleRarityFilter(rarity),
+          titolo: attiva ? t("hideRarityTitle", uiLang, Allies.rarityName(rarity, uiLang)) : t("showRarityTitle", uiLang, Allies.rarityName(rarity, uiLang)),
+        };
+      }),
+      militari: mostraMilitari, cambiaMilitari: () => setMostraMilitari(v => !v),
+      scienza: mostraScienza, cambiaScienza: () => setMostraScienza(v => !v),
+      frammenti: schedaCorrente === "alleati" ? { attivo: mostraFrammentiAlleati, cambia: () => setMostraFrammentiAlleati(v => !v) } : undefined,
+      conteggi: schedaCorrente === "alleati" ? conteggiAlleati : undefined,
+    },
+    livello100: { attivo: alleatiLivello100, cambia: () => setAlleatiLivello100(v => !v) },
+    consigliere: {
+      attivo: mostraConsigliere, cambia: () => setMostraConsigliere(v => !v),
+      disponibile: !!playerResources && importedAllies.some(a => !a.isFragment),
+    },
+    planner: {
+      sorgente: plannerSorgente === "json" || !haCittaPlanner ? "json" : "citta",
+      haCitta: haCittaPlanner,
+      setSorgente: (v: "citta" | "json") => { if (v === "json" && !plannerJson) plannerFileRef.current?.click(); else setPlannerSorgente(v); },
+      jsonNome: plannerJson?.citta.nome ?? null,
+      onImportaJson: () => plannerFileRef.current?.click(),
+      // X sul nome del file: si chiude il JSON e si torna alla città selezionata (se c'è)
+      onChiudiJson: () => { setPlannerJson(null); setPlannerErrore(null); if (haCittaPlanner) setPlannerSorgente("citta"); },
+      gruppi: gruppiPlanner,
+    },
+    insediamenti: { gruppi: gruppiPirati },
+    giocatore: (() => {
+      // Planner con un JSON: il giocatore del file (se lo ha: nostro export, Hammer)
+      if (schedaCorrente === "planner" && plannerSorgente === "json") {
+        const g = plannerJson?.citta.giocatore;
+        return g ? { nome: g.nome, avatar: null, era: g.era ? ageName(g.era, gameLang) : null, id: g.id, visitata: false, daJson: true } : null;
+      }
+      if (!haCitta) return null;
+      const p = profiles.find(x => x.id === activeProfileId);
+      return {
+        nome: p?.name ?? "",
+        avatar: portraitUrl || null,
+        era: currentEra ? ageName(currentEra, gameLang) : null,
+        id: p?.playerId ?? null,
+        visitata: tipoAttiva === "visitata",
+      };
+    })(),
+    tri: { stati: currentFilters.tri, gira: giraTri },
+    esporta: {
+      n: selectedIds.size, onClick: exportSelectedAsCsv,
+      titolo: selectedIds.size === 0 ? t("exportSelectFirstTitle", uiLang) : t("exportSelectedCsvTitle", uiLang, selectedIds.size),
+    },
+    debug: schedaCorrente === "inventario"
+      ? { attivo: isInventoryDebugOpen, cambia: () => setIsInventoryDebugOpen(v => !v) }
+      : { attivo: isDebugOpen, cambia: () => setIsDebugOpen(v => !v) },
+    citta: {
+      inventario: { attivo: showInventoryInCity, cambia: () => setShowInventoryInCity(v => !v) },
+      // stesso export JSON del pulsante JSON del pannello MAPPA (CityMapView)
+      onEsportaJson: () => scaricaJson(esportaCittaJson(cityMapBuildings, cityMapUnlockedAreas), `${prefissoFile(profiles.find(x => x.id === activeProfileId)?.name)}-map-${localDateStamp()}.json`),
+      statistiche: {
+        aggiornabili: { attivo: isCityUpgradeableOpen, cambia: () => setIsCityUpgradeableOpen(v => !v) },
+        strade: { attivo: isRoadSummaryOpen, cambia: () => setIsRoadSummaryOpen(v => !v) },
+        produzione: { attivo: isProdSummaryOpen, cambia: () => setIsProdSummaryOpen(v => !v) },
+        militari: { attivo: isMilSummaryOpen, cambia: () => setIsMilSummaryOpen(v => !v) },
+        era: { attivo: isOutdatedSummaryOpen, cambia: () => setIsOutdatedSummaryOpen(v => !v) },
+      },
+    },
+    vista: {
+      dettaglioProd: { attivo: showProdColumns, cambia: () => setShowProdColumns(v => !v) },
+      somme: { attivo: showSigmaColumns, cambia: () => setShowSigmaColumns(v => !v) },
+      iqProd: { attivo: showIqProdColumns, cambia: () => setShowIqProdColumns(v => !v) },
+      pop: { attivo: showPopColumn, cambia: () => setShowPopColumn(v => !v) },
+      fel: { attivo: showFelColumn, cambia: () => setShowFelColumn(v => !v) },
+      sped: { attivo: showSpedColumns, cambia: () => setShowSpedColumns(v => !v) },
+    },
+    spedNeiPesi: spedizioniEnabled,
+    pesi: {
+      uiLang, difesa: generalDefense, setDifesa: setGeneralDefense,
+      spedizioni: spedizioniEnabled, setSpedizioni: setSpedizioniEnabled,
+      spedAttacco: spedizioniAttack, setSpedAttacco: setSpedizioniAttack,
+      onAiuto: () => setIsEfficiencyHelpOpen(true),
+    },
+  });
 
   return (
     // h-dvh/overflow-hidden SOLO sulla tab Pirati: è il primo anello della
@@ -5839,796 +5891,45 @@ export default function App() {
     // mobile — nessun bisogno di listener aggiuntivi su resize/
     // orientationchange, il browser lo ricalcola da solo ad ogni frame.
     <div className={`bg-slate-950 text-slate-100 flex flex-col font-sans ${activeTab === "pirati" ? "h-dvh overflow-hidden" : "min-h-screen"}`}>
-      {/* HEADER */}
-      <header className="bg-slate-900/60 backdrop-blur-xl border-b border-amber-500/10 sticky top-0 z-40 pl-3 py-2 flex flex-col md:flex-row md:items-center md:justify-between">
-        {/* Riga superiore mobile: logo + Export/Import. Su desktop: solo logo */}
-        <div className="flex items-center justify-between gap-3 md:justify-start md:shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border-[1.5px] border-amber-500/80 bg-slate-950/80 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-              <Swords size={22} strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col justify-center min-w-0">
-              {/* text-base (non text-lg) sotto md: a 18px+uppercase+tracking-wide
-                  "FOE OPTIMIZER" non ci stava su una riga nella larghezza stretta
-                  del contenitore mobile (dopo logo+gap, prima dei pulsanti export/
-                  import) e andava a capo su due righe, raddoppiando l'altezza
-                  dell'header — verticale su telefono, segnalato dall'utente
-                  (screenshot: "FOE" / "OPTIMIZER" spezzato). whitespace-nowrap
-                  impedisce comunque il wrap: se anche a 16px non bastasse lo
-                  spazio, il titolo trabocca visivamente invece di spezzarsi (il
-                  min-w-0 sul contenitore permette comunque lo shrink di questo
-                  blocco rispetto ai fratelli flex). */}
-              <h1 className="text-base md:text-xl font-black uppercase text-transparent bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text leading-tight tracking-normal md:tracking-wide whitespace-nowrap">
-                FOE OPTIMIZER
-              </h1>
-              <p className="text-[10px] md:text-[11px] font-bold italic tracking-wide text-slate-400 leading-tight whitespace-nowrap">
-                <button
-                  onClick={() => setIsAboutOpen(true)}
-                  title={t("aboutTitle", uiLang)}
-                  className="hover:text-amber-400 transition-colors cursor-pointer"
-                >BY SDRUSHI</button>
-                {/* Dimensione storage nascosta sotto md: su mobile la riga
-                    "BY SDRUSHI 1 KB v1.202" è già stretta, e lo storage è
-                    l'informazione meno utile delle tre in quello spazio —
-                    richiesto dall'utente per liberare posto nell'header
-                    verticale su telefono. Resta visibile su desktop. */}
-                {totalStorageStr ? <span className="ml-1.5 hidden md:inline not-italic font-normal text-slate-400">{totalStorageStr}</span> : null}
-                <span className="ml-1.5 not-italic font-mono text-[9px] tracking-tighter text-amber-500/80">{__BUILD_VERSION__}</span>
-              </p>
-            </div>
-          </div>
+      <Testata scheda={schedaCorrente} onScheda={scegliScheda}
+        spente={spente}
+        citta={vociCitta} cittaAttiva={activeProfileId} onSelezionaCitta={switchProfile}
+        onEliminaCitta={(id) => deleteProfile(id, false)} onImportaCittaJson={() => cittaJsonRef.current?.click()} onImporta={importaDaNastro}
+        avviso={avvisoCitta} onChiudiAvviso={chiudiAvviso}
+        versione={__BUILD_VERSION__} gruppi={gruppiNastro}
+        uiLang={uiLang} onLingua={handleUiLangChange} avatar={portraitUrl || null} />
+      <input ref={plannerFileRef} type="file" accept=".json,application/json" className="hidden"
+        onChange={e => { const f = e.currentTarget.files?.[0]; if (f) void importaJsonPlanner(f); e.currentTarget.value = ""; }} />
+      <input ref={cittaJsonRef} type="file" accept=".json,application/json" className="hidden"
+        onChange={e => { const f = e.currentTarget.files?.[0]; if (f) void importaCittaJson(f); e.currentTarget.value = ""; }} />
 
-          {/* Pulsanti azione profilo — solo mobile, spinti a destra dal justify-between */}
-          <div className="flex items-center gap-1 md:hidden">
-            {renderProfileButtons()}
-          </div>
+      {/* 2.0: la vecchia barra (Light/Full, ricerca, categoria, eventi, pesi,
+          colonne, produzioni) non c'è più: Database, Città e Inventario hanno il
+          nastro, i pesi sono in Opzioni. */}
 
-        </div>
-
-        {/* ── Barra profili ─────────────────────────────────────────── */}
-        <div className="flex flex-col flex-1 min-w-0 px-2 gap-0.5">
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-          <div className="hidden md:flex items-center gap-1 shrink-0">
-            {renderProfileButtons()}
-          </div>
-          {profiles.map((profile) => {
-            const isActive = profile.id === activeProfileId;
-            const isRenaming = renamingProfileId === profile.id;
-            const hasData = profileDataCache.get(profile.id) ?? false;
-            return (
-              <div
-                key={profile.id}
-                onClick={() => !isRenaming && switchProfile(profile.id)}
-                onDoubleClick={() => { setRenamingProfileId(profile.id); setRenameValue(profile.name); }}
-                className={`flex items-center gap-1.5 h-7 px-2.5 rounded border text-xs font-semibold cursor-pointer whitespace-nowrap transition-all select-none shrink-0 ${
-                  isActive
-                    ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
-                    : "border-slate-600 bg-slate-700/20 text-slate-300 hover:bg-slate-700/40 hover:text-slate-100"
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${hasData ? "bg-emerald-400" : "bg-slate-700"}`} />
-                {isRenaming ? (
-                  <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={e => setRenameValue(e.target.value)}
-                    onBlur={() => commitRename(profile.id, renameValue)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") commitRename(profile.id, renameValue);
-                      if (e.key === "Escape") setRenamingProfileId(null);
-                    }}
-                    onClick={e => e.stopPropagation()}
-                    className="bg-slate-700/80 text-slate-100 text-xs rounded px-2 py-1 w-24 outline-none border border-slate-600"
-                  />
-                ) : (
-                  <span>{profile.name}</span>
-                )}
-                <button
-                  onClick={e => { e.stopPropagation(); deleteProfile(profile.id); }}
-                  className="ml-0.5 text-slate-600 hover:text-red-400 transition-colors"
-                  title={t("profileDelete", uiLang)}
-                >
-                  <XIcon size={11} />
-                </button>
-              </div>
-            );
-          })}
-          </div>
-        </div>
-
-        <nav className="flex items-center gap-1 bg-transparent w-full md:w-auto md:min-w-0 overflow-x-auto no-scrollbar md:shrink py-1 pr-[10px]">
-           <button
-             onClick={() => setActiveTab("database")}
-             className={`flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-               activeTab === "database"
-                 ? "bg-slate-900/80 border border-amber-500/60 text-amber-400 shadow-lg shadow-amber-500/5"
-                 : "text-slate-400 hover:text-slate-300 border border-slate-500"
-             }`}
-           >
-             <Info size={16} className={activeTab === "database" ? "text-amber-400" : "text-slate-500"} />
-             {t("tabInfo")}
-           </button>
-           <button
-             onClick={() => setActiveTab("propria_citta")}
-             className={`flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-               activeTab === "propria_citta"
-                 ? "bg-slate-900/80 border border-amber-500/60 text-amber-400 shadow-lg shadow-amber-500/5"
-                 : "text-slate-400 hover:text-slate-300 border border-slate-500"
-             }`}
-           >
-             <Home size={16} className={activeTab === "propria_citta" ? "text-amber-400" : "text-slate-500"} />
-             {t("tabCity", uiLang)}
-            {totalCityEntityInstances > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold leading-none text-slate-950 ring-1 ring-slate-950">
-                {totalCityEntityInstances}
-              </span>
-            )}
-          </button>
-           <button
-             onClick={() => setActiveTab("inventario")}
-             className={`flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-               activeTab === "inventario"
-                 ? "bg-slate-900/80 border border-amber-500/60 text-amber-400 shadow-lg shadow-amber-500/5"
-                 : "text-slate-400 hover:text-slate-300 border border-slate-500"
-             }`}
-           >
-             <Package size={16} className={activeTab === "inventario" ? "text-amber-400" : "text-slate-500"} />
-             {t("tabInventory", uiLang)}
-            {totalInventoryInstances > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold leading-none text-slate-950 ring-1 ring-slate-950">
-                {totalInventoryInstances}
-              </span>
-            )}
-          </button>
-
-           <button
-             onClick={() => setActiveTab("alleati")}
-             className={`relative flex-1 md:flex-none px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-               activeTab === "alleati"
-                 ? "bg-slate-900/80 border border-amber-500/60 text-amber-400 shadow-lg shadow-amber-500/5"
-                 : "text-slate-400 hover:text-slate-300 border border-slate-500"
-             }`}
-           >
-             <Users size={16} className={activeTab === "alleati" ? "text-amber-400" : "text-slate-500"} />
-             {t("tabAllies", uiLang)}
-            {importedAllies.length > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold leading-none text-slate-950 ring-1 ring-slate-950">
-                {importedAllies.length}
-              </span>
-            )}
-          </button>
-
-           <button
-             onClick={() => setActiveTab("pirati")}
-             className={`flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-               activeTab === "pirati"
-                 ? "bg-slate-900/80 border border-amber-500/60 text-amber-400 shadow-lg shadow-amber-500/5"
-                 : "text-slate-400 hover:text-slate-300 border border-slate-500"
-             }`}
-           >
-             <Anchor size={16} className={activeTab === "pirati" ? "text-amber-400" : "text-slate-500"} />
-             {t("tabPirates", uiLang)}
-          </button>
-
-           <a
-             href={uiLang === "it" ? "/guida.html" : "/guide.html"}
-             title={t("tabHelpTitle", uiLang)}
-             className="flex-1 md:flex-none relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 text-slate-400 hover:text-slate-300 border border-slate-500"
-           >
-             <HelpCircle size={16} className="text-slate-500" />
-             {t("tabHelp", uiLang)}
-          </a>
-        </nav>
-      </header>
-
-      {(activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario") && (
-         <div className="flex flex-wrap items-start px-2 pt-2 pb-1">
-           <section className="flex flex-wrap items-center gap-1.5 text-xs flex-1">
-             <div className="flex w-full items-center gap-1.5 md:w-auto md:contents">
-             <div className="inline-flex h-7 shrink-0 overflow-hidden rounded border border-slate-700/60" role="group" title={t("lightFullTitle", uiLang)}>
-               <button
-                 onClick={() => setDbViewFull(false)}
-                 className={`px-2 h-full text-[11px] font-bold transition-colors ${!dbViewFull ? "bg-amber-500/90 text-slate-950" : "bg-slate-800/40 text-slate-400 hover:bg-amber-500/15 hover:text-amber-300"}`}
-               >
-                 LIGHT
-               </button>
-               <button
-                 onClick={() => setDbViewFull(true)}
-                 className={`px-2 h-full text-[11px] font-bold transition-colors border-l border-slate-700/60 ${dbViewFull ? "bg-amber-500/90 text-slate-950" : "bg-slate-800/40 text-slate-400 hover:bg-amber-500/15 hover:text-amber-300"}`}
-               >
-                 FULL
-               </button>
-             </div>
-             <div className="relative flex h-7 min-w-0 flex-1 items-center rounded border border-slate-700/60 bg-slate-800/40 px-2.5 md:w-[130px] md:flex-none hover:border-slate-600 transition-colors">
-               <Search size={13} className="absolute left-2.5 text-slate-500 shrink-0" />
-               <input
-                 type="text"
-                 placeholder={t("searchPlaceholder", uiLang)}
-                 aria-label={t("searchInputLabel", uiLang)}
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 className="w-full bg-transparent pl-6 pr-1 text-xs text-slate-100 outline-none placeholder:text-slate-400"
-                />
-              </div>
-
-              <button
-                onClick={resetFilters}
-                title={t("resetFiltersTitle", uiLang)}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-700/60 bg-slate-800/40 text-slate-400 hover:bg-red-500/20 hover:text-red-200 hover:border-red-400/60 transition-all"
-              >
-                <RotateCcw size={13} />
-              </button>
-
-              <div className="flex h-7 flex-1 items-center rounded border border-slate-700/60 bg-slate-800/40 px-2 md:h-7 md:w-auto md:flex-none hover:border-slate-600 transition-colors" title={t("categoryFilterTitle", uiLang)}>
-                <select
-                  value={currentFilters.showOnlyFilter}
-                  onChange={(e) => updateFilter("showOnlyFilter", e.target.value as FilterType)}
-                  aria-label={t("categoryFilterTitle", uiLang)}
-                  className="w-full bg-transparent text-slate-200 text-xs outline-none cursor-pointer hover:text-slate-100 py-0"
-                >
-                  <option value="all" className="bg-slate-800">{t("catAll", uiLang)}</option>
-                  <option value="incursioni" className="bg-slate-800">{t("catIq", uiLang)}</option>
-                  <option value="alleati" className="bg-slate-800">{t("catAlly", uiLang)}</option>
-                  <option value="insediamenti" className="bg-slate-800">{t("catSettlements", uiLang)}</option>
-                  <option value="premi_campi" className="bg-slate-800">{t("catBattlegroundsPrizes", uiLang)}</option>
-                  <option value="premi_iq" className="bg-slate-800">{t("catQiPrizes", uiLang)}</option>
-                </select>
-              </div>
-
-              <div className="flex h-7 flex-1 items-center rounded border border-slate-700/60 bg-slate-800/40 px-1 md:h-7 md:w-auto md:flex-none hover:border-slate-600 transition-colors" title={t("eventFilterTitle", uiLang)}>
-                <select
-                  value={currentFilters.showEventFilter}
-                  onChange={(e) => updateFilter("showEventFilter", e.target.value)}
-                  aria-label={t("eventFilterTitle", uiLang)}
-                  className="w-full bg-transparent text-slate-200 text-xs outline-none cursor-pointer hover:text-slate-100 py-0"
-                >
-                  <option value="" className="bg-slate-800">{t("eventsDefaultOption", uiLang)}</option>
-                  {EVENTS_LIST.map((event) => (
-                    event.isGroup ? (
-                      <option key={event.id} value={event.id} className="bg-slate-800 font-bold text-amber-300">🗓️ {eventName(event, uiLang)}</option>
-                    ) : (
-                      <option key={event.id} value={event.id} className="bg-slate-800">  {eventName(event, uiLang)}</option>
-                    )
-                  ))}
-                </select>
-              </div>
-            </div>
-
-          <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightAtk", uiLang)}</span>
-            <span className="font-mono text-xs font-bold text-red-400">1,0</span>
-          </div>
-
-          <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightDef", uiLang)}</span>
-            <div className="flex gap-0.5">
-              {([0.8, 1.0] as const).map((val) => (
-                <button
-                  key={val}
-                  onClick={() => setGeneralDefense(val)}
-                  className={`px-1.5 py-0.5 rounded text-xs font-mono font-bold transition-all ${
-                    generalDefense === val ? "bg-blue-500/20 text-blue-400 border border-blue-500/50 shadow-sm" : "bg-slate-800/50 text-slate-400 hover:text-blue-300 border border-transparent hover:bg-slate-700"
-                  }`}
-                >
-                  {val.toFixed(1).replace(".", ",")}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => setIsEfficiencyHelpOpen(true)}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-600 bg-slate-700/20 text-slate-400 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-500/50 transition-all font-bold text-xs"
-            title={t("efficiencyHelpTitle", uiLang)}
-          >
-            ?
-          </button>
-
-          <div className="flex h-7 items-center gap-1 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightGbg", uiLang)}</span>
-            <span className="font-mono text-xs font-bold text-red-400">{(1.0 - (spedizioniEnabled ? spedizioniAttack : 0)).toFixed(2).replace(".", ",")}</span>
-            <span className="text-xs text-slate-600">/</span>
-            <span className="font-mono text-xs font-bold text-blue-400">{(generalDefense * (1 - (spedizioniEnabled ? spedizioniAttack : 0))).toFixed(2).replace(".", ",")}</span>
-          </div>
-
-          {/* Pulsante Sigma - mostra colonne somma Gen+Campi (e Gen+Sped se SPED acceso) */}
-          <button
-            onClick={() => setShowSigmaColumns(v => !v)}
-            className={`toggle-icon-btn text-base font-bold leading-none ${
-              showSigmaColumns ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm" : ""
-            }`}
-            title={showSigmaColumns ? t("sigmaShowTitle", uiLang) : t("sigmaHideTitle", uiLang)}
-          >
-            Σ
-          </button>
-
-          <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightGe", uiLang)}</span>
-            <button
-              onClick={() => setSpedizioniEnabled(prev => !prev)}
-              aria-label={t("spedizioniToggleLabel", uiLang)}
-              role="switch"
-              aria-checked={spedizioniEnabled}
-              className={`relative w-7 h-3.5 rounded-full transition-colors shrink-0 ${
-                spedizioniEnabled ? "bg-amber-500" : "bg-slate-700"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${
-                  spedizioniEnabled ? "translate-x-3.5" : ""
-                }`}
-              />
-            </button>
-            {spedizioniEnabled && (
-              <>
-                <input
-                  type="range"
-                  aria-label={t("spedizioniAttackSliderLabel", uiLang)}
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={spedizioniAttack}
-                  onChange={(e) => setSpedizioniAttack(parseFloat(e.target.value))}
-                  className="h-1 w-10 appearance-none rounded bg-slate-800 accent-amber-500 cursor-pointer"
-                />
-                <span className="font-mono text-xs font-bold text-amber-400">{spedizioniAttack.toFixed(2).replace(".", ",")}</span>
-              </>
-            )}
-          </div>
-
-             {/* Colonna Tempo (⏱) - Nasconde/mostra sia la colonna che gli edifici limitati */}
-             <button
-               onClick={() => {
-                 const newVal = !currentFilters.showTimeColumn;
-                 updateFilter("showTimeColumn", newVal);
-                 updateFilter("showLimitedAscended", newVal);
-               }}
-               className={`toggle-icon-btn text-xl leading-none ${
-                 currentFilters.showTimeColumn ? "border-violet-500/50 bg-violet-500/15 text-violet-300 shadow-sm" : ""
-               }`}
-               title={currentFilters.showTimeColumn ? t("timeColumnShowTitle", uiLang) : t("timeColumnHideTitle", uiLang)}
-             >
-               ⏱
-             </button>
-
-             {/* Popolazione Toggle */}
-             <button
-               onClick={() => setShowPopColumn(v => !v)}
-               className={`toggle-icon-btn ${
-                 showPopColumn ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm" : ""
-               }`}
-               title={showPopColumn ? t("popColumnShowTitle", uiLang) : t("popColumnHideTitle", uiLang)}
-             >
-               <TableHeaderIcon src={iconPop} alt="" />
-             </button>
-
-             {/* Felicità Toggle */}
-             <button
-               onClick={() => setShowFelColumn(v => !v)}
-               className={`toggle-icon-btn ${
-                 showFelColumn ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm" : ""
-               }`}
-               title={showFelColumn ? t("felColumnShowTitle", uiLang) : t("felColumnHideTitle", uiLang)}
-             >
-               <TableHeaderIcon src={iconFel} alt="" />
-             </button>
-
-             {/* IQ Monete/Materiali Toggle: globale, off di default, colori Sigma */}
-             <button
-               onClick={() => setShowIqProdColumns(v => !v)}
-               className={`toggle-icon-btn ${
-                 showIqProdColumns ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm" : ""
-               }`}
-               title={t("iqProdColumnsTitle", uiLang)}
-             >
-               <TableHeaderIcon src={iconIQProd} alt="" />
-             </button>
-
-              <button
-                  onClick={() => {
-                    setShowProdColumns(v => {
-                      const next = !v;
-                      // Nascondendo l'intera sezione Produzioni, i pulsanti
-                      // "Nascondi 🚫"/"Nascondi ^" al suo interno spariscono
-                      // dalla UI: se hideNoRush/hideEraMutable restassero
-                      // true, i filtri continuerebbero ad agire
-                      // "silenziosamente" senza controllo visibile
-                      // dell'utente — li resettiamo insieme.
-                      if (!next) {
-                        setHideNoRush(false);
-                        setHideEraMutable(false);
-                      }
-                      return next;
-                    });
-                  }}
-                  className={`toggle-icon-btn text-[19px] leading-none ${
-                    showProdColumns ? "border-orange-500/50 bg-orange-500/15 text-orange-300 shadow-sm" : ""
-                  }`}
-                  title={showProdColumns ? t("prodColumnsShowTitle", uiLang) : t("prodColumnsHideTitle", uiLang)}
-                >
-                  📦
-                </button>
-
-              {showProdColumns && (
-                <>
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase whitespace-nowrap">{t("filterLabel", uiLang)}</span>
-                  {([
-                    { key: "mon", icon: <img src={iconMon} alt={t("prodCoins", uiLang)} className="icon-16" />, title: t("prodCoins", uiLang) },
-                    { key: "mat", icon: <img src={iconMat} alt={t("prodMaterials", uiLang)} className="icon-16" />, title: t("prodMaterials", uiLang) },
-                    { key: "fp", icon: <img src={iconFP} alt={t("prodForgePoints", uiLang)} className="icon-16" />, title: t("prodForgePoints", uiLang) },
-                    { key: "fpb", icon: <img src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} className="icon-16" />, title: t("prodForgePointsBoost", uiLang) },
-                    { key: "fur", icon: <img src={iconFUR} alt={t("prodRogues", uiLang)} className="icon-16" />, title: t("prodRogues", uiLang) },
-                    { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
-                    { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
-                    { key: "beni", icon: <img src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="icon-16" />, title: t("prodGoodsCurrent", uiLang) },
-                    { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
-                    { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
-                    { key: "benis", icon: <img src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="icon-16" />, title: t("prodGoodsNext", uiLang) },
-                    { key: "benisp", icon: "🌟", title: t("prodGoodsSpecial", uiLang) },
-                    { key: "benispb", icon: "🌠", title: t("prodGoodsSpecialBoost", uiLang) },
-                    { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
-                    { key: "bp", icon: <img src={iconBP} alt={t("prodBlueprints", uiLang)} className="icon-16" />, title: t("prodBlueprints", uiLang) },
-                    { key: "fsp", icon: "⏳", title: t("prodRushSpecial", uiLang) },
-                    { key: "tpm", icon: "🛠", title: t("prodRushMaterials", uiLang) },
-                    { key: "tpb", icon: "📦", title: t("prodRushGoods", uiLang) },
-                    { key: "adm", icon: <img src={iconAiuto} alt={t("prodMassAid", uiLang)} className="icon-16" />, title: t("prodMassAid", uiLang) },
-                    { key: "mod", icon: <img src={iconOneUp} alt={t("prodOneUpKit", uiLang)} className="icon-16" />, title: t("prodOneUpKit", uiLang) },
-                    { key: "rin", icon: <img src={iconRinn} alt={t("prodRenovationKit", uiLang)} className="icon-16" />, title: t("prodRenovationKit", uiLang) },
-                    { key: "imm", icon: <img src={iconImm} alt={t("prodStoreBuilding", uiLang)} className="icon-16" />, title: t("prodStoreBuilding", uiLang) },
-                  ] as Array<{ key: string; icon: React.ReactNode; title: string; iconClass?: string }>).map(({ key, icon, title, iconClass }) => {
-                    const active = currentFilters.prodFilter.has(key);
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => toggleProdFilter(key)}
-                        title={title}
-                        className={`flex h-6 w-6 items-center justify-center rounded border text-sm transition-all ${
-                          active
-                            ? "border-orange-500/50 bg-orange-500/20 text-orange-300 shadow-sm"
-                            : "border-slate-700/50 bg-slate-700/20 text-slate-400 hover:border-slate-600 hover:text-slate-200"
-                        }`}
-                      >
-                        <span className={`text-sm ${iconClass ?? ""}`}>{icon}</span>
-                      </button>
-                    );
-                  })}
-                  <div className="flex items-center rounded border border-slate-700/50 bg-slate-900/40 p-0.5 text-[10px] font-bold">
-                    <button
-                      onClick={() => updateFilter("prodFilterMode", "AND")}
-                      className={`px-1.5 py-0.5 rounded transition-all ${currentFilters.prodFilterMode === "AND" ? "bg-orange-500/20 text-orange-300" : "text-slate-400 hover:text-slate-300"}`}
-                    >
-                      AND
-                    </button>
-                    <button
-                      onClick={() => updateFilter("prodFilterMode", "OR")}
-                      className={`px-1.5 py-0.5 rounded transition-all ${currentFilters.prodFilterMode === "OR" ? "bg-orange-500/20 text-orange-300" : "text-slate-400 hover:text-slate-300"}`}
-                    >
-                      OR
-                    </button>
-                  </div>
-                </>
-              )}
-
-           </section>
-
-         </div>
-       )}
-
-      {activeTab === "alleati" && (
-         <section className="flex flex-wrap items-center gap-1.5 px-2 pt-2 pb-1 text-xs">
-           <div className="relative flex h-7 min-w-0 items-center rounded border border-slate-700/60 bg-slate-800/40 px-2.5 md:w-[130px] hover:border-slate-600 transition-colors">
-             <Search size={13} className="absolute left-2.5 text-slate-500 shrink-0" />
-             <input
-               type="text"
-               placeholder={t("searchPlaceholder", uiLang)}
-               aria-label={t("searchInputLabel", uiLang)}
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full bg-transparent pl-6 pr-1 text-xs text-slate-100 outline-none placeholder:text-slate-400"
-             />
-           </div>
-
-          <button
-            onClick={resetFilters}
-            title={t("resetFiltersTitle", uiLang)}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-700/60 bg-slate-800/40 text-slate-400 hover:bg-slate-700/40 hover:text-amber-400 hover:border-amber-500/40 transition-all"
-          >
-            <RotateCcw size={13} />
-          </button>
-
-          <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightAtk", uiLang)}</span>
-            <span className="font-mono text-xs font-bold text-red-400">1,0</span>
-          </div>
-
-          <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightDef", uiLang)}</span>
-            <div className="flex gap-0.5">
-              {([0.8, 1.0] as const).map((val) => (
-                <button
-                  key={val}
-                  onClick={() => setGeneralDefense(val)}
-                  className={`px-1.5 py-0.5 rounded text-xs font-mono font-bold transition-all ${
-                    generalDefense === val ? "bg-blue-500/20 text-blue-400 border border-blue-500/50 shadow-sm" : "bg-slate-800/50 text-slate-400 hover:text-blue-300 border border-transparent hover:bg-slate-700"
-                  }`}
-                >
-                  {val.toFixed(1).replace(".", ",")}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => setIsEfficiencyHelpOpen(true)}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-600 bg-slate-700/20 text-slate-400 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-500/50 transition-all font-bold text-xs"
-            title={t("efficiencyHelpTitle", uiLang)}
-          >
-            ?
-          </button>
-
-          <div className="flex h-7 items-center gap-1 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightGbg", uiLang)}</span>
-            <span className="font-mono text-xs font-bold text-red-400">{(1.0 - (spedizioniEnabled ? spedizioniAttack : 0)).toFixed(2).replace(".", ",")}</span>
-            <span className="text-xs text-slate-600">/</span>
-            <span className="font-mono text-xs font-bold text-blue-400">{(generalDefense * (1 - (spedizioniEnabled ? spedizioniAttack : 0))).toFixed(2).replace(".", ",")}</span>
-          </div>
-
-          {/* Pulsante Sigma - mostra colonne somma Gen+Campi (e Gen+Sped se SPED acceso) */}
-          <button
-            onClick={() => setShowSigmaColumns(v => !v)}
-            className={`toggle-icon-btn text-base font-bold leading-none ${
-              showSigmaColumns ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-sm" : ""
-            }`}
-            title={showSigmaColumns ? t("sigmaShowTitle", uiLang) : t("sigmaHideTitle", uiLang)}
-          >
-            Σ
-          </button>
-
-          <div className="flex h-7 items-center gap-1.5 rounded border border-slate-700/60 bg-slate-800/40 px-2.5">
-            <span className="whitespace-nowrap text-xs font-semibold uppercase text-slate-400">{t("weightGe", uiLang)}</span>
-            <button
-              onClick={() => setSpedizioniEnabled(prev => !prev)}
-              aria-label={t("spedizioniToggleLabel", uiLang)}
-              role="switch"
-              aria-checked={spedizioniEnabled}
-              className={`relative w-7 h-3.5 rounded-full transition-colors shrink-0 ${
-                spedizioniEnabled ? "bg-amber-500" : "bg-slate-700"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${
-                  spedizioniEnabled ? "translate-x-3.5" : ""
-                }`}
-              />
-            </button>
-            {spedizioniEnabled && (
-              <>
-                <input
-                  type="range"
-                  aria-label={t("spedizioniAttackSliderLabel", uiLang)}
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={spedizioniAttack}
-                  onChange={(e) => setSpedizioniAttack(parseFloat(e.target.value))}
-                  className="h-1 w-10 appearance-none rounded bg-slate-800 accent-amber-500 cursor-pointer"
-                />
-                <span className="font-mono text-xs font-bold text-amber-400">{spedizioniAttack.toFixed(2).replace(".", ",")}</span>
-              </>
-            )}
-          </div>
-
-          {Allies.RARITY_LEVELS.map((rarity) => {
-            const active = allyRarityFilters[rarity];
-            const d = Allies.RARITY_DISPLAY[rarity];
-            return (
-              <button
-                key={rarity}
-                onClick={() => toggleRarityFilter(rarity)}
-                className={`flex h-7 items-center justify-center rounded border px-2 text-xs font-bold uppercase transition-all ${active ? d.badgeOn : d.badgeOff}`}
-                title={active ? t("hideRarityTitle", uiLang, Allies.rarityName(rarity, uiLang)) : t("showRarityTitle", uiLang, Allies.rarityName(rarity, uiLang))}
-              >
-                {d.label}
-              </button>
-            );
-          })}
-        </section>
-      )}
+      {/* 2.0: la vecchia barra degli alleati (ricerca, pesi, Σ, rarità) è nel
+          nastro (Filtri alleati, Visualizza) e in Opzioni (pesi). */}
 
       {/* min-h-0/overflow-hidden SOLO sulla tab Pirati: il planner (dentro
           PiratiTool) ha bisogno di un vincolo di altezza REALE propagato
           dall'alto per potersi ridimensionare (vedi commento su gridWrapperSize
           in PiratiTool.tsx) — le altre tab restano scrollabili come sempre
           (nessun min-h-0/overflow-hidden), quindi la classe è condizionale. */}
-      <main className={`flex-1 px-2 pt-1 pb-4 flex flex-col gap-4 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
+      <main className={`flex-1 px-2 ${activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario" || (activeTab === "alleati" && alleatiDaDb) ? "pt-0" : "pt-1"} pb-4 flex flex-col gap-4 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
 
         <section className={`flex-1 flex flex-col gap-2 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
           
-          {activeTab === "propria_citta" && cityEntityIds.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs">
-              <>
-                {portraitUrl ? (
-                  <img
-                    src={portraitUrl}
-                    alt=""
-                    className="h-7 w-7 rounded object-cover border border-amber-500/40 shrink-0"
-                  />
-                ) : (
-                  <img
-                    src="https://foezz.innogamescdn.com/assets/shared/avatars/portrait_unknown-9d9c1d859.jpg"
-                    alt=""
-                    className="h-7 w-7 rounded object-cover border border-slate-600/60 shrink-0 opacity-50"
-                    title={t("avatarOutdatedTitle", uiLang)}
-                  />
-                )}
-                {currentEra && (
-                  <span
-                    className="flex items-center h-7 px-2.5 rounded border border-amber-500/30 bg-amber-500/8 text-amber-400/90 font-semibold cursor-default select-none whitespace-nowrap"
-                    title={t("profileEraTitle", uiLang, ageName(currentEra, gameLang))}
-                  >
-                    {ageName(currentEra, gameLang)}
-                  </span>
-                )}
-                <button
-                  onClick={() => setIsDebugOpen((open) => !open)}
-                  className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
-                    isDebugOpen
-                      ? "border-slate-500 bg-slate-700/40 text-slate-200"
-                      : "border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
-                  }`}
-                >
-                  {t("debugLabel")}
-                </button>
-                {cityMapBuildings.length > 0 && cityMapBounds && (
-                  <button
-                    onClick={() => {
-                      const newVal = !showCityMap;
-                      setShowCityMap(newVal);
-                      localStorage.setItem(SHOW_CITY_MAP_KEY, String(newVal));
-                    }}
-                    className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
-                      showCityMap
-                        ? "border-slate-500 bg-slate-700/40 text-slate-200"
-                        : "border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
-                    }`}
-                  >
-                    MAP
-                  </button>
-                )}
-                {cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
-                  <button
-                    onClick={() => setShowPlanner(v => !v)}
-                    className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
-                      showPlanner
-                        ? "border-fuchsia-500 bg-fuchsia-900/40 text-fuchsia-200"
-                        : "border-fuchsia-500 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
-                    }`}
-                  >
-                    PLANNER
-                  </button>
-                )}
-                {outdatedBuildings.size > 0 && (
-                  <button
-                    onClick={() => setShowOnlyOutdated(v => !v)}
-                    className={`toggle-icon-btn-wide ${
-                      showOnlyOutdated ? "border-red-500 bg-red-950/40 text-red-300" : ""
-                    }`}
-                    title={t("showOnlyOldBuildingsTitle", uiLang)}
-                  >
-                    <svg viewBox="0 0 8 8" width="8" fill="#D35"><path d="M0 0l4 8 4-8H0z"/></svg>
-                  </button>
-                )}
-                {cityEntityIds.size > 0 && (
-                  <button
-                    onClick={() => setIsOutdatedSummaryOpen(v => !v)}
-                    className={`toggle-icon-btn-wide !w-auto px-2 whitespace-nowrap ${
-                      isOutdatedSummaryOpen ? "border-red-500 bg-red-950/40 text-red-300" : ""
-                    }`}
-                    title={t("outdatedSummaryButtonTitle", uiLang)}
-                  >
-                    <span className="font-semibold text-yellow-400">ERA ➜</span>
-                  </button>
-                )}
-                {declassableBuildings.size > 0 && (
-                  <button
-                    onClick={() => setShowOnlyDeclassable(v => !v)}
-                    className={`toggle-icon-btn-wide ${
-                      showOnlyDeclassable ? "border-green-500 bg-green-950/40 text-green-300" : ""
-                    }`}
-                    title={t("showOnlyDeclassableTitle", uiLang)}
-                  >
-                    <svg viewBox="0 0 8 8" width="8" fill="#2a6"><path d="M0 0l4 8 4-8H0z"/></svg>
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowOnlyWithAllySlot(v => !v)}
-                  className={`toggle-icon-btn-wide ${
-                    showOnlyWithAllySlot ? "border-amber-500 bg-amber-950/40 text-amber-300" : ""
-                  }`}
-                  title={t("showOnlyWithAllySlotTitle", uiLang)}
-                >
-                  <img src={allies_slot_full} alt="" className="h-5 w-5 object-contain" />
-                </button>
-                <button
-                  onClick={() => setShowOnlyWithFragments(v => !v)}
-                  className={`toggle-icon-btn-wide ${
-                    showOnlyWithFragments ? "border-blue-500 bg-blue-950/40 text-blue-300" : ""
-                  }`}
-                  title={t("showOnlyWithFragmentsTitle", uiLang)}
-                >
-                  <img src={iconFragment} alt="" className="h-5 w-5 object-contain" />
-                </button>
-                <button
-                  onClick={() => setIsCityUpgradeableOpen(true)}
-                  className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
-                >
-                  {t("upgradableBuildingsButton", uiLang)}
-                </button>
-                {renderRoadSummary()}
-                {renderProdSummary()}
-
-                <span className="text-xs font-semibold text-slate-300 uppercase whitespace-nowrap">{t("hideBuildingsLabel", uiLang)}</span>
-                <button
-                  onClick={() => updateFilter("showIncursionBuildings", !currentFilters.showIncursionBuildings)}
-                  className={`toggle-icon-btn text-xs ${
-                    currentFilters.showIncursionBuildings ? "border-blue-500/50 bg-blue-500/15 text-blue-300 shadow-sm" : ""
-                  }`}
-                  title={currentFilters.showIncursionBuildings ? t("showQiUsefulTitle", uiLang) : t("hideQiUsefulTitle", uiLang)}
-                >
-                  ✊🏾
-                </button>
-                <button
-                  onClick={() => updateFilter("showAllyBuildings", !currentFilters.showAllyBuildings)}
-                  className={`toggle-icon-btn text-xs ${
-                    currentFilters.showAllyBuildings ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm" : ""
-                  }`}
-                  title={currentFilters.showAllyBuildings ? t("hideHistoricalAllyBuildingsTitle", uiLang) : t("showHistoricalAllyBuildingsTitle", uiLang)}
-                >
-                  ⭐
-                </button>
-                <button
-                  onClick={() => updateFilter("showMassAidBuildings", !currentFilters.showMassAidBuildings)}
-                  className={`toggle-icon-btn text-xs ${
-                    currentFilters.showMassAidBuildings ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm" : ""
-                  }`}
-                  title={currentFilters.showMassAidBuildings ? t("hideMassAidBuildingsTitle", uiLang) : t("showMassAidBuildingsTitle", uiLang)}
-                >
-                  <img src={iconAiuto} alt={t("prodMassAid", uiLang)} className="icon-16" />
-                </button>
-                <button
-                  onClick={() => updateFilter("showStoreBuildingBuildings", !currentFilters.showStoreBuildingBuildings)}
-                  className={`toggle-icon-btn text-xs ${
-                    currentFilters.showStoreBuildingBuildings ? "border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300 shadow-sm" : ""
-                  }`}
-                  title={currentFilters.showStoreBuildingBuildings ? t("hideStoreBuildingBuildingsTitle", uiLang) : t("showStoreBuildingBuildingsTitle", uiLang)}
-                >
-                  <img src={iconImm} alt={t("prodStoreBuilding", uiLang)} className="icon-16" />
-                </button>
-                <button
-                  onClick={() => updateFilter("showGreatBuildings", !currentFilters.showGreatBuildings)}
-                  className={`toggle-icon-btn text-xs font-bold ${
-                    currentFilters.showGreatBuildings ? "border-amber-500/50 bg-amber-500/15 text-amber-300 shadow-sm" : ""
-                  }`}
-                  title={currentFilters.showGreatBuildings ? t("hideGreatBuildingsTitle", uiLang) : t("showGreatBuildingsTitle", uiLang)}
-                >
-                  {t("greatBuildingBadge", uiLang)}
-                </button>
-                {/* Merge Città+Inventario: stesso stile del bottone PROD + STAT
-                    (renderProdSummary), ma tinta verde/emerald invece di
-                    amber/orange per non confondersi con quel pannello — e per
-                    restare in tema con .row-merged-inventory (sfondo riga). */}
-                <button
-                  onClick={() => setShowInventoryInCity(v => !v)}
-                  className={`h-7 px-2.5 rounded border font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
-                    showInventoryInCity
-                      ? "border-emerald-500 bg-emerald-950/40 text-emerald-300"
-                      : "border-slate-700 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800/60"
-                  }`}
-                  title={showInventoryInCity ? t("hideInventoryInCityTitle", uiLang) : t("showInventoryInCityTitle", uiLang)}
-                >
-                  {t("showInventoryInCityButton", uiLang)}
-                </button>
-              </>
+          {/* 2.0: avatar ed era sono nel gruppo "Giocatore" del nastro; il riquadro
+              compare solo con un pannello aperto (Statistiche, Debug, Cambio era). */}
+          {activeTab === "propria_citta" && !showPlanner && cityEntityIds.size > 0 && (isRoadSummaryOpen || isProdSummaryOpen || isMilSummaryOpen || isDebugOpen || isOutdatedSummaryOpen || isCityUpgradeableOpen) && (
+            // 2.0: niente riquadro esterno, resta solo il margine (px-3 py-2)
+            <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs">
+              {(isRoadSummaryOpen || isProdSummaryOpen || isMilSummaryOpen) && (
+                <div className="flex w-full flex-wrap items-start gap-2">
+                  {renderRoadSummary()}
+                  {renderProdSummary()}
+                </div>
+              )}
               {isDebugOpen && (
                 <div className="w-full mt-2">
                     <div className="mt-2 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
@@ -6692,74 +5993,48 @@ export default function App() {
                   {fallbackEraId !== currentEraId
                     ? renderOutdatedSummaryCard(fullCitySummaryToFallback, "outdatedSummaryFallbackTitle", "outdatedSummaryToMaxEra", ageName(FALLBACK_ERA, gameLang))
                     : (
-                      <div className="flex flex-col rounded-lg bg-slate-950 border border-slate-700/20 items-center justify-center px-3 py-4">
+                      <div className="flex flex-col bg-slate-950 border border-slate-700/20 items-center justify-center px-3 py-4">
                         <p className="text-[11px] text-slate-500 italic">{t("outdatedSummaryAlreadyAtMax", uiLang)}</p>
                       </div>
                     )}
                 </div>
               )}
+              {/* 2.0: Aggiornabili è un pannello di Statistiche (era un popup) */}
+              {isCityUpgradeableOpen && (
+                <div className="w-full mt-2 space-y-4">
+                {!cityUpgradeableData.hasInventoryData ? (
+                  <div className="border border-amber-500/20 bg-amber-500/5 p-6 text-center">
+                    <div className="text-xs font-bold uppercase tracking-[0.15em] text-amber-300">{t("inventoryRequiredTitle", uiLang)}</div>
+                    <p className="mt-2 text-xs text-slate-400">
+                      {t("inventoryRequiredBody", uiLang)}
+                    </p>
+                  </div>
+                ) : cityUpgradeableData.upgradable.length === 0 && cityUpgradeableData.ascendable.length === 0 ? (
+                  <div className="border border-slate-800 bg-slate-950/40 p-6 text-center text-slate-400 text-xs">
+                    {t("noUpgradableFound", uiLang)}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {renderCityUpgradeableTable(
+                      t("upgradableBuildingsTitle", uiLang),
+                      cityUpgradeableData.upgradable,
+                      "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+                    )}
+                    {renderCityUpgradeableTable(
+                      t("ascendableBuildingsTitle", uiLang),
+                      cityUpgradeableData.ascendable,
+                      "border-violet-500/30 bg-violet-500/10 text-violet-300",
+                    )}
+                  </div>
+                )}
+                </div>
+              )}
             </div>
           )}
 
-          {activeTab === "inventario" && inventoryMatched.size > 0 && (
+          {/* 2.0: avatar ed era nel gruppo "Giocatore" del nastro; qui solo il Debug. */}
+          {activeTab === "inventario" && inventoryMatched.size > 0 && isInventoryDebugOpen && (
             <div className="flex flex-wrap items-center gap-2 rounded border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs">
-              {portraitUrl ? (
-                <img
-                  src={portraitUrl}
-                  alt=""
-                  className="h-7 w-7 rounded object-cover border border-amber-500/40 shrink-0"
-                />
-              ) : (
-                <img
-                  src="https://foezz.innogamescdn.com/assets/shared/avatars/portrait_unknown-9d9c1d859.jpg"
-                  alt=""
-                  className="h-7 w-7 rounded object-cover border border-slate-600/60 shrink-0 opacity-50"
-                  title={t("avatarOutdatedTitle", uiLang)}
-                />
-              )}
-              {currentEra && (
-                <span
-                  className="flex items-center h-7 px-2.5 rounded border border-amber-500/30 bg-amber-500/8 text-amber-400/90 font-semibold cursor-default select-none whitespace-nowrap"
-                  title={t("profileEraTitle", uiLang, ageName(currentEra, gameLang))}
-                >
-                  {ageName(currentEra, gameLang)}
-                </span>
-              )}
-              <button
-                onClick={() => setIsInventoryDebugOpen(open => !open)}
-                className="flex items-center gap-1 rounded border border-slate-700 bg-slate-950/40 px-2.5 py-1 font-semibold text-slate-300 hover:bg-slate-800/60 transition-all h-7"
-              >
-                {t("debugLabel")}
-              </button>
-              <button
-                onClick={() => setShowOnlyWithAllySlot(v => !v)}
-                className={`toggle-icon-btn-wide ${
-                  showOnlyWithAllySlot ? "border-amber-500 bg-amber-950/40 text-amber-300" : ""
-                }`}
-                title={t("showOnlyWithAllySlotTitle", uiLang)}
-              >
-                <img src={allies_slot_full} alt="" className="h-5 w-5 object-contain" />
-              </button>
-              <button
-                onClick={() => setShowOnlyWithFragments(v => !v)}
-                className={`toggle-icon-btn-wide ${
-                  showOnlyWithFragments ? "border-blue-500 bg-blue-950/40 text-blue-300" : ""
-                }`}
-                title={t("showOnlyWithFragmentsTitle", uiLang)}
-              >
-                <img src={iconFragment} alt="" className="h-5 w-5 object-contain" />
-              </button>
-              <button
-                onClick={() => setShowOnlyReadyBuildings(v => !v)}
-                className={`flex items-center gap-1 rounded border px-2.5 py-1 font-semibold transition-all h-7 ${
-                  showOnlyReadyBuildings
-                    ? "border-amber-500/60 bg-amber-500/10 text-amber-400"
-                    : "border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-800/60"
-                }`}
-                title={t("onlyReadyBuildingsTitle", uiLang)}
-              >
-                {t("onlyReadyBuildings", uiLang).toUpperCase()}
-              </button>
               {isInventoryDebugOpen && (() => {
                 const allSelectionKits = Array.from(inventorySelectionKits.values());
 
@@ -6834,24 +6109,20 @@ export default function App() {
           {/* Solo con una città importata (dopo l'eliminazione del profilo o di
               tutti i profili sparisce); key = profilo: cambiando profilo il
               Planner riparte da zero (si fermano le ricerche dell'altro). */}
-          {activeTab === "propria_citta" && showPlanner && cityMapBuildings.length > 0 && cityMapUnlockedCells.size > 0 && (
-            <PlannerView
-              key={activeProfileId}
-              cityMapBuildings={cityMapBuildings}
-              cityMapUnlockedCells={cityMapUnlockedCells}
-              candidati={plannerCandidati}
-              uiLang={uiLang}
-            />
-          )}
-
-          {activeTab === "propria_citta" && showCityMap && (
+          {/* Mappa della città: scheda Città e (2.0) scheda Planner con la città
+              selezionata (pulsante Mappa del gruppo Città del nastro del Planner). */}
+          {(() => {
+          // 2.0: nel Planner con la sorgente JSON la mappa mostra la città del file
+          const mj = showPlanner && plannerSorgente === "json" ? mappaJson : null;
+          if (!(activeTab === "propria_citta" && showCityMap && (mj || !showPlanner || (plannerSorgente === "citta" && haCittaPlanner)))) return null;
+          return (
             <CityMapView
-              cityMapBuildings={cityMapBuildings}
-              cityMapBounds={cityMapBounds}
-              cityMapUnlockedCells={cityMapUnlockedCells}
-              cityMapUnlockedAreas={cityMapUnlockedAreas}
-              cityMapGrid={cityMapGrid}
-              highlightedCityEntityIds={highlightedCityEntityIds}
+              cityMapBuildings={mj ? mj.buildings : cityMapBuildings}
+              cityMapBounds={mj ? mj.bounds : cityMapBounds}
+              cityMapUnlockedCells={mj ? mj.cells : cityMapUnlockedCells}
+              cityMapUnlockedAreas={mj ? mj.aree : cityMapUnlockedAreas}
+              cityMapGrid={mj ? mj.grid : cityMapGrid}
+              highlightedCityEntityIds={mj ? NESSUN_ID : highlightedCityEntityIds}
               cityMapView={cityMapView}
               setCityMapView={setCityMapView}
               cityMapCellSize={cityMapCellSize}
@@ -6882,14 +6153,56 @@ export default function App() {
                 });
               }}
               onBuildingLeave={scheduleImagePopupClose}
-              onBuildingClick={handleMapBuildingClick}
+              onBuildingClick={mj ? undefined : handleMapBuildingClick}
               uiLang={uiLang}
+              nomeGiocatore={mj ? mj.nome : profiles.find(x => x.id === activeProfileId)?.name}
             />
-          )}
+          );
+          })()}
 
-          {(activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario") && (
+          {/* Planner (2.0: scheda a sé). Sorgente: città selezionata o JSON
+              importato dal nastro; key = sorgente: cambiandola il Planner
+              riparte da zero (si fermano le ricerche dell'altra). */}
+          {activeTab === "propria_citta" && showPlanner && (() => {
+            const usaJson = plannerSorgente === "json" || !haCittaPlanner;
+            if (usaJson && !plannerJson) {
+              return (
+                <div className="px-4 py-6 text-center text-[13px] text-slate-300">
+                  {t("r2PlNoSource", uiLang)}
+                  {plannerErrore && <div className="mt-2 text-red-400">{plannerErrore}</div>}
+                </div>
+              );
+            }
+            const ignorati = usaJson ? plannerJson!.citta.ignorati : undefined;
+            return (
+              <Suspense fallback={<div className="avvio" style={{ minHeight: 200 }}><div className="avvio-rotella" /></div>}>
+                {/* Import da Forge Hammer: pezzi senza dimensioni note (non nel catalogo) */}
+                {ignorati && ignorati.length > 0 && (
+                  <div className="px-3 pt-2 text-[12px] text-amber-300" title={[...new Set(ignorati)].join("\n")}>
+                    {t("plannerJsonIgnored", uiLang, ignorati.length, [...new Set(ignorati)].join(", "))}
+                  </div>
+                )}
+                <PlannerView
+                  key={usaJson ? `json-${plannerJson!.n}` : `citta-${activeProfileId}`}
+                  cityMapBuildings={usaJson ? NESSUN_EDIFICIO : cityMapBuildings}
+                  cityMapUnlockedCells={usaJson ? NESSUNA_CELLA : cityMapUnlockedCells}
+                  esterna={usaJson ? plannerJson!.citta : null}
+                  candidati={plannerCandidati}
+                  uiLang={uiLang}
+                  onNastro={setGruppiPlanner}
+                  militariCollegatiIniziali={usaJson ? undefined : militariCollegatiOra}
+                  mappa={{ attiva: showCityMap, cambia: () => { const v = !showCityMap; setShowCityMap(v); localStorage.setItem(SHOW_CITY_MAP_KEY, String(v)); } }}
+                />
+              </Suspense>
+            );
+          })()}
+
+
+          {(activeTab === "database" || (activeTab === "propria_citta" && !showPlanner) || activeTab === "inventario") && (
             <>
-              <div ref={buildingTableWrapperRef} className="bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
+              {/* 2.0: in Database, Città e Inventario la tabella va da bordo a bordo
+                  (annulla il px-2 di <main>) con spigoli vivi. */}
+              <div ref={buildingTableWrapperRef} className="-mx-2 bg-slate-900/20 border-y border-slate-800/80 overflow-hidden">
                 <div
                   ref={buildingTableScrollRef}
                   onScroll={() => syncBuildingTableScroll("table")}
@@ -6900,7 +6213,7 @@ export default function App() {
                       <col className="w-[32px]" />
                       <col className="w-[14px]" />
                       <col className={buildingTableNeedsScroll ? "w-[260px]" : "w-full min-w-[260px]"} />
-                      {currentFilters.showTimeColumn && <col className="w-[50px]" />}
+                      <col className="w-[50px]" />
                       <col className="w-[32px]" />
                       <col className="w-[50px]" />
                       <col className="w-[48px]" />
@@ -6910,8 +6223,8 @@ export default function App() {
                        {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
                        {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
                        {showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`sig-gc-${i}`} className="w-[42px]" />)}
-                       {!showSigmaColumns && spedizioniEnabled && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
-                       {showSigmaColumns && spedizioniEnabled && Array.from({ length: 4 }).map((_, i) => <col key={`sig-gs-${i}`} className="w-[42px]" />)}
+                       {!showSigmaColumns && showSpedColumns && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
+                       {showSigmaColumns && showSpedColumns && Array.from({ length: 4 }).map((_, i) => <col key={`sig-gs-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 4 }).map((_, i) => <col key={`iq-ad-${i}`} className="w-[42px]" />)}
                        {showIqProdColumns && Array.from({ length: 4 }).map((_, i) => <col key={`iq-mm-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
@@ -6924,68 +6237,22 @@ export default function App() {
                             th-name-summary, scoped sotto .has-sticky-name): niente più stili
                             inline condizionali qui. */}
                         <th className="th-export-summary py-1 px-1 text-center" colSpan={2}>
-                          <button
-                            onClick={exportSelectedAsCsv}
-                            disabled={selectedIds.size === 0}
-                            title={selectedIds.size === 0 ? t("exportSelectFirstTitle", uiLang) : t("exportSelectedCsvTitle", uiLang, selectedIds.size)}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-950/60 px-1.5 py-1 text-[11px] font-bold text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            <Download size={11} />
-                            Export
-                          </button>
+                          {/* 2.0: Export degli edifici selezionati → nastro, Opzioni. */}
                         </th>
                         <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
                           {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : processedBuildings.length}</span>
                         </th>
-                        <th className="py-2 px-0" colSpan={4 + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
+                        <th className="py-2 px-0" colSpan={5 + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
-                            <div style={{ minWidth: `calc(${currentFilters.showTimeColumn ? '50px' : '0px'} + 32px)` }} />
-                            <input
-                              type="text"
-                              value={currentFilters.minEff}
-                              onChange={(e) => updateFilter("minEff", e.target.value)}
-                              aria-label={t("minEffInputLabel", uiLang)}
-                              className="w-12 h-5 rounded border border-slate-700 bg-slate-900/80 px-1 text-center font-mono text-[11px] text-amber-400 outline-none focus:border-amber-500"
-                            />
-                            <span>min EFF</span>
+                            <div style={{ minWidth: "82px" }} />
+                            {/* 2.0: l'efficienza minima è nel nastro (Filtri). */}
                           </div>
                         </th>
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
                           <th className="relative text-center group-header-orange text-orange-400/80" colSpan={22}>
-                            <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                              <button
-                                onClick={() => setHideNoRush(v => !v)}
-                                className={`inline-flex items-center gap-1 rounded border-[0.5px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
-                                  hideNoRush
-                                    ? "border-orange-300 bg-orange-500/70 text-white shadow-sm"
-                                    : "border-slate-400/70 bg-slate-950/40 text-slate-300 hover:border-slate-300 hover:text-slate-100"
-                                }`}
-                                title={t(hideNoRush ? "hideNoRushActiveTitle" : "hideNoRushTitle", uiLang)}
-                              >
-                                {t("hideNoRushLabel", uiLang)}
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5" className="flex-shrink-0">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <line x1="5.5" y1="18.5" x2="18.5" y2="5.5" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => setHideEraMutable(v => !v)}
-                                className={`inline-flex items-center gap-1 rounded border-[0.5px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider normal-case ${
-                                  hideEraMutable
-                                    ? "border-orange-300 bg-orange-500/70 text-white shadow-sm"
-                                    : "border-slate-400/70 bg-slate-950/40 text-slate-300 hover:border-slate-300 hover:text-slate-100"
-                                }`}
-                                title={t(hideEraMutable ? "hideEraMutableActiveTitle" : "hideEraMutableTitle", uiLang)}
-                              >
-                                {t("hideEraMutableLabel", uiLang)}
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#0e7490" strokeWidth="2.5" className="flex-shrink-0">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <polyline points="8 14 12 10 16 14" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </button>
-                            </div>
+                            {/* 2.0: Nascondi 🚫/^ sono nel nastro (Visualizza: Non accelerabili, Auto aggiornabili). */}
                             {t("groupProductions", uiLang)}
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
                                 salta applyEraStats (isGameTab è falso), quindi i valori sono
@@ -7066,9 +6333,7 @@ export default function App() {
                             repaint dello sfondo su Chrome (solo questo th, a caso). */}
                         <SortableHeader label={t("colBuilding", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="cell-name py-0.5 px-2 text-left" />
                         
-                        {currentFilters.showTimeColumn && (
-                          <th className="py-0.5 px-1 text-center text-amber-400/80 w-[50px] text-xl">⏱</th>
-                        )}
+                        <th className="py-0.5 px-1 text-center text-amber-400/80 w-[50px] text-xl">⏱</th>
                         <th className="py-0.5 px-1 text-center w-[32px]">❔</th>
                         <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />
                         <SortableHeader label={<TableHeaderIcon src={iconSize} alt={t("colSize", uiLang)} />} sortKey="size" onClick={() => handleSort("size")} active={sortBy === "size"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[48px] section-divider" title={t("colSize", uiLang)} />
@@ -7136,9 +6401,8 @@ export default function App() {
                           uiLang={uiLang}
                           gameLang={gameLang}
                           currentEraId={currentEraId}
-                          currentFilters={currentFilters}
                           showSigmaColumns={showSigmaColumns}
-                          spedizioniEnabled={spedizioniEnabled}
+                          spedizioniEnabled={showSpedColumns}
                           showPopColumn={showPopColumn}
                           showFelColumn={showFelColumn}
                           showIqProdColumns={showIqProdColumns}
@@ -7210,7 +6474,7 @@ export default function App() {
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>
-                            <td colSpan={27 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (currentFilters.showTimeColumn ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (spedizioniEnabled ? 4 : 0) + (showProdColumns ? 22 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                            <td colSpan={28 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? 22 : 0)} className="text-center py-12 text-slate-400 font-semibold">
                               <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
                                 <span>{emptyMessagePrefix}</span>
                                 {/* SOLO riferimento visivo al pulsante reale della toolbar
@@ -7261,7 +6525,7 @@ export default function App() {
             {/* Potenziale alleati + Gettoni Valore (pannello unico): SOLO per profili importati con la
                 bacchetta v6 (magazzino risorse presente). Con bacchette più
                 vecchie l'utente vede il solito modale "bacchetta obsoleta". */}
-            {playerResources && importedAllies.some(a => !a.isFragment) && (
+            {!alleatiDaDb && mostraConsigliere && playerResources && importedAllies.some(a => !a.isFragment) && (
               <AllyAdvisorPanel
                 owned={importedAllies}
                 byIdRarity={ALLIES_BY_ID_RARITY}
@@ -7271,15 +6535,15 @@ export default function App() {
                 uiLang={uiLang}
                 gameLang={gameLang}
                 allyName={allyName}
-                groupHeaders={renderMilitaryGroupHeaders()}
-                statHeaders={renderMilitaryIconHeaders()}
+                groupHeaders={renderMilitaryGroupHeaders(true)}
+                statHeaders={renderMilitaryIconHeaders(true)}
                 renderBoostCells={(g, c, sp) => (
-                  <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled={spedizioniEnabled} uiLang={uiLang} />
+                  <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled uiLang={uiLang} />
                 )}
               />
             )}
-            {/* Tabella alleati importati */}
-            {processedImportedAllies.length > 0 && (
+            {/* Tabella alleati importati (solo scheda Alleati, non nel catalogo del Database) */}
+            {!alleatiDaDb && processedImportedAllies.length > 0 && (
               <div className="bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="building-table w-full table-fixed text-left border-collapse" style={{ minWidth: alliesTableMinWidth }}>
@@ -7289,43 +6553,29 @@ export default function App() {
                       <col className="w-[50px]" />
                       {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
                       {Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
-                      {spedizioniEnabled && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
+                      {Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
                       {Array.from({ length: 3 }).map((_, i) => <col key={`prod-${i}`} className="w-[42px]" />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <th className="py-2 px-2 text-center cursor-pointer hover:text-slate-300 transition-colors" colSpan={3} onClick={() => setIsMyAlliesTableOpen(v => !v)}>
-                          {(() => {
-                            const placed = processedImportedAllies.filter(a => a.isPlaced).length;
-                            const inventory = processedImportedAllies.filter(a => !a.isPlaced && !a.isFragment).length;
-                            const fragments = processedImportedAllies.filter(a => a.isFragment).length;
-                            return (
-                              <>
-                                <span className="mr-2">{isMyAlliesTableOpen ? "▼" : "▶"}</span>
-                                {t("ownedAlliesCount", uiLang)}: <span className="font-bold text-slate-100">{processedImportedAllies.length}</span>
-                                <span className="text-slate-400"> (</span>
-                                <span className="font-bold text-emerald-300">{placed}</span>
-                                <span className="text-slate-400"> {t("alliesPlacedInCity", uiLang)} </span>
-                                <span className="font-bold text-red-400">{inventory}</span>
-                                <span className="text-slate-400"> {t("alliesInInventory", uiLang)} </span>
-                                <span className="font-bold text-amber-400">{fragments}</span>
-                                <span className="text-slate-400"> {t("alliesFragmented", uiLang)}</span>
-                              </>
-                            );
-                          })()}
+                        <th className="py-2 px-2 text-center" colSpan={3}>
+                          {/* 2.0: i conteggi per tipo (militari, scienza, frammentati)
+                              sono nei pulsanti dei Filtri del nastro. */}
+                          <span className="text-[11px] font-normal normal-case text-slate-400">
+                            {t("alliesVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{processedImportedAllies.length}</span>
+                          </span>
                         </th>
-                        {renderMilitaryGroupHeaders()}
+                        {renderMilitaryGroupHeaders(true)}
                         {renderAllyProductionGroupHeader()}
                       </tr>
                       <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                         <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiOwn("name")} active={sortByAlleatiOwn === "name"} order={sortOrderAlleatiOwn} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
                         <SortableHeader label="Lvl" sortKey="ally_level" onClick={() => handleSortAlleatiOwn("ally_level")} active={sortByAlleatiOwn === "ally_level"} order={sortOrderAlleatiOwn} className="py-0.5 px-1 text-center w-[64px]" title={t("allyLevelTitle", uiLang)} />
                         <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSortAlleatiOwn("eff")} active={sortByAlleatiOwn === "eff"} order={sortOrderAlleatiOwn} className="th-eff" />
-                        {renderMilitaryHeaders("alleati_own")}
+                        {renderMilitaryHeaders("alleati_own", true)}
                         {renderAllyProductionHeaders("alleati_own")}
                       </tr>
                     </thead>
-                    {isMyAlliesTableOpen && (
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
                       {processedImportedAllies.map((a) => (
                         <tr
@@ -7375,19 +6625,21 @@ export default function App() {
                           <td className="cell-eff">
                             <span className="text-amber-400 text-sm">{formatEff(a.currentEff)}</span>
                           </td>
-                          <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled={spedizioniEnabled} />
+                          <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled />
                           <AllyProductionCells pf={a.computedPf} beni={a.computedBeni} beniP={a.computedBeniP} />
                         </tr>
                       ))}
                     </tbody>
-                    )}
                   </table>
                 </div>
               </div>
             )}
 
-            {/* Tabella database alleati completo */}
-            <div ref={buildingTableWrapperRef} className="bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
+            {/* Tabella database alleati completo: solo nel catalogo Alleati del
+                Database (2.0; la scheda Alleati mostra solo i tuoi alleati) */}
+            {alleatiDaDb && (
+            // 2.0: catalogo Alleati del Database da bordo a bordo, spigoli vivi
+            <div ref={buildingTableWrapperRef} className="-mx-2 bg-slate-900/20 border-y border-slate-800/80 overflow-hidden">
               <div
                 ref={buildingTableScrollRef}
                 onScroll={() => syncBuildingTableScroll("table")}
@@ -7399,7 +6651,7 @@ export default function App() {
                     <col className="w-[50px]" />
                     {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
                     {Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
-                    {spedizioniEnabled && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
+                    {Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
                     {Array.from({ length: 3 }).map((_, i) => <col key={`prod-${i}`} className="w-[42px]" />)}
                   </colgroup>
                   <thead>
@@ -7409,54 +6661,34 @@ export default function App() {
                           <span className="text-slate-400 uppercase tracking-wider">{t("calcEfficiencyAtLevel", uiLang)}</span>
                           <div className="h-4 w-[1px] bg-slate-800 mx-2" />
                           <span className="text-slate-400 text-[11px] normal-case font-normal">{t("alliesVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredAllies.length}</span></span>
-                          <button
-                            onClick={() => setShowOnlyOwnedAllies((value) => !value)}
-                            disabled={importedAllies.length === 0}
-                            className={`inline-flex h-7 items-center rounded-lg border px-2 text-[10px] font-bold uppercase transition-all disabled:cursor-not-allowed disabled:opacity-35 ${
-                              showOnlyOwnedAllies
-                                ? "border-emerald-400 bg-emerald-500/20 text-emerald-200"
-                                : "border-slate-700 bg-slate-950/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                            }`}
-                            title={importedAllies.length === 0 ? t("importAlliesFirstTitle", uiLang) : showOnlyOwnedAllies ? t("showFullDatabaseTitle", uiLang) : t("showOnlyOwnedTitle", uiLang)}
-                          >
-                            {t("onlyOwnedLabel", uiLang)}
-                          </button>
                         </div>
                       </th>
-                      {renderMilitaryGroupHeaders()}
+                      {renderMilitaryGroupHeaders(true)}
                       {renderAllyProductionGroupHeader()}
                     </tr>
                     <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                       <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiDb("name")} active={sortByAlleatiDb === "name"} order={sortOrderAlleatiDb} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
                       <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSortAlleatiDb("eff")} active={sortByAlleatiDb === "eff"} order={sortOrderAlleatiDb} className="th-eff" />
 
-                        {renderMilitaryHeaders("alleati_db")}
+                        {renderMilitaryHeaders("alleati_db", true)}
                         {renderAllyProductionHeaders("alleati_db")}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
                     {filteredAllies.map((a) => {
-                      const hasUnplaced = showOnlyOwnedAllies && unplacedAllyLookup.has(`${a.id}__${a.rarity}`);
                       return (
                       <tr
                         key={a.id + a.rarity}
-                        className={`transition-colors ${hasUnplaced ? "bg-red-950/30 hover:bg-red-950/50" : "hover:bg-slate-900/40"}`}
+                        className="transition-colors hover:bg-slate-900/40"
                       >
                         <td className="cell-name">
                           <AllyRarityName id={a.id} rarity={a.rarity} lang={uiLang} />
-                          {hasUnplaced ? (
-                            <span className="ml-1.5 inline-block text-[10px] font-mono font-bold px-1 py-0.5 rounded bg-red-950 text-red-400 border border-red-600" title={t("allyHasUnplacedCopyTitle", uiLang)}>{t("allyNotPlacedBadge", uiLang)}</span>
-                          ) : showOnlyOwnedAllies && fragmentAllyLookup.set.has(`${a.id}__${a.rarity}`) && (
-                            <span className="ml-1.5 inline-block text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-600" title={t("fragmentsCountTitle", uiLang, fragmentAllyLookup.countMap.get(`${a.id}__${a.rarity}`) ?? 0)}>
-                              {t("fragmentsBadge", uiLang, fragmentAllyLookup.countMap.get(`${a.id}__${a.rarity}`) ?? 0)}
-                            </span>
-                          )}
                         </td>
                         <td className="cell-eff">
                           <span className="text-amber-400 text-sm">{formatEff(a.currentEff)}</span>
                         </td>
 
-                        <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled={spedizioniEnabled} />
+                        <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled />
                         <AllyProductionCells pf={a.computedPf} beni={a.computedBeni} beniP={a.computedBeniP} />
                       </tr>
                     );
@@ -7465,7 +6697,7 @@ export default function App() {
                     {filteredAllies.length === 0 && (
                       <tr>
                         {/* nome+eff (2) + militari effettive: 4 con Σ, 8 senza, +4 se Spedizioni + 3 produzioni */}
-                        <td colSpan={2 + (showSigmaColumns ? 4 : 8) + (spedizioniEnabled ? 4 : 0) + 3} className="text-center py-12 text-slate-400 font-semibold">
+                        <td colSpan={2 + (showSigmaColumns ? 4 : 8) + 4 + 3} className="text-center py-12 text-slate-400 font-semibold">
                           {t("noAlliesFound", uiLang)}
                         </td>
                       </tr>
@@ -7488,6 +6720,7 @@ export default function App() {
                 </div>
               )}
             </div>
+            )}
           </>
           )}
 
@@ -7512,7 +6745,7 @@ export default function App() {
               questa tab, vedi sopra) fino a PiratiTool, che ne ha bisogno per il
               ridimensionamento del planner (gridWrapperSize). */}
           <div className={activeTab === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
-            <PiratiTool ref={piratiToolRef} uiLang={uiLang} />
+            <PiratiTool ref={piratiToolRef} uiLang={uiLang} onNastro={setGruppiPirati} />
           </div>
 
         </section>
@@ -8091,52 +7324,6 @@ export default function App() {
         </div>
       )}
 
-      {isCityUpgradeableOpen && (
-        <div
-          className="modal-overlay"
-          {...cityUpgradeableBackdrop}
-        >
-          <div
-            className="relative flex max-h-[90vh] w-full max-w-5xl flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setIsCityUpgradeableOpen(false)}
-              className="absolute -right-3 -top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
-              aria-label={t("closeAriaLabel", uiLang)}
-            >
-              <XIcon size={14} />
-            </button>
-            <div className="flex-1 overflow-auto p-4 space-y-4">
-              {!cityUpgradeableData.hasInventoryData ? (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6 text-center">
-                  <div className="text-xs font-bold uppercase tracking-[0.15em] text-amber-300">{t("inventoryRequiredTitle", uiLang)}</div>
-                  <p className="mt-2 text-xs text-slate-400">
-                    {t("inventoryRequiredBody", uiLang)}
-                  </p>
-                </div>
-              ) : cityUpgradeableData.upgradable.length === 0 && cityUpgradeableData.ascendable.length === 0 ? (
-                <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-6 text-center text-slate-400 text-xs">
-                  {t("noUpgradableFound", uiLang)}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {renderCityUpgradeableTable(
-                    t("upgradableBuildingsTitle", uiLang),
-                    cityUpgradeableData.upgradable,
-                    "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-                  )}
-                  {renderCityUpgradeableTable(
-                    t("ascendableBuildingsTitle", uiLang),
-                    cityUpgradeableData.ascendable,
-                    "border-violet-500/30 bg-violet-500/10 text-violet-300",
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
       {/* ── Modale Avviso Versione Outdated ─────────────────────────────── */}
       {isOutdatedModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-md">

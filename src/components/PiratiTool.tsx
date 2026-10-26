@@ -19,7 +19,8 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 // file): Wand2 è importata da lucide-react per riusare l'IDENTICA immagine della
 // bacchetta magica mostrata come CTA in App.tsx (tab Città/Inventario, "Nessuna città
 // importata...") nella guida rapida in fondo al planner — stesso font/stile, stessa icona.
-import { Wand2 } from "lucide-react";
+import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, type LucideIcon } from "lucide-react";
+import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
 import { isLegacyBookmarkletPayload, readPayloadDiagnostics, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
 import { importCulturalOutpostPayload, ImportCulturalOutpostFailure } from "../data/importCulturalOutpost";
 import { t, type UiLang } from "../data/ui-strings";
@@ -58,35 +59,10 @@ import {
 
 // Icone SVG inline (stroke, coerenti con lo stile FoE Optimizer: niente libreria
 // icone esterna, controllo diretto su stroke/fill invece del glifo con colore pieno).
-function IconPlay({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-}
-
 function IconStop({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
       <rect x="6" y="6" width="12" height="12" rx="1" />
-    </svg>
-  );
-}
-
-function IconReset({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-      <path d="M3 3v5h5" />
-    </svg>
-  );
-}
-
-function IconAuto({ size = 13 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M13 2 3 14h7l-1 8 11-13h-7l1-7z" />
     </svg>
   );
 }
@@ -334,9 +310,12 @@ export type PiratiToolHandle = {
 
 type PiratiToolProps = {
   uiLang: UiLang;
+  /** 2.0: i comandi (Calcolo, Espansioni) stanno nel nastro: PiratiTool
+   *  consegna qui i suoi gruppi a ogni cambio di stato. */
+  onNastro?: (gruppi: RibbonGroup[]) => void;
 };
 
-const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function PiratiTool({ uiLang }, ref) {
+const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function PiratiTool({ uiLang, onNastro }, ref) {
   const [buildings, setBuildings] = useState<BuildingType[]>(INITIAL_BUILDINGS);
   const [placements, setPlacements] = useState<Placement[]>(INITIAL_PLACEMENTS);
   const [obstacles, setObstacles] = useState<Set<string>>(new Set());
@@ -1994,73 +1973,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     return false;
   }, [buildings, placements, obstacles, expansions, baseline]);
 
-  const buildingCategories = [
-    { title: t("piratiCategoryResidential", uiLang), ids: ["amaca", "capanno", "baracca"] },
-    { title: t("piratiCategoryGoods", uiLang), ids: ["pescatore", "spezie", "rum", "cannoni"] },
-    // Ex unico gruppo "Diplomazia", separato in due (agosto 2026, su richiesta
-    // esplicita): le tre imbarcazioni producono anche Dobloni oltre a Diplomazia
-    // (pop negativo più alto), i quattro moli danno solo Diplomazia pura.
-    { title: t("piratiCategoryDiplomacyDoubloons", uiLang), ids: ["imbarcazione", "brigantino", "galeone"] },
-    { title: t("piratiCategoryDiplomacyOnly", uiLang), ids: ["molo", "molo_lungo", "molo_largo", "grande_molo"] },
-  ];
-
-  return (
-    <div className="h-full min-h-0 flex flex-col font-sans">
-      {/* Riga statistiche compatta: pulsanti azione (Risolvi/Reset/Bacchetta),
-          Area/Popolazione (pillole), Aggiungi/Rimuovi EXP e stato ricerca, tutto
-          su una riga sottile in stile toolbar filtri di FoE Optimizer (bordi
-          border-slate-700/60, sfondo bg-slate-800/40, h-7, text-xs).
-          shrink-0: dimensione naturale, non deve restringersi quando il
-          layout sotto (planner) va in pressione verticale. */}
-      <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-1 text-xs shrink-0">
-        <button
-          onClick={() => void solve()}
-          // Bloccato fuori da 'obstacle' come le altre azioni sulla griglia (userebbe
-          // coordinate display estese, vedi canEditGrid). Non vale con isSolving:
-          // lì il bottone significa "Stop", sempre permesso.
-          disabled={(status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle") && !isSolving}
-          className={cx(
-            "flex items-center gap-1.5 h-7 px-3 rounded border font-bold transition-all shrink-0",
-            isSolving
-              ? "bg-red-950/40 hover:bg-red-900/50 border-red-500/40 text-red-300 animate-pulse"
-              : (status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle")
-                ? "bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed"
-                : "bg-amber-950/40 hover:bg-amber-900/50 border-amber-500/40 text-amber-300"
-          )}
-        >
-          {isSolving ? (
-            <>
-              <IconStop size={13} />
-              {t("piratiStopLabel", uiLang)}
-            </>
-          ) : (
-            <>
-              <IconPlay size={13} />
-              {t("piratiSolveLabel", uiLang)}
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => setAutoMode((current) => !current)}
-          disabled={isSolving}
-          title={t("piratiAutoTitle", uiLang)}
-          aria-pressed={autoMode}
-          className={cx(
-            "flex items-center gap-1.5 h-7 px-3 rounded border font-bold transition-all shrink-0",
-            isSolving
-              ? "bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed"
-              : autoMode
-                ? "bg-cyan-950/40 hover:bg-cyan-900/50 border-cyan-500/40 text-cyan-300"
-                : "border-slate-600 bg-slate-700/20 text-slate-400 hover:bg-slate-700/40 hover:text-slate-100"
-          )}
-        >
-          <IconAuto size={13} />
-          {t("piratiAutoLabel", uiLang)}
-        </button>
-
-        <button
-          onClick={() => {
+  // ── Undo / Reset (2.0: estratti dai pulsanti, chiamati dal nastro) ──────
+  const annulla = () => {
             if (isSolving || !hasChangesFromBaseline) return;
             // 'success' e non 'idle': la baseline è già una disposizione valida
             // (vuota o post-import), quindi Risolvi deve restare disabilitato
@@ -2089,23 +2003,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             // pulsante −EXP disabilitato con la modalità ancora attiva (griglia
             // bloccata, "+" e Risolvi disabilitati — bug corretto settembre 2026).
             setEditMode("obstacle");
-          }}
-          // isSolving: l'onClick già ignora il click con isSolving, ma senza
-          // rifletterlo qui il pulsante restava visivamente attivo durante una
-          // ricerca in corso (stesso problema visto sui pulsanti +/- e sulla X
-          // di eliminazione placement).
-          disabled={!hasChangesFromBaseline || isSolving}
-          // Attivo solo se lo stato corrente si è discostato dalla baseline (stato
-          // vuoto, o stato subito dopo l'ultimo import) — vedi hasChangesFromBaseline.
-          className="flex items-center gap-1.5 h-7 px-3 rounded border border-slate-600 bg-slate-700/20 text-slate-400 font-bold hover:bg-slate-700/40 hover:text-slate-100 transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-700/20 disabled:hover:text-slate-400"
-          title={t("piratiUndoTitle", uiLang)}
-        >
-          <IconReset size={13} />
-          {t("piratiUndoLabel", uiLang)}
-        </button>
-
-        <button
-          onClick={() => {
+  };
+  const azzera = () => {
             if (isSolving || !hasImportedCity) return;
             // Reset "vero": a differenza di Undo (sopra), riporta SEMPRE allo stato
             // vuoto iniziale, anche se è già stato fatto un import — e azzera anche
@@ -2135,20 +2034,66 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             // ultima soluzione valida.
             lastSolvedRef.current = { buildings: INITIAL_BUILDINGS.map((b) => ({ ...b })), placements: INITIAL_PLACEMENTS.map((p) => ({ ...p })) };
             setHasImportedCity(false);
-          }}
-          // isSolving: stesso motivo del pulsante Undo sopra.
-          disabled={!hasImportedCity || isSolving}
-          // Stesso schema colore/stato del cestino "elimina tutti i profili"
-          // nell'header (App.tsx): rosso scuro e leggero quando disabilitato
-          // (niente importato, o dopo Reset), rosso più chiaro e abilitato
-          // dopo un import riuscito — pilotato da hasImportedCity.
-          className="flex items-center gap-1.5 h-7 px-3 rounded border border-red-500/30 bg-red-500/10 text-red-300 font-bold hover:bg-red-500/20 hover:text-red-200 hover:border-red-400/60 transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500/10 disabled:hover:text-red-300 disabled:hover:border-red-500/30"
-          title={t("piratiResetTitle", uiLang)}
-        >
-          <IconReset size={13} />
-          {t("piratiResetLabel", uiLang)}
-        </button>
+  };
 
+  // ── Nastro (2.0) ────────────────────────────────────────────────────────
+  // Come il Planner: i gruppi si ricostruiscono quando cambia lo stato che
+  // mostrano (firma); i click passano da azioniRef (funzioni correnti).
+  const azioniRef = useRef({ solve, annulla, azzera });
+  azioniRef.current = { solve, annulla, azzera };
+  const risolviBloccato = (status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle") && !isSolving;
+  const firmaNastro = [isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
+    candidateExpansionBlocks.length, removableExpansionKeys.size, uiLang].join("|");
+  const onNastroRef = useRef(onNastro);
+  onNastroRef.current = onNastro;
+  useEffect(() => {
+    const L = (k: Parameters<typeof t>[0]) => t(k, uiLang) as string;
+    const b = (id: string, icon: LucideIcon, label: string, onClick: () => void, extra: Partial<Extract<RibbonItem, { kind: "button" }>> = {}): RibbonItem =>
+      ({ kind: "button", id, icon, label, onClick, ...extra });
+    const a = () => azioniRef.current;
+    const gruppi: RibbonGroup[] = [
+      { id: "pi-calcolo", label: L("r2GrpCalc"), icon: Play, priority: 3, rows: [[
+        isSolving
+          ? b("risolvi", Square, L("r2PiStop"), () => void a().solve(), { active: true, danger: true })
+          : b("risolvi", Play, L("r2PiSolve"), () => void a().solve(), { disabled: risolviBloccato }),
+        b("auto", Repeat, L("r2PiAuto"), () => setAutoMode(v => !v), { active: autoMode, disabled: isSolving, title: L("piratiAutoTitle") }),
+        b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving, title: L("piratiUndoTitle") }),
+        b("reset", Trash2, L("r2PiReset"), () => a().azzera(), { disabled: !hasImportedCity || isSolving, title: L("piratiResetTitle"), danger: true }),
+      ]] },
+      { id: "pi-espansioni", label: L("r2GrpExpansions"), icon: SquarePlus, priority: 2, rows: [[
+        b("piu", SquarePlus, L("r2PiAddExp"), () => setEditMode(c => (c === "add-expansion" ? "obstacle" : "add-expansion")),
+          { active: editMode === "add-expansion", disabled: isSolving || candidateExpansionBlocks.length === 0,
+            title: candidateExpansionBlocks.length === 0 ? L("piratiAddExpNoneTitle") : L("piratiAddExpTitle") }),
+        b("meno", SquareMinus, L("r2PiRemoveExp"), () => setEditMode(c => (c === "remove-expansion" ? "obstacle" : "remove-expansion")),
+          { active: editMode === "remove-expansion", danger: true, disabled: isSolving || removableExpansionKeys.size === 0,
+            title: removableExpansionKeys.size === 0 ? L("piratiRemoveExpNoneTitle") : L("piratiRemoveExpTitle") }),
+      ]] },
+    ];
+    onNastroRef.current?.(gruppi);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firmaNastro]);
+
+  const buildingCategories = [
+    { title: t("piratiCategoryResidential", uiLang), ids: ["amaca", "capanno", "baracca"] },
+    { title: t("piratiCategoryGoods", uiLang), ids: ["pescatore", "spezie", "rum", "cannoni"] },
+    // Ex unico gruppo "Diplomazia", separato in due (agosto 2026, su richiesta
+    // esplicita): le tre imbarcazioni producono anche Dobloni oltre a Diplomazia
+    // (pop negativo più alto), i quattro moli danno solo Diplomazia pura.
+    { title: t("piratiCategoryDiplomacyDoubloons", uiLang), ids: ["imbarcazione", "brigantino", "galeone"] },
+    { title: t("piratiCategoryDiplomacyOnly", uiLang), ids: ["molo", "molo_lungo", "molo_largo", "grande_molo"] },
+  ];
+
+  return (
+    <div className="h-full min-h-0 flex flex-col font-sans">
+      {/* Riga statistiche compatta: pulsanti azione (Risolvi/Reset/Bacchetta),
+          Area/Popolazione (pillole), Aggiungi/Rimuovi EXP e stato ricerca, tutto
+          su una riga sottile in stile toolbar filtri di FoE Optimizer (bordi
+          border-slate-700/60, sfondo bg-slate-800/40, h-7, text-xs).
+          shrink-0: dimensione naturale, non deve restringersi quando il
+          layout sotto (planner) va in pressione verticale. */}
+      <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-1 text-xs shrink-0">
+        {/* 2.0: Risolvi/Stop, Auto, Annulla e Reset sono nel nastro (gruppo
+            Calcolo, vedi gruppiNastro più sotto). */}
         {/* Niente bacchetta magica qui: un solo pulsante bacchetta in tutta
             l'app (header globale, App.tsx). Quando l'utente è su questa tab,
             handleWandClick smista l'import qui tramite l'handle imperativo
@@ -2198,38 +2143,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           </span>
         </div>
 
-        <div className="inline-flex h-7 shrink-0 overflow-hidden rounded border border-slate-700/60" role="group">
-          <button
-            onClick={() => setEditMode((current) => (current === "add-expansion" ? "obstacle" : "add-expansion"))}
-            disabled={isSolving || candidateExpansionBlocks.length === 0}
-            title={candidateExpansionBlocks.length === 0 ? t("piratiAddExpNoneTitle", uiLang) : t("piratiAddExpTitle", uiLang)}
-            className={cx(
-              "px-2.5 h-full text-[11px] font-bold transition-colors",
-              isSolving || candidateExpansionBlocks.length === 0
-                ? "bg-slate-900 text-slate-600 cursor-not-allowed"
-                : editMode === "add-expansion"
-                  ? "bg-emerald-500/90 text-slate-950"
-                  : "bg-slate-800/40 text-slate-400 hover:bg-emerald-500/15 hover:text-emerald-300"
-            )}
-          >
-            {t("piratiAddExpLabel", uiLang)}
-          </button>
-          <button
-            onClick={() => setEditMode((current) => (current === "remove-expansion" ? "obstacle" : "remove-expansion"))}
-            disabled={isSolving || removableExpansionKeys.size === 0}
-            title={removableExpansionKeys.size === 0 ? t("piratiRemoveExpNoneTitle", uiLang) : t("piratiRemoveExpTitle", uiLang)}
-            className={cx(
-              "px-2.5 h-full text-[11px] font-bold transition-colors border-l border-slate-700/60",
-              isSolving || removableExpansionKeys.size === 0
-                ? "bg-slate-900 text-slate-600 cursor-not-allowed"
-                : editMode === "remove-expansion"
-                  ? "bg-rose-500/90 text-slate-950"
-                  : "bg-slate-800/40 text-slate-400 hover:bg-rose-500/15 hover:text-rose-300"
-            )}
-          >
-            {t("piratiRemoveExpLabel", uiLang)}
-          </button>
-        </div>
+        {/* 2.0: +EXP / −EXP sono nel nastro (gruppo Espansioni). */}
 
         {/* Condizionata a `stats` (non più a status !== "idle"): le statistiche
             appartengono a UNA ricerca specifica, quindi la pillola compare solo

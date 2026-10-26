@@ -240,7 +240,7 @@ export class BuildingModel {
   private static createBaseBuilding(id: string, name: string): Building {
     return {
       id, name, names: { it: name, en: name }, hash: "", light: false, cityEntityId: id,
-      time: 0, size: "1x1", area: 1, road: 0, pop: 0, fel: 0,
+      time: 0, size: "1x1", area: 1, road: 0, roadLvl: 0, pop: 0, fel: 0,
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "", fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0,
@@ -455,7 +455,7 @@ export class BuildingModel {
     return {
       ...BuildingModel.createBaseBuilding(`ge-${gb.entityId}`, italianNames.get(gb.entityId) ?? gb.entityId),
       size, area,
-      road: BuildingModel.getRoadForGreatBuildingSize(size),
+      road: BuildingModel.getRoadForGreatBuildingSize(size), roadLvl: 1,
       pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat,
       cityEntityId: gb.entityId,
       hash,
@@ -1489,7 +1489,7 @@ export class BuildingModel {
     return {
       ...BuildingModel.createBaseBuilding(`fallback-${entityId}`, displayName),
       size, area,
-      road: BuildingModel.computeRoad(cityEntity),
+      road: BuildingModel.computeRoad(cityEntity), roadLvl: BuildingModel.requiredRoadLevel(cityEntity),
       time, allyType, ally: allyType.length,
       ...(flags !== undefined ? { flags } : {}),
       pop: stats.pop, fel: stats.fel,

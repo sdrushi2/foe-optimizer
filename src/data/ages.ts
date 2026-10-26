@@ -1,4 +1,4 @@
-import agesCsv from "../assets/ages.csv?raw";
+import { datiGioco } from "./datiGioco";
 import { LANGUAGES, FALLBACK_LANG, type Lang } from "./languages";
 
 /** Era del gioco, parsata da ages.csv.
@@ -74,7 +74,7 @@ function parseAgesCsv(csvText: string): Age[] {
  *  consumer esterno itera l'array direttamente — usano AGES_BY_ID/AGE_BY_CODE
  *  (lookup) o ageName() (nome localizzato). Se in futuro serve iterare tutte
  *  le ere in ordine (es. un selettore "scegli era"), esportarla di nuovo. */
-const AGES: Age[] = parseAgesCsv(agesCsv).sort((a, b) => a.id - b.id); // ID sono 0,1,2...22
+const AGES: Age[] = parseAgesCsv(datiGioco().ages).sort((a, b) => a.id - b.id); // ID sono 0,1,2...22
 
 // Fail fast se il dataset è corrotto (errore interno, non testo per l'utente).
 if (AGES.length === 0) throw new Error("ages.csv is empty or failed to parse");

@@ -60,6 +60,10 @@ export interface Building {
   size: string; // es. "3x5" (solo per visualizzazione)
   area: number; // es. 15 (per ordinamento e logica)
   road: number;
+  /** Livello di strada RICHIESTO dal gioco (0 nessuna, 1 normale, 2 due
+   *  corsie), colonna RoadLvl (2.0, ottobre 2026). 0 anche se la colonna
+   *  manca (CSV generati prima). Non va confuso con `road` (costo). */
+  roadLvl: number;
   pop: number;
   fel: number;
   general: [number, number, number, number];
@@ -381,6 +385,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
       size,
       area,
       road,
+      roadLvl: getNumber(parts, "RoadLvl"),
       pop: getNumber(parts, "Pop"),
       fel: getNumber(parts, "Fel"),
       fp: getNumber(parts, "PF"),

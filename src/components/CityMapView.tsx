@@ -3,7 +3,7 @@ import type { CityMapBuilding, CityMapBounds } from "../data/cityMap";
 import type { UnlockedArea } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
 import { parseNumberPair } from "../data/piratiBuildings";
-import { localDateStamp } from "../utils/format";
+import { localDateStamp, prefissoFile } from "../utils/format";
 import { esportaCittaJson, scaricaJson } from "../data/cityMapJson";
 import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_GREAT_BUILDING, MAP_COLOR_TOWN_HALL, MAP_COLOR_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_STREET, MAP_COLOR_MILITARY, MAP_COLOR_INACTIVE, PNG_COLOR_FREE } from "./cityMapPng";
 
@@ -97,6 +97,8 @@ interface CityMapViewProps {
   /** Click su un edificio della mappa: riceve il cityEntityId cliccato. */
   onBuildingClick?: (entityId: string) => void;
   uiLang: UiLang;
+  /** Nome del giocatore: prefisso del file JSON (es. sdrushi-map-2026-10-26.json). */
+  nomeGiocatore?: string;
 }
 
 export default function CityMapView({
@@ -118,6 +120,7 @@ export default function CityMapView({
   onBuildingLeave,
   onBuildingClick,
   uiLang,
+  nomeGiocatore,
 }: CityMapViewProps) {
   if (!cityMapBounds || cityMapBuildings.length === 0) return null;
 
@@ -239,11 +242,13 @@ export default function CityMapView({
   const viewHeight = isIsometric ? (hasRealBounds ? (realMaxY - realMinY) + CELL * 1.5 : (transformedMaxY - transformedMinY)) : (transformedMaxY - transformedMinY + 2);
 
   return (
-    <div>
+    // 2.0: la mappa va da bordo a bordo (annulla il px-2 di <main>)
+    <div className="-mx-2">
       <div className="flex flex-col lg:flex-row gap-3">
-        <div className="lg:w-64 shrink-0 space-y-4">
+        {/* pt-4 = stessa distanza (space-y-4) che separa Vista mappa da Legenda */}
+        <div className="lg:w-64 shrink-0 space-y-4 pt-4">
           {/* Riquadro VISTA MAPPA */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
+          <div className="border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-800 pb-2">{t("mapViewTitle", uiLang)}</h4>
 
             <div className="space-y-3">
@@ -338,7 +343,7 @@ export default function CityMapView({
                     // CityEntities / UnlockedAreas), strade comprese: si apre
                     // nei planner esterni che leggono il payload intero (vedi
                     // data/cityMapJson.ts).
-                    scaricaJson(esportaCittaJson(cityMapBuildings, cityMapUnlockedAreas), `foe-map-${localDateStamp()}.json`);
+                    scaricaJson(esportaCittaJson(cityMapBuildings, cityMapUnlockedAreas), `${prefissoFile(nomeGiocatore)}-map-${localDateStamp()}.json`);
                   }}
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >
@@ -356,7 +361,7 @@ export default function CityMapView({
           </div>
 
           {/* Legenda sotto la vista */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
+          <div className="border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-800 pb-2">{t("mapLegendTitle", uiLang)}</h4>
             <div className="space-y-3 text-[11px] text-slate-300">
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_TOWN_HALL, borderColor: MAP_COLOR_TOWN_HALL, borderWidth: 1, borderStyle: "solid" }} /> {t("legendTownHall", uiLang)}</div>
@@ -397,14 +402,11 @@ export default function CityMapView({
 
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-slate-700" style={{ background: "#000000" }} /> {t("legendUnavailableSpace", uiLang)}</div>
             </div>
-            <div className="mt-6 pt-3 border-t border-slate-800 text-[10px] text-slate-500 italic leading-relaxed">
-              {t("mapLegendFootnote", uiLang)}
-            </div>
           </div>
         </div>
 
         <div
-          className={`flex-1 overflow-hidden rounded-xl border border-slate-800 bg-black p-2 shadow-inner h-[70vh] min-h-[420px] flex items-center justify-center select-none ${cityMapDragStart ? "cursor-grabbing" : "cursor-grab"}`}
+          className={`flex-1 overflow-hidden border border-slate-800 bg-black shadow-inner h-[70vh] min-h-[420px] flex items-center justify-center select-none ${cityMapDragStart ? "cursor-grabbing" : "cursor-grab"}`}
           style={{ touchAction: "none" }}
           onPointerDown={(event) => {
             if (event.button !== 0) return;
