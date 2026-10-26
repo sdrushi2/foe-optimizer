@@ -146,7 +146,7 @@ html { scrollbar-gutter: stable; }
        costruzione — nessuna riapertura del bug ghosting sulle colonne
        sticky, vedi commento .row-goods/.row-inactive sotto). Cambiare SOLO
        questo valore per tarare l'intensità su tutte le 7 categorie insieme. */
-    --row-even-lighten: 4%;
+    --row-even-lighten: 7%;
   }
 
   /* Righe dell'header (riga 1 = titoli sezione/Export, riga 2 = colonne).
@@ -484,14 +484,14 @@ html { scrollbar-gutter: stable; }
     width: 260px;
     background-color: inherit;
     background-image: inherit;
-    box-shadow: inset -1px 0 0 0 var(--color-slate-800), 4px 0 10px rgba(0,0,0,0.5);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
   }
   .has-sticky-name thead th.cell-name {
     @apply sticky z-20;
     left: 46px;
     width: 260px;
     background-color: inherit;
-    box-shadow: inset -1px 0 0 0 var(--color-slate-800), 4px 0 10px rgba(0,0,0,0.5);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
   }
 
   /* Riga 1 dell'header (bg-slate-900/80): th "Export" (colSpan checkbox+
@@ -515,7 +515,7 @@ html { scrollbar-gutter: stable; }
     left: 46px;
     width: 260px;
     background-color: inherit;
-    box-shadow: inset -1px 0 0 0 var(--color-slate-800), 4px 0 10px rgba(0,0,0,0.5);
+    box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
   }
 
   /* Padding orizzontale intermedio (es. colonna frammenti alleati) */
