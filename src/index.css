@@ -57,6 +57,12 @@ body {
 }
 .avvio button:hover { background: var(--color-slate-800); }
 
+/* 2.0: spazio della barra di scorrimento verticale sempre riservato. Senza,
+   quando la pagina diventa abbastanza corta da non scorrere più (es. pochi
+   edifici in tabella) la larghezza utile cresce di ~17 px e il nastro ricalcola
+   la compattazione: i gruppi cambiano forma da un filtro all'altro. */
+html { scrollbar-gutter: stable; }
+
 /* Colori di riga "a tinta" che non sono nella scala di Tailwind (Grandi
    Edifici, militari): variabili, con la versione chiara per il tema chiaro
    (2.0; il resto del tema chiaro è in theme-light.css, generato). */
