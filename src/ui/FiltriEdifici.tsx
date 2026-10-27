@@ -79,9 +79,15 @@ const campo = "h-[22px] rounded-md border border-slate-700 bg-slate-900 px-1.5 t
 function MenuProduzione({ s }: { s: StatoFiltri }) {
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const rif = useRef<HTMLDivElement>(null);
+  const rifPulsante = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!pos) return;
-    const fuori = (e: MouseEvent) => { if (!rif.current?.contains(e.target as Node)) setPos(null); };
+    // il clic sul pulsante Produzione lo gestisce il pulsante stesso (apre/chiude):
+    // chiudere qui al mousedown lo farebbe riaprire subito dopo al click
+    const fuori = (e: MouseEvent) => {
+      const n = e.target as Node;
+      if (!rif.current?.contains(n) && !rifPulsante.current?.contains(n)) setPos(null);
+    };
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setPos(null); };
     const tm = setTimeout(() => document.addEventListener("mousedown", fuori));
     document.addEventListener("keydown", esc);
@@ -90,11 +96,11 @@ function MenuProduzione({ s }: { s: StatoFiltri }) {
   const n = s.prodSel.size;
   return (
     <>
-      <button type="button" title={t("r2ProdFilterTitle", s.uiLang)}
+      <button ref={rifPulsante} type="button" title={t("r2ProdFilterTitle", s.uiLang)} aria-expanded={!!pos}
         onClick={(e) => {
           if (pos) { setPos(null); return; }
           const r = e.currentTarget.getBoundingClientRect();
-          setPos({ left: Math.max(4, Math.min(r.left, window.innerWidth - 300)), top: r.bottom + 4 });
+          setPos({ left: Math.max(4, Math.min(r.left, window.innerWidth - 340)), top: r.bottom + 4 });
         }}
         className={`${campo} flex w-full items-center justify-between gap-1 ${n ? ATTIVO : ""}`}>
         <span>{t("r2Production", s.uiLang)}{n ? ` (${n} · ${s.prodModo})` : ""}</span>
@@ -102,13 +108,13 @@ function MenuProduzione({ s }: { s: StatoFiltri }) {
       </button>
       {pos && (
         <div ref={rif} style={{ left: pos.left, top: pos.top }}
-          className="fixed z-[60] w-[292px] rounded-lg border border-slate-700 bg-slate-900 p-2 text-[11px] whitespace-normal shadow-xl">
+          className="fixed z-[60] w-[336px] rounded-lg border border-slate-700 bg-slate-900 p-2 text-[11px] whitespace-normal shadow-xl">
           <div className="grid grid-cols-8 gap-1">
             {s.produzioni.map(({ key, icon, title }) => {
               const on = s.prodSel.has(key);
               return (
                 <button key={key} type="button" title={title} aria-pressed={on} onClick={() => s.toggleProd(key)}
-                  className={`flex h-7 w-7 items-center justify-center rounded border text-sm ${on
+                  className={`flex h-9 w-9 items-center justify-center rounded border text-lg [&_img]:!h-6 [&_img]:!w-6 ${on
                     ? "border-orange-500/60 bg-orange-500/20 text-orange-200"
                     : "border-slate-700 text-slate-300 hover:border-slate-500"}`}>
                   {icon}

@@ -178,7 +178,12 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   // pannello del gruppo chiuso: si chiude cliccando fuori o con Esc
   useEffect(() => {
     if (!aperto) return;
-    const fuori = (e: MouseEvent) => { if (!rifPannello.current?.contains(e.target as Node)) setAperto(null); };
+    // i pulsanti dei gruppi chiusi gestiscono da soli il clic (apri/chiudi/cambia
+    // gruppo): chiudere qui al mousedown farebbe riaprire il pannello al click
+    const fuori = (e: MouseEvent) => {
+      const el = e.target as Element;
+      if (!rifPannello.current?.contains(el) && !el.closest?.("[data-apre-gruppo]")) setAperto(null);
+    };
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setAperto(null); };
     const t = setTimeout(() => document.addEventListener("mousedown", fuori));
     document.addEventListener("keydown", esc);
@@ -203,7 +208,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
             <div key={g.id} className="flex flex-none flex-col items-center border-r border-slate-800 px-2 last:border-r-0">
               <div className="flex h-[72px] shrink-0 flex-col items-center justify-center gap-[3px]">
                 {modo === "C" ? (
-                  <button type="button" onClick={(e) => apri(i, e as unknown as MouseEvent)}
+                  <button type="button" data-apre-gruppo="" aria-expanded={aperto?.indice === i} onClick={(e) => apri(i, e as unknown as MouseEvent)}
                     className="flex h-[60px] min-w-[60px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-700 px-2 leading-none whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-slate-100">
                     <Icon size={20} strokeWidth={1.75} className="text-sky-300" aria-hidden="true" />
                     <span className="flex items-center gap-0.5">{g.label}<ChevronDown size={11} aria-hidden="true" /></span>

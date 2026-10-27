@@ -80,6 +80,7 @@ import {
   iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, 
   iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap, iconFUR, iconBP, iconTR, iconTRNE,
   iconOneUp, iconImm, iconRinn, iconAiuto, iconFragment, allies_slot_empty, allies_slot_full,
+  iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB,
 } from "./assets/icons";
 
 // I nomi (NomeIta/NomeEng) sono ora colonne dirette di buildings.csv/allies.csv,
@@ -307,14 +308,14 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
     { key: "beni", labelKey: "diffGoods", icon: icons.iconBeni, get: sca("beni") },
     { key: "benip", labelKey: "diffGoodsPreviousEra", icon: icons.iconBeniP, get: sca("benip") },
     { key: "benis", labelKey: "diffGoodsNextEra", icon: icons.iconBeniS, get: sca("benis") },
-    { key: "benisp", labelKey: "diffGoodsSpecial", emoji: "🌟", get: sca("benisp") },
-    { key: "benispb", labelKey: "diffGoodsSpecialBoost", emoji: "🌠", get: sca("benispb") },
+    { key: "benisp", labelKey: "diffGoodsSpecial", icon: icons.iconBeniSp, get: sca("benisp") },
+    { key: "benispb", labelKey: "diffGoodsSpecialBoost", icon: icons.iconBeniSpB, get: sca("benispb") },
     { key: "benib", labelKey: "diffGoodsBoost", icon: icons.iconBeniB, get: sca("benib") },
     { key: "benig", labelKey: "diffTreasuryGoods", icon: icons.iconBeniG, get: sca("benig") },
     { key: "bp", labelKey: "diffBlueprints", icon: icons.iconBP, get: sca("bp") },
-    { key: "fsp", labelKey: "prodRushSpecial", emoji: "⏳", get: sca("fsp") },
-    { key: "tpm", labelKey: "prodRushMaterials", emoji: "🛠", get: sca("tpm") },
-    { key: "tpb", labelKey: "prodRushGoods", emoji: "📦", get: sca("tpb") },
+    { key: "fsp", labelKey: "prodRushSpecial", icon: icons.iconFSP, get: sca("fsp") },
+    { key: "tpm", labelKey: "prodRushMaterials", icon: icons.iconTPM, get: sca("tpm") },
+    { key: "tpb", labelKey: "prodRushGoods", icon: icons.iconTPB, get: sca("tpb") },
     { key: "adm", labelKey: "diffMassAid", icon: icons.iconAiuto, get: sca("adm") },
     { key: "mod", labelKey: "diffOneUpKit", icon: icons.iconOneUp, get: sca("mod") },
     { key: "rin", labelKey: "diffRenovationKit", icon: icons.iconRinn, get: sca("rin") },
@@ -4643,6 +4644,7 @@ export default function App() {
     iconMon, iconMat, iconFP, iconFPB, iconFUR, iconTR, iconTRNE,
     iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG, iconBP,
     iconOneUp, iconImm, iconRinn, iconAiuto,
+    iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB,
   }), []);
 
   // Riepilogo aggregato "se TUTTI gli edifici vecchi venissero aggiornati":
@@ -5262,9 +5264,9 @@ export default function App() {
     if (cityEntityIds.size === 0) return null;
 
     const prodTypes = [
-      { key: "fsp", name: t("prodRushSpecial", uiLang),    icon: "⏳", cost: 30, invKey: "rushEventBuildings"    as keyof SpecialKits },
-      { key: "tpm", name: t("prodRushMaterials", uiLang),  icon: "🛠", cost: 15, invKey: "rushMassSupplies"      as keyof SpecialKits },
-      { key: "tpb", name: t("prodRushGoods", uiLang),      icon: "📦", cost: 30, invKey: "rushGoodsBuildings"    as keyof SpecialKits },
+      { key: "fsp", name: t("prodRushSpecial", uiLang),    icon: <img src={iconFSP} alt="" className="icon-16" />, cost: 30, invKey: "rushEventBuildings"    as keyof SpecialKits },
+      { key: "tpm", name: t("prodRushMaterials", uiLang),  icon: <img src={iconTPM} alt="" className="icon-16" />, cost: 15, invKey: "rushMassSupplies"      as keyof SpecialKits },
+      { key: "tpb", name: t("prodRushGoods", uiLang),      icon: <img src={iconTPB} alt="" className="icon-16" />, cost: 30, invKey: "rushGoodsBuildings"    as keyof SpecialKits },
       { key: "adm", name: t("prodMassAid", uiLang),         icon: <img src={iconAiuto} alt="" className="icon-16" />, cost: 30, invKey: "massSelfAidKit"        as keyof SpecialKits },
       { key: "mod", name: t("prodOneUpKit", uiLang),        icon: <img src={iconOneUp} alt="" className="icon-16" />, cost: 30, invKey: "oneUpKit"              as keyof SpecialKits },
       { key: "rin", name: t("prodRenovationKit", uiLang),   icon: <img src={iconRinn} alt="" className="icon-16" />, cost: 30, invKey: "renovationKit"         as keyof SpecialKits },
@@ -5473,7 +5475,7 @@ export default function App() {
                       <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniSBoosted)}</td>
                     </tr>
                     <tr className="border-b border-slate-800/50">
-                      <td className="py-1 px-1 flex items-center gap-1"><span className="text-sm">🌟</span><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsSpecial", uiLang)}</span></td>
+                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsSpecial", uiLang)}</span></td>
                       <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniSpBoosted)}</td>
                     </tr>
                     <tr>
@@ -5749,13 +5751,13 @@ export default function App() {
     { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
     { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
     { key: "benis", icon: <img src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="icon-16" />, title: t("prodGoodsNext", uiLang) },
-    { key: "benisp", icon: "🌟", title: t("prodGoodsSpecial", uiLang) },
-    { key: "benispb", icon: "🌠", title: t("prodGoodsSpecialBoost", uiLang) },
+    { key: "benisp", icon: <img src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} className="icon-16" />, title: t("prodGoodsSpecial", uiLang) },
+    { key: "benispb", icon: <img src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} className="icon-16" />, title: t("prodGoodsSpecialBoost", uiLang) },
     { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
     { key: "bp", icon: <img src={iconBP} alt={t("prodBlueprints", uiLang)} className="icon-16" />, title: t("prodBlueprints", uiLang) },
-    { key: "fsp", icon: "⏳", title: t("prodRushSpecial", uiLang) },
-    { key: "tpm", icon: "🛠", title: t("prodRushMaterials", uiLang) },
-    { key: "tpb", icon: "📦", title: t("prodRushGoods", uiLang) },
+    { key: "fsp", icon: <img src={iconFSP} alt={t("prodRushSpecial", uiLang)} className="icon-16" />, title: t("prodRushSpecial", uiLang) },
+    { key: "tpm", icon: <img src={iconTPM} alt={t("prodRushMaterials", uiLang)} className="icon-16" />, title: t("prodRushMaterials", uiLang) },
+    { key: "tpb", icon: <img src={iconTPB} alt={t("prodRushGoods", uiLang)} className="icon-16" />, title: t("prodRushGoods", uiLang) },
     { key: "adm", icon: <img src={iconAiuto} alt={t("prodMassAid", uiLang)} className="icon-16" />, title: t("prodMassAid", uiLang) },
     { key: "mod", icon: <img src={iconOneUp} alt={t("prodOneUpKit", uiLang)} className="icon-16" />, title: t("prodOneUpKit", uiLang) },
     { key: "rin", icon: <img src={iconRinn} alt={t("prodRenovationKit", uiLang)} className="icon-16" />, title: t("prodRenovationKit", uiLang) },
@@ -6394,13 +6396,13 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
-                            <SortableHeader noGap label="🌟" sortKey="benisp" onClick={() => handleSort("benisp")} active={sortBy === "benisp"} order={sortOrder} className="th-col text-sm" title={t("prodGoodsSpecial", uiLang)} />
-                            <SortableHeader noGap label="🌠" sortKey="benispb" onClick={() => handleSort("benispb")} active={sortBy === "benispb"} order={sortOrder} className="th-col text-sm" title={t("prodGoodsSpecialBoost", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} />} sortKey="benisp" onClick={() => handleSort("benisp")} active={sortBy === "benisp"} order={sortOrder} className="th-col" title={t("prodGoodsSpecial", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} />} sortKey="benispb" onClick={() => handleSort("benispb")} active={sortBy === "benispb"} order={sortOrder} className="th-col" title={t("prodGoodsSpecialBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
-                            <SortableHeader noGap label="⏳" sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col text-sm" title={t("prodRushSpecial", uiLang)} />
-                            <SortableHeader noGap label="🛠" sortKey="tpm" onClick={() => handleSort("tpm")} active={sortBy === "tpm"} order={sortOrder} className="th-col text-sm" title={t("prodRushMaterials", uiLang)} />
-                            <SortableHeader noGap label="📦" sortKey="tpb" onClick={() => handleSort("tpb")} active={sortBy === "tpb"} order={sortOrder} className="th-col text-sm" title={t("prodRushGoods", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconFSP} alt={t("prodRushSpecial", uiLang)} />} sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col" title={t("prodRushSpecial", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconTPM} alt={t("prodRushMaterials", uiLang)} />} sortKey="tpm" onClick={() => handleSort("tpm")} active={sortBy === "tpm"} order={sortOrder} className="th-col" title={t("prodRushMaterials", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconTPB} alt={t("prodRushGoods", uiLang)} />} sortKey="tpb" onClick={() => handleSort("tpb")} active={sortBy === "tpb"} order={sortOrder} className="th-col" title={t("prodRushGoods", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconAiuto} alt={t("prodMassAid", uiLang)} />} sortKey="adm" onClick={() => handleSort("adm")} active={sortBy === "adm"} order={sortOrder} className="th-col text-sm" title={t("prodMassAid", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconOneUp} alt={t("prodOneUpKit", uiLang)} />} sortKey="mod" onClick={() => handleSort("mod")} active={sortBy === "mod"} order={sortOrder} className="th-col text-sm" title={t("prodOneUpKit", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconRinn} alt={t("prodRenovationKit", uiLang)} />} sortKey="rin" onClick={() => handleSort("rin")} active={sortBy === "rin"} order={sortOrder} className="th-col text-sm" title={t("prodRenovationKit", uiLang)} />
