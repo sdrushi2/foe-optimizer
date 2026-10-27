@@ -197,6 +197,70 @@ const UI_STRINGS = {
     en: "The bookmark copies only the data the extension provides, and only to your computer's clipboard: nothing is sent to any server.",
   },
   r2About: { it: "Informazioni", en: "About" },
+  r2EffTitle: { it: "Come si calcola l'efficienza", en: "How efficiency is calculated" },
+  r2EffIntro: {
+    it: "L'efficienza (colonna EFF) dice quanto rende un edificio in bonus militari per ogni casella che occupa in città, strada compresa. Si aggiorna subito quando cambi i pesi qui sopra, in tutte le tabelle.",
+    en: "Efficiency (EFF column) tells how much military bonus a building gives for each tile it takes in the city, road included. It updates right away when you change the weights above, in every table.",
+  },
+  r2EffFormula: {
+    it: "EFF = (somma dei bonus × il loro peso) ÷ (caselle dell'edificio + caselle di strada)",
+    en: "EFF = (sum of bonuses × their weight) ÷ (building tiles + road tiles)",
+  },
+  r2EffWhatTitle: { it: "Quali bonus contano", en: "Which bonuses count" },
+  r2EffWhat: { it: "Solo i bonus di attacco e difesa, in tre gruppi:", en: "Only attack and defense bonuses, in three groups:" },
+  r2EffGeneral: { it: "Generale", en: "General" },
+  r2EffGeneralBody: { it: "valgono ovunque (mappa dei continenti, Campi di Battaglia, Spedizioni…).", en: "valid everywhere (continent map, Battlegrounds, Expeditions…)." },
+  r2EffGbg: { it: "Campi di Battaglia", en: "Battlegrounds" },
+  r2EffGbgBody: { it: "valgono solo nei Campi di Battaglia di Gilda.", en: "valid only in Guild Battlegrounds." },
+  r2EffGe: { it: "Spedizioni", en: "Expeditions" },
+  r2EffGeBody: { it: "valgono solo nelle Spedizioni di Gilda; contano solo se le attivi.", en: "valid only in Guild Expeditions; they count only if you enable them." },
+  r2EffArmies: {
+    it: "Per ogni gruppo si sommano attacco e difesa sia dell'esercito che attacca sia di quello che difende.",
+    en: "For each group, attack and defense of both the attacking and the defending army are added up.",
+  },
+  r2EffNotCounted: {
+    it: "Non contano: i bonus delle Incursioni Quantiche e le produzioni (punti forge, beni, monete…), che vedi nelle loro colonne.",
+    en: "Not counted: Quantum Incursion bonuses and productions (forge points, goods, coins…), which you see in their own columns.",
+  },
+  r2EffWeightsTitle: { it: "I pesi che puoi scegliere", en: "The weights you can choose" },
+  r2EffDefBody: {
+    it: "l'attacco vale sempre 1; la difesa vale 0,8 (80%) o quanto l'attacco (100%).",
+    en: "attack is always worth 1; defense is worth 0.8 (80%) or as much as attack (100%).",
+  },
+  r2EffGeOnBody: { it: "se è spenta i bonus delle Spedizioni non contano.", en: "when off, Expedition bonuses don't count." },
+  r2EffSplitBody: {
+    it: "con le Spedizioni attive, come dividere il peso fra Campi e Spedizioni: per esempio 80 / 20 vuol dire che un bonus dei Campi vale 0,8 e uno delle Spedizioni 0,2.",
+    en: "with Expeditions on, how to split the weight between Battlegrounds and Expeditions: for example 80 / 20 means a Battlegrounds bonus is worth 0.8 and an Expedition one 0.2.",
+  },
+  r2EffNowTitle: { it: "Pesi in uso adesso:", en: "Weights in use now:" },
+  r2EffAtk: { it: "Attacco", en: "Attack" },
+  r2EffDef: { it: "Difesa", en: "Defense" },
+  r2EffSpaceTitle: { it: "Lo spazio", en: "The space" },
+  r2EffSpace: {
+    it: "Le caselle dell'edificio (larghezza × altezza) più la sua parte di strada: metà del lato corto, perché una strada serve gli edifici su entrambi i lati. Gli edifici che non richiedono strada contano solo le loro caselle.",
+    en: "The building's tiles (width × height) plus its share of road: half of the short side, since a road serves buildings on both sides. Buildings that need no road count only their own tiles.",
+  },
+  r2EffExampleTitle: { it: "Un esempio", en: "An example" },
+  r2EffExample: {
+    it: "Neo Colosso liv. 11: 4×4 con strada (16 + 2 = 18 caselle), bonus 64% in tutte e quattro le caselle Generali, 60% nei Campi, 74% nelle Spedizioni. Ogni gruppo dà (attacco + difesa × peso difesa) × 2 eserciti, moltiplicato per il suo peso (Generale 1, Campi e Spedizioni secondo la divisione).",
+    en: "Neo Colossus lv. 11: 4×4 with a road (16 + 2 = 18 tiles), 64% bonus in all four General cells, 60% in Battlegrounds, 74% in Expeditions. Each group gives (attack + defense × defense weight) × 2 armies, times its weight (General 1, Battlegrounds and Expeditions per the split).",
+  },
+  r2EffCaseWeights: { it: "Pesi", en: "Weights" },
+  r2EffCaseSum: { it: "Somma ÷ spazio", en: "Sum ÷ space" },
+  r2EffCase1: { it: "Predefiniti", en: "Default" },
+  r2EffCase2: { it: "Con le Spedizioni", en: "With Expeditions" },
+  r2EffCase3: { it: "Spedizioni e difesa al 100%", en: "Expeditions and defense at 100%" },
+  r2EffCaseMine: { it: "I tuoi pesi", en: "Your weights" },
+  r2EffNoGe: { it: "senza Spedizioni", en: "no Expeditions" },
+  r2EffAlliesTitle: { it: "Gli alleati", en: "Allies" },
+  r2EffAllies: {
+    it: "Stessi bonus e stessi pesi, ma senza dividere per lo spazio: un alleato sta dentro un edificio e non occupa caselle.",
+    en: "Same bonuses and same weights, but not divided by space: an ally sits inside a building and takes no tiles.",
+  },
+  r2EffWhere: {
+    it: "Nel Database i valori sono quelli dell'ultima era; nella Città e nell'Inventario quelli dell'era vera di ogni edificio.",
+    en: "In the Database values are those of the latest age; in City and Inventory those of each building's actual age.",
+  },
   r2WhatsNew: { it: "Novità", en: "What's new" },
   r2WhatsNewIntro: {
     it: "Le novità di FoE Optimizer, dalla più recente.",
@@ -1445,104 +1509,8 @@ const UI_STRINGS = {
   },
 
   // ── Modale "Efficienza e Pesi" ────────────────────────────────────────
-  effHelpTitle: {
-    it: "⚖️ Efficienza e Pesi",
-    en: "⚖️ Efficiency and Weights",
-  },
-  effHelpStep1Title: {
-    it: "Come viene calcolata l'efficienza?",
-    en: "How is efficiency calculated?",
-  },
-  effHelpStep1Intro: {
-    it: "Per ogni edificio o alleato viene calcolato un punteggio di efficienza usando questa formula:",
-    en: "For each building or ally, an efficiency score is calculated using this formula:",
-  },
-  effHelpFormula: {
-    it: "Efficienza = (somma dei bonus pesati) ÷ (spazio occupato + strade)",
-    en: "Efficiency = (sum of weighted bonuses) ÷ (occupied space + roads)",
-  },
-  effHelpBonusesIntro: {
-    it: "I bonus considerati sono:",
-    en: "The bonuses taken into account are:",
-  },
-  effHelpBonusGeneral: {
-    it: "bonus validi in modo generale",
-    en: "bonuses that apply generally",
-  },
-  effHelpBonusGbg: {
-    it: "bonus specifici per i campi di battaglia",
-    en: "bonuses specific to battlegrounds",
-  },
-  effHelpBonusGe: {
-    it: "bonus per le Spedizioni di Gilda (opzionale)",
-    en: "bonuses for Guild Expeditions (optional)",
-  },
-  effHelpStep1Footnote: {
-    it: (buildings: string, allies: string) => `Il meccanismo è lo stesso sia per gli ${buildings} (tab Info, Città, Inventario) sia per gli ${allies} (tab Alleati): i pesi che modifichi nella toolbar si applicano a entrambi.`,
-    en: (buildings: string, allies: string) => `The mechanism is the same for both ${buildings} (Info, City, Inventory tabs) and ${allies} (Allies tab): the weights you change in the toolbar apply to both.`,
-  },
-  effHelpBuildingsWord: {
-    it: "edifici",
-    en: "buildings",
-  },
-  effHelpAlliesWord: {
-    it: "alleati",
-    en: "allies",
-  },
-  effHelpStep2Title: {
-    it: "I pesi che puoi modificare",
-    en: "The weights you can change",
-  },
-  effHelpAtkTitle: {
-    it: (atk: string) => `⚔️ ${atk} (Attacco)`,
-    en: (atk: string) => `⚔️ ${atk} (Attack)`,
-  },
-  effHelpAtkBody: {
-    it: "Il peso dell'Attacco è fisso a 1,0: è il riferimento rispetto al quale si calibra il peso della Difesa.",
-    en: "The Attack weight is fixed at 1.0: it's the reference against which the Defense weight is calibrated.",
-  },
-  effHelpDefTitle: {
-    it: (def: string) => `🛡️ ${def} (Difesa — 0,8 / 1,0)`,
-    en: (def: string) => `🛡️ ${def} (Defense — 0.8 / 1.0)`,
-  },
-  effHelpDefBody: {
-    it: "Decide quanto peso dare ai bonus di Difesa rispetto all'Attacco. Il valore predefinito è 0,8: i bonus difensivi contano un po' meno di quelli offensivi nel calcolo finale.",
-    en: "Decides how much weight to give Defense bonuses relative to Attack. The default value is 0.8: defensive bonuses count a bit less than offensive ones in the final calculation.",
-  },
-  effHelpCamTitle: {
-    it: (cam: string) => `🔰 ${cam} (riquadro Att/Dif risultanti)`,
-    en: (cam: string) => `🔰 ${cam} (resulting Atk/Def box)`,
-  },
-  effHelpCamBody: {
-    it: "Mostra i due pesi Attacco e Difesa effettivamente usati nel calcolo, dopo aver tolto la quota riservata alle Spedizioni (se attive). Non è modificabile direttamente: si aggiorna in base agli altri controlli.",
-    en: "Shows the two Attack and Defense weights actually used in the calculation, after removing the share reserved for Expeditions (if enabled). It cannot be edited directly: it updates based on the other controls.",
-  },
-  effHelpSigmaBody: {
-    it: "Mostra colonne aggiuntive con la somma Generale+Campi (e Generale+Spedizioni, se attive) per ogni edificio o alleato — utile per confrontare il bonus complessivo senza fare i calcoli a mente.",
-    en: "Shows additional columns with the General+Battlegrounds sum (and General+Expeditions, if enabled) for each building or ally — useful for comparing the overall bonus without doing the math mentally.",
-  },
-  effHelpSpeTitle: {
-    it: (spe: string) => `⚡ ${spe} (Spedizioni — on/off + slider)`,
-    en: (spe: string) => `⚡ ${spe} (Expeditions — on/off + slider)`,
-  },
-  effHelpSpeBody: {
-    it: "Se vuoi considerare anche le Spedizioni di Gilda nel calcolo, attiva questo switch. Lo slider decide quanto \"peso\" dare alle Spedizioni rispetto ai Campi. A 0,20 (default), il 20% dei bonus va alle Spedizioni e l'80% ai Campi.",
-    en: "If you also want to factor Guild Expeditions into the calculation, turn on this switch. The slider decides how much \"weight\" to give Expeditions relative to Battlegrounds. At 0.20 (default), 20% of the bonus weight goes to GE and 80% to GBG.",
-  },
-  effHelpStep3Title: {
-    it: "Filtrare per soglia di efficienza",
-    en: "Filtering by efficiency threshold",
-  },
   // Solo edifici: il campo min EFF esiste nella tabella edifici (tab Info, Città,
   // Inventario), non nelle tabelle Alleati (prima il testo diceva "edifici o alleati").
-  effHelpStep3Body: {
-    it: "Nell'header della colonna EFF della tabella edifici (tab Info, Città, Inventario) puoi inserire una soglia minima (min EFF): scrivendo, ad esempio, 80, vedrai solo gli edifici con efficienza superiore a 80, calcolata con i pesi attuali.",
-    en: "In the EFF column header of the buildings table (Info, City, Inventory tabs) you can enter a minimum threshold (min EFF): by typing, for example, 80, you'll only see buildings with an efficiency above 80, based on the current weights.",
-  },
-  gotItButton: {
-    it: "Ho capito",
-    en: "Got it",
-  },
 
   // ── Modale "Profili e Bacchetta Magica" ───────────────────────────────
 

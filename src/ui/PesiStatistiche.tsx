@@ -22,6 +22,8 @@ export interface StatoPesi {
   spedAttacco: number;
   setSpedAttacco: (v: number) => void;
   onAiuto: () => void;
+  /** Pannello "Come si calcola" aperto (il "?" resta acceso). */
+  aiutoAperto?: boolean;
 }
 
 const riga = "flex h-[22px] items-center gap-2 text-[11px] whitespace-nowrap";
@@ -52,7 +54,7 @@ export function BloccoPesi({ s }: { s: StatoPesi }) {
           {t("r2WIncludeGe", s.uiLang)}
         </label>
         <button type="button" onClick={s.onAiuto} title={t("efficiencyHelpTitle", s.uiLang)} aria-label={t("r2HowItWorks", s.uiLang)}
-          className="ml-auto text-slate-500 hover:text-sky-300">
+          aria-pressed={!!s.aiutoAperto} className={`ml-auto hover:text-sky-300 ${s.aiutoAperto ? "text-sky-400" : "text-slate-500"}`}>
           <CircleHelp size={13} aria-hidden="true" />
         </button>
       </div>

@@ -32,7 +32,7 @@ import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
 import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import { esportaCittaJson, scaricaJson } from "./data/cityMapJson";
-import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
+import PannelloEfficienza from "./ui/PannelloEfficienza";
 import PannelloImporta from "./ui/PannelloImporta";
 import PannelloNovita from "./ui/PannelloNovita";
 import VideoTutorial from "./planner/VideoTutorial";
@@ -5919,7 +5919,7 @@ export default function App() {
       uiLang, difesa: generalDefense, setDifesa: setGeneralDefense,
       spedizioni: spedizioniEnabled, setSpedizioni: setSpedizioniEnabled,
       spedAttacco: spedizioniAttack, setSpedAttacco: setSpedizioniAttack,
-      onAiuto: () => setIsEfficiencyHelpOpen(true),
+      onAiuto: () => setIsEfficiencyHelpOpen(v => !v), aiutoAperto: isEfficiencyHelpOpen,
     },
   });
 
@@ -5974,6 +5974,12 @@ export default function App() {
         <section className={`flex-1 flex flex-col gap-2 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
 
           {/* 2.0: pannelli della Guida (sopra il contenuto dell'ultima scheda di lavoro) */}
+          {/* 2.0: Opzioni › Pesi statistiche › "?": come si calcola l'efficienza (prima era un popup) */}
+          {schedaCorrente === "opzioni" && isEfficiencyHelpOpen && (
+            <div className="px-3 py-2">
+              <PannelloEfficienza uiLang={uiLang} difesa={generalDefense} spedizioni={spedizioniEnabled} spedAttacco={spedizioniAttack} onChiudi={() => setIsEfficiencyHelpOpen(false)} />
+            </div>
+          )}
           {schedaCorrente === "guida" && pannelloGuida !== null && (
             <div className="px-3 py-2">
               {pannelloGuida === "info" ? <PannelloInformazioni uiLang={uiLang} versione={__BUILD_VERSION__} />
@@ -6897,11 +6903,6 @@ export default function App() {
         </div>
       )}
 
-      <EfficiencyHelpModal
-        isOpen={isEfficiencyHelpOpen}
-        onClose={() => setIsEfficiencyHelpOpen(false)}
-        uiLang={uiLang}
-      />
 
       {selectedJsonEntry && (
         <div className="modal-overlay">
