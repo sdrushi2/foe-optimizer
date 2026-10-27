@@ -150,9 +150,10 @@ export function BloccoFiltri({ s }: { s: StatoFiltri }) {
       <div className="flex w-[150px] flex-col gap-[3px]">
         <select value={s.evento} onChange={(e) => s.setEvento(e.currentTarget.value)} title={t("eventFilterTitle", s.uiLang)}
           className={`${campo} ${s.evento ? ATTIVO : ""}`}>
-          <option value="">{t("r2AllEvents", s.uiLang)}</option>
+          {/* le opzioni ereditano lo sfondo del menu: verde solo il menu chiuso, la lista resta normale */}
+          <option value="" className="bg-slate-900 text-slate-100">{t("r2AllEvents", s.uiLang)}</option>
           {s.eventi.map(ev => (
-            <option key={ev.id} value={ev.id}>{ev.gruppo ? `— ${ev.nome} —` : `${RIENTRO}${ev.nome}`}</option>
+            <option key={ev.id} value={ev.id} className={`bg-slate-900 ${ev.gruppo ? "text-slate-400" : "text-slate-100"}`}>{ev.gruppo ? `— ${ev.nome} —` : `${RIENTRO}${ev.nome}`}</option>
           ))}
         </select>
         <MenuProduzione s={s} />
