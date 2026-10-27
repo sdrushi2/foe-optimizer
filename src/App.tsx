@@ -1957,7 +1957,10 @@ export default function App() {
   const buildingTableWrapperRef = useRef<HTMLDivElement | null>(null);
   const buildingTableScrollRef = useRef<HTMLDivElement | null>(null);
   const buildingTableFloatingScrollRef = useRef<HTMLDivElement | null>(null);
-  const isSyncingBuildingTableScroll = useRef(false);
+  // Sincronizzazione tabella ↔ barra orizzontale fissa in basso: "guida"
+  // l'elemento su cui l'utente ha agito per ultimo (mouse, rotella, tocco,
+  // tastiera); l'altro lo segue e i suoi eventi di scroll (solo eco) sono ignorati.
+  const guidaScrollTabella = useRef<"table" | "floating" | null>(null);
   const [buildingTableScrollMetrics, setBuildingTableScrollMetrics] = useState({
     scrollWidth: 0,
     clientWidth: 0,
@@ -4349,20 +4352,28 @@ export default function App() {
     });
   }, [filteredBuildings]);
 
+  // 2.0 (fix scorrimento a scatti): prima il blocco anti-rimbalzo durava un
+  // solo frame, ma l'evento di scroll "di ritorno" dell'altro elemento arriva
+  // spesso dopo: riscriveva la posizione vecchia sulla barra mentre la si
+  // trascinava (movimento a scatti) e interrompeva lo scorrimento animato del
+  // clic sulla parte vuota della barra (solo un piccolo spostamento). Ora
+  // guida l'elemento su cui l'utente ha agito per ultimo (pointerdown, rotella,
+  // tocco, tasti: vedi guidaScroll), senza timer: un timer scaduto a metà di
+  // uno scorrimento animato lasciava passare l'eco e la barra non arrivava
+  // più in fondo / all'inizio. Gli eventi dell'altro elemento sono solo eco.
   const syncBuildingTableScroll = (source: "table" | "floating") => {
     const tableScroller = buildingTableScrollRef.current;
     const floatingScroller = buildingTableFloatingScrollRef.current;
-    if (!tableScroller || !floatingScroller || isSyncingBuildingTableScroll.current) return;
-
-    isSyncingBuildingTableScroll.current = true;
-    if (source === "table") {
-      floatingScroller.scrollLeft = tableScroller.scrollLeft;
-    } else {
-      tableScroller.scrollLeft = floatingScroller.scrollLeft;
-    }
-    requestAnimationFrame(() => {
-      isSyncingBuildingTableScroll.current = false;
-    });
+    if (!tableScroller || !floatingScroller) return;
+    if (guidaScrollTabella.current === null) guidaScrollTabella.current = source;
+    if (guidaScrollTabella.current !== source) return; // eco dell'altro elemento
+    const [da, a] = source === "table" ? [tableScroller, floatingScroller] : [floatingScroller, tableScroller];
+    if (Math.abs(a.scrollLeft - da.scrollLeft) >= 1) a.scrollLeft = da.scrollLeft;
+  };
+  /** Eventi che dicono su quale elemento l'utente sta agendo: quello diventa la guida. */
+  const guidaScroll = (source: "table" | "floating") => {
+    const prendi = () => { guidaScrollTabella.current = source; };
+    return { onPointerDown: prendi, onWheel: prendi, onTouchStart: prendi, onKeyDown: prendi };
   };
 
   useEffect(() => {
@@ -6225,7 +6236,7 @@ export default function App() {
               <div ref={buildingTableWrapperRef} className="-mx-2 bg-slate-900/20 border-y border-slate-800/80 overflow-hidden">
                 <div
                   ref={buildingTableScrollRef}
-                  onScroll={() => syncBuildingTableScroll("table")}
+                  onScroll={() => syncBuildingTableScroll("table")} {...guidaScroll("table")}
                   className="overflow-x-auto"
                 >
                   <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}`} style={{ minWidth: tableMinWidth }}>
@@ -6529,7 +6540,7 @@ export default function App() {
                   >
                     <div
                       ref={buildingTableFloatingScrollRef}
-                      onScroll={() => syncBuildingTableScroll("floating")}
+                      onScroll={() => syncBuildingTableScroll("floating")} {...guidaScroll("floating")}
                       className="building-floating-scrollbar h-4 overflow-x-auto overflow-y-hidden"
                     >
                       <div style={{ width: buildingTableScrollMetrics.scrollWidth, height: 1 }} />
@@ -6662,7 +6673,7 @@ export default function App() {
             <div ref={buildingTableWrapperRef} className="-mx-2 bg-slate-900/20 border-y border-slate-800/80 overflow-hidden">
               <div
                 ref={buildingTableScrollRef}
-                onScroll={() => syncBuildingTableScroll("table")}
+                onScroll={() => syncBuildingTableScroll("table")} {...guidaScroll("table")}
                 className="overflow-x-auto"
               >
               <table className="building-table w-full table-fixed text-left border-collapse" style={{ minWidth: alliesTableMinWidth }}>
@@ -6732,7 +6743,7 @@ export default function App() {
                 >
                   <div
                     ref={buildingTableFloatingScrollRef}
-                    onScroll={() => syncBuildingTableScroll("floating")}
+                    onScroll={() => syncBuildingTableScroll("floating")} {...guidaScroll("floating")}
                     className="building-floating-scrollbar h-4 overflow-x-auto overflow-y-hidden"
                   >
                     <div style={{ width: buildingTableScrollMetrics.scrollWidth, height: 1 }} />
