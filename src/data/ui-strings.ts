@@ -727,40 +727,40 @@ const UI_STRINGS = {
     en: "Blueprints",
   },
   prodRushSpecial: {
-    it: "Termina prod. speciale",
-    en: "Finish Special Production",
+    it: "Frammenti di Termina produzione speciale",
+    en: "Fragments of Finish Special Production",
   },
   prodRushMaterials: {
-    it: "Termina prod. materiali",
-    en: "Finish All Supply Productions",
+    it: "Frammenti di Termina tutte le produzioni di materiali",
+    en: "Fragments of Finish All Supply Productions",
   },
   prodRushGoods: {
-    it: "Termina prod. beni",
-    en: "Finish Goods Production",
+    it: "Frammenti di Termina produzione di beni",
+    en: "Fragments of Finish Goods Production",
   },
   prodMassAid: {
-    it: "Auto-aiuto di massa",
-    en: "Mass Self-Aid Kit",
+    it: "Frammenti di Kit auto-aiuto di massa",
+    en: "Fragments of Mass Self-Aid Kit",
   },
   prodOneUpKit: {
-    it: "Kit modernizzatore",
-    en: "One Up Kit",
+    it: "Frammenti di Kit modernizzatore",
+    en: "Fragments of One Up Kit",
   },
   prodOneDownKit: {
-    it: "Kit epoca precedente",
+    it: "Kit Invecchiatore",
     en: "One Down Kit",
   },
   prodReversionKit: {
-    it: "Kit di ripristino",
+    it: "Kit di Inversione",
     en: "Reversion Kit",
   },
   prodRenovationKit: {
-    it: "Kit rinnovamento",
-    en: "Renovation Kit",
+    it: "Frammenti di Kit rinnovamento",
+    en: "Fragments of Renovation Kit",
   },
   prodStoreBuilding: {
-    it: "Immagazzina edificio",
-    en: "Store Building",
+    it: "Frammenti di Immagazzina edificio",
+    en: "Fragments of Store Building",
   },
 
   // ── Nomi brevi di sezione (senza emoji), usati dentro boostTitle() ───
