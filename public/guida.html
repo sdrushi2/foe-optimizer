@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guida a FoE Optimizer – Come usare il tool</title>
-    <meta name="description" content="Guida completa a FoE Optimizer: come importare la città, leggere l'efficienza, usare l'ottimizzatore dell'inventario e gestire profili, alleati e filtri.">
+    <title>Guida a FoE Optimizer 2.0 – Come usare il tool</title>
+    <meta name="description" content="Guida completa a FoE Optimizer 2.0: importare la città con la bacchetta, leggere l'efficienza, ottimizzare inventario e alleati, ridisegnare la città con il Planner, pianificare l'Insediamento dei Pirati.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark light">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <link rel="canonical" href="https://foe-optimizer.com/guida.html">
 
-    <meta property="og:title" content="Guida a FoE Optimizer">
-    <meta property="og:description" content="Come importare la città, capire l'efficienza e usare l'ottimizzatore dell'inventario, spiegato senza tecnicismi.">
+    <meta property="og:title" content="Guida a FoE Optimizer 2.0">
+    <meta property="og:description" content="Importare la città, capire l'efficienza, usare inventario, alleati, Planner e Insediamenti, spiegato senza tecnicismi.">
     <meta property="og:url" content="https://foe-optimizer.com/guida.html">
     <meta property="og:type" content="article">
     <meta property="og:image" content="https://foe-optimizer.com/og-image.png">
@@ -432,6 +432,18 @@
       .top-of-page a:hover {
         color: var(--amber);
       }
+      code {
+        background: var(--bg-deep);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-family: "SF Mono", Consolas, Menlo, monospace;
+        font-size: 0.88em;
+        color: var(--text);
+      }
+
+      ul { padding-left: 22px; }
+      li { margin-bottom: 6px; color: #d4dbe6; }
     </style>
   </head>
   <body>
@@ -451,116 +463,174 @@
       </div>
 
       <div class="hero">
-        <h1>Guida (quasi) definitiva a FoE Optimizer</h1>
-        <p>Se ti sei perso tra icone, colonne e pulsanti la prima volta che hai aperto il tool, sei nel posto giusto. Qui spieghiamo tutto con calma, senza dare per scontato niente.</p>
+        <h1>Guida a FoE Optimizer 2.0</h1>
+        <p>Tutto quello che c'è da sapere, scheda per scheda e pulsante per pulsante: come importare la città, leggere i numeri, ottimizzare inventario e alleati e ridisegnare la città con il Planner.</p>
       </div>
 
       <nav class="toc">
         <h2>In questa guida</h2>
         <ol>
-          <li><a href="#panoramica">1. Di cosa stiamo parlando</a></li>
-          <li><a href="#profili">2. Profili e importazione dati</a></li>
-          <li><a href="#tab-database">3. Tab Database</a></li>
-          <li><a href="#tab-citta">4. Tab Città</a></li>
-          <li><a href="#tab-inventario">5. Tab Inventario (l'ottimizzatore)</a></li>
-          <li><a href="#tab-alleati">6. Tab Alleati</a></li>
-          <li><a href="#efficienza">7. Efficienza e pesi</a></li>
-          <li><a href="#filtri">8. Filtri, ricerca e toolbar</a></li>
-          <li><a href="#faq">9. Domande frequenti</a></li>
+          <li><a href="#panoramica">1. Di cosa si tratta</a></li>
+          <li><a href="#interfaccia">2. L'interfaccia</a></li>
+          <li><a href="#importare">3. Importare la città</a></li>
+          <li><a href="#citta-salvate">4. Le città salvate</a></li>
+          <li><a href="#tabelle">5. Tabelle, ricerca e filtri</a></li>
+          <li><a href="#tab-database">6. Database</a></li>
+          <li><a href="#tab-citta">7. Città</a></li>
+          <li><a href="#tab-inventario">8. Inventario</a></li>
+          <li><a href="#tab-planner">9. Planner</a></li>
+          <li><a href="#tab-alleati">10. Alleati</a></li>
+          <li><a href="#tab-insediamenti">11. Insediamenti</a></li>
+          <li><a href="#efficienza">12. Efficienza e pesi</a></li>
+          <li><a href="#tab-opzioni">13. Opzioni</a></li>
+          <li><a href="#tab-guida">14. Guida</a></li>
+          <li><a href="#faq">15. Domande frequenti</a></li>
         </ol>
       </nav>
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="panoramica">
-        <h2>🏰 1. Di cosa stiamo parlando</h2>
-        <p class="lede">Tre minuti per capire cosa fa questo tool prima di buttarti sui dettagli.</p>
-
-        <p>FoE Optimizer è un coltellino svizzero per Forge of Empires. Fa fondamentalmente quattro cose:</p>
+        <h2>🏰 1. Di cosa si tratta</h2>
+        <p class="lede">FoE Optimizer è un coltellino svizzero gratuito per Forge of Empires.</p>
 
         <div class="tabgrid">
           <div class="tabcard">
             <span class="emoji">📚</span>
-            <h4>Consultare il database</h4>
-            <p>Tutti gli edifici del gioco, con statistiche vere, anche senza importare nulla.</p>
+            <h4>Database</h4>
+            <p>Tutti gli edifici e gli alleati del gioco con le loro statistiche, anche senza importare nulla.</p>
           </div>
           <div class="tabcard">
             <span class="emoji">🏙️</span>
-            <h4>Analizzare la tua città</h4>
-            <p>Importi la tua città reale e vedi cosa rende davvero ogni edificio che possiedi.</p>
+            <h4>Città</h4>
+            <p>La tua città vera, con i numeri della tua era: efficienza, strade, produzioni, valori militari, cosa aggiornare.</p>
           </div>
           <div class="tabcard">
             <span class="emoji">🧰</span>
-            <h4>Ottimizzare l'inventario</h4>
-            <p>Scopri esattamente cosa puoi costruire con i kit che hai in magazzino. È la funzione più unica del tool.</p>
+            <h4>Inventario</h4>
+            <p>Cosa puoi costruire davvero con i kit e i frammenti che hai in magazzino.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🗺️</span>
+            <h4>Planner</h4>
+            <p>Ridisegna la città da zero cercando la disposizione con meno strade possibile.</p>
           </div>
           <div class="tabcard">
             <span class="emoji">🤝</span>
-            <h4>Gestire gli alleati</h4>
-            <p>Livelli, rarità, bonus ereditati e frammenti, tutto calcolato al posto tuo.</p>
+            <h4>Alleati</h4>
+            <p>I tuoi alleati con i bonus reali, e quali far crescere con i Gettoni Valore.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">⚓</span>
+            <h4>Insediamenti</h4>
+            <p>Pianifica l'Insediamento dei Pirati: dove mettere ogni edificio nello spazio che hai.</p>
           </div>
         </div>
 
-        <p>Tutto gira <strong>dentro il tuo browser</strong>: non c'è un server da qualche parte che riceve i tuoi dati, non serve creare un account, non c'è niente da installare. Chiudi la scheda e riapri: i tuoi dati sono ancora lì, salvati sul tuo dispositivo.</p>
+        <p>Tutto gira <strong>dentro il tuo browser</strong>: non c'è un server che riceve i tuoi dati, non serve un account e non c'è niente da installare. Le città importate restano salvate solo sul tuo computer.</p>
 
         <div class="callout">
-          <strong>Un consiglio prima di partire:</strong> se non hai mai importato la tua città, la Tab Database funziona benissimo anche "a vuoto" — puoi già consultare tutto il catalogo edifici. Ma il grosso del valore del tool arriva quando importi i tuoi dati veri, quindi la prossima sezione è quella da non saltare.
+          <strong>Progetto amatoriale.</strong> FoE Optimizer è fatto nel tempo libero da un giocatore, è gratuito e <strong>non è affiliato, sponsorizzato né approvato da InnoGames GmbH</strong>. Forge of Empires, i suoi nomi, le immagini e i marchi appartengono a InnoGames GmbH.
         </div>
       </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="profili">
-        <h2>🧙 2. Profili e importazione dati</h2>
-        <p class="lede">Come far entrare la tua città reale nel tool, e come tenere ordine se giochi su più mondi.</p>
+      <section id="interfaccia">
+        <h2>🧭 2. L'interfaccia</h2>
+        <p class="lede">Una testata in alto, un nastro di comandi sotto e il contenuto della scheda.</p>
 
-        <h3>Cos'è un profilo</h3>
-        <p>Un <strong>profilo</strong> è semplicemente una scheda che tiene insieme città, inventario e alleati di un account. Se giochi su più mondi (es. uno "live" e uno "beta"), o hai più account, puoi tenerli come profili separati senza che si mescolino mai tra loro.</p>
+        <h3>La testata</h3>
+        <table>
+          <thead><tr><th>Elemento</th><th>A cosa serve</th></tr></thead>
+          <tbody>
+            <tr><td class="k">⚔️ Logo e versione</td><td>Il numero di versione (es. <code>v2.000</code>) sale di uno ogni giorno: ti dice quanto è recente la versione che stai usando.</td></tr>
+            <tr><td class="k">🪄 Bacchetta verde</td><td>Un clic importa la città copiata dal segnalibro; trascinata nella barra dei preferiti crea il segnalibro. Vedi <a href="#importare">Importare la città</a>.</td></tr>
+            <tr><td class="k">Selettore città</td><td>La città attiva (avatar e nome). Aprilo per cambiare città, eliminarne una o importarne una da JSON. Vedi <a href="#citta-salvate">Le città salvate</a>.</td></tr>
+            <tr><td class="k">Schede</td><td>Database, Città, Inventario, Planner, Alleati, Insediamenti, Opzioni, Guida. Le schede grigie non sono disponibili: passaci sopra col mouse per sapere perché (es. "Importa prima una città").</td></tr>
+            <tr><td class="k">🇮🇹 / 🇬🇧 Lingua</td><td>Cambia la lingua dell'interfaccia (la pagina si ricarica).</td></tr>
+          </tbody>
+        </table>
 
+        <h3>Il nastro dei comandi</h3>
+        <p>Sotto le schede c'è il <strong>nastro</strong>: i comandi della scheda, divisi in gruppi con il nome sotto (Ricerca, Filtri, Visualizza, Statistiche…). Quando la finestra è stretta i gruppi si compattano: prima perdono le scritte, poi diventano un unico pulsante che apre il gruppo in un menu.</p>
         <ul>
-          <li>Puoi crearne quanti ne vuoi.</li>
-          <li>Ogni profilo è completamente indipendente: modificare o cancellare uno non tocca gli altri.</li>
-          <li><strong>Doppio click</strong> sul nome di un profilo per rinominarlo (tipo "Live" o "Beta").</li>
-          <li><strong>Click singolo</strong> per passare da un profilo all'altro.</li>
-          <li>La <strong>×</strong> accanto al nome cancella quel profilo (e tutti i suoi dati).</li>
+          <li>I pulsanti <strong>accesi</strong> (colorati) sono attivi: un altro clic li spegne.</li>
+          <li>Passando il mouse su un pulsante compare una spiegazione.</li>
+          <li>Il piccolo <span class="pill">?</span> accanto al nome di un gruppo (es. Ricerca) spiega come usarlo.</li>
+          <li>Nelle schede Città, Inventario, Alleati e Planner il primo gruppo, <strong>Giocatore</strong>, mostra avatar, nome ed era della città attiva.</li>
         </ul>
 
-        <h3>La bacchetta magica 🪄</h3>
-        <p>È l'unico modo per far entrare i tuoi dati veri nel tool, e in pratica è un segnalibro speciale del browser che, quando lo clicchi mentre sei dentro Forge of Empires, legge i tuoi dati di gioco e li porta qui dentro. Ecco tutti i passaggi:</p>
+        <h3>I pannelli</h3>
+        <p>Alcuni pulsanti non cambiano la tabella ma aprono un <strong>pannello</strong> sopra di essa (Statistiche, Debug, Potenziale e gettoni, Modifica città, i pannelli della Guida…). Il pulsante resta acceso finché il pannello è aperto: per chiuderlo basta premerlo di nuovo.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="importare">
+        <h2>🪄 3. Importare la città</h2>
+        <p class="lede">La bacchetta magica porta qui la tua città dal gioco con due clic. Si prepara una volta sola.</p>
 
         <ol class="steps">
           <li>
-            <h4>Installa FoE Helper o Forge Hammer nel browser</h4>
-            <p>Sono estensioni gratuite che leggono i dati di Forge of Empires mentre giochi. Basta una delle due: se non ce l'hai già, cercala nello store estensioni del tuo browser.</p>
+            <h4>Installa FoE Helper o Forge Hammer</h4>
+            <p>Sono estensioni gratuite del browser (non fanno parte di questo progetto) che leggono i dati di Forge of Empires mentre giochi. Ne basta una: FoE Helper (<a href="https://chromewebstore.google.com/detail/foe-helper/bkagcmloachflbbkfmfiggipaelfamdf" target="_blank" rel="noopener">Chrome</a>, <a href="https://addons.mozilla.org/en-US/firefox/addon/foe-helper/" target="_blank" rel="noopener">Firefox</a>) oppure Forge Hammer (<a href="https://chromewebstore.google.com/detail/forge-hammer/kmicglnhmpaebfcoiojigbnepklclboa" target="_blank" rel="noopener">Chrome</a>, <a href="https://addons.mozilla.org/en-US/firefox/addon/forge-hammer/" target="_blank" rel="noopener">Firefox</a>).</p>
           </li>
           <li>
             <h4>Trascina la bacchetta nella barra dei preferiti</h4>
-            <p>Tieni premuto il pulsante con la bacchetta 🪄 (in alto nel tool) e trascinalo su nella barra dei preferiti del browser. Si crea un segnalibro speciale che puoi rinominare come vuoi.</p>
+            <p>Tieni premuto sulla bacchetta verde in alto (o su quella del pannello Guida › Come importare la città) e lasciala nella barra dei preferiti: diventa un segnalibro, rinominabile come vuoi. Non vedi la barra? Mostrala con <kbd>Ctrl</kbd>+<kbd>Maiusc</kbd>+<kbd>B</kbd> (<kbd>Cmd</kbd>+<kbd>Maiusc</kbd>+<kbd>B</kbd> su Mac).</p>
           </li>
           <li>
-            <h4>Vai nel gioco e clicca quel segnalibro</h4>
-            <p>Con Forge of Empires aperto nel browser e FoE Helper (o Forge Hammer) attivo, clicca il segnalibro appena creato. In silenzio, copia tutti i tuoi dati di gioco negli appunti del computer — non vedrai nulla succedere, è normale.</p>
+            <h4>Nel gioco, clicca il segnalibro</h4>
+            <p>Con Forge of Empires aperto e l'estensione attiva, clicca il segnalibro: copia in silenzio i dati negli appunti del computer. Non vedrai nulla: è normale. Se qualcosa non va compare un messaggio.</p>
           </li>
           <li>
             <h4>Torna qui e clicca la bacchetta</h4>
-            <p>Il tool legge gli appunti, crea automaticamente un nuovo profilo, e importa città, inventario e alleati tutti insieme. I profili che avevi già non vengono mai toccati.</p>
+            <p>FoE Optimizer legge gli appunti e importa la città. La prima volta il browser può chiederti il permesso di leggere gli appunti: concedilo.</p>
           </li>
         </ol>
 
         <div class="callout">
-          <strong>Vuoi aggiornare i dati più avanti?</strong> Basta ripetere i passi 3 e 4: si crea un nuovo profilo con i dati freschi, senza cancellare quello vecchio. Se vuoi tenere solo l'ultimo, elimina il profilo obsoleto a mano.
+          <strong>Per aggiornare</strong> ripeti i passi 3 e 4. La città viene riconosciuta dall'id del giocatore e <strong>aggiornata</strong>: non si crea una copia.
         </div>
 
-        <h3>Salvare e caricare i profili (backup)</h3>
+        <h3>Cosa viene importato</h3>
         <table>
-          <thead><tr><th>Pulsante</th><th>Cosa fa</th></tr></thead>
           <tbody>
-            <tr><td class="k">SAVE</td><td>Esporta tutti i tuoi profili in un file JSON. Utile come backup, o per spostare i dati su un altro dispositivo (es. dal PC al tablet).</td></tr>
-            <tr><td class="k">LOAD</td><td>Importa i profili da un file salvato in precedenza. Vengono aggiunti a quelli esistenti, senza sovrascrivere nulla.</td></tr>
+            <tr><td class="k">La tua città</td><td>Mappa ed edifici, inventario, alleati e magazzino delle risorse (Pergamene, Gettoni Valore…).</td></tr>
+            <tr><td class="k">La città di un altro</td><td>Clicca il segnalibro mentre visiti la sua città: entra come <strong>città visitata</strong>. Solo la mappa: il gioco non mostra inventario e alleati degli altri giocatori.</td></tr>
+            <tr><td class="k">Insediamento dei Pirati</td><td>Se l'hai aperto nella sessione di gioco, arriva insieme alla città e lo trovi nella scheda Insediamenti.</td></tr>
           </tbody>
         </table>
 
-        <p>Dato che tutto vive solo nel tuo browser, fare un salvataggio ogni tanto (specie prima di cambiare browser o dispositivo, o di svuotare la cache) è una buona abitudine.</p>
+        <h3>Altri modi</h3>
+        <ul>
+          <li><strong>Da un file JSON</strong>: Opzioni › Importa da JSON (o la voce "Importa da JSON" del selettore città) legge l'export di FoE Optimizer (Città › Esporta JSON città, Planner) o il piano di Forge Hammer. Diventa una città "ridotta": mappa e Grandi Edifici completi, statistiche degli altri edifici dal catalogo, niente inventario né alleati.</li>
+          <li><strong>Da un backup</strong>: Opzioni › Ripristina riporta tutte le città salvate con Esporta tutto, anche su un altro computer.</li>
+        </ul>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="citta-salvate">
+        <h2>🏘️ 4. Le città salvate</h2>
+        <p class="lede">Puoi tenere tutte le città che vuoi; il selettore in testata dice quale stai guardando.</p>
+
+        <p>Aprendo il selettore le città sono divise in tre gruppi:</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Le tue città</td><td>Importate con la bacchetta dalla tua città: tutte le schede disponibili.</td></tr>
+            <tr><td class="k">Città visitate</td><td>Città di altri giocatori: solo la mappa, quindi Città e Planner sì, Inventario e Alleati no ("Disponibile solo per le tue città").</td></tr>
+            <tr><td class="k">Città importate da JSON</td><td>Città caricate da un file: come le visitate, ma con le statistiche degli edifici prese dal catalogo.</td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li>Un clic su una città la rende attiva.</li>
+          <li>Il cestino accanto al nome la elimina, dopo una conferma. Per la tua città vengono tolti mappa, inventario, alleati e insediamenti: se vuoi conservarli, fai prima un backup.</li>
+          <li>Dopo un import compare per qualche secondo un avviso: "Aggiunta la tua città…", "Aggiornata…" oppure "Aggiunta la città di…".</li>
+        </ul>
       </section>
 
       <span class="top-of-page"><a href="#panoramica">↑ torna all'indice</a></span>
@@ -568,95 +638,100 @@
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="tab-database">
-        <h2>📚 3. Tab Database</h2>
-        <p class="lede">Il catalogo completo del gioco: oltre duemila edifici, consultabili senza dover importare niente.</p>
+      <section id="tabelle">
+        <h2>🔍 5. Tabelle, ricerca e filtri</h2>
+        <p class="lede">Database, Città e Inventario usano la stessa tabella e gli stessi comandi.</p>
 
-        <p>Questa è la tab che vedi appena apri il tool, anche a profilo vuoto. Contiene <strong>tutti gli edifici di Forge of Empires</strong> — più di 2000 — con le loro statistiche "di riferimento" (calcolate all'era finale del gioco, Era Spaziale Space Hub, per un confronto uniforme).</p>
-
-        <p>È utile per:</p>
+        <h3>Ricerca</h3>
+        <p>La casella del gruppo <strong>Ricerca</strong> filtra mentre scrivi:</p>
         <ul>
-          <li>Cercare un edificio specifico e vedere subito quanto rende.</li>
-          <li>Confrontare varianti simili (es. diversi livelli dello stesso edificio evento) prima di decidere quale costruire.</li>
-          <li>Farsi un'idea generale prima ancora di aver importato la propria città.</li>
+          <li><strong>per nome</strong>: basta una parte del nome, maiuscole e minuscole sono uguali (es. <code>boutique</code>);</li>
+          <li><strong>per id</strong>: metti <code>\</code> davanti (es. <code>\W_MultiAge_SUM24</code>);</li>
+          <li><strong>più ricerche insieme</strong>: separale con la virgola (es. <code>boutique, provviste</code> mostra gli edifici che contengono l'una o l'altra). Vale anche per gli id: <code>\W_A, W_B</code>.</li>
+        </ul>
+        <p>Negli alleati si cerca per nome, anche lì con la virgola.</p>
+
+        <h3>Filtri</h3>
+        <table>
+          <thead><tr><th>Filtro</th><th>Cosa fa</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Evento</td><td>Solo gli edifici di un evento (o di un gruppo di eventi).</td></tr>
+            <tr><td class="k">Produzione</td><td>Solo gli edifici che producono le risorse scelte (PF, beni, monete, truppe…). Con <em>Almeno una</em> basta una delle risorse, con <em>Tutte</em> servono tutte.</td></tr>
+            <tr><td class="k">Eff. min</td><td>Soglia minima di efficienza: scrivendo 80 vedi solo gli edifici con efficienza sopra 80.</td></tr>
+            <tr><td class="k">Categorie</td><td>Premi insediamenti, Premi campi, Premi IQ. Spuntandone più d'una vedi gli edifici di <em>almeno una</em> delle categorie; nessuna spunta = tutti.</td></tr>
+            <tr><td class="k">Azzera</td><td>Toglie tutti i filtri.</td></tr>
+          </tbody>
+        </table>
+        <p>Alcune schede aggiungono caselle proprie: in Città <strong>Da aggiornare</strong> (edifici di ere precedenti) e <strong>Declassabili</strong>, in Inventario <strong>Solo pronti</strong>.</p>
+
+        <h3>Visualizza</h3>
+        <p>Accende o spegne gruppi di colonne, per tenere la tabella leggibile: <strong>Popolazione</strong>, <strong>Felicità</strong>, <strong>IQ monete/mat.</strong> (produzioni delle Incursioni Quantiche), <strong>Dettaglio produzioni</strong> e <strong>Spedizioni</strong>. Se Spedizioni ha il ⚠️, le spedizioni non contano nell'efficienza: puoi attivarle in Opzioni › Pesi statistiche.</p>
+
+        <h3>Nascondi / Mostra solo</h3>
+        <p>Ogni pulsante di questo gruppo ha <strong>tre stati</strong>, che si alternano a ogni clic:</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Spento</td><td>Mostra tutti gli edifici.</td></tr>
+            <tr><td class="k">Rosso</td><td><strong>Nasconde</strong> quegli edifici.</td></tr>
+            <tr><td class="k">Verde</td><td>Mostra <strong>solo</strong> quegli edifici.</td></tr>
+          </tbody>
+        </table>
+        <p>Le voci: <strong>Non accelerabili</strong> (🚫), <strong>Auto aggiornabili</strong> (passano da soli all'era successiva), <strong>Limitati / Ascesi</strong> (a tempo), <strong>Utili IQ</strong>, <strong>Slot alleato</strong>, <strong>Producono frammenti</strong>; nella scheda Città anche <strong>Fr. auto-aiuto</strong>, <strong>Fr. immagazzina</strong> e <strong>Grandi edifici</strong>.</p>
+
+        <h3>Opzioni della tabella</h3>
+        <ul>
+          <li><strong>Somma %</strong>: colonne con la somma delle statistiche (Generale + Campi, e Generale + Spedizioni), per confrontare i bonus complessivi senza fare conti.</li>
+          <li><strong>Export</strong>: spunta le caselle a sinistra delle righe e scarica in CSV gli edifici selezionati. Il numero tra parentesi dice quanti ne hai scelti.</li>
         </ul>
 
-        <p>Il pulsante <span class="pill">LIGHT / FULL</span> in alto a sinistra cambia quanto database vedi: <strong>LIGHT</strong> mostra solo gli edifici "principali" del gioco (quelli storici, senza varianti o livelli intermedi), <strong>FULL</strong> mostra tutto, comprese le varianti. Se ti senti sopraffatto dalla quantità di righe, parti da LIGHT.</p>
+        <h3>Ordinare</h3>
+        <p>Clic sull'intestazione di una colonna per ordinare, un altro clic per invertire. L'ordine precedente resta come criterio secondario: ordinando per Felicità e poi per EFF, a parità di EFF vince la felicità più alta. Ogni tabella ricorda il suo ordine.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-database">
+        <h2>📚 6. Database</h2>
+        <p class="lede">Il catalogo completo del gioco, consultabile anche senza importare niente.</p>
+        <p>Il gruppo <strong>Catalogo</strong> sceglie cosa consultare:</p>
+        <ul>
+          <li><strong>Edifici</strong>: oltre duemila edifici, con le statistiche calcolate tutte all'ultima era del gioco, per un confronto alla pari.</li>
+          <li><strong>Alleati</strong>: tutti gli alleati del gioco, con gli stessi comandi della scheda Alleati.</li>
+          <li><strong>Grandi edifici</strong>: in arrivo.</li>
+        </ul>
+        <p>È la scheda ideale per confrontare edifici simili prima di decidere cosa costruire, o per farsi un'idea prima ancora di importare la città.</p>
       </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-citta">
-        <h2>🏙️ 4. Tab Città</h2>
-        <p class="lede">La tua città reale, con i numeri veri — non quelli teorici del database.</p>
+        <h2>🏙️ 7. Città</h2>
+        <p class="lede">La tua città vera, con i numeri della tua era e non quelli teorici del database.</p>
 
-        <p>Una volta importata la città con la bacchetta magica, questa tab mostra <strong>esattamente gli edifici che possiedi</strong>, con le statistiche calcolate sulla tua era attuale (non su quella finale come nel Database). Se hai un edificio ancora all'Età del Ferro, vedrai i numeri di quell'era, non quelli "da endgame".</p>
-
-        <p>Rispetto al Database, qui trovi qualche informazione in più:</p>
-
+        <p>Qui vedi solo gli edifici che possiedi, con le statistiche dell'era in cui sono davvero. Nella tabella alcune icone segnalano:</p>
         <table>
-          <thead><tr><th>Cosa vedi</th><th>Cosa significa</th></tr></thead>
           <tbody>
-            <tr><td class="k">Edifici scollegati</td><td>Un badge segnala gli edifici non collegati alla strada — non stanno producendo come dovrebbero.</td></tr>
-            <tr><td class="k">Strada superflua</td><td>Il contrario: edifici collegati alla strada che in realtà non ne avrebbero bisogno (stai "sprecando" connessioni).</td></tr>
-            <tr><td class="k">Badge di aggiornamento</td><td>Se possiedi già i kit necessari (visibili nella tab Inventario), un'icona ti segnala quali edifici puoi far salire di livello subito.</td></tr>
-            <tr><td class="k">Slot alleato</td><td>Un'icona per ogni copia dell'edificio che può ospitare un alleato, piena se occupata (con tooltip col nome dell'alleato) o vuota se libera.</td></tr>
+            <tr><td class="k">Scollegati</td><td>Edifici che richiedono la strada ma non sono collegati: non producono come dovrebbero.</td></tr>
+            <tr><td class="k">Strada inutile</td><td>Edifici collegati alla strada che non ne hanno bisogno.</td></tr>
+            <tr><td class="k">Era vecchia</td><td>Edifici di ere precedenti alla tua (filtro <em>Da aggiornare</em>).</td></tr>
+            <tr><td class="k">Slot alleato ⭐ / 🔬</td><td>Uno per ogni copia che può ospitare un alleato (militare o scienza): pieno se occupato, col nome dell'alleato al passaggio del mouse.</td></tr>
           </tbody>
         </table>
 
-        <p>C'è anche una <strong>vista mappa</strong> 🗺️ che mostra la disposizione reale della tua città, utile per farsi un'idea visiva d'insieme o per esportare un'immagine da condividere.</p>
-      </section>
+        <h3>Comandi del nastro</h3>
+        <table>
+          <thead><tr><th>Gruppo</th><th>Cosa trovi</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Visualizza</td><td>Oltre alle colonne, <strong>+ Inventario</strong> aggiunge alla tabella gli edifici disponibili in Inventario (sfondo verde), per confrontarli con quelli che hai già piazzato.</td></tr>
+            <tr><td class="k">Statistiche</td><td>Pannelli di riepilogo: <strong>Efficienza strade</strong> (quanta strada usi rispetto a quanta ne serve), <strong>Produzione</strong> (totali della città), <strong>Valori militari</strong> (somma dei bonus di attacco e difesa), <strong>Cambio era</strong> (cosa cambierebbe aggiornando tutti gli edifici vecchi all'era attuale e a quella massima), <strong>Aggiornabili</strong> (edifici che puoi far salire di livello con i kit e i frammenti che hai).</td></tr>
+            <tr><td class="k">Strumenti</td><td><strong>Mappa</strong> (vedi sotto), <strong>Esporta JSON città</strong> (scarica la città in un file, utile per il Planner o per mandarla a un amico) e <strong>Debug</strong> (elenco degli edifici riconosciuti, dei Grandi Edifici e di quelli non ancora in catalogo).</td></tr>
+          </tbody>
+        </table>
 
-      <hr class="sep">
-
-      <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="tab-inventario">
-        <h2>🧰 5. Tab Inventario — l'ottimizzatore</h2>
-        <p class="lede">La funzione per cui questo tool esiste davvero: cosa puoi <em>realmente</em> costruire con quello che hai.</p>
-
-        <p>Chiunque abbia giocato a Forge of Empires per un po' conosce il problema: l'inventario si riempie di kit di selezione, kit di aggiornamento, frammenti, e diventa impossibile capire a colpo d'occhio <strong>cosa puoi effettivamente tirar fuori da tutta quella roba</strong>. Questa tab risolve esattamente questo.</p>
-
-        <p>Importi il tuo inventario (sempre con la bacchetta magica) e il tool calcola, famiglia per famiglia di edifici, il massimo che riesci a costruire con i kit che possiedi — livello per livello, mostrandoti anche quali kit specifici userebbe.</p>
-
-        <h3>Come funzionano i kit, in breve</h3>
-        <p>Se non hai mai approfondito la meccanica, ecco l'essenziale:</p>
-
-        <ul>
-          <li><strong>Kit di selezione:</strong> ti dà un edificio a scelta tra alcune opzioni. Esistono a "tier" diversi — base, argento, oro, platino — e quelli più alti offrono più scelta.</li>
-          <li><strong>Kit di aggiornamento:</strong> fa salire un edificio già costruito di <strong>un livello</strong>. Consumabile, monouso: se ti servono 4 livelli, ti servono 4 kit.</li>
-          <li><strong>Kit di rimpicciolimento:</strong> riduce la dimensione di un edificio. Non conta come aggiornamento.</li>
-        </ul>
-
-        <div class="callout">
-          <strong>Un dettaglio da tenere a mente:</strong> un kit di aggiornamento da solo non "crea" nulla dal niente — serve prima avere l'edificio di base da far salire di livello (ottenuto con un kit di selezione, o già posseduto). Il tool tiene conto di questo automaticamente.
-        </div>
-
-        <h3>I kit "jolly" (epici)</h3>
-        <p>Alcuni kit di selezione — quelli epici — offrono opzioni che toccano <strong>tante famiglie diverse</strong> di edifici contemporaneamente. Il tool ti mostra il potenziale di quel kit per ognuna delle famiglie che tocca: se vedi lo stesso kit epico comparire in dodici punti diversi, non è un errore di conteggio — significa che <em>potresti</em> usarlo per una qualunque di quelle dodici famiglie, ma dovrai sceglierne una sola quando lo spenderai davvero in gioco.</p>
-
-        <h3>Cosa vedi in tabella</h3>
-        <p>Per ogni famiglia costruibile, il tool distingue due tipi di righe:</p>
-        <ul>
-          <li><strong>Costruibili da zero</strong> — edifici che potresti tirare fuori partendo da un kit di selezione, con il livello massimo raggiungibile.</li>
-          <li><strong>Già posseduti, aggiornabili</strong> — edifici che hai già in inventario (non ancora costruiti in città) e fino a che livello potresti farli salire con gli upgrade kit che hai.</li>
-        </ul>
-
-        <p>Il pulsante <span class="pill">Solo edifici pronti</span> filtra la vista mostrando solo ciò che hai già fisicamente in inventario, utile se vuoi concentrarti su cosa piazzare subito invece che su cosa potresti ottenere in futuro.</p>
-      </section>
-
-      <hr class="sep">
-
-      <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="tab-alleati">
-        <h2>🤝 6. Tab Alleati</h2>
-        <p class="lede">I tuoi alleati, i loro bonus reali, e i frammenti che stai ancora raccogliendo.</p>
-
-        <p>Importando gli alleati vedi quelli posseduti, il loro livello, la rarità, e i bonus calcolati — comprese le <strong>ereditarietà</strong>: un alleato di rarità alta eredita automaticamente i bonus delle versioni di rarità più bassa dello stesso alleato, e il tool li somma tutti per te senza che tu debba fare i conti a mano.</p>
-
-        <p>Trovi anche i <strong>frammenti</strong>: pezzi di alleato che, accumulati in numero sufficiente, diventano un alleato intero. Utile per capire a che punto sei con quelli che stai ancora completando.</p>
-
-        <p>Il pulsante <span class="pill">Solo posseduti</span> nasconde il resto del catalogo alleati e mostra solo quelli che hai davvero, mentre <span class="pill">Mostra tutto il database</span> fa l'opposto — comodo se vuoi vedere anche gli alleati che non hai ancora, per farti un'idea di cosa punteresti a ottenere.</p>
+        <h3>La mappa</h3>
+        <p>Il pulsante <strong>Mappa</strong> mostra la disposizione reale della città, con i colori della legenda: municipio, Grandi Edifici, edifici militari, edifici che richiedono la strada (a una o due corsie), che non la richiedono, collegati inutilmente, inattivi, strade e spazio libero. Puoi passare dalla vista <strong>Verticale</strong> a quella <strong>Isometrica</strong>, ingrandire e rimpicciolire, e scaricare la mappa come immagine <strong>PNG</strong> o come file <strong>JSON</strong>.</p>
       </section>
 
       <span class="top-of-page"><a href="#panoramica">↑ torna all'indice</a></span>
@@ -664,65 +739,194 @@
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="efficienza">
-        <h2>⚖️ 7. Efficienza e pesi</h2>
-        <p class="lede">Il numero che vedi accanto a ogni edificio (EFF) e cosa significa davvero.</p>
+      <section id="tab-inventario">
+        <h2>🧰 8. Inventario</h2>
+        <p class="lede">Cosa puoi costruire davvero con quello che hai in magazzino.</p>
 
-        <p>Ogni edificio (e alleato) riceve un <strong>punteggio di efficienza</strong>: in pratica, quanto "rende" per ogni cella di spazio che occupa in città. Più alto è, più quell'edificio ti dà in proporzione allo spazio che gli dedichi. La formula, in parole povere:</p>
+        <p>L'inventario si riempie di kit di selezione, kit di aggiornamento e frammenti, e diventa difficile capire cosa se ne può tirare fuori. Questa scheda lo calcola per te: per ogni famiglia di edifici, il livello massimo che riesci a raggiungere con i kit che possiedi.</p>
 
-        <div class="formula">Efficienza = (somma dei bonus pesati) ÷ (spazio occupato + strade)</div>
+        <h3>I kit, in breve</h3>
+        <ul>
+          <li><strong>Kit di selezione</strong>: ti dà un edificio a scelta tra alcune opzioni (base, argento, oro, platino: più è alto, più scelta).</li>
+          <li><strong>Kit di aggiornamento</strong>: fa salire di un livello un edificio già ottenuto. Uno per livello.</li>
+          <li><strong>Frammenti</strong>: raccolti in numero sufficiente diventano un kit o un edificio.</li>
+        </ul>
+        <div class="callout">
+          Un kit di aggiornamento da solo non crea nulla: serve prima l'edificio di base. Il tool ne tiene conto da solo.
+        </div>
 
-        <p>I bonus considerati nel calcolo sono quelli generali, quelli dei Campi di Battaglia di Gilda e — se li attivi — quelli delle Spedizioni di Gilda. Lo stesso identico meccanismo si applica sia agli edifici (tab Database, Città, Inventario) sia agli alleati (tab Alleati): i pesi che modifichi nella toolbar valgono per entrambi contemporaneamente.</p>
+        <h3>Kit "jolly"</h3>
+        <p>Alcuni kit epici valgono per molte famiglie di edifici. Il tool mostra il loro potenziale per ognuna: se lo stesso kit compare in dodici punti non è un errore, puoi usarlo per una qualunque di quelle famiglie (ma una sola, quando lo spendi nel gioco).</p>
 
-        <h3>I pesi che puoi regolare</h3>
+        <h3>Cosa vedi in tabella</h3>
+        <ul>
+          <li><strong>Costruibili da zero</strong>: edifici che puoi ottenere partendo da un kit di selezione, al livello massimo raggiungibile.</li>
+          <li><strong>Già in inventario</strong>: edifici che hai già (non piazzati) e fino a che livello puoi farli salire.</li>
+        </ul>
+        <p>Il filtro <strong>Solo pronti</strong> mostra solo gli edifici già presenti in inventario, da piazzare subito.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-planner">
+        <h2>🗺️ 9. Planner</h2>
+        <p class="lede">Ridisegna la città da zero cercando la disposizione con meno strade, così resta più spazio per gli edifici.</p>
+
+        <div class="callout">
+          C'è anche un <strong>video tutorial</strong>: Planner › Aiuto › Video tutorial, oppure Guida › Come usare il planner.
+        </div>
+
+        <h3>Quale città</h3>
+        <p>Il gruppo <strong>Sorgente</strong> sceglie cosa ottimizzare: la <strong>Città selezionata</strong> oppure un file con <strong>Importa JSON</strong> (l'export della Mappa, o un file mandato da un altro giocatore). Il file non viene salvato: la ✕ sul pulsante lo chiude, e finché è caricato un clic sul suo nome ci torna.</p>
+
+        <h3>Come si usa</h3>
+        <ol class="steps">
+          <li>
+            <h4>Ottimizza</h4>
+            <p>Parte la ricerca, su più <strong>scenari</strong> in parallelo: Raccordo a 3, a 4 e a 5, Girandola, Girandola 2 e Configurazione attuale (che parte dalla città così com'è). Ogni scenario ha la sua mappa con le statistiche (edifici con e senza strada, strade, angoli) e migliora man mano.</p>
+          </li>
+          <li>
+            <h4>Pausa</h4>
+            <p>Quando i numeri smettono di migliorare, metti in pausa. Ora puoi intervenire sulle mappe.</p>
+          </li>
+          <li>
+            <h4>Smussa (facoltativo)</h4>
+            <p>Sposta e scambia gli edifici con strada, senza toccare le strade, per ridurre angoli e buchi del contorno: il riempimento finale incastrerà meglio i pezzi piccoli. Continua finché non lo metti in pausa.</p>
+          </li>
+          <li>
+            <h4>Completa</h4>
+            <p>Chiude la ricerca su tutte le mappe (ognuna tiene quella mostrata) e piazza gli edifici che non richiedono strada. <strong>Annulla completamento</strong> torna alla ricerca in pausa.</p>
+          </li>
+        </ol>
+        <p><strong>Reset</strong> azzera tutto. <strong>Annulla modifiche</strong> ripristina l'ultima disposizione trovata sulle mappe che hai modificato a mano.</p>
+
+        <h3>Su ogni scenario</h3>
         <table>
-          <thead><tr><th>Peso</th><th>Cosa regola</th></tr></thead>
           <tbody>
-            <tr><td class="k">⚔️ Att</td><td>Fisso a 1,0. È il riferimento rispetto a cui si calibra tutto il resto.</td></tr>
-            <tr><td class="k">🛡️ Dif</td><td>Quanto contano i bonus difensivi rispetto a quelli offensivi. Default 0,8: la difesa pesa un po' meno dell'attacco.</td></tr>
-            <tr><td class="k">🔰 CAM</td><td>Il riquadro con i pesi Attacco/Difesa realmente usati nel calcolo, dopo aver tolto la quota riservata alle Spedizioni. Non si modifica direttamente: si aggiorna da solo in base agli altri controlli.</td></tr>
-            <tr><td class="k">⚡ SPE</td><td>Interruttore + slider per includere anche le Spedizioni di Gilda nel calcolo. A 0,20 (default), il 20% del peso va alle Spedizioni e l'80% resta ai Campi.</td></tr>
+            <tr><td class="k">Frecce</td><td>Spostano l'intera città (edifici e strade) di una cella.</td></tr>
+            <tr><td class="k">Specchia</td><td>Ribalta la città in orizzontale o in verticale, mantenendo i collegamenti.</td></tr>
+            <tr><td class="k">✏ Modifica</td><td>Apre la mappa nell'<strong>editor</strong> (nuova scheda): sposti e togli edifici e strade, poi "Applica al Planner". Serve il Planner in pausa.</td></tr>
+            <tr><td class="k">⬇ PNG / JSON</td><td>Scarica la soluzione come immagine o come file JSON.</td></tr>
+            <tr><td class="k">✕</td><td>Elimina lo scenario: la sua ricerca si ferma e le altre proseguono, con più potenza.</td></tr>
           </tbody>
         </table>
 
-        <h3>Filtrare per soglia di efficienza</h3>
-        <p>Nell'intestazione della colonna <strong>EFF</strong> della tabella puoi scrivere un valore minimo: digitando, ad esempio, 80, vedrai solo gli edifici (o alleati) con efficienza sopra 80, calcolata con i pesi attuali. Ottimo per tagliare subito il rumore e vedere solo quello che vale davvero la pena tenere.</p>
+        <h3>Modifica città</h3>
+        <p>Nel gruppo Città, prima di ottimizzare, <strong>Modifica</strong> apre un pannello dove togli edifici dalla città e ne aggiungi altri dall'inventario o dal database (anche Grandi Edifici ed edifici evento). Il pannello ti avvisa se lo spazio è stretto. Le modifiche sono temporanee: il Planner disporrà la città modificata, e sulla mappa e nel PNG gli edifici aggiunti hanno il bordo bianco.</p>
 
+        <h3>Casi particolari</h3>
+        <ul>
+          <li><strong>Edifici militari</strong>: con Alcatraz o la Nave da guerra stellare le truppe arrivano dal Grande Edificio, quindi i militari non hanno bisogno della strada. In quel caso compaiono degli interruttori per scegliere quali collegare comunque. Senza quei due GE i militari sono edifici normali con strada.</li>
+          <li><strong>Catene</strong> (es. Statua all'onore + Strade per la vittoria, treni, Ippodromo): il Planner tiene insieme ogni catena come un blocco unico, e gli anelli si possono ridistribuire fra le teste della stessa catena.</li>
+          <li><strong>Strade a due corsie</strong>: gli edifici che le richiedono vengono collegati a strade 2×2.</li>
+          <li><strong>Set di edifici</strong> (bonus di adiacenza): non gestiti; il Planner li segnala nelle statistiche.</li>
+        </ul>
+
+        <h3>Processore e statistiche</h3>
+        <p><strong>MIN / MED / MAX</strong> decidono quanta potenza del computer usa il Planner (circa 25%, 50%, 100%). Il gruppo <strong>Statistiche attuali</strong> riporta la città di partenza: edifici con e senza strada, caselle di strada, edifici a catena e set.</p>
+      </section>
+
+      <span class="top-of-page"><a href="#panoramica">↑ torna all'indice</a></span>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-alleati">
+        <h2>🤝 10. Alleati</h2>
+        <p class="lede">I tuoi alleati, i loro bonus reali e i frammenti che stai raccogliendo.</p>
+
+        <p>Vedi gli alleati che possiedi con livello, rarità e bonus, comprese le ereditarietà: un alleato di rarità alta eredita i bonus delle rarità più basse e il tool li somma per te. Gli alleati di cui hai solo frammenti mostrano a che punto sei.</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Filtri</td><td><strong>Militari</strong>, <strong>Scienza</strong> e <strong>Frammenti</strong>, con il numero di quelli che hai.</td></tr>
+            <tr><td class="k">Visualizza rarità</td><td>Accende o spegne ciascuna delle cinque rarità.</td></tr>
+            <tr><td class="k">Livello 100</td><td>Mostra le statistiche dei tuoi alleati come se fossero già al livello 100.</td></tr>
+            <tr><td class="k">Somma %</td><td>Colonne con la somma delle statistiche, come negli edifici.</td></tr>
+            <tr><td class="k">Potenziale e gettoni</td><td>Pannello che valuta ogni alleato militare al livello 100 e propone una <strong>coda di evoluzioni</strong> ordinate per guadagno di efficienza per Gettone Valore speso, segnando quelle che puoi già pagare. Gli alleati scienza vengono mostrati solo con i loro dati, senza consigli. Serve un import con la bacchetta aggiornata (magazzino risorse).</td></tr>
+          </tbody>
+        </table>
+        <p>Gli alleati di tutto il gioco, anche quelli che non hai, sono in Database › Alleati.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-insediamenti">
+        <h2>⚓ 11. Insediamenti</h2>
+        <p class="lede">Pianifica l'Insediamento dei Pirati.</p>
+
+        <p>Visita il tuo Insediamento dei Pirati nel gioco, poi usa la bacchetta: la sua mappa (espansioni, edifici, ostacoli) arriva insieme alla città. Il tool cerca dove mettere gli edifici che scegli nello spazio che hai.</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Risolvi / Stop</td><td>Cerca una disposizione che faccia stare tutti gli edifici scelti; Stop la interrompe.</td></tr>
+            <tr><td class="k">Auto</td><td>Quando aggiungi un edificio che non trova subito posto, prova a risolvere da sola; se non ci riesce, lo toglie.</td></tr>
+            <tr><td class="k">Annulla</td><td>Torna allo stato subito dopo l'ultimo import.</td></tr>
+            <tr><td class="k">Reset</td><td>Riporta tutto alla situazione di partenza, cancellando anche i dati importati.</td></tr>
+            <tr><td class="k">Espansioni</td><td><strong>Aggiungi</strong> sblocca un'area 4×4 (clic su uno slot verde), <strong>Rimuovi</strong> ne richiude una (clic su un'area rossa).</td></tr>
+          </tbody>
+        </table>
+        <p>Sulla mappa puoi trascinare il municipio e gli edifici per spostarli o scambiarli, e cliccare una cella per segnarla come ostacolo (o toglierlo).</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="efficienza">
+        <h2>⚖️ 12. Efficienza e pesi</h2>
+        <p class="lede">Il numero EFF accanto a ogni edificio e alleato, e come regolarlo.</p>
+
+        <p>L'efficienza dice quanto rende un edificio per ogni casella di spazio che occupa: più è alta, più ti dà in proporzione allo spazio.</p>
+        <div class="formula">Efficienza = (somma dei bonus pesati) ÷ (spazio occupato + strade)</div>
+        <p>I bonus considerati sono quelli generali, quelli dei Campi di Battaglia di Gilda e, se le attivi, quelli delle Spedizioni di Gilda. Lo stesso calcolo vale per edifici e alleati.</p>
+
+        <h3>I pesi (Opzioni › Pesi statistiche)</h3>
+        <table>
+          <thead><tr><th>Comando</th><th>Cosa regola</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Difesa vale … dell'attacco</td><td>Quanto contano i bonus di difesa rispetto a quelli di attacco (l'attacco vale sempre 1). Predefinito 0,8.</td></tr>
+            <tr><td class="k">Conta anche le spedizioni</td><td>Include i bonus delle Spedizioni di Gilda nel calcolo.</td></tr>
+            <tr><td class="k">Campi / Sped.</td><td>Come dividere il peso tra Campi e Spedizioni (es. 0,20 = 20% alle Spedizioni, 80% ai Campi).</td></tr>
+            <tr><td class="k">Come si calcola</td><td>Apre la spiegazione dettagliata.</td></tr>
+          </tbody>
+        </table>
         <div class="callout">
-          <strong>Non esiste un'efficienza "giusta" in assoluto</strong> — dipende da cosa ti interessa di più nel tuo momento di gioco. Se stai puntando ai Campi di Battaglia, alza il peso CAM mentalmente valutando quegli edifici; se ti interessano le Spedizioni, attiva lo slider SPE. Il numero cambia, il tuo giudizio resta il tuo.
+          Non esiste un'efficienza "giusta" in assoluto: dipende da cosa ti interessa. Se giochi soprattutto i Campi, lascia spente le Spedizioni; se ti interessano anche quelle, attivale. Il numero cambia, il giudizio resta tuo.
         </div>
       </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="filtri">
-        <h2>🔍 8. Filtri, ricerca e toolbar</h2>
-        <p class="lede">La mappa dei pulsanti più usati, per non dover indovinare cosa fa ogni icona.</p>
-
-        <h3>Ricerca</h3>
-        <p>La casella <strong>Cerca...</strong> filtra per nome mentre digiti. Se hai scritto qualcosa e vuoi ripartire da zero, la ✕ accanto alla casella pulisce tutto in un click. Se cancelli le lettere a mano, la ricerca si aggiorna subito, senza ritardi.</p>
-
-        <h3>Filtri principali</h3>
+      <section id="tab-opzioni">
+        <h2>⚙️ 13. Opzioni</h2>
+        <p class="lede">Città salvate, backup, pesi e aspetto.</p>
         <table>
-          <thead><tr><th>Filtro</th><th>Cosa fa</th></tr></thead>
           <tbody>
-            <tr><td class="k">Categoria</td><td>Riduce la vista a un tipo specifico: utili per Incursioni Quantiche, con slot alleato, insediamenti, premi Campi, premi IQ.</td></tr>
-            <tr><td class="k">Evento</td><td>Mostra solo gli edifici collegati a un evento specifico del gioco (utile quando stai valutando cosa tenere di un evento appena passato).</td></tr>
-            <tr><td class="k">AND / OR</td><td>Decide come combinare più filtri attivi insieme: AND li richiede tutti contemporaneamente, OR ne basta uno solo.</td></tr>
-            <tr><td class="k">min EFF</td><td>Soglia minima di efficienza (vedi sezione 7).</td></tr>
+            <tr><td class="k">Città salvate</td><td><strong>Importa da JSON</strong> aggiunge una città da un file; <strong>Elimina tutte</strong> cancella tutte le città salvate, dopo una conferma.</td></tr>
+            <tr><td class="k">Backup</td><td><strong>Esporta tutto</strong> salva tutte le città in un file; <strong>Ripristina</strong> le riporta qui (anche su un altro computer o browser).</td></tr>
+            <tr><td class="k">Pesi statistiche</td><td>I pesi dell'efficienza (vedi <a href="#efficienza">sezione 12</a>).</td></tr>
+            <tr><td class="k">Tema</td><td><strong>Scuro</strong> o <strong>Chiaro</strong>.</td></tr>
+            <tr><td class="k">Azzera</td><td><strong>Cancella tutto</strong> svuota tutti i dati e le impostazioni salvati dal sito (città, pesi, tema, lingua…) e ricarica la pagina. Non si può annullare: prima fai un backup.</td></tr>
           </tbody>
         </table>
-
-        <h3>Colonne mostrabili/nascondibili</h3>
-        <p>Diverse icone in toolbar accendono o spengono gruppi di colonne, per tenere la tabella leggibile mostrando solo ciò che ti serve in quel momento: Popolazione, Felicità, Produzioni, monete/materiali delle Incursioni Quantiche, e le colonne <strong>Σ (Sigma)</strong> che sommano automaticamente Generale+Campi (e Generale+Spedizioni, se attive) così non devi far di conto a mente.</p>
-
-        <h3>Selezione ed esportazione</h3>
-        <p>Le checkbox a sinistra di ogni riga permettono di selezionare più edifici; il pulsante <strong>Export</strong> in alto scarica in CSV solo le righe selezionate (o tutte, se non selezioni nulla) — comodo se vuoi analizzare i dati altrove, tipo in un foglio di calcolo.</p>
-
         <div class="callout">
-          <strong>Nota:</strong> la selezione si azzera ogni volta che cambi tab. Non è un bug: ogni tab ha un significato diverso per gli stessi ID, quindi mantenere una selezione "attraverso" le tab creerebbe più confusione che utilità.
+          Tutto vive solo nel tuo browser: fare un <strong>Esporta tutto</strong> ogni tanto (soprattutto prima di cambiare browser o computer, o di cancellare i dati di navigazione) è una buona abitudine.
         </div>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-guida">
+        <h2>📖 14. Guida</h2>
+        <p class="lede">Aiuto sempre a portata di mano.</p>
+        <ul>
+          <li><strong>Guida</strong>: apre questa pagina.</li>
+          <li><strong>Come importare la città</strong>: i passi della bacchetta, con il video e una bacchetta da trascinare.</li>
+          <li><strong>Come usare il planner</strong>: il video tutorial del Planner.</li>
+          <li><strong>Informazioni</strong>: il progetto, i contatti, il codice sorgente e l'informativa sulla privacy.</li>
+        </ul>
       </section>
 
       <span class="top-of-page"><a href="#panoramica">↑ torna all'indice</a></span>
@@ -731,37 +935,47 @@
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="faq">
-        <h2>❓ 9. Domande frequenti</h2>
+        <h2>❓ 15. Domande frequenti</h2>
 
         <div class="card">
           <h3 style="margin-top:0">I miei dati sono al sicuro? Li vede qualcun altro?</h3>
-          <p>No. Tutto resta nel tuo browser (localStorage). Non c'è un server che riceve o conserva i tuoi dati di gioco: se cancelli i dati del sito dal browser, o li esporti manualmente con SAVE, sei l'unico ad avere una copia.</p>
+          <p>No. Tutto resta nel tuo browser. Non c'è un server che riceve o conserva i tuoi dati di gioco, e il segnalibro copia i dati solo negli appunti del tuo computer. I dettagli sono nell'<a href="https://github.com/sdrushi2/foe-optimizer/blob/main/PRIVACY.md" target="_blank" rel="noopener">informativa sulla privacy</a>.</p>
         </div>
 
         <div class="card">
-          <h3 style="margin-top:0">Perché alcuni edifici hanno un badge "sconosciuto" o mancano dei dati?</h3>
-          <p>Il gioco introduce continuamente nuovi edifici (specie durante gli eventi). Il database viene aggiornato regolarmente, ma può capitare che un edificio novissimo non sia ancora stato mappato — in quel caso il tool costruisce comunque una scheda con i dati reali che riesce a leggere dalla tua città importata, anche se non è ancora nel catalogo generale.</p>
+          <h3 style="margin-top:0">Ho cliccato la bacchetta ma non succede niente / dice che gli appunti sono vuoti.</h3>
+          <p>Controlla di aver cliccato il segnalibro <em>nel gioco</em>, con FoE Helper o Forge Hammer attivi, prima di tornare qui. Se il browser nega il permesso di leggere gli appunti (succede con alcuni browser, come Vivaldi o Brave), abilitalo nelle impostazioni del sito e riprova.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Ho reimportato la città e non vedo una copia nuova.</h3>
+          <p>È voluto: nella 2.0 la stessa città viene riconosciuta e aggiornata, non duplicata.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Perché alcuni edifici hanno dati mancanti o compaiono in Debug come non riconosciuti?</h3>
+          <p>Il gioco aggiunge continuamente edifici nuovi. Il catalogo viene aggiornato spesso, ma un edificio appena uscito può non esserci ancora: il tool lo mostra comunque con i dati che riesce a leggere dalla tua città.</p>
         </div>
 
         <div class="card">
           <h3 style="margin-top:0">Posso usarlo da telefono?</h3>
-          <p>Sì, il sito è responsive e si può anche "installare" come app sulla schermata home (sia Android che iPhone) per aprirlo più comodamente. Tieni conto che l'importazione con la bacchetta magica richiede un browser desktop con l'estensione FoE Helper o Forge Hammer: su mobile puoi comunque consultare i dati già importati da un profilo salvato/caricato.</p>
+          <p>Sì: il sito si adatta allo schermo e si può "installare" come app sulla schermata home. L'importazione con la bacchetta però richiede un browser da computer con FoE Helper o Forge Hammer; sul telefono puoi portare le città con un backup (Esporta tutto / Ripristina).</p>
         </div>
 
         <div class="card">
           <h3 style="margin-top:0">Il tool è gratuito?</h3>
-          <p>Sì, completamente. Nessun account, nessun abbonamento, nessun limite di utilizzo.</p>
+          <p>Sì, completamente: nessun account, nessun abbonamento, nessun limite.</p>
         </div>
 
         <div class="card">
           <h3 style="margin-top:0">Ho un dubbio non coperto da questa guida.</h3>
-          <p>Scrivimi pure a <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a> — rispondo appena posso.</p>
+          <p>Scrivimi a <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a>: rispondo appena posso.</p>
         </div>
       </section>
 
       <footer>
         <p><a href="/">← Torna a FoE Optimizer</a></p>
-        <p>Forge of Empires è un marchio di InnoGames. FoE Optimizer è un progetto indipendente, non affiliato a InnoGames.</p>
+        <p>Forge of Empires è un marchio di InnoGames GmbH. FoE Optimizer è un progetto amatoriale indipendente, non affiliato a InnoGames.</p>
       </footer>
 
     </div>

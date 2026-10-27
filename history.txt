@@ -1,53 +1,173 @@
-FoE OPTIMIZER - NOVITA' E AGGIORNAMENTI
-=======================================
+23/10
+  Planner: nuovo scenario "Configurazione attuale"
+  "Modifica città" per provare la città togliendo e aggiungendo edifici
 
-23/10  Planner: nuovo scenario "Configurazione attuale"; "Modifica città" per provare la città togliendo e aggiungendo edifici.
-22/10  Video tutorial del Planner.
-21/10  Planner: supporto alle strade a due corsie; scelta degli edifici militari da collegare; nuovo scenario Raccordo a 5; scelta della potenza della CPU (MIN/MED/MAX); Planner in inglese.
-20/10  Planner: più ricerche in parallelo, meno strade.
-19/10  Nuovo EDITOR della città; Planner: città più compatta.
-16/10  Planner: supporto alle "catene" di edifici.
-15/10  Planner: nuova rifinitura e correzioni di bug.
-14/10  Planner: nuovo layout "girandola", correzioni, nuovo colore dei pulsanti.
-13/10  Planner: aggiornamenti e correzioni (efficienza stradale, smussatura).
-12/10  PLANNER: nuovo planner di città che calcola il piazzamento degli edifici minimizzando le strade.
-10/10  Nuovo pannello "Potenziale alleati e Gettoni Valore" (tab Alleati); il bookmarklet importa anche il magazzino risorse; correzioni all'ottimizzatore dell'inventario.
-02/10  Nuova versione del bookmarklet; correzioni all'import dell'Avamposto e allo strumento Pirati; edifici dell'evento invernale.
-29/09  Correzione al bookmarklet.
-28/09  Correzioni di vari bug; aiuti, guida e informativa privacy aggiornati.
-17/09  Ritocchi estetici; edifici del nuovo evento.
-12/09  Correzione per gli edifici "AllAge".
-04/09  Correzioni di bug e miglioramenti all'ottimizzatore dell'inventario.
-27/08  Supporto ai "Beni speciali"; correzioni al layout su smartphone.
-26/08  Più sicurezza e privacy (bookmarklet e dati salvati nel browser); aggiornamento dati SAD.
-24/08  PIRATI: nuovo strumento per pianificare l'Insediamento dei Pirati (import dell'Avamposto Culturale) e correzioni.
-23/08  Riconosciuti gli edifici che cambiano con l'era.
-20/08  Opzione per nascondere gli elementi 🚫; nuovo stile delle caselle di spunta; ritocchi vari.
-17/08  Bookmarklet e testi aggiornati.
-16/08  Edificio "FSB" disattivato.
-15/08  Kit aggiornati e miglioramenti all'ottimizzatore.
-14/08  Nuova era "Stellar Age: Discovery" di default.
-13/08  Pieno supporto a Forge Hammer (oltre a FoE Helper); nuovo pannello "ERA ->"; guide aggiornate.
-12/08  Il bookmarklet importa anche il nome del giocatore.
-11/08  Export della città in PNG; gestione alleati aggiornata.
-03/08  Nuovi edifici e kit.
-31/07  Mappa della città migliorata.
-29/07  Gestione delle strade corretta.
-27/07  Edifici unici (non ottenibili da kit); supporto SAD; intestazioni delle tab; correzioni.
-24/07  Ritocchi estetici.
-23/07  Nuovi edifici e ritocchi estetici.
-22/07  La tab Città può mostrare anche l'inventario; ordinamento delle colonne; correzioni di stile.
-21/07  Badge frammenti (mostra cosa produce un edificio); efficienza delle strade; riga d'intestazione fissa; orientamento orizzontale.
-20/07  Correzioni (inventario, ottimizzatore); nuove icone dell'app.
-19/07  Ritocchi grafici e nuove icone.
-17/07  Ritocchi all'interfaccia e ai testi.
-15/07  Nuovo bookmarklet.
-14/07  Nuova icona per iPhone/iPad.
-13/07  Informativa sulla privacy.
-11/07  Correzioni (inventario, dati degli edifici, aggiornamento dell'app).
-09/07  Guida online (italiano e inglese); pagina di errore 404; nuovi edifici.
-07/07  Il filtro sugli edifici viene ora ricordato.
-02/07  Ritocchi estetici.
-01/07  Filtro per slot degli alleati; più alleati; ricerca più fluida.
-30/06  Rilevamento degli edifici "declassabili"; migliore gestione degli alleati; avatar del giocatore nella barra della città.
-29/06  PRIMA VERSIONE: database degli edifici, import di città e inventario, ottimizzatore dell'inventario, alleati, profili, installabile come app.
+22/10
+  Video tutorial del Planner
+
+21/10
+  Planner: supporto alle strade a due corsie; scelta degli edifici militari da collegare; nuovo scenario Raccordo a 5; scelta della potenza della CPU (MIN/MED/MAX); traduzione in inglese
+
+20/10
+  Planner: più ricerche in parallelo, meno strade
+
+19/10
+  Nuovo EDITOR della città
+  Planner: città più compatta
+
+16/10
+  Planner: supporto alle "catene" di edifici
+
+15/10
+  Planner: nuova rifinitura e correzioni di bug
+
+14/10
+  Planner: nuovo layout "girandola", correzioni, nuovo colore dei pulsanti
+
+13/10
+  Planner: aggiornamenti e correzioni (efficienza stradale, smussatura)
+
+12/10
+  PLANNER: nuovo planner di città che calcola il piazzamento degli edifici minimizzando le strade
+
+10/10
+  Nuovo pannello "Potenziale alleati e Gettoni Valore" (tab Alleati)
+  Il bookmarklet importa anche il magazzino risorse
+  Correzioni all'ottimizzatore dell'inventario
+
+02/10
+  Nuova versione del bookmarklet
+  Correzioni all'import dell'Avamposto e allo strumento Pirati
+
+29/09
+  Correzione al bookmarklet
+
+28/09
+  Correzioni di vari bug
+  Aiuti, guida e informativa privacy aggiornati
+
+17/09
+  Ritocchi estetici
+
+12/09
+  Correzione per gli edifici "AllAge"
+
+04/09
+  Correzioni di bug e miglioramenti all'ottimizzatore dell'inventario
+
+27/08
+  Supporto ai "Beni speciali"
+  Correzioni al layout su smartphone
+
+26/08
+  Più sicurezza e privacy (bookmarklet e dati salvati nel browser)
+  Aggiornamento dati SAD
+
+24/08
+  PIRATI: nuovo strumento per pianificare l'Insediamento dei Pirati (import dell'Avamposto Culturale) e correzioni
+
+23/08
+  Riconosciuti gli edifici che cambiano con l'era
+
+20/08
+  Opzione per nascondere gli elementi 🚫
+  Ritocchi estetici
+
+17/08
+  Bookmarklet e testi aggiornati
+
+16/08
+  Edificio "FSB" disattivato
+
+15/08
+  Kit aggiornati e miglioramenti all'ottimizzatore
+
+14/08
+  Nuova era "Stellar Age: Discovery" di default
+
+13/08
+  Pieno supporto a Forge Hammer (oltre a FoE Helper)
+  Nuovo pannello "ERA ->"
+  Guide aggiornate
+
+12/08
+  Il bookmarklet importa anche il nome del giocatore
+
+11/08
+  Export della città in PNG
+  Gestione alleati aggiornata
+
+03/08
+  Nuovi edifici e kit
+
+31/07
+  Mappa della città migliorata
+
+29/07
+  Gestione delle strade corretta
+
+27/07
+  Edifici unici (non ottenibili da kit)
+  Supporto a SAD
+  Intestazioni delle tab
+  Ritocchi estetici
+
+24/07
+  Ritocchi estetici
+
+23/07
+  Nuovi edifici e ritocchi estetici
+
+22/07
+  La tab Città può mostrare anche l'inventario
+  Ordinamento delle colonne
+  Correzioni di stile
+
+21/07
+  Badge frammenti (mostra cosa produce un edificio)
+  Efficienza delle strade
+  Orientamento orizzontale
+
+20/07
+  Correzioni (inventario, ottimizzatore)
+  Nuove icone dell'app
+
+19/07
+  Ritocchi grafici e nuove icone
+
+17/07
+  Ritocchi all'interfaccia e ai testi
+
+15/07
+  Nuovo bookmarklet
+
+14/07
+  Nuova icona per iPhone/iPad
+
+13/07
+  Informativa sulla privacy
+
+11/07
+  Correzioni (inventario, dati degli edifici, aggiornamento dell'app)
+
+09/07
+  Guida online (italiano e inglese)
+  Pagina di errore 404
+
+07/07
+  Il filtro sugli edifici viene ora ricordato
+
+02/07
+  Ritocchi estetici
+
+01/07
+  Filtro per slot degli alleati
+  Ricerca più fluida
+
+30/06
+  Rilevamento degli edifici "declassabili"
+  Migliore gestione degli alleati
+  Avatar del giocatore nella barra della città
+
+29/06
+  PRIMA VERSIONE: database degli edifici, import di città e inventario, ottimizzatore dell'inventario, alleati, profili, installabile come app

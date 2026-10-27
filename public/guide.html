@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoE Optimizer Guide – How to Use the Tool</title>
-    <meta name="description" content="A complete guide to FoE Optimizer: how to import your city, read your efficiency score, use the inventory optimizer, and manage profiles, allies and filters.">
+    <title>FoE Optimizer 2.0 Guide – How to Use the Tool</title>
+    <meta name="description" content="A complete guide to FoE Optimizer 2.0: importing your city with the wand, reading efficiency, optimizing inventory and allies, redesigning your city with the Planner, planning the Pirate Settlement.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark light">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <link rel="canonical" href="https://foe-optimizer.com/guide.html">
 
-    <meta property="og:title" content="FoE Optimizer Guide">
-    <meta property="og:description" content="How to import your city, understand efficiency, and use the inventory optimizer, explained without the jargon.">
+    <meta property="og:title" content="FoE Optimizer 2.0 Guide">
+    <meta property="og:description" content="Importing your city, understanding efficiency, using inventory, allies, Planner and Settlements, explained without the jargon.">
     <meta property="og:url" content="https://foe-optimizer.com/guide.html">
     <meta property="og:type" content="article">
     <meta property="og:image" content="https://foe-optimizer.com/og-image.png">
@@ -432,6 +432,18 @@
       .top-of-page a:hover {
         color: var(--amber);
       }
+      code {
+        background: var(--bg-deep);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-family: "SF Mono", Consolas, Menlo, monospace;
+        font-size: 0.88em;
+        color: var(--text);
+      }
+
+      ul { padding-left: 22px; }
+      li { margin-bottom: 6px; color: #d4dbe6; }
     </style>
   </head>
   <body>
@@ -451,317 +463,519 @@
       </div>
 
       <div class="hero">
-        <h1>The (almost) definitive guide to FoE Optimizer</h1>
-        <p>If you got lost among icons, columns and buttons the first time you opened the tool, you're in the right place. Here we explain everything calmly, without assuming you already know anything.</p>
+        <h1>FoE Optimizer 2.0 Guide</h1>
+        <p>Everything you need to know, tab by tab and button by button: importing your city, reading the numbers, optimizing inventory and allies, and redesigning your city with the Planner.</p>
       </div>
 
       <nav class="toc">
         <h2>In this guide</h2>
         <ol>
-          <li><a href="#overview">1. What we're talking about</a></li>
-          <li><a href="#profiles">2. Profiles and importing your data</a></li>
-          <li><a href="#tab-database">3. Database tab</a></li>
-          <li><a href="#tab-city">4. City tab</a></li>
-          <li><a href="#tab-inventory">5. Inventory tab (the optimizer)</a></li>
-          <li><a href="#tab-allies">6. Allies tab</a></li>
-          <li><a href="#efficiency">7. Efficiency and weights</a></li>
-          <li><a href="#filters">8. Filters, search and toolbar</a></li>
-          <li><a href="#faq">9. Frequently asked questions</a></li>
+          <li><a href="#overview">1. What it is</a></li>
+          <li><a href="#interface">2. The interface</a></li>
+          <li><a href="#importing">3. Importing your city</a></li>
+          <li><a href="#saved-cities">4. Saved cities</a></li>
+          <li><a href="#tables">5. Tables, search and filters</a></li>
+          <li><a href="#tab-database">6. Database</a></li>
+          <li><a href="#tab-city">7. City</a></li>
+          <li><a href="#tab-inventory">8. Inventory</a></li>
+          <li><a href="#tab-planner">9. Planner</a></li>
+          <li><a href="#tab-allies">10. Allies</a></li>
+          <li><a href="#tab-settlements">11. Settlements</a></li>
+          <li><a href="#efficiency">12. Efficiency and weights</a></li>
+          <li><a href="#tab-options">13. Options</a></li>
+          <li><a href="#tab-help">14. Help</a></li>
+          <li><a href="#faq">15. FAQ</a></li>
         </ol>
       </nav>
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="overview">
-        <h2>🏰 1. What we're talking about</h2>
-        <p class="lede">Three minutes to understand what this tool does before diving into the details.</p>
-
-        <p>FoE Optimizer is a Swiss army knife for Forge of Empires. It basically does four things:</p>
+        <h2>🏰 1. What it is</h2>
+        <p class="lede">FoE Optimizer is a free Swiss-army knife for Forge of Empires.</p>
 
         <div class="tabgrid">
           <div class="tabcard">
             <span class="emoji">📚</span>
-            <h4>Browse the database</h4>
-            <p>Every building in the game, with real stats, even without importing anything.</p>
+            <h4>Database</h4>
+            <p>Every building and ally in the game with its stats, even without importing anything.</p>
           </div>
           <div class="tabcard">
             <span class="emoji">🏙️</span>
-            <h4>Analyze your city</h4>
-            <p>Import your real city and see what every building you own actually earns you.</p>
+            <h4>City</h4>
+            <p>Your real city, with the numbers of your age: efficiency, roads, production, military values, what to upgrade.</p>
           </div>
           <div class="tabcard">
             <span class="emoji">🧰</span>
-            <h4>Optimize your inventory</h4>
-            <p>Find out exactly what you can build with the kits sitting in your warehouse. It's the tool's most unique feature.</p>
+            <h4>Inventory</h4>
+            <p>What you can actually build with the kits and fragments in your inventory.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🗺️</span>
+            <h4>Planner</h4>
+            <p>Redesigns your city from scratch, looking for the layout with as few roads as possible.</p>
           </div>
           <div class="tabcard">
             <span class="emoji">🤝</span>
-            <h4>Manage your allies</h4>
-            <p>Levels, rarity, inherited bonuses and fragments, all calculated for you.</p>
+            <h4>Allies</h4>
+            <p>Your allies with their real bonuses, and which ones to evolve with Valor Tokens.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">⚓</span>
+            <h4>Settlements</h4>
+            <p>Plan the Pirate Settlement: where each building goes in the space you have.</p>
           </div>
         </div>
 
-        <p>Everything runs <strong>inside your browser</strong>: there's no server anywhere receiving your data, no account to create, nothing to install. Close the tab and reopen it — your data is still there, saved on your own device.</p>
+        <p>Everything runs <strong>inside your browser</strong>: no server receives your data, no account is needed and there's nothing to install. Imported cities are saved only on your computer.</p>
 
         <div class="callout">
-          <strong>One tip before you start:</strong> if you've never imported your city, the Database tab works great "empty" too — you can already browse the full building catalog. But most of the tool's value kicks in once you import your real data, so the next section is the one not to skip.
+          <strong>A hobby project.</strong> FoE Optimizer is made in spare time by a player, it's free and <strong>it is not affiliated with, sponsored or endorsed by InnoGames GmbH</strong>. Forge of Empires, its names, images and trademarks belong to InnoGames GmbH.
         </div>
       </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="profiles">
-        <h2>🧙 2. Profiles and importing your data</h2>
-        <p class="lede">How to bring your real city into the tool, and how to stay organized if you play on multiple worlds.</p>
+      <section id="interface">
+        <h2>🧭 2. The interface</h2>
+        <p class="lede">A header at the top, a command ribbon below it, and the tab content.</p>
 
-        <h3>What's a profile</h3>
-        <p>A <strong>profile</strong> is simply a card that groups together the city, inventory and allies of one account. If you play on multiple worlds (say, a "live" one and a "beta" one), or you have multiple accounts, you can keep them as separate profiles that never mix.</p>
+        <h3>The header</h3>
+        <table>
+          <thead><tr><th>Item</th><th>What it's for</th></tr></thead>
+          <tbody>
+            <tr><td class="k">⚔️ Logo and version</td><td>The version number (e.g. <code>v2.000</code>) goes up by one every day: it tells you how recent your version is.</td></tr>
+            <tr><td class="k">🪄 Green wand</td><td>One click imports the city copied by the bookmark; dragged to the bookmarks bar it creates the bookmark. See <a href="#importing">Importing your city</a>.</td></tr>
+            <tr><td class="k">City selector</td><td>The active city (avatar and name). Open it to switch city, delete one or import one from JSON. See <a href="#saved-cities">Saved cities</a>.</td></tr>
+            <tr><td class="k">Tabs</td><td>Database, City, Inventory, Planner, Allies, Settlements, Options, Help. Greyed-out tabs aren't available: hover over them to see why (e.g. "Import a city first").</td></tr>
+            <tr><td class="k">🇮🇹 / 🇬🇧 Language</td><td>Changes the interface language (the page reloads).</td></tr>
+          </tbody>
+        </table>
 
+        <h3>The command ribbon</h3>
+        <p>Below the tabs is the <strong>ribbon</strong>: the tab's commands, split into groups with their name underneath (Search, Filters, View, Statistics…). When the window is narrow the groups shrink: first they lose their labels, then each becomes a single button that opens the group in a menu.</p>
         <ul>
-          <li>You can create as many as you want.</li>
-          <li>Each profile is completely independent: editing or deleting one never touches the others.</li>
-          <li><strong>Double-click</strong> a profile's name to rename it (e.g. "Live" or "Beta").</li>
-          <li><strong>Single click</strong> to switch between profiles.</li>
-          <li>The <strong>×</strong> next to the name deletes that profile (and all its data).</li>
+          <li><strong>Lit</strong> (coloured) buttons are on: click again to turn them off.</li>
+          <li>Hovering over a button shows an explanation.</li>
+          <li>The small <span class="pill">?</span> next to a group name (e.g. Search) explains how to use it.</li>
+          <li>In the City, Inventory, Allies and Planner tabs the first group, <strong>Player</strong>, shows the active city's avatar, name and age.</li>
         </ul>
 
-        <h3>The magic wand 🪄</h3>
-        <p>It's the only way to bring your real data into the tool, and it's essentially a special browser bookmark that, when clicked while you're inside Forge of Empires, reads your game data and brings it in here. Here are all the steps:</p>
+        <h3>Panels</h3>
+        <p>Some buttons don't change the table but open a <strong>panel</strong> above it (Statistics, Debug, Potential &amp; tokens, Edit city, the Help panels…). The button stays lit while the panel is open: press it again to close it.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="importing">
+        <h2>🪄 3. Importing your city</h2>
+        <p class="lede">The magic wand brings your city here from the game in two clicks. You only set it up once.</p>
 
         <ol class="steps">
           <li>
-            <h4>Install FoE Helper or Forge Hammer in your browser</h4>
-            <p>These are free extensions that read Forge of Empires data while you play. Either one works: if you don't have one yet, search for it in your browser's extension store.</p>
+            <h4>Install FoE Helper or Forge Hammer</h4>
+            <p>These are free browser extensions (not part of this project) that read Forge of Empires data while you play. One is enough: FoE Helper (<a href="https://chromewebstore.google.com/detail/foe-helper/bkagcmloachflbbkfmfiggipaelfamdf" target="_blank" rel="noopener">Chrome</a>, <a href="https://addons.mozilla.org/en-US/firefox/addon/foe-helper/" target="_blank" rel="noopener">Firefox</a>) or Forge Hammer (<a href="https://chromewebstore.google.com/detail/forge-hammer/kmicglnhmpaebfcoiojigbnepklclboa" target="_blank" rel="noopener">Chrome</a>, <a href="https://addons.mozilla.org/en-US/firefox/addon/forge-hammer/" target="_blank" rel="noopener">Firefox</a>).</p>
           </li>
           <li>
-            <h4>Drag the wand into your bookmarks bar</h4>
-            <p>Press and hold the wand button 🪄 (at the top of the tool) and drag it up into your browser's bookmarks bar. This creates a special bookmark you can rename however you like.</p>
+            <h4>Drag the wand to your bookmarks bar</h4>
+            <p>Press and hold the green wand at the top (or the one in Help › How to import your city) and drop it on your bookmarks bar: it becomes a bookmark you can rename as you like. Can't see the bar? Show it with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> on Mac).</p>
           </li>
           <li>
-            <h4>Go into the game and click that bookmark</h4>
-            <p>With Forge of Empires open in the browser and FoE Helper (or Forge Hammer) active, click the bookmark you just created. It silently copies all your game data to your computer's clipboard — you won't see anything happen, that's normal.</p>
+            <h4>In the game, click the bookmark</h4>
+            <p>With Forge of Empires open and the extension active, click the bookmark: it silently copies the data to your computer's clipboard. You won't see anything happen, that's normal. If something goes wrong, a message appears.</p>
           </li>
           <li>
             <h4>Come back here and click the wand</h4>
-            <p>The tool reads the clipboard, automatically creates a new profile, and imports city, inventory and allies all together. Any profiles you already had are never touched.</p>
+            <p>FoE Optimizer reads the clipboard and imports the city. The first time, your browser may ask for permission to read the clipboard: allow it.</p>
           </li>
         </ol>
 
         <div class="callout">
-          <strong>Want to update your data later?</strong> Just repeat steps 3 and 4: a new profile is created with the fresh data, without deleting the old one. If you only want to keep the latest, delete the old profile manually.
+          <strong>To update</strong> repeat steps 3 and 4. The city is recognised by the player id and <strong>updated</strong>: no copy is created.
         </div>
 
-        <h3>Saving and loading profiles (backups)</h3>
+        <h3>What gets imported</h3>
         <table>
-          <thead><tr><th>Button</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td class="k">SAVE</td><td>Exports all your profiles into a JSON file. Useful as a backup, or to move your data to another device (e.g. from PC to tablet).</td></tr>
-            <tr><td class="k">LOAD</td><td>Imports profiles from a previously saved file. They're added to your existing ones, without overwriting anything.</td></tr>
+            <tr><td class="k">Your city</td><td>Map and buildings, inventory, allies and resource storage (Scrolls, Valor Tokens…).</td></tr>
+            <tr><td class="k">Another player's city</td><td>Click the bookmark while visiting their city: it is added as a <strong>visited city</strong>. Map only: the game doesn't show other players' inventory and allies.</td></tr>
+            <tr><td class="k">Pirate Settlement</td><td>If you opened it during the game session, it comes along with the city and you'll find it in the Settlements tab.</td></tr>
           </tbody>
         </table>
 
-        <p>Since everything only lives in your browser, saving a backup every now and then (especially before switching browsers or devices, or clearing your cache) is a good habit.</p>
+        <h3>Other ways</h3>
+        <ul>
+          <li><strong>From a JSON file</strong>: Options › Import from JSON (or "Import from JSON" in the city selector) reads a FoE Optimizer export (City › Export city JSON, Planner) or a Forge Hammer plan. It becomes a "reduced" city: full map and Great Buildings, other buildings' stats from the catalogue, no inventory or allies.</li>
+          <li><strong>From a backup</strong>: Options › Restore brings back all the cities saved with Export all, even on another computer.</li>
+        </ul>
       </section>
 
-      <span class="top-of-page"><a href="#overview">↑ back to top</a></span>
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="saved-cities">
+        <h2>🏘️ 4. Saved cities</h2>
+        <p class="lede">You can keep as many cities as you like; the selector in the header tells you which one you're looking at.</p>
+
+        <p>When you open the selector, cities are split into three groups:</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Your cities</td><td>Imported with the wand from your own city: every tab is available.</td></tr>
+            <tr><td class="k">Visited cities</td><td>Other players' cities: map only, so City and Planner yes, Inventory and Allies no ("Only available for your cities").</td></tr>
+            <tr><td class="k">Cities imported from JSON</td><td>Cities loaded from a file: like visited ones, with building stats taken from the catalogue.</td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li>Click a city to make it active.</li>
+          <li>The bin next to the name deletes it, after a confirmation. For your own city, map, inventory, allies and settlements are removed: make a backup first if you want to keep them.</li>
+          <li>After an import a notice appears for a few seconds: "Your city … added", "… updated" or "…'s city added".</li>
+        </ul>
+      </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to contents</a></span>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tables">
+        <h2>🔍 5. Tables, search and filters</h2>
+        <p class="lede">Database, City and Inventory share the same table and the same commands.</p>
+
+        <h3>Search</h3>
+        <p>The box in the <strong>Search</strong> group filters as you type:</p>
+        <ul>
+          <li><strong>by name</strong>: part of the name is enough, case doesn't matter (e.g. <code>boutique</code>);</li>
+          <li><strong>by id</strong>: put <code>\</code> in front (e.g. <code>\W_MultiAge_SUM24</code>);</li>
+          <li><strong>several searches at once</strong>: separate them with a comma (e.g. <code>boutique, supplies</code> shows buildings matching either). Works for ids too: <code>\W_A, W_B</code>.</li>
+        </ul>
+        <p>For allies you search by name, with commas as well.</p>
+
+        <h3>Filters</h3>
+        <table>
+          <thead><tr><th>Filter</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Event</td><td>Only the buildings of one event (or group of events).</td></tr>
+            <tr><td class="k">Production</td><td>Only buildings producing the chosen resources (FP, goods, coins, units…). With <em>Any</em> one resource is enough, with <em>All</em> every one is required.</td></tr>
+            <tr><td class="k">Min eff.</td><td>Minimum efficiency threshold: type 80 to see only buildings with efficiency above 80.</td></tr>
+            <tr><td class="k">Categories</td><td>Settlement prizes, GBG prizes, QI prizes. Ticking more than one shows buildings in <em>at least one</em> of them; none ticked = all.</td></tr>
+            <tr><td class="k">Reset</td><td>Clears every filter.</td></tr>
+          </tbody>
+        </table>
+        <p>Some tabs add their own boxes: in City <strong>Outdated</strong> (buildings from earlier ages) and <strong>Downgradable</strong>, in Inventory <strong>Ready only</strong>.</p>
+
+        <h3>View</h3>
+        <p>Turns groups of columns on and off to keep the table readable: <strong>Population</strong>, <strong>Happiness</strong>, <strong>QI coins/supp.</strong> (Quantum Incursion production), <strong>Production details</strong> and <strong>Expeditions</strong>. If Expeditions shows ⚠️, expeditions don't count towards efficiency: you can enable them in Options › Stat weights.</p>
+
+        <h3>Hide / Show only</h3>
+        <p>Every button in this group has <strong>three states</strong>, cycling with each click:</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Off</td><td>Shows every building.</td></tr>
+            <tr><td class="k">Red</td><td><strong>Hides</strong> those buildings.</td></tr>
+            <tr><td class="k">Green</td><td>Shows <strong>only</strong> those buildings.</td></tr>
+          </tbody>
+        </table>
+        <p>The items: <strong>Not rushable</strong> (🚫), <strong>Self-upgrading</strong> (move to the next age by themselves), <strong>Limited / Ascended</strong> (timed), <strong>QI useful</strong>, <strong>Ally slot</strong>, <strong>Produce fragments</strong>; in the City tab also <strong>Mass aid fr.</strong>, <strong>Store bld. fr.</strong> and <strong>Great buildings</strong>.</p>
+
+        <h3>Table options</h3>
+        <ul>
+          <li><strong>Sum %</strong>: columns with the sum of the stats (General + GbG, and General + Expeditions), to compare overall bonuses without doing the maths.</li>
+          <li><strong>Export</strong>: tick the boxes to the left of the rows and download the selected buildings as CSV. The number in brackets tells you how many you picked.</li>
+        </ul>
+
+        <h3>Sorting</h3>
+        <p>Click a column header to sort, click again to reverse. The previous order stays as a secondary criterion: sorting by Happiness and then by EFF, ties in EFF are broken by the higher happiness. Each table remembers its own order.</p>
+      </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-database">
-        <h2>📚 3. Database tab</h2>
-        <p class="lede">The full game catalog: over two thousand buildings, browsable without importing anything.</p>
-
-        <p>This is the tab you see the moment you open the tool, even with an empty profile. It contains <strong>every building in Forge of Empires</strong> — more than 2000 — with their "reference" stats (calculated at the game's final era, the Space Age Space Hub, for a fair comparison).</p>
-
-        <p>It's useful for:</p>
+        <h2>📚 6. Database</h2>
+        <p class="lede">The full game catalogue, available without importing anything.</p>
+        <p>The <strong>Catalog</strong> group chooses what to browse:</p>
         <ul>
-          <li>Looking up a specific building and immediately seeing what it earns.</li>
-          <li>Comparing similar variants (e.g. different levels of the same event building) before deciding which one to build.</li>
-          <li>Getting a general feel for things even before importing your own city.</li>
+          <li><strong>Buildings</strong>: over two thousand buildings, all with stats at the game's latest age for a fair comparison.</li>
+          <li><strong>Allies</strong>: every ally in the game, with the same commands as the Allies tab.</li>
+          <li><strong>Great buildings</strong>: coming soon.</li>
         </ul>
-
-        <p>The <span class="pill">LIGHT / FULL</span> button at the top left changes how much of the database you see: <strong>LIGHT</strong> shows only the game's "main" buildings (the classic ones, without variants or intermediate levels), <strong>FULL</strong> shows everything, variants included. If the sheer number of rows feels overwhelming, start with LIGHT.</p>
+        <p>It's the place to compare similar buildings before deciding what to build, or to get an idea before you even import your city.</p>
       </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-city">
-        <h2>🏙️ 4. City tab</h2>
-        <p class="lede">Your real city, with real numbers — not the theoretical ones from the database.</p>
+        <h2>🏙️ 7. City</h2>
+        <p class="lede">Your real city, with the numbers of your age rather than the database's theoretical ones.</p>
 
-        <p>Once you've imported your city with the magic wand, this tab shows <strong>exactly the buildings you own</strong>, with stats calculated at your current era (not the final one like in the Database). If you have a building still stuck in the Iron Age, you'll see that era's numbers, not the "endgame" ones.</p>
-
-        <p>Compared to the Database, here you'll find a bit more information:</p>
-
+        <p>Here you see only the buildings you own, with the stats of the age they're actually in. In the table some icons flag:</p>
         <table>
-          <thead><tr><th>What you see</th><th>What it means</th></tr></thead>
           <tbody>
-            <tr><td class="k">Disconnected buildings</td><td>A badge flags buildings not connected to the road — they aren't producing the way they should.</td></tr>
-            <tr><td class="k">Unnecessary road</td><td>The opposite: buildings connected to the road that actually don't need to be (you're "wasting" connections).</td></tr>
-            <tr><td class="k">Upgrade badge</td><td>If you already own the necessary kits (visible in the Inventory tab), an icon flags which buildings you can level up right away.</td></tr>
-            <tr><td class="k">Ally slot</td><td>An icon for each copy of the building that can host an ally, filled if occupied (with a tooltip showing the ally's name) or empty if free.</td></tr>
+            <tr><td class="k">Disconnected</td><td>Buildings that need a road but aren't connected: they don't produce as they should.</td></tr>
+            <tr><td class="k">Needless road</td><td>Buildings connected to a road they don't need.</td></tr>
+            <tr><td class="k">Old age</td><td>Buildings from ages before yours (the <em>Outdated</em> filter).</td></tr>
+            <tr><td class="k">Ally slot ⭐ / 🔬</td><td>One per copy that can host an ally (military or science): full if occupied, with the ally's name on hover.</td></tr>
           </tbody>
         </table>
 
-        <p>There's also a <strong>map view</strong> 🗺️ showing the actual layout of your city, handy for getting a visual overview or exporting an image to share.</p>
+        <h3>Ribbon commands</h3>
+        <table>
+          <thead><tr><th>Group</th><th>What you'll find</th></tr></thead>
+          <tbody>
+            <tr><td class="k">View</td><td>Besides the columns, <strong>+ Inventory</strong> adds the buildings available in Inventory to the table (green background), to compare them with the ones already placed.</td></tr>
+            <tr><td class="k">Statistics</td><td>Summary panels: <strong>Road efficiency</strong> (how much road you use compared to how much you need), <strong>Production</strong> (city totals), <strong>Military values</strong> (sum of attack and defence bonuses), <strong>Era change</strong> (what would change upgrading all old buildings to the current and the maximum age), <strong>Upgradable</strong> (buildings you can level up with the kits and fragments you have).</td></tr>
+            <tr><td class="k">Tools</td><td><strong>Map</strong> (see below), <strong>Export city JSON</strong> (downloads the city to a file, handy for the Planner or to send to a friend) and <strong>Debug</strong> (list of recognised buildings, Great Buildings and those not yet in the catalogue).</td></tr>
+          </tbody>
+        </table>
+
+        <h3>The map</h3>
+        <p>The <strong>Map</strong> button shows your city's real layout with the legend colours: town hall, Great Buildings, military buildings, buildings needing a road (one or two lanes), not needing one, needlessly connected, inactive, roads and free space. You can switch between <strong>Vertical</strong> and <strong>Isometric</strong> view, zoom in and out, and download the map as a <strong>PNG</strong> image or a <strong>JSON</strong> file.</p>
       </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to contents</a></span>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-inventory">
-        <h2>🧰 5. Inventory tab — the optimizer</h2>
-        <p class="lede">The reason this tool exists in the first place: what you can <em>actually</em> build with what you have.</p>
+        <h2>🧰 8. Inventory</h2>
+        <p class="lede">What you can really build with what's in your inventory.</p>
 
-        <p>Anyone who's played Forge of Empires for a while knows the problem: your inventory fills up with selection kits, upgrade kits, fragments, and it becomes impossible to tell at a glance <strong>what you can actually pull out of all that stuff</strong>. This tab solves exactly that.</p>
+        <p>The inventory fills up with selection kits, upgrade kits and fragments, and it gets hard to tell what you can get out of them. This tab works it out for you: for each building family, the highest level you can reach with the kits you own.</p>
 
-        <p>You import your inventory (again with the magic wand) and the tool calculates, building family by building family, the maximum you can build with the kits you own — level by level, also showing you which specific kits it would use.</p>
-
-        <h3>How kits work, in short</h3>
-        <p>If you've never dug into the mechanic, here's the essentials:</p>
-
+        <h3>Kits in a nutshell</h3>
         <ul>
-          <li><strong>Selection kit:</strong> gives you a building of your choice among a few options. They come in different tiers — normal, silver, gold, platinum — and the higher ones offer more choice.</li>
-          <li><strong>Upgrade kit:</strong> levels up a building you already built by <strong>one level</strong>. Consumable, single-use: if you need 4 levels, you need 4 kits.</li>
-          <li><strong>Shrink kit:</strong> reduces a building's footprint. Doesn't count as an upgrade.</li>
+          <li><strong>Selection kit</strong>: gives you one building out of a few options (basic, silver, gold, platinum: the higher, the more choice).</li>
+          <li><strong>Upgrade kit</strong>: raises a building you already have by one level. One per level.</li>
+          <li><strong>Fragments</strong>: once you collect enough, they become a kit or a building.</li>
         </ul>
-
         <div class="callout">
-          <strong>One detail worth keeping in mind:</strong> an upgrade kit alone doesn't "create" anything out of nothing — you need to already have the base building to level up (obtained via a selection kit, or already owned). The tool accounts for this automatically.
+          An upgrade kit alone creates nothing: you need the base building first. The tool takes care of this automatically.
         </div>
 
-        <h3>"Wildcard" (epic) kits</h3>
-        <p>Some selection kits — the epic ones — offer options that touch <strong>many different families</strong> of buildings at once. The tool shows you that kit's potential for each of the families it touches: if you see the same epic kit show up in twelve different spots, that's not a counting error — it means you <em>could</em> use it for any one of those twelve families, but you'll have to pick just one when you actually spend it in-game.</p>
+        <h3>"Wildcard" kits</h3>
+        <p>Some epic kits work for many building families. The tool shows their potential for each one: if the same kit appears in twelve places it's not a mistake, you can use it for any of those families (but only one, when you spend it in the game).</p>
 
         <h3>What you see in the table</h3>
-        <p>For each buildable family, the tool distinguishes two types of rows:</p>
         <ul>
-          <li><strong>Buildable from scratch</strong> — buildings you could pull out starting from a selection kit, with the maximum reachable level.</li>
-          <li><strong>Already owned, upgradable</strong> — buildings you already have in inventory (not yet built in your city) and up to which level you could take them with the upgrade kits you have.</li>
+          <li><strong>Buildable from scratch</strong>: buildings you can get starting from a selection kit, at the highest reachable level.</li>
+          <li><strong>Already in inventory</strong>: buildings you already own (not placed) and how far you can level them up.</li>
+        </ul>
+        <p>The <strong>Ready only</strong> filter shows only the buildings already in your inventory, ready to place.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-planner">
+        <h2>🗺️ 9. Planner</h2>
+        <p class="lede">Redesigns your city from scratch, looking for the layout with the fewest roads, so more space is left for buildings.</p>
+
+        <div class="callout">
+          There's also a <strong>video tutorial</strong> (in Italian): Planner › Help › Video tutorial, or Help › How to use the planner.
+        </div>
+
+        <h3>Which city</h3>
+        <p>The <strong>Source</strong> group chooses what to optimize: the <strong>Selected city</strong> or a file via <strong>Import JSON</strong> (the Map export, or a file sent by another player). The file isn't saved: the ✕ on the button closes it, and while it's loaded a click on its name brings you back to it.</p>
+
+        <h3>How to use it</h3>
+        <ol class="steps">
+          <li>
+            <h4>Optimize</h4>
+            <p>The search starts on several <strong>scenarios</strong> in parallel: Connector 3, 4 and 5, Pinwheel, Pinwheel 2 and Current layout (which starts from the city as it is). Each scenario has its own map with stats (buildings with and without road, roads, corners) and improves as it goes.</p>
+          </li>
+          <li>
+            <h4>Pause</h4>
+            <p>When the numbers stop improving, pause. Now you can work on the maps.</p>
+          </li>
+          <li>
+            <h4>Smooth (optional)</h4>
+            <p>Moves and swaps road-connected buildings, without touching the roads, to reduce corners and gaps in the outline: the final fill will fit small pieces better. It keeps going until you pause it.</p>
+          </li>
+          <li>
+            <h4>Complete</h4>
+            <p>Ends the search on every map (each keeps the one shown) and places the buildings that don't need a road. <strong>Undo completion</strong> goes back to the paused search.</p>
+          </li>
+        </ol>
+        <p><strong>Reset</strong> clears everything. <strong>Undo edits</strong> restores the last layout found on the maps you edited by hand.</p>
+
+        <h3>On each scenario</h3>
+        <table>
+          <tbody>
+            <tr><td class="k">Arrows</td><td>Move the whole city (buildings and roads) by one cell.</td></tr>
+            <tr><td class="k">Mirror</td><td>Flips the city horizontally or vertically, keeping the connections.</td></tr>
+            <tr><td class="k">✏ Edit</td><td>Opens the map in the <strong>editor</strong> (new tab): move and remove buildings and roads, then "Apply to Planner". The Planner must be paused.</td></tr>
+            <tr><td class="k">⬇ PNG / JSON</td><td>Downloads the solution as an image or a JSON file.</td></tr>
+            <tr><td class="k">✕</td><td>Deletes the scenario: its search stops and the others carry on, with more power.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Edit city</h3>
+        <p>In the City group, before optimizing, <strong>Edit</strong> opens a panel where you remove buildings from the city and add others from your inventory or the database (Great Buildings and event buildings too). The panel warns you if space is tight. Changes are temporary: the Planner lays out the edited city, and on the map and in the PNG the added buildings have a white border.</p>
+
+        <h3>Special cases</h3>
+        <ul>
+          <li><strong>Military buildings</strong>: with Alcatraz or the Star Warship the units come from the Great Building, so military buildings don't need a road. In that case switches appear to choose which ones to connect anyway. Without those two GBs, military buildings are normal road buildings.</li>
+          <li><strong>Chains</strong> (e.g. Statue of Honor + Victory Roads, trains, Hippodrome): the Planner keeps each chain together as one block, and links can be redistributed among the heads of the same chain.</li>
+          <li><strong>Two-lane roads</strong>: buildings that need them are connected to 2×2 roads.</li>
+          <li><strong>Building sets</strong> (adjacency bonuses): not handled; the Planner flags them in the statistics.</li>
         </ul>
 
-        <p>The <span class="pill">Ready buildings only</span> button filters the view to show only what you already physically have in inventory, handy if you want to focus on what to place right now instead of what you might get in the future.</p>
+        <h3>Processor and statistics</h3>
+        <p><strong>MIN / MED / MAX</strong> set how much of your computer's power the Planner uses (about 25%, 50%, 100%). The <strong>Current stats</strong> group reports the starting city: buildings with and without road, road tiles, chain buildings and sets.</p>
       </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to contents</a></span>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-allies">
-        <h2>🤝 6. Allies tab</h2>
-        <p class="lede">Your allies, their real bonuses, and the fragments you're still collecting.</p>
+        <h2>🤝 10. Allies</h2>
+        <p class="lede">Your allies, their real bonuses and the fragments you're collecting.</p>
 
-        <p>Once you import your allies, you'll see the ones you own, their level, rarity, and calculated bonuses — including <strong>inheritance</strong>: a higher-rarity ally automatically inherits the bonuses of lower-rarity versions of the same ally, and the tool adds them all up for you without you having to do the math by hand.</p>
-
-        <p>You'll also find <strong>fragments</strong>: ally pieces that, once you collect enough of them, turn into a full ally. Useful for seeing how close you are to completing the ones you're still working on.</p>
-
-        <p>The <span class="pill">Owned only</span> button hides the rest of the allies catalog and shows only the ones you actually have, while <span class="pill">Show full database</span> does the opposite — handy if you also want to see allies you don't have yet, to get a sense of what to aim for.</p>
+        <p>You see the allies you own with level, rarity and bonuses, inheritance included: a higher-rarity ally inherits the bonuses of the lower rarities and the tool adds them up for you. Allies you only have fragments of show how far along you are.</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Filters</td><td><strong>Military</strong>, <strong>Science</strong> and <strong>Fragments</strong>, with how many you have.</td></tr>
+            <tr><td class="k">Show rarity</td><td>Turns each of the five rarities on or off.</td></tr>
+            <tr><td class="k">Level 100</td><td>Shows your allies' stats as if they were already level 100.</td></tr>
+            <tr><td class="k">Sum %</td><td>Columns with the sum of the stats, as for buildings.</td></tr>
+            <tr><td class="k">Potential &amp; tokens</td><td>A panel that rates every military ally at level 100 and suggests a <strong>queue of evolutions</strong> sorted by efficiency gained per Valor Token spent, marking the ones you can already afford. Science allies are shown with their data only, no advice. Requires an import with the updated wand (resource storage).</td></tr>
+          </tbody>
+        </table>
+        <p>All the game's allies, including those you don't have, are in Database › Allies.</p>
       </section>
 
-      <span class="top-of-page"><a href="#overview">↑ back to top</a></span>
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-settlements">
+        <h2>⚓ 11. Settlements</h2>
+        <p class="lede">Plan the Pirate Settlement.</p>
+
+        <p>Visit your Pirate Settlement in the game, then use the wand: its map (expansions, buildings, obstacles) comes along with the city. The tool works out where to put the buildings you choose in the space you have.</p>
+        <table>
+          <tbody>
+            <tr><td class="k">Solve / Stop</td><td>Looks for a layout that fits all the chosen buildings; Stop interrupts it.</td></tr>
+            <tr><td class="k">Auto</td><td>When you add a building that doesn't fit straight away, it tries to solve by itself; if it can't, it removes that building.</td></tr>
+            <tr><td class="k">Undo</td><td>Goes back to the state right after the last import.</td></tr>
+            <tr><td class="k">Reset</td><td>Returns everything to the starting point, clearing the imported data too.</td></tr>
+            <tr><td class="k">Expansions</td><td><strong>Add</strong> unlocks a 4×4 area (click a green slot), <strong>Remove</strong> closes one (click a red area).</td></tr>
+          </tbody>
+        </table>
+        <p>On the map you can drag the town hall and buildings to move or swap them, and click a cell to mark it as an obstacle (or clear it).</p>
+      </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="efficiency">
-        <h2>⚖️ 7. Efficiency and weights</h2>
-        <p class="lede">The number you see next to every building (EFF) and what it actually means.</p>
+        <h2>⚖️ 12. Efficiency and weights</h2>
+        <p class="lede">The EFF number next to every building and ally, and how to tune it.</p>
 
-        <p>Every building (and ally) gets an <strong>efficiency score</strong>: basically, how much it "earns" for every space cell it occupies in your city. The higher it is, the more that building gives you relative to the space you dedicate to it. The formula, in plain terms:</p>
+        <p>Efficiency tells you how much a building yields for each tile of space it takes: the higher, the more it gives you relative to its space.</p>
+        <div class="formula">Efficiency = (sum of weighted bonuses) ÷ (space taken + roads)</div>
+        <p>The bonuses counted are general ones, Guild Battlegrounds ones and, if you enable them, Guild Expedition ones. The same calculation applies to buildings and allies.</p>
 
-        <div class="formula">Efficiency = (sum of weighted bonuses) ÷ (occupied space + roads)</div>
-
-        <p>The bonuses factored into the calculation are the general ones, the Guild Battlegrounds ones and — if you enable them — the Guild Expedition ones. The exact same mechanism applies to both buildings (Database, City, Inventory tabs) and allies (Allies tab): the weights you adjust in the toolbar apply to both at once.</p>
-
-        <h3>The weights you can adjust</h3>
+        <h3>The weights (Options › Stat weights)</h3>
         <table>
-          <thead><tr><th>Weight</th><th>What it controls</th></tr></thead>
+          <thead><tr><th>Control</th><th>What it sets</th></tr></thead>
           <tbody>
-            <tr><td class="k">⚔️ Atk</td><td>Fixed at 1.0. It's the reference point everything else is calibrated against.</td></tr>
-            <tr><td class="k">🛡️ Def</td><td>How much defensive bonuses count relative to offensive ones. Default 0.8: defense weighs a bit less than attack.</td></tr>
-            <tr><td class="k">🔰 BG</td><td>The box showing the Attack/Defense weights actually used in the calculation, after subtracting the share reserved for Expeditions. Not editable directly: it updates automatically based on the other controls.</td></tr>
-            <tr><td class="k">⚡ GE</td><td>Toggle + slider to also include Guild Expeditions in the calculation. At 0.20 (default), 20% of the weight goes to Expeditions and 80% stays with Battlegrounds.</td></tr>
+            <tr><td class="k">Defense is … of attack</td><td>How much defence bonuses count compared to attack ones (attack is always 1). Default 0.8.</td></tr>
+            <tr><td class="k">Include expeditions</td><td>Includes Guild Expedition bonuses in the calculation.</td></tr>
+            <tr><td class="k">GBG / GE</td><td>How to split the weight between Battlegrounds and Expeditions (e.g. 0.20 = 20% to Expeditions, 80% to Battlegrounds).</td></tr>
+            <tr><td class="k">How it works</td><td>Opens the detailed explanation.</td></tr>
           </tbody>
         </table>
-
-        <h3>Filtering by efficiency threshold</h3>
-        <p>In the <strong>EFF</strong> column header of the table you can type a minimum value: typing, say, 80, will show only buildings (or allies) with efficiency above 80, calculated with the current weights. Great for cutting through the noise and seeing only what's actually worth keeping.</p>
-
         <div class="callout">
-          <strong>There's no single "correct" efficiency</strong> — it depends on what matters most to you at that point in the game. If you're chasing Guild Battlegrounds, mentally weigh those buildings higher; if Expeditions are your focus, turn on the GE slider. The number changes, your judgment stays yours.
+          There's no "right" efficiency in absolute terms: it depends on what matters to you. If you mostly play Battlegrounds, leave Expeditions off; if you care about them too, turn them on. The number changes, the judgement stays yours.
         </div>
       </section>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
-      <section id="filters">
-        <h2>🔍 8. Filters, search and toolbar</h2>
-        <p class="lede">A map of the most-used buttons, so you don't have to guess what each icon does.</p>
-
-        <h3>Search</h3>
-        <p>The <strong>Search...</strong> box filters by name as you type. If you've typed something and want to start fresh, the ✕ next to the box clears everything in one click. If you delete letters by hand, the search updates instantly, with no delay.</p>
-
-        <h3>Main filters</h3>
+      <section id="tab-options">
+        <h2>⚙️ 13. Options</h2>
+        <p class="lede">Saved cities, backup, weights and appearance.</p>
         <table>
-          <thead><tr><th>Filter</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td class="k">Category</td><td>Narrows the view to a specific type: Quantum Incursion buildings, ones with ally slots, settlements, Battlegrounds prizes, QI prizes.</td></tr>
-            <tr><td class="k">Event</td><td>Shows only buildings tied to a specific in-game event (handy when deciding what to keep from an event that just ended).</td></tr>
-            <tr><td class="k">AND / OR</td><td>Decides how multiple active filters combine: AND requires all of them at once, OR needs just one.</td></tr>
-            <tr><td class="k">min EFF</td><td>Minimum efficiency threshold (see section 7).</td></tr>
+            <tr><td class="k">Saved cities</td><td><strong>Import from JSON</strong> adds a city from a file; <strong>Delete all</strong> removes every saved city, after a confirmation.</td></tr>
+            <tr><td class="k">Backup</td><td><strong>Export all</strong> saves every city to a file; <strong>Restore</strong> brings them back (even on another computer or browser).</td></tr>
+            <tr><td class="k">Stat weights</td><td>The efficiency weights (see <a href="#efficiency">section 12</a>).</td></tr>
+            <tr><td class="k">Theme</td><td><strong>Dark</strong> or <strong>Light</strong>.</td></tr>
+            <tr><td class="k">Reset</td><td><strong>Erase everything</strong> clears all data and settings saved by the site (cities, weights, theme, language…) and reloads the page. It can't be undone: make a backup first.</td></tr>
           </tbody>
         </table>
-
-        <h3>Columns you can show/hide</h3>
-        <p>Several icons in the toolbar toggle groups of columns on or off, keeping the table readable by showing only what you need at that moment: Population, Happiness, Production, Quantum Incursion coins/goods, and the <strong>Σ (Sigma)</strong> columns that automatically add up General+Battlegrounds (and General+Expeditions, if enabled) so you don't have to do the math in your head.</p>
-
-        <h3>Selection and export</h3>
-        <p>The checkboxes to the left of each row let you select multiple buildings; the <strong>Export</strong> button at the top downloads the selected rows as CSV (or all of them, if nothing is selected) — handy if you want to analyze the data elsewhere, like in a spreadsheet.</p>
-
         <div class="callout">
-          <strong>Note:</strong> your selection resets every time you switch tabs. That's not a bug: each tab means something different for the same IDs, so keeping a selection "across" tabs would cause more confusion than it's worth.
+          Everything lives only in your browser: running <strong>Export all</strong> now and then (especially before switching browser or computer, or clearing browsing data) is a good habit.
         </div>
       </section>
 
-      <span class="top-of-page"><a href="#overview">↑ back to top</a></span>
+      <hr class="sep">
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="tab-help">
+        <h2>📖 14. Help</h2>
+        <p class="lede">Help always at hand.</p>
+        <ul>
+          <li><strong>Guide</strong>: opens this page.</li>
+          <li><strong>How to import your city</strong>: the wand steps, with the video and a wand to drag.</li>
+          <li><strong>How to use the planner</strong>: the Planner video tutorial.</li>
+          <li><strong>About</strong>: the project, contacts, source code and privacy policy.</li>
+        </ul>
+      </section>
+
+      <span class="top-of-page"><a href="#overview">↑ back to contents</a></span>
 
       <hr class="sep">
 
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="faq">
-        <h2>❓ 9. Frequently asked questions</h2>
+        <h2>❓ 15. FAQ</h2>
 
         <div class="card">
           <h3 style="margin-top:0">Is my data safe? Can anyone else see it?</h3>
-          <p>No. Everything stays in your browser (localStorage). There's no server receiving or storing your game data: if you clear the site's data from your browser, or export it manually with SAVE, you're the only one with a copy.</p>
+          <p>No. Everything stays in your browser. No server receives or stores your game data, and the bookmark copies the data only to your computer's clipboard. Details are in the <a href="https://github.com/sdrushi2/foe-optimizer/blob/main/PRIVACY.md" target="_blank" rel="noopener">privacy policy</a>.</p>
         </div>
 
         <div class="card">
-          <h3 style="margin-top:0">Why do some buildings show an "unknown" badge or missing data?</h3>
-          <p>The game keeps introducing new buildings (especially during events). The database is updated regularly, but a brand-new building might not be mapped yet — in that case the tool still builds a card using the real data it can read from your imported city, even if it's not yet in the general catalog.</p>
+          <h3 style="margin-top:0">I clicked the wand and nothing happens / it says the clipboard is empty.</h3>
+          <p>Make sure you clicked the bookmark <em>in the game</em>, with FoE Helper or Forge Hammer active, before coming back here. If the browser denies permission to read the clipboard (some browsers, like Vivaldi or Brave, do by default), allow it in the site settings and try again.</p>
         </div>
 
         <div class="card">
-          <h3 style="margin-top:0">Can I use it from my phone?</h3>
-          <p>Yes, the site is responsive and can even be "installed" as an app on your home screen (both Android and iPhone) for easier access. Keep in mind that importing via the magic wand requires a desktop browser with the FoE Helper or Forge Hammer extension: on mobile you can still browse data already imported from a saved/loaded profile.</p>
+          <h3 style="margin-top:0">I re-imported my city and don't see a new copy.</h3>
+          <p>That's intended: in 2.0 the same city is recognised and updated, not duplicated.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Why do some buildings have missing data, or show up in Debug as not recognised?</h3>
+          <p>The game keeps adding new buildings. The catalogue is updated often, but a brand-new building may not be in it yet: the tool still shows it with whatever data it can read from your city.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Can I use it on my phone?</h3>
+          <p>Yes: the site adapts to the screen and can be "installed" as an app on your home screen. Importing with the wand, though, needs a desktop browser with FoE Helper or Forge Hammer; on your phone you can bring your cities over with a backup (Export all / Restore).</p>
         </div>
 
         <div class="card">
           <h3 style="margin-top:0">Is the tool free?</h3>
-          <p>Yes, completely. No account, no subscription, no usage limit.</p>
+          <p>Yes, completely: no account, no subscription, no limits.</p>
         </div>
 
         <div class="card">
           <h3 style="margin-top:0">I have a question this guide doesn't cover.</h3>
-          <p>Feel free to write to <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a> — I'll reply as soon as I can.</p>
+          <p>Write to me at <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a>: I'll reply as soon as I can.</p>
         </div>
       </section>
 
       <footer>
         <p><a href="/">← Back to FoE Optimizer</a></p>
-        <p>Forge of Empires is a trademark of InnoGames. FoE Optimizer is an independent project, not affiliated with InnoGames.</p>
+        <p>Forge of Empires is a trademark of InnoGames GmbH. FoE Optimizer is an independent hobby project, not affiliated with InnoGames.</p>
       </footer>
 
     </div>
