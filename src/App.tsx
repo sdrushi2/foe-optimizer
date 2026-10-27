@@ -81,7 +81,7 @@ import {
   iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, 
   iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap, iconFUR, iconBP, iconTR, iconTRNE,
   iconOneUp, iconImm, iconRinn, iconAiuto, iconFragment, allies_slot_empty, allies_slot_full,
-  iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB,
+  iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB, iconMed,
 } from "./assets/icons";
 
 // I nomi (NomeIta/NomeEng) sono ora colonne dirette di buildings.csv/allies.csv,
@@ -241,7 +241,7 @@ type EraDiffEntry = { key: string; icon: string; emoji?: string; labelKey: UiKey
 // colonne strette libere ai campi realmente compatti come "beni" — bug
 // segnalato luglio 2026 su "Capy's Winter Holiday Spa", dove fel occupava
 // la 4a colonna della riga militare al posto di beni).
-const isWideDiffKey = (key: string): boolean => key === "pop" || key === "fel" || key === "mon" || key === "mat";
+const isWideDiffKey = (key: string): boolean => key === "pop" || key === "fel" || key === "mon" || key === "mat" || key === "med";
 
 // Definizione dei campi confrontabili: come leggerli da EraStats (vecchia era) e
 // da un Building (era corrente, già popolato da applyEraStats). I boost sono
@@ -303,6 +303,7 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
     { key: "mat", labelKey: "diffMaterials", icon: icons.iconMat, get: sca("mat") },
     { key: "fp", labelKey: "diffForgePoints", icon: icons.iconFP, get: sca("fp") },
     { key: "fpb", labelKey: "diffForgePointsBoost", icon: icons.iconFPB, get: sca("fpb") },
+    { key: "med", labelKey: "diffMedals", icon: icons.iconMed, get: sca("med") },
     { key: "fur", labelKey: "diffRogues", icon: icons.iconFUR, get: sca("fur") },
     { key: "tr", labelKey: "diffUnits", icon: icons.iconTR, get: sca("tr") },
     { key: "trne", labelKey: "diffUnitsNextEra", icon: icons.iconTRNE, get: sca("trne") },
@@ -1651,6 +1652,9 @@ const BuildingRow = memo(function BuildingRow({
           <StaleFieldCell value={b.fpb} className={`cell-num${b.fpb > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.fpb)}
           </StaleFieldCell>
+          <StaleFieldCell value={b.med} className={`cell-num${b.med > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.med)}
+          </StaleFieldCell>
           <StaleFieldCell value={b.fur} className={`cell-num${b.fur > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fur)}
           </StaleFieldCell>
@@ -1751,7 +1755,7 @@ type SortKey =
   | "sig_gen_campi_atk_a" | "sig_gen_campi_def_a" | "sig_gen_campi_atk_d" | "sig_gen_campi_def_d"
   | "sig_gen_sped_atk_a" | "sig_gen_sped_def_a" | "sig_gen_sped_atk_d" | "sig_gen_sped_def_d"
   | "iq_mon_b" | "iq_mat_b" | "iq_mon" | "iq_mat" | "iq_atk_a" | "iq_def_a" | "iq_atk_d" | "iq_def_d" | "iq_beni" | "iq_truppe" | "iq_azioni" | "iq_cap"
-  | "mon" | "mat" | "fp" | "fpb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
+  | "mon" | "mat" | "fp" | "fpb" | "med" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
 type SortCriterion = { key: SortKey; order: "asc" | "desc" };
 // Ambito di ordinamento indipendente: le 3 viste della tabella edifici
 // (Database/Città/Inventario, distinte da TabType) più le 2 tabelle Alleati
@@ -2199,12 +2203,35 @@ export default function App() {
     );
   }, [cityEntityIds]);
 
-  const unmatchedCityEntityIds = useMemo(() => {
+  // 2.0: id di buildings_extra.csv (militari, fabbriche di beni, premi come la
+  // Tana dei furfanti…): edifici che il tool conosce anche se non sono nel
+  // catalogo. Scaricati solo quando si apre il Debug.
+  const [idsExtra, setIdsExtra] = useState<ReadonlySet<string> | null>(null);
+  useEffect(() => {
+    if (!isDebugOpen || idsExtra) return;
+    let vivo = true;
+    void caricaBuildingsExtra().then(testo => {
+      if (!vivo) return;
+      const ids = new Set<string>();
+      for (const riga of testo.replace(/^\uFEFF/, "").split(/\r?\n/).slice(1)) {
+        const id = riga.slice(0, riga.indexOf(";")).trim();
+        if (id) ids.add(id);
+      }
+      setIdsExtra(ids);
+    });
+    return () => { vivo = false; };
+  }, [isDebugOpen, idsExtra]);
+
+  const unmatchedAll = useMemo(() => {
     return Array.from(cityEntityIds.keys()).filter((id) =>
       !CSV_ENTITY_IDS_SET.has(id) &&
       !isGreatBuildingId(id)
     );
   }, [cityEntityIds]);
+  /** Fuori catalogo ma riconosciuti (in buildings_extra.csv). */
+  const extraCityEntityIds = useMemo(() => (idsExtra ? unmatchedAll.filter(id => idsExtra.has(id)) : []), [unmatchedAll, idsExtra]);
+  /** Davvero sconosciuti: né nel catalogo né in buildings_extra.csv. */
+  const unmatchedCityEntityIds = useMemo(() => (idsExtra ? unmatchedAll.filter(id => !idsExtra.has(id)) : unmatchedAll), [unmatchedAll, idsExtra]);
 
   const greatBuildingIds = useMemo(() => {
     return Array.from(greatBuildingsJson.keys());
@@ -3415,6 +3442,7 @@ export default function App() {
       case "mat": return b.mat;
       case "fp": return b.fp;
       case "fpb": return b.fpb;
+      case "med": return b.med;
       case "fur": return b.fur;
       case "tr": return b.tr;
       case "trne": return b.trne;
@@ -3716,7 +3744,7 @@ export default function App() {
       "IQAtk_A", "IQDef_A", "IQAtk_D", "IQDef_D",
       "IQmon", "IQmonB", "IQmat", "IQmatB",
       "IQBeni", "IQTruppe", "IQAzioni", "IQCap",
-      "Mon", "Mat", "PF", "PFB", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
+      "Mon", "Mat", "PF", "PFB", "Med", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
     ];
     const rows = selectedBuildings.map(b => [
       b.cityEntityId, b.name, b.currentEff, b.size, b.road, b.pop, b.fel,
@@ -3726,7 +3754,7 @@ export default function App() {
       b.iq[0], b.iq[1], b.iq[2], b.iq[3],
       b.iqMon, b.iqMonB, b.iqMat, b.iqMatB,
       b.iqBeni, b.iqTruppe, b.iqAzioni, b.iqCap,
-      b.mon, b.mat, b.fp, b.fpb, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benisp, b.benispb, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
+      b.mon, b.mat, b.fp, b.fpb, b.med, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benisp, b.benispb, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
     ]);
 
     const escapeCsv = (val: string | number) => {
@@ -3809,6 +3837,7 @@ export default function App() {
       bp: stats.bp,
       fp: stats.fp,
       fpb: stats.fpb,
+      med: stats.med,
       fur: stats.fur,
       tr: stats.tr,
       trne: stats.trne,
@@ -3916,7 +3945,7 @@ export default function App() {
       general: [0,0,0,0], gbg: [0,0,0,0], sped: [0,0,0,0], iq: [0,0,0,0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "",
-      fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0,
+      fp: 0, fpb: 0, med: 0, fur: 0, tr: 0, trne: 0,
       beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0,
       bp: 0, fsp: 0, tpm: 0, tpb: 0, adm: 0, mod: 0, rin: 0, imm: 0,
       fragments: "", isGreatBuilding: false, isInactive: false,
@@ -4653,7 +4682,7 @@ export default function App() {
     iconIQAtkA, iconIQDefA, iconIQAtkD, iconIQDefD,
     iconIQMonB, iconIQMatB, iconIQMon, iconIQMat,
     iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap,
-    iconMon, iconMat, iconFP, iconFPB, iconFUR, iconTR, iconTRNE,
+    iconMon, iconMat, iconFP, iconFPB, iconMed, iconFUR, iconTR, iconTRNE,
     iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG, iconBP,
     iconOneUp, iconImm, iconRinn, iconAiuto,
     iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB,
@@ -4803,7 +4832,7 @@ export default function App() {
     const percentFields = ["fpb", "benib", "benispb", "iqMonB", "iqMatB"];
     const fmtField = (field: DiffField, v: number) => {
       if (percentFields.includes(field.key)) return formatProdPercent(v);
-      if (["pop", "fel", "mon", "mat", "iqMon", "iqMat", "fp"].includes(field.key)) return formatInt(Math.round(v));
+      if (["pop", "fel", "mon", "mat", "med", "iqMon", "iqMat", "fp"].includes(field.key)) return formatInt(Math.round(v));
       // Sopra le 1000 unità i decimali sono solo rumore visivo (es. "1.510,758"):
       // arrotondati a intero. Sotto restano a 1 decimale, dove può essere
       // l'unica differenza visibile tra from/to (2 decimali erano eccessivi).
@@ -4892,7 +4921,7 @@ export default function App() {
     const fel = showFelColumn ? 66 : 0;
     const milCols = showSigmaColumns ? (showSpedColumns ? 8 : 4) : (showSpedColumns ? 12 : 8); // gen+gbg+(sped) | sig-gc+(sig-gs)
     const iq = (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
-    const prod = showProdColumns ? 22 * 36 : 0; // Mon+Mat + le 20 colonne esistenti (incl. BeniSp, BeniSpB)
+    const prod = showProdColumns ? 23 * 36 : 0; // Mon+Mat+Med + le 20 colonne esistenti (incl. BeniSp, BeniSpB)
     return base + time + pop + fel + milCols * 42 + iq + prod;
   }, [showSigmaColumns, showSpedColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
 
@@ -5750,12 +5779,13 @@ export default function App() {
     if (schedaSpenta) scegliScheda(haCitta ? "citta" : "database");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedaSpenta]);
-  // Le 22 produzioni filtrabili (nastro: menu Produzione; vecchia barra: icone).
+  // Le 23 produzioni filtrabili (nastro: menu Produzione; vecchia barra: icone).
   const opzioniProduzione: OpzioneProduzione[] = [
     { key: "mon", icon: <img src={iconMon} alt={t("prodCoins", uiLang)} className="icon-16" />, title: t("prodCoins", uiLang) },
     { key: "mat", icon: <img src={iconMat} alt={t("prodMaterials", uiLang)} className="icon-16" />, title: t("prodMaterials", uiLang) },
     { key: "fp", icon: <img src={iconFP} alt={t("prodForgePoints", uiLang)} className="icon-16" />, title: t("prodForgePoints", uiLang) },
     { key: "fpb", icon: <img src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} className="icon-16" />, title: t("prodForgePointsBoost", uiLang) },
+    { key: "med", icon: <img src={iconMed} alt={t("prodMedals", uiLang)} className="icon-16" />, title: t("prodMedals", uiLang) },
     { key: "fur", icon: <img src={iconFUR} alt={t("prodRogues", uiLang)} className="icon-16" />, title: t("prodRogues", uiLang) },
     { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
     { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
@@ -5966,7 +5996,7 @@ export default function App() {
               )}
               {isDebugOpen && (
                 <div className="w-full mt-2">
-                    <div className="mt-2 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-emerald-500/20">
                       <span className="px-3 pt-2 pb-1 text-xs font-bold text-emerald-400">
                         {t("debugMatchedBuildings", uiLang).toUpperCase()} ({matchedCityEntityIds.length})
@@ -6001,8 +6031,25 @@ export default function App() {
                         ))}
                       </div>
                     </div>
+                    <div className="flex flex-col rounded-lg bg-slate-950 border border-sky-500/20">
+                      <span className="px-3 pt-2 pb-1 text-xs font-bold text-sky-400" title={t("debugExtraBuildingsTitle", uiLang)}>
+                        {t("debugExtraBuildings", uiLang).toUpperCase()} ({idsExtra ? extraCityEntityIds.length : "…"})
+                      </span>
+                      <div className="debug-panel-list">
+                        {extraCityEntityIds.length === 0 ? "-" : extraCityEntityIds
+                          .map((id) => ({ id, name: displayName(id, fallbackBuildings.get(id)?.name ?? id, gameLang) }))
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map(({ id, name }, i) => (
+                          <div key={id} className={i > 0 ? "mt-0.5" : ""}>
+                            <button onClick={() => setSelectedJsonEntry({ title: id, rawEntry: unmatchedJson.get(id) })} className="debug-panel-entry">
+                              {name}<DebugQtyBadge qty={cityEntityIds.get(id) ?? 1} colorClass="text-sky-400" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     <div className="flex flex-col rounded-lg bg-slate-950 border border-red-500/20">
-                      <span className="px-3 pt-2 pb-1 text-xs font-bold text-red-400">
+                      <span className="px-3 pt-2 pb-1 text-xs font-bold text-red-400" title={t("debugUnmatchedBuildingsTitle", uiLang)}>
                         {t("debugUnmatchedBuildings", uiLang).toUpperCase()} ({unmatchedCityEntityIds.length})
                       </span>
                       <div className="debug-panel-list">
@@ -6263,7 +6310,7 @@ export default function App() {
                        {showIqProdColumns && Array.from({ length: 4 }).map((_, i) => <col key={`iq-mm-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
                        <col className="w-[42px]" />
-                       {showProdColumns && Array.from({ length: 22 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
+                       {showProdColumns && Array.from({ length: 23 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
@@ -6285,7 +6332,7 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
                         {showProdColumns && (
-                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={22}>
+                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={23}>
                             {/* 2.0: Nascondi 🚫/^ sono nel nastro (Visualizza: Non accelerabili, Auto aggiornabili). */}
                             {t("groupProductions", uiLang)}
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
@@ -6403,6 +6450,7 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMat} alt={t("prodMaterials", uiLang)} />} sortKey="mat" onClick={() => handleSort("mat")} active={sortBy === "mat"} order={sortOrder} className="th-col" title={t("prodMaterials", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFP} alt={t("prodForgePoints", uiLang)} />} sortKey="fp" onClick={() => handleSort("fp")} active={sortBy === "fp"} order={sortOrder} className="th-col" title={t("prodForgePoints", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} />} sortKey="fpb" onClick={() => handleSort("fpb")} active={sortBy === "fpb"} order={sortOrder} className="th-col" title={t("prodForgePointsBoost", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconMed} alt={t("prodMedals", uiLang)} />} sortKey="med" onClick={() => handleSort("med")} active={sortBy === "med"} order={sortOrder} className="th-col" title={t("prodMedals", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFUR} alt={t("prodRogues", uiLang)} />} sortKey="fur" onClick={() => handleSort("fur")} active={sortBy === "fur"} order={sortOrder} className="th-col" title={t("prodRogues", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
@@ -6508,7 +6556,7 @@ export default function App() {
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>
-                            <td colSpan={28 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? 22 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                            <td colSpan={28 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? 23 : 0)} className="text-center py-12 text-slate-400 font-semibold">
                               <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
                                 <span>{emptyMessagePrefix}</span>
                                 {/* SOLO riferimento visivo al pulsante reale della toolbar
@@ -6997,7 +7045,7 @@ export default function App() {
                           ogni riga prima di passare ai col-span-full. */}
                       {[...cmp.diffs].sort((a, b) => Number(isWideDiffKey(a.key)) - Number(isWideDiffKey(b.key))).map((d) => {
                         const up = d.to > d.from;
-                        const useFormatInt = ["pop", "fel", "mon", "mat", "iqMon", "iqMat"].includes(d.key);
+                        const useFormatInt = ["pop", "fel", "mon", "mat", "med", "iqMon", "iqMat"].includes(d.key);
                         // isWideDiffKey (definita fuori dal componente): Pop/
                         // Mon/Mat possono arrivare a 5-6+ cifre (es. "106.290
                         // → 235.290", "15.890 → 27.890") — condividendo una
@@ -7150,7 +7198,7 @@ export default function App() {
               <div className={`grid ${gridColsClass} gap-x-0.5 gap-y-0.5`}>
                 {diffs.map((d) => {
                   const up = d.to > d.from;
-                  const useFormatInt = ["pop", "fel", "mon", "mat", "iqMon", "iqMat"].includes(d.key);
+                  const useFormatInt = ["pop", "fel", "mon", "mat", "med", "iqMon", "iqMat"].includes(d.key);
                   return (
                     <div key={d.key} className="flex items-center gap-1 text-xs font-mono" title={t(d.labelKey, uiLang)}>
                       {d.icon

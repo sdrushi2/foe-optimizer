@@ -29,7 +29,7 @@ import { cittaDaEditor } from "./editorPonte";
 import VideoTutorial from "./VideoTutorial";
 import ModificaCitta from "./ModificaCitta";
 import { applicaModifiche, contaModifiche, eNuovo, NESSUNA_MODIFICA, type CandidatiPlanner, type Modifiche } from "./modificheCitta";
-import { celleBlocchi, nucleiDueCorsie, richiedeDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
+import { celleBlocchi, nucleiDueCorsie, retePettine, richiedeDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
 
 interface Props {
   cityMapBuildings: readonly CityMapBuilding[];
@@ -345,6 +345,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   framesRef.current = frames;
   /** Generazione della corsa: i fotogrammi di una corsa annullata (Reset) vengono ignorati. */
   const genRef = useRef(0);
+  /** Reti a pettine già calcolate (per posizione del municipio) del problema attuale. */
+  const pettineRef = useRef<{ problem: unknown; mappa: Map<string, Nucleo[]> }>({ problem: null, mappa: new Map() });
   // Città cambiata (re-import nello stesso profilo): si ferma la corsa in atto
   // e si riparte da zero, così non restano mappe o ricerche della città vecchia.
   const primoProblem = useRef(true);
@@ -688,6 +690,21 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       ris.forEach((f, i) => { const [a, b] = [voto(f), voto(ris[mig]!)]; if ((a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]!) < 0) mig = i; });
       return mig;
     };
+    /** Rete a pettine (dueCorsie.ts) quando i nuclei non bastano: qualche
+     *  edificio a due corsie resterebbe fuori. Dipende solo dalla posizione del
+     *  municipio: calcolata una volta per posizione (r3/r4/r5 la condividono). */
+    const pettineSeServe = (nuclei: Nucleo[], base: { placements: ReadonlyMap<string, { x: number; y: number }> }): Nucleo[] => {
+      if (!problem.buildings.some(richiedeDueCorsie)) return [];
+      if (nuclei.length && Math.min(...nuclei.map(n => n.fuori)) === 0) return [];
+      const th = problem.buildings.find(b => b.isTownhall);
+      const p = th ? base.placements.get(th.id) : undefined;
+      if (!p) return [];
+      if (pettineRef.current.problem !== problem) pettineRef.current = { problem, mappa: new Map() };
+      const k = `${p.x},${p.y}`;
+      let r = pettineRef.current.mappa.get(k);
+      if (!r) { r = retePettine(problem, base, 2); pettineRef.current.mappa.set(k, r); }
+      return r;
+    };
     const conNucleo = (n: Nucleo | undefined) => {
       dueRef.current = { ...dueRef.current, [id]: n ? n.blocchi : [] };
     };
@@ -732,11 +749,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         base = scelte.find(b => !centro || b.tx !== centro.tx || b.ty !== centro.ty || b.specchio !== centro.specchio);
       }
       if (!base || fermato()) return;
-      // Strade a due corsie: nuclei candidati attorno al municipio (dueCorsie.ts)
-      const nuclei = nucleiDueCorsie(problem, base, []);
+      // Strade a due corsie: nuclei candidati attorno al municipio (dueCorsie.ts),
+      // più la rete a pettine se i nuclei lasciano fuori edifici a due corsie
+      const nuclei0 = nucleiDueCorsie(problem, base, []);
+      const nuclei = [...nuclei0, ...pettineSeServe(nuclei0, base)];
       const opz = (n?: Nucleo) => ({
         initial: n ? { placements: n.placements, roads: n.roads } : { placements: base.placements, roads: base.roads },
-        geometry: base.geometry, fissi: n ? n.fissi : [], girandola: { bracci: base.bracci },
+        geometry: n?.geometry ?? base.geometry, fissi: n ? n.fissi : [],
+        // (la rete a pettine non usa i bracci della girandola)
+        ...(n?.geometry ? {} : { girandola: { bracci: base.bracci } }),
         ...(n ? { stradeFisse: celleBlocchi(n.blocchi) } : {}),
       });
       let nucleo: Nucleo | undefined;
@@ -755,12 +776,13 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const fine = (b: BuilderVariant) => b.stages[b.stages.length - 1]!;
     const candidati: Array<{ b: BuilderVariant; n?: Nucleo }> = [];
     for (const b of sc.alt ? [v, sc.alt] : [v]) {
-      const nuclei = nucleiDueCorsie(problem, fine(b), b.fissi, 3, b.geometry);
+      const nuclei0 = nucleiDueCorsie(problem, fine(b), b.fissi, 3, b.geometry);
+      const nuclei = [...nuclei0, ...(b === v ? pettineSeServe(nuclei0, fine(b)) : [])];
       if (nuclei.length) for (const n of nuclei) candidati.push({ b, n }); else candidati.push({ b });
     }
     const opzB = (c: { b: BuilderVariant; n?: Nucleo }) => ({
       initial: c.n ? { placements: c.n.placements, roads: c.n.roads } : { placements: fine(c.b).placements, roads: fine(c.b).roads },
-      geometry: c.b.geometry, fissi: c.n ? c.n.fissi : c.b.fissi,
+      geometry: c.n?.geometry ?? c.b.geometry, fissi: c.n ? c.n.fissi : c.b.fissi,
       ...(c.n ? { stradeFisse: celleBlocchi(c.n.blocchi) } : {}),
     });
     let scelto = candidati[0]!;
@@ -773,7 +795,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     }
     conNucleo(scelto.n);
     let prev: BuilderVariant["stages"][number] | null = null;
-    for (const [i, s] of v.stages.entries()) {
+    // (con la rete a pettine le fasi del builder non servono: si parte dalla rete)
+    if (!scelto.n?.geometry) for (const [i, s] of v.stages.entries()) {
       if (fermato()) return;
       const nuovi = [...s.placements.keys()].filter(id => !prev?.placements.has(id));
       const nb = nuovi.length === 1 ? byId.get(nuovi[0]!) : undefined;
@@ -787,7 +810,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       prev = s;
       await sleep(0);
     }
-    if (!prev || fermato()) return;
+    if ((!prev && !scelto.n?.geometry) || fermato()) return;
     if (scelto.n) {
       setF({ placements: scelto.n.placements, roads: scelto.n.roads, probe: null, lastPath: celleBlocchi(scelto.n.blocchi), placed: scelto.n.placements.size, unplaced: [], iterations: v.stages.length, done: false, label: "Strade a due corsie" });
       await sleep(0);

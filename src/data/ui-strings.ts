@@ -674,6 +674,10 @@ const UI_STRINGS = {
     it: "Materiali",
     en: "Supplies",
   },
+  prodMedals: {
+    it: "Medaglie",
+    en: "Medals",
+  },
   prodForgePoints: {
     it: "Punti Forge",
     en: "Forge Points",
@@ -841,7 +845,7 @@ const UI_STRINGS = {
     en: "Quantum Start Goods",
   },
   iqUnits: {
-    it: "Truppe QI iniziali aggiuntive",
+    it: "Truppe IQ iniziali aggiuntive",
     en: "Quantum Start Units",
   },
   iqActions: {
@@ -1157,6 +1161,18 @@ const UI_STRINGS = {
   debugUnmatchedBuildings: {
     it: "Edifici senza match",
     en: "Unmatched buildings",
+  },
+  debugUnmatchedBuildingsTitle: {
+    it: "Edifici sconosciuti: non sono né nel catalogo né tra gli edifici fuori catalogo (di solito edifici appena usciti, non ancora aggiunti)",
+    en: "Unknown buildings: neither in the catalog nor among the off-catalog buildings (usually brand-new buildings not added yet)",
+  },
+  debugExtraBuildings: {
+    it: "Fuori catalogo",
+    en: "Off catalog",
+  },
+  debugExtraBuildingsTitle: {
+    it: "Edifici riconosciuti ma non presenti nel catalogo degli edifici (militari, fabbriche di beni, alcuni premi come la Tana dei furfanti): il tool ne conosce dimensioni e strada, non le statistiche",
+    en: "Buildings recognised but not in the building catalog (military, goods factories, some prizes like the Rogue Den): the tool knows their size and road, not their stats",
   },
   debugSelectionKits: {
     it: "Kit di selezione",
@@ -1736,6 +1752,10 @@ const UI_STRINGS = {
   diffMaterials: {
     it: "Materiali",
     en: "Supplies",
+  },
+  diffMedals: {
+    it: "Medaglie",
+    en: "Medals",
   },
   diffForgePoints: {
     it: "Punti Forge",

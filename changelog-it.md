@@ -1,6 +1,9 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.001 (27/10/2026)
+### Novità
+- Planner: le città con tanti edifici a strada a due corsie vengono disposte con una nuova rete "a pettine"
+- Nuova colonna Medaglie tra le produzioni degli edifici (anche nel filtro Produzione)
 ### Aggiornamenti
 - Guida online riscritta per la versione 2.0 (italiano e inglese)
 

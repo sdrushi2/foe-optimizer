@@ -26,6 +26,7 @@ export interface EraStats {
   bp: number;       // blueprint
   fp: number;       // punti forge (strategy_points, boostabili)
   fpb: number;      // boost % produzione FP
+  med: number;      // medaglie prodotte giornalmente
   fur: number;      // furfanti (valore atteso)
   tr: number;       // truppe era attuale
   trne: number;     // truppe era successiva
@@ -243,7 +244,7 @@ export class BuildingModel {
       time: 0, size: "1x1", area: 1, road: 0, roadLvl: 0, pop: 0, fel: 0,
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
-      iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "", fp: 0, fpb: 0, fur: 0, tr: 0, trne: 0,
+      iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "", fp: 0, fpb: 0, med: 0, fur: 0, tr: 0, trne: 0,
       beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0, bp: 0, fsp: 0, tpm: 0, tpb: 0,
       adm: 0, mod: 0, rin: 0, imm: 0, fragments: ""
     };
@@ -405,7 +406,7 @@ export class BuildingModel {
     // non è un GE). `benispb` resta sempre 0 per i GE (via createBaseBuilding).
 
     // Produzioni
-    let beniG = 0, beni = 0, beniP = 0, beniS = 0, beniSp = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0;
+    let beniG = 0, beni = 0, beniP = 0, beniS = 0, beniSp = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0, med = 0;
     allBonuses.forEach((b) => {
       if (b?.type === "happiness") fel += Number(b.value ?? 0);
       else if (b?.type === "population") pop += Number(b.value ?? 0);
@@ -426,6 +427,7 @@ export class BuildingModel {
         else if (p.name === "special_goods") beniSp += sumRes(resources);
         else if (p.name === "money") mon += Number(resources.money ?? 0);
         else if (p.name === "supplies") mat += Number(resources.supplies ?? 0);
+        else if (p.name === "medals") med += Number(resources.medals ?? 0);
         else if (p.amount) tr += Number(p.amount ?? 0);
       });
     }
@@ -456,7 +458,7 @@ export class BuildingModel {
       ...BuildingModel.createBaseBuilding(`ge-${gb.entityId}`, italianNames.get(gb.entityId) ?? gb.entityId),
       size, area,
       road: BuildingModel.getRoadForGreatBuildingSize(size), roadLvl: 1,
-      pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat,
+      pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat, med,
       cityEntityId: gb.entityId,
       hash,
       isGreatBuilding: true,
@@ -998,6 +1000,78 @@ export class BuildingModel {
     return { mon, mat };
   }
 
+  /** Medaglie (med) prodotte giornalmente per l'era data. Traduzione fedele
+   *  di extract_medals() in buildings.py (colonna Med del CSV), stessa
+   *  logica di extractMonMat con "medals" al posto di money/supplies:
+   *  1. components: opzioni non motivate, normalizzate a 24h (resources e
+   *     random con dropChance, genericReward risolti nel lookup dell'era);
+   *  2. entity_levels ProductionEntityLevel: production_values[-1] (slot 24h);
+   *  3. AddResourcesWhenMotivatedAbility: medaglie aggiuntive;
+   *  4. RandomChestRewardAbility: valore atteso (drop_chance% × amount). */
+  private static extractMedals(cityEntity: CityEntityDefinition, era: string): number {
+    let med = 0;
+    const comps = BuildingModel.asObj(cityEntity.components);
+
+    // 1. components (nuovo stile)
+    for (const eraKey of [era, "AllAge"]) {
+      const eraData = BuildingModel.asObj(comps[eraKey]);
+      const lookup = BuildingModel.asObj(BuildingModel.asObj(eraData.lookup).rewards);
+      let options = BuildingModel.prodOptions(cityEntity, eraKey).filter(o => !o.onlyWhenMotivated);
+      if (options.length > 1) options = [BuildingModel.maxTimeOption(options)];
+      for (const option of options) {
+        const mult = 86400 / (BuildingModel.num(option.time) || 86400);
+        for (const p of BuildingModel.asArr(option.products).map(BuildingModel.asObj)) {
+          med += BuildingModel.num(BuildingModel.asObj(BuildingModel.asObj(p.playerResources).resources).medals) * mult;
+          if (BuildingModel.str(p.type) === "random") {
+            for (const sub of BuildingModel.asArr(p.products).map(BuildingModel.asObj)) {
+              const drop = BuildingModel.num(sub.dropChance);
+              const prod = BuildingModel.asObj(sub.product);
+              med += BuildingModel.num(BuildingModel.asObj(BuildingModel.asObj(prod.playerResources).resources).medals) * drop * mult;
+              if (BuildingModel.str(prod.type) === "genericReward") {
+                const resolved = BuildingModel.asObj(lookup[BuildingModel.str(BuildingModel.asObj(prod.reward).id)]);
+                if (BuildingModel.str(resolved.subType) === "medals") med += BuildingModel.num(resolved.amount) * drop * mult;
+              }
+            }
+          }
+        }
+      }
+      if (med) break;
+    }
+
+    // 2. entity_levels (vecchio stile)
+    if (!med) {
+      const lvl = BuildingModel.asArr(cityEntity.entity_levels).map(BuildingModel.asObj).find(l => BuildingModel.str(l.era) === era);
+      if (lvl && BuildingModel.str(lvl.__class__) === "ProductionEntityLevel") {
+        const pv = BuildingModel.asArr(lvl.production_values).map(BuildingModel.asObj);
+        const last = pv[pv.length - 1];
+        if (last && BuildingModel.str(last.type) === "medals") med = BuildingModel.num(last.value);
+      }
+    }
+
+    // 3. AddResourcesWhenMotivatedAbility (prima era con risorse non vuote)
+    for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
+      if (BuildingModel.str(ability.__class__) !== "AddResourcesWhenMotivatedAbility") continue;
+      const addRes = BuildingModel.asObj(ability.additionalResources);
+      for (const eraKey of [era, "AllAge"]) {
+        const res = BuildingModel.asObj(BuildingModel.asObj(addRes[eraKey]).resources);
+        if (Object.keys(res).length > 0) { med += BuildingModel.num(res.medals); break; }
+      }
+    }
+
+    // 4. RandomChestRewardAbility: valore atteso da baule casuale
+    for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
+      if (BuildingModel.str(ability.__class__) !== "RandomChestRewardAbility") continue;
+      const rewards = BuildingModel.asObj(ability.rewards);
+      const eraRewards = [rewards[era], rewards.AllAge, Object.values(rewards)[0]]
+        .map(BuildingModel.asObj).find(r => Object.keys(r).length > 0) ?? {};
+      for (const pr of BuildingModel.asArr(eraRewards.possible_rewards).map(BuildingModel.asObj)) {
+        const reward = BuildingModel.asObj(pr.reward);
+        if (BuildingModel.str(reward.subType) === "medals") med += BuildingModel.num(reward.amount) * BuildingModel.num(pr.drop_chance) / 100;
+      }
+    }
+    return med;
+  }
+
   /** Numero di blueprint per un reward id (BP e BPNE unificati). `era` è
    *  l'era per cui si stanno estraendo le statistiche. */
   private static bpFromRewardId(rid: string, lookup: Record<string, unknown>, era: string): number {
@@ -1442,7 +1516,7 @@ export class BuildingModel {
 
     const stats: EraStats = {
       pop, fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
-      bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, fur, tr, trne,
+      bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, med: BuildingModel.extractMedals(cityEntity, era), fur, tr, trne,
       beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benisp: goods.benisp, benispb: goods.benispb, benib: goods.benib, benig: prod.benig,
       mon: monMat.mon, mat: monMat.mat,
       fsp: BuildingModel.extractReward(cityEntity, era, "fsp"),
@@ -1498,7 +1572,7 @@ export class BuildingModel {
       iqBeni: stats.iqBeni, iqTruppe: stats.iqTruppe, iqAzioni: stats.iqAzioni, iqCap: stats.iqCap,
       // Produzioni estratte da CityEntities per l'era corrente: ora abbiamo
       // davvero tutti i dati, quindi niente più "?" per questi edifici.
-      bp: stats.bp, fp: stats.fp, fpb: stats.fpb, fur: stats.fur, tr: stats.tr, trne: stats.trne,
+      bp: stats.bp, fp: stats.fp, fpb: stats.fpb, med: stats.med, fur: stats.fur, tr: stats.tr, trne: stats.trne,
       beni: stats.beni, benip: stats.benip, benis: stats.benis, benisp: stats.benisp, benispb: stats.benispb, benib: stats.benib, benig: stats.benig,
       mon: stats.mon, mat: stats.mat,
       fsp: stats.fsp, tpm: stats.tpm, tpb: stats.tpb, adm: stats.adm, mod: stats.mod, rin: stats.rin, imm: stats.imm,

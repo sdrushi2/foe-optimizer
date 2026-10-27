@@ -1,6 +1,9 @@
 # FoE Optimizer Changelog
 
 ## Version 2.001 (27/10/2026)
+### New
+- Planner: cities with many two-lane road buildings are laid out with a new "comb" network
+- New Medals column among building productions (also in the Production filter)
 ### Update
 - Online guide rewritten for version 2.0 (Italian and English)
 

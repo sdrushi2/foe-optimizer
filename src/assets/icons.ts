@@ -56,6 +56,7 @@ export { default as iconAiuto } from "./icons/Aiuto.png";
 export { default as allies_slot_empty } from "./icons/allies_slot_empty.png";
 export { default as allies_slot_full } from "./icons/allies_slot_full.png";
 export { default as iconFragment } from "./icons/Fragment.png";
+export { default as iconMed } from "./icons/Med.png";
 // Segnaposto (prima erano emoji: 🌟 🌠 ⏳ 🛠 📦): da sostituire con le icone vere.
 export { default as iconBeniSp } from "./icons/BeniSp.png";
 export { default as iconBeniSpB } from "./icons/BeniSpB.png";

@@ -97,6 +97,8 @@ export interface Building {
   allyType: string;
   fp: number;
   fpb: number;
+  /** Medaglie prodotte giornalmente (colonna Med). */
+  med: number;
   fur: number;
   tr: number;
   trne: number;
@@ -390,6 +392,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
       fel: getNumber(parts, "Fel"),
       fp: getNumber(parts, "PF"),
       fpb: getNumber(parts, "PFB"),
+      med: getNumber(parts, "Med"),
       fur: getNumber(parts, "FUR"),
       tr: getNumber(parts, "TR"),
       trne: getNumber(parts, "TRNE"),
