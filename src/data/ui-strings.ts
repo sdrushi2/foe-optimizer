@@ -197,6 +197,12 @@ const UI_STRINGS = {
     en: "The bookmark copies only the data the extension provides, and only to your computer's clipboard: nothing is sent to any server.",
   },
   r2About: { it: "Informazioni", en: "About" },
+  r2WhatsNew: { it: "Novità", en: "What's new" },
+  r2WhatsNewIntro: {
+    it: "Le novità di FoE Optimizer, dalla più recente.",
+    en: "What's new in FoE Optimizer, latest first.",
+  },
+  r2WhatsNewLatest: { it: "ultima", en: "latest" },
   r2InfoProject: { it: "Il progetto", en: "The project" },
   r2InfoAmateur: {
     it: "FoE Optimizer è un progetto amatoriale e gratuito, nato e sviluppato nel tempo libero da un giocatore di Forge of Empires per gli altri giocatori.",

@@ -11,7 +11,7 @@
 //  Opzioni (Pesi).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, type LucideIcon } from "lucide-react";
+import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -36,6 +36,8 @@ export interface ContestoNastri {
   comeImportare: Interruttore;
   /** Guida › Come usare il planner: pannello col video (lo stesso della scheda Planner). */
   comeUsarePlanner: Interruttore;
+  /** Guida › Novità: pannello con changelog-it.md / changelog-en.md. */
+  novita: Interruttore;
   onEliminaTutte: () => void;
   /** 2.0: città "ridotta" da un file JSON (nostro export, Planner, Forge Hammer). */
   onImportaCittaJson: () => void;
@@ -290,6 +292,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
           tasto("planner", c.comeUsarePlanner, MapIcon, "r2PlannerHow"),
         ]] },
         { id: "info", label: L("r2GrpInfo"), icon: Info, rows: [[
+          tasto("novita", c.novita, Megaphone, "r2WhatsNew"),
           tasto("info", c.informazioni, Info, "r2About"),
         ]] },
       ];

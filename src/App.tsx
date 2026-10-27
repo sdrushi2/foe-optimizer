@@ -34,6 +34,7 @@ import CityMapView, { type CityMapDragState } from "./components/CityMapView";
 import { esportaCittaJson, scaricaJson } from "./data/cityMapJson";
 import EfficiencyHelpModal from "./components/EfficiencyHelpModal";
 import PannelloImporta from "./ui/PannelloImporta";
+import PannelloNovita from "./ui/PannelloNovita";
 import VideoTutorial from "./planner/VideoTutorial";
 import PannelloInformazioni from "./ui/PannelloInformazioni";
 import { infoImport, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
@@ -2133,7 +2134,7 @@ export default function App() {
   const [isInventoryDebugOpen, setIsInventoryDebugOpen] = useState(false);
   const [isEfficiencyHelpOpen, setIsEfficiencyHelpOpen] = useState(false);
   // 2.0: pannelli della scheda Guida (aperti dal nastro, come Statistiche e Debug)
-  const [pannelloGuida, setPannelloGuida] = useState<"info" | "importa" | "planner" | null>(null);
+  const [pannelloGuida, setPannelloGuida] = useState<"info" | "importa" | "planner" | "novita" | null>(null);
   // 2.0: scheda Opzioni/Guida aperta (solo nastro), tema chiaro/scuro
   const [schedaExtra, setSchedaExtra] = useState<"opzioni" | "guida" | null>(null);
   // 2.0: catalogo scelto nel Database. Il catalogo Alleati usa la vista
@@ -5784,6 +5785,7 @@ export default function App() {
     onMappa: () => { const v = !showCityMap; setShowCityMap(v); localStorage.setItem(SHOW_CITY_MAP_KEY, String(v)); },
     tema, setTema, informazioni: { attivo: pannelloGuida === "info", cambia: () => setPannelloGuida(p => (p === "info" ? null : "info")) },
     comeImportare: { attivo: pannelloGuida === "importa", cambia: () => setPannelloGuida(p => (p === "importa" ? null : "importa")) },
+    novita: { attivo: pannelloGuida === "novita", cambia: () => setPannelloGuida(p => (p === "novita" ? null : "novita")) },
     comeUsarePlanner: { attivo: pannelloGuida === "planner", cambia: () => setPannelloGuida(p => (p === "planner" ? null : "planner")) },
     filtri: {
       uiLang,
@@ -5946,6 +5948,7 @@ export default function App() {
             <div className="px-3 py-2">
               {pannelloGuida === "info" ? <PannelloInformazioni uiLang={uiLang} versione={__BUILD_VERSION__} />
                 : pannelloGuida === "importa" ? <PannelloImporta uiLang={uiLang} />
+                : pannelloGuida === "novita" ? <PannelloNovita uiLang={uiLang} />
                 : <VideoTutorial uiLang={uiLang} />}
             </div>
           )}
