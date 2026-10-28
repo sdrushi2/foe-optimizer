@@ -96,7 +96,10 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
     <div ref={rif} className="sticky top-0 z-40 bg-slate-950 text-[12px]">
       {/* Riga delle schede, alta 42 px: logo, bacchetta, città e lingua centrati
           in verticale (h-7); le schede (h-8) poggiano sul nastro. */}
-      <div ref={rifRiga} className="flex h-[42px] items-end gap-px overflow-hidden border-b border-slate-700 bg-slate-900 px-2 whitespace-nowrap">
+      {/* la linea sotto le schede è un'ombra interna (non un bordo): la scheda attiva, con lo
+          sfondo del nastro, la copre e si fonde col nastro (col bordo, -mb-px veniva tagliato
+          da overflow-hidden e la linea restava visibile) */}
+      <div ref={rifRiga} className="flex h-[42px] items-end gap-px overflow-hidden bg-slate-900 px-2 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--color-slate-700)]">
         {/* Logo (spade), titolo in ambra, versione e bacchetta magica sempre a
             portata (clic = importa; trascinabile nella barra dei preferiti). */}
         <span className="mr-1 flex shrink-0 items-center gap-2 self-center px-1" title={versione}>
@@ -131,7 +134,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
             <button key={id} type="button" disabled={!!motivo} onClick={() => onScheda(id)}
               title={motivo ?? (soloIcone ? nome : "")} aria-label={nome}
               className={`flex h-8 shrink-0 items-center gap-1.5 rounded-t-md border border-b-0 ${soloIcone ? "px-2" : stretta ? "px-2 text-[11px]" : "px-3"} disabled:cursor-not-allowed disabled:opacity-35 ${
-                sel ? "-mb-px border-slate-700 bg-slate-950 text-slate-50" : "border-transparent text-slate-400 hover:text-slate-200"
+                sel ? "relative border-slate-700 bg-slate-950 text-slate-50" : "border-transparent text-slate-400 hover:text-slate-200"
               }`}>
               <Icona size={14} strokeWidth={1.75} className={sel ? "text-sky-300" : ""} aria-hidden="true" />
               {!soloIcone && nome}
