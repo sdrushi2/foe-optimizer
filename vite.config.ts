@@ -29,10 +29,6 @@ const BUILD_VERSION = `v2.${String(giorni).padStart(3, "0")}`;
 const SW_CACHE_VERSION = `${BUILD_VERSION}-${now.getTime()}`;
 const BUILD_DATE = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-// Plugin: genera dist/sw.js dal template sw-template.js, iniettando la versione
-// di build nel nome della cache. Cosi' ad ogni nuova build la cache vecchia viene
-// invalidata (il SW rileva il nome cache diverso e cancella la precedente).
-// Il template NON sta in public/ apposta, per non essere copiato as-is non-versionato.
 // Plugin: anteprima social (og:image / twitter:image) sempre aggiornata.
 // Discord, Facebook & co. tengono in cache l'anteprima per URL dell'immagine:
 // se og-image.png cambia ma l'URL no, continuano a mostrare la vecchia.
@@ -122,6 +118,11 @@ function filePrecache(): string[] {
   return [...assets, "/data/manifest.json", ...dati];
 }
 
+// Plugin: genera dist/sw.js dal template sw-template.js, iniettando la versione
+// di build nel nome della cache e l'elenco dei file da pre-cachare. Così a ogni
+// nuova build la cache vecchia viene invalidata (il SW rileva il nome cache
+// diverso e cancella la precedente). Il template NON sta in public/ apposta,
+// per non essere copiato così com'è, senza versione.
 function serviceWorkerPlugin(version: string): Plugin {
   return {
     name: "foe-service-worker",
@@ -203,7 +204,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-      // Preact come drop-in replacement di React (~4KB vs ~300KB).
+      // Preact come drop-in replacement di React (~4 kB contro ~45 kB, compressi).
       // Per tornare a React, rimuovi le tre righe seguenti e npm uninstall preact.
       "react": "preact/compat",
       "react-dom": "preact/compat",

@@ -7,7 +7,8 @@
 // (che tsc non può controllare, essendo semantica React/Preact, non tipi),
 // e qualche controllo di stile/sicurezza che tsc non copre.
 //
-// Uso: npx eslint .   (oppure npx eslint src per limitarsi al codice sorgente)
+// Uso: npm run lint (= eslint src, il gate della GitHub Action). Anche
+// "npx eslint ." passa: copre in più gli script Node in scripts/.
 
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
@@ -18,7 +19,9 @@ import globals from "globals";
 export default tseslint.config(
   // Cartelle da ignorare del tutto.
   {
-    ignores: ["dist/**", "node_modules/**", "*.config.js", "*.config.ts"],
+    // planner-test/: città di prova locali (non in repo). sw-template.js ha
+    // già il suo eslint-disable (è un template, non un modulo).
+    ignores: ["dist/**", "node_modules/**", "planner-test/**", "*.config.js", "*.config.ts", "sw-template.js"],
   },
 
   // Regole base JS consigliate da eslint.
@@ -121,12 +124,24 @@ export default tseslint.config(
     },
   },
 
-  // File di configurazione del progetto stesso (vite.config.ts ecc.):
-  // possono usare Node.js globals e sono meno soggetti alle regole strette.
+  // Script Node di supporto (scripts/: controllo dei dati per la build,
+  // generatore del tema chiaro): globals di Node; le regole "fs con percorso
+  // non letterale" di eslint-plugin-security non hanno senso qui (i percorsi
+  // sono costruiti dallo script stesso, mai da input esterno).
   {
-    files: ["*.{js,ts}"],
+    files: ["scripts/**/*.{ts,js,cjs}"],
     languageOptions: {
       globals: { ...globals.node },
     },
+    rules: {
+      "security/detect-non-literal-fs-filename": "off",
+      "security/detect-object-injection": "off",
+    },
+  },
+  // .cjs = CommonJS: require() è il modo normale di importare.
+  {
+    files: ["scripts/**/*.cjs"],
+    languageOptions: { sourceType: "commonjs" },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
   },
 );

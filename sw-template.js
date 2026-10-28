@@ -10,10 +10,10 @@
 //   2.0: non più single-file; l'elenco dei file lo inietta la build
 //   (__SW_PRECACHE__, plugin serviceWorkerPlugin in vite.config.ts).
 // - Visite successive: l'app viene servita ISTANTANEAMENTE dalla cache, mentre in
-//   background si controlla se c'e' una versione nuova. Se c'e', viene scaricata e
-//   il nuovo SW si installa; alla visita/refresh successivo l'utente ha la nuova
-//   versione. La pagina viene anche notificata (postMessage) cosi' puo' mostrare
-//   un avviso "nuova versione disponibile".
+//   background si controlla se c'e' una versione nuova. Se c'e', il nuovo SW si
+//   installa e si attiva subito (skipWaiting + clients.claim); la pagina se ne
+//   accorge da sola (updatefound / controllerchange in src/registerSW.ts), mostra
+//   l'avviso "nuova versione" e ricarica.
 // - Offline: l'app funziona comunque (e' tutto client-side).
 //
 // IL NOME DELLA CACHE INCLUDE LA VERSIONE DI BUILD (__SW_VERSION__, iniettata dal
@@ -79,9 +79,9 @@ self.addEventListener("activate", (event) => {
 });
 
 // ── FETCH ────────────────────────────────────────────────────────────────────
-// Gestiamo solo richieste GET same-origin. Tutto il resto (POST, cross-origin
-// come le chiamate a Google Sheets della pipeline, ecc.) passa direttamente in
-// rete senza intercettazione.
+// Gestiamo solo richieste GET same-origin. Tutto il resto (le immagini e gli
+// avatar dal CDN di InnoGames, cross-origin) passa direttamente in rete senza
+// intercettazione.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
@@ -120,8 +120,12 @@ self.addEventListener("fetch", (event) => {
           .catch(() => null);
 
         // Se abbiamo una copia in cache, la serviamo SUBITO (network in background).
-        // Altrimenti (prima visita) aspettiamo la rete.
-        return cached || (await networkFetch) || cache.match(request);
+        // Altrimenti (prima visita) aspettiamo la rete. Offline e mai visitata
+        // con QUESTO indirizzo (es. "/?qualcosa"): la stessa pagina senza
+        // parametri, se in cache; altrimenti l'errore di rete del browser.
+        return cached || (await networkFetch)
+          || (await cache.match(request, { ignoreSearch: true }))
+          || Response.error();
       })()
     );
     return;
@@ -166,13 +170,4 @@ self.addEventListener("fetch", (event) => {
       }
     })()
   );
-});
-
-// ── MESSAGE ──────────────────────────────────────────────────────────────────
-// La pagina puo' chiedere al SW in attesa di attivarsi immediatamente (quando
-// l'utente clicca "ricarica" sull'avviso di aggiornamento).
-self.addEventListener("message", (event) => {
-  if (event.data === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
 });

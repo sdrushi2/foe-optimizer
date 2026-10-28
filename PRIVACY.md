@@ -1,6 +1,6 @@
 # Informativa sulla Privacy
 
-**Ultimo aggiornamento:** 28 settembre 2026
+**Ultimo aggiornamento:** 28 ottobre 2026
 
 *(English version below)*
 
@@ -54,7 +54,7 @@ mentre sei loggato su Forge of Empires con una delle due estensioni attiva, estr
 - gli edifici presenti nella tua città;
 - i tuoi alleati;
 - il tuo inventario;
-- il nome del tuo giocatore (proposto come nome del profilo);
+- il nome del tuo giocatore (usato come nome della città salvata);
 - l'URL dell'avatar del tuo giocatore;
 - la disposizione del tuo Insediamento dei Pirati (aree sbloccate, edifici, ostacoli),
   se l'hai visitato nella sessione di gioco in corso.
@@ -63,14 +63,21 @@ Se usi il bookmarklet mentre visiti la città di un altro giocatore, vengono let
 stessi dati di quella città che il gioco ti mostra (edifici, nome e avatar del
 giocatore), con le stesse garanzie qui sotto.
 
+Il bookmarklet copia questi dati negli **appunti del tuo computer**; il tool li legge
+dagli appunti quando premi la bacchetta (il browser può chiederti il permesso di
+leggerli). In alternativa puoi caricare una città da un **file JSON** (export di FoE
+Optimizer, FoE Helper o Forge Hammer): il file viene letto nel tuo browser, come i
+dati del bookmarklet.
+
 - Questi dati **non vengono mai inviati a un server esterno**: bookmarklet e tool
   elaborano tutto localmente, nel tuo browser.
-- Se scegli di salvare un profilo, i dati vengono scritti (in forma compressa) **solo
-  nel `localStorage` del tuo browser**, sul tuo dispositivo.
+- Le città importate vengono salvate (in forma compressa) **solo nel `localStorage`
+  del tuo browser**, sul tuo dispositivo, insieme alle impostazioni del tool.
 - Nessuno — incluso lo sviluppatore del tool — ha accesso a questi dati: non transitano
   da nessuna parte se non nel tuo browser.
-- Puoi cancellarli in qualunque momento eliminando i profili dall'interfaccia del tool,
-  oppure cancellando i dati del sito dalle impostazioni del tuo browser.
+- Puoi cancellarli in qualunque momento: una città alla volta dal selettore delle
+  città, tutto insieme con **Opzioni › Cancella tutto**, oppure cancellando i dati del
+  sito dalle impostazioni del tuo browser.
 - FoE Helper e Forge Hammer sono prodotti indipendenti, ciascuno con una propria
   informativa e un proprio trattamento dei dati: per informazioni su come operano,
   fai riferimento ai siti ufficiali delle estensioni.
@@ -80,42 +87,27 @@ giocatore), con le stesse garanzie qui sotto.
 Il tool **non richiede né supporta** registrazione, login, email, username o qualunque
 altro dato personale identificativo. Non esiste alcun sistema di autenticazione.
 
-### 3. Analisi del traffico del sito (Cloudflare Web Analytics)
+### 3. Nessuna statistica sulle visite
 
-Il sito usa **Cloudflare Web Analytics** (RUM — Real User Monitoring) per capire, in
-forma aggregata, come viene usato il sito (es. tempi di caricamento pagina, pagine più
-visitate). Per dichiarazione dello stesso fornitore (Cloudflare):
+Il sito **non usa alcuno strumento di analisi del traffico** (niente Google Analytics,
+niente Cloudflare Web Analytics, niente pixel dei social) e **nessuno script di terze
+parti**: tutto il codice viene dal sito stesso. Lo sviluppatore non sa chi visita il
+sito né cosa fa al suo interno.
 
-- non usa cookie, non accede a `localStorage`/`sessionStorage` del browser;
-- non traccia individualmente i singoli visitatori tra sessioni diverse;
-- l'indirizzo IP del visitatore viene scartato dal data center Cloudflare più vicino e
-  non viene salvato in log o database permanenti.
+### 4. Hosting (GitHub Pages)
 
-I dati aggregati (non riconducibili a te) sono visibili solo al gestore del sito
-tramite la dashboard Cloudflare. Informativa completa di Cloudflare:
-https://www.cloudflare.com/privacypolicy/
+Il sito è pubblicato tramite **GitHub Pages**. Come qualunque servizio di hosting,
+GitHub registra automaticamente log tecnici standard delle richieste HTTP (es.
+indirizzo IP, user agent, data e ora) per finalità di sicurezza e funzionamento del
+servizio. Questi log sono gestiti da GitHub secondo la sua informativa e **non sono
+accessibili allo sviluppatore del tool**.
 
-### 4. Hosting e sicurezza (GitHub Pages + Cloudflare)
-
-Il sito è pubblicato tramite **GitHub Pages** e servito attraverso la rete
-**Cloudflare** (CDN, protezione da bot/scanner automatici, cache). Come qualunque
-infrastruttura web, questi fornitori registrano automaticamente log tecnici standard
-delle richieste HTTP (es. indirizzo IP, user agent, timestamp) per finalità di sicurezza
-e funzionamento del servizio — ad esempio per bloccare scanner automatici malevoli
-prima che raggiungano il sito. Questi log tecnici:
-
-- sono gestiti da Cloudflare/GitHub secondo le rispettive informative;
-- **non sono accessibili né utilizzati dallo sviluppatore del tool per identificare
-  singoli utenti**; vengono consultati solo in forma aggregata per analisi generali di
-  traffico o per capire eventuali abusi/attacchi.
-
-Informative dei fornitori:
-- Cloudflare: https://www.cloudflare.com/privacypolicy/
-- GitHub: https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
+Informativa di GitHub:
+https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
 
 ### 5. Immagini caricate dal CDN di InnoGames
 
-Le immagini degli edifici (e, se hai importato la tua città, l'avatar del tuo profilo)
+Le immagini degli edifici (e, se hai importato la tua città, l'avatar del giocatore)
 non sono copiate dentro il tool: il tuo browser le richiede direttamente al **CDN di
 InnoGames** (`*.innogamescdn.com`), lo stesso da cui le carica il gioco. Questo vale
 anche se non importi nulla, perché il database consultabile mostra le immagini degli
@@ -128,9 +120,9 @@ file immagine da scaricare. Il sito imposta inoltre una `Referrer-Policy` restri
 così l'indirizzo completo della pagina che stai guardando non viene trasmesso.
 
 L'URL dell'avatar viene accettato **solo** se punta a `https://*.innogamescdn.com`:
-qualunque altro indirizzo eventualmente presente in un profilo importato viene scartato
-e sostituito dall'avatar segnaposto, così un file di profilo ricevuto da terzi non può
-far contattare al tuo browser un server arbitrario.
+qualunque altro indirizzo eventualmente presente in un file importato o in un backup
+viene scartato e sostituito dall'avatar segnaposto, così un file ricevuto da terzi non
+può far contattare al tuo browser un server arbitrario.
 
 ### 6. Cookie
 
@@ -141,14 +133,23 @@ di terze parti.
 
 Il tool installa un *service worker* per permettere l'uso offline e il caricamento
 istantaneo dell'app dopo la prima visita. Il service worker si limita a salvare in
-cache, **sul tuo dispositivo**, i file statici dell'app (HTML/CSS/JS, icone): non
-raccoglie né trasmette alcun dato.
+cache, **sul tuo dispositivo**, i file dell'app (HTML/CSS/JS, icone) e il database
+degli edifici: non raccoglie né trasmette alcun dato.
 
 ### 8. Nessuna pubblicità, nessuna vendita di dati
 
 Il tool non mostra pubblicità e non vende, affitta o condivide alcun dato con terze
 parti a fini commerciali — anche perché, come spiegato sopra, non esiste alcun dato
 lato server da vendere.
+
+### 9. Link esterni e donazioni facoltative
+
+Il pannello Informazioni contiene dei semplici link verso siti esterni (GitHub e, per
+offrire un caffè allo sviluppatore se ti va, PayPal e Satispay). Il logo di PayPal e il
+codice QR di Satispay sono immagini salvate nel sito stesso: **nessuno script né
+contenuto di questi servizi viene caricato** finché non clicchi un link. Se lo fai, sei
+sul loro sito e valgono le loro informative. Le donazioni sono del tutto facoltative e
+non cambiano nulla nel funzionamento del tool.
 
 ## Minori
 
@@ -183,7 +184,7 @@ aziendali) è opportuno consultare un professionista.
 
 # Privacy Policy (English)
 
-**Last updated:** September 28, 2026
+**Last updated:** October 28, 2026
 
 ## Who we are
 
@@ -234,7 +235,7 @@ of data** made available by the extension:
 - the buildings present in your city;
 - your allies;
 - your inventory;
-- your player name (suggested as the profile name);
+- your player name (used as the name of the saved city);
 - your player avatar's URL;
 - the layout of your Pirate Outpost (unlocked areas, buildings, obstacles), if you
   visited it during the current game session.
@@ -243,14 +244,21 @@ If you run the bookmarklet while visiting another player's city, the same data t
 game shows you about that city is read (buildings, the player's name and avatar),
 with the same guarantees described below.
 
+The bookmarklet copies this data to **your computer's clipboard**; the tool reads it
+from the clipboard when you press the wand (your browser may ask for permission to
+read it). Alternatively you can load a city from a **JSON file** (an FoE Optimizer,
+FoE Helper or Forge Hammer export): the file is read in your browser, just like the
+bookmarklet data.
+
 - This data is **never sent to an external server**: the bookmarklet and the tool
   process everything locally, in your browser.
-- If you choose to save a profile, the data is written (in compressed form) **only to
-  your browser's `localStorage`**, on your device.
+- Imported cities are saved (in compressed form) **only in your browser's
+  `localStorage`**, on your device, together with the tool's settings.
 - No one — including the tool's developer — has access to this data: it never travels
   anywhere except within your own browser.
-- You can delete it at any time from the tool's own interface, or by clearing the
-  site's data from your browser settings.
+- You can delete it at any time: one city at a time from the city selector,
+  everything at once with **Options › Erase everything**, or by clearing the site's
+  data from your browser settings.
 - FoE Helper and Forge Hammer are independent products, each with its own privacy
   practices and data handling: for information on how they operate, refer to the
   extensions' official sites.
@@ -260,43 +268,27 @@ with the same guarantees described below.
 The tool **does not require or support** registration, login, email, username, or any
 other personally identifying data. There is no authentication system whatsoever.
 
-### 3. Site traffic analytics (Cloudflare Web Analytics)
+### 3. No visitor statistics
 
-The site uses **Cloudflare Web Analytics** (RUM — Real User Monitoring) to understand,
-in aggregate form, how the site is used (e.g. page load times, most visited pages). Per
-Cloudflare's own documentation:
+The site uses **no traffic analytics tool at all** (no Google Analytics, no Cloudflare
+Web Analytics, no social media pixels) and **no third-party scripts**: all the code
+comes from the site itself. The developer does not know who visits the site or what
+they do on it.
 
-- it does not use cookies, and does not access the browser's `localStorage` /
-  `sessionStorage`;
-- it does not individually track visitors across separate sessions;
-- the visitor's IP address is discarded at the nearest Cloudflare data center and is
-  not stored in permanent logs or databases.
+### 4. Hosting (GitHub Pages)
 
-Aggregated data (not attributable to you) is visible only to the site operator via the
-Cloudflare dashboard. Cloudflare's full privacy policy:
-https://www.cloudflare.com/privacypolicy/
+The site is published via **GitHub Pages**. Like any hosting service, GitHub
+automatically logs standard technical data about HTTP requests (e.g. IP address, user
+agent, date and time) for security and service-operation purposes. These logs are
+managed by GitHub according to its own policy and **are not accessible to the tool's
+developer**.
 
-### 4. Hosting and security (GitHub Pages + Cloudflare)
-
-The site is published via **GitHub Pages** and served through the **Cloudflare**
-network (CDN, protection against automated bots/scanners, caching). Like any web
-infrastructure, these providers automatically log standard technical data about HTTP
-requests (e.g. IP address, user agent, timestamp) for security and service-operation
-purposes — for example, to block malicious automated scanners before they reach the
-site. These technical logs:
-
-- are managed by Cloudflare/GitHub according to their respective policies;
-- **are not accessible to or used by the tool's developer to identify individual
-  users**; they are only reviewed in aggregate for general traffic analysis or to
-  understand potential abuse/attacks.
-
-Providers' privacy policies:
-- Cloudflare: https://www.cloudflare.com/privacypolicy/
-- GitHub: https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
+GitHub's privacy statement:
+https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
 
 ### 5. Images loaded from InnoGames' CDN
 
-Building images (and, if you imported your city, your profile avatar) are not bundled
+Building images (and, if you imported your city, the player's avatar) are not bundled
 inside the tool: your browser requests them directly from **InnoGames' CDN**
 (`*.innogamescdn.com`), the same one the game itself uses. This happens even if you
 import nothing, because the browsable database shows building images.
@@ -308,9 +300,9 @@ download. The site also sets a restrictive `Referrer-Policy`, so the full addres
 page you are viewing is not transmitted.
 
 The avatar URL is accepted **only** if it points to `https://*.innogamescdn.com`: any
-other address that might be present in an imported profile is discarded and replaced by
-the placeholder avatar, so a profile file received from someone else cannot make your
-browser contact an arbitrary server.
+other address that might be present in an imported file or a backup is discarded and
+replaced by the placeholder avatar, so a file received from someone else cannot make
+your browser contact an arbitrary server.
 
 ### 6. Cookies
 
@@ -320,14 +312,23 @@ third-party cookies.
 ### 7. Service worker / offline functionality
 
 The tool installs a *service worker* to enable offline use and instant loading after
-the first visit. The service worker only caches the app's static files (HTML/CSS/JS,
-icons) **on your device**: it does not collect or transmit any data.
+the first visit. The service worker only caches the app's files (HTML/CSS/JS, icons)
+and the building database **on your device**: it does not collect or transmit any data.
 
 ### 8. No advertising, no data sale
 
 The tool shows no advertising and does not sell, rent, or share any data with third
 parties for commercial purposes — not least because, as explained above, there is no
 server-side data to sell in the first place.
+
+### 9. External links and optional donations
+
+The About panel contains plain links to external sites (GitHub and, if you'd like to
+buy the developer a coffee, PayPal and Satispay). The PayPal logo and the Satispay QR
+code are images stored on the site itself: **no script or content from these services
+is loaded** until you click a link. If you do, you are on their site and their
+policies apply. Donations are entirely optional and change nothing in how the tool
+works.
 
 ## Minors
 
