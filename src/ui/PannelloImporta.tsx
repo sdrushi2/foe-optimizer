@@ -119,7 +119,7 @@ export default function PannelloImporta({ uiLang }: { uiLang: UiLang }) {
             {/* due video diversi per lingua; il cambio lingua ricarica la pagina */}
             <video controls preload="none" playsInline className="block w-full border border-slate-800 bg-black"
               poster={uiLang === "it" ? "tutorial-it.jpg" : "tutorial-eng.jpg"} title={L("r2ImpVideo")}>
-              <source src={uiLang === "it" ? "tutorial-it.mp4" : "tutorial-eng.mp4"} type="video/mp4" />
+              <source src={uiLang === "it" ? "/video/tutorial-it.mp4" : "/video/tutorial-eng.mp4"} type="video/mp4" />
             </video>
             <p className="mt-1 text-[11px] text-slate-500">{L("r2ImpVideoNote")}</p>
           </div>
