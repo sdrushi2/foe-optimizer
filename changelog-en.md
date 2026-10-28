@@ -17,6 +17,8 @@
 ### Update
 - Search for several names separated by commas, in allies too, and by ID
 - Online guide rewritten for version 2.0 (Italian and English)
+### Bug Fixes
+- Planner, "Current layout": road buildings added with "Edit city" are now connected by opening new roads (the search used to get stuck with one building left out)
 
 ---
 

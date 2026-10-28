@@ -73,6 +73,7 @@ export function runCompletionParallela(problem: PlannerProblem, opts: Completion
       ...(opts.riprendiDa ? { riprendiDa: opts.riprendiDa } : {}),
       ...(opts.seme !== undefined ? { seme: opts.seme } : {}),
       ...(opts.stradeFisse ? { stradeFisse: opts.stradeFisse } : {}),
+      ...(opts.rami ? { rami: true } : {}),
     },
     ha: {
       adotta: !!opts.adotta,

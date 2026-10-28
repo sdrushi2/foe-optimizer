@@ -584,7 +584,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     };
     /** Ricerca + completamento; se il completamento viene annullato si
      *  riparte (ricerca in pausa) dalla disposizione di prima di COMPLETA. */
-    const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse">, partenza?: StatoManuale) => {
+    const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse" | "rami">, partenza?: StatoManuale) => {
       let riprendiDa: { stato: StatoManuale; valutate: number } | undefined = partenza ? { stato: partenza, valutate: 0 } : undefined;
       for (;;) {
         // ── Squadra di ricerca (vedi SEMI): aiutanti con altri semi, solo
@@ -723,6 +723,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         initial: { placements: st.placements, roads: st.roads },
         geometry: { stradaVX: problem.minX - 1, eastMidY: th.origY + Math.floor(th.h / 2) },
         fissi: due, ...(st.blocchi.length ? { stradeFisse: celleBlocchi(st.blocchi) } : {}),
+        // la città com'è non ha la verticale del builder: la ricerca deve poter aprire rami nuovi
+        rami: true,
       }, st);
       setSearching(s => ({ ...s, [id]: false }));
       return;

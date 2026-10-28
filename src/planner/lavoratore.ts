@@ -36,7 +36,7 @@ type Ha = { adotta?: boolean; finish?: boolean; stopFill?: boolean; paused?: boo
 export type AvvioCompletion = {
   tipo: "completion";
   problem: Parameters<typeof runCompletion>[0];
-  opts: Pick<CompletionOptions, "delayMs" | "initial" | "geometry" | "limiteValutate" | "fissi" | "girandola" | "soloRicerca" | "riprendiDa" | "seme" | "stradeFisse">;
+  opts: Pick<CompletionOptions, "delayMs" | "initial" | "geometry" | "limiteValutate" | "fissi" | "girandola" | "soloRicerca" | "riprendiDa" | "seme" | "stradeFisse" | "rami">;
   ha: Ha;
   flag: typeof flag;
 };

@@ -172,6 +172,15 @@ export interface CompletionOptions {
    *  COMPLETA), come una ripresa da modifiche manuali; `valutate` continua il
    *  conteggio delle disposizioni. */
   riprendiDa?: { stato: StatoManuale; valutate: number };
+  /** "Configurazione attuale" (bug segnalato dall'utente su Sdrushi3): la
+   *  città com'è non ha la verticale del builder, quindi nessuna mossa sapeva
+   *  AGGIUNGERE strada; un edificio con strada in più (Modifica città) poteva
+   *  solo scalzarne un altro e la ricerca restava ferma con un edificio fuori.
+   *  Con `rami`, finché un edificio con strada resta fuori, il vicinato
+   *  "prolungamento" vale per tutte le città e apre anche rami nuovi: parte da
+   *  qualunque cella di strada (anche di lato) e può passare sopra edifici con
+   *  strada spostabili, che tornano in gioco. */
+  rami?: boolean;
   /** Seme del generatore casuale della ricerca (default 12345). Più ricerche
    *  dello stesso scenario con semi diversi prendono strade diverse. */
   seme?: number;
@@ -3252,15 +3261,27 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       // le altre città restano identiche.
       let prolunga: string[] | null = null;
       // (solo con tutti gli edifici con strada dentro: altrimenti il prolungamento
-      // diventa una scorciatoia costosa per farli entrare, Avito r3 da 188 a 220)
-      if (fisse.size && S.punti[0] === 0 && rnd() < 0.15) {
-        const occS = new Set<string>(S.rd);
-        for (const [id, q] of pl) { const b = byId.get(id)!; for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) occS.add(key(q.x + dx, q.y + dy)); }
-        const lib = (x: number, y: number) => problem.cells.has(key(x, y)) && !occS.has(key(x, y));
+      // diventa una scorciatoia costosa per farli entrare, Avito r3 da 188 a 220;
+      // con `rami` invece è proprio il modo di farli entrare, vedi CompletionOptions:
+      // solo finché c'è un edificio con strada fuori, poi la ricerca torna
+      // quella di prima, così la città senza modifiche resta identica)
+      const conRami = !!opts.rami && S.punti[0] > 0;
+      if (conRami ? rnd() < 0.35 : fisse.size && S.punti[0] === 0 && rnd() < 0.15) {
+        /** Cella → edificio con strada che la occupa (per i rami: si può passarci sopra). */
+        const occS = new Map<string, string>();
+        for (const r of S.rd) occS.set(r, "");
+        for (const [id, q] of pl) { const b = byId.get(id)!; for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) occS.set(key(q.x + dx, q.y + dy), id); }
+        const spostabile = (id: string) => { const b = byId.get(id)!; return !b.isTownhall && !fissiBuilder.has(id) && !richiedeDueCorsie(b); };
+        const lib = (x: number, y: number) => {
+          const k = key(x, y);
+          if (!problem.cells.has(k)) return false;
+          const o = occS.get(k);
+          return o === undefined || (conRami && o !== "" && spostabile(o));
+        };
         const cand: Array<[number, number, number, number]> = [];
         for (const r of S.rd) {
           const i = r.indexOf(","), x = Number(r.slice(0, i)), y = Number(r.slice(i + 1));
-          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) if (S.rd.has(key(x - dx, y - dy)) && lib(x + dx, y + dy)) cand.push([x, y, dx, dy]);
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) if ((conRami || S.rd.has(key(x - dx, y - dy))) && lib(x + dx, y + dy)) cand.push([x, y, dx, dy]);
         }
         const daFisse = cand.filter(c => fisse.has(key(c[0], c[1])));
         const scelte = daFisse.length && rnd() < 0.7 ? daFisse : cand;
@@ -3271,10 +3292,12 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           for (let t = 1; t <= L && lib(x + dx * t, y + dy * t); t++) ext.push(key(x + dx * t, y + dy * t));
           if (ext.length) {
             prolunga = ext;
+            // (rami) gli edifici sotto il nuovo tratto tornano in gioco
+            for (const k of ext) { const o = occS.get(k); if (o) togli(o); }
             const fx = x + dx * ext.length, fy = y + dy * ext.length;
             const dist = (id: string) => { const q = pl.get(id)!, b = byId.get(id)!; return Math.abs(q.x + b.w / 2 - fx) + Math.abs(q.y + b.h / 2 - fy); };
             const k = 1 + Math.floor(rnd() * 8);
-            for (const id of conStrada.filter(id => !fisse.size || !richiedeDueCorsie(byId.get(id)!)).sort((a, b) => dist(a) - dist(b)).slice(0, k)) togli(id);
+            for (const id of conStrada.filter(id => pl.has(id) && (!fisse.size || !richiedeDueCorsie(byId.get(id)!))).sort((a, b) => dist(a) - dist(b)).slice(0, k)) togli(id);
           }
         }
       }

@@ -17,6 +17,8 @@
 ### Aggiornamenti
 - Ricerca con più nomi separati da virgola, anche negli alleati, e per ID
 - Guida online riscritta per la versione 2.0 (italiano e inglese)
+### Correzioni
+- Planner, "Configurazione attuale": gli edifici con strada aggiunti con "Modifica città" vengono ora collegati aprendo nuove strade (prima la ricerca restava ferma con un edificio fuori)
 
 ---
 
