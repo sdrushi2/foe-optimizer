@@ -11,6 +11,8 @@
 - Catalogo degli alleati nel Database
 - Tema chiaro e scuro
 - Opzioni › Cancella tutto per azzerare dati e impostazioni
+- Informazioni: "Pulito, per scelta" – niente pubblicità, cookie, tracciamento né profilazione
+- Informazioni: "Offrimi un caffè o una birra" (PayPal o Satispay), del tutto facoltativo
 ### Aggiornamenti
 - Ricerca con più nomi separati da virgola, anche negli alleati, e per ID
 - Guida online riscritta per la versione 2.0 (italiano e inglese)

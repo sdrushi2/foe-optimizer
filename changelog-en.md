@@ -11,6 +11,8 @@
 - Allies catalog in the Database
 - Light and dark theme
 - Options › Erase everything to reset data and settings
+- About: "Clean, by choice" – no ads, cookies, tracking or profiling
+- About: "Buy me a coffee or a beer" (PayPal or Satispay), entirely optional
 ### Update
 - Search for several names separated by commas, in allies too, and by ID
 - Online guide rewritten for version 2.0 (Italian and English)
