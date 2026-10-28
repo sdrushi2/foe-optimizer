@@ -135,7 +135,7 @@ def pagina(L):
         <p>{L['lede']}</p>
         <div class="badges">{pills}</div>
         <div class="cta-row">
-          <a class="cta" href="/">{L['cta']}</a>
+          <a class="cta" href="/#planner">{L['cta']}</a>
           <a class="cta-2" href="{L['guide']}#importing">{L['cta2']}</a>
         </div>
       </div>
@@ -173,7 +173,7 @@ def pagina(L):
 
       <div class="card card-amber">
         <p style="margin:0">{L['final']}</p>
-        <div class="cta-row"><a class="cta" href="/">{L['cta']}</a></div>
+        <div class="cta-row"><a class="cta" href="/#planner">{L['cta']}</a></div>
       </div>
 
       <footer>

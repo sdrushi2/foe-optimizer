@@ -773,6 +773,14 @@ function Boost4({ values, uiLang }: { values: [number, number, number, number]; 
  *  o ComputedAllyStats.computedGeneral, ecc.). */
 type TabType = "database" | "alleati" | "propria_citta" | "inventario";
 
+// Link diretti alle schede (2.0): nome nell'hash → scheda. In inglese per i
+// link pubblici (foe-optimizer.com/#planner), con gli alias italiani.
+const HASH_SCHEDA: Record<string, Scheda> = {
+  database: "database", city: "citta", inventory: "inventario", planner: "planner",
+  allies: "alleati", settlements: "insediamenti", options: "opzioni", help: "guida",
+  citta: "citta", inventario: "inventario", alleati: "alleati", insediamenti: "insediamenti", opzioni: "opzioni", guida: "guida",
+};
+
 /** Voci a tre stati del gruppo "Nascondi / Mostra solo". */
 type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "aiuto" | "immagazzina" | "ge";
 type StatoTri = 0 | 1 | 2;
@@ -5684,6 +5692,23 @@ export default function App() {
     else if (sc === "alleati") { setAlleatiDaDb(false); setActiveTab("alleati"); }
     else setActiveTab("pirati");
   };
+  // Link diretti alle schede (#planner, #city, …): all'avvio e quando l'hash
+  // cambia si apre la scheda indicata (nomi inglesi o italiani), poi l'hash
+  // si toglie dall'indirizzo (replaceState). Cambiando scheda l'indirizzo NON
+  // cambia (scelta dell'autore). Una scheda spenta (es. #city senza città) la
+  // gestisce l'effetto "schedaSpenta" più sotto.
+  useEffect(() => {
+    const daHash = () => {
+      const sc = HASH_SCHEDA[window.location.hash.slice(1).toLowerCase()];
+      if (!sc) return;
+      scegliScheda(sc);
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    };
+    daHash();
+    window.addEventListener("hashchange", daHash);
+    return () => window.removeEventListener("hashchange", daHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const setCatalogo = (c: "edifici" | "alleati") => {
     setCatalogoStato(c);
     if (c === "alleati") { setAlleatiDaDb(true); setActiveTab("alleati"); } else { setAlleatiDaDb(false); setActiveTab("database"); }

@@ -34,7 +34,7 @@
       }
 
       .card {
-        max-width: 560px;
+        max-width: 640px;
       }
 
       .rubble {
@@ -118,6 +118,48 @@
         background: #273449;
       }
 
+      .links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 22px;
+        text-align: left;
+      }
+
+      .links a {
+        display: block;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+        background: rgba(30, 41, 59, 0.55);
+        text-decoration: none;
+        color: #e2e8f0;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+      }
+
+      .links a:hover {
+        border-color: #d97706;
+        transform: translateY(-1px);
+      }
+
+      .links strong {
+        display: block;
+        font-size: 0.95rem;
+        color: #fbbf24;
+      }
+
+      .links span {
+        display: block;
+        font-size: 0.82rem;
+        color: #94a3b8;
+        margin-top: 2px;
+      }
+
+      /* Lingua: inglese di base; lo script in fondo passa all'italiano se il browser è in italiano */
+      [lang="it"] { display: none; }
+      html.it [lang="it"] { display: revert; }
+      html.it [lang="en"] { display: none; }
+
       .code {
         margin-top: 36px;
         font-size: 0.8rem;
@@ -130,14 +172,41 @@
     <div class="card">
       <div class="rubble">🏚️</div>
       <h1>404</h1>
-      <h2>Building Not Found</h2>
-      <p>Looks like this construction site never got built. Maybe it was demolished, maybe it never existed &mdash; either way, there's nothing to optimize here.</p>
-      <p class="flavor">Even the Great Buildings team is scratching their heads on this one.</p>
-      <div class="actions">
-        <a class="btn btn-primary" href="/">🏠 Back to my city</a>
-        <a class="btn btn-secondary" href="https://forgeofempires.com" target="_blank" rel="noopener noreferrer">⚔️ Open Forge of Empires</a>
+
+      <div lang="en">
+        <h2>Building Not Found</h2>
+        <p>Looks like this construction site never got built. Maybe it was demolished, maybe it never existed &mdash; either way, there's nothing to optimize here.</p>
+        <p class="flavor">Even the Great Buildings team is scratching their heads on this one.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/">🏠 Back to FoE Optimizer</a>
+        </div>
+        <nav class="links">
+          <a href="/#planner"><strong>🗺️ City Planner</strong><span>Rearrange your city with fewer roads</span></a>
+          <a href="/#database"><strong>📚 Database</strong><span>Every building, with efficiency</span></a>
+          <a href="/planner.html"><strong>📐 Planner: before &amp; after</strong><span>What the Planner can do</span></a>
+          <a href="/guide.html"><strong>📖 Guide</strong><span>How to use the tool</span></a>
+        </nav>
       </div>
+
+      <div lang="it">
+        <h2>Edificio non trovato</h2>
+        <p>Sembra che questo cantiere non sia mai stato costruito. Forse è stato demolito, forse non è mai esistito: in ogni caso qui non c'è niente da ottimizzare.</p>
+        <p class="flavor">Perfino la squadra dei Grandi Edifici si sta grattando la testa.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/">🏠 Torna a FoE Optimizer</a>
+        </div>
+        <nav class="links">
+          <a href="/#planner"><strong>🗺️ Planner</strong><span>Ridisegna la città con meno strade</span></a>
+          <a href="/#database"><strong>📚 Database</strong><span>Tutti gli edifici, con l'efficienza</span></a>
+          <a href="/planner-it.html"><strong>📐 Planner: prima e dopo</strong><span>Cosa sa fare il Planner</span></a>
+          <a href="/guida.html"><strong>📖 Guida</strong><span>Come si usa il tool</span></a>
+        </nav>
+      </div>
+
       <div class="code">HTTP 404 &middot; FoE Optimizer</div>
     </div>
+    <script>
+      try { if ((navigator.language || "").toLowerCase().indexOf("it") === 0) document.documentElement.classList.add("it"); } catch (e) {}
+    </script>
   </body>
 </html>
