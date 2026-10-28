@@ -14,12 +14,14 @@ permissions:
   pages: write
   id-token: write
 
-# Evita che due deploy si sovrappongano: se arriva un nuovo push mentre uno
-# precedente è in corso, quello vecchio viene annullato (non ha senso
-# pubblicare una versione superata).
+# Un solo deploy alla volta. Come raccomanda GitHub per Pages, quello in
+# corso NON viene annullato (interromperlo a metà della pubblicazione può
+# lasciare il deploy in uno stato incoerente): un push arrivato nel frattempo
+# aspetta, e se ne arrivano più d'uno parte solo l'ultimo (quelli intermedi,
+# ormai superati, vengono saltati).
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:

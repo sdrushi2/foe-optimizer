@@ -23,6 +23,7 @@ style+='''
       .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
       video { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: #000; }
       .faq h3 { margin-top: 22px; }
+      .card-amber { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.06); }
       .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 8px; }
       .ba figure { margin: 0; }
       .ba img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--border); }
@@ -33,6 +34,18 @@ style+='''
       @media (max-width: 640px) { .ba { grid-template-columns: 1fr; } }
 '''
 GITHUB='https://github.com/sdrushi2/foe-optimizer'
+
+def pota_css(css, html):
+    """Toglie dal CSS (copiato da guide.html) le regole i cui selettori usano
+    solo classi che nella pagina non compaiono (es. .toc, .formula)."""
+    usate = set(re.findall(r'class="([^"]*)"', html))
+    usate = {c for v in usate for c in v.split()}
+    def tieni(m):
+        sel = m.group(1)
+        classi = re.findall(r'\.([a-zA-Z][\w-]*)', sel)
+        return m.group(0) if not classi or any(c in usate for c in classi) else ''
+    css = re.sub(r'(?m)^( {6}[^{}\n@][^{}]*)\{[^{}]*\}\n\n?', tieni, css)
+    return css
 
 def pagina(L):
     url=f"https://foe-optimizer.com/{L['file']}"
@@ -84,7 +97,7 @@ def pagina(L):
         </div>'''
     pills=''.join(f'<span class="pill">{p}</span>' for p in L['pills'])
     altro=L['other']
-    return f'''<!doctype html>
+    out = f'''<!doctype html>
 <html lang="{L['lang']}">
   <head>
     <meta charset="UTF-8">
@@ -185,6 +198,7 @@ def pagina(L):
   </body>
 </html>
 '''
+    return out.replace(style, pota_css(style, out), 1)
 
 EN=dict(file='planner.html',lang='en',locale='en_US',crumb='City Planner',
  title='Forge of Empires City Planner – Free Automatic Layout | FoE Optimizer',

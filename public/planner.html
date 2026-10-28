@@ -300,45 +300,6 @@
         margin: 0;
       }
 
-      /* ── Table of contents ─────────────────────────────────────────────── */
-
-      .toc {
-        background: rgba(30, 41, 59, 0.55);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 48px;
-      }
-
-      .toc h2 {
-        margin: 0 0 12px;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-faint);
-        font-weight: 700;
-      }
-
-      .toc ol {
-        margin: 0;
-        padding-left: 0;
-        list-style: none;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 6px 24px;
-      }
-
-      .toc a {
-        text-decoration: none;
-        color: var(--text);
-        font-weight: 600;
-        font-size: 0.95rem;
-      }
-
-      .toc a:hover {
-        color: var(--amber);
-      }
-
       /* ── Sections ────────────────────────────────────────────── */
 
       section {
@@ -385,11 +346,6 @@
         border-radius: 12px;
         padding: 18px 22px;
         margin: 16px 0;
-      }
-
-      .card-amber {
-        border-color: rgba(251, 191, 36, 0.35);
-        background: rgba(251, 191, 36, 0.06);
       }
 
       .steps {
@@ -462,12 +418,6 @@
         font-weight: 700;
       }
 
-      td.k {
-        white-space: nowrap;
-        font-weight: 700;
-        color: var(--amber);
-      }
-
       .pill {
         display: inline-flex;
         align-items: center;
@@ -526,18 +476,6 @@
         color: var(--amber);
       }
 
-      .formula {
-        font-family: "SF Mono", Consolas, Menlo, monospace;
-        background: var(--bg-deep);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 14px 18px;
-        color: var(--amber);
-        font-size: 0.95rem;
-        margin: 16px 0;
-        overflow-x: auto;
-      }
-
       kbd {
         background: var(--panel-2);
         border: 1px solid var(--border);
@@ -546,12 +484,6 @@
         font-size: 0.85em;
         font-family: inherit;
         color: var(--text);
-      }
-
-      hr.sep {
-        border: none;
-        border-top: 1px solid var(--border);
-        margin: 56px 0;
       }
 
       footer {
@@ -565,22 +497,6 @@
         color: var(--text-dim);
       }
 
-      .top-of-page {
-        display: block;
-        text-align: right;
-        margin-top: -30px;
-        margin-bottom: 20px;
-      }
-
-      .top-of-page a {
-        font-size: 0.82rem;
-        color: var(--text-faint);
-        text-decoration: none;
-      }
-
-      .top-of-page a:hover {
-        color: var(--amber);
-      }
       code {
         background: var(--bg-deep);
         border: 1px solid var(--border);
@@ -611,6 +527,7 @@
       .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
       video { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: #000; }
       .faq h3 { margin-top: 22px; }
+      .card-amber { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.06); }
       .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 8px; }
       .ba figure { margin: 0; }
       .ba img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--border); }

@@ -10,9 +10,10 @@ browsable, constantly-updated database of every building in the game, with
 combat boosts, goods production, Forge Points, and Quantum Incursions stats.
 
 Optionally, players can import live data from their own game session via a
-bookmarklet (which relies on the third-party browser extension FoE Helper).
-Imported data is processed and stored only in the browser's own
-localStorage; it is never sent to any server. Imported data unlocks:
+bookmarklet (which relies on one of the third-party browser extensions FoE
+Helper or Forge Hammer), or load a city from a JSON file. Imported data is
+processed and stored only in the browser's own localStorage; it is never
+sent to any server. Imported data unlocks:
 
 - City import: real, era-accurate building stats instead of catalog
   defaults, plus a city map view and road-connection efficiency panel.
@@ -21,14 +22,15 @@ localStorage; it is never sent to any server. Imported data unlocks:
   partial upgrades and multi-step kit chains.
 - Allies import: tracking of owned allies and rarity against the full
   ally database.
-- An automatic city layout optimizer: a solver that searches for
-  the best arrangement of buildings (2D packing) starting from the
-  imported city.
-- A dedicated planner for the in-game Pirate Outpost map (building
+- An automatic city planner: it rearranges the imported city's
+  buildings looking for the layout with the fewest roads (several
+  layouts searched in parallel, two-lane roads, building chains,
+  optional connection of military buildings), with PNG/JSON export.
+- A dedicated planner for the in-game Pirate Settlement map (building
   placement solver).
 - A simple city editor (/editor.html, opened from the city map or the
-  layout optimizer): move, duplicate and remove buildings and roads, then
-  save the city as JSON (same format as the bookmarklet data) or PNG.
+  Planner): move and remove buildings, add and remove roads, then save
+  the city as PNG or send it back to the Planner.
 
 Key facts for citation or summarization:
 - No sign-up, no login, no account system of any kind.

@@ -19,7 +19,6 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="canonical" href="https://foe-optimizer.com/editor.html">
 <!-- anteprima quando il link viene condiviso (stessa immagine delle altre pagine) -->
 <meta property="og:title" content="Editor città – FoE Optimizer">
 <meta property="og:description" content="Sposta e togli edifici e strade della tua città di Forge of Empires, poi salvala in PNG.">
@@ -248,7 +247,6 @@ const MIN_SIZE = 72;
 const PAD = 24;            // celle libere in più oltre l'ultimo edificio
 let mapSize = MIN_SIZE;
 
-// Dati della città caricata (servono a "Applica al Planner" e al PNG)
 // ---- Lingua: quella del tool (messaggio "carica"); aperto da solo, la scelta
 // salvata dal tool o la lingua del browser (FoeCondiviso.linguaUi) ----
 const TESTI = {
@@ -303,10 +301,11 @@ function applicaLingua(l) {
 let nomeMunicipio = 'Municipio';   // dal tool arriva la traduzione nella sua lingua
 let nomeMunicipioDaTool = false;
 // "Modifica città" del Planner: id (del JSON) degli edifici aggiunti e riquadro
-// delle modifiche per il PNG, come il PNG del Planner (vuoti se aperto da file)
+// delle modifiche per il PNG, come il PNG del Planner (vuoti se aperto dalla MAPPA)
 let nuoviDalPlanner = new Set();
 let riepilogoPng = null;
 
+// Dati della città caricata (servono a "Applica al Planner" e al PNG)
 let fonte = null;          // { ents, areeRaw, celle:Set, strada:{eid,name,w,h}|null, strada2 (2×2)|null }
 // Canale col Planner: token dell'apertura (null = editor usato da solo)
 let token = null;
@@ -342,14 +341,13 @@ const FIXED = new Set(['hub_main', 'hub_part', 'off_grid', 'outpost_ship', 'frie
 const SPECIAL = new Set(['main_building', 'greatbuilding', 'military', 'street']);
 const colorClass = (type, lv) => SPECIAL.has(type) ? type : (lv < 1 ? 'noroad' : lv >= 2 ? 'road2' : 'road');
 
-// Trasforma il JSON in { areas, items }. Accetta il formato dell'export
-// (CityMapData / CityEntities / UnlockedAreas, anche il payload intero del
-// bookmarklet) e il vecchio formato semplificato (buildings / unlocked_areas).
-// `colori` (opzionale, dal Planner): id → colore esatto della vista MAPPA.
+// Trasforma il JSON in { areas, items }. Il tool (MAPPA e Planner) manda
+// sempre il formato del suo export JSON: CityMapData / CityEntities /
+// UnlockedAreas (esportaCittaJson in src/data/cityMapJson.ts).
+// `colori` (opzionale): id → colore esatto della vista MAPPA.
 function parse(data, colori) {
-  if (data.data) data = data.data;
   const ents = data.CityEntities || {};
-  const areeRaw = data.UnlockedAreas || data.unlocked_areas || [];
+  const areeRaw = data.UnlockedAreas || [];
   const areas = [], items = [];
 
   areeRaw.forEach(a =>
@@ -363,17 +361,6 @@ function parse(data, colori) {
     const lv = livelloStrada(e);
     items.push({ id, eid: b.cityentity_id, x: b.x || 0, y: b.y || 0, w: d[0], h: d[1], type, noRoad: lv < 1, livello: lv,
                  cls: colorClass(type, lv), colore: colori && colori[id], name: e.name || b.cityentity_id });
-  });
-
-  (data.buildings || []).forEach(b => {
-    const e = ents[b.cityentity_id];
-    if (!(b.width > 0 && b.length > 0)) return;
-    let type = e && e.type ? e.type : '';
-    if (!type && String(b.cityentity_id || '').startsWith('H_')) type = 'main_building';
-    if (FIXED.has(type)) return;
-    const lv = b.road_requirement == null ? 1 : Number(b.road_requirement) || 0;
-    items.push({ id: b.id, eid: b.cityentity_id || b.name, x: b.x || 0, y: b.y || 0, w: b.width, h: b.length,
-                 type, noRoad: lv < 1, livello: lv, cls: colorClass(type, lv), name: b.name || b.cityentity_id });
   });
 
   // celle sbloccate (per le strade col doppio clic e il controllo delle posizioni)
@@ -677,13 +664,12 @@ document.addEventListener('keydown', ev => {
 });
 
 // ---- Esportazione: stesso formato dell'export di FoE Optimizer ----
-// { CityMapData, CityEntities (solo quelli usati), UnlockedAreas }. Le copie
-// (Ctrl+trascina) e le strade nuove ricevono un id numerico nuovo.
+// { CityMapData, CityEntities (solo quelli usati), UnlockedAreas }. Le strade
+// aggiunte col doppio clic ricevono un id numerico nuovo.
 function esporta() {
   const CityMapData = {}, CityEntities = {};
   const usati = new Set();
   let prossimo = 1 + Math.max(0, ...entries.map(e => (/^\d+$/.test(String(e.item.id)) ? Number(e.item.id) : 0)));
-  // ordine di creazione: a parità di id lo tiene l'originale, non la copia
   entries.forEach(e => {
     const i = e.item;
     let id = i.id;
