@@ -35,6 +35,20 @@ style+='''
 '''
 GITHUB='https://github.com/sdrushi2/foe-optimizer'
 
+def dim(nome):
+    """Larghezza e altezza di public/planner-<nome>.jpg (lette dal file PNG/JPEG)."""
+    import struct
+    with open(os.path.join(APP, 'public', f'planner-{nome}.jpg'), 'rb') as f:
+        dati = f.read()
+    i = 2
+    while i < len(dati):
+        m, n = dati[i + 1], struct.unpack('>H', dati[i + 2:i + 4])[0]
+        if 0xC0 <= m <= 0xCF and m not in (0xC4, 0xC8, 0xCC):
+            h, w = struct.unpack('>HH', dati[i + 5:i + 9])
+            return w, h
+        i += 2 + n
+    raise ValueError(nome)
+
 def pota_css(css, html):
     """Toglie dal CSS (copiato da guide.html) le regole i cui selettori usano
     solo classi che nella pagina non compaiono (es. .toc, .formula)."""
@@ -87,11 +101,11 @@ def pagina(L):
         <p class="ba-title">{titolo}</p>
         <div class="ba">
           <figure>
-            <a href="/planner-prima-{k}.png" target="_blank" rel="noopener"><img src="/planner-prima-{k}.jpg" alt="{L['alt_prima']} {k}" width="1000" height="{1056 if k==1 else 824}" loading="lazy"></a>
+            <a href="/planner-prima-{k}.png" target="_blank" rel="noopener"><img src="/planner-prima-{k}.jpg" alt="{L['alt_prima']} {k}" width="{dim(f"prima-{k}")[0]}" height="{dim(f"prima-{k}")[1]}" loading="lazy"></a>
             <figcaption>{prima}</figcaption>
           </figure>
           <figure>
-            <a href="/planner-dopo-{k}.png" target="_blank" rel="noopener"><img src="/planner-dopo-{k}.jpg" alt="{L['alt_dopo']} {k}" width="1000" height="{1056 if k==1 else 824}" loading="lazy"></a>
+            <a href="/planner-dopo-{k}.png" target="_blank" rel="noopener"><img src="/planner-dopo-{k}.jpg" alt="{L['alt_dopo']} {k}" width="{dim(f"dopo-{k}")[0]}" height="{dim(f"dopo-{k}")[1]}" loading="lazy"></a>
             <figcaption>{dopo}</figcaption>
           </figure>
         </div>'''
@@ -249,8 +263,8 @@ EN=dict(file='planner.html',lang='en',locale='en_US',crumb='City Planner',
 EN.update(ba_h='📐 Before and after',
  ba_lede='Two real cities, before and after the Planner. Same buildings: the road tiles saved become free space (in yellow). Click a map to see it full size.',
  alt_prima='Forge of Empires city before the Planner, example',alt_dopo='Forge of Empires city after the Planner, example',
- ba=[('Example 1','Before: <strong>~406</strong> road tiles','After: <strong>~93</strong> road tiles (−77%)'),
-     ('Example 2','Before: <strong>~208</strong> road tiles','After: <strong>~96</strong> road tiles (−54%)')])
+ ba=[('Example 1','Before: <strong>406</strong> road tiles','After: <strong>93</strong> road tiles (−77%)'),
+     ('Example 2','Before: <strong>124</strong> road tiles','After: <strong>71</strong> road tiles (−43%)')])
 EN['other']='/planner-it.html'; EN['foot_other']='Italiano'
 
 IT=dict(file='planner-it.html',lang='it',locale='it_IT',crumb='Planner della città',
@@ -302,8 +316,8 @@ IT=dict(file='planner-it.html',lang='it',locale='it_IT',crumb='Planner della cit
 IT.update(ba_h='📐 Prima e dopo',
  ba_lede='Due città reali, prima e dopo il Planner. Stessi edifici: le caselle di strada risparmiate diventano spazio libero (in giallo). Clicca una mappa per vederla a grandezza piena.',
  alt_prima='Città di Forge of Empires prima del Planner, esempio',alt_dopo='Città di Forge of Empires dopo il Planner, esempio',
- ba=[('Esempio 1','Prima: <strong>~406</strong> caselle di strada','Dopo: <strong>~93</strong> caselle di strada (−77%)'),
-     ('Esempio 2','Prima: <strong>~208</strong> caselle di strada','Dopo: <strong>~96</strong> caselle di strada (−54%)')])
+ ba=[('Esempio 1','Prima: <strong>406</strong> caselle di strada','Dopo: <strong>93</strong> caselle di strada (−77%)'),
+     ('Esempio 2','Prima: <strong>124</strong> caselle di strada','Dopo: <strong>71</strong> caselle di strada (−43%)')])
 IT['other']='/planner.html'; IT['foot_other']='English'
 
 for L in (EN,IT):
