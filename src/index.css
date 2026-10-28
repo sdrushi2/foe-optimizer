@@ -494,18 +494,16 @@ html { scrollbar-gutter: stable; }
     box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
   }
 
-  /* Riga 1 dell'header (bg-slate-900/80): th "Export" (colSpan checkbox+
-     occhio) e th "EDIFICI VISUALIZZATI" (colonna nome). Prima erano
+  /* Riga 1 dell'header (bg-slate-900/80): th sopra checkbox+occhio
+     (colSpan 2; vuota nella 2.0, l'Export è nel nastro) e th "EDIFICI
+     VISUALIZZATI" (colonna nome). Prima erano
      stilate inline in App.tsx con backgroundColor:"inherit" (trasparenti,
      stesso bug delle celle sopra) — ora tutto vive qui, scoped: sticky e
      sfondo opaco SOLO sotto .has-sticky-name, separatore della th nome
      anche nel ramo elastico (regola .has-name-divider sopra). */
-  /* z-30 (sopra il z-20 della th nome accanto): il pulsante Export è più
-     largo dei 46px del suo colSpan (checkbox+occhio) e sborda a destra —
-     con z uguale la th nome (opaca, successiva nel DOM) lo coprirebbe
-     troncandolo ("Expo"). Con z-30 il pulsante sborda SOPRA la th nome,
-     che essendo opaca e sticky fa comunque da scudo verso i dati
-     scrollati: nessun rischio di ghosting. */
+  /* z-30 (sopra il z-20 della th nome accanto): serviva quando qui c'era
+     il pulsante Export della 1.x, più largo del colSpan; con la th vuota
+     è indifferente, resta per non cambiare l'ordine degli strati. */
   .has-sticky-name thead th.th-export-summary {
     @apply sticky left-0 z-30;
     background-color: inherit;
@@ -681,35 +679,10 @@ html { scrollbar-gutter: stable; }
   }
 
   /* ----------------------------------------------------------
-     PULSANTI TOGGLE QUADRATI (barra filtri/colonne tabella)
-     Scheletro condiviso da ~13 pulsanti icona 28×28 nella toolbar
-     (Sigma, Tempo, Popolazione, Felicità, IQ, Produzioni, filtri riga
-     Città/Inventario). Copre solo la parte IDENTICA in ogni istanza:
-     forma/dimensione/transizione + stato "inattivo" (sempre uguale).
-     Lo stato "attivo" (colore diverso per ciascun pulsante) e le
-     classi tipografiche opzionali (dimensione/peso del simbolo interno)
-     restano nel template literal locale in App.tsx, aggiunte DOPO
-     questa classe così vincono in caso di conflitto. */
-  .toggle-icon-btn {
-    @apply flex h-7 w-7 items-center justify-center rounded border transition-all
-           border-slate-700/50 bg-slate-700/20 text-slate-400
-           hover:border-slate-600 hover:bg-slate-700/40;
-  }
-
-  /* Variante 28×32 (h-7 w-8): stessi pulsanti ma per i filtri "mostra
-     solo" (obsoleti, declassabili, slot alleato, frammenti) in tab
-     Città/Inventario. Anche qui solo lo scheletro comune; i colori
-     dello stato attivo restano locali. */
-  .toggle-icon-btn-wide {
-    @apply flex items-center justify-center rounded border h-7 w-8
-           border-slate-700 bg-slate-950/40 hover:bg-slate-800/60;
-  }
-
-  /* ----------------------------------------------------------
      OVERLAY MODALE A SCHERMO INTERO
-     Sfondo scuro sfocato dietro ai modali (Import Sessione, Debug
-     JSON, Edifici Aggiornabili). Il contenuto del modale resta
-     definito localmente in App.tsx.
+     Sfondo scuro sfocato dietro ai modali (Import Sessione, dettaglio
+     JSON del pannello Debug). Il contenuto del modale resta definito
+     localmente in App.tsx.
      ---------------------------------------------------------- */
   .modal-overlay {
     @apply fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm;
@@ -739,15 +712,8 @@ html { scrollbar-gutter: stable; }
 
 }
 
-/* ============================================================
-   UTILITY – Scrollbar invisibile (usata nella navbar mobile)
-   ============================================================ */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
+/* Barra di scorrimento orizzontale "flottante" sotto la tabella edifici
+   (App.tsx): colori del tema e altezza un po' più comoda da afferrare. */
 .building-floating-scrollbar {
   scrollbar-color: var(--color-slate-600) var(--color-slate-900);
 }

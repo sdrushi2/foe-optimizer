@@ -61,7 +61,16 @@ export function registerServiceWorker(): void {
   if (import.meta.env.DEV) return;
   if (!("serviceWorker" in navigator)) return;
 
-  window.addEventListener("load", () => {
+  // Registrazione a pagina caricata, per non contendere banda all'avvio.
+  // 2.0: questa funzione gira DOPO il download dei dati di gioco (avvio.tsx),
+  // quando l'evento "load" di solito è GIÀ scattato: aspettarlo e basta
+  // voleva dire non registrare mai il service worker. Se la pagina è già
+  // completa si registra subito.
+  const quandoCaricata = (fn: () => void) => {
+    if (document.readyState === "complete") fn();
+    else window.addEventListener("load", fn, { once: true });
+  };
+  quandoCaricata(() => {
     navigator.serviceWorker
       .register("/sw.js")
       .then((registration) => {
