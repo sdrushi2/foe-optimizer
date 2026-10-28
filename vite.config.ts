@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -32,6 +33,24 @@ const BUILD_DATE = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2
 // di build nel nome della cache. Cosi' ad ogni nuova build la cache vecchia viene
 // invalidata (il SW rileva il nome cache diverso e cancella la precedente).
 // Il template NON sta in public/ apposta, per non essere copiato as-is non-versionato.
+// Plugin: anteprima social (og:image / twitter:image) sempre aggiornata.
+// Discord, Facebook & co. tengono in cache l'anteprima per URL dell'immagine:
+// se og-image.png cambia ma l'URL no, continuano a mostrare la vecchia.
+// Qui ogni "og-image.png" in index.html diventa "og-image.png?v=<hash del
+// file>": l'URL cambia da solo quando (e solo quando) cambia l'immagine.
+function ogImagePlugin(): Plugin {
+  return {
+    name: "foe-og-image",
+    apply: "build",
+    transformIndexHtml(html) {
+      const file = path.resolve(__dirname, "public", "og-image.png");
+      if (!fs.existsSync(file)) return html;
+      const hash = crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex").slice(0, 8);
+      return html.replace(/og-image\.png(?:\?v=[^"]*)?"/g, `og-image.png?v=${hash}"`);
+    },
+  };
+}
+
 // Plugin: aggiorna <lastmod> in dist/sitemap.xml con la data di build.
 function sitemapPlugin(date: string): Plugin {
   return {
@@ -175,6 +194,7 @@ export default defineConfig({
     datiPlugin(),
     serviceWorkerPlugin(SW_CACHE_VERSION),
     sitemapPlugin(BUILD_DATE),
+    ogImagePlugin(),
     editorCondivisoPlugin(),
   ],
   // 2.0: il codice principale (App) supera i 500 kB minificati; il Planner
