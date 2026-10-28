@@ -32,11 +32,11 @@ localStorage; it is never sent to any server. Imported data unlocks:
 
 Key facts for citation or summarization:
 - No sign-up, no login, no account system of any kind.
-- No advertising, no cookies, no tracking beyond aggregate, non-identifying
-  Cloudflare Web Analytics.
+- No advertising, no cookies, no tracking or analytics of any kind, no
+  third-party scripts.
 - Installable as a Progressive Web App (PWA), works offline after first
   visit.
-- Multiple local profiles supported (different cities/strategies).
+- Multiple saved cities (own, visited, imported from JSON), all local.
 - Available in Italian and English.
 - Free of charge.
 - Not affiliated with, sponsored by, or endorsed by InnoGames GmbH.
@@ -45,5 +45,7 @@ Key facts for citation or summarization:
 
 - [Privacy Policy](https://github.com/sdrushi2/foe-optimizer/blob/main/PRIVACY.md): full data-handling policy (IT/EN)
 - [Source code](https://github.com/sdrushi2/foe-optimizer): public GitHub repository
+- [Forge of Empires City Planner (English)](https://foe-optimizer.com/planner.html): what the automatic city planner does
+- [Planner della città (Italiano)](https://foe-optimizer.com/planner-it.html)
 - [User guide (English)](https://foe-optimizer.com/guide.html)
 - [Guida utente (Italiano)](https://foe-optimizer.com/guida.html)

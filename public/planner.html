@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge of Empires City Planner – Free Automatic Layout | FoE Optimizer</title>
+    <meta name="description" content="Free Forge of Empires city planner: import your city and it automatically rearranges your buildings with as few roads as possible. Two-lane roads, chains, no sign-up.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="color-scheme" content="dark light">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="canonical" href="https://foe-optimizer.com/planner.html">
+    <link rel="alternate" hreflang="en" href="https://foe-optimizer.com/planner.html">
+    <link rel="alternate" hreflang="it" href="https://foe-optimizer.com/planner-it.html">
+    <link rel="alternate" hreflang="x-default" href="https://foe-optimizer.com/planner.html">
+
+    <meta property="og:title" content="Forge of Empires City Planner – Free Automatic Layout | FoE Optimizer">
+    <meta property="og:description" content="Free Forge of Empires city planner: import your city and it automatically rearranges your buildings with as few roads as possible. Two-lane roads, chains, no sign-up.">
+    <meta property="og:url" content="https://foe-optimizer.com/planner.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="FoE Optimizer">
+    <meta property="og:image" content="https://foe-optimizer.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Dati strutturati: pagina, app (planner), video tutorial, domande frequenti -->
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://foe-optimizer.com/planner.html",
+      "url": "https://foe-optimizer.com/planner.html",
+      "name": "Forge of Empires City Planner – Free Automatic Layout | FoE Optimizer",
+      "description": "Free Forge of Empires city planner: import your city and it automatically rearranges your buildings with as few roads as possible. Two-lane roads, chains, no sign-up.",
+      "inLanguage": "en",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "FoE Optimizer",
+        "url": "https://foe-optimizer.com/"
+      },
+      "about": {
+        "@id": "https://foe-optimizer.com/#planner"
+      },
+      "image": [
+        "https://foe-optimizer.com/planner-dopo-1.jpg",
+        "https://foe-optimizer.com/planner-prima-1.jpg",
+        "https://foe-optimizer.com/planner-dopo-2.jpg",
+        "https://foe-optimizer.com/planner-prima-2.jpg"
+      ],
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "FoE Optimizer",
+            "item": "https://foe-optimizer.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "City Planner",
+            "item": "https://foe-optimizer.com/planner.html"
+          }
+        ]
+      }
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://foe-optimizer.com/#planner",
+      "name": "FoE Optimizer City Planner",
+      "url": "https://foe-optimizer.com/",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "description": "Free automatic city planner for Forge of Empires: rearranges the buildings of an imported city looking for the layout with the fewest roads.",
+      "featureList": [
+        "Automatic city layout with the fewest roads",
+        "Several scenarios searched in parallel",
+        "Two-lane road support",
+        "Building chains kept together",
+        "Optional connection of military buildings",
+        "Built-in city editor",
+        "PNG and JSON export",
+        "Runs in the browser, no sign-up"
+      ],
+      "inLanguage": [
+        "en",
+        "it"
+      ],
+      "creator": {
+        "@type": "Person",
+        "name": "Sdrushi"
+      }
+    },
+    {
+      "@type": "VideoObject",
+      "name": "How to use the FoE Optimizer City Planner (Italian)",
+      "description": "Video tutorial of the Forge of Empires city planner in FoE Optimizer.",
+      "thumbnailUrl": "https://foe-optimizer.com/planner-ita.jpg",
+      "contentUrl": "https://foe-optimizer.com/video/planner-ita.mp4",
+      "uploadDate": "2026-10-28",
+      "inLanguage": "it"
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://foe-optimizer.com/planner.html#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is the Forge of Empires city planner free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, completely: no account, no subscription, no limits, no ads."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it move the buildings in my game?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. FoE Optimizer never touches your game: it shows you a better layout, and you rebuild it in Forge of Empires yourself, following the map or the PNG."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What do I need to import my city?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A desktop browser with FoE Helper or Forge Hammer and the FoE Optimizer bookmark, or a JSON export of the city from FoE Optimizer, FoE Helper or Forge Hammer."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it handle two-lane roads, chains and sets?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Two-lane roads and chains (Statue of Honor, trains, Hippodrome) yes. Building sets with adjacency bonuses are not handled: the Planner flags them in the statistics."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does it take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It depends on the size of the city and on your computer. The search runs on several scenarios in parallel and keeps improving: pause it when the numbers stop changing."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data safe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Everything is processed and saved only in your browser; no server receives your city."
+          }
+        }
+      ]
+    }
+  ]
+}
+    </script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --bg-deep: #020617;
+        --panel: #1e293b;
+        --panel-2: #172033;
+        --border: #334155;
+        --text: #e2e8f0;
+        --text-dim: #94a3b8;
+        --text-faint: #64748b;
+        --amber: #fbbf24;
+        --amber-dim: #d97706;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 50% -10%, var(--panel) 0%, var(--bg) 45%, var(--bg-deep) 100%);
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--amber);
+      }
+
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+
+      /* ── Header ─────────────────────────────────────────────── */
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 800;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .brand .swords {
+        font-size: 1.3rem;
+      }
+
+      .back-link {
+        text-decoration: none;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .back-link:hover {
+        border-color: var(--amber-dim);
+        color: var(--amber);
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .lang-switch {
+        text-decoration: none;
+        color: var(--text-faint);
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 4px 2px;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .lang-switch.active {
+        color: var(--amber);
+        border-color: var(--amber);
+      }
+
+      .lang-switch:not(.active):hover {
+        color: var(--text);
+      }
+
+      .lang-sep {
+        color: var(--text-faint);
+        font-size: 0.8rem;
+      }
+
+      .hero {
+        margin: 28px 0 40px;
+      }
+
+      .hero h1 {
+        font-size: clamp(1.8rem, 5vw, 2.6rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0 0 10px;
+        color: var(--amber);
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        color: var(--text-dim);
+        max-width: 640px;
+        margin: 0;
+      }
+
+      /* ── Table of contents ─────────────────────────────────────────────── */
+
+      .toc {
+        background: rgba(30, 41, 59, 0.55);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 48px;
+      }
+
+      .toc h2 {
+        margin: 0 0 12px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-faint);
+        font-weight: 700;
+      }
+
+      .toc ol {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 6px 24px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .toc a:hover {
+        color: var(--amber);
+      }
+
+      /* ── Sections ────────────────────────────────────────────── */
+
+      section {
+        margin-bottom: 56px;
+        scroll-margin-top: 20px;
+      }
+
+      section h2 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--amber);
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      section > .lede {
+        color: var(--text-dim);
+        font-size: 1.02rem;
+        margin: 0 0 24px;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin: 28px 0 10px;
+      }
+
+      p {
+        margin: 0 0 14px;
+        color: #d4dbe6;
+      }
+
+      strong {
+        color: var(--text);
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.45);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin: 16px 0;
+      }
+
+      .card-amber {
+        border-color: rgba(251, 191, 36, 0.35);
+        background: rgba(251, 191, 36, 0.06);
+      }
+
+      .steps {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+      }
+
+      .steps > li {
+        counter-increment: step;
+        position: relative;
+        padding: 4px 0 20px 40px;
+        border-left: 2px solid var(--border);
+        margin-left: 14px;
+      }
+
+      .steps > li:last-child {
+        border-left-color: transparent;
+        padding-bottom: 0;
+      }
+
+      .steps > li::before {
+        content: counter(step);
+        position: absolute;
+        left: -15px;
+        top: 0;
+        width: 28px;
+        height: 28px;
+        background: var(--amber);
+        color: #1a1a2e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+      }
+
+      .steps h4 {
+        margin: 0 0 4px;
+        font-size: 1.02rem;
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .steps p {
+        margin: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 0.93rem;
+      }
+
+      th, td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--text-faint);
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+      }
+
+      td.k {
+        white-space: nowrap;
+        font-weight: 700;
+        color: var(--amber);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(251, 191, 36, 0.12);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        color: var(--amber);
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .tabgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+
+      .tabcard {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+      }
+
+      .tabcard .emoji {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      .tabcard h4 {
+        margin: 0 0 6px;
+        color: var(--amber);
+        font-size: 1.02rem;
+      }
+
+      .tabcard p {
+        margin: 0;
+        font-size: 0.92rem;
+        color: var(--text-dim);
+      }
+
+      .callout {
+        border-left: 3px solid var(--amber);
+        background: rgba(251, 191, 36, 0.07);
+        padding: 12px 18px;
+        border-radius: 0 10px 10px 0;
+        margin: 18px 0;
+        font-size: 0.95rem;
+      }
+
+      .callout strong {
+        color: var(--amber);
+      }
+
+      .formula {
+        font-family: "SF Mono", Consolas, Menlo, monospace;
+        background: var(--bg-deep);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        color: var(--amber);
+        font-size: 0.95rem;
+        margin: 16px 0;
+        overflow-x: auto;
+      }
+
+      kbd {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 2px 7px;
+        font-size: 0.85em;
+        font-family: inherit;
+        color: var(--text);
+      }
+
+      hr.sep {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 56px 0;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--text-faint);
+        font-size: 0.85rem;
+        margin-top: 60px;
+      }
+
+      footer a {
+        color: var(--text-dim);
+      }
+
+      .top-of-page {
+        display: block;
+        text-align: right;
+        margin-top: -30px;
+        margin-bottom: 20px;
+      }
+
+      .top-of-page a {
+        font-size: 0.82rem;
+        color: var(--text-faint);
+        text-decoration: none;
+      }
+
+      .top-of-page a:hover {
+        color: var(--amber);
+      }
+      code {
+        background: var(--bg-deep);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-family: "SF Mono", Consolas, Menlo, monospace;
+        font-size: 0.88em;
+        color: var(--text);
+      }
+
+      ul { padding-left: 22px; }
+      li { margin-bottom: 6px; color: #d4dbe6; }
+    
+      /* ── Pagina Planner ─────────────────────────────────────── */
+      .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+      .cta {
+        display: inline-block; text-decoration: none; font-weight: 800;
+        background: var(--amber); color: #1a1a2e; padding: 12px 22px;
+        border-radius: 10px; font-size: 1.02rem;
+      }
+      .cta:hover { background: #fcd34d; }
+      .cta-2 {
+        display: inline-block; text-decoration: none; font-weight: 700;
+        border: 1px solid var(--border); color: var(--text); padding: 12px 18px;
+        border-radius: 10px; font-size: 0.98rem;
+      }
+      .cta-2:hover { border-color: var(--amber-dim); color: var(--amber); }
+      .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+      video { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: #000; }
+      .faq h3 { margin-top: 22px; }
+      .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 8px; }
+      .ba figure { margin: 0; }
+      .ba img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--border); }
+      .ba a:hover img { border-color: var(--amber-dim); }
+      .ba figcaption { text-align: center; font-size: 0.9rem; color: var(--text-dim); margin-top: 6px; }
+      .ba figcaption strong { color: var(--amber); }
+      .ba-title { font-weight: 700; color: var(--text); margin: 26px 0 0; }
+      @media (max-width: 640px) { .ba { grid-template-columns: 1fr; } }
+</style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <div class="top">
+        <a class="brand" href="/">
+          <span class="swords">⚔️</span>
+          FOE OPTIMIZER
+        </a>
+        <div class="top-actions">
+          <span class="lang-switch active">🇬🇧 English</span>
+          <span class="lang-sep">/</span>
+          <a class="lang-switch" href="/planner-it.html">🇮🇹 Italiano</a>
+          <a class="back-link" href="/">Open the tool →</a>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1>Forge of Empires City Planner</h1>
+        <p>A free, automatic city planner for Forge of Empires. Import your city and the Planner rearranges your buildings from scratch, looking for the layout with the fewest roads, so more of your city is left for buildings.</p>
+        <div class="badges"><span class="pill">100% free</span><span class="pill">No sign-up</span><span class="pill">Runs in your browser</span><span class="pill">English &amp; Italian</span></div>
+        <div class="cta-row">
+          <a class="cta" href="/">Open the Planner →</a>
+          <a class="cta-2" href="/guide.html#importing">How to import your city</a>
+        </div>
+      </div>
+
+      <section id="before-after">
+        <h2>📐 Before and after</h2>
+        <p class="lede">Two real cities, before and after the Planner. Same buildings: the road tiles saved become free space (in yellow). Click a map to see it full size.</p>
+        <p class="ba-title">Example 1</p>
+        <div class="ba">
+          <figure>
+            <a href="/planner-prima-1.png" target="_blank" rel="noopener"><img src="/planner-prima-1.jpg" alt="Forge of Empires city before the Planner, example 1" width="1000" height="1056" loading="lazy"></a>
+            <figcaption>Before: <strong>~406</strong> road tiles</figcaption>
+          </figure>
+          <figure>
+            <a href="/planner-dopo-1.png" target="_blank" rel="noopener"><img src="/planner-dopo-1.jpg" alt="Forge of Empires city after the Planner, example 1" width="1000" height="1056" loading="lazy"></a>
+            <figcaption>After: <strong>~93</strong> road tiles (−77%)</figcaption>
+          </figure>
+        </div>
+        <p class="ba-title">Example 2</p>
+        <div class="ba">
+          <figure>
+            <a href="/planner-prima-2.png" target="_blank" rel="noopener"><img src="/planner-prima-2.jpg" alt="Forge of Empires city before the Planner, example 2" width="1000" height="824" loading="lazy"></a>
+            <figcaption>Before: <strong>~208</strong> road tiles</figcaption>
+          </figure>
+          <figure>
+            <a href="/planner-dopo-2.png" target="_blank" rel="noopener"><img src="/planner-dopo-2.jpg" alt="Forge of Empires city after the Planner, example 2" width="1000" height="824" loading="lazy"></a>
+            <figcaption>After: <strong>~96</strong> road tiles (−54%)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="why">
+        <h2>🗺️ Why use it</h2>
+        <p class="lede">Roads produce nothing. Every road tile you save is space for another building.</p>
+        <div class="tabgrid">
+          <div class="tabcard">
+            <span class="emoji">🛣️</span>
+            <h4>Fewer roads</h4>
+            <p>The Planner searches for the arrangement that connects every building with as few road tiles as possible, and shows you how many you save.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">⚡</span>
+            <h4>Several layouts at once</h4>
+            <p>It explores several scenarios in parallel (Connector 3, 4 and 5, Pinwheel, Pinwheel 2 and your Current layout), each with its own map and stats.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🚗</span>
+            <h4>Two-lane roads</h4>
+            <p>Buildings that need two-lane roads are connected to 2×2 roads.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🔗</span>
+            <h4>Chains kept together</h4>
+            <p>Statue of Honor and Victory Roads, trains, Hippodrome: each chain stays together as one block.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">⚔️</span>
+            <h4>Smart about military buildings</h4>
+            <p>With Alcatraz or the Star Warship, military buildings don't need a road: you choose which ones to connect anyway.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">✏️</span>
+            <h4>Edit before and after</h4>
+            <p>Remove buildings or add new ones from your inventory or the database before optimizing; fine-tune the result in the built-in editor.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">⬇️</span>
+            <h4>PNG and JSON export</h4>
+            <p>Download the solution as an image to follow while you rebuild, or as a JSON file to share.</p>
+          </div>
+          <div class="tabcard">
+            <span class="emoji">🔒</span>
+            <h4>Private</h4>
+            <p>Everything runs in your browser: no account, no server, your city stays on your computer.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="how">
+        <h2>🧭 How it works</h2>
+        <ol class="steps">
+          <li>
+            <h4>Import your city</h4>
+            <p>With the FoE Optimizer bookmark and FoE Helper or Forge Hammer, or by loading a JSON file (FoE Optimizer, FoE Helper or Forge Hammer export).</p>
+          </li>
+          <li>
+            <h4>Optimize</h4>
+            <p>Open the Planner tab and press Optimize: the search starts on every scenario and improves as it goes.</p>
+          </li>
+          <li>
+            <h4>Pause and smooth</h4>
+            <p>When the numbers stop improving, pause. Smooth (optional) reduces corners and gaps so small buildings fit better.</p>
+          </li>
+          <li>
+            <h4>Complete</h4>
+            <p>The Planner places the buildings that don't need a road and finishes every map.</p>
+          </li>
+          <li>
+            <h4>Rebuild in the game</h4>
+            <p>Pick the layout you like, adjust it in the editor if needed, download the PNG and rearrange your city in Forge of Empires.</p>
+          </li>
+        </ol>
+        <div class="callout"><strong>Tip:</strong> MIN / MED / MAX choose how much of your computer's power the Planner uses. The full step-by-step explanation is in the <a href="/guide.html#tab-planner">guide</a>.</div>
+      </section>
+
+      <section id="video">
+        <h2>🎬 Video tutorial</h2>
+        <p class="lede">The Planner explained step by step (video in Italian).</p>
+        <video controls preload="none" poster="/planner-ita.jpg" width="1920" height="1080">
+          <source src="/video/planner-ita.mp4" type="video/mp4">
+        </video>
+      </section>
+
+      <section id="faq" class="faq">
+        <h2>❓ Frequently asked questions</h2>
+        <h3>Is the Forge of Empires city planner free?</h3>
+        <p>Yes, completely: no account, no subscription, no limits, no ads.</p>
+        <h3>Does it move the buildings in my game?</h3>
+        <p>No. FoE Optimizer never touches your game: it shows you a better layout, and you rebuild it in Forge of Empires yourself, following the map or the PNG.</p>
+        <h3>What do I need to import my city?</h3>
+        <p>A desktop browser with FoE Helper or Forge Hammer and the FoE Optimizer bookmark, or a JSON export of the city from FoE Optimizer, FoE Helper or Forge Hammer.</p>
+        <h3>Does it handle two-lane roads, chains and sets?</h3>
+        <p>Two-lane roads and chains (Statue of Honor, trains, Hippodrome) yes. Building sets with adjacency bonuses are not handled: the Planner flags them in the statistics.</p>
+        <h3>How long does it take?</h3>
+        <p>It depends on the size of the city and on your computer. The search runs on several scenarios in parallel and keeps improving: pause it when the numbers stop changing.</p>
+        <h3>Is my data safe?</h3>
+        <p>Yes. Everything is processed and saved only in your browser; no server receives your city.</p>
+      </section>
+
+      <div class="card card-amber">
+        <p style="margin:0">Ready to free up space in your city? Import it and let the Planner do the work.</p>
+        <div class="cta-row"><a class="cta" href="/">Open the Planner →</a></div>
+      </div>
+
+      <footer>
+        <p><a href="/">← Back to FoE Optimizer</a> · <a href="/guide.html">Guide</a> · <a href="/planner-it.html">Italiano</a></p>
+        <p>Forge of Empires is a trademark of InnoGames GmbH. FoE Optimizer is an independent hobby project, not affiliated with InnoGames.</p>
+      </footer>
+
+    </div>
+  </body>
+</html>
