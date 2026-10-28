@@ -19,6 +19,7 @@
 - Online guide rewritten for version 2.0 (Italian and English)
 ### Bug Fixes
 - Planner, "Current layout": road buildings added with "Edit city" are now connected by opening new roads (the search used to get stuck with one building left out)
+- Planner, Complete: no more scattered gaps; the remaining free space is gathered into a single gap, as square as possible. In "Current layout" buildings without a road stay where they are if their spot is still free
 
 ---
 

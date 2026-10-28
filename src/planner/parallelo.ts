@@ -74,6 +74,7 @@ export function runCompletionParallela(problem: PlannerProblem, opts: Completion
       ...(opts.seme !== undefined ? { seme: opts.seme } : {}),
       ...(opts.stradeFisse ? { stradeFisse: opts.stradeFisse } : {}),
       ...(opts.rami ? { rami: true } : {}),
+      ...(opts.posizioniSenzaStrada ? { posizioniSenzaStrada: opts.posizioniSenzaStrada } : {}),
     },
     ha: {
       adotta: !!opts.adotta,

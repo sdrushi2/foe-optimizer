@@ -19,6 +19,7 @@
 - Guida online riscritta per la versione 2.0 (italiano e inglese)
 ### Correzioni
 - Planner, "Configurazione attuale": gli edifici con strada aggiunti con "Modifica città" vengono ora collegati aprendo nuove strade (prima la ricerca restava ferma con un edificio fuori)
+- Planner, Completa: niente più buchi sparsi; lo spazio libero rimasto viene raccolto in un unico buco, il più quadrato possibile. In "Configurazione attuale" gli edifici senza strada restano al loro posto se è ancora libero
 
 ---
 

@@ -181,6 +181,11 @@ export interface CompletionOptions {
    *  qualunque cella di strada (anche di lato) e può passare sopra edifici con
    *  strada spostabili, che tornano in gioco. */
   rami?: boolean;
+  /** "Configurazione attuale": posizioni degli edifici senza strada nella
+   *  città com'è. Al completamento restano dove sono (se il posto è ancora
+   *  libero) e il riempimento piazza solo gli altri: la città senza modifiche
+   *  torna identica, invece di essere ririempita da zero con buchi sparsi. */
+  posizioniSenzaStrada?: ReadonlyArray<readonly [string, { x: number; y: number }]>;
   /** Seme del generatore casuale della ricerca (default 12345). Più ricerche
    *  dello stesso scenario con semi diversi prendono strade diverse. */
   seme?: number;
@@ -3721,6 +3726,13 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
 
   // ── B. Edifici senza strada → algoritmo di fase2 su tutta l'area libera ────
   const LBL = "Completamento · edifici senza strada (algoritmo fase 2)";
+  // Configurazione attuale: prima al loro posto, se è ancora libero (i più grandi prima)
+  if (opts.posizioniSenzaStrada?.length) {
+    const lista = opts.posizioniSenzaStrada.map(([id, q]) => [byId.get(id), q] as const)
+      .filter((e): e is readonly [PlannerBuilding, { x: number; y: number }] => !!e[0] && !e[0].isTownhall && e[0].roadLevel === 0 && !placements.has(e[0].id))
+      .sort((a, b) => b[0].w * b[0].h - a[0].w * a[0].h);
+    for (const [b, q] of lista) if (fits(q.x, q.y, b.w, b.h)) { placements.set(b.id, { x: q.x, y: q.y }); occupy(q.x, q.y, b.w, b.h); }
+  }
   const pool = problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0 && !placements.has(b.id));
   if (pool.length) {
     await emit(LBL + " · calcolo…", null, []);
@@ -3790,15 +3802,17 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
  * Richieste dell'utente: il riempimento non si accontenta della prima
  * soluzione; si possono spostare TUTTI gli edifici senza strada (anche di
  * fase 1 e 2); strade, municipio ed edifici con strada restano fermi.
- * Obiettivi, in ordine:
- *  1. piazzare tutti gli edifici senza strada "veri" (entrambi i lati >= 2);
- *  2. colmare i BUCHI INTERNI (celle libere in zone che non toccano il bordo
- *     dell'area sbloccata), lasciando lo spazio libero fuori dal perimetro
- *     occupato, dove entrano edifici più grandi;
- *  2b. meno STRADE VUOTE (celle di strada con un lato libero: strade sprecate);
- *  3. minimo PERIMETRO ESPOSTO (lati fra una cella libera e una occupata) →
- *     la massa degli edifici resta compatta;
- *  4. meno zone libere.
+ * Obiettivi, in ordine (ottobre 2026, richiesta dell'utente: niente buchi
+ * sparsi, "tutto lo spazio libero rimanente un unico buco contiguo, il più
+ * quadrato possibile"), valutati CON i tappabuchi messi:
+ *  1. piazzare tutti gli edifici senza strada (area dei non piazzati);
+ *  2. meno ZONE LIBERE (componenti di celle libere): l'ideale è una sola;
+ *  3. minimo PERIMETRO DELLO SPAZIO LIBERO (bordo della mappa compreso): a
+ *     parità di area vince il buco più quadrato (5×6 meglio di 2×15);
+ *  4. meno STRADE VUOTE (celle di strada con un lato libero: strade sprecate);
+ *  5. minimo PERIMETRO ESPOSTO (lati fra una cella libera e una occupata).
+ * (Prima: buchi interni → strade vuote → perimetro esposto → zone; i buchi
+ * sul bordo non contavano e restavano sparsi.)
  * Prima ancora dei buchi: nessun pezzo STACCATO (edifici senza strada non
  * collegati, attraverso celle occupate, alla massa del municipio).
  * I pezzi con un lato = 1 sono tappabuchi: esclusi dalla ricerca e messi
@@ -3828,7 +3842,11 @@ async function rifinisciSenzaStrada(
   const tappo = (id: string) => { const b = byId.get(id); return !!b && !b.isTownhall && b.roadLevel === 0 && piccolo(b); };
   const roads = start.roads;
   const pl = new Map(start.placements);
-  for (const id of [...pl.keys()]) if (tappo(id)) pl.delete(id); // i tappabuchi si rimettono alla fine
+  /** Posto dei tappabuchi all'inizio: si rimettono lì se è ancora libero
+   *  (altrimenti la disposizione di partenza, es. la città com'è, perdeva i
+   *  suoi 1×2 e 1×3 ben incastrati e li ripiazzava peggio). */
+  const tappiIniziali = new Map<string, { x: number; y: number }>();
+  for (const id of [...pl.keys()]) if (tappo(id)) { tappiIniziali.set(id, pl.get(id)!); pl.delete(id); } // i tappabuchi si rimettono alla fine
   /** cella → id dell'edificio (o "#" per la strada). */
   const owner = new Map<string, string>();
   for (const r of roads) owner.set(r, "#");
@@ -3949,26 +3967,70 @@ async function rifinisciSenzaStrada(
   const stradeIdx: number[] = [];
   for (const r of roads) { const j = r.indexOf(","), g = gIdx(Number(r.slice(0, j)), Number(r.slice(j + 1))); if (g >= 0) stradeIdx.push(g); }
   /** strade_vuote (roadEff.ts): celle di strada con un lato su una cella libera. */
-  const stradeVuote = () => {
+  const stradeVuote = (oc: Uint8Array = og) => {
     let n = 0;
     for (const g of stradeIdx) {
       const x = g % GW, y = (g - x) / GW;
-      const libera = (nx: number, ny: number) => nx >= 0 && ny >= 0 && nx < GW && ny < GH && cellG[ny * GW + nx] === 1 && og[ny * GW + nx] === 0;
+      const libera = (nx: number, ny: number) => nx >= 0 && ny >= 0 && nx < GW && ny < GH && cellG[ny * GW + nx] === 1 && oc[ny * GW + nx] === 0;
       if (libera(x + 1, y) || libera(x - 1, y) || libera(x, y + 1) || libera(x, y - 1)) n++;
     }
     return n;
   };
+  /** Lo spazio libero rimasto (richiesta dell'utente: "tutto lo spazio
+   *  libero rimanente deve essere un unico buco contiguo, il più quadrato
+   *  possibile; meglio un 5×6 che un 2×15"): zone libere (componenti 4-
+   *  connesse) e perimetro dello spazio libero (lati di una cella libera
+   *  verso una cella non libera, bordo della mappa compreso: a parità di
+   *  area è minimo per il rettangolo più quadrato). `minori` = celle delle
+   *  zone diverse dalla più grande (quelle da eliminare). */
+  const analizzaLibere = (oc: Uint8Array) => {
+    const visto = new Uint8Array(N);
+    let zone = 0, perimetro = 0, maxN = 0, maxS = -1;
+    const zoneCelle: number[][] = [];
+    for (let s0 = 0; s0 < N; s0++) {
+      if (!cellG[s0] || oc[s0] || visto[s0]) continue;
+      zone++;
+      let n = 0;
+      coda[n++] = s0; visto[s0] = 1;
+      for (let i = 0; i < n; i++) {
+        const c = coda[i]!, x = c % GW, y = (c - x) / GW;
+        for (let d = 0; d < 4; d++) {
+          const nx = d === 0 ? x + 1 : d === 1 ? x - 1 : x, ny = d === 2 ? y + 1 : d === 3 ? y - 1 : y;
+          if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) { perimetro++; continue; }
+          const g = ny * GW + nx;
+          if (!cellG[g] || oc[g]) { perimetro++; continue; }
+          if (visto[g]) continue;
+          visto[g] = 1; coda[n++] = g;
+        }
+      }
+      zoneCelle.push(Array.from(coda.subarray(0, n)));
+      if (n > maxN) { maxN = n; maxS = zoneCelle.length - 1; }
+    }
+    const minori: number[] = [];
+    zoneCelle.forEach((z, i) => { if (i !== maxS) for (const g of z) minori.push(g); });
+    return { zone, perimetro, minori, tutte: zoneCelle };
+  };
   let buchiInterni: number[] = [];
+  /** Tappabuchi messi sulla disposizione dell'ultimo punteggio (per mostrarla senza ricalcolarli). */
+  let ultimiTappi: Map<string, { x: number; y: number }> | null = null;
+  const ogT = new Uint8Array(N);
   const punteggio = (): Punti => {
     let fuori = 0;
-    for (const b of grandi) if (!pl.has(b.id)) fuori += b.w * b.h;
+    // valutata con i tappabuchi messi (1×n): sono loro a chiudere o a
+    // lasciare aperti i buchi piccoli
+    const conTappi = tappabuchi(pl);
+    ultimiTappi = conTappi;
+    ogT.set(og);
+    for (const b of senzaStrada) { const q = conTappi.get(b.id); if (!q) fuori += b.w * b.h; else if (tappo(b.id)) segnaG(ogT, b.id, q, 1); }
     const m = massa();
     let staccati = 0;
     staccatiIds = [];
     for (const [id, q] of pl) if (mobile(id) && !m[gIdx(q.x, q.y)]) { const b = byId.get(id)!; staccati += b.w * b.h; staccatiIds.push(id); }
-    const a = analizza(og);
-    buchiInterni = a.elenco;
-    return [fuori, staccati, a.elenco.length, stradeVuote(), a.perimetro, a.zone, gruppi()];
+    const L = analizzaLibere(ogT);
+    // bersagli delle mosse: le zone libere da eliminare; con una zona sola, la zona stessa (per compattarla)
+    buchiInterni = L.zone > 1 ? L.minori : (L.tutte[0] ?? []);
+    const a = analizza(ogT);
+    return [fuori, staccati, L.zone, L.perimetro, stradeVuote(ogT), a.perimetro, gruppi()];
   };
   /** Senza i gruppi: il cammino delle mosse di riempimento non ne tiene
    *  conto (altrimenti esplora meno e i buchi/il perimetro peggiorano). */
@@ -3994,11 +4056,23 @@ async function rifinisciSenzaStrada(
     const isOcc = (k: string) => occ.has(k);
     const ocG = new Uint8Array(N);
     for (const k of occ) { const j = k.indexOf(","), g = gIdx(Number(k.slice(0, j)), Number(k.slice(j + 1))); if (g >= 0) ocG[g] = 1; }
-    let interni = analizza(ocG).interni;
+    /** Celle delle zone libere minori (non la più grande): lì vanno per primi i tappabuchi. */
+    const minoriDi = (oc: Uint8Array) => { const m = new Uint8Array(N); for (const g of analizzaLibere(oc).minori) m[g] = 1; return m; };
+    let interni = minoriDi(ocG);
     // tipo per cella (a parità di posto, un tappabuchi va accanto a uno uguale)
     const tipoCella = new Map<string, string>();
     for (const [id, q] of base) { const b = byId.get(id); if (b && !b.isTownhall && b.roadLevel === 0) for (const k of celle(id, q)) tipoCella.set(k, b.entityId || b.name); }
+    // prima al loro posto iniziale, se è ancora libero
+    const daCercare: PlannerBuilding[] = [];
     for (const b of piccoli) {
+      const q = tappiIniziali.get(b.id);
+      if (!q || !libera(q.x, q.y, b.w, b.h, isOcc)) { daCercare.push(b); continue; }
+      out.set(b.id, q);
+      for (const k of celle(b.id, q)) { occ.add(k); tipoCella.set(k, b.entityId || b.name); }
+      segnaG(ocG, b.id, q, 1);
+    }
+    if (daCercare.length !== piccoli.length) interni = minoriDi(ocG);
+    for (const b of daCercare) {
       const tb = b.entityId || b.name;
       let best: [number, number] | null = null, bv = -1, bc = 0;
       for (const k of problem.cells) {
@@ -4016,13 +4090,13 @@ async function rifinisciSenzaStrada(
       out.set(b.id, { x: best[0], y: best[1] });
       for (const k of celle(b.id, { x: best[0], y: best[1] })) { occ.add(k); tipoCella.set(k, tb); }
       segnaG(ocG, b.id, { x: best[0], y: best[1] }, 1);
-      if (bc) interni = analizza(ocG).interni;
+      if (bc) interni = minoriDi(ocG);
     }
     return out;
   };
   let corrente = punteggio();
   let migliore = { pl: new Map(pl), punti: corrente };
-  let mostrata = tappabuchi(migliore.pl);
+  let mostrata = ultimiTappi ?? tappabuchi(migliore.pl);
   const rnd = mulberry32(777);
   let valutate = getValutate(), trovataAl = valutate, senzaMigliorare = 0;
   const mostra = (stato: string) => {
@@ -4031,7 +4105,7 @@ async function rifinisciSenzaStrada(
       placements: new Map(mostrata), roads: new Set(roads), probe: null, lastPath: [],
       placed: mostrata.size, unplaced: fuori, iterations: valutate, done: false,
       search: { valutate, strade: null, spreco: 0, buchi: migliore.punti[2], latiLiberi: 0, trovataAl, esclusi: 0, attiva: stato === "" },
-      label: `Rifinitura edifici senza strada · ${valutate.toLocaleString()} tentativi · buchi interni ${migliore.punti[2]} · strade vuote ${migliore.punti[3]} · perimetro ${migliore.punti[4]}`
+      label: `Rifinitura edifici senza strada · ${valutate.toLocaleString()} tentativi · zone libere ${migliore.punti[2]} · perimetro libero ${migliore.punti[3]} · strade vuote ${migliore.punti[4]}`
         + `${migliore.punti[1] ? ` · ${migliore.punti[1]} celle staccate` : ""}`
         + `${fuori.length ? ` · ${fuori.length} non piazzati` : ""}${stato}`,
     });
@@ -4098,7 +4172,7 @@ async function rifinisciSenzaStrada(
     const u = rnd();
     // prima i buchi e i pezzi fuori: gli scambi per i gruppi solo di rado
     // finché ce ne sono
-    const sc = corrente[6] && rnd() < (corrente[0] || corrente[1] || corrente[2] ? 0.03 : 0.25) ? scambioGruppi() : null;
+    const sc = corrente[6] && rnd() < (corrente[0] || corrente[1] || corrente[2] > 1 ? 0.03 : 0.25) ? scambioGruppi() : null;
     if (sc) {
       // (c) scambio fra pezzi con la stessa impronta per riunire i gruppi
       const [A, B] = sc, qA = pl.get(A)!, qB = pl.get(B)!;
@@ -4163,7 +4237,7 @@ async function rifinisciSenzaStrada(
     if ((sc ? confronta(pt, corrente) : confronta6(pt, corrente)) <= 0) {
       corrente = pt;
       if (confronta(pt, migliore.punti) < 0) {
-        migliore = { pl: new Map(pl), punti: pt }; mostrata = tappabuchi(migliore.pl);
+        migliore = { pl: new Map(pl), punti: pt }; mostrata = ultimiTappi ?? tappabuchi(migliore.pl);
         migliorata = true; trovataAl = valutate; senzaMigliorare = 0;
       }
     } else {
