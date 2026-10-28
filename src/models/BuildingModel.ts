@@ -240,7 +240,7 @@ export class BuildingModel {
    */
   private static createBaseBuilding(id: string, name: string): Building {
     return {
-      id, name, names: { it: name, en: name }, hash: "", light: false, cityEntityId: id,
+      id, name, names: { it: name, en: name }, hash: "", cityEntityId: id,
       time: 0, size: "1x1", area: 1, road: 0, roadLvl: 0, pop: 0, fel: 0,
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,

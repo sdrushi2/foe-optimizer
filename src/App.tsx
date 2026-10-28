@@ -3948,7 +3948,7 @@ export default function App() {
   // Helper: building placeholder per edifici non presenti nel CSV.
   const placeholderBuilding = useCallback((bldId: string, name: string): InventoryRowBuilding => {
     return {
-      id: `placeholder-${bldId}`, name, names: { it: name, en: name }, hash: "", light: false, cityEntityId: bldId,
+      id: `placeholder-${bldId}`, name, names: { it: name, en: name }, hash: "", cityEntityId: bldId,
       time: 0, size: "?", area: 0, road: 0, roadLvl: 0, pop: 0, fel: 0,
       general: [0,0,0,0], gbg: [0,0,0,0], sped: [0,0,0,0], iq: [0,0,0,0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,

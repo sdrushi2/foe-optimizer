@@ -52,10 +52,6 @@ export interface Building {
    *  "L_AllAge_CupBonus1-2b911bbae"). Interpretato da getImageUrl(). Vuoto
    *  per gli edifici senza immagine (es. i "Dummy"). */
   hash: string;
-  /** true se l'edificio fa parte del set "principale" (823 edifici storici,
-   *  Light=1 nel CSV); false per i livelli intermedi/varianti aggiunti dopo.
-   *  Usato dallo switch LIGHT/FULL nella tab Info. */
-  light: boolean;
   time: number;
   size: string; // es. "3x5" (solo per visualizzazione)
   area: number; // es. 15 (per ordinamento e logica)
@@ -382,7 +378,6 @@ export function parseBuildingsCsv(csv: string): Building[] {
       name,
       names,
       hash: getText(parts, "Hash"),
-      light: getText(parts, "Light") === "1",
       time: getNumber(parts, "Time"),
       size,
       area,

@@ -4548,9 +4548,9 @@
         "it": "Kit di aggiornamento Statua del Serpente piumato"
       },
       "steps": [
-        "R_MultiAge_Expedition22a",
-        "R_MultiAge_Expedition22b",
-        "R_MultiAge_Expedition22c"
+        "W_MultiAge_Expedition22a",
+        "W_MultiAge_Expedition22b",
+        "W_MultiAge_Expedition22c"
       ]
     },
     "upgrade_kit_feathered_serpent_statue_gold": {
@@ -4559,8 +4559,8 @@
         "it": "Kit aggiornamento Statua del Serpente Piumato Oro"
       },
       "steps": [
-        "R_MultiAge_Expedition22dSilver",
-        "R_MultiAge_Expedition22eGold"
+        "W_MultiAge_Expedition22dSilver",
+        "W_MultiAge_Expedition22eGold"
       ]
     },
     "upgrade_kit_feathered_serpent_statue_platinum": {
@@ -4569,8 +4569,8 @@
         "it": "Kit Aggiornamento Platino Statua del Serpente Piumato "
       },
       "steps": [
-        "R_MultiAge_Expedition22eGold",
-        "R_MultiAge_Expedition22fPlatinum"
+        "W_MultiAge_Expedition22eGold",
+        "W_MultiAge_Expedition22fPlatinum"
       ]
     },
     "upgrade_kit_feathered_serpent_statue_silver": {
@@ -4579,8 +4579,8 @@
         "it": "Kit aggiornamento Statua del Serpente piumato Argento"
       },
       "steps": [
-        "R_MultiAge_Expedition22c",
-        "R_MultiAge_Expedition22dSilver"
+        "W_MultiAge_Expedition22c",
+        "W_MultiAge_Expedition22dSilver"
       ]
     },
     "upgrade_kit_ferris_wheel": {
@@ -5357,8 +5357,8 @@
         "it": "Kit Aggiornamento Piume del Serpente Oro"
       },
       "steps": [
-        "D_MultiAge_Expedition22FeathersSilver",
-        "D_MultiAge_Expedition22FeathersGold"
+        "W_MultiAge_Expedition22FeathersSilver",
+        "W_MultiAge_Expedition22FeathersGold"
       ]
     },
     "upgrade_kit_serpent_feathers_platinum": {
@@ -5367,8 +5367,8 @@
         "it": "Kit aggiornamento Platino Piume del Serpente"
       },
       "steps": [
-        "D_MultiAge_Expedition22FeathersGold",
-        "D_MultiAge_Expedition22FeathersPlatinum"
+        "W_MultiAge_Expedition22FeathersGold",
+        "W_MultiAge_Expedition22FeathersPlatinum"
       ]
     },
     "upgrade_kit_serpent_feathers_silver": {
@@ -5377,8 +5377,8 @@
         "it": "Kit Aggiornamento Piume del Serpente Argento"
       },
       "steps": [
-        "D_MultiAge_Expedition22Feathers",
-        "D_MultiAge_Expedition22FeathersSilver"
+        "W_MultiAge_Expedition22Feathers",
+        "W_MultiAge_Expedition22FeathersSilver"
       ]
     },
     "upgrade_kit_serpent_scales_gold": {
@@ -5387,8 +5387,8 @@
         "it": "Kit Aggiornamento Pinne del Serpente Oro"
       },
       "steps": [
-        "D_MultiAge_Expedition22ScalesSilver",
-        "D_MultiAge_Expedition22ScalesGold"
+        "W_MultiAge_Expedition22ScalesSilver",
+        "W_MultiAge_Expedition22ScalesGold"
       ]
     },
     "upgrade_kit_serpent_scales_platinum": {
@@ -5397,8 +5397,8 @@
         "it": "Kit aggiornamento Platino Scaglie del Serpente"
       },
       "steps": [
-        "D_MultiAge_Expedition22ScalesGold",
-        "D_MultiAge_Expedition22ScalesPlatinum"
+        "W_MultiAge_Expedition22ScalesGold",
+        "W_MultiAge_Expedition22ScalesPlatinum"
       ]
     },
     "upgrade_kit_serpent_scales_silver": {
@@ -5407,8 +5407,8 @@
         "it": "Kit Aggiornamento Pinne del Serpente Argento"
       },
       "steps": [
-        "D_MultiAge_Expedition22Scales",
-        "D_MultiAge_Expedition22ScalesSilver"
+        "W_MultiAge_Expedition22Scales",
+        "W_MultiAge_Expedition22ScalesSilver"
       ]
     },
     "upgrade_kit_serpent_spikes_gold": {
@@ -5417,8 +5417,8 @@
         "it": "Kit Aggiornamento Spuntoni del Serpente Oro"
       },
       "steps": [
-        "D_MultiAge_Expedition22SpikesSilver",
-        "D_MultiAge_Expedition22SpikesGold"
+        "W_MultiAge_Expedition22SpikesSilver",
+        "W_MultiAge_Expedition22SpikesGold"
       ]
     },
     "upgrade_kit_serpent_spikes_platinum": {
@@ -5427,8 +5427,8 @@
         "it": "Kit aggiornamento Platino Spuntoni del Serpente"
       },
       "steps": [
-        "D_MultiAge_Expedition22SpikesGold",
-        "D_MultiAge_Expedition22SpikesPlatinum"
+        "W_MultiAge_Expedition22SpikesGold",
+        "W_MultiAge_Expedition22SpikesPlatinum"
       ]
     },
     "upgrade_kit_serpent_spikes_silver": {
@@ -5437,8 +5437,8 @@
         "it": "Kit Aggiornamento Spuntoni del Serpente Argento"
       },
       "steps": [
-        "D_MultiAge_Expedition22Spikes",
-        "D_MultiAge_Expedition22SpikesSilver"
+        "W_MultiAge_Expedition22Spikes",
+        "W_MultiAge_Expedition22SpikesSilver"
       ]
     },
     "upgrade_kit_shrine_of_knowledge": {
@@ -7004,7 +7004,7 @@
         "it": "Kit selezione Statua del Serpente"
       },
       "options": [
-        "R_MultiAge_Expedition22a",
+        "W_MultiAge_Expedition22a",
         "upgrade_kit_feathered_serpent_statue"
       ]
     },
@@ -7014,9 +7014,9 @@
         "it": "Kit a catena Statua del Serpente piumato"
       },
       "options": [
-        "D_MultiAge_Expedition22Spikes",
-        "D_MultiAge_Expedition22Feathers",
-        "D_MultiAge_Expedition22Scales"
+        "W_MultiAge_Expedition22Spikes",
+        "W_MultiAge_Expedition22Feathers",
+        "W_MultiAge_Expedition22Scales"
       ]
     },
     "selection_kit_gex1": {
@@ -9972,7 +9972,7 @@
         "it": "Kit selezione Statua del Serpente Argento"
       },
       "options": [
-        "R_MultiAge_Expedition22a",
+        "W_MultiAge_Expedition22a",
         "upgrade_kit_feathered_serpent_statue",
         "upgrade_kit_feathered_serpent_statue_silver"
       ]
@@ -10005,9 +10005,9 @@
         "it": "Kit selezione Catena del Serpente Argento"
       },
       "options": [
-        "D_MultiAge_Expedition22Spikes",
-        "D_MultiAge_Expedition22Feathers",
-        "D_MultiAge_Expedition22Scales",
+        "W_MultiAge_Expedition22Spikes",
+        "W_MultiAge_Expedition22Feathers",
+        "W_MultiAge_Expedition22Scales",
         "upgrade_kit_serpent_scales_silver",
         "upgrade_kit_serpent_spikes_silver",
         "upgrade_kit_serpent_feathers_silver"
@@ -10557,7 +10557,7 @@
         "it": "Kit Selezione Statua del Serpente Oro"
       },
       "options": [
-        "R_MultiAge_Expedition22a",
+        "W_MultiAge_Expedition22a",
         "upgrade_kit_feathered_serpent_statue",
         "upgrade_kit_feathered_serpent_statue_silver",
         "upgrade_kit_feathered_serpent_statue_gold"
@@ -10580,9 +10580,9 @@
         "it": "Kit Selezione Oro Catena Serpente"
       },
       "options": [
-        "D_MultiAge_Expedition22Spikes",
-        "D_MultiAge_Expedition22Feathers",
-        "D_MultiAge_Expedition22Scales",
+        "W_MultiAge_Expedition22Spikes",
+        "W_MultiAge_Expedition22Feathers",
+        "W_MultiAge_Expedition22Scales",
         "upgrade_kit_serpent_scales_silver",
         "upgrade_kit_serpent_spikes_silver",
         "upgrade_kit_serpent_feathers_silver",
