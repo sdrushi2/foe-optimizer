@@ -19,7 +19,7 @@ import SelettoreLingua from "./SelettoreLingua";
 
 export type Scheda = "database" | "citta" | "inventario" | "planner" | "alleati" | "insediamenti" | "opzioni" | "guida";
 
-export const SCHEDE: Array<{ id: Scheda; chiave: Parameters<typeof t>[0]; icona: LucideIcon }> = [
+const SCHEDE: Array<{ id: Scheda; chiave: Parameters<typeof t>[0]; icona: LucideIcon }> = [
   { id: "database", chiave: "r2TabDatabase", icona: Database },
   { id: "citta", chiave: "r2TabCity", icona: Building2 },
   { id: "inventario", chiave: "r2TabInventory", icona: Package },

@@ -20,7 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** File di public/data/ (stessi nomi di src/assets/ della 1.x). */
-export const FILE_DATI = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json"] as const;
+const FILE_DATI = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json"] as const;
 type FileDati = typeof FILE_DATI[number];
 
 export interface DatiGioco {

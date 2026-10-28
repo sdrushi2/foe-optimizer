@@ -21,14 +21,14 @@ import { t, type UiLang } from "../data/ui-strings";
 /** (2.0: "Slot alleato", "Utili per IQ" e "Producono frammenti" sono nel gruppo Nascondi / Mostra solo.) */
 export type Categoria = "insediamenti" | "premi_campi" | "premi_iq";
 
-export const CATEGORIE: Array<{ id: Categoria; chiave: Parameters<typeof t>[0] }> = [
+const CATEGORIE: Array<{ id: Categoria; chiave: Parameters<typeof t>[0] }> = [
   { id: "insediamenti", chiave: "r2CatSettlements" },
   { id: "premi_campi", chiave: "r2CatGbg" },
   { id: "premi_iq", chiave: "r2CatQi" },
 ];
 
 export interface OpzioneProduzione { key: string; icon: ReactNode; title: string }
-export interface VoceEvento { id: string; nome: string; gruppo: boolean }
+interface VoceEvento { id: string; nome: string; gruppo: boolean }
 
 export interface StatoFiltri {
   uiLang: UiLang;

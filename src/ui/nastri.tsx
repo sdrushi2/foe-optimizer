@@ -90,9 +90,9 @@ export interface ContestoNastri {
   consigliere: Interruttore & { disponibile: boolean };
 }
 
-export type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "aiuto" | "immagazzina" | "ge";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "aiuto" | "immagazzina" | "ge";
 
-export interface Interruttore { attivo: boolean; cambia: () => void }
+interface Interruttore { attivo: boolean; cambia: () => void }
 
 /** Nastro della scheda: i gruppi della scheda e, nelle schede della città
  *  (Città, Inventario, Alleati, Planner sulla città selezionata), in testa il
