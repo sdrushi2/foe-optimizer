@@ -1,25 +1,19 @@
 # Novità di FoE Optimizer
 
-## Versione 2.001 (27/10/2026)
-### Novità
-- Planner: le città con tanti edifici a strada a due corsie vengono disposte con una nuova rete "a pettine"
-- Nuova colonna Medaglie tra le produzioni degli edifici (anche nel filtro Produzione)
-### Aggiornamenti
-- Guida online riscritta per la versione 2.0 (italiano e inglese)
-
----
-
-## Versione 2.000 (26/10/2026)
+## Versione 2.000 (28/10/2026)
 ### Novità
 - NUOVA VERSIONE 2.0: interfaccia rinnovata, con le schede in alto e un nastro di comandi che si adatta alla larghezza della finestra
 - Città salvate: le tue città, quelle visitate e quelle importate da JSON, tutte nel selettore in alto; reimportando una città viene aggiornata invece di crearne una copia
 - Importa una città da un file JSON (export di FoE Optimizer, FoE Helper o Forge Hammer) ed esporta la tua città in JSON compatibili con altri tools
+- Planner: le città con tanti edifici a strada a due corsie vengono disposte con una nuova rete "a pettine"
+- Nuova colonna Medaglie tra le produzioni degli edifici (anche nel filtro Produzione)
 - Nascondi / Mostra solo: ogni voce nasconde gli edifici oppure mostra solo quelli
 - Catalogo degli alleati nel Database
 - Tema chiaro e scuro
 - Opzioni › Cancella tutto per azzerare dati e impostazioni
 ### Aggiornamenti
 - Ricerca con più nomi separati da virgola, anche negli alleati, e per ID
+- Guida online riscritta per la versione 2.0 (italiano e inglese)
 
 ---
 

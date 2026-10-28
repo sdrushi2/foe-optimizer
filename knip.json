@@ -10,7 +10,6 @@
   "ignore": [
     "sw-template.js",
     "src/editor/condiviso.ts",
-    "functions/**",
     "scripts/**"
   ]
 }

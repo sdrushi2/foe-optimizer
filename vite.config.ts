@@ -9,12 +9,12 @@ import { manifestDati, verificaDati } from "./scripts/dati-pubblici.ts";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Versione automatica (2.0): v2.<giorni dal 26/10/2026>, a tre cifre.
-// Il 26 ottobre 2026 è v2.000, il giorno dopo v2.001, e così via (conteggio
+// Versione automatica (2.0): v2.<giorni dal 28/10/2026>, a tre cifre.
+// Il 28 ottobre 2026 è v2.000, il giorno dopo v2.001, e così via (conteggio
 // continuo, non riparte a inizio anno). Giorni di calendario locali, contati
 // in UTC per non sbagliare di un giorno al cambio dell'ora legale.
 const now = new Date();
-const GIORNO_ZERO = Date.UTC(2026, 9, 26);
+const GIORNO_ZERO = Date.UTC(2026, 9, 28);
 const oggi = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 const giorni = Math.max(0, Math.round((oggi - GIORNO_ZERO) / 86_400_000));
 

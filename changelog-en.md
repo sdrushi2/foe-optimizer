@@ -1,25 +1,19 @@
 # FoE Optimizer Changelog
 
-## Version 2.001 (27/10/2026)
-### New
-- Planner: cities with many two-lane road buildings are laid out with a new "comb" network
-- New Medals column among building productions (also in the Production filter)
-### Update
-- Online guide rewritten for version 2.0 (Italian and English)
-
----
-
-## Version 2.000 (26/10/2026)
+## Version 2.000 (28/10/2026)
 ### New
 - NEW VERSION 2.0: redesigned interface, with tabs at the top and a command ribbon that adapts to the window width
 - Saved cities: your cities, visited ones and those imported from JSON, all in the selector at the top; re-importing a city updates it instead of creating a copy
 - Import a city from a JSON file (FoE Optimizer, FoE Helper or Forge Hammer export) and export your city to JSON compatible with other tools
+- Planner: cities with many two-lane road buildings are laid out with a new "comb" network
+- New Medals column among building productions (also in the Production filter)
 - Hide / Show only: each item hides those buildings or shows only them
 - Allies catalog in the Database
 - Light and dark theme
 - Options › Erase everything to reset data and settings
 ### Update
 - Search for several names separated by commas, in allies too, and by ID
+- Online guide rewritten for version 2.0 (Italian and English)
 
 ---
 

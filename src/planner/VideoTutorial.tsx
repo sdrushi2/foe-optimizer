@@ -4,8 +4,7 @@
 //  Prima era un popup; ora è un pannello come Statistiche o Debug (riquadro
 //  squadrato, titolo in maiuscolo), aperto e chiuso da due pulsanti:
 //  Planner › Aiuto › Video tutorial e Guida › Come usare il planner.
-//  Il video (public/video/planner-ita.mp4, solo in italiano; /video/* passa da
-//  functions/video/[[file]].js per poter saltare a un punto) si scarica solo quando
+//  Il video (public/video/planner-ita.mp4, solo in italiano) si scarica solo quando
 //  si apre il pannello (preload="metadata").
 // ─────────────────────────────────────────────────────────────────────────────
 
