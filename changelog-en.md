@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.001 (29/10/2026)
+### Bug Fixes
+- Phone layout: the command ribbon scrolls instead of being cut off, and group menus stay inside the screen
+
+---
+
 ## Version 2.000 (28/10/2026)
 ### New
 - NEW VERSION 2.0: redesigned interface, with tabs at the top and a command ribbon that adapts to the window width

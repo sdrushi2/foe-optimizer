@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.001 (29/10/2026)
+### Correzioni
+- Interfaccia su telefono: il nastro dei comandi scorre invece di tagliarsi e i menu dei gruppi restano dentro lo schermo
+
+---
+
 ## Versione 2.000 (28/10/2026)
 ### Novità
 - NUOVA VERSIONE 2.0: interfaccia rinnovata, con le schede in alto e un nastro di comandi che si adatta alla larghezza della finestra
