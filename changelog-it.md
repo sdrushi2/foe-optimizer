@@ -1,6 +1,10 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.001 (29/10/2026)
+### Novità
+- Nascondi / Mostra solo: nuova voce "Richiede strada"
+### Aggiornamenti
+- Nascondi / Mostra solo e Visualizza: icone del gioco al posto di quelle generiche
 ### Correzioni
 - Interfaccia su telefono: il nastro dei comandi scorre invece di tagliarsi e i menu dei gruppi restano dentro lo schermo
 

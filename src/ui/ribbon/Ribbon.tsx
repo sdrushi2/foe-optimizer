@@ -28,6 +28,8 @@ export type RibbonItem =
       kind: "button";
       id: string;
       icon: LucideIcon;
+      /** Icona PNG del gioco al posto di `icon` (es. la strada di "Richiede strada"). */
+      img?: string;
       label: string;
       onClick?: () => void;
       /** Pulsante "acceso" (interruttore o scelta attiva). */
@@ -94,7 +96,10 @@ function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; m
         grande ? "h-[60px] min-w-[60px] flex-col justify-center gap-1.5 px-2" : "h-[22px] gap-1.5 px-1.5"
       }`}
     >
-      <Icon size={grande ? 20 : 14} strokeWidth={1.75} className={it.danger ? "text-red-400" : it.success ? "text-emerald-400" : "text-sky-300"} aria-hidden="true" />
+      {it.img
+        // grandezza originale (24×24) nel pulsante grande; 16 nei compatti, alti 22 px
+        ? <img src={it.img} alt="" width={grande ? 24 : 16} height={grande ? 24 : 16} className="shrink-0" aria-hidden="true" />
+        : <Icon size={grande ? 20 : 14} strokeWidth={1.75} className={it.danger ? "text-red-400" : it.success ? "text-emerald-400" : "text-sky-300"} aria-hidden="true" />}
       {modo !== "S" && <span>{it.label}</span>}
     </button>
   );

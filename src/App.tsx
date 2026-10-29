@@ -782,9 +782,9 @@ const HASH_SCHEDA: Record<string, Scheda> = {
 };
 
 /** Voci a tre stati del gruppo "Nascondi / Mostra solo". */
-type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "aiuto" | "immagazzina" | "ge";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge";
 type StatoTri = 0 | 1 | 2;
-const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, aiuto: 0, immagazzina: 0, ge: 0 };
+const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, strada: 0, aiuto: 0, immagazzina: 0, ge: 0 };
 /** true = riga da scartare: stato 1 scarta chi ha la caratteristica, stato 2 chi non ce l'ha. */
 const scartaTri = (stato: StatoTri, ha: boolean) => (stato === 1 ? ha : stato === 2 ? !ha : false);
 
@@ -4311,6 +4311,8 @@ export default function App() {
       // (allySlotsPerBuilding), nel Database la colonna Ally del CSV.
       if (scartaTri(tri.alleati, (isPropriacitta || isInventario) ? !!b.cityEntityId && allySlotsPerBuilding.has(b.cityEntityId) : b.ally > 0)) continue;
       if (scartaTri(tri.frammenti, !!b.cityEntityId && FRAGMENTS_PRODUCED.has(b.cityEntityId))) continue;
+      // Richiede strada (fabbisogno stradale della colonna "strada" > 0)
+      if (scartaTri(tri.strada, b.road > 0)) continue;
       if (scartaTri(tri.aiuto, b.adm > 0)) continue;
       if (scartaTri(tri.immagazzina, b.imm > 0)) continue;
       if (scartaTri(tri.ge, !!b.isGreatBuilding)) continue;

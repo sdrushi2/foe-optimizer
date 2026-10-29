@@ -36,6 +36,7 @@ export { default as iconIQBeni } from "./icons/IQBeni.png";
 export { default as iconIQTruppe } from "./icons/IQTruppe.png";
 export { default as iconIQAzioni } from "./icons/IQAzioni.png";
 export { default as iconIQCap } from "./icons/IQCap.png";
+export { default as iconIQProd } from "./icons/IQProd.png";
 export { default as iconMon } from "./icons/Mon.png";
 export { default as iconMat } from "./icons/Mat.png";
 export { default as iconFP } from "./icons/FP.png";
@@ -57,6 +58,19 @@ export { default as allies_slot_empty } from "./icons/allies_slot_empty.png";
 export { default as allies_slot_full } from "./icons/allies_slot_full.png";
 export { default as iconFragment } from "./icons/Fragment.png";
 export { default as iconMed } from "./icons/Med.png";
+// Gruppo "Nascondi / Mostra solo" del nastro (24×24): clessidra, castello dei
+// GE, scudo IQ e freccia verde dalle immagini del gioco (via FoE Helper,
+// js/web/x_img), ritagliate e ridotte a 24×24; NoRush è il divieto rosso
+// della tabella (il gioco non ha un'icona per "non accelerabile").
+export { default as iconNoRush } from "./icons/NoRush.png";
+export { default as iconAutoAge } from "./icons/AutoAge.png";
+export { default as iconLimitati } from "./icons/Limitati.png";
+export { default as iconIQ } from "./icons/IQ.png";
+export { default as iconGE } from "./icons/GE.png";
+// Gruppo "Visualizza" (24×24, stessa origine): beni, spedizione, inventario.
+export { default as iconProduzioni } from "./icons/Produzioni.png";
+export { default as iconSpedizioni } from "./icons/Spedizioni.png";
+export { default as iconInventario } from "./icons/Inventario.png";
 // Segnaposto (prima erano emoji: 🌟 🌠 ⏳ 🛠 📦): da sostituire con le icone vere.
 export { default as iconBeniSp } from "./icons/BeniSp.png";
 export { default as iconBeniSpB } from "./icons/BeniSpB.png";

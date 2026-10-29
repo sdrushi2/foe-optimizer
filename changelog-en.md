@@ -1,6 +1,10 @@
 # FoE Optimizer Changelog
 
 ## Version 2.001 (29/10/2026)
+### New
+- Hide / Show only: new "Needs road" item
+### Update
+- Hide / Show only and View: game icons instead of generic ones
 ### Bug Fixes
 - Phone layout: the command ribbon scrolls instead of being cut off, and group menus stay inside the screen
 

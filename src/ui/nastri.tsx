@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
+import { allies_slot_full, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -90,7 +91,7 @@ export interface ContestoNastri {
   consigliere: Interruttore & { disponibile: boolean };
 }
 
-type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "aiuto" | "immagazzina" | "ge";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge";
 
 interface Interruttore { attivo: boolean; cambia: () => void }
 
@@ -129,8 +130,8 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const ricerca: RibbonGroup = { id: "ricerca", label: L("r2GrpSearch"), icon: Search, priority: 2,
     help: L(sonoAlleati ? "r2SearchHelpAllies" : "r2SearchHelp"), rows: [[campoRicerca]] };
   const inArrivo = L("r2Soon");
-  const interruttore = (k: keyof ContestoNastri["vista"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], titolo?: Parameters<typeof t>[0]): RibbonItem => ({
-    kind: "button", id: k, icon, label: L(etichetta), title: titolo ? L(titolo) : undefined,
+  const interruttore = (k: keyof ContestoNastri["vista"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], titolo?: Parameters<typeof t>[0], img?: string): RibbonItem => ({
+    kind: "button", id: k, icon, ...(img ? { img } : {}), label: L(etichetta), title: titolo ? L(titolo) : undefined,
     active: c.vista[k].attivo, onClick: c.vista[k].cambia,
   });
 
@@ -141,12 +142,13 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
     { kind: "custom", id: "filtri", render: () => <BloccoFiltri s={c.filtri} /> },
   ]] };
   const vistaBase: RibbonItem[] = [
-    interruttore("pop", UsersRound, "r2Pop"),
-    interruttore("fel", Smile, "r2Fel"),
-    interruttore("iqProd", Coins, "r2IqProd", "iqProdColumnsTitle"),
-    interruttore("dettaglioProd", Package, "r2ProdDetail", "r2ProdDetailTitle"),
+    // (icone del gioco, 24×24: vedi assets/icons.ts)
+    interruttore("pop", UsersRound, "r2Pop", undefined, iconPop),
+    interruttore("fel", Smile, "r2Fel", undefined, iconFel),
+    interruttore("iqProd", Coins, "r2IqProd", "iqProdColumnsTitle", iconIQProd),
+    interruttore("dettaglioProd", Package, "r2ProdDetail", "r2ProdDetailTitle", iconProduzioni),
     // Colonne Spedizioni: ⚠️ se in Opzioni le spedizioni non contano nell'efficienza
-    { kind: "button", id: "sped", icon: Compass, active: c.vista.sped.attivo, onClick: c.vista.sped.cambia,
+    { kind: "button", id: "sped", icon: Compass, img: iconSpedizioni, active: c.vista.sped.attivo, onClick: c.vista.sped.cambia,
       label: c.spedNeiPesi ? L("r2Sped") : `${L("r2Sped")} ⚠️`,
       title: c.spedNeiPesi ? L("r2SpedTitle") : `${L("r2SpedTitle")}\n${L("r2SpedNotWeighted")}` },
   ];
@@ -175,21 +177,23 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   ]] };
   // "Nascondi / Mostra solo" (2.0): ogni voce gira su tre stati con un clic:
   // tutti → nascosti (rosso) → solo questi (verde) → tutti.
-  const tri3 = (v: keyof ContestoNastri["tri"]["stati"], icon: LucideIcon, etichetta: Parameters<typeof t>[0]): RibbonItem => {
+  // (icone del gioco, 24×24: vedi assets/icons.ts)
+  const tri3 = (v: keyof ContestoNastri["tri"]["stati"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], img: string): RibbonItem => {
     const stato = c.tri.stati[v];
     return {
-      kind: "button", id: `tri-${v}`, icon, label: L(etichetta), onClick: () => c.tri.gira(v),
+      kind: "button", id: `tri-${v}`, icon, img, label: L(etichetta), onClick: () => c.tri.gira(v),
       active: stato !== 0, danger: stato === 1, success: stato === 2,
       title: `${L(etichetta)}: ${L(stato === 1 ? "r2TriHidden" : stato === 2 ? "r2TriOnly" : "r2TriAll")}`,
     };
   };
   const nascondiMostra = (extra: RibbonItem[] = []): RibbonGroup => ({ id: "nascondi", label: L("r2GrpHideShow"), icon: EyeOff, rows: [[
-    tri3("nonAcc", ZapOff, "r2NonRush"),
-    tri3("autoAge", ChevronsUp, "r2AutoAge"),
-    tri3("limitati", Clock4, "r2Limited"),
-    tri3("iq", Atom, "r2HideIq"),
-    tri3("alleati", Users, "r2HideAlly"),
-    tri3("frammenti", Puzzle, "r2CatFragments"),
+    tri3("nonAcc", ZapOff, "r2NonRush", iconNoRush),
+    tri3("autoAge", ChevronsUp, "r2AutoAge", iconAutoAge),
+    tri3("limitati", Clock4, "r2Limited", iconLimitati),
+    tri3("iq", Atom, "r2HideIq", iconIQ),
+    tri3("alleati", Users, "r2HideAlly", allies_slot_full),
+    tri3("frammenti", Puzzle, "r2CatFragments", iconFragment),
+    tri3("strada", Route, "r2NeedsRoad", iconRoad),
     ...extra,
   ]] });
   const vista = (extra: RibbonItem[] = []): RibbonGroup => ({ id: "vista", label: L("r2GrpView"), icon: Eye, rows: [[...vistaBase, ...extra]] });
@@ -210,7 +214,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         ricerca,
         filtri,
         vista([
-          tasto("inventario", k.inventario, PackagePlus, "r2PlusInv", "showInventoryInCityTitle"),
+          { ...tasto("inventario", k.inventario, PackagePlus, "r2PlusInv", "showInventoryInCityTitle"), img: iconInventario } as RibbonItem,
         ]),
         opzioniEdifici,
         { id: "statistiche", label: L("r2GrpStats"), icon: ChartColumn, priority: 1, rows: [[
@@ -221,9 +225,9 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
           tasto("aggiornabili", k.statistiche.aggiornabili, ArrowBigUpDash, "r2Upgradable", "r2UpgradableTitle"),
         ]] },
         nascondiMostra([
-          tri3("aiuto", LifeBuoy, "r2HideAid"),
-          tri3("immagazzina", Archive, "r2HideStore"),
-          tri3("ge", Landmark, "r2GreatBuildings"),
+          tri3("aiuto", LifeBuoy, "r2HideAid", iconAiuto),
+          tri3("immagazzina", Archive, "r2HideStore", iconImm),
+          tri3("ge", Landmark, "r2GreatBuildings", iconGE),
         ]),
         { id: "strumenti", label: L("r2GrpTools"), icon: MapIcon, rows: [[
           { kind: "button", id: "mappa", icon: MapIcon, label: L("r2Map"), active: c.mappa, onClick: c.onMappa, disabled: !c.haCitta },
