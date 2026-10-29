@@ -190,6 +190,15 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
     return () => { clearTimeout(t); document.removeEventListener("mousedown", fuori); document.removeEventListener("keydown", esc); };
   }, [aperto]);
 
+  // il pannello non deve uscire dallo schermo (telefono): se sborda a destra
+  // si sposta a sinistra quanto serve; più largo dello schermo → scorre dentro
+  useLayoutEffect(() => {
+    const p = rifPannello.current, contenitore = p?.parentElement;
+    if (!p || !aperto || !contenitore) return;
+    const W = contenitore.clientWidth, margine = 4;
+    p.style.left = `${Math.max(margine, Math.min(aperto.left, W - p.offsetWidth - margine))}px`;
+  }, [aperto]);
+
   const apri = (i: number, e: MouseEvent) => {
     const btn = e.currentTarget as HTMLElement, base = rifNastro.current!.getBoundingClientRect(), r = btn.getBoundingClientRect();
     setAperto(aperto?.indice === i ? null : { indice: i, left: r.left - base.left, top: r.bottom - base.top + 4 });
@@ -197,7 +206,8 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
 
   return (
     <div className="relative">
-      <div ref={rifNastro} className="flex h-[98px] items-stretch overflow-hidden border-b border-slate-700 bg-slate-950 px-1 pt-1.5 pb-1 text-[11px]">
+      {/* overflow-x-auto: quando anche tutti i gruppi chiusi non stanno (telefono) il nastro scorre in orizzontale invece di tagliarsi */}
+      <div ref={rifNastro} className="flex h-[98px] items-stretch overflow-x-auto overflow-y-hidden [scrollbar-width:thin] border-b border-slate-700 bg-slate-950 px-1 pt-1.5 pb-1 text-[11px]">
         {groups.map((g, i) => {
           const modo = modi[i] ?? "L";
           const Icon = g.icon;
@@ -224,7 +234,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
       </div>
       {aperto && groups[aperto.indice] && (
         <div ref={rifPannello} style={{ left: Math.max(0, aperto.left), top: aperto.top }}
-          className="absolute z-50 flex flex-col items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl">
+          className="absolute z-50 flex max-w-[calc(100%-8px)] flex-col items-center gap-1 overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl">
           <ContenutoGruppo g={groups[aperto.indice]!} modo="L" />
           <div className="text-[11px] text-slate-500">{groups[aperto.indice]!.label}<Aiuto testo={groups[aperto.indice]!.help} /></div>
         </div>
