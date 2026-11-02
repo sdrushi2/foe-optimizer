@@ -17,7 +17,7 @@ import fs from "fs";
 import path from "path";
 
 /** Stessa lista di FILE_DATI in src/data/datiGioco.ts. */
-const FILE = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json",
+const FILE = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json", "pergamene.csv",
   // 2.0: scaricato solo quando serve (datiGioco.caricaBuildingsExtra), ma con hash come gli altri
   "buildings_extra.csv"] as const;
 
@@ -111,6 +111,13 @@ export function verificaDati(dir: string): string[] {
     colonne: ["Id", "NomeIta", "NomeEng", "Rarity", "MaxLevel"], minRighe: 50,
     chiave: (r, c) => `${campo(r, c("Id"))}__${campo(r, c("Rarity"))}`,
   });
+  // pergamene.csv (2.005, tabella dell'utente): pergamene per ARRIVARE a ogni livello 1..100 (livello 1 = 0)
+  const pg = leggi("pergamene.csv");
+  if (pg !== null) {
+    controllaCsv("pergamene.csv", pg, errori, { colonne: ["livello", "pergamene"], minRighe: 100, chiave: (r, c) => campo(r, c("livello")) });
+    const r = righeCsv(pg).slice(1).map(x => x.map(v => Number(v.trim())));
+    if (r.some(([l, p], i) => l !== i + 1 || !Number.isInteger(p) || p! < 0)) errori.push("pergamene.csv: livelli 1, 2, 3… in ordine e pergamene intere ≥ 0");
+  }
   const ev = leggi("events.csv");
   if (ev !== null) controllaCsv("events.csv", ev, errori, { colonne: ["NomeIt", "NomeEng", "ID_LIST"], minRighe: 1 });
   const u = leggi("unique.csv");

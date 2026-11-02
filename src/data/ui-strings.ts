@@ -474,7 +474,9 @@ const UI_STRINGS = {
   r2AllySciTitle: { it: "Mostra gli alleati scienza", en: "Show science allies" },
   r2GrpTableOptions: { it: "Opzioni", en: "Options" },
   r2GrpAnalysis: { it: "Analisi", en: "Analysis" },
-  r2Advisor: { it: "Potenziale e gettoni", en: "Potential & tokens" },
+  r2Advisor: { it: "Gettoni", en: "Tokens" },
+  r2Scrolls: { it: "Pergamene", en: "Scrolls" },
+  r2ScrollsTitle: { it: "Quali alleati far salire di livello con le Pergamene Eroiche che hai", en: "Which allies to level up with the Heroic Scrolls you have" },
   r2AdvisorTitle: {
     it: "Quali alleati far crescere e quali vendere, con pergamene e gettoni valore che hai",
     en: "Which allies to grow and which to sell, with the scrolls and value tokens you have",
@@ -1889,6 +1891,30 @@ const UI_STRINGS = {
   allyAdvisorExpandTitle: { it: "Mostra/nascondi il dettaglio delle evoluzioni e dei boost", en: "Show/hide evolution and boost details" },
   allyAdvisorTokensShort: { it: "gettoni", en: "tokens" },
   allyAdvisorNoNext: { it: "— nessuna evoluzione utile", en: "— no useful evolution" },
+  allyScrollsTitle: { it: "Potenziale alleati e Pergamene Eroiche", en: "Ally potential and Heroic Scrolls" },
+  allyScrollsOwned: { it: "Pergamene Eroiche possedute", en: "Heroic Scrolls owned" },
+  allyScrollsIntro: {
+    it: "Ogni livello in più costa pergamene (di più ai livelli alti, fino al 100) e aumenta attacco e difesa dell'alleato. Ecco quali alleati militari far salire, e di quanti livelli, per il massimo aumento di attacco e difesa con le pergamene che hai: le colonne contano come nella colonna EFF, con i pesi attuali (la rarità resta quella di adesso).",
+    en: "Each extra level costs scrolls (more at higher levels, up to 100) and raises the ally's attack and defense. Here is which military allies to level up, and by how many levels, for the largest attack and defense increase with the scrolls you have: columns count as in the EFF column, with the current weights (rarity stays as it is now).",
+  },
+  allyScrollsDeltaNote: { it: "Aumenti dei boost", en: "Boost increases" },
+  allyScrollsTotal: { it: "Totale", en: "Total" },
+  allyScrollsSummary: {
+    it: (spese: string, n: number, g: string, resto: string) => `Spendi ${spese} pergamene su ${n === 1 ? "1 alleato" : `${n} alleati`}: efficienza +${g}. Ne avanzano ${resto}.`,
+    en: (spese: string, n: number, g: string, resto: string) => `Spend ${spese} scrolls on ${n === 1 ? "1 ally" : `${n} allies`}: efficiency +${g}. ${resto} left over.`,
+  },
+  allyScrollsNotEnough: {
+    it: (c: string) => `Le pergamene non bastano per nessun livello: il più economico ne costa ${c}.`,
+    en: (c: string) => `Not enough scrolls for any level: the cheapest costs ${c}.`,
+  },
+  allyScrollsAllMax: { it: "I tuoi alleati militari sono tutti al livello massimo.", en: "All your military allies are at the maximum level." },
+  allyScrollsApprox: {
+    it: "Pergamene molte: calcolo veloce, il risultato può discostarsi di poco dall'ottimo.",
+    en: "Many scrolls: fast calculation, the result may differ slightly from the optimum.",
+  },
+  allyScrollsColLevel: { it: "Livello", en: "Level" },
+  allyScrollsColScrolls: { it: "Pergamene", en: "Scrolls" },
+  allyScrollsColGain: { it: "Efficienza", en: "Efficiency" },
   allyAdvisorValorOwned: { it: "Gettoni Valore posseduti", en: "Valor Tokens owned" },
   allyAdvisorIntro: {
     it: (maxR: string) => `Ogni alleato militare posseduto è valutato al livello 100 (prima o poi verrà maxato), fino alla rarità ${maxR}: slot e Pergamene Eroiche non sono considerati vincoli, solo i Gettoni Valore. Le copie identiche (stesso alleato e rarità) sono una sola riga. L'efficienza usa gli stessi pesi della colonna EFF.`,

@@ -20,7 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** File di public/data/ (stessi nomi di src/assets/ della 1.x). */
-const FILE_DATI = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json"] as const;
+const FILE_DATI = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json", "pergamene.csv"] as const;
 type FileDati = typeof FILE_DATI[number];
 
 export interface DatiGioco {
@@ -33,6 +33,8 @@ export interface DatiGioco {
   kit: unknown;
   /** catene.json già analizzato (forma: vedi planner/catene.ts). */
   catene: unknown;
+  /** pergamene.csv: pergamene per arrivare a ogni livello degli alleati (data/pergameneAdvisor.ts). */
+  pergamene: string;
 }
 
 /** /data/manifest.json: hash (corto) del contenuto di ogni file. */
@@ -84,9 +86,9 @@ export async function caricaDatiGioco(): Promise<void> {
   };
   const testo = async (f: FileDati) => (await scarica(url(f))).text();
   const json = async (f: FileDati) => (await scarica(url(f))).json() as Promise<unknown>;
-  const [ages, buildings, allies, events, unique, kit, catene] = await Promise.all([
+  const [ages, buildings, allies, events, unique, kit, catene, pergamene] = await Promise.all([
     testo("ages.csv"), testo("buildings.csv"), testo("allies.csv"), testo("events.csv"), testo("unique.csv"),
-    json("kit.json"), json("catene.json"),
+    json("kit.json"), json("catene.json"), testo("pergamene.csv"),
   ]);
-  dati = { ages, buildings, allies, events, unique, kit, catene };
+  dati = { ages, buildings, allies, events, unique, kit, catene, pergamene };
 }

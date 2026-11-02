@@ -37,6 +37,7 @@ import PannelloImporta from "./ui/PannelloImporta";
 import PannelloNovita from "./ui/PannelloNovita";
 import VideoTutorial from "./planner/VideoTutorial";
 import PannelloInformazioni from "./ui/PannelloInformazioni";
+import { PERGAMENE_RESOURCE, VALOR_RESOURCE } from "./data/allyAdvisor";
 import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
@@ -57,6 +58,7 @@ const NESSUNA_CELLA = new Set<string>();
 import type { Categoria, OpzioneProduzione } from "./ui/FiltriEdifici";
 import { useModalDismiss } from "./utils/useModalDismiss";
 import AllyAdvisorPanel from "./components/AllyAdvisorPanel";
+import PannelloPergamene from "./components/PannelloPergamene";
 import { dimensioniDaSize, senzaLivello, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner } from "./planner/modificheCitta";
 import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
@@ -722,7 +724,9 @@ const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = ""
 
 
 
-const BoostCell = memo(function BoostCell({ value, color, className = "", suffix = "", uiLang }: { value: number; color: "red" | "blue"; className?: string; suffix?: string; uiLang?: UiLang }) {
+const BoostCell = memo(function BoostCell({ value, color, className = "", suffix = "", uiLang, segno }: { value: number; color: "red" | "blue"; className?: string; suffix?: string; uiLang?: UiLang;
+  /** "+" davanti ai valori positivi (aumenti, es. pannello Pergamene). */
+  segno?: boolean }) {
   if (isStaleField(value)) {
     return <td className={className ? `cell-num ${className}` : "cell-num"} title={uiLang ? t("staleDataWarning", uiLang) : undefined}>⚠️</td>;
   }
@@ -731,7 +735,7 @@ const BoostCell = memo(function BoostCell({ value, color, className = "", suffix
   }
   return (
     <td className={className ? `cell-num cell-${color} ${className}` : `cell-num cell-${color}`}>
-      {formatInt(value)}{suffix}
+      {segno && value > 0 ? "+" : ""}{formatInt(value)}{suffix}
     </td>
   );
 });
@@ -755,13 +759,13 @@ function StaleFieldCell({ value, className = "cell-num cell-white", uiLang, chil
  *  blocco di bonus (Generale, Campi, Spedizioni...). I colori sono sempre
  *  nello stesso ordine fisso: questo pattern si ripete 3 volte dentro
  *  MilitaryBoostCells (general/gbg/sped), qui factorizzato una volta. */
-function Boost4({ values, uiLang }: { values: [number, number, number, number]; uiLang?: UiLang }) {
+function Boost4({ values, uiLang, segno }: { values: [number, number, number, number]; uiLang?: UiLang; segno?: boolean }) {
   return (
     <>
-      <BoostCell value={values[0]} color="red" className="section-divider" uiLang={uiLang} />
-      <BoostCell value={values[1]} color="red" uiLang={uiLang} />
-      <BoostCell value={values[2]} color="blue" uiLang={uiLang} />
-      <BoostCell value={values[3]} color="blue" uiLang={uiLang} />
+      <BoostCell value={values[0]} color="red" className="section-divider" uiLang={uiLang} segno={segno} />
+      <BoostCell value={values[1]} color="red" uiLang={uiLang} segno={segno} />
+      <BoostCell value={values[2]} color="blue" uiLang={uiLang} segno={segno} />
+      <BoostCell value={values[3]} color="blue" uiLang={uiLang} segno={segno} />
     </>
   );
 }
@@ -840,6 +844,7 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
   showSigmaColumns,
   spedizioniEnabled,
   uiLang,
+  segno,
 }: {
   general: number[];
   gbg: number[];
@@ -847,6 +852,7 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
   showSigmaColumns: boolean;
   spedizioniEnabled: boolean;
   uiLang?: UiLang;
+  segno?: boolean;
 }) {
   const sigmaGbg: [number, number, number, number] = [
     showSigmaColumns ? general[0] + gbg[0] : gbg[0],
@@ -862,9 +868,9 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
   ];
   return (
     <>
-      {!showSigmaColumns && <Boost4 values={general as [number, number, number, number]} uiLang={uiLang} />}
-      <Boost4 values={sigmaGbg} uiLang={uiLang} />
-      {spedizioniEnabled && <Boost4 values={sigmaSped} uiLang={uiLang} />}
+      {!showSigmaColumns && <Boost4 values={general as [number, number, number, number]} uiLang={uiLang} segno={segno} />}
+      <Boost4 values={sigmaGbg} uiLang={uiLang} segno={segno} />
+      {spedizioniEnabled && <Boost4 values={sigmaSped} uiLang={uiLang} segno={segno} />}
     </>
   );
 });
@@ -2175,6 +2181,8 @@ export default function App() {
   // Pannello "Potenziale e gettoni" (AllyAdvisorPanel) nella scheda Alleati:
   // spento di default, lo accende il pulsante del nastro (Analisi).
   const [mostraConsigliere, setMostraConsigliere] = useState(false);
+  /** Pannello "Potenziale alleati e Pergamene Eroiche" (per ora segnaposto). */
+  const [mostraPergamene, setMostraPergamene] = useState(false);
   /** Avviso dopo l'import ("Aggiornata …", "Aggiunta …"), mostrato dalla testata. */
   const [avvisoCitta, setAvvisoCitta] = useState<string | null>(null);
   const [tema, setTema] = useTema();
@@ -5912,6 +5920,11 @@ export default function App() {
     consigliere: {
       attivo: mostraConsigliere, cambia: () => setMostraConsigliere(v => !v),
       disponibile: !!playerResources && importedAllies.some(a => !a.isFragment),
+      gettoni: playerResources ? playerResources[VALOR_RESOURCE] ?? 0 : null,
+    },
+    pergamene: {
+      attivo: mostraPergamene, cambia: () => setMostraPergamene(v => !v),
+      n: playerResources ? playerResources[PERGAMENE_RESOURCE] ?? 0 : null,
     },
     planner: {
       sorgente: plannerSorgente === "json" || !haCittaPlanner ? "json" : "citta",
@@ -6685,6 +6698,14 @@ export default function App() {
                   <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled uiLang={uiLang} />
                 )}
               />
+            )}
+            {!alleatiDaDb && mostraPergamene && playerResources && (
+              <PannelloPergamene owned={importedAllies} byIdRarity={ALLIES_BY_ID_RARITY} inherited={INHERITED_ALLIES_MAP} weights={weights}
+                pergamene={playerResources[PERGAMENE_RESOURCE] ?? 0} uiLang={uiLang} gameLang={gameLang} allyName={allyName}
+                groupHeaders={renderMilitaryGroupHeaders(true)} statHeaders={renderMilitaryIconHeaders(true)}
+                renderBoostCells={(g, c, sp) => (
+                  <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled uiLang={uiLang} segno />
+                )} />
             )}
             {/* Tabella alleati importati (solo scheda Alleati, non nel catalogo del Database) */}
             {!alleatiDaDb && processedImportedAllies.length > 0 && (

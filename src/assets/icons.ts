@@ -54,8 +54,13 @@ export { default as iconOneUp } from "./icons/OneUp.png";
 export { default as iconImm } from "./icons/Imm.png";
 export { default as iconRinn } from "./icons/Rinn.png";
 export { default as iconAiuto } from "./icons/Aiuto.png";
+export { default as allies_100 } from "./icons/allies_100.png";
+export { default as allies_military } from "./icons/allies_military.png";
+export { default as allies_science } from "./icons/allies_science.png";
 export { default as allies_slot_empty } from "./icons/allies_slot_empty.png";
 export { default as allies_slot_full } from "./icons/allies_slot_full.png";
+export { default as allies_token } from "./icons/allies_token.png";
+export { default as allies_train } from "./icons/allies_train.png";
 export { default as iconFragment } from "./icons/Fragment.png";
 export { default as iconMed } from "./icons/Med.png";
 // Gruppo "Nascondi / Mostra solo" del nastro (24×24): clessidra, castello dei

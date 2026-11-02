@@ -1,6 +1,8 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.005 (02/11/2026)
+### Novità
+- Alleati: nuovo pannello "Pergamene" (gruppo Analisi), che mostra quali alleati far salire di livello, e di quanti livelli, per ottenere la massima efficienza con le Pergamene Eroiche che hai
 ### Aggiornamenti
 - Nuova versione della bacchetta: riconosce il mondo di gioco e avvisa se i dati non sono ancora caricati (va ricreata, trascinandola di nuovo nella barra dei preferiti)
 - Città salvate: le città dello stesso giocatore su mondi diversi restano separate invece di sovrascriversi, e il nome mostra davanti il mondo con la sua lettera (es. "L · Sdrushi")
@@ -8,6 +10,8 @@
 - Telefono in verticale: il nastro dei comandi mostra solo le icone dei gruppi ed è più basso
 - Il "?" accanto al nome di un gruppo (es. Ricerca) si apre anche con un tocco
 - Planner, "Configurazione attuale": le catene partono come sono montate nella tua città, con i loro anelli
+- Alleati: il pulsante "Potenziale e gettoni" diventa "Gettoni" con l'icona del gioco e i Gettoni Valore che hai
+- Alleati: "Livello 100" spostato nel gruppo Analisi; icone del gioco per Livello 100, Militari, Scienza e Frammenti
 ### Correzioni
 - Telefono: la pagina non scorre più in orizzontale
 - App installata sul telefono: si può di nuovo usare anche in verticale

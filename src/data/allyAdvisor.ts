@@ -43,6 +43,8 @@ export const MAX_TARGET_RARITY = 4;
 const ADVISOR_LEVEL = 100;
 /** Risorsa di gioco dei Gettoni Valore (chiave di ResourceStock). */
 export const VALOR_RESOURCE = "historical_allies_valor_token";
+/** Pergamene di addestramento degli alleati (magazzino risorse, bacchetta v6+). */
+export const PERGAMENE_RESOURCE = "historical_allies_train_manual_1";
 
 export interface AdvisorStep {
   allyId: string;
@@ -82,7 +84,7 @@ interface AdvisorResult {
 }
 
 /** Efficienza pesata: stessa formula della colonna EFF in App.tsx. */
-function weightedEff(s: { computedGeneral: number[]; computedGbg: number[]; computedSped: number[]; computedIq: number[] }, w: Weights): number {
+export function weightedEff(s: { computedGeneral: number[]; computedGbg: number[]; computedSped: number[]; computedIq: number[] }, w: Weights): number {
   let e = 0;
   for (let i = 0; i < 4; i++) {
     e += (s.computedGeneral[i] ?? 0) * (w.general[i] ?? 0)

@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_slot_full, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
+import { allies_100, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -20,6 +20,7 @@ import { BloccoPesi, type StatoPesi } from "./PesiStatistiche";
 import type { RibbonGroup, RibbonItem } from "./ribbon/Ribbon";
 import type { Scheda } from "./Testata";
 import { t, type UiLang } from "../data/ui-strings";
+import { formatInt } from "../utils/format";
 import type { Tema } from "./theme";
 
 export interface ContestoNastri {
@@ -87,8 +88,11 @@ export interface ContestoNastri {
   alleati: StatoAlleati;
   /** Scheda Alleati: statistiche dei tuoi alleati come a livello 100. */
   livello100: Interruttore;
-  /** Scheda Alleati: pannello Potenziale e gettoni valore. */
-  consigliere: Interruttore & { disponibile: boolean };
+  /** Scheda Alleati: pannello Potenziale e gettoni valore; Gettoni Valore e
+   *  Pergamene di addestramento del magazzino (null = non importati). */
+  consigliere: Interruttore & { disponibile: boolean; gettoni: number | null };
+  /** Scheda Alleati: pannello Potenziale e Pergamene Eroiche (null = magazzino non importato). */
+  pergamene: Interruttore & { n: number | null };
 }
 
 type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge";
@@ -111,6 +115,9 @@ export function costruisciNastri(scheda: Scheda, c: ContestoNastri): RibbonGroup
 
 function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const L = (k: Parameters<typeof t>[0]) => t(k, c.uiLang) as string;
+  /** Numero in oro dopo il nome del pulsante, col separatore delle migliaia
+   *  (5.924 / 5,924: l'italiano di Intl non separa i numeri di 4 cifre). */
+  const numero = (n: number | null) => (n === null ? {} : { badge: c.uiLang === "en" ? n.toLocaleString("en-US") : formatInt(n) });
   // (2.0: niente gruppo Importa nelle schede: si importa solo con la
   // bacchetta verde della testata.)
   const campoRicerca: RibbonItem = {
@@ -159,9 +166,10 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const conta = (it: RibbonItem, n: number | undefined): RibbonItem =>
     n === undefined || it.kind !== "button" ? it : { ...it, label: `${it.label} (${n})` };
   const filtriAlleati: RibbonGroup = { id: "filtri-alleati", label: L("r2GrpFilters"), icon: Funnel, priority: 3, rows: [[
-    conta(tasto("militari", { attivo: a.militari, cambia: a.cambiaMilitari }, Swords, "r2AllyTypeMil", "r2AllyMilTitle"), a.conteggi?.militari),
-    conta(tasto("scienza", { attivo: a.scienza, cambia: a.cambiaScienza }, FlaskConical, "r2AllyTypeSci", "r2AllySciTitle"), a.conteggi?.scienza),
-    ...(a.frammenti ? [conta(tasto("frammenti", a.frammenti, Puzzle, "r2AllyFragments", "r2AllyFragmentsTitle"), a.conteggi?.frammenti)] : []),
+    // (icone del gioco)
+    conta({ ...tasto("militari", { attivo: a.militari, cambia: a.cambiaMilitari }, Swords, "r2AllyTypeMil", "r2AllyMilTitle"), img: allies_military } as RibbonItem, a.conteggi?.militari),
+    conta({ ...tasto("scienza", { attivo: a.scienza, cambia: a.cambiaScienza }, FlaskConical, "r2AllyTypeSci", "r2AllySciTitle"), img: allies_science } as RibbonItem, a.conteggi?.scienza),
+    ...(a.frammenti ? [conta({ ...tasto("frammenti", a.frammenti, Puzzle, "r2AllyFragments", "r2AllyFragmentsTitle"), img: iconFragment } as RibbonItem, a.conteggi?.frammenti)] : []),
   ]] };
   const vistaAlleati: RibbonGroup = { id: "vista-alleati", label: L("r2GrpViewRarity"), icon: Eye, rows: [[
     { kind: "custom", id: "rarita", render: () => <BloccoRarita rarita={a.rarita} /> },
@@ -241,11 +249,15 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         tasto("debug", c.debug, Bug, "r2Debug"),
       ]] }];
     case "alleati":
-      return [ricerca, filtriAlleati, vistaAlleati, {
-        ...opzioniTabella, rows: [[...opzioniTabella.rows[0]!, tasto("livello100", c.livello100, UserCheck, "r2Level100", "r2Level100Title")]],
-      }, { id: "analisi", label: L("r2GrpAnalysis"), icon: ChartColumn, rows: [[
-        { kind: "button", id: "consigliere", icon: Lightbulb, label: L("r2Advisor"), title: L(c.consigliere.disponibile ? "r2AdvisorTitle" : "r2AdvisorNeedWand"),
+      return [ricerca, filtriAlleati, vistaAlleati, opzioniTabella, { id: "analisi", label: L("r2GrpAnalysis"), icon: ChartColumn, rows: [[
+        { ...tasto("livello100", c.livello100, UserCheck, "r2Level100", "r2Level100Title"), img: allies_100 } as RibbonItem,
+        { kind: "button", id: "consigliere", icon: Lightbulb, img: allies_token, label: L("r2Advisor"), ...numero(c.consigliere.gettoni),
+          title: L(c.consigliere.disponibile ? "r2AdvisorTitle" : "r2AdvisorNeedWand"),
           active: c.consigliere.attivo && c.consigliere.disponibile, onClick: c.consigliere.cambia, disabled: !c.consigliere.disponibile },
+        // Pergamene: per ora solo il conteggio (segnaposto, la funzione arriverà)
+        { kind: "button", id: "pergamene", icon: Lightbulb, img: allies_train, label: L("r2Scrolls"), ...numero(c.pergamene.n),
+          title: L(c.pergamene.n === null ? "r2AdvisorNeedWand" : "r2ScrollsTitle"),
+          active: c.pergamene.attivo && c.pergamene.n !== null, onClick: c.pergamene.cambia, disabled: c.pergamene.n === null },
       ]] }];
     case "insediamenti":
       // Tipo di insediamento: per ora solo i Pirati (gli altri arriveranno).

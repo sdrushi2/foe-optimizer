@@ -1,6 +1,8 @@
 # FoE Optimizer Changelog
 
 ## Version 2.005 (02/11/2026)
+### New
+- Allies: new "Scrolls" panel (Analysis group), showing which allies to level up, and by how many levels, for the highest efficiency with the Heroic Scrolls you have
 ### Update
 - New magic wand version: it recognises the game world and warns if the data is not loaded yet (create it again by dragging it to the bookmarks bar)
 - Saved cities: cities of the same player on different worlds stay separate instead of overwriting each other, and the name starts with the world letter (e.g. "L · Sdrushi")
@@ -8,6 +10,8 @@
 - Phone in portrait: the command ribbon shows only the group icons and is shorter
 - The "?" next to a group name (e.g. Search) also opens with a tap
 - Planner, "Current layout": chains start as they are assembled in your city, with their links
+- Allies: the "Potential & tokens" button becomes "Tokens" with the game icon and the Valor Tokens you have
+- Allies: "Level 100" moved to the Analysis group; game icons for Level 100, Military, Science and Fragments
 ### Bug Fixes
 - Phone: the page no longer scrolls sideways
 - App installed on the phone: it can be used in portrait again
