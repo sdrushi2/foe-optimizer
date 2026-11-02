@@ -11,6 +11,7 @@
 ### Bug Fixes
 - Phone: the page no longer scrolls sideways
 - App installed on the phone: it can be used in portrait again
+- Planner, PNG with the city changes: the white border note only appears when buildings were added
 - Planner, editor changes: chain links (e.g. Serpent Spikes) can be moved from one Statue to another, even making chains longer or shorter, instead of giving "broken chain"
 
 ---

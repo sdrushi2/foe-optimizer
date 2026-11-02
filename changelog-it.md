@@ -11,6 +11,7 @@
 ### Correzioni
 - Telefono: la pagina non scorre più in orizzontale
 - App installata sul telefono: si può di nuovo usare anche in verticale
+- Planner, PNG con le modifiche alla città: la nota sul bordo bianco compare solo se ci sono edifici aggiunti
 - Planner, modifiche nell'editor: gli anelli delle catene (es. Spuntoni del Serpente) si possono spostare da una Statua all'altra, anche allungando o accorciando le catene, invece di dare "catena spezzata"
 
 ---

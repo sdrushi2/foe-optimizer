@@ -1068,7 +1068,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       titolo: t("plannerPngChangesTitle", uiLang),
       tolti: { titolo: t("plannerPngRemovedTitle", uiLang, tolti.length, celle(tolti)), voci: voci(tolti) },
       aggiunti: { titolo: t("plannerPngAddedTitle", uiLang, aggiunti.length, celle(aggiunti)), voci: voci(aggiunti) },
-      nota: t("plannerPngChangesNote", uiLang),
+      // (la nota sul bordo bianco solo se ci sono edifici aggiunti)
+      ...(aggiunti.length ? { nota: t("plannerPngChangesNote", uiLang) } : {}),
     } : undefined;
   };
   const scaricaPng = (f: PlannerFrame, n: VName) => {
