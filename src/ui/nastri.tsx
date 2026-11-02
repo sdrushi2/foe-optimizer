@@ -249,7 +249,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         tasto("debug", c.debug, Bug, "r2Debug"),
       ]] }];
     case "alleati":
-      return [ricerca, filtriAlleati, vistaAlleati, opzioniTabella, { id: "analisi", label: L("r2GrpAnalysis"), icon: ChartColumn, rows: [[
+      return [ricerca, filtriAlleati, vistaAlleati, opzioniTabella, { id: "analisi", label: L("r2GrpAnalysis"), icon: ChartColumn, help: L("r2AnalysisHelp"), rows: [[
         { ...tasto("livello100", c.livello100, UserCheck, "r2Level100", "r2Level100Title"), img: allies_100 } as RibbonItem,
         { kind: "button", id: "consigliere", icon: Lightbulb, img: allies_token, label: L("r2Advisor"), ...numero(c.consigliere.gettoni),
           title: L(c.consigliere.disponibile ? "r2AdvisorTitle" : "r2AdvisorNeedWand"),

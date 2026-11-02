@@ -476,6 +476,10 @@ const UI_STRINGS = {
   r2GrpAnalysis: { it: "Analisi", en: "Analysis" },
   r2Advisor: { it: "Gettoni", en: "Tokens" },
   r2Scrolls: { it: "Pergamene", en: "Scrolls" },
+  r2AnalysisHelp: {
+    it: "• Livello 100: le statistiche dei tuoi alleati come se fossero già al livello 100.\n• Gettoni: quali alleati evolvere di rarità con i Gettoni Valore, in ordine di efficienza guadagnata per gettone.\n• Pergamene: quali alleati far salire di livello con le Pergamene Eroiche, e di quanti livelli, per il massimo aumento di attacco e difesa (secondo i pesi).",
+    en: "• Level 100: your allies' stats as if they were already level 100.\n• Tokens: which allies to evolve in rarity with Valor Tokens, in order of efficiency gained per token.\n• Scrolls: which allies to level up with Heroic Scrolls, and by how many levels, for the largest attack and defense increase (according to the weights).",
+  },
   r2ScrollsTitle: { it: "Quali alleati far salire di livello con le Pergamene Eroiche che hai", en: "Which allies to level up with the Heroic Scrolls you have" },
   r2AdvisorTitle: {
     it: "Quali alleati far crescere e quali vendere, con pergamene e gettoni valore che hai",
