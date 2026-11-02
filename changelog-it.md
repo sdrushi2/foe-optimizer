@@ -4,6 +4,8 @@
 ### Aggiornamenti
 - Nuova versione della bacchetta: riconosce il mondo di gioco e avvisa se i dati non sono ancora caricati (va ricreata, trascinandola di nuovo nella barra dei preferiti)
 - Città salvate: le città dello stesso giocatore su mondi diversi restano separate invece di sovrascriversi, e il nome mostra il mondo con la sua lettera (es. "Sdrushi · L")
+- Telefono in verticale: il nastro dei comandi mostra solo le icone dei gruppi ed è più basso
+- Il "?" accanto al nome di un gruppo (es. Ricerca) si apre anche con un tocco
 ### Correzioni
 - Telefono: la pagina non scorre più in orizzontale
 - App installata sul telefono: si può di nuovo usare anche in verticale

@@ -4,6 +4,8 @@
 ### Update
 - New magic wand version: it recognises the game world and warns if the data is not loaded yet (create it again by dragging it to the bookmarks bar)
 - Saved cities: cities of the same player on different worlds stay separate instead of overwriting each other, and the name shows the world by its letter (e.g. "Sdrushi · L")
+- Phone in portrait: the command ribbon shows only the group icons and is shorter
+- The "?" next to a group name (e.g. Search) also opens with a tap
 ### Bug Fixes
 - Phone: the page no longer scrolls sideways
 - App installed on the phone: it can be used in portrait again

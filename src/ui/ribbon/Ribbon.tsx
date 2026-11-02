@@ -21,7 +21,9 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ChevronDown, X } from "lucide-react";
 
-export type ModoGruppo = "L" | "M" | "S" | "C";
+/** L grande, M medio, S piccolo, C chiuso (icona + nome, apre un pannello),
+ *  I chiuso con la sola icona (telefono in verticale: il nome resta nel suggerimento). */
+export type ModoGruppo = "L" | "M" | "S" | "C" | "I";
 
 export type RibbonItem =
   | {
@@ -62,16 +64,42 @@ export interface RibbonGroup {
   priority?: number;
 }
 
-/** Il "?" dell'etichetta di un gruppo: spiegazione nel suggerimento al passaggio del mouse. */
+/** Il "?" dell'etichetta di un gruppo: spiegazione nel suggerimento al
+ *  passaggio del mouse e, con un tocco/clic, in un fumetto (sul telefono il
+ *  suggerimento non si vede). Il fumetto è `fixed`, dentro lo schermo; si
+ *  chiude toccando fuori, con Esc o scorrendo la pagina. */
 function Aiuto({ testo }: { testo?: string }) {
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const rif = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!pos) return;
+    const chiudi = (e: Event) => { if (!rif.current?.contains(e.target as Node)) setPos(null); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setPos(null); };
+    const via = () => setPos(null);
+    const t = setTimeout(() => document.addEventListener("pointerdown", chiudi));
+    document.addEventListener("keydown", esc);
+    window.addEventListener("scroll", via, true);
+    return () => { clearTimeout(t); document.removeEventListener("pointerdown", chiudi); document.removeEventListener("keydown", esc); window.removeEventListener("scroll", via, true); };
+  }, [pos]);
   if (!testo) return null;
+  const apri = () => {
+    if (pos) { setPos(null); return; }
+    const r = rif.current!.getBoundingClientRect(), L = 260;
+    setPos({ left: Math.max(4, Math.min(r.left + r.width / 2 - L / 2, window.innerWidth - L - 4)), top: r.bottom + 6 });
+  };
   return (
-    <span title={testo} aria-label={testo} role="img"
-      className="ml-1 inline-flex h-3 w-3 cursor-help items-center justify-center rounded-full border border-slate-600 align-[1px] text-[8px] leading-none font-bold text-slate-400 hover:border-sky-500 hover:text-sky-300">?</span>
+    <>
+      <button ref={rif} type="button" onClick={apri} title={testo} aria-label={testo} aria-expanded={!!pos}
+        className="ml-1 inline-flex h-3 w-3 cursor-help items-center justify-center rounded-full border border-slate-600 align-[1px] text-[8px] leading-none font-bold text-slate-400 hover:border-sky-500 hover:text-sky-300">?</button>
+      {pos && (
+        <span role="tooltip" style={{ left: pos.left, top: pos.top, width: 260 }}
+          className="fixed z-[80] rounded-md border border-slate-700 bg-slate-900 px-2.5 py-2 text-left text-[12px] leading-snug whitespace-normal text-slate-200 shadow-xl">{testo}</span>
+      )}
+    </>
   );
 }
 
-const ORDINE: ModoGruppo[] = ["L", "M", "S", "C"];
+const ORDINE: ModoGruppo[] = ["L", "M", "S", "C", "I"];
 
 function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; modo: ModoGruppo }) {
   const Icon = it.icon;
@@ -116,7 +144,9 @@ function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; m
   );
 }
 
-function ContenutoGruppo({ g, modo }: { g: RibbonGroup; modo: ModoGruppo }) {
+/** `aCapo`: nel pannello di un gruppo chiuso i pulsanti vanno a capo invece
+ *  di uscire dallo schermo (telefono in verticale). */
+function ContenutoGruppo({ g, modo, aCapo = false }: { g: RibbonGroup; modo: ModoGruppo; aCapo?: boolean }) {
   return (
     <>
       {g.rows.map((riga, i) => {
@@ -130,7 +160,7 @@ function ContenutoGruppo({ g, modo }: { g: RibbonGroup; modo: ModoGruppo }) {
           );
         }
         return (
-          <div key={i} className="flex items-center gap-1">
+          <div key={i} className={`flex items-center gap-1 ${aCapo ? "flex-wrap justify-center" : ""}`}>
             {riga.map((it) => (it.kind === "button" ? <Pulsante key={it.id} it={it} modo={modo} /> : <span key={it.id} className="contents">{it.render(modo)}</span>))}
           </div>
         );
@@ -146,6 +176,8 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   const rifPannello = useRef<HTMLDivElement>(null);
   const [larghezza, setLarghezza] = useState(0);
   const firma = groups.map((g) => g.id).join("|");
+  /** Tutti i gruppi chiusi con la sola icona (telefono in verticale): nastro più basso, senza la riga dei nomi. */
+  const tuttiIcona = modi.length > 0 && modi.every((m) => m === "I");
 
   // ricomincia da tutti grandi quando cambiano larghezza o gruppi
   useLayoutEffect(() => {
@@ -164,6 +196,9 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
       for (const i of indici) {
         const corrente = modi[i]!;
         if (ORDINE.indexOf(corrente) >= ORDINE.indexOf(livello)) continue;
+        // ultimo livello (solo icone): tutti i gruppi insieme, così il nastro
+        // resta uniforme (niente "Filtri" con il nome in mezzo alle sole icone)
+        if (livello === "I") { setModi(modi.map(() => "I")); return; }
         const nuovi = [...modi];
         nuovi[i] = livello;
         setModi(nuovi);
@@ -212,7 +247,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   return (
     <div className="relative">
       {/* overflow-x-auto: quando anche tutti i gruppi chiusi non stanno (telefono) il nastro scorre in orizzontale invece di tagliarsi */}
-      <div ref={rifNastro} className="flex h-[98px] items-stretch overflow-x-auto overflow-y-hidden [scrollbar-width:thin] border-b border-slate-700 bg-slate-950 px-1 pt-1.5 pb-1 text-[11px]">
+      <div ref={rifNastro} className={`flex ${tuttiIcona ? "h-[56px] justify-around" : "h-[98px]"} items-stretch overflow-x-auto overflow-y-hidden [scrollbar-width:thin] border-b border-slate-700 bg-slate-950 px-1 pt-1.5 pb-1 text-[11px]`}>
         {groups.map((g, i) => {
           const modo = modi[i] ?? "L";
           const Icon = g.icon;
@@ -220,28 +255,34 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
             // Gruppo: area comandi ad altezza fissa (contenuto centrato in
             // verticale) + etichetta in basso, così tutte le etichette stanno
             // sulla stessa riga qualunque sia il contenuto.
-            <div key={g.id} className="flex flex-none flex-col items-center border-r border-slate-800 px-2 last:border-r-0">
-              <div className="flex h-[72px] shrink-0 flex-col items-center justify-center gap-[3px]">
-                {modo === "C" ? (
+            <div key={g.id} className={`flex flex-none flex-col items-center ${tuttiIcona ? "px-0.5" : "border-r border-slate-800 px-2 last:border-r-0"}`}>
+              <div className={`flex ${tuttiIcona ? "h-[46px]" : "h-[72px]"} shrink-0 flex-col items-center justify-center gap-[3px]`}>
+                {modo === "C" || modo === "I" ? (
                   <button type="button" data-apre-gruppo="" aria-expanded={aperto?.indice === i} onClick={(e) => apri(i, e as unknown as MouseEvent)}
-                    className="flex h-[60px] min-w-[60px] flex-col items-center justify-center gap-1.5 rounded-md border border-slate-700 px-2 leading-none whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-slate-100">
+                    title={modo === "I" ? g.label : undefined} aria-label={g.label}
+                    className={`flex flex-col items-center justify-center rounded-md border border-slate-700 leading-none whitespace-nowrap text-slate-300 hover:bg-slate-800 hover:text-slate-100 ${
+                      modo === "I" ? "h-[44px] min-w-[44px] gap-0.5 px-1.5" : "h-[60px] min-w-[60px] gap-1.5 px-2"}`}>
                     <Icon size={20} strokeWidth={1.75} className="text-sky-300" aria-hidden="true" />
-                    <span className="flex items-center gap-0.5">{g.label}<ChevronDown size={11} aria-hidden="true" /></span>
+                    {modo === "I"
+                      ? <ChevronDown size={11} aria-hidden="true" />
+                      : <span className="flex items-center gap-0.5">{g.label}<ChevronDown size={11} aria-hidden="true" /></span>}
                   </button>
                 ) : (
                   <ContenutoGruppo g={g} modo={modo} />
                 )}
               </div>
-              <div className="h-4 shrink-0 leading-4 whitespace-nowrap text-slate-500">{modo === "C" ? " " : <>{g.label}<Aiuto testo={g.help} /></>}</div>
+              <div className={`${tuttiIcona ? "hidden" : "h-4"} shrink-0 leading-4 whitespace-nowrap text-slate-500`}>{modo === "C" || modo === "I" ? " " : <>{g.label}<Aiuto testo={g.help} /></>}</div>
             </div>
           );
         })}
       </div>
       {aperto && groups[aperto.indice] && (
         <div ref={rifPannello} style={{ left: Math.max(0, aperto.left), top: aperto.top }}
-          className="absolute z-50 flex max-w-[calc(100%-8px)] flex-col items-center gap-1 overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl">
-          <ContenutoGruppo g={groups[aperto.indice]!} modo="L" />
-          <div className="text-[11px] text-slate-500">{groups[aperto.indice]!.label}<Aiuto testo={groups[aperto.indice]!.help} /></div>
+          className="absolute z-50 flex max-w-[calc(100%-8px)] flex-col items-stretch gap-1 overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl">
+          {/* (items-stretch, non items-center: un contenuto centrato più largo del
+              pannello usciva anche a SINISTRA, dove lo scorrimento non arriva) */}
+          <ContenutoGruppo g={groups[aperto.indice]!} modo="L" aCapo />
+          <div className="text-center text-[11px] text-slate-500">{groups[aperto.indice]!.label}<Aiuto testo={groups[aperto.indice]!.help} /></div>
         </div>
       )}
     </div>
