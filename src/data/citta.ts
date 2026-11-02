@@ -54,10 +54,24 @@ function letteraMondo(mondo: string): string | null {
   return n < 0 ? null : LETTERE_MONDI[n % LETTERE_MONDI.length]!;
 }
 
-/** Nome di una città: il giocatore e, se noto, il suo mondo ("Sdrushi · L"). */
+/** Nome di una città: il mondo, se noto, e il giocatore ("L · Sdrushi"). */
 export function nomeCitta(nome: string, mondo: string | null): string {
   const l = mondo ? letteraMondo(mondo) : null;
-  return l ? `${nome} · ${l}` : nome;
+  return l ? `${l} · ${nome}` : nome;
+}
+
+/** Città salvate col primo formato della 2.005 ("Sdrushi · L"): il mondo
+ *  passa davanti ("L · Sdrushi"). I nomi scelti dall'utente restano. */
+export function nomiMondoDavanti(citta: Profile[]): Profile[] {
+  let cambiate = false;
+  const out = citta.map(c => {
+    const l = c.mondo && !c.nomeUtente ? letteraMondo(c.mondo) : null;
+    const fine = ` · ${l}`;
+    if (!l || !c.name.endsWith(fine) || c.name.length === fine.length) return c;
+    cambiate = true;
+    return { ...c, name: `${l} · ${c.name.slice(0, -fine.length)}` };
+  });
+  return cambiate ? out : citta;
 }
 
 /** Soglia di somiglianza (vedi `somiglianza` di trovaCitta) oltre la quale

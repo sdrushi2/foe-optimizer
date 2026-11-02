@@ -6,16 +6,19 @@
 //  disposizione del Planner (placements + celle di strada) e si controlla:
 //   - edifici riconosciuti tramite idMap (id del JSON → id della città); copie
 //     o edifici nuovi rifiutati (il Planner usa solo gli edifici della città);
-//   - catene: un blocco torna solo se tutti i suoi pezzi sono rimasti insieme
-//     nella stessa forma (oppure tutti tolti);
+//   - catene: riconosciute dalla geometria (ricomponiCatene, catene.ts); un
+//     anello può passare a un altro inizio e una catena può avere più o meno
+//     anelli (allora lo scenario ha un problema suo e la sua ricerca riparte).
+//     Ippodromo: un blocco torna solo se i suoi pezzi sono rimasti insieme
+//     (o tutti tolti);
 //   - municipio presente; tutto dentro l'area sbloccata; niente sovrapposizioni;
 //   - completamento in pausa (soloSenzaStrada): strade e municipio fermi;
 //     edifici con strada spostabili/scambiabili se restano attaccati a una strada.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { leggiCittaDati, type CittaJson } from "../data/cityMapJson";
-import { toccaStradaZona, type PlannerFrame, type PlannerProblem } from "./engine";
-import type { Blocco } from "./catene";
+import { toccaStradaZona, type PlannerFrame } from "./engine";
+import { ricomponiCatene, type Raggruppamento } from "./catene";
 import { t, type UiLang } from "../data/ui-strings";
 
 export interface RitornoEditor {
@@ -24,15 +27,20 @@ export interface RitornoEditor {
   roads: Set<string>;
   /** Strade a due corsie: blocchi 2×2 (angolo in alto a sinistra). */
   blocchi: string[];
+  /** Catene ricomposte (ricomponiCatene): stesso problema dello scenario o,
+   *  se una catena ha cambiato numero di anelli, uno nuovo (placements e
+   *  controlli usano i suoi id). */
+  raggruppamento: Raggruppamento;
 }
 
-export function cittaDaEditor(dati: unknown, { problem, blocchi, idMap, frame, soloSenzaStrada, lang = "it" }: {
-  problem: PlannerProblem; blocchi: ReadonlyMap<string, Blocco>; idMap: ReadonlyMap<string, string>;
+export function cittaDaEditor(dati: unknown, { raggruppamento, idMap, frame, soloSenzaStrada, lang = "it" }: {
+  /** Composizione dello scenario (problema e blocchi di catena). */
+  raggruppamento: Raggruppamento; idMap: ReadonlyMap<string, string>;
   frame: PlannerFrame; soloSenzaStrada: boolean; lang?: UiLang;
 }): RitornoEditor {
+  const { problem: vecchio, blocchi } = raggruppamento;
   let citta: CittaJson;
-  try { citta = leggiCittaDati(dati); } catch (err) { return { errori: [t("plannerErrInvalidData", lang, err instanceof Error ? err.message : String(err))], placements: new Map(), roads: new Set(), blocchi: [] }; }
-  const byId = new Map(problem.buildings.map(b => [b.id, b]));
+  try { citta = leggiCittaDati(dati); } catch (err) { return { errori: [t("plannerErrInvalidData", lang, err instanceof Error ? err.message : String(err))], placements: new Map(), roads: new Set(), blocchi: [], raggruppamento }; }
   const errori: string[] = [];
   const pos = new Map<string, { x: number; y: number }>();
   const roads = new Set<string>();
@@ -51,9 +59,18 @@ export function cittaDaEditor(dati: unknown, { problem, blocchi, idMap, frame, s
     if (!mid || mid.startsWith("planner-road") || pos.has(mid)) errori.push(t("plannerErrNewBuilding", lang, b.name));
     else pos.set(mid, { x: b.x, y: b.y });
   }
-  // edifici del Planner: i blocchi di catena tornano interi solo se i pezzi sono rimasti insieme
-  const pl = new Map<string, { x: number; y: number }>();
-  for (const b of problem.buildings) {
+  // catene riconosciute dalla geometria: gli anelli possono passare da una
+  // catena all'altra e una catena può averne più o meno (problema nuovo)
+  const rc = ricomponiCatene(raggruppamento, pos);
+  const problem = rc.rag.problem;
+  const byId = new Map(problem.buildings.map(b => [b.id, b]));
+  for (const n of new Set(rc.staccati)) errori.push(t("plannerErrChainLoose", lang, n));
+  for (const n of new Set(rc.forme)) errori.push(t("plannerErrChainShape", lang, n));
+  for (const n of new Set(rc.tolti)) errori.push(t("plannerErrChainRingRemoved", lang, n));
+  // edifici del Planner: i blocchi delle altre catene (Ippodromo) tornano interi solo se i pezzi sono rimasti insieme
+  const pl = new Map<string, { x: number; y: number }>(rc.placements);
+  for (const b of vecchio.buildings) {
+    if (rc.voci.has(b.id)) continue;
     const bl = blocchi.get(b.id);
     if (!bl) {
       const p = pos.get(b.id);
@@ -98,9 +115,13 @@ export function cittaDaEditor(dati: unknown, { problem, blocchi, idMap, frame, s
     const strada = (x: number, y: number) => roads.has(`${x},${y}`);
     const staccati: string[] = [];
     let mancano = false, municipio = true;
+    const primaId = new Set(vecchio.buildings.map(b => b.id));
     for (const b of problem.buildings) {
       if (!b.isTownhall && b.roadLevel <= 0) continue;
-      const a = frame.placements.get(b.id), c = pl.get(b.id);
+      const c = pl.get(b.id);
+      // (catena rifatta con un altro numero di anelli: voce nuova, basta che tocchi la strada)
+      if (!primaId.has(b.id)) { if (!c) mancano = true; else if (!toccaStradaZona(b, c.x, c.y, strada)) staccati.push(b.name); continue; }
+      const a = frame.placements.get(b.id);
       if (b.isTownhall) { if (!a || !c || a.x !== c.x || a.y !== c.y) municipio = false; continue; }
       if (!!a !== !!c) { mancano = true; continue; }
       if (c && (!a || a.x !== c.x || a.y !== c.y) && !toccaStradaZona(b, c.x, c.y, strada)) staccati.push(b.name);
@@ -109,5 +130,5 @@ export function cittaDaEditor(dati: unknown, { problem, blocchi, idMap, frame, s
     if (mancano) errori.push(t("plannerErrFillMissing", lang));
     if (staccati.length) errori.push(t("plannerErrDetached", lang, elenco(new Set(staccati))));
   }
-  return { errori, placements: pl, roads, blocchi: blocchi2 };
+  return { errori, placements: pl, roads, blocchi: blocchi2, raggruppamento: rc.rag };
 }

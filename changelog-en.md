@@ -3,12 +3,15 @@
 ## Version 2.005 (02/11/2026)
 ### Update
 - New magic wand version: it recognises the game world and warns if the data is not loaded yet (create it again by dragging it to the bookmarks bar)
-- Saved cities: cities of the same player on different worlds stay separate instead of overwriting each other, and the name shows the world by its letter (e.g. "Sdrushi · L")
+- Saved cities: cities of the same player on different worlds stay separate instead of overwriting each other, and the name starts with the world letter (e.g. "L · Sdrushi")
+- Saved cities: double-click the city name at the top to rename it (the name is kept when importing it again)
 - Phone in portrait: the command ribbon shows only the group icons and is shorter
 - The "?" next to a group name (e.g. Search) also opens with a tap
+- Planner, "Current layout": chains start as they are assembled in your city, with their links
 ### Bug Fixes
 - Phone: the page no longer scrolls sideways
 - App installed on the phone: it can be used in portrait again
+- Planner, editor changes: chain links (e.g. Serpent Spikes) can be moved from one Statue to another, even making chains longer or shorter, instead of giving "broken chain"
 
 ---
 

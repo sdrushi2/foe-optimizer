@@ -37,7 +37,7 @@ import PannelloImporta from "./ui/PannelloImporta";
 import PannelloNovita from "./ui/PannelloNovita";
 import VideoTutorial from "./planner/VideoTutorial";
 import PannelloInformazioni from "./ui/PannelloInformazioni";
-import { improntaCitta, infoImport, nomeCitta, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
+import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
 import { useTema } from "./ui/theme";
@@ -1845,7 +1845,12 @@ function compareAllies(
 
 export default function App() {
   // ── Profili ──────────────────────────────────────────────────────────────
-  const [profiles, setProfiles] = useState<Profile[]>(loadProfiles);
+  const [profiles, setProfiles] = useState<Profile[]>(() => {
+    // (2.005: "Sdrushi · L" → "L · Sdrushi", vedi nomiMondoDavanti)
+    const salvate = loadProfiles(), p = nomiMondoDavanti(salvate);
+    if (p !== salvate) writeStoredJson(PROFILES_KEY, p);
+    return p;
+  });
   const [activeProfileId, setActiveProfileId] = useState<string>(() =>
     getActiveProfileId(loadProfiles())
   );
@@ -1913,6 +1918,16 @@ export default function App() {
     setActiveProfileId(profileId);
     localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
     loadProfileData(profileId);
+  };
+
+  /** Rinomina di una città (doppio clic sul selettore, 2.005): il nome resta
+   *  anche ai reimport successivi (`nomeUtente`). */
+  const rinominaCitta = (profileId: string, nome: string) => {
+    const n = nome.trim();
+    if (!n) return;
+    const updated = profiles.map(p => (p.id === profileId ? { ...p, name: n, nomeUtente: true as const } : p));
+    setProfiles(updated);
+    writeStoredJson(PROFILES_KEY, updated);
   };
 
   /** `chiedi` false: la conferma l'ha già data il selettore della città (2.0). */
@@ -3604,16 +3619,17 @@ export default function App() {
     const soloCitta = info.tipo === "visitata";
     const id = esistente?.id ?? `p_${Date.now()}`;
     let name: string;
-    // nome = giocatore · lettera del mondo ("Sdrushi · L"), se il mondo è noto
+    // nome = lettera del mondo · giocatore ("L · Sdrushi"), se il mondo è noto;
+    // un nome scelto dall'utente (rinominaCitta) resta
     const nomeInfo = info.nome ? nomeCitta(info.nome, info.mondo ?? esistente?.mondo ?? null) : null;
-    if (esistente) name = nomeInfo ?? esistente.name;
+    if (esistente) name = esistente.nomeUtente ? esistente.name : nomeInfo ?? esistente.name;
     else if (nomeInfo) {
       // collisione col nome di un'altra città: "Nome 2", "Nome 3", ...
       const existingNames = new Set(profiles.map(p => p.name));
       name = nomeInfo;
       for (let suffix = 2; existingNames.has(name); suffix++) name = `${nomeInfo} ${suffix}`;
     } else name = t("defaultProfileName", uiLang, profiles.length + 1);
-    const newProfile: Profile = { id, name, tipo: tipoFinale, ...(daJson ? { origine: "json" as const } : {}),
+    const newProfile: Profile = { id, name, tipo: tipoFinale, ...(daJson ? { origine: "json" as const } : {}), ...(esistente?.nomeUtente ? { nomeUtente: true as const } : {}),
       ...(info.playerId !== null ? { playerId: info.playerId } : esistente?.playerId !== undefined ? { playerId: esistente.playerId } : {}),
       ...(info.mondo ? { mondo: info.mondo } : esistente?.mondo ? { mondo: esistente.mondo } : {}),
       ...(() => { const a = sanitizePortraitUrl(data.portraitUrl) || esistente?.avatar; return a ? { avatar: a } : {}; })() };
@@ -5988,7 +6004,7 @@ export default function App() {
       <Testata scheda={schedaCorrente} onScheda={scegliScheda}
         spente={spente}
         citta={vociCitta} cittaAttiva={activeProfileId} onSelezionaCitta={switchProfile}
-        onEliminaCitta={(id) => deleteProfile(id, false)} onImportaCittaJson={() => cittaJsonRef.current?.click()} onImporta={importaDaNastro}
+        onEliminaCitta={(id) => deleteProfile(id, false)} onRinominaCitta={rinominaCitta} onImportaCittaJson={() => cittaJsonRef.current?.click()} onImporta={importaDaNastro}
         avviso={avvisoCitta} onChiudiAvviso={chiudiAvviso}
         versione={__BUILD_VERSION__} gruppi={gruppiNastro}
         uiLang={uiLang} onLingua={handleUiLangChange} avatar={portraitUrl || null} />

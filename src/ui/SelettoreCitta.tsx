@@ -7,6 +7,8 @@
 //  (si importa con la bacchetta verde della testata; 2.0: in fondo al menu
 //  anche "Importa da JSON", città ridotta). Il menu è `position: fixed` così
 //  non viene tagliato dalla riga delle schede (overflow hidden).
+//  Doppio clic sul pulsante (2.005): il nome diventa un campo per rinominare
+//  la città (Invio o clic fuori = salva, Esc = annulla).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from "react";
@@ -30,6 +32,7 @@ interface Props {
   attiva: string;
   onSeleziona: (id: string) => void;
   onElimina: (id: string) => void;
+  onRinomina: (id: string, nome: string) => void;
   /** 2.0: aggiunge una città da un file JSON (come Opzioni › Importa da JSON). */
   onImportaJson?: () => void;
   uiLang: UiLang;
@@ -39,8 +42,11 @@ interface Props {
   maxW: number;
 }
 
-export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, onImportaJson, uiLang, maxW, avatar }: Props) {
+export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, onRinomina, onImportaJson, uiLang, maxW, avatar }: Props) {
   const [menu, setMenu] = useState<{ left: number; top: number } | null>(null);
+  /** Nome in modifica (doppio clic), null = non si sta rinominando. */
+  const [nuovoNome, setNuovoNome] = useState<string | null>(null);
+  const rifCampo = useRef<HTMLInputElement>(null);
   const [daEliminare, setDaEliminare] = useState<VoceCitta | null>(null);
   const rifMenu = useRef<HTMLDivElement>(null);
   const rifPulsante = useRef<HTMLButtonElement>(null);
@@ -62,7 +68,18 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
     return () => { clearTimeout(tm); document.removeEventListener("mousedown", fuori); document.removeEventListener("keydown", esc); };
   }, [menu]);
 
+  const inModifica = nuovoNome !== null;
+  useEffect(() => { if (inModifica) rifCampo.current?.select(); }, [inModifica]);
+  const salva = () => {
+    if (nuovoNome === null) return;
+    const n = nuovoNome.trim();
+    if (corrente && n && n !== corrente.nome) onRinomina(corrente.id, n);
+    setNuovoNome(null);
+  };
+
   const apri = (e: MouseEvent) => {
+    // (secondo clic di un doppio clic: lo gestisce onDoubleClick)
+    if (e.detail > 1) return;
     if (menu) { setMenu(null); return; }
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMenu({ left: Math.max(4, Math.min(r.left, window.innerWidth - 284)), top: r.bottom + 4 });
@@ -86,7 +103,21 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
 
   return (
     <>
-      <button ref={rifPulsante} type="button" onClick={(e) => apri(e as unknown as MouseEvent)} title={corrente?.nome ?? t("r2NoCity", uiLang)}
+      {nuovoNome !== null && corrente ? (
+        <div style={{ maxWidth: maxW }}
+          className="mr-2 flex h-8 shrink-0 items-center gap-1.5 self-end -mb-px overflow-hidden rounded-t-md border border-b-0 border-sky-600 bg-slate-950 px-3 text-slate-50">
+          <Miniatura c={{ ...corrente, avatar: corrente.avatar ?? avatar }} />
+          <input ref={rifCampo} value={nuovoNome} maxLength={60} aria-label={t("r2RenameCity", uiLang)}
+            onInput={(e) => setNuovoNome((e.target as HTMLInputElement).value)}
+            onKeyDown={(e) => { if (e.key === "Enter") salva(); else if (e.key === "Escape") setNuovoNome(null); }}
+            onBlur={salva}
+            style={{ width: `${Math.max(6, nuovoNome.length + 1)}ch` }}
+            className="min-w-0 bg-transparent text-slate-50 outline-none" />
+        </div>
+      ) : (
+      <button ref={rifPulsante} type="button" onClick={(e) => apri(e as unknown as MouseEvent)}
+        onDoubleClick={() => { if (!corrente) return; setMenu(null); setDaEliminare(null); setNuovoNome(corrente.nome); }}
+        title={corrente ? `${corrente.nome}\n${t("r2RenameCityHint", uiLang)}` : t("r2NoCity", uiLang)}
         style={{ maxWidth: maxW }}
         // Stesso aspetto della scheda selezionata (bordo sopra e ai lati,
         // sfondo del nastro, appoggiata al nastro): la città si legge come
@@ -96,6 +127,7 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
         <span className="truncate">{corrente?.nome ?? t("r2NoCity", uiLang)}</span>
         <ChevronDown size={12} className="shrink-0 text-slate-400" aria-hidden="true" />
       </button>
+      )}
       {menu && (
         <div ref={rifMenu} style={{ left: menu.left, top: menu.top }}
           className="fixed z-[60] w-[280px] rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-[12px] whitespace-normal shadow-xl">

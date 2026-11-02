@@ -71,6 +71,8 @@ const UI_STRINGS = {
   r2VisitedCity: { it: "Città visitata", en: "Visited city" },
   r2GrpPlayer: { it: "Giocatore", en: "Player" },
   r2NoCitiesYet: { it: "Nessuna città: importala con la bacchetta verde in alto.", en: "No cities yet: import one with the green magic wand at the top." },
+  r2RenameCity: { it: "Nome della città", en: "City name" },
+  r2RenameCityHint: { it: "Doppio clic per rinominare la città", en: "Double-click to rename the city" },
   r2DeleteCity: { it: "Elimina", en: "Delete" },
   r2DeleteAsk: { it: (n: string) => `Eliminare ${n}?`, en: (n: string) => `Delete ${n}?` },
   r2DeleteMine: {
@@ -2563,6 +2565,18 @@ const UI_STRINGS = {
   plannerErrChainBroken: {
     it: (n: string) => `${n}: catena spezzata, sposta o togli tutti i suoi pezzi insieme.`,
     en: (n: string) => `${n}: broken chain, move or remove all its pieces together.`,
+  },
+  plannerErrChainLoose: {
+    it: (n: string) => `${n}: anello staccato, va attaccato all'inizio di una catena o a un altro anello.`,
+    en: (n: string) => `${n}: detached link, attach it to the start of a chain or to another link.`,
+  },
+  plannerErrChainRingRemoved: {
+    it: (n: string) => `${n}: anello tolto da solo; rimettilo in una catena oppure togli anche l'inizio di una catena.`,
+    en: (n: string) => `${n}: link removed on its own; put it back in a chain or also remove the start of a chain.`,
+  },
+  plannerErrChainShape: {
+    it: (n: string) => `${n}: catena montata in una forma che il Planner non gestisce.`,
+    en: (n: string) => `${n}: chain assembled in a shape the Planner does not handle.`,
   },
   plannerErrRoad: { it: "strada", en: "road" },
   plannerErrOthers: { it: (n: number) => ` e altri ${n}`, en: (n: number) => ` and ${n} more` },

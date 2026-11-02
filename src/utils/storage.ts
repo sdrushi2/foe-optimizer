@@ -11,7 +11,9 @@ import type { CityStore } from "../data/cityStore";
  *  lo slot (compresso) della città. */
 export type Profile = { id: string; name: string; tipo?: "mia" | "visitata"; playerId?: number; mondo?: string; avatar?: string;
   /** 2.0: città "ridotta" importata da un file JSON (data/cittaDaJson.ts). */
-  origine?: "json" };
+  origine?: "json";
+  /** 2.005: nome scelto dall'utente (doppio clic sul selettore): i reimport non lo cambiano. */
+  nomeUtente?: true };
 
 // Versione del formato di storage. Incrementarla (key rotation) invalida
 // automaticamente tutte le chiavi delle versioni precedenti: i dati vecchi

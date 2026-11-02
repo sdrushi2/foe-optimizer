@@ -18,7 +18,7 @@ import { runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
 import { baseCentrale, type BaseGirandola } from "./girandola";
-import { espandiCatene, raggruppaCatene, SET_DI_EDIFICI } from "./catene";
+import { espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI_EDIFICI, type Raggruppamento } from "./catene";
 import { coloreEdificioMappa, renderCityMapPng, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -122,6 +122,23 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const delayMs = 0;
 
 /** Edifici con strada non collegati alla rete del municipio (bordo rosso in pausa). */
+/** Specchio vietato dalle catene: il blocco si sposta rigido (gli anelli
+ *  restano dal lato giusto, il gioco non li accetta specchiati), ma la sua
+ *  zona di strada (l'inizio) finirebbe dal lato opposto della strada
+ *  specchiata e la catena resterebbe scollegata. Vietato sull'asse in cui
+ *  l'inizio non è centrato nel blocco: catene orizzontali → specchio
+ *  orizzontale, verticali → verticale, entrambe → entrambi. */
+function specchioVietato(problem: PlannerProblem): { h: boolean; v: boolean } {
+  const no = { h: false, v: false };
+  for (const b of problem.buildings) {
+    const z = b.zonaStrada;
+    if (!z || b.roadLevel <= 0) continue;
+    if (z.x !== b.w - z.x - z.w) no.h = true;
+    if (z.y !== b.h - z.y - z.h) no.v = true;
+  }
+  return no;
+}
+
 function scollegati(frame: PlannerFrame, problem: PlannerProblem, byId: Map<string, PlannerBuilding>): Set<string> {
   const k = (x: number, y: number) => `${x},${y}`;
   const per = (x: number, y: number, w: number, h: number) => {
@@ -273,7 +290,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
    *  città. Una catena entra solo se i suoi pezzi sono montati come il blocco
    *  del Planner (stessa distribuzione degli anelli), altrimenti la ripiazza la
    *  ricerca. null se la città non ha strade (es. export JSON senza strade). */
-  const statoAttuale = useMemo((): { placements: Map<string, { x: number; y: number }>; roads: Set<string>; blocchi: string[] } | null => {
+  const statoAttuale = useMemo((): { placements: Map<string, { x: number; y: number }>; roads: Set<string>; blocchi: string[]; rag: Raggruppamento } | null => {
     const roads = new Set<string>(), blocchi: string[] = [];
     const pos = new Map<string, { x: number; y: number }>();
     for (const b of cityMapBuildings) {
@@ -283,18 +300,24 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) roads.add(`${b.x + i},${b.y + j}`);
     }
     if (!roads.size) return null;
+    // catene come sono montate nella città (anche con numeri di anelli diversi:
+    // lo scenario ha allora un problema suo); anelli staccati: li piazza la ricerca
+    const rc = ricomponiCatene(catene, pos, true);
     const placements = new Map<string, { x: number; y: number }>();
-    for (const b of problem.buildings) {
+    for (const b of rc.rag.problem.buildings) {
       if ((!b.isTownhall && b.roadLevel <= 0) || eNuovo(b.id)) continue;
-      const bl = catene.blocchi.get(b.id);
+      const q = rc.placements.get(b.id);
+      if (q) { placements.set(b.id, q); continue; }
+      if (rc.voci.has(b.id)) continue;
+      const bl = rc.rag.blocchi.get(b.id);
       if (!bl) { placements.set(b.id, { x: b.origX, y: b.origY }); continue; }
       const m0 = bl.membri[0]!, p0 = pos.get(m0.id);
       if (!p0) continue;
       const x0 = p0.x - m0.dx, y0 = p0.y - m0.dy;
       if (bl.membri.every(m => { const p = pos.get(m.id); return p && p.x - m.dx === x0 && p.y - m.dy === y0; })) placements.set(b.id, { x: x0, y: y0 });
     }
-    return { placements, roads, blocchi };
-  }, [cityMapBuildings, problem, catene]);
+    return { placements, roads, blocchi, rag: rc.rag };
+  }, [cityMapBuildings, catene]);
   const [frames, setFrames] = useState<Record<VName, PlannerFrame | null>>(tutte(null));
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
@@ -345,6 +368,27 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   framesRef.current = frames;
   /** Generazione della corsa: i fotogrammi di una corsa annullata (Reset) vengono ignorati. */
   const genRef = useRef(0);
+  // Catene di uno scenario (ricomponiCatene): rimontate nell'editor (anelli
+  // spostati da una catena all'altra, catene con più o meno anelli) o come
+  // nella città ("Configurazione attuale"). Per scenario, valide finché non
+  // riparte la ricerca; con un problema diverso da `problem` la ricerca dello
+  // scenario riparte col suo (rifaiRef).
+  const scenRef = useRef<Partial<Record<VName, { gen: number; rag: Raggruppamento }>>>({});
+  const ragDi = (n?: VName): Raggruppamento => {
+    const r = n ? scenRef.current[n] : undefined;
+    return r && r.gen === genRef.current ? r.rag : catene;
+  };
+  const problemDi = (n?: VName) => ragDi(n).problem;
+  const byIdCache = useRef(new WeakMap<PlannerProblem, Map<string, PlannerBuilding>>());
+  const byIdDi = (n?: VName): Map<string, PlannerBuilding> => {
+    const p = problemDi(n);
+    if (p === problem) return byId;
+    let m = byIdCache.current.get(p);
+    if (!m) { m = new Map(p.buildings.map(b => [b.id, b])); byIdCache.current.set(p, m); }
+    return m;
+  };
+  /** Scenario da far ripartire col suo problema dalla disposizione modificata (applicaDaEditor). */
+  const rifaiRef = useRef<Partial<Record<VName, StatoManuale>>>({});
   /** Reti a pettine già calcolate (per posizione del municipio) del problema attuale. */
   const pettineRef = useRef<{ problem: unknown; mappa: Map<string, Nucleo[]> }>({ problem: null, mappa: new Map() });
   // Città cambiata (re-import nello stesso profilo): si ferma la corsa in atto
@@ -428,7 +472,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     for (let t = 0; t < 60 && inRicerca.some(sc => !inPausaRef.current[sc.id]); t++) await sleep(50);
     await Promise.all(visibili.filter(sc => inPausaRef.current[sc.id] && framesRef.current[sc.id]).map(async sc => {
       const f0 = framesRef.current[sc.id]!;
-      await smussaBordi(problem, f0, {
+      await smussaBordi(problemDi(sc.id), f0, {
         fissi: new Set(sc.v?.fissi ?? []),
         shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current || eliminatiRef.current.has(sc.id),
         onFrame: f => {
@@ -452,7 +496,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** "Sposta l'intera città" (richiesta dell'utente, solo in pausa): edifici,
    *  municipio e strade traslati in blocco di (dx, dy); conta come modifica a
    *  mano. Null se qualche cella uscirebbe dall'area sbloccata. */
-  const traslato = (f: PlannerFrame, dx: number, dy: number): PlannerFrame | null => {
+  const traslato = (f: PlannerFrame, dx: number, dy: number, n: VName): PlannerFrame | null => {
+    const byId = byIdDi(n);
     const sp = (k: string) => { const i = k.indexOf(","); return `${Number(k.slice(0, i)) + dx},${Number(k.slice(i + 1)) + dy}`; };
     const pl = new Map<string, { x: number; y: number }>();
     for (const [id, p] of f.placements) {
@@ -470,24 +515,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
    *  orizzontale ("h") o in verticale ("v") attorno al rettangolo che
    *  contiene edifici e strade; i contatti fra edifici e strade restano
    *  gli stessi. Null se qualche cella uscirebbe dall'area sbloccata. */
-  /** Specchio vietato dalle catene: il blocco si sposta rigido (gli anelli
-   *  restano dal lato giusto, il gioco non li accetta specchiati), ma la sua
-   *  zona di strada (l'inizio) finirebbe dal lato opposto della strada
-   *  specchiata e la catena resterebbe scollegata. Vietato sull'asse in cui
-   *  l'inizio non è centrato nel blocco: catene orizzontali → specchio
-   *  orizzontale, verticali → verticale, entrambe → entrambi. */
-  const specchioCatene = useMemo(() => {
-    const no = { h: false, v: false };
-    for (const b of problem.buildings) {
-      const z = b.zonaStrada;
-      if (!z || b.roadLevel <= 0) continue;
-      if (z.x !== b.w - z.x - z.w) no.h = true;
-      if (z.y !== b.h - z.y - z.h) no.v = true;
-    }
-    return no;
-  }, [problem]);
-  const specchiato = (f: PlannerFrame, asse: "h" | "v"): PlannerFrame | null => {
-    if (specchioCatene[asse]) return null;
+  const specchioCatene = useMemo(() => specchioVietato(problem), [problem]);
+  const specchioDi = (n: VName) => (problemDi(n) === problem ? specchioCatene : specchioVietato(problemDi(n)));
+  const specchiato = (f: PlannerFrame, asse: "h" | "v", n: VName): PlannerFrame | null => {
+    if (specchioDi(n)[asse]) return null;
+    const byId = byIdDi(n);
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const [id, p] of f.placements) { const b = byId.get(id); if (!b) continue; x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x + b.w - 1); y1 = Math.max(y1, p.y + b.h - 1); }
     for (const k of f.roads) { const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1)); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
@@ -517,7 +549,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   const spostaTutto = (v: VName, dx: number, dy: number) => {
     const f = framesRef.current[v];
-    const nf = f && traslato(f, dx, dy);
+    const nf = f && traslato(f, dx, dy, v);
     if (!nf) return;
     framesRef.current = { ...framesRef.current, [v]: nf };
     setFrames(prev => ({ ...prev, [v]: nf }));
@@ -556,7 +588,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const fermato = () => stopRef.current || eliminatiRef.current.has(id);
     const gen = genRef.current;
     const setF = (f0: PlannerFrame) => {
-      if (gen !== genRef.current || annullaRef.current[id]) return;
+      if (gen !== genRef.current || annullaRef.current[id] || rifaiRef.current[id]) return;
       const f: PlannerFrame = f0.due ? f0 : { ...f0, due: dueRef.current[id] };
       framesRef.current = { ...framesRef.current, [id]: f };
       setFrames(prev => ({ ...prev, [id]: f }));
@@ -565,7 +597,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (f.search) setRicerca(prev => ({ ...prev, [id]: f.search! }));
     };
     const opzioni = {
-      delayMs, onFrame: setF, shouldStop: () => fermato() || annullaRef.current[id],
+      delayMs, onFrame: setF, shouldStop: () => fermato() || annullaRef.current[id] || !!rifaiRef.current[id],
       riposo: () => riposoRef.current,
       shouldFinishSearch: () => finishRef.current,
       onSearchActive: (a: boolean) => setSearching(s => ({ ...s, [id]: a })),
@@ -577,7 +609,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         // in pausa, e un riempimento che arriva ora alla pausa restava fermo per
         // sempre (la corsa non finiva, non ripartiva la ricerca: completati ancora
         // visibili e Smussa spento — segnalazione dell'utente)
-        if (fermato() || !pausedRef.current || annullaRef.current[id]) { res(null); return; }
+        if (fermato() || !pausedRef.current || annullaRef.current[id] || rifaiRef.current[id]) { res(null); return; }
         resumeRef.current[id] = res;
       }),
       onPaused: (p: boolean) => { inPausaRef.current = { ...inPausaRef.current, [id]: p }; setInPausa(s => ({ ...s, [id]: p })); },
@@ -587,6 +619,13 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse" | "rami" | "posizioniSenzaStrada">, partenza?: StatoManuale) => {
       let riprendiDa: { stato: StatoManuale; valutate: number } | undefined = partenza ? { stato: partenza, valutate: 0 } : undefined;
       for (;;) {
+        // problema dello scenario (catene rimontate nell'editor: può cambiare fra un giro e l'altro)
+        const prob = problemDi(id);
+        const ids = new Set(prob.buildings.map(b => b.id));
+        const argsP = prob === problem ? args : {
+          ...args, ...(args.fissi ? { fissi: args.fissi.filter(x => ids.has(x)) } : {}),
+          ...(args.posizioniSenzaStrada ? { posizioniSenzaStrada: args.posizioniSenzaStrada.filter(([x]) => ids.has(x)) } : {}),
+        };
         // ── Squadra di ricerca (vedi SEMI): aiutanti con altri semi, solo
         // ricerca. Si fermano a COMPLETA, a Ferma (pausa) e a fine corsa; alla
         // ripresa ripartono dalla disposizione della principale (con le
@@ -594,12 +633,12 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         let principale: PlannerFrame | null = null;
         const aiuti: Array<{ f: PlannerFrame | null; inviato: PlannerFrame | null; i: number; vivo: boolean }> = [];
         let corsa = 0, chiusa = false, passate = 0;
-        const basta = () => chiusa || fermato() || annullaRef.current[id] || finishRef.current || gen !== genRef.current;
+        const basta = () => chiusa || fermato() || annullaRef.current[id] || !!rifaiRef.current[id] || finishRef.current || gen !== genRef.current;
         const avviaAiutante = (i: number, g: number, da?: StatoManuale) => {
           const a: (typeof aiuti)[number] = { f: null, inviato: null, i, vivo: true };
           aiuti.push(a);
-          runCompletionParallela(problem, {
-            ...args, delayMs: 0, soloRicerca: true, seme: seme(i),
+          runCompletionParallela(prob, {
+            ...argsP, delayMs: 0, soloRicerca: true, seme: seme(i),
             onFrame: f => { if (g === corsa) a.f = f; },
             // (potenza abbassata: le aiutanti oltre il numero ammesso si fermano)
             shouldStop: () => basta() || pausedRef.current || g !== corsa || i >= semiRef.current,
@@ -651,8 +690,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         if (semiRef.current > 1) lanciaAiuti(riprendiDa?.stato);
         try {
           // in un Web Worker (parallelo.ts): ogni ricerca su un core suo
-          await runCompletionParallela(problem, {
-            ...opzioni, ...args, ...(riprendiDa ? { riprendiDa } : {}),
+          await runCompletionParallela(prob, {
+            ...opzioni, ...argsP, ...(riprendiDa ? { riprendiDa } : {}),
             onFrame: f => setF(somma(f)),
             adotta,
             waitResume: () => opzioni.waitResume().then(s => {
@@ -664,6 +703,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         } finally {
           chiusa = true;
           delete rinforziRef.current[id];
+        }
+        // catene rimontate nell'editor con un altro numero di anelli: si riparte
+        // (in pausa) col problema nuovo dalla disposizione modificata
+        const rifai = rifaiRef.current[id];
+        if (rifai) {
+          delete rifaiRef.current[id];
+          if (fermato() || gen !== genRef.current) break;
+          riprendiDa = { stato: rifai, valutate: (principale as PlannerFrame | null)?.search?.valutate ?? 0 };
+          continue;
         }
         const prima = primaRef.current[id];
         if (!annullaRef.current[id] || !prima || fermato() || gen !== genRef.current) break;
@@ -716,9 +764,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       const st = statoAttuale;
       const th = problem.buildings.find(b => b.isTownhall);
       if (!st || !th) return;
+      if (st.rag !== catene) scenRef.current = { ...scenRef.current, [id]: { gen, rag: st.rag } };
+      const pa = st.rag.problem;
       dueRef.current = { ...dueRef.current, [id]: st.blocchi };
       setF({ placements: new Map(st.placements), roads: new Set(st.roads), probe: null, lastPath: [], placed: st.placements.size, unplaced: [], iterations: 0, done: false, label: t("plannerScenarioCurrent", uiLang) });
-      const due = problem.buildings.filter(b => richiedeDueCorsie(b) && st.placements.has(b.id)).map(b => b.id);
+      const due = pa.buildings.filter(b => richiedeDueCorsie(b) && st.placements.has(b.id)).map(b => b.id);
       await corri({
         initial: { placements: st.placements, roads: st.roads },
         geometry: { stradaVX: problem.minX - 1, eastMidY: th.origY + Math.floor(th.h / 2) },
@@ -726,7 +776,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         // la città com'è non ha la verticale del builder: la ricerca deve poter aprire rami nuovi
         rami: true,
         // e gli edifici senza strada restano dove sono, se il posto è ancora libero
-        posizioniSenzaStrada: problem.buildings.filter(b => !b.isTownhall && b.roadLevel <= 0 && !eNuovo(b.id)).map(b => [b.id, { x: b.origX, y: b.origY }] as const),
+        posizioniSenzaStrada: pa.buildings.filter(b => !b.isTownhall && b.roadLevel <= 0 && !eNuovo(b.id)).map(b => [b.id, { x: b.origX, y: b.origY }] as const),
       }, st);
       setSearching(s => ({ ...s, [id]: false }));
       return;
@@ -928,10 +978,14 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Riga di stato di una mappa: edifici CON STRADA piazzati (verde = tutti,
    *  rosso = ne mancano), strade attuali/della città di partenza (verde = meno della città di partenza, rosso = di più)
    *  e disposizioni provate dalla ricerca. */
-  const conStrada = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0), [problem]);
-  const senzaStrada = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0), [problem]);
-  const stats = (f: PlannerFrame | null, valutate?: number) => {
+  const conStradaP = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0), [problem]);
+  const senzaStradaP = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0), [problem]);
+  const stats = (f: PlannerFrame | null, valutate?: number, n?: VName) => {
     if (!f) return null;
+    // (scenario con le catene rimontate: le sue voci)
+    const pn = problemDi(n);
+    const conStrada = pn === problem ? conStradaP : pn.buildings.filter(b => !b.isTownhall && b.roadLevel > 0);
+    const senzaStrada = pn === problem ? senzaStradaP : pn.buildings.filter(b => !b.isTownhall && b.roadLevel === 0);
     const piazzati = conStrada.filter(b => f.placements.has(b.id)).length;
     const piazzatiSenza = senzaStrada.filter(b => f.placements.has(b.id)).length;
     return (
@@ -939,7 +993,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       {t("plannerStatsPlaced", uiLang)} <b className={piazzati >= conStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzati}/{conStrada.length}</b>
       {" · "}{t("plannerStatsNoRoad", uiLang)} <b className={piazzatiSenza >= senzaStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzatiSenza}/{senzaStrada.length}</b>
       {" · "}{t("plannerStatsRoads", uiLang)} <b className={f.roads.size < problem.originalRoadCells ? "text-emerald-400" : f.roads.size > problem.originalRoadCells ? "text-red-400" : "text-slate-100"}>{f.roads.size}/{problem.originalRoadCells}</b>
-      {" · "}<span title={t("plannerStatsCornersTitle", uiLang)}>{t("plannerStatsCorners", uiLang)} <b className="text-slate-100">{contaAngoli(problem, f.placements, f.roads)}</b></span>
+      {" · "}<span title={t("plannerStatsCornersTitle", uiLang)}>{t("plannerStatsCorners", uiLang)} <b className="text-slate-100">{contaAngoli(pn, f.placements, f.roads)}</b></span>
       {valutate !== undefined && <>{" · "}{valutate.toLocaleString(uiLang === "en" ? "en-US" : "it-IT")} {t("plannerStatsLayouts", uiLang)}</>}
     </span>
     );
@@ -948,7 +1002,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Edifici (catene riscomposte) e strade di una soluzione, come cityMapBuildings. */
   const edificiFrame = (f: PlannerFrame, n?: VName): CityMapBuilding[] => {
     const edifici: CityMapBuilding[] = [];
-    const posizioni = espandiCatene(f.placements, catene.blocchi);
+    const posizioni = espandiCatene(f.placements, ragDi(n).blocchi);
     for (const b of cityMapBuildings) {
       if (b.type === "street") continue;
       const p = posizioni.get(b.mapEntityId);
@@ -1074,7 +1128,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       const b = perId.get(mid);
       if (b) colori[jid] = coloreEdificioMappa({
         ...b, isTownhall: b.type === "main_building", isStreet: b.type === "street",
-        isGreatBuilding: b.isGreatBuilding || grandiEdifici.has(mid), roadLevel: byId.get(mid)?.roadLevel ?? b.roadLevel,
+        isGreatBuilding: b.isGreatBuilding || grandiEdifici.has(mid), roadLevel: byIdDi(e.n).get(mid)?.roadLevel ?? b.roadLevel,
       });
     }
     // edifici aggiunti con "Modifica città" (id del JSON) e riquadro delle modifiche, per il PNG dell'editor
@@ -1086,16 +1140,32 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     if (e.gen !== genRef.current) return [t("plannerEditorRestarted", uiLang)];
     if (!modificabile(e.n)) return [t("plannerEditorPauseFirst", uiLang)];
     const f = framesRef.current[e.n]!;
-    const r = cittaDaEditor(dati, { problem, blocchi: catene.blocchi, idMap: e.idMap, frame: f, soloSenzaStrada: filling[e.n], lang: uiLang });
+    const rag = ragDi(e.n);
+    const r = cittaDaEditor(dati, { raggruppamento: rag, idMap: e.idMap, frame: f, soloSenzaStrada: filling[e.n], lang: uiLang });
     if (r.errori.length) return r.errori;
     // Strade a due corsie: i blocchi 2×2 si possono spostare, aggiungere o
     // togliere (alla ripresa diventano le nuove strade fisse della ricerca),
     // purché allineati e collegati al municipio, con gli edifici a due corsie
     // accanto a un blocco collegato (verificaDueCorsie).
-    const err2 = verificaDueCorsie(problem, r.placements, r.blocchi, uiLang);
+    const err2 = verificaDueCorsie(r.raggruppamento.problem, r.placements, r.blocchi, uiLang);
     if (err2.length) return err2;
     const { placements: pl, roads } = r;
+    if (r.raggruppamento !== rag) scenRef.current = { ...scenRef.current, [e.n]: { gen: genRef.current, rag: r.raggruppamento } };
     applicaManuale(e.n, { ...f, placements: pl, roads, due: r.blocchi, lastPath: [...roads].filter(k => !f.roads.has(k)), probe: null, placed: pl.size });
+    if (r.raggruppamento.problem !== rag.problem) {
+      // Catene con un altro numero di anelli: problema nuovo per lo scenario.
+      // Le disposizioni salvate (Annulla modifiche / completamento) hanno le
+      // voci vecchie; la ricerca in pausa riparte (in pausa) col problema nuovo.
+      autoRef.current[e.n] = null;
+      primaRef.current[e.n] = null;
+      const res = resumeRef.current[e.n];
+      if (res) {
+        delete resumeRef.current[e.n];
+        dueRef.current = { ...dueRef.current, [e.n]: [...r.blocchi] };
+        rifaiRef.current[e.n] = { placements: pl, roads, blocchi: r.blocchi };
+        res(null);
+      }
+    }
     return [];
   };
   const onMessageRef = useRef<(ev: MessageEvent) => void>(() => {});
@@ -1132,8 +1202,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const statistiche = useMemo(() => {
     let aCatena = 0;
     for (const bl of catene.blocchi.values()) aCatena += bl.membri.length;
-    return { conStrada: conStrada.length, senzaStrada: senzaStrada.length, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
-  }, [conStrada, senzaStrada, catene, problem, edificiSet]);
+    return { conStrada: conStradaP.length, senzaStrada: senzaStradaP.length, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
+  }, [conStradaP, senzaStradaP, catene, problem, edificiSet]);
   const nomiSet = [...new Set(edificiSet.map(b => b.name))].sort().join(", ");
   const titoloCpu = (() => {
     // diagnostica: quanti core vede il browser, ricerche e pause calcolate
@@ -1261,20 +1331,21 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                 const f = frames[n];
                 // Bordi tratteggiati (gialli = problematici, rossi = strade vuote):
                 // sempre visibili; l'elenco sotto la mappa solo con DEBUG_PLANNER.
-                const eff = f ? calcolaRoadEff(problem.buildings, f.placements, f.roads) : null;
-                const vuote = f ? calcolaStradeVuote(problem.buildings, f.placements, f.roads, problem.cells) : null;
+                const pn = problemDi(n), bn = byIdDi(n);
+                const eff = f ? calcolaRoadEff(pn.buildings, f.placements, f.roads) : null;
+                const vuote = f ? calcolaStradeVuote(pn.buildings, f.placements, f.roads, pn.cells) : null;
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <b className="text-fuchsia-300">{titoloScenario(n)}</b>
-                      <span className="text-[12px]">{stats(f, ricerca[n]?.valutate)}</span>
+                      <span className="text-[12px]">{stats(f, ricerca[n]?.valutate, n)}</span>
                     </div>
                     {/* Riga dei pulsanti (sotto il titolo e le statistiche) */}
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       {f && inPausa[n] && paused && !smussando && (
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title={t("plannerMoveAllTitle", uiLang)}>
                           {([["←", -1, 0], ["↑", 0, -1], ["↓", 0, 1], ["→", 1, 0]] as const).map(([fr, dx, dy]) => (
-                            <button key={fr} type="button" disabled={!traslato(f, dx, dy)} onClick={() => spostaTutto(n, dx, dy)}
+                            <button key={fr} type="button" disabled={!traslato(f, dx, dy, n)} onClick={() => spostaTutto(n, dx, dy)}
                               className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
                           ))}
                         </span>
@@ -1283,7 +1354,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title={t("plannerMirrorTitle", uiLang)}>
                           {t("plannerMirror", uiLang)}
                           {([["⇋", "h", "plannerMirrorH"], ["⇵", "v", "plannerMirrorV"]] as const).map(([fr, asse, tit]) => (
-                            <button key={asse} type="button" title={specchioCatene[asse] ? t("plannerMirrorChain", uiLang) : t(tit, uiLang)}disabled={!specchiato(f, asse)} onClick={() => applicaManuale(n, specchiato(f, asse))}
+                            <button key={asse} type="button" title={specchioDi(n)[asse] ? t("plannerMirrorChain", uiLang) : t(tit, uiLang)}disabled={!specchiato(f, asse, n)} onClick={() => applicaManuale(n, specchiato(f, asse, n))}
                               className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
                           ))}
                         </span>
@@ -1307,7 +1378,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                         className="rounded border border-red-700 px-2 py-0.5 text-[12px] text-red-300 hover:bg-red-950 disabled:opacity-40">🗑</button>
                     </div>
                     <div className={`overflow-hidden rounded border ${inPausa[n] ? "border-sky-500" : "border-slate-800"}`}>
-                      <MapCanvas frame={f} problem={problem} byId={byId} ge={grandiEdifici} pausa={inPausa[n] && paused} due={f?.due ?? dueRef.current[n]}
+                      <MapCanvas frame={f} problem={pn} byId={bn} ge={grandiEdifici} pausa={inPausa[n] && paused} due={f?.due ?? dueRef.current[n]}
                         evidenzia={eff ? new Set(eff.voci.map(v => v.id)) : undefined} stradeVuote={vuote ?? undefined} />
                     </div>
                     {DEBUG_PLANNER && eff && (
