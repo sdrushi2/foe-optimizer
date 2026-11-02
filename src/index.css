@@ -63,6 +63,15 @@ body {
    la compattazione: i gruppi cambiano forma da un filtro all'altro. */
 html { scrollbar-gutter: stable; }
 
+/* Niente scorrimento orizzontale della PAGINA (segnalato su telefono in
+   orizzontale: la pagina si spostava di qualche decina di px a sinistra).
+   Tutto ciò che è più largo dello schermo scorre già dentro il proprio
+   contenitore (tabella, nastro) o viene tagliato (riga delle schede); se il
+   telefono ingrandisce qualcosa (dimensione del testo di sistema) non deve
+   allargare la pagina. `clip` (non `hidden`) sul body: non crea un
+   contenitore di scorrimento, quindi la testata `sticky` continua a funzionare. */
+html, body { overflow-x: clip; }
+
 /* Colori di riga "a tinta" che non sono nella scala di Tailwind (Grandi
    Edifici, militari): variabili, con la versione chiara per il tema chiaro
    (2.0; il resto del tema chiaro è in theme-light.css, generato). */

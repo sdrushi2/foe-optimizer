@@ -1,5 +1,15 @@
 # Novità di FoE Optimizer
 
+## Versione 2.005 (02/11/2026)
+### Aggiornamenti
+- Nuova versione della bacchetta: riconosce il mondo di gioco e avvisa se i dati non sono ancora caricati (va ricreata, trascinandola di nuovo nella barra dei preferiti)
+- Città salvate: le città dello stesso giocatore su mondi diversi restano separate invece di sovrascriversi, e il nome mostra il mondo con la sua lettera (es. "Sdrushi · L")
+### Correzioni
+- Telefono: la pagina non scorre più in orizzontale
+- App installata sul telefono: si può di nuovo usare anche in verticale
+
+---
+
 ## Versione 2.001 (29/10/2026)
 ### Novità
 - Nascondi / Mostra solo: nuova voce "Richiede strada"

@@ -37,7 +37,7 @@ import PannelloImporta from "./ui/PannelloImporta";
 import PannelloNovita from "./ui/PannelloNovita";
 import VideoTutorial from "./planner/VideoTutorial";
 import PannelloInformazioni from "./ui/PannelloInformazioni";
-import { infoImport, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
+import { improntaCitta, infoImport, nomeCitta, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
 import { useTema } from "./ui/theme";
@@ -3586,19 +3586,32 @@ export default function App() {
     const info = infoImport(data);
     // Città da JSON (città "ridotta"): aggiorna solo un'altra città da JSON
     // dello stesso giocatore, mai una città importata con la bacchetta.
-    const trovata = trovaCitta(profiles, info);
+    // Somiglianza con una città salvata (stessi edifici negli stessi posti):
+    // distingue le città dello stesso giocatore su mondi diversi quando una
+    // delle due non ha ancora il mondo (vedi trovaCitta).
+    const impronta = improntaCitta(Object.values(data.CityMapData ?? {}).map(e => ({ entityId: String(e.cityentity_id ?? ""), x: Number(e.x ?? 0), y: Number(e.y ?? 0), type: e.type })));
+    const somiglianza = (c: Profile) => {
+      if (!impronta.size) return 0;
+      const salvata = improntaCitta(initCityStore(c.id)?.cityMapBuildings ?? []);
+      let comuni = 0;
+      for (const k of impronta) if (salvata.has(k)) comuni++;
+      return comuni / impronta.size;
+    };
+    const trovata = trovaCitta(profiles, info, somiglianza);
     const esistente = daJson && trovata && trovata.origine !== "json" ? undefined : trovata;
     const haInventario = (pid: string) => !!localStorage.getItem(profileStorageKey(pid, "inventory"));
     const tipoFinale: TipoCitta = !daJson && esistente && tipoCitta(esistente, haInventario) === "mia" ? "mia" : info.tipo;
     const soloCitta = info.tipo === "visitata";
     const id = esistente?.id ?? `p_${Date.now()}`;
     let name: string;
-    if (esistente) name = info.nome ?? esistente.name;
-    else if (info.nome) {
+    // nome = giocatore · lettera del mondo ("Sdrushi · L"), se il mondo è noto
+    const nomeInfo = info.nome ? nomeCitta(info.nome, info.mondo ?? esistente?.mondo ?? null) : null;
+    if (esistente) name = nomeInfo ?? esistente.name;
+    else if (nomeInfo) {
       // collisione col nome di un'altra città: "Nome 2", "Nome 3", ...
       const existingNames = new Set(profiles.map(p => p.name));
-      name = info.nome;
-      for (let suffix = 2; existingNames.has(name); suffix++) name = `${info.nome} ${suffix}`;
+      name = nomeInfo;
+      for (let suffix = 2; existingNames.has(name); suffix++) name = `${nomeInfo} ${suffix}`;
     } else name = t("defaultProfileName", uiLang, profiles.length + 1);
     const newProfile: Profile = { id, name, tipo: tipoFinale, ...(daJson ? { origine: "json" as const } : {}),
       ...(info.playerId !== null ? { playerId: info.playerId } : esistente?.playerId !== undefined ? { playerId: esistente.playerId } : {}),
@@ -7463,12 +7476,16 @@ export default function App() {
               <p className="mt-3 text-sm text-slate-400 leading-relaxed">
                 {t("bookmarkletOutdatedModalIntro", uiLang)}
               </p>
-              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-                {t("bookmarkletOutdatedModalBody", uiLang)}
-              </p>
               <div className="mt-4 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 text-xs text-amber-400">
-                {t("bookmarkletOutdatedModalSteps", uiLang)}
+                {/* testo con il grassetto su "elimina" e, al posto di {bacchetta}, il pulsante verde della testata (stesso aspetto) */}
+                {t("bookmarkletOutdatedModalSteps", uiLang).split(/(\{elimina\}.*?\{\/elimina\}|\{bacchetta\})/).map((parte, i) =>
+                  parte === "{bacchetta}"
+                    ? <span key={i} className="mx-0.5 inline-flex h-6 w-6 items-center justify-center rounded-md border border-emerald-500/50 bg-emerald-500/10 align-middle text-emerald-300"><Wand2 size={13} aria-hidden="true" /></span>
+                    : parte.startsWith("{elimina}")
+                      ? <strong key={i} className="text-amber-300">{parte.slice(9, -10)}</strong>
+                      : parte)}
               </div>
+              <p className="mt-3 text-sm text-slate-400 leading-relaxed">{t("bookmarkletOutdatedModalReimport", uiLang)}</p>
             </div>
 
             <button

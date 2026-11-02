@@ -1934,13 +1934,14 @@ const UI_STRINGS = {
     it: "Import riuscito, ma hai usato una versione precedente della bacchetta magica: alcuni dati potrebbero mancare o non essere aggiornati.",
     en: "Import successful, but you used an older version of the magic wand: some data may be missing or outdated.",
   },
-  bookmarkletOutdatedModalBody: {
-    it: "La nuova bacchetta magica resiste agli aggiornamenti di FoE Helper e Forge Hammer (segnala se un helper non fornisce qualche dato), supporta entrambi e funziona anche sulle città di altri giocatori: basta visitare la loro città e cliccarla per importarla (senza inventario né alleati, che il gioco non mostra mai per un altro giocatore).",
-    en: "The new magic wand copes with FoE Helper and Forge Hammer updates (it reports when a helper does not provide some data), supports both, and also works on other players' cities: just visit their city and click it to import it (without inventory or allies, which the game never shows for another player).",
+  bookmarkletOutdatedModalReimport: {
+    it: "Infine, importa nuovamente la città.",
+    en: "Finally, import the city again.",
   },
   bookmarkletOutdatedModalSteps: {
-    it: "Per aggiornarla: elimina la vecchia bacchetta magica dalla barra dei preferiti, poi trascina di nuovo quella qui sopra per sostituirla.",
-    en: "To update it: delete the old magic wand from your bookmarks bar, then drag the one above again to replace it.",
+    // {elimina}…{/elimina} = in grassetto; {bacchetta} = il pulsante verde della testata (App.tsx)
+    it: "Per aggiornarla: {elimina}elimina{/elimina} la vecchia bacchetta magica dalla barra dei preferiti, poi trascina di nuovo il pulsante {bacchetta} per creare quella aggiornata.",
+    en: "To update it: {elimina}delete{/elimina} the old magic wand from your bookmarks bar, then drag the {bacchetta} button again to create the updated one.",
   },
   bookmarkletOutdatedModalButton: {
     it: "Ho capito",
