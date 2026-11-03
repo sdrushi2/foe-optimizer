@@ -8,6 +8,8 @@
 - Set buildings (Cherry Garden, Piazza, Harvest Farm…): the missing set bonuses now count too (happiness, coins, supplies, medals, attack and defense); in the ❔ column the set icon shows the set name and that the bonuses are the maximum ones
 - Database: removed the two town halls of the starting tutorial, which are not real buildings, and the Stellar Age colony buildings
 - Building tables: game icon in the limited column instead of ⏱
+### Bug Fixes
+- Tables: the efficiency column of Great Buildings has the same color as the row
 
 ---
 

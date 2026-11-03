@@ -1596,8 +1596,10 @@ const BuildingRow = memo(function BuildingRow({
           ? b.isGreatBuilding
             ? "bg-[#351605]"
             : "bg-[#2d0a0a]"
+          // (GE: niente sfondo proprio, si vede quello della riga — .row-great,
+          // schiarito sulle righe pari — invece di un #191900 fisso diverso dalla riga)
           : b.isGreatBuilding
-          ? "bg-[#191900]"
+          ? ""
           // isInactive scoped a propria_citta: stessa ragione della cella
           // nome/riga più sopra, niente evidenziazione in tab Database.
           : (b.isInactive && activeTab === "propria_citta")

@@ -8,6 +8,8 @@
 - Edifici dei set (Cherry Garden, Piazza, Harvest Farm…): contano anche i bonus del set che mancavano (felicità, monete, materiali, medaglie, attacco e difesa); nella colonna ❔ l'icona del set dice il nome del set e che i bonus sono quelli massimi
 - Database: tolti i due municipi del tutorial iniziale, che non sono edifici veri, e gli edifici della colonia dell'Era Stellare
 - Tabelle degli edifici: icona del gioco nella colonna dei limitati al posto di ⏱
+### Correzioni
+- Tabelle: la colonna dell'efficienza dei Grandi Edifici ha lo stesso colore della riga
 
 ---
 
