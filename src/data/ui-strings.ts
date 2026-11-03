@@ -333,16 +333,20 @@ const UI_STRINGS = {
   r2AllEvents: { it: "Tutti gli eventi", en: "All events" },
   r2Production: { it: "Produzione", en: "Production" },
   r2ProdFilterTitle: {
-    it: "Mostra solo gli edifici che producono le risorse scelte",
-    en: "Show only buildings producing the chosen resources",
+    it: "Edifici che producono (verde) o non producono (rosso) le risorse scelte: un clic sì, due no, tre niente",
+    en: "Buildings that produce (green) or don't produce (red) the chosen resources: one click yes, two no, three off",
   },
   r2ProdModeTitle: {
-    it: "Almeno una delle risorse scelte, oppure tutte",
-    en: "At least one of the chosen resources, or all of them",
+    it: "Ogni riquadro è un filtro (verde: la produce, rosso: non la produce): basta che ne valga almeno uno, oppure devono valere tutti",
+    en: "Each box is a filter (green: produces it, red: doesn't produce it): at least one must hold, or all of them",
   },
-  r2ProdOr: { it: "Almeno una", en: "Any" },
-  r2ProdAnd: { it: "Tutte", en: "All" },
-  r2ProdNone: { it: "Nessuna", en: "None" },
+  r2ProdAll: { it: "Tutte le produzioni insieme", en: "All productions at once" },
+  r2ProdStateOff: { it: "Clic: solo chi la produce", en: "Click: only buildings producing it" },
+  r2ProdStateYes: { it: "Produce (verde) · clic: chi NON la produce", en: "Produces (green) · click: buildings NOT producing it" },
+  r2ProdStateNo: { it: "Non la produce (rosso) · clic: nessun filtro", en: "Doesn't produce it (red) · click: no filter" },
+  r2ProdOr: { it: "Almeno un filtro", en: "Any filter" },
+  r2ProdAnd: { it: "Tutti i filtri", en: "All filters" },
+  r2ProdNone: { it: "Azzera", en: "Reset" },
   r2EffMin: { it: "Eff. min", en: "Min eff." },
   r2Reset: { it: "Azzera", en: "Reset" },
   r2NonRush: { it: "Non accelerabili", en: "Not rushable" },
@@ -357,8 +361,8 @@ const UI_STRINGS = {
   },
   r2Limited: { it: "Limitati / Ascesi", en: "Limited / Ascended" },
   r2LimitedTitle: {
-    it: "Mostra gli edifici a tempo e la colonna ⏱",
-    en: "Show limited buildings and the ⏱ column",
+    it: "Mostra gli edifici a tempo e la colonna dei limitati",
+    en: "Show limited buildings and the limited column",
   },
   r2ProdDetail: { it: "Produzioni", en: "Productions" },
   r2ProdDetailTitle: { it: "Mostra le colonne delle produzioni", en: "Show the production columns" },
@@ -378,7 +382,7 @@ const UI_STRINGS = {
   r2WSplit: { it: "Campi / Sped.", en: "GBG / GE" },
   r2HowItWorks: { it: "Come si calcola", en: "How it works" },
   // Nastro Città (2.0)
-  r2GrpStats: { it: "Statistiche", en: "Statistics" },
+  r2GrpStats: { it: "Statistiche città", en: "City statistics" },
   r2GrpHide: { it: "Nascondi", en: "Hide" },
   r2GrpHideShow: { it: "Nascondi / Mostra solo", en: "Hide / Show only" },
   r2TriAll: { it: "tutti (clic: nascondi)", en: "all (click: hide)" },
@@ -1023,6 +1027,10 @@ const UI_STRINGS = {
   historicalAllySlotTitleScience: {
     it: "L'edificio può ospitare un Alleato Storico (scienza)",
     en: "The building can host a Historical Ally (science)",
+  },
+  setBuildingTitle: {
+    it: (nome: string) => `Fa parte di un set: ${nome}.\nI bonus in tabella sono quelli massimi: si ottengono solo con gli altri edifici del set accanto.`,
+    en: (name: string) => `Part of a set: ${name}.\nThe bonuses in the table are the maximum ones: you only get them with the other set buildings next to it.`,
   },
   wonInGbgTitle: {
     it: "L'edificio si vince nei Campi",

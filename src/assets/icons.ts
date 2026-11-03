@@ -55,6 +55,7 @@ export { default as iconImm } from "./icons/Imm.png";
 export { default as iconRinn } from "./icons/Rinn.png";
 export { default as iconAiuto } from "./icons/Aiuto.png";
 export { default as allies_100 } from "./icons/allies_100.png";
+export { default as badge_pirates } from "./icons/badge_pirates.png";
 export { default as allies_military } from "./icons/allies_military.png";
 export { default as allies_science } from "./icons/allies_science.png";
 export { default as allies_slot_empty } from "./icons/allies_slot_empty.png";

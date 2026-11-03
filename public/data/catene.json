@@ -2359,7 +2359,11 @@
     "R_MultiAge_ArcheologyBonus22d",
     "R_MultiAge_ArcheologyBonus22e"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Butterfly Sanctuary",
+    "it": "Santuario della farfalla"
+   }
   },
   "celtic_forest": {
    "edifici": [
@@ -2374,7 +2378,11 @@
     "R_MultiAge_PatrickBonusSet20c",
     "R_MultiAge_PatrickBonusSet20d"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Celtic Forest",
+    "it": "Foresta celtica"
+   }
   },
   "cherry_garden": {
    "edifici": [
@@ -2389,7 +2397,11 @@
     "R_MultiAge_SpringBonusSet18a",
     "R_MultiAge_SpringBonusSet18b"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Cherry Garden Set",
+    "it": "Set Giardino di ciliegi"
+   }
   },
   "classical_garden": {
    "edifici": [
@@ -2397,7 +2409,11 @@
     "D_MultiAge_SportBonusSet18",
     "R_MultiAge_SportBonusSet18"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Classical Garden",
+    "it": "Giardino classico"
+   }
   },
   "grand_monarchs": {
    "edifici": [
@@ -2406,7 +2422,11 @@
     "R_MultiAge_BirthdayBonus22c",
     "R_MultiAge_BirthdayBonus22d"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Grand Monarchs Set",
+    "it": "Set Grandi monarchi"
+   }
   },
   "harvest_farm": {
    "edifici": [
@@ -2421,7 +2441,11 @@
     "R_MultiAge_FallBonus20d",
     "R_MultiAge_FallBonus20e"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Harvest Farm",
+    "it": "Masseria"
+   }
   },
   "horror_circus": {
    "edifici": [
@@ -2436,7 +2460,11 @@
     "R_MultiAge_HalloweenBonusSet21c",
     "R_MultiAge_HalloweenBonusSet21d"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Horror Circus Set",
+    "it": "Set Circo degli orrori"
+   }
   },
   "indian_fountain": {
    "edifici": [
@@ -2446,7 +2474,11 @@
     "R_MultiAge_SummerBonusSetB17a",
     "R_MultiAge_SummerBonusSetB17b"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Indian Fountain Set",
+    "it": "Set Fontana Indiana"
+   }
   },
   "indian_palace": {
    "edifici": [
@@ -2456,7 +2488,11 @@
     "R_MultiAge_SummerBonusSetA17b",
     "R_MultiAge_SummerBonusSetA17c"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Indian Palace Set",
+    "it": "Set Palazzo Indiano"
+   }
   },
   "piazza": {
    "edifici": [
@@ -2471,7 +2507,11 @@
     "R_MultiAge_CarnivalBonus19c",
     "R_MultiAge_CarnivalBonus19d"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Piazza Set",
+    "it": "Set Piazza"
+   }
   },
   "royal_garden": {
    "edifici": [
@@ -2479,7 +2519,11 @@
     "R_MultiAge_RoyalBonusSet17a",
     "R_MultiAge_RoyalBonusSet17b"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Royal Garden Set",
+    "it": "Set Giardino reale"
+   }
   },
   "winter_bakery": {
    "edifici": [
@@ -2488,7 +2532,11 @@
     "R_MultiAge_WinterBonus20fMarzipan",
     "R_MultiAge_WinterBonus20fPatisserie"
    ],
-   "stessoTipo": true
+   "stessoTipo": true,
+   "nome": {
+    "en": "Winter Bakery Set",
+    "it": "Set Fornaio d'inverno"
+   }
   },
   "winter_village": {
    "edifici": [
@@ -2502,7 +2550,11 @@
     "R_MultiAge_WinterBonusSet17b",
     "R_MultiAge_WinterBonusSet17c"
    ],
-   "stessoTipo": false
+   "stessoTipo": false,
+   "nome": {
+    "en": "Winter Village Set",
+    "it": "Set Villaggio d'Inverno"
+   }
   }
  }
 }

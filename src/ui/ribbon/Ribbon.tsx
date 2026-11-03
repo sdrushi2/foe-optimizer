@@ -32,6 +32,8 @@ export type RibbonItem =
       icon: LucideIcon;
       /** Icona PNG del gioco al posto di `icon` (es. la strada di "Richiede strada"). */
       img?: string;
+      /** `img` nel pulsante grande alla grandezza del file (es. badge_pirates) invece di 24×24. */
+      imgReale?: boolean;
       label: string;
       /** Numero dopo il nome, in oro: "Gettoni (70)". */
       badge?: string;
@@ -128,7 +130,9 @@ function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; m
     >
       {it.img
         // grandezza originale (24×24) nel pulsante grande; 16 nei compatti, alti 22 px
-        ? <img src={it.img} alt="" width={grande ? 24 : 16} height={grande ? 24 : 16} className="shrink-0" aria-hidden="true" />
+        ? grande && it.imgReale
+          ? <img src={it.img} alt="" className="shrink-0" aria-hidden="true" />
+          : <img src={it.img} alt="" width={grande ? 24 : 16} height={grande ? 24 : 16} className="shrink-0" aria-hidden="true" />
         : <Icon size={grande ? 20 : 14} strokeWidth={1.75} className={it.danger ? "text-red-400" : it.success ? "text-emerald-400" : "text-sky-300"} aria-hidden="true" />}
       {modo !== "S" && <span>{it.label}{it.badge && <> (<span className="font-bold text-amber-300">{it.badge}</span>)</>}</span>}
     </button>

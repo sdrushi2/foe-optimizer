@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_100, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
+import { allies_100, badge_pirates, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -262,7 +262,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
     case "insediamenti":
       // Tipo di insediamento: per ora solo i Pirati (gli altri arriveranno).
       return [{ id: "insediamento", label: L("r2GrpSettlement"), icon: Anchor, priority: 1, rows: [[
-        { kind: "button", id: "pirati", icon: Anchor, label: L("r2Pirates"), active: true },
+        { kind: "button", id: "pirati", icon: Anchor, img: badge_pirates, imgReale: true, label: L("r2Pirates"), active: true },
       ]] }, ...c.insediamenti.gruppi];
     case "planner": {
       const p = c.planner;

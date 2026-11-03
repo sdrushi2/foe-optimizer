@@ -1,5 +1,16 @@
 # Novità di FoE Optimizer
 
+## Versione 2.006 (03/11/2026)
+### Novità
+- Filtro Produzione: secondo clic su una risorsa = riquadro rosso, mostra gli edifici che NON la producono (es. tutte rosse: gli edifici che non producono nulla)
+### Aggiornamenti
+- Insediamenti: icona del gioco per i Pirati
+- Edifici dei set (Cherry Garden, Piazza, Harvest Farm…): contano anche i bonus del set che mancavano (felicità, monete, materiali, medaglie, attacco e difesa); nella colonna ❔ l'icona del set dice il nome del set e che i bonus sono quelli massimi
+- Database: tolti i due municipi del tutorial iniziale, che non sono edifici veri, e gli edifici della colonia dell'Era Stellare
+- Tabelle degli edifici: icona del gioco nella colonna dei limitati al posto di ⏱
+
+---
+
 ## Versione 2.005 (02/11/2026)
 ### Novità
 - Alleati: nuovo pannello "Pergamene" (gruppo Analisi), che mostra quali alleati far salire di livello, e di quanti livelli, per ottenere la massima efficienza con le Pergamene Eroiche che hai

@@ -1,5 +1,16 @@
 # FoE Optimizer Changelog
 
+## Version 2.006 (03/11/2026)
+### New
+- Production filter: second click on a resource = red box, shows buildings that do NOT produce it (e.g. all red: buildings producing nothing)
+### Update
+- Settlements: game icon for the Pirates
+- Set buildings (Cherry Garden, Piazza, Harvest Farm…): the missing set bonuses now count too (happiness, coins, supplies, medals, attack and defense); in the ❔ column the set icon shows the set name and that the bonuses are the maximum ones
+- Database: removed the two town halls of the starting tutorial, which are not real buildings, and the Stellar Age colony buildings
+- Building tables: game icon in the limited column instead of ⏱
+
+---
+
 ## Version 2.005 (02/11/2026)
 ### New
 - Allies: new "Scrolls" panel (Analysis group), showing which allies to level up, and by how many levels, for the highest efficiency with the Heroic Scrolls you have

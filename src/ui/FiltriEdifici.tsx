@@ -36,7 +36,11 @@ export interface StatoFiltri {
   evento: string;
   setEvento: (id: string) => void;
   produzioni: OpzioneProduzione[];
+  /** Produzioni "sì" (verde) e "no" (rosso): un clic sì, due no, tre niente. */
   prodSel: ReadonlySet<string>;
+  prodNo: ReadonlySet<string>;
+  /** Pulsante ALL: tutte le produzioni verdi ("si"), rosse ("no") o nessun filtro (null). */
+  tuttiProd: (stato: "si" | "no" | null) => void;
   toggleProd: (key: string) => void;
   azzeraProd: () => void;
   prodModo: "AND" | "OR";
@@ -93,7 +97,12 @@ function MenuProduzione({ s }: { s: StatoFiltri }) {
     document.addEventListener("keydown", esc);
     return () => { clearTimeout(tm); document.removeEventListener("mousedown", fuori); document.removeEventListener("keydown", esc); };
   }, [pos]);
-  const n = s.prodSel.size;
+  const n = s.prodSel.size, nNo = s.prodNo.size;
+  // "Produzione (2 · 2 · or)": filtri verdi e rossi in grassetto col loro
+  // colore, poi il modo (or / and) se i filtri sono più d'uno
+  const modo = s.prodModo.toLowerCase();
+  const numeri = [n ? <b key="v" className="text-emerald-400">{n}</b> : null, nNo ? <b key="r" className="text-red-400">{nNo}</b> : null].filter(Boolean);
+  const etichetta = numeri.length ? <>{numeri.length === 2 ? <>{numeri[0]} · {numeri[1]}</> : numeri[0]}{n + nNo > 1 ? ` · ${modo}` : ""}</> : null;
   return (
     <>
       <button ref={rifPulsante} type="button" title={t("r2ProdFilterTitle", s.uiLang)} aria-expanded={!!pos}
@@ -102,37 +111,56 @@ function MenuProduzione({ s }: { s: StatoFiltri }) {
           const r = e.currentTarget.getBoundingClientRect();
           setPos({ left: Math.max(4, Math.min(r.left, window.innerWidth - 340)), top: r.bottom + 4 });
         }}
-        className={`${campo} flex w-full items-center justify-between gap-1 ${n ? ATTIVO : ""}`}>
-        <span>{t("r2Production", s.uiLang)}{n ? ` (${n} · ${s.prodModo})` : ""}</span>
-        <ChevronDown size={12} aria-hidden="true" />
+        className={`${campo} flex w-full items-center justify-between gap-1 ${n || nNo ? ATTIVO : ""}`}>
+        <span className="truncate whitespace-nowrap">{t("r2Production", s.uiLang)}{etichetta && <> ({etichetta})</>}</span>
+        <ChevronDown size={12} className="shrink-0" aria-hidden="true" />
       </button>
       {pos && (
         <div ref={rif} style={{ left: pos.left, top: pos.top }}
           className="fixed z-[60] w-[336px] rounded-lg border border-slate-700 bg-slate-900 p-2 text-[11px] whitespace-normal shadow-xl">
           <div className="grid grid-cols-8 gap-1">
             {s.produzioni.map(({ key, icon, title }) => {
-              const on = s.prodSel.has(key);
+              const si = s.prodSel.has(key), no = s.prodNo.has(key);
+              // (stessi colori di "Nascondi / Mostra solo": verde = la produce, rosso = non la produce)
               return (
-                <button key={key} type="button" title={title} aria-pressed={on} onClick={() => s.toggleProd(key)}
-                  className={`flex h-9 w-9 items-center justify-center rounded border text-lg [&_img]:!h-6 [&_img]:!w-6 ${on
-                    ? "border-orange-500/60 bg-orange-500/20 text-orange-200"
-                    : "border-slate-700 text-slate-300 hover:border-slate-500"}`}>
+                <button key={key} type="button" aria-pressed={si || no} onClick={() => s.toggleProd(key)}
+                  title={`${title}\n${t(si ? "r2ProdStateYes" : no ? "r2ProdStateNo" : "r2ProdStateOff", s.uiLang)}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded border text-lg [&_img]:!h-6 [&_img]:!w-6 ${si
+                    ? "border-emerald-500/70 bg-emerald-950/60 text-emerald-100"
+                    : no ? "border-red-500/70 bg-red-950/60 text-red-100 [&_img]:opacity-60"
+                      : "border-slate-700 text-slate-300 hover:border-slate-500"}`}>
                   {icon}
                 </button>
               );
             })}
+            {(() => {
+              // ALL: stessi tre stati per tutte insieme (verde → rosso → niente)
+              const tot = s.produzioni.length;
+              const si = tot > 0 && n === tot, no = tot > 0 && nNo === tot;
+              return (
+                <button type="button" aria-pressed={si || no} onClick={() => s.tuttiProd(si ? "no" : no ? null : "si")}
+                  title={`${t("r2ProdAll", s.uiLang)}\n${t(si ? "r2ProdStateYes" : no ? "r2ProdStateNo" : "r2ProdStateOff", s.uiLang)}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded border text-[11px] font-black tracking-wide ${si
+                    ? "border-emerald-500/70 bg-emerald-950/60 text-emerald-100"
+                    : no ? "border-red-500/70 bg-red-950/60 text-red-100"
+                      : "border-slate-700 text-slate-300 hover:border-slate-500"}`}>
+                  ALL
+                </button>
+              );
+            })()}
           </div>
           <div className="mt-2 flex items-center justify-between">
             <span className="inline-flex overflow-hidden rounded-md border border-slate-700" role="group" title={t("r2ProdModeTitle", s.uiLang)}>
               {(["OR", "AND"] as const).map(m => (
                 <button key={m} type="button" aria-pressed={s.prodModo === m} onClick={() => s.setProdModo(m)}
-                  className={`px-2 py-0.5 font-bold ${s.prodModo === m ? "bg-orange-500/25 text-orange-200" : "text-slate-400 hover:bg-slate-800"}`}>
+                  className={`px-2 py-0.5 font-bold ${s.prodModo === m ? "bg-emerald-500/25 text-emerald-200" : "text-slate-400 hover:bg-slate-800"}`}>
                   {m === "OR" ? t("r2ProdOr", s.uiLang) : t("r2ProdAnd", s.uiLang)}
                 </button>
               ))}
             </span>
-            <button type="button" onClick={s.azzeraProd} disabled={!n}
-              className="rounded-md border border-slate-700 px-2 py-0.5 text-slate-300 hover:bg-slate-800 disabled:opacity-35">
+            {/* (attivo con almeno un filtro, verde o rosso: ben visibile, prima sembrava spento) */}
+            <button type="button" onClick={s.azzeraProd} disabled={!n && !nNo}
+              className="rounded-md border border-slate-500 px-2 py-0.5 font-bold text-slate-100 hover:bg-slate-800 disabled:border-slate-700 disabled:font-normal disabled:text-slate-300 disabled:opacity-35">
               {t("r2ProdNone", s.uiLang)}
             </button>
           </div>

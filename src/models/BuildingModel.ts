@@ -833,52 +833,72 @@ export class BuildingModel {
   }
 
   /**
-   * Beni (+benip/benis) e fp dagli edifici "bonus per adiacenza di set"
-   * (luglio 2026, es. Piazza Set, Harvest Farm, Butterfly Sanctuary, Horror
-   * Circus — prefisso "L_", `type: "random_production"`). Traduzione fedele
-   * di _extract_set_adjacency_bonus() in buildings.py: la produzione di
-   * questi edifici NON vive in available_products/entity_levels come per gli
-   * edifici normali — è dichiarata in abilities[].__class__ ==
-   * "BonusOnSetAdjacencyAbility", come una lista di bonuses[] (uno per
-   * livello di adiacenza raggiunto in game, 1..N vicini dello stesso set),
-   * ciascuno con un revenue per era.
+   * Bonus degli edifici "per adiacenza di set" (luglio 2026, es. Piazza Set,
+   * Harvest Farm, Butterfly Sanctuary, Horror Circus, Cherry Garden…).
+   * Traduzione fedele di _extract_set_adjacency_bonus() in buildings.py: non
+   * vivono in available_products/entity_levels come per gli edifici normali —
+   * sono dichiarati in abilities[].__class__ == "BonusOnSetAdjacencyAbility",
+   * come una lista di bonuses[] (uno per livello di adiacenza raggiunto in
+   * game, 1..N vicini dello stesso set), ciascuno con un revenue per era
+   * (risorse) e/o un boost per era.
    *
    * Convenzione dell'app (come nel CSV): si sommano i bonus di TUTTI i
    * livelli, non solo l'ultimo — a differenza degli edifici a produzione
    * oraria dove si prende la sola opzione da 24h.
    *
-   * I bonus in "medals" (Medaglie) sono ignorati deliberatamente: risorsa
-   * che il CSV/l'app non gestiscono, per scelta esplicita (non una svista).
+   * Revenue: fp, beni/benip/benis, monete, materiali, medaglie. Boost
+   * (novembre 2026): felicità qui; i boost militari li aggiunge extractEraStats
+   * (setAdjacencyBoosts). Le percentuali coin_production/supply_production
+   * restano fuori (scelta dell'utente, nessuna colonna).
    */
-  private static extractSetAdjacencyBonus(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; fp: number } {
-    let beni = 0, benip = 0, benis = 0, fp = 0;
+  private static extractSetAdjacencyBonus(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; fp: number; mon: number; mat: number; med: number; fel: number } {
+    let beni = 0, benip = 0, benis = 0, fp = 0, mon = 0, mat = 0, med = 0, fel = 0;
     for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
       if (BuildingModel.str(ability.__class__) !== "BonusOnSetAdjacencyAbility") continue;
       for (const bonus of BuildingModel.asArr(ability.bonuses).map(BuildingModel.asObj)) {
         const revenue = bonus.revenue;
-        if (!revenue || typeof revenue !== "object" || Array.isArray(revenue)) continue; // osservato anche come lista vuota []
-        const revenueObj = BuildingModel.asObj(revenue);
-        for (const eraKey of [era, "AllAge"]) {
-          const res = BuildingModel.asObj(revenueObj[eraKey]);
-          const resources = BuildingModel.asObj(res.resources);
-          const sp = BuildingModel.num(resources.strategy_points);
-          if (sp) fp += sp;
-          for (const key of GOODS_KEYS.beni) {
-            const v = BuildingModel.num(resources[key]);
-            if (v) beni += v;
-          }
-          for (const key of GOODS_KEYS.benip) {
-            const v = BuildingModel.num(resources[key]);
-            if (v) benip += v;
-          }
-          for (const key of GOODS_KEYS.benis) {
-            const v = BuildingModel.num(resources[key]);
-            if (v) benis += v;
+        if (revenue && typeof revenue === "object" && !Array.isArray(revenue)) { // osservato anche come lista vuota []
+          const revenueObj = BuildingModel.asObj(revenue);
+          for (const eraKey of [era, "AllAge"]) {
+            const res = BuildingModel.asObj(revenueObj[eraKey]);
+            const resources = BuildingModel.asObj(res.resources);
+            fp += BuildingModel.num(resources.strategy_points);
+            mon += BuildingModel.num(resources.money);
+            mat += BuildingModel.num(resources.supplies);
+            med += BuildingModel.num(resources.medals);
+            for (const key of GOODS_KEYS.beni) beni += BuildingModel.num(resources[key]);
+            for (const key of GOODS_KEYS.benip) benip += BuildingModel.num(resources[key]);
+            for (const key of GOODS_KEYS.benis) benis += BuildingModel.num(resources[key]);
           }
         }
+        const b = BuildingModel.setBonusBoost(bonus, era);
+        if (b && b.type === "happiness_amount" && b.value) fel += Number(b.value);
       }
     }
-    return { beni, benip, benis, fp };
+    return { beni, benip, benis, fp, mon, mat, med, fel };
+  }
+
+  /** Boost (per era) di un livello di bonus di set: quello dell'era, altrimenti
+   *  AllAge (lista vuota [] = nessun boost). Gemello di _set_bonus_boost. */
+  private static setBonusBoost(bonus: Record<string, unknown>, era: string): BoostHint | null {
+    const boost = bonus.boost;
+    if (!boost || typeof boost !== "object" || Array.isArray(boost)) return null;
+    const bo = boost as Record<string, unknown>;
+    const b = BuildingModel.pyOr(bo[era], bo.AllAge);
+    return b && typeof b === "object" && !Array.isArray(b) ? b as BoostHint : null;
+  }
+
+  /** Boost militari & co. dei bonus di set (tutti i livelli). Gemello di _set_adjacency_boosts. */
+  private static setAdjacencyBoosts(cityEntity: CityEntityDefinition, era: string): BoostHint[] {
+    const out: BoostHint[] = [];
+    for (const ability of BuildingModel.asArr(cityEntity.abilities).map(BuildingModel.asObj)) {
+      if (BuildingModel.str(ability.__class__) !== "BonusOnSetAdjacencyAbility") continue;
+      for (const bonus of BuildingModel.asArr(ability.bonuses).map(BuildingModel.asObj)) {
+        const b = BuildingModel.setBonusBoost(bonus, era);
+        if (b && b.value) out.push(b);
+      }
+    }
+    return out;
   }
 
   /** Monete (mon) e materiali (mat) prodotti giornalmente per l'era data.
@@ -1471,6 +1491,8 @@ export class BuildingModel {
         });
       }
     });
+    // Boost dei bonus di set (tutti i livelli), come extract_boosts del gemello Python
+    allBoosts.push(...BuildingModel.setAdjacencyBoosts(cityEntity, era));
     const chain = BuildingModel.chainFor(cityEntity, era);
     BuildingModel.asArr(BuildingModel.asObj(chain.config).bonuses).map(BuildingModel.asObj).forEach((bn) => {
       if (Array.isArray(bn.boosts)) allBoosts.push(...(bn.boosts as BoostHint[]));
@@ -1515,10 +1537,10 @@ export class BuildingModel {
     const [tr, trne] = BuildingModel.extractTrTrne(cityEntity, era, prevEra);
 
     const stats: EraStats = {
-      pop, fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
-      bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, med: BuildingModel.extractMedals(cityEntity, era), fur, tr, trne,
+      pop, fel: fel + adjBonus.fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
+      bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, med: BuildingModel.extractMedals(cityEntity, era) + adjBonus.med, fur, tr, trne,
       beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benisp: goods.benisp, benispb: goods.benispb, benib: goods.benib, benig: prod.benig,
-      mon: monMat.mon, mat: monMat.mat,
+      mon: monMat.mon + adjBonus.mon, mat: monMat.mat + adjBonus.mat,
       fsp: BuildingModel.extractReward(cityEntity, era, "fsp"),
       tpm: BuildingModel.extractReward(cityEntity, era, "tpm"),
       tpb: BuildingModel.extractReward(cityEntity, era, "tpb"),

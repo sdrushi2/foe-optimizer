@@ -38,6 +38,7 @@ import PannelloNovita from "./ui/PannelloNovita";
 import VideoTutorial from "./planner/VideoTutorial";
 import PannelloInformazioni from "./ui/PannelloInformazioni";
 import { PERGAMENE_RESOURCE, VALOR_RESOURCE } from "./data/allyAdvisor";
+import { setEdificio } from "./data/setEdifici";
 import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
@@ -71,7 +72,7 @@ import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilita
   BUILDING_ROW_COLORS, ROW_DISCONNECTED_OVERLAY, RARITY_FROM_GAME } from "./data/buildingClassification";
 import {
   iconSize, iconRoad, iconPop, iconFel, iconFP, iconFPB, iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG,
-  iconMon, iconMat,
+  iconMon, iconMat, iconLimitati,
   iconGenAtk_A as iconGenAtkA, iconGenDef_A as iconGenDefA,
   iconGenAtk_D as iconGenAtkD, iconGenDef_D as iconGenDefD,
   iconCampiAtk_A as iconCampiAtkA, iconCampiDef_A as iconCampiDefA,
@@ -715,11 +716,13 @@ function DebugKitsByTier({ kits, qtyColorClass, uiLang, onSelect }: {
   );
 }
 
-const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = "", spostata = true }: { src: string; alt: string; className?: string;
+  /** false = senza "relative top-[1px]" (es. icona dei limitati). */
+  spostata?: boolean }) {
   if (!src) {
     return <span title={alt || undefined} className="text-[11px] font-bold uppercase">{alt}</span>;
   }
-  return <img src={src} alt={alt} title={alt || undefined} className={`inline-block h-[24px] w-auto relative top-[1px] ${className}`} />;
+  return <img src={src} alt={alt} title={alt || undefined} className={`inline-block h-[24px] w-auto ${spostata ? "relative top-[1px] " : ""}${className}`} />;
 });
 
 
@@ -798,8 +801,11 @@ type TabFilters = {
   showEventFilter: string;
   /** "Nascondi / Mostra solo" del nastro (2.0): 0 tutti, 1 nascosti, 2 solo questi. */
   tri: Record<VoceTri, StatoTri>;
+  /** Produzioni "sì" (riquadro verde): almeno una / tutte, secondo prodFilterMode. */
   prodFilter: Set<string>;
   prodFilterMode: "AND" | "OR";
+  /** Produzioni "no" (riquadro rosso, 2.006): l'edificio non deve produrne nessuna. */
+  prodNo: Set<string>;
   minEff: string;
 };
 
@@ -1572,6 +1578,16 @@ const BuildingRow = memo(function BuildingRow({
           {(() => {
             const info = getSettlementInfo(b.cityEntityId);
             return info ? <span title={t(info.nameKey, uiLang)}>{info.icon}</span> : null;
+          })()}
+          {(() => {
+            // edificio di un set (2.006): i bonus in tabella sono quelli massimi
+            // (icona del gioco del set, 🧩 se non ancora scaricata: icone_set.py)
+            const set = setEdificio(b.cityEntityId, uiLang);
+            if (!set) return null;
+            const titolo = t("setBuildingTitle", uiLang, set.nome);
+            return set.icona
+              ? <img src={set.icona} alt={set.nome} title={titolo} className="inline-block h-5 w-5 cursor-help object-contain" />
+              : <span className="cursor-help" title={titolo}>🧩</span>;
           })()}
         </div>
       </td>
@@ -2974,6 +2990,7 @@ export default function App() {
     tri: TRI_ZERO,
     prodFilter: new Set(),
     prodFilterMode: "OR",
+    prodNo: new Set(),
     minEff: "",
   };
 
@@ -3023,10 +3040,11 @@ export default function App() {
   const toggleProdFilter = (key: string) => {
     // Stesso ragionamento di updateFilter sopra: mai chiamata da "pirati".
     const tab = activeTab as TabType;
+    // tre stati come "Nascondi / Mostra solo": niente → sì (verde) → no (rosso) → niente
     setTabFilters(prev => {
-      const current = new Set(prev[tab].prodFilter);
-      if (current.has(key)) current.delete(key); else current.add(key);
-      return { ...prev, [tab]: { ...prev[tab], prodFilter: current } };
+      const si = new Set(prev[tab].prodFilter), no = new Set(prev[tab].prodNo);
+      if (si.has(key)) { si.delete(key); no.add(key); } else if (no.has(key)) no.delete(key); else si.add(key);
+      return { ...prev, [tab]: { ...prev[tab], prodFilter: si, prodNo: no } };
     });
   };
 
@@ -3041,10 +3059,10 @@ export default function App() {
 
   const resetFilters = () => {
     setTabFilters({
-      database: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
-      alleati: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
-      propria_citta: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
-      inventario: { ...DEFAULT_FILTERS, prodFilter: new Set(), categorie: new Set() },
+      database: { ...DEFAULT_FILTERS, prodFilter: new Set(), prodNo: new Set(), categorie: new Set() },
+      alleati: { ...DEFAULT_FILTERS, prodFilter: new Set(), prodNo: new Set(), categorie: new Set() },
+      propria_citta: { ...DEFAULT_FILTERS, prodFilter: new Set(), prodNo: new Set(), categorie: new Set() },
+      inventario: { ...DEFAULT_FILTERS, prodFilter: new Set(), prodNo: new Set(), categorie: new Set() },
     });
     setAllyRarityFilters({
       1: true, 2: true, 3: true, 4: true, 5: true,
@@ -4277,6 +4295,7 @@ export default function App() {
     // gli id: "\W_A, \W_B" (il "\" davanti a ogni parte è facoltativo).
     const searchTerms = deferredSearchLower.split(",").map(t => t.trim().replace(/^\\/, "")).filter(Boolean);
     const prodFilterKeys = currentFilters.prodFilter.size > 0 ? [...currentFilters.prodFilter] : null;
+    const prodNoKeys = currentFilters.prodNo.size > 0 ? [...currentFilters.prodNo] : null;
 
     // Pre-compute minEff once outside the loop
     const minEffVal = currentFilters.minEff
@@ -4364,16 +4383,14 @@ export default function App() {
       )) continue;
       if (hasEventFilter && !buildingMatchesEvent(b.cityEntityId, currentEventFilter)) continue;
 
-      if (prodFilterKeys) {
+      // Filtri produzione (2.006): ogni riquadro è una condizione, verde =
+      // "la produce", rosso = "non la produce"; Almeno un filtro = OR, Tutti i
+      // filtri = AND (tutti rossi + Tutti i filtri = edifici che non producono nulla di quelle).
+      if (prodFilterKeys || prodNoKeys) {
+        const produce = (k: string) => { const v = b[k as keyof typeof b]; return typeof v === "number" && v > 0; };
         const prodMatch = isAndMode
-          ? prodFilterKeys.every(k => {
-              const v = b[k as keyof typeof b];
-              return typeof v === "number" && v > 0;
-            })
-          : prodFilterKeys.some(k => {
-              const v = b[k as keyof typeof b];
-              return typeof v === "number" && v > 0;
-            });
+          ? (prodFilterKeys ?? []).every(produce) && !(prodNoKeys ?? []).some(produce)
+          : (prodFilterKeys ?? []).some(produce) || (prodNoKeys ?? []).some(k => !produce(k));
         if (!prodMatch) continue;
       }
 
@@ -5885,8 +5902,13 @@ export default function App() {
       uiLang,
       eventi: EVENTS_LIST.map(ev => ({ id: ev.id, nome: eventName(ev, uiLang), gruppo: ev.isGroup })),
       evento: currentFilters.showEventFilter, setEvento: (id) => updateFilter("showEventFilter", id),
-      produzioni: opzioniProduzione, prodSel: currentFilters.prodFilter, toggleProd: toggleProdFilter,
-      azzeraProd: () => updateFilter("prodFilter", new Set()),
+      produzioni: opzioniProduzione, prodSel: currentFilters.prodFilter, prodNo: currentFilters.prodNo, toggleProd: toggleProdFilter,
+      azzeraProd: () => { updateFilter("prodFilter", new Set()); updateFilter("prodNo", new Set()); },
+      tuttiProd: (stato) => {
+        const tutte = new Set(opzioniProduzione.map(o => o.key));
+        updateFilter("prodFilter", stato === "si" ? tutte : new Set());
+        updateFilter("prodNo", stato === "no" ? tutte : new Set());
+      },
       prodModo: currentFilters.prodFilterMode, setProdModo: (m) => updateFilter("prodFilterMode", m),
       effMin: currentFilters.minEff, setEffMin: (v) => updateFilter("minEff", v),
       categorie: currentFilters.categorie, toggleCategoria,
@@ -6489,7 +6511,7 @@ export default function App() {
                             repaint dello sfondo su Chrome (solo questo th, a caso). */}
                         <SortableHeader label={t("colBuilding", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="cell-name py-0.5 px-2 text-left" />
                         
-                        <th className="py-0.5 px-1 text-center text-amber-400/80 w-[50px] text-xl">⏱</th>
+                        <th className="pt-1 pb-0 px-1 text-center w-[50px]" title={t("r2Limited", uiLang)}><TableHeaderIcon src={iconLimitati} alt={t("r2Limited", uiLang)} spostata={false} /></th>
                         <th className="py-0.5 px-1 text-center w-[32px]">❔</th>
                         <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />
                         <SortableHeader label={<TableHeaderIcon src={iconSize} alt={t("colSize", uiLang)} />} sortKey="size" onClick={() => handleSort("size")} active={sortBy === "size"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[48px] section-divider" title={t("colSize", uiLang)} />
