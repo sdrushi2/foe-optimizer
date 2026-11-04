@@ -48,16 +48,6 @@
   },
   "guild_battlegrounds_iridescent_garden": {
    "inizi": [
-    "R_MultiAge_Battlegrounds3a",
-    "R_MultiAge_Battlegrounds3b",
-    "R_MultiAge_Battlegrounds3c",
-    "R_MultiAge_Battlegrounds3d",
-    "R_MultiAge_Battlegrounds3e",
-    "R_MultiAge_Battlegrounds3f",
-    "R_MultiAge_Battlegrounds3g",
-    "R_MultiAge_Battlegrounds3hBazaar",
-    "R_MultiAge_Battlegrounds3hCitadel",
-    "R_MultiAge_Battlegrounds3hRoyalty",
     "W_MultiAge_Battlegrounds3a",
     "W_MultiAge_Battlegrounds3b",
     "W_MultiAge_Battlegrounds3c",
@@ -70,7 +60,6 @@
     "W_MultiAge_Battlegrounds3hRoyalty"
    ],
    "anelli": [
-    "D_MultiAge_Battlegrounds4",
     "W_MultiAge_Battlegrounds4"
    ]
   },
@@ -237,18 +226,6 @@
   }
  },
  "edifici": {
-  "D_MultiAge_Battlegrounds4": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "anello",
-   "aggancio": [
-    [
-     0,
-     2,
-     2,
-     3
-    ]
-   ]
-  },
   "D_MultiAge_Expedition22Feathers": {
    "catena": "serpent_statue",
    "ruolo": "anello",
@@ -390,126 +367,6 @@
      -2,
      1,
      -1
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3a": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3b": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3c": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3d": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3e": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3f": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3g": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3hBazaar": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3hCitadel": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
-    ]
-   ]
-  },
-  "R_MultiAge_Battlegrounds3hRoyalty": {
-   "catena": "guild_battlegrounds_iridescent_garden",
-   "ruolo": "inizio",
-   "aggancio": [
-    [
-     0,
-     4,
-     2,
-     5
     ]
    ]
   },

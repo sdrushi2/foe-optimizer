@@ -2491,7 +2491,8 @@
     },
     "upgrade_kit_GBG27A": {
       "names": {
-        "en": "Air Corps Hangar Upgrade Kit"
+        "en": "Air Corps Hangar Upgrade Kit",
+        "it": "Kit di aggiornamento Hangar del corpo aereo"
       },
       "steps": [
         "W_MultiAge_GBG27A1",
@@ -2500,7 +2501,8 @@
     },
     "upgrade_kit_GBG27B": {
       "names": {
-        "en": "Air Corps Parachute School Upgrade Kit"
+        "en": "Air Corps Parachute School Upgrade Kit",
+        "it": "Kit di aggiornamento Scuola di paracadutismo del corpo aereo"
       },
       "steps": [
         "W_MultiAge_GBG27B1",
@@ -11718,7 +11720,8 @@
     },
     "selection_kit_GBG27A": {
       "names": {
-        "en": "Air Corps Hangar Selection Kit"
+        "en": "Air Corps Hangar Selection Kit",
+        "it": "Kit di selezione Hangar del corpo aereo"
       },
       "options": [
         "W_MultiAge_GBG27A1",
@@ -11727,7 +11730,8 @@
     },
     "selection_kit_GBG27B": {
       "names": {
-        "en": "Air Corps Parachute School Selection Kit"
+        "en": "Air Corps Parachute School Selection Kit",
+        "it": "Kit di selezione Scuola di paracadutismo del corpo aereo"
       },
       "options": [
         "W_MultiAge_GBG27B1",
