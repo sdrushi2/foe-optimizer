@@ -47,6 +47,9 @@ export interface GreatBuilding {
   name: string;
   level: number;
   maxLevel: number;
+  /** Prestige (novembre 2026): tier massimo del GE (CityEntities.maxTier.value,
+   *  "gold" | "copper"), salvato all'import; assente nelle città salvate prima. */
+  tierMax?: string;
   width: number;
   length: number;
   rawEntry: CityMapEntry;
@@ -61,6 +64,9 @@ interface GbBonus {
   value?: number;
   /** "all" | "battleground" | "guild_expedition" | "guild_raids" (bonus militari). */
   targetedFeature?: string;
+  /** Prestige (novembre 2026): bonus MOLTIPLICATIVO (moltiplica il totale della
+   *  città per quella modalità invece di sommarsi). */
+  isBonusMultiplier?: boolean;
 }
 
 interface GbProduct {
@@ -214,6 +220,17 @@ const MANUAL_OVERRIDES: ReadonlyMap<string, Partial<Pick<EraStats, "beni" | "fp"
  *  boost = difesa dell'attaccante, defender_attack_boost = attacco del
  *  difensore, defense_boost = difesa del difensore). Map (non oggetto) per
  *  non risolvere mai chiavi ereditate dal prototipo. */
+/** GE con il tier Oro (MainParser del 05/11/2026, maxTier "gold"): ripiego per
+ *  le città salvate prima che l'import registrasse `tierMax`. */
+const GE_ORO: ReadonlySet<string> = new Set([
+  "X_AllAge_EasterBonus4", "X_ArcticFuture_Landmark2", "X_ArcticFuture_Landmark3", "X_BronzeAge_Landmark2",
+  "X_ColonialAge_Landmark2", "X_ContemporaryEra_Landmark1", "X_EarlyMiddleAge_Landmark2", "X_FutureEra_Landmark1",
+  "X_HighMiddleAge_Landmark1", "X_IndustrialAge_Landmark1", "X_IronAge_Landmark1", "X_LateMiddleAge_Landmark3",
+  "X_OceanicFuture_Landmark2", "X_OceanicFuture_Landmark3", "X_ProgressiveEra_Landmark1", "X_ProgressiveEra_Landmark2",
+  "X_SpaceAgeAsteroidBelt_Landmark1", "X_SpaceAgeMars_Landmark2", "X_StellarAgeDiscovery_Landmark1",
+  "X_VirtualFuture_Landmark1", "X_VirtualFuture_Landmark2",
+]);
+
 const GB_MILITARY_SLOTS: ReadonlyMap<string, ReadonlyArray<0 | 1 | 2 | 3>> = new Map<string, ReadonlyArray<0 | 1 | 2 | 3>>([
   ["military_boost", [0, 1]],
   ["fierce_resistance", [2, 3]],
@@ -376,17 +393,38 @@ export class BuildingModel {
     // hanno un military_boost/fierce_resistance che NON è il primo della lista
     // (Deposito di sementi, Galassia blu). Modalità sconosciuta → bonus
     // ignorato, stessa regola di BOOST_MAP per gli edifici normali.
-    // ⚠️ Valori dei tier argento/oro da verificare in gioco appena un GE
-    // supera il livello 100: il MainParser dichiara numeri molto alti (es.
-    // Progetto Arc argento 3040 al liv. 301), che FoE Helper mostra come "%".
+    // Prestige in live dal 05/11/2026: tier Rame (tutti, fino al 200) e Oro (21
+    // GE, dal 101, senza limite); l'Argento della beta non esiste più. Elenco
+    // dei tipi di bonus: RECUPERO DATI/GE_PRESTIGE_BONUS.md.
+    // ⚠️ Valori reali da verificare con un import di una città dopo il 05/11.
     const general: [number, number, number, number] = [0, 0, 0, 0];
     const gbg: [number, number, number, number] = [0, 0, 0, 0];
     const sped: [number, number, number, number] = [0, 0, 0, 0];
     const iq: [number, number, number, number] = [0, 0, 0, 0];
+    // Prestige (novembre 2026): i bonus moltiplicativi (isBonusMultiplier, quasi
+    // tutti del tier Oro, più il Rame del Sifone) moltiplicano il totale della
+    // città: NON vanno nelle colonne né nell'efficienza (prima si sommavano come
+    // un normale +%). Restano in `gbMoltiplicativi` per il tooltip della tabella.
+    const moltiplicativi: Array<{ tipo: string; modalita: string; valore: number }> = [];
     for (const b of allBonuses) {
+      // +% produzione di beni / beni speciali (San Marco, Trasportatore spaziale,
+      // Oro): percentuali sulla città, nessuna colonna → solo nel tooltip del ×
+      // (anche i boost agli alleati del Colosseo / Tempio del Loto, Oro: per ora
+      // solo nel tooltip, il calcolo sugli alleati attende una città da verificare)
+      if (b?.type === "goods_production_boost" || b?.type === "special_goods_production_boost"
+        || b?.type === "military_ally_boost" || b?.type === "science_ally_boost") {
+        const v = Number(b.value ?? 0);
+        if (Number.isFinite(v) && v) moltiplicativi.push({ tipo: b.type, modalita: "all", valore: v });
+        continue;
+      }
       const slots = GB_MILITARY_SLOTS.get(String(b?.type ?? ""));
       if (!slots) continue;
       const feature = b.targetedFeature ?? "all";
+      if (b.isBonusMultiplier === true) {
+        const v = Number(b.value ?? 0);
+        if (Number.isFinite(v) && v) moltiplicativi.push({ tipo: String(b.type), modalita: feature, valore: v });
+        continue;
+      }
       const target = feature === "all" ? general
         : feature === "battleground" ? gbg
         : feature === "guild_expedition" ? sped
@@ -413,6 +451,9 @@ export class BuildingModel {
     });
 
     const currentProduct = gb.rawEntry?.state?.current_product as GbCurrentProduct | undefined;
+    // Produzioni del tier Oro (Prestige, novembre 2026): viste nel prodotto
+    // corrente? Altrimenti si usa il bonus come per clan_goods (sotto).
+    let visteEstese = false, visteRiserve = false;
     if (currentProduct) {
       const products: GbProduct[] = currentProduct.products || (currentProduct.name ? [currentProduct] : []);
       const sumRes = (res: Record<string, number> | undefined) =>
@@ -420,6 +461,8 @@ export class BuildingModel {
       products.forEach((p) => {
         const resources = p.product?.resources ?? {};
         if (p.name === "clan_goods") beniG += Array.isArray(p.goods) ? p.goods.reduce((s, g) => s + Number(g.value ?? 0), 0) : 0;
+        else if (p.name === "clan_goods_extended") { visteEstese = true; beniG += Array.isArray(p.goods) ? p.goods.reduce((s, g) => s + Number(g.value ?? 0), 0) : sumRes(resources); }
+        else if (p.name === "age_reserves") { visteRiserve = true; beni += sumRes(resources); }
         else if (p.name === "strategy_points") fp += Number(resources.strategy_points ?? 0);
         else if (p.name === "previous_era_goods") beniP += sumRes(resources);
         else if (p.name === "random_goods" || p.name === "current_era_goods" || p.name === "goods") beni += sumRes(resources);
@@ -437,6 +480,21 @@ export class BuildingModel {
     if (beniG === 0) {
       const clanBonus = allBonuses.find((b) => b?.type === "clan_goods");
       if (clanBonus) beniG = Number(clanBonus.value ?? 0) * 5;
+    }
+    // Oro (Prestige): Osservatorio "beni di gilda di 3 ere" (clan_goods_extended:
+    // `value` di ciascuno dei 5 beni di era precedente, attuale e successiva →
+    // ×15, nel tesoro della gilda come i clan_goods → BeniG) e Royal Albert Hall
+    // "riserve" (age_reserves: beni ogni 24h di tipo casuale fra gli edifici di
+    // beni della città → Beni). ×15 verificato in gioco (05/11/2026, Osservatorio
+    // liv. 155: "produce 476 unità di ogni bene dell'Era Precedente, Corrente e
+    // Successiva" → 7.140; con i 1.003 ×5 del Rame il tool mostra 12.155).
+    if (!visteEstese) {
+      const est = allBonuses.find((b) => b?.type === "clan_goods_extended");
+      if (est) beniG += Number(est.value ?? 0) * 15;
+    }
+    if (!visteRiserve) {
+      const ris = allBonuses.find((b) => b?.type === "age_reserves");
+      if (ris) beni += Number(ris.value ?? 0);
     }
     // BeniSp (agosto 2026): X_SpaceAgeAsteroidBelt_Landmark1 è l'UNICO GE con
     // una produzione di beni speciali (bonus type="special_goods",
@@ -461,6 +519,9 @@ export class BuildingModel {
       pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat, med,
       cityEntityId: gb.entityId,
       hash,
+      ...(moltiplicativi.length ? { gbMoltiplicativi: moltiplicativi } : {}),
+      // tier attuale: Oro dal livello 101 per i GE che lo hanno, altrimenti Rame
+      gbTier: (gb.tierMax ?? (GE_ORO.has(gb.entityId) ? "gold" : "copper")) === "gold" && gb.level >= 101 ? "oro" : "rame",
       isGreatBuilding: true,
       isInactive: false,
       isFallback: false,

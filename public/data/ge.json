@@ -1,0 +1,2227 @@
+{
+ "versione": 1,
+ "edifici": {
+  "X_AllAge_EasterBonus4": {
+   "nome": {
+    "it": "Osservatorio",
+    "en": "Observatory"
+   },
+   "era": "AllAge",
+   "w": 3,
+   "h": 3,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "all",
+      "valori": {
+       "1": 22,
+       "101": 207,
+       "201": 250,
+       "301": 250,
+       "401": 250,
+       "500": 250
+      }
+     },
+     {
+      "tipo": "clan_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 41,
+       "101": 860,
+       "201": 1050,
+       "301": 1050,
+       "401": 1050,
+       "500": 1050
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "clan_goods_extended",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 0,
+       "101": 203,
+       "201": 687,
+       "301": 979,
+       "401": 1109,
+       "500": 1160
+      }
+     },
+     {
+      "tipo": "defense_boost",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 3,
+       "301": 4,
+       "401": 5,
+       "500": 5
+      }
+     }
+    ]
+   }
+  },
+  "X_AllAge_Expedition": {
+   "nome": {
+    "it": "Tempio delle Reliquie",
+    "en": "Temple of Relics"
+   },
+   "era": "AllAge",
+   "w": 6,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "totem_drop",
+      "modalita": "all",
+      "valori": {
+       "1": 3,
+       "101": 24,
+       "200": 29
+      },
+      "usi": {
+       "1": 12,
+       "101": 31,
+       "200": 35
+      }
+     }
+    ]
+   }
+  },
+  "X_AllAge_Oracle": {
+   "nome": {
+    "it": "Oracolo di Delphi",
+    "en": "Oracle of Delphi"
+   },
+   "era": "AllAge",
+   "w": 3,
+   "h": 3,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 956,
+       "101": 6352,
+       "200": 7603
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 6052,
+       "101": 241222,
+       "200": 295716
+      }
+     }
+    ]
+   }
+  },
+  "X_ArcticFuture_Landmark1": {
+   "nome": {
+    "it": "Statua di Gea",
+    "en": "Gaea Statue"
+   },
+   "era": "ArcticFuture",
+   "w": 4,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 6337,
+       "101": 45851,
+       "200": 55008
+      }
+     },
+     {
+      "tipo": "medals",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 192,
+       "101": 3310,
+       "200": 4032
+      }
+     }
+    ]
+   }
+  },
+  "X_ArcticFuture_Landmark2": {
+   "nome": {
+    "it": "Serra Artica",
+    "en": "Arctic Orangery"
+   },
+   "era": "ArcticFuture",
+   "w": 7,
+   "h": 7,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "critical_hit_chance",
+      "modalita": "all",
+      "valori": {
+       "1": 7,
+       "101": 42,
+       "201": 50,
+       "301": 50,
+       "401": 50,
+       "500": 50
+      }
+     },
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 52,
+       "101": 1634,
+       "201": 2000,
+       "301": 2000,
+       "401": 2000,
+       "500": 2000
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "all_units_critical_hit_chance",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 23,
+       "301": 33,
+       "401": 38,
+       "500": 40
+      }
+     }
+    ]
+   }
+  },
+  "X_ArcticFuture_Landmark3": {
+   "nome": {
+    "it": "Deposito di sementi",
+    "en": "Seed Vault"
+   },
+   "era": "ArcticFuture",
+   "w": 6,
+   "h": 5,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "helping_hands",
+      "modalita": "all",
+      "valori": {
+       "1": 3,
+       "101": 21,
+       "201": 25,
+       "301": 25,
+       "401": 25,
+       "500": 25
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 97950,
+       "101": 2454283,
+       "201": 3000296,
+       "301": 3000296,
+       "401": 3000296,
+       "500": 3000296
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "helping_hands_boosted",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 15,
+       "301": 21,
+       "401": 24,
+       "500": 25
+      }
+     },
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "battleground",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 3,
+       "301": 4,
+       "401": 5,
+       "500": 5
+      }
+     }
+    ]
+   }
+  },
+  "X_BronzeAge_Landmark1": {
+   "nome": {
+    "it": "Torre di Babele",
+    "en": "Tower of Babel"
+   },
+   "era": "BronzeAge",
+   "w": 4,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "population",
+      "modalita": "all",
+      "valori": {
+       "1": 420,
+       "101": 4219,
+       "200": 5099
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 15,
+       "101": 336,
+       "200": 410
+      }
+     }
+    ]
+   }
+  },
+  "X_BronzeAge_Landmark2": {
+   "nome": {
+    "it": "Statua di Zeus",
+    "en": "Statue of Zeus"
+   },
+   "era": "BronzeAge",
+   "w": 3,
+   "h": 2,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "military_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 23,
+       "101": 264,
+       "201": 320,
+       "301": 320,
+       "401": 320,
+       "500": 320
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "attack_boost",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 4,
+       "301": 6,
+       "401": 7,
+       "500": 7
+      }
+     },
+     {
+      "tipo": "attacker_defense_boost",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 4,
+       "301": 6,
+       "401": 7,
+       "500": 7
+      }
+     }
+    ]
+   }
+  },
+  "X_ColonialAge_Landmark1": {
+   "nome": {
+    "it": "Frauenkirche di Dresda",
+    "en": "Frauenkirche of Dresden"
+   },
+   "era": "ColonialAge",
+   "w": 5,
+   "h": 5,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 2254,
+       "101": 18216,
+       "200": 21914
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 19,
+       "101": 340,
+       "200": 414
+      }
+     }
+    ]
+   }
+  },
+  "X_ColonialAge_Landmark2": {
+   "nome": {
+    "it": "Deal Castle",
+    "en": "Deal Castle"
+   },
+   "era": "ColonialAge",
+   "w": 7,
+   "h": 7,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "all",
+      "valori": {
+       "1": 68,
+       "101": 1637,
+       "201": 2000,
+       "301": 2000,
+       "401": 2000,
+       "500": 2000
+      }
+     },
+     {
+      "tipo": "medals",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 7341,
+       "101": 366967,
+       "201": 450300,
+       "301": 450300,
+       "401": 450300,
+       "500": 450300
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "defender_attack_boost",
+      "modalita": "guild_raids",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 6,
+       "301": 8,
+       "401": 10,
+       "500": 10
+      }
+     }
+    ]
+   }
+  },
+  "X_ContemporaryEra_Landmark1": {
+   "nome": {
+    "it": "Tempio del Loto",
+    "en": "Lotus Temple"
+   },
+   "era": "ContemporaryEra",
+   "w": 6,
+   "h": 6,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 5067,
+       "101": 203921,
+       "201": 250000,
+       "301": 250000,
+       "401": 250000,
+       "500": 250000
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 34675,
+       "101": 2848075,
+       "201": 3500000,
+       "301": 3500000,
+       "401": 3500000,
+       "500": 3500000
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "science_ally_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 6,
+       "301": 8,
+       "401": 10,
+       "500": 10
+      }
+     },
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 8,
+       "301": 12,
+       "401": 14,
+       "500": 15
+      }
+     }
+    ]
+   }
+  },
+  "X_ContemporaryEra_Landmark2": {
+   "nome": {
+    "it": "Innovation Tower",
+    "en": "Innovation Tower"
+   },
+   "era": "ContemporaryEra",
+   "w": 6,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "population",
+      "modalita": "all",
+      "valori": {
+       "1": 5668,
+       "101": 56654,
+       "200": 68469
+      }
+     },
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 1,
+       "101": 98,
+       "200": 120
+      }
+     }
+    ]
+   }
+  },
+  "X_EarlyMiddleAge_Landmark1": {
+   "nome": {
+    "it": "Basilica di Santa Sofia",
+    "en": "Hagia Sophia"
+   },
+   "era": "EarlyMiddleAge",
+   "w": 6,
+   "h": 7,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 9801,
+       "101": 25081,
+       "200": 28622
+      }
+     },
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 1,
+       "101": 98,
+       "200": 120
+      }
+     }
+    ]
+   }
+  },
+  "X_EarlyMiddleAge_Landmark2": {
+   "nome": {
+    "it": "Cattedrale di Aquisgrana",
+    "en": "Cathedral of Aachen"
+   },
+   "era": "EarlyMiddleAge",
+   "w": 6,
+   "h": 4,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "military_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 51,
+       "101": 984,
+       "201": 1200,
+       "301": 1200,
+       "401": 1200,
+       "500": 1200
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 92051,
+       "101": 991563,
+       "201": 1200000,
+       "301": 1200000,
+       "401": 1200000,
+       "500": 1200000
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "attack_boost",
+      "modalita": "battleground",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 7,
+       "301": 11,
+       "401": 12,
+       "500": 13
+      }
+     }
+    ]
+   }
+  },
+  "X_EarlyMiddleAge_Landmark3": {
+   "nome": {
+    "it": "Torre di Galata",
+    "en": "Galata Tower"
+   },
+   "era": "EarlyMiddleAge",
+   "w": 3,
+   "h": 3,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "plunder_repel",
+      "modalita": "all",
+      "valori": {
+       "1": 27,
+       "101": 57,
+       "200": 64
+      },
+      "usi": {
+       "1": 2,
+       "101": 5,
+       "200": 6
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 12,
+       "101": 330,
+       "200": 404
+      }
+     }
+    ]
+   }
+  },
+  "X_FutureEra_Landmark1": {
+   "nome": {
+    "it": "Progetto Arc",
+    "en": "The Arc"
+   },
+   "era": "FutureEra",
+   "w": 5,
+   "h": 7,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "contribution_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 19,
+       "101": 85,
+       "201": 100,
+       "301": 100,
+       "401": 100,
+       "500": 100
+      }
+     },
+     {
+      "tipo": "clan_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 52,
+       "101": 1634,
+       "201": 2000,
+       "301": 2000,
+       "401": 2000,
+       "500": 2000
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "contribution_boost_gold",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 23,
+       "301": 33,
+       "401": 38,
+       "500": 40
+      }
+     }
+    ]
+   }
+  },
+  "X_FutureEra_Landmark2": {
+   "nome": {
+    "it": "Progetto Foresta Pluviale",
+    "en": "Rain Forest Project"
+   },
+   "era": "FutureEra",
+   "w": 6,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "aid_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 49,
+       "101": 787,
+       "200": 958
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 53,
+       "101": 374,
+       "200": 448
+      }
+     }
+    ]
+   }
+  },
+  "X_HighMiddleAge_Landmark1": {
+   "nome": {
+    "it": "Basilica di San Marco",
+    "en": "St. Mark's Basilica"
+   },
+   "era": "HighMiddleAge",
+   "w": 6,
+   "h": 6,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "money_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 214,
+       "101": 1177,
+       "201": 1400,
+       "301": 1400,
+       "401": 1400,
+       "500": 1400
+      },
+      "usi": {
+       "1": 90,
+       "101": 90,
+       "201": 90,
+       "301": 90,
+       "401": 90,
+       "500": 90
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 56,
+       "101": 904,
+       "201": 1100,
+       "301": 1100,
+       "401": 1100,
+       "500": 1100
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "goods_production_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 15,
+       "301": 21,
+       "401": 24,
+       "500": 25
+      }
+     }
+    ]
+   }
+  },
+  "X_HighMiddleAge_Landmark3": {
+   "nome": {
+    "it": "Notre Dame",
+    "en": "Notre Dame"
+   },
+   "era": "HighMiddleAge",
+   "w": 6,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 1811,
+       "101": 14501,
+       "200": 17442
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 8427,
+       "101": 250192,
+       "200": 306215
+      }
+     }
+    ]
+   }
+  },
+  "X_IndustrialAge_Landmark1": {
+   "nome": {
+    "it": "Royal Albert Hall",
+    "en": "Royal Albert Hall"
+   },
+   "era": "IndustrialAge",
+   "w": 6,
+   "h": 7,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "supplies_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 163,
+       "101": 965,
+       "201": 1150,
+       "301": 1150,
+       "401": 1150,
+       "500": 1150
+      },
+      "usi": {
+       "1": 75,
+       "101": 75,
+       "201": 75,
+       "301": 75,
+       "401": 75,
+       "500": 75
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 43,
+       "101": 982,
+       "201": 1200,
+       "301": 1200,
+       "401": 1200,
+       "500": 1200
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "age_reserves",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 0,
+       "101": 113,
+       "201": 2585,
+       "301": 4074,
+       "401": 4738,
+       "500": 5000
+      }
+     }
+    ]
+   }
+  },
+  "X_IndustrialAge_Landmark2": {
+   "nome": {
+    "it": "Campidoglio",
+    "en": "Capitol"
+   },
+   "era": "IndustrialAge",
+   "w": 5,
+   "h": 7,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "population",
+      "modalita": "all",
+      "valori": {
+       "1": 3789,
+       "101": 38945,
+       "200": 47092
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 11293,
+       "101": 544665,
+       "200": 668259
+      }
+     }
+    ]
+   }
+  },
+  "X_IronAge_Landmark1": {
+   "nome": {
+    "it": "Colosseo",
+    "en": "Colosseum"
+   },
+   "era": "IronAge",
+   "w": 7,
+   "h": 6,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 8475,
+       "101": 123375,
+       "201": 150000,
+       "301": 150000,
+       "401": 150000,
+       "500": 150000
+      }
+     },
+     {
+      "tipo": "medals",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 7055,
+       "101": 269245,
+       "201": 330000,
+       "301": 330000,
+       "401": 330000,
+       "500": 330000
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "military_ally_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 6,
+       "301": 8,
+       "401": 10,
+       "500": 10
+      }
+     }
+    ]
+   }
+  },
+  "X_IronAge_Landmark2": {
+   "nome": {
+    "it": "Faro di Alessandria",
+    "en": "Lighthouse of Alexandria"
+   },
+   "era": "IronAge",
+   "w": 4,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "supplies_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 106,
+       "101": 909,
+       "200": 1095
+      },
+      "usi": {
+       "1": 40,
+       "101": 40,
+       "200": 40
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 23,
+       "101": 344,
+       "200": 418
+      }
+     }
+    ]
+   }
+  },
+  "X_LateMiddleAge_Landmark1": {
+   "nome": {
+    "it": "Cattedrale di San Basilio",
+    "en": "Saint Basil's Cathedral"
+   },
+   "era": "LateMiddleAge",
+   "w": 5,
+   "h": 5,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "all",
+      "valori": {
+       "1": 26,
+       "101": 106,
+       "200": 125
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 29353,
+       "101": 1042879,
+       "200": 1277734
+      }
+     }
+    ]
+   }
+  },
+  "X_LateMiddleAge_Landmark3": {
+   "nome": {
+    "it": "Castel del Monte",
+    "en": "Castel del Monte"
+   },
+   "era": "LateMiddleAge",
+   "w": 5,
+   "h": 5,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "military_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 59,
+       "101": 742,
+       "201": 900,
+       "301": 900,
+       "401": 900,
+       "500": 900
+      }
+     },
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 53,
+       "101": 659,
+       "201": 800,
+       "301": 800,
+       "401": 800,
+       "500": 800
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "attack_boost",
+      "modalita": "guild_raids",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 6,
+       "301": 8,
+       "401": 10,
+       "500": 10
+      }
+     }
+    ]
+   }
+  },
+  "X_ModernEra_Landmark1": {
+   "nome": {
+    "it": "Space Needle",
+    "en": "Space Needle"
+   },
+   "era": "ModernEra",
+   "w": 5,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 2246,
+       "101": 17851,
+       "200": 21467
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 69742,
+       "101": 2385897,
+       "200": 2922600
+      }
+     }
+    ]
+   }
+  },
+  "X_ModernEra_Landmark2": {
+   "nome": {
+    "it": "Atomium",
+    "en": "Atomium"
+   },
+   "era": "ModernEra",
+   "w": 6,
+   "h": 7,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 4500,
+       "101": 36080,
+       "200": 43398
+      }
+     },
+     {
+      "tipo": "clan_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 8,
+       "101": 324,
+       "200": 397
+      }
+     }
+    ]
+   }
+  },
+  "X_OceanicFuture_Landmark1": {
+   "nome": {
+    "it": "Museo di Atlantide",
+    "en": "Atlantis Museum"
+   },
+   "era": "OceanicFuture",
+   "w": 7,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "plunder_and_pillage",
+      "modalita": "all",
+      "valori": {
+       "1": 14,
+       "101": 43,
+       "200": 50
+      },
+      "usi": {
+       "1": 2,
+       "101": 2,
+       "200": 2
+      }
+     },
+     {
+      "tipo": "random_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 37,
+       "101": 358,
+       "200": 432
+      }
+     }
+    ]
+   }
+  },
+  "X_OceanicFuture_Landmark2": {
+   "nome": {
+    "it": "Il Kraken",
+    "en": "The Kraken"
+   },
+   "era": "OceanicFuture",
+   "w": 5,
+   "h": 5,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "first_strike",
+      "modalita": "all",
+      "valori": {
+       "1": 5,
+       "101": 25,
+       "201": 30,
+       "301": 30,
+       "401": 30,
+       "500": 30
+      },
+      "usi": {
+       "1": 27,
+       "101": 249,
+       "201": 300,
+       "301": 300,
+       "401": 300,
+       "500": 300
+      }
+     },
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 17,
+       "101": 491,
+       "201": 600,
+       "301": 600,
+       "401": 600,
+       "500": 600
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "second_strike",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 18,
+       "301": 25,
+       "401": 29,
+       "500": 30
+      },
+      "usi": {
+       "101": 26,
+       "201": 164,
+       "301": 248,
+       "401": 285,
+       "500": 300
+      }
+     }
+    ]
+   }
+  },
+  "X_OceanicFuture_Landmark3": {
+   "nome": {
+    "it": "La Galassia blu",
+    "en": "The Blue Galaxy"
+   },
+   "era": "OceanicFuture",
+   "w": 5,
+   "h": 7,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "double_collection",
+      "modalita": "all",
+      "valori": {
+       "1": 23,
+       "101": 65,
+       "201": 75,
+       "301": 75,
+       "401": 75,
+       "500": 75
+      },
+      "usi": {
+       "1": 4,
+       "101": 13,
+       "201": 15,
+       "301": 15,
+       "401": 15,
+       "500": 15
+      }
+     },
+     {
+      "tipo": "medals",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 4159,
+       "101": 244370,
+       "201": 300032,
+       "301": 300032,
+       "401": 300032,
+       "500": 300032
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "guild_raids_double_collection",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 33,
+       "301": 50,
+       "401": 57,
+       "500": 60
+      },
+      "usi": {
+       "101": 2,
+       "201": 6,
+       "301": 8,
+       "401": 10,
+       "500": 10
+      }
+     }
+    ]
+   }
+  },
+  "X_PostModernEra_Landmark1": {
+   "nome": {
+    "it": "Cape Canaveral",
+    "en": "Cape Canaveral"
+   },
+   "era": "PostModernEra",
+   "w": 5,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 2,
+       "101": 163,
+       "200": 200
+      }
+     }
+    ]
+   }
+  },
+  "X_PostModernEra_Landmark2": {
+   "nome": {
+    "it": "Habitat 67",
+    "en": "The Habitat"
+   },
+   "era": "PostModernEra",
+   "w": 6,
+   "h": 7,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "population",
+      "modalita": "all",
+      "valori": {
+       "1": 6495,
+       "101": 69334,
+       "200": 83895
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 24271,
+       "101": 1748937,
+       "200": 2148579
+      }
+     }
+    ]
+   }
+  },
+  "X_ProgressiveEra_Landmark1": {
+   "nome": {
+    "it": "Alcatraz",
+    "en": "Alcatraz"
+   },
+   "era": "ProgressiveEra",
+   "w": 7,
+   "h": 10,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "happiness",
+      "modalita": "all",
+      "valori": {
+       "1": 7171,
+       "101": 285504,
+       "201": 350000,
+       "301": 350000,
+       "401": 350000,
+       "500": 350000
+      }
+     },
+     {
+      "tipo": "penal_unit",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 20,
+       "101": 613,
+       "201": 750,
+       "301": 750,
+       "401": 750,
+       "500": 750
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "military_boost",
+      "modalita": "battleground",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 8,
+       "301": 12,
+       "401": 14,
+       "500": 15
+      }
+     },
+     {
+      "tipo": "advanced_tactics",
+      "modalita": "battleground",
+      "valori": {
+       "1": 0,
+       "101": 102,
+       "201": 430,
+       "301": 627,
+       "401": 715,
+       "500": 750
+      }
+     }
+    ]
+   }
+  },
+  "X_ProgressiveEra_Landmark2": {
+   "nome": {
+    "it": "Château Frontenac",
+    "en": "Château Frontenac"
+   },
+   "era": "ProgressiveEra",
+   "w": 6,
+   "h": 5,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "quest_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 111,
+       "101": 915,
+       "201": 1102,
+       "301": 1102,
+       "401": 1102,
+       "500": 1102
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 183567,
+       "101": 4123621,
+       "201": 5036616,
+       "301": 5036616,
+       "401": 5036616,
+       "500": 5036616
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "allies_quest_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 53,
+       "301": 82,
+       "401": 95,
+       "500": 100
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeAsteroidBelt_Landmark1": {
+   "nome": {
+    "it": "Trasportatore spaziale",
+    "en": "Space Carrier"
+   },
+   "era": "SpaceAgeAsteroidBelt",
+   "w": 4,
+   "h": 7,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "diplomatic_gifts",
+      "modalita": "all",
+      "valori": {
+       "1": 20,
+       "101": 44,
+       "201": 50,
+       "301": 50,
+       "401": 50,
+       "500": 50
+      },
+      "usi": {
+       "1": 5,
+       "101": 9,
+       "201": 10,
+       "301": 10,
+       "401": 10,
+       "500": 10
+      }
+     },
+     {
+      "tipo": "special_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 19,
+       "101": 329,
+       "201": 400,
+       "301": 400,
+       "401": 400,
+       "500": 400
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "special_goods_production_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 18,
+       "301": 25,
+       "401": 29,
+       "500": 30
+      }
+     },
+     {
+      "tipo": "military_boost",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 8,
+       "301": 12,
+       "401": 14,
+       "500": 15
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeJupiterMoon_Landmark1": {
+   "nome": {
+    "it": "Nucleo I.A.",
+    "en": "A.I. Core"
+   },
+   "era": "SpaceAgeJupiterMoon",
+   "w": 5,
+   "h": 5,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "algorithmic_core",
+      "modalita": "all",
+      "valori": {
+       "1": 15,
+       "101": 43,
+       "200": 50
+      },
+      "usi": {
+       "1": 4,
+       "101": 9,
+       "200": 10
+      }
+     },
+     {
+      "tipo": "clan_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 10,
+       "101": 331,
+       "200": 405
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeMars_Landmark1": {
+   "nome": {
+    "it": "Osservatorio delle stelle",
+    "en": "Star Gazer"
+   },
+   "era": "SpaceAgeMars",
+   "w": 5,
+   "h": 5,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "previous_era_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 9,
+       "101": 124,
+       "200": 151
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeMars_Landmark2": {
+   "nome": {
+    "it": "Il progetto della Vergine",
+    "en": "The Virgo Project"
+   },
+   "era": "SpaceAgeMars",
+   "w": 5,
+   "h": 5,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "missile_launch",
+      "modalita": "all",
+      "valori": {
+       "1": 5,
+       "101": 17,
+       "201": 20,
+       "301": 20,
+       "401": 20,
+       "500": 20
+      },
+      "usi": {
+       "1": 31,
+       "101": 168,
+       "201": 200,
+       "301": 200,
+       "401": 200,
+       "500": 200
+      }
+     },
+     {
+      "tipo": "money",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 81487,
+       "101": 3591658,
+       "201": 4405040,
+       "301": 4405040,
+       "401": 4405040,
+       "500": 4405040
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "missile_launch_wave_2",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 13,
+       "301": 17,
+       "401": 19,
+       "500": 20
+      },
+      "usi": {
+       "101": 30,
+       "201": 116,
+       "301": 168,
+       "401": 191,
+       "500": 200
+      }
+     },
+     {
+      "tipo": "attacker_defense_boost",
+      "modalita": "guild_raids",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 3,
+       "301": 4,
+       "401": 5,
+       "500": 5
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeSpaceHub_Landmark1": {
+   "nome": {
+    "it": "Nave da guerra stellare",
+    "en": "Stellar Warship"
+   },
+   "era": "SpaceAgeSpaceHub",
+   "w": 3,
+   "h": 5,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "advanced_tactics",
+      "modalita": "all",
+      "valori": {
+       "1": 11,
+       "101": 814,
+       "200": 1000
+      }
+     },
+     {
+      "tipo": "penal_unit",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 3,
+       "101": 163,
+       "200": 200
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeSpaceHub_Landmark2": {
+   "nome": {
+    "it": "Catalizzatore cosmico",
+    "en": "Cosmic Catalyst"
+   },
+   "era": "SpaceAgeSpaceHub",
+   "w": 4,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "critical_hit_chance",
+      "modalita": "all",
+      "valori": {
+       "1": 8,
+       "101": 22,
+       "200": 25
+      }
+     },
+     {
+      "tipo": "clan_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 11,
+       "101": 814,
+       "200": 1000
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeTitan_Landmark1": {
+   "nome": {
+    "it": "Cancello di Saturno VI CENTAURO",
+    "en": "Saturn VI Gate CENTAURUS"
+   },
+   "era": "SpaceAgeTitan",
+   "w": 4,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "military_boost",
+      "modalita": "all",
+      "valori": {
+       "1": 9,
+       "101": 651,
+       "200": 800
+      }
+     },
+     {
+      "tipo": "previous_era_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 29,
+       "101": 894,
+       "200": 1095
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeTitan_Landmark2": {
+   "nome": {
+    "it": "Cancello di Saturno VI PEGASO",
+    "en": "Saturn VI Gate PEGASUS"
+   },
+   "era": "SpaceAgeTitan",
+   "w": 4,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "all",
+      "valori": {
+       "1": 11,
+       "101": 814,
+       "200": 1000
+      }
+     },
+     {
+      "tipo": "strategy_points",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 5,
+       "101": 326,
+       "200": 400
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeTitan_Landmark3": {
+   "nome": {
+    "it": "Cancello di Saturno VI IDRA",
+    "en": "Saturn VI Gate HYDRA"
+   },
+   "era": "SpaceAgeTitan",
+   "w": 4,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "advanced_tactics",
+      "modalita": "all",
+      "valori": {
+       "1": 7,
+       "101": 488,
+       "200": 600
+      }
+     },
+     {
+      "tipo": "clan_goods",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 7,
+       "101": 488,
+       "200": 600
+      }
+     }
+    ]
+   }
+  },
+  "X_SpaceAgeVenus_Landmark1": {
+   "nome": {
+    "it": "Isola volante",
+    "en": "Flying Island"
+   },
+   "era": "SpaceAgeVenus",
+   "w": 6,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "mysterious_shards",
+      "modalita": "all",
+      "valori": {
+       "1": 3,
+       "101": 24,
+       "200": 29
+      },
+      "usi": {
+       "1": 20,
+       "101": 46,
+       "200": 52
+      }
+     }
+    ]
+   }
+  },
+  "X_StellarAgeDiscovery_Landmark1": {
+   "nome": {
+    "it": "Sifone dell'Orizzonte Infranto",
+    "en": "Shattered Horizon Siphon"
+   },
+   "era": "StellarAgeDiscovery",
+   "w": 4,
+   "h": 4,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "advanced_tactics",
+      "modalita": "all",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 1,
+       "101": 4,
+       "201": 5,
+       "301": 5,
+       "401": 5,
+       "500": 5
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 476376,
+       "101": 8434720,
+       "201": 10278840,
+       "301": 10278840,
+       "401": 10278840,
+       "500": 10278840
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "contribution_boost_gold",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 28,
+       "301": 41,
+       "401": 48,
+       "500": 50
+      }
+     }
+    ]
+   }
+  },
+  "X_TomorrowEra_Landmark1": {
+   "nome": {
+    "it": "Voyager V1",
+    "en": "Voyager V1"
+   },
+   "era": "TomorrowEra",
+   "w": 7,
+   "h": 4,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "plunder_goods",
+      "modalita": "all",
+      "valori": {
+       "1": 10,
+       "101": 63,
+       "200": 76
+      },
+      "usi": {
+       "1": 3,
+       "101": 3,
+       "200": 3
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 60510,
+       "101": 1460536,
+       "200": 1784952
+      }
+     }
+    ]
+   }
+  },
+  "X_TomorrowEra_Landmark2": {
+   "nome": {
+    "it": "Torre della tregua",
+    "en": "Truce Tower"
+   },
+   "era": "TomorrowEra",
+   "w": 5,
+   "h": 6,
+   "tierMax": "copper",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "aid_goods",
+      "modalita": "all",
+      "valori": {
+       "1": 1,
+       "101": 1,
+       "200": 1
+      },
+      "usi": {
+       "1": 31,
+       "101": 192,
+       "200": 229
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 57748,
+       "101": 1563063,
+       "200": 1911877
+      }
+     }
+    ]
+   }
+  },
+  "X_VirtualFuture_Landmark1": {
+   "nome": {
+    "it": "Esercito di terracotta",
+    "en": "Terracotta Army"
+   },
+   "era": "VirtualFuture",
+   "w": 6,
+   "h": 4,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "advanced_tactics",
+      "modalita": "all",
+      "valori": {
+       "1": 42,
+       "101": 576,
+       "201": 700,
+       "301": 700,
+       "401": 700,
+       "500": 700
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "military_boost",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 7,
+       "301": 10,
+       "401": 11,
+       "500": 12
+      }
+     },
+     {
+      "tipo": "fierce_resistance",
+      "modalita": "guild_expedition",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 7,
+       "301": 10,
+       "401": 11,
+       "500": 12
+      }
+     }
+    ]
+   }
+  },
+  "X_VirtualFuture_Landmark2": {
+   "nome": {
+    "it": "Castello di Himeji",
+    "en": "Himeji Castle"
+   },
+   "era": "VirtualFuture",
+   "w": 6,
+   "h": 6,
+   "tierMax": "gold",
+   "tier": {
+    "copper": [
+     {
+      "tipo": "spoils_of_war",
+      "modalita": "all",
+      "valori": {
+       "1": 5,
+       "101": 17,
+       "201": 20,
+       "301": 20,
+       "401": 20,
+       "500": 20
+      },
+      "usi": {
+       "1": 5,
+       "101": 66,
+       "201": 80,
+       "301": 80,
+       "401": 80,
+       "500": 80
+      }
+     },
+     {
+      "tipo": "supplies",
+      "modalita": "all",
+      "produzione": true,
+      "valori": {
+       "1": 476376,
+       "101": 8434720,
+       "201": 10278840,
+       "301": 10278840,
+       "401": 10278840,
+       "500": 10278840
+      }
+     }
+    ],
+    "gold": [
+     {
+      "tipo": "spoils_of_war_enhanced",
+      "modalita": "all",
+      "valori": {
+       "1": 0,
+       "101": 5,
+       "201": 18,
+       "301": 25,
+       "401": 29,
+       "500": 30
+      },
+      "usi": {
+       "101": 5,
+       "201": 53,
+       "301": 82,
+       "401": 95,
+       "500": 100
+      }
+     },
+     {
+      "tipo": "defender_attack_boost",
+      "modalita": "battleground",
+      "moltiplicativo": true,
+      "valori": {
+       "1": 0,
+       "101": 1,
+       "201": 3,
+       "301": 4,
+       "401": 5,
+       "500": 5
+      }
+     }
+    ]
+   }
+  }
+ }
+}

@@ -77,10 +77,13 @@ html, body { overflow-x: clip; }
    (2.0; il resto del tema chiaro è in theme-light.css, generato). */
 :root {
   --row-great-bg: #191900;
+  /* GE nel tier Rame (Prestige, novembre 2026) */
+  --row-copper-bg: #1f0e0a;
   --row-military-bg: #190F05;
 }
 :root[data-theme="light"] {
   --row-great-bg: #fdf9e1;
+  --row-copper-bg: #fcefe6;
   --row-military-bg: #fdf0e6;
 }
 
@@ -319,6 +322,21 @@ html, body { overflow-x: clip; }
   }
   .row-great.row-even:hover {
     filter: brightness(1.25);
+  }
+  /* GE nel tier Rame: stessa logica di .row-great con la tinta rame */
+  .row-great.row-copper {
+    background-color: var(--row-copper-bg);
+  }
+  .row-great.row-copper.row-even {
+    background-color: color-mix(in srgb, #b87333 var(--row-even-lighten), var(--row-copper-bg));
+  }
+  .gb-badge-copper {
+    background-color: color-mix(in srgb, #b87333 15%, transparent);
+    color: #d4895a;
+    border-color: color-mix(in srgb, #b87333 55%, transparent);
+  }
+  :root[data-theme="light"] .gb-badge-copper {
+    color: #9a4a1f;
   }
   .row-military.row-even {
     background-color: color-mix(in srgb, var(--color-red-700) var(--row-even-lighten), var(--row-military-bg));

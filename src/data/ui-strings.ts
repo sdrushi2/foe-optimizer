@@ -113,8 +113,18 @@ const UI_STRINGS = {
   r2GrpInfo: { it: "Info", en: "Info" },
   r2Buildings: { it: "Edifici", en: "Buildings" },
   r2AlliesCat: { it: "Alleati", en: "Allies" },
+  r2GreatBuildingsCat: { it: "Grandi Edifici", en: "Great Buildings" },
+  r2GrpGeLevel: { it: "Livello", en: "Level" },
+  r2GrpGeTier: { it: "Tier", en: "Tier" },
+  r2GeTierAll: { it: "Tutti", en: "All" },
+  r2GeTierCopper: { it: "Solo Rame", en: "Copper only" },
+  r2GeTierGold: { it: "Anche Oro", en: "With Gold" },
+  r2GeLevelHelp: {
+    it: "Statistiche dei Grandi Edifici al livello scelto: i soli livelli noti dai dati del gioco (fra due livelli la crescita non è lineare). I GE solo Rame si fermano al 200: dal 201 in su mostrano i valori del 200.",
+    en: "Great Building stats at the chosen level: only the levels known from the game data (growth between two levels is not linear). Copper-only GBs stop at 200: from 201 up they show the level 200 values.",
+  },
+  gbOtherTitle: { it: "Altri bonus, senza colonna:", en: "Other bonuses, without a column:" },
   r2GreatBuildings: { it: "Grandi edifici", en: "Great buildings" },
-  r2Soon: { it: "In arrivo", en: "Coming soon" },
   r2Map: { it: "Mappa", en: "Map" },
   r2SelectedCity: { it: "Città selezionata", en: "Selected city" },
   r2ImportJson: { it: "Importa JSON", en: "Import JSON" },
@@ -1028,6 +1038,14 @@ const UI_STRINGS = {
     it: "L'edificio può ospitare un Alleato Storico (scienza)",
     en: "The building can host a Historical Ally (science)",
   },
+  gbMultTitle: {
+    it: "Bonus del tier Oro che agiscono sul totale della città o sugli alleati: non sono contati nelle colonne né nell'efficienza.",
+    en: "Gold tier bonuses acting on the city total or on allies: not counted in the columns or in the efficiency.",
+  },
+  gbMultLine: {
+    it: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacco esercito attaccante", attacker_defense_boost: "Difesa esercito attaccante", defender_attack_boost: "Attacco esercito in difesa", defense_boost: "Difesa esercito in difesa", military_boost: "Attacco e difesa esercito attaccante", fierce_resistance: "Attacco e difesa esercito in difesa", advanced_tactics: "Attacco e difesa di entrambi gli eserciti", goods_production_boost: "Produzione di beni", special_goods_production_boost: "Produzione di beni speciali", military_ally_boost: "Alleati militari", science_ally_boost: "Alleati scienza" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} (come livelli in più, anche oltre il 100)` : ` (${({ all: "ovunque", battleground: "Campi di battaglia", guild_expedition: "Spedizioni", guild_raids: "Incursioni quantiche" } as Record<string, string>)[mod] ?? mod}): ${tipo.endsWith("_production_boost") ? "+" : "×"}${v}%`}`,
+    en: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacking army attack", attacker_defense_boost: "Attacking army defense", defender_attack_boost: "Defending army attack", defense_boost: "Defending army defense", military_boost: "Attacking army attack and defense", fierce_resistance: "Defending army attack and defense", advanced_tactics: "Attack and defense of both armies", goods_production_boost: "Goods production", special_goods_production_boost: "Special goods production", military_ally_boost: "Military allies", science_ally_boost: "Science allies" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} (like extra levels, even past 100)` : ` (${({ all: "everywhere", battleground: "Battlegrounds", guild_expedition: "Expeditions", guild_raids: "Quantum Incursions" } as Record<string, string>)[mod] ?? mod}): ${tipo.endsWith("_production_boost") ? "+" : "×"}${v}%`}`,
+  },
   setBuildingTitle: {
     it: (nome: string) => `Fa parte di un set: ${nome}.\nI bonus in tabella sono quelli massimi: si ottengono solo con gli altri edifici del set accanto.`,
     en: (name: string) => `Part of a set: ${name}.\nThe bonuses in the table are the maximum ones: you only get them with the other set buildings next to it.`,
@@ -1489,6 +1507,8 @@ const UI_STRINGS = {
     it: "Mostra Grandi Edifici",
     en: "Show Great Buildings",
   },
+  gbTierGold: { it: "Tier Oro", en: "Gold tier" },
+  gbTierCopper: { it: "Tier Rame", en: "Copper tier" },
   greatBuildingBadge: {
     it: "GE",
     en: "GB",

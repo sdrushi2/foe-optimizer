@@ -1,5 +1,16 @@
 # FoE Optimizer Changelog
 
+## Version 2.008 (05/11/2026)
+### New
+- Database: new Great Buildings catalog, with every GB in the game in the buildings table (same columns, efficiency and sorting) and a level selector (1, 101, 201, 301, 401, 500) to see how the stats change; row and badge in gold or copper depending on the tier
+### Update
+- Database: game icons for the Buildings and Allies catalogs
+- Great Buildings: row and GB badge in gold for GBs in the Gold tier, in copper for those in the Copper tier
+- Great Buildings with the new Gold tier: multiplicative bonuses are no longer added to the columns and the efficiency; in the ❔ column the × symbol lists them, together with the goods production +% and the ally boosts of the Colosseum and the Lotus Temple
+- Great Buildings with the Gold tier: the Observatory's guild goods of 3 eras and the Royal Albert Hall's goods reserves now count too
+
+---
+
 ## Version 2.006 (03/11/2026)
 ### New
 - Production filter: second click on a resource = red box, shows buildings that do NOT produce it (e.g. all red: buildings producing nothing)

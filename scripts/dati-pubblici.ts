@@ -18,8 +18,8 @@ import path from "path";
 
 /** Stessa lista di FILE_DATI in src/data/datiGioco.ts. */
 const FILE = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json", "pergamene.csv",
-  // 2.0: scaricato solo quando serve (datiGioco.caricaBuildingsExtra), ma con hash come gli altri
-  "buildings_extra.csv"] as const;
+  // 2.0: scaricati solo quando servono (es. datiGioco.caricaBuildingsExtra), ma con hash come gli altri
+  "buildings_extra.csv", "ge.json"] as const;
 
 export interface ManifestDati { versione: string; file: Record<string, string> }
 
@@ -139,5 +139,6 @@ export function verificaDati(dir: string): string[] {
   };
   json("kit.json", ["buildingUpgrades", "selectionKits"]);
   json("catene.json", ["edifici"]);
+  json("ge.json", ["versione", "edifici"]);   // Grandi Edifici (ge.py, Prestige)
   return errori;
 }

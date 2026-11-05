@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_100, badge_pirates, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
+import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -20,6 +20,7 @@ import { BloccoPesi, type StatoPesi } from "./PesiStatistiche";
 import type { RibbonGroup, RibbonItem } from "./ribbon/Ribbon";
 import type { Scheda } from "./Testata";
 import { t, type UiLang } from "../data/ui-strings";
+import { LIVELLI_GE } from "../data/geBonus";
 import { formatInt } from "../utils/format";
 import type { Tema } from "./theme";
 
@@ -83,8 +84,12 @@ export interface ContestoNastri {
   /** Pannello Debug della scheda (Città o Inventario). */
   debug: Interruttore;
   /** Catalogo del Database. */
-  catalogo: "edifici" | "alleati";
-  setCatalogo: (c: "edifici" | "alleati") => void;
+  catalogo: "edifici" | "alleati" | "ge";
+  setCatalogo: (c: "edifici" | "alleati" | "ge") => void;
+  /** Catalogo › Grandi Edifici: livello mostrato (1, 101, 201, 301, 401, 500). */
+  livelloGe: { valore: number; imposta: (n: number) => void };
+  /** Catalogo › Grandi Edifici: filtro per tier massimo. */
+  tierGe: { valore: "tutti" | "copper" | "gold"; imposta: (v: "tutti" | "copper" | "gold") => void };
   alleati: StatoAlleati;
   /** Scheda Alleati: statistiche dei tuoi alleati come a livello 100. */
   livello100: Interruttore;
@@ -136,7 +141,6 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const sonoAlleati = scheda === "alleati" || (scheda === "database" && c.catalogo === "alleati");
   const ricerca: RibbonGroup = { id: "ricerca", label: L("r2GrpSearch"), icon: Search, priority: 2,
     help: L(sonoAlleati ? "r2SearchHelpAllies" : "r2SearchHelp"), rows: [[campoRicerca]] };
-  const inArrivo = L("r2Soon");
   const interruttore = (k: keyof ContestoNastri["vista"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], titolo?: Parameters<typeof t>[0], img?: string): RibbonItem => ({
     kind: "button", id: k, icon, ...(img ? { img } : {}), label: L(etichetta), title: titolo ? L(titolo) : undefined,
     active: c.vista[k].attivo, onClick: c.vista[k].cambia,
@@ -209,11 +213,42 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   switch (scheda) {
     case "database": {
       const catalogo: RibbonGroup = { id: "catalogo", label: L("r2GrpCatalog"), icon: Building, priority: 1, rows: [[
-        { kind: "button", id: "edifici", icon: Building, label: L("r2Buildings"), active: c.catalogo === "edifici", onClick: () => c.setCatalogo("edifici") },
-        { kind: "button", id: "alleati", icon: Users, label: L("r2AlliesCat"), active: c.catalogo === "alleati", onClick: () => c.setCatalogo("alleati") },
-        { kind: "button", id: "ge", icon: Landmark, label: L("r2GreatBuildings"), disabled: true, title: inArrivo },
+        { kind: "button", id: "edifici", icon: Building, img: iconBuildings, label: L("r2Buildings"), active: c.catalogo === "edifici", onClick: () => c.setCatalogo("edifici") },
+        { kind: "button", id: "alleati", icon: Users, img: allies_100, label: L("r2AlliesCat"), active: c.catalogo === "alleati", onClick: () => c.setCatalogo("alleati") },
+        { kind: "button", id: "ge", icon: Landmark, img: iconGE, label: L("r2GreatBuildingsCat"), active: c.catalogo === "ge", onClick: () => c.setCatalogo("ge") },
       ]] };
       if (c.catalogo === "alleati") return [catalogo, ricerca, filtriAlleati, vistaAlleati, opzioniTabella];
+      if (c.catalogo === "ge") {
+        // Grandi Edifici: livello delle statistiche (solo quelli noti del gioco)
+        const livello: RibbonGroup = { id: "livello-ge", label: L("r2GrpGeLevel"), icon: ChevronsUp, priority: 2, help: L("r2GeLevelHelp"), rows: [[
+          { kind: "custom", id: "livelli", render: () => (
+            <span className="inline-flex self-center overflow-hidden rounded-md border border-slate-700 text-[12px]" role="group">
+              {LIVELLI_GE.map(n => (
+                <button key={n} type="button" aria-pressed={c.livelloGe.valore === n} onClick={() => c.livelloGe.imposta(n)}
+                  className={`px-2 py-1 font-bold ${c.livelloGe.valore === n ? "bg-emerald-500/25 text-emerald-200" : "text-slate-300 hover:bg-slate-800"}`}>
+                  {n}
+                </button>
+              ))}
+            </span>
+          ) },
+        ]] };
+        // (niente Filtri: i GE sono pochi e a sé)
+        const tier: RibbonGroup = { id: "tier-ge", label: L("r2GrpGeTier"), icon: Landmark, priority: 2, rows: [[
+          { kind: "custom", id: "tier", render: () => (
+            <span className="inline-flex self-center overflow-hidden rounded-md border border-slate-700 text-[12px]" role="group">
+              {(["tutti", "copper", "gold"] as const).map(v => (
+                <button key={v} type="button" aria-pressed={c.tierGe.valore === v} onClick={() => c.tierGe.imposta(v)}
+                  className={`px-2 py-1 font-bold ${c.tierGe.valore === v
+                    ? v === "copper" ? "gb-badge-copper" : v === "gold" ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/25 text-emerald-200"
+                    : "text-slate-300 hover:bg-slate-800"}`}>
+                  {L(v === "tutti" ? "r2GeTierAll" : v === "copper" ? "r2GeTierCopper" : "r2GeTierGold")}
+                </button>
+              ))}
+            </span>
+          ) },
+        ]] };
+        return [catalogo, livello, tier, ricerca, vista(), opzioniEdifici];
+      }
       return [catalogo, ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici];
     }
     case "citta": {

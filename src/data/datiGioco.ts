@@ -58,6 +58,19 @@ export function caricaBuildingsExtra(): Promise<string> {
   return extra;
 }
 
+let ge: Promise<unknown> | null = null;
+/** ge.json (Prestige, novembre 2026): Grandi Edifici con tier e bonus
+ *  (RECUPERO DATI/ge.py). Scaricato SOLO quando si apre Catalogo › Grandi
+ *  Edifici, una volta sola; null se manca o non si scarica. */
+export function caricaGe(): Promise<unknown> {
+  if (!ge) {
+    const h = manifestAvvio.file?.["ge.json"];
+    ge = scarica(h ? `/data/ge.json?v=${h}` : "/data/ge.json")
+      .then(r => r.json() as Promise<unknown>).catch(() => { ge = null; return null; });
+  }
+  return ge;
+}
+
 /** Dati caricati. Lancia un errore se chiamata prima di `caricaDatiGioco()`. */
 export function datiGioco(): DatiGioco {
   if (!dati) throw new Error("datiGioco(): dati non ancora caricati (vedi main.tsx)");

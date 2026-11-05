@@ -1,5 +1,16 @@
 # Novità di FoE Optimizer
 
+## Versione 2.008 (05/11/2026)
+### Novità
+- Database: nuovo catalogo Grandi Edifici, con tutti i GE del gioco nella tabella degli edifici (stesse colonne, efficienza e ordinamenti) e un selettore del livello (1, 101, 201, 301, 401, 500) per vedere come cambiano le statistiche; riga e badge in oro o in rame secondo il tier
+### Aggiornamenti
+- Database: icone del gioco per i cataloghi Edifici e Alleati
+- Grandi Edifici: riga e badge GE in oro per i GE nel tier Oro, in rame per quelli nel tier Rame
+- Grandi Edifici con il nuovo tier Oro: i bonus moltiplicativi non vengono più sommati alle colonne e all'efficienza; nella colonna ❔ il simbolo × li elenca, insieme ai +% di produzione di beni e ai boost per gli alleati di Colosseo e Tempio del Loto
+- Grandi Edifici con il tier Oro: contano anche i beni di gilda di 3 ere dell'Osservatorio e le riserve di beni della Royal Albert Hall
+
+---
+
 ## Versione 2.006 (03/11/2026)
 ### Novità
 - Filtro Produzione: secondo clic su una risorsa = riquadro rosso, mostra gli edifici che NON la producono (es. tutte rosse: gli edifici che non producono nulla)

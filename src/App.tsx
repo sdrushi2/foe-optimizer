@@ -27,7 +27,8 @@ import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_A
   isStorageOutdated, PROFILE_SLOTS
 } from "./utils/storage";
 
-import { caricaBuildingsExtra, datiGioco } from "./data/datiGioco";
+import { caricaBuildingsExtra, caricaGe, datiGioco } from "./data/datiGioco";
+import { leggiGe, statisticheGe, type DatiGe } from "./data/geBonus";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
 import CityMapView, { type CityMapDragState } from "./components/CityMapView";
@@ -1013,6 +1014,8 @@ const BuildingRow = memo(function BuildingRow({
               const disconnected = activeTab === "propria_citta" && !b._isMergedInventory && (disconnectedCount) > 0;
               const notInCsv = b.cityEntityId && !CSV_ENTITY_IDS_SET.has(b.cityEntityId);
               return BUILDING_ROW_COLORS[cat]
+                // GE nel tier Rame: tinta rame invece dell'oro (Prestige)
+                + (cat === "great" && b.gbTier === "rame" ? " row-copper" : "")
                 + (isEven ? " row-even" : "")
                 + (disconnected ? " " + ROW_DISCONNECTED_OVERLAY : "")
                 // shadow inset invece di border-left: un vero border
@@ -1220,7 +1223,11 @@ const BuildingRow = memo(function BuildingRow({
           </span>
         )}
         {b.isGreatBuilding && (
-          <span className="ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/40">
+          // badge GE: oro per il tier Oro, rame per il tier Rame (Prestige)
+          <span title={b.gbTier ? t(b.gbTier === "oro" ? "gbTierGold" : "gbTierCopper", uiLang) : undefined}
+            className={`ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded border ${b.gbTier === "rame"
+              ? "gb-badge-copper"
+              : "bg-amber-500/15 text-amber-400 border-amber-500/40"}`}>
             {t("greatBuildingBadge", uiLang)}
           </span>
         )}
@@ -1579,6 +1586,15 @@ const BuildingRow = memo(function BuildingRow({
             const info = getSettlementInfo(b.cityEntityId);
             return info ? <span title={t(info.nameKey, uiLang)}>{info.icon}</span> : null;
           })()}
+          {b.gbMoltiplicativi && b.gbMoltiplicativi.length > 0 && (
+            // GE con bonus moltiplicativi (Prestige): non contati nelle colonne
+            <span className="cursor-help font-black text-amber-300"
+              title={[t("gbMultTitle", uiLang), ...b.gbMoltiplicativi.map(m => t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore))].join("\n")}>×</span>
+          )}
+          {b.gbAltri && b.gbAltri.length > 0 && (
+            // GE del Catalogo: bonus senza colonna (meccaniche di battaglia, aiuti…)
+            <span className="cursor-help font-black text-sky-300" title={[t("gbOtherTitle", uiLang), ...b.gbAltri].join("\n")}>✦</span>
+          )}
           {(() => {
             // edificio di un set (2.006): i bonus in tabella sono quelli massimi
             // (icona del gioco del set, 🧩 se non ancora scaricata: icone_set.py)
@@ -2191,7 +2207,19 @@ export default function App() {
   // 2.0: catalogo scelto nel Database. Il catalogo Alleati usa la vista
   // alleati di sempre (activeTab "alleati") in modalità database
   // (alleatiDaDb): niente pannello consigliere né tabella dei posseduti.
-  const [catalogo, setCatalogoStato] = useState<"edifici" | "alleati">("edifici");
+  const [catalogo, setCatalogoStato] = useState<"edifici" | "alleati" | "ge">("edifici");
+  // Catalogo › Grandi Edifici: livello del selettore e dati (ge.json, scaricato
+  // la prima volta che si apre il catalogo)
+  const [livelloGe, setLivelloGe] = useState<number>(201);
+  /** Filtro per tier massimo: tutti, solo Rame, con anche l'Oro. */
+  const [tierGe, setTierGe] = useState<"tutti" | "copper" | "gold">("tutti");
+  const [datiGe, setDatiGe] = useState<DatiGe | null>(null);
+  useEffect(() => {
+    if (catalogo !== "ge" || datiGe) return;
+    let vivo = true;
+    void caricaGe().then(d => { if (vivo) setDatiGe(leggiGe(d)); });
+    return () => { vivo = false; };
+  }, [catalogo, datiGe]);
   const [alleatiDaDb, setAlleatiDaDb] = useState(false);
   // Tipi di alleato mostrati (colonna Tipo di allies.csv; "" = come militare).
   const [mostraMilitari, setMostraMilitari] = useState(true);
@@ -2539,7 +2567,8 @@ export default function App() {
           const level = entry.level ?? 0;
           const maxLevel = entry.max_level ?? 0;
           const [w, l] = getEntitySize(id);
-          gbs.set(id, { entityId: id, name: "", level, maxLevel, width: w, length: l, rawEntry: entry });
+          const tierMax = (cityEntities[id] as { maxTier?: { value?: unknown } } | undefined)?.maxTier?.value;
+          gbs.set(id, { entityId: id, name: "", level, maxLevel, width: w, length: l, rawEntry: entry, ...(typeof tierMax === "string" ? { tierMax } : {}) });
         } else if (isMissingFromCsv && !unmatched.has(id)) {
           // Edificio non presente nel CSV ma presente in città: lo salvo per creare un fallback
           unmatched.set(id, entry);
@@ -3942,6 +3971,19 @@ export default function App() {
     }));
   }, [weights, buildingSearchNames]);
 
+  // Catalogo › Grandi Edifici: una riga per GE (forma, strada, immagine e nomi
+  // da buildings.csv) con le statistiche al livello scelto (geBonus.statisticheGe).
+  const processedGeCatalogo = useMemo<ProcessedBuilding[]>(() => {
+    if (!datiGe) return [];
+    return BUILDINGS_FROM_CSV.filter(b => b.isGreatBuilding && datiGe.edifici[b.cityEntityId]).map(b => {
+      const s = statisticheGe(datiGe.edifici[b.cityEntityId]!, livelloGe, uiLang);
+      const { livello: _l, tier, ...stat } = s;
+      const gb: Building = { ...b, ...stat, gbTier: tier,
+        ...(stat.gbMoltiplicativi.length ? {} : { gbMoltiplicativi: undefined }), ...(stat.gbAltri.length ? {} : { gbAltri: undefined }) };
+      return { ...gb, currentEff: calculateEfficiency(gb, weights), searchName: buildingSearchNames.get(b.cityEntityId) ?? "" };
+    });
+  }, [datiGe, livelloGe, uiLang, weights, buildingSearchNames]);
+
   const processedGreatBuildings = useMemo<ProcessedBuilding[]>(() => {
     return Array.from(greatBuildingsJson.values())
       .map(gb => {
@@ -4248,8 +4290,9 @@ export default function App() {
     if (activeTab === "inventario") {
       return showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings;
     }
+    if (catalogo === "ge") return processedGeCatalogo;
     return processedBuildings;
-  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity]);
+  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity, catalogo, processedGeCatalogo]);
 
   // Applica UNA VOLTA l'override era corrente (stats + nome + efficienza) per le
   // tab Città/Inventario, indipendentemente dalla ricerca. Prima questo lavoro
@@ -4351,6 +4394,12 @@ export default function App() {
       // fuorviante, non un'informazione utile sulla riga merged stessa).
       if (isPropriacitta && showOnlyOutdated && (b._isMergedInventory || (b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)))) continue;
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
+      // Catalogo › Grandi Edifici: solo la ricerca (niente filtri né Nascondi /
+      // Mostra solo, che restano impostati per il catalogo Edifici)
+      if (catalogo === "ge") {
+        if (tierGe === "tutti" || datiGe?.edifici[b.cityEntityId]?.tierMax === tierGe) filtered.push(b);
+        continue;
+      }
       // "Nascondi / Mostra solo" (2.0, tre stati): non accelerabili 🚫 e
       // auto aggiornabili ^.
       const tri = currentFilters.tri;
@@ -4422,7 +4471,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, allySlotsPerBuilding]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -5767,7 +5816,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", daHash);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const setCatalogo = (c: "edifici" | "alleati") => {
+  const setCatalogo = (c: "edifici" | "alleati" | "ge") => {
     setCatalogoStato(c);
     if (c === "alleati") { setAlleatiDaDb(true); setActiveTab("alleati"); } else { setAlleatiDaDb(false); setActiveTab("database"); }
   };
@@ -5926,6 +5975,8 @@ export default function App() {
       ] : undefined,
     },
     catalogo, setCatalogo,
+    livelloGe: { valore: livelloGe, imposta: setLivelloGe },
+    tierGe: { valore: tierGe, imposta: setTierGe },
     alleati: {
       rarita: Allies.RARITY_LEVELS.map(rarity => {
         const d = Allies.RARITY_DISPLAY[rarity]!;
@@ -6378,6 +6429,7 @@ export default function App() {
           })()}
 
 
+          {/* (Catalogo › Grandi Edifici: stessa tabella degli edifici, righe da processedGeCatalogo) */}
           {(activeTab === "database" || (activeTab === "propria_citta" && !showPlanner) || activeTab === "inventario") && (
             <>
               {/* 2.0: in Database, Città e Inventario la tabella va da bordo a bordo
@@ -6599,7 +6651,10 @@ export default function App() {
                           disconnectedCount={b._isMergedInventory ? 0 : cityEntityDisconnected.get(b.cityEntityId) ?? 0}
                           needlessCount={b._isMergedInventory ? 0 : cityEntityNeedlessCount.get(b.cityEntityId) ?? 0}
                           importedCount={b._isMergedInventory ? 0 : importedCityEntityLookup.get(b.cityEntityId) ?? 0}
-                          greatBuildingInfo={greatBuildingsJson.get(b.cityEntityId)}
+                          greatBuildingInfo={activeTab === "database" && catalogo === "ge"
+                            // (Catalogo › GE: livello del selettore, non quello della tua città)
+                            ? { entityId: b.cityEntityId, name: "", level: Math.min(livelloGe, datiGe?.edifici[b.cityEntityId]?.tierMax === "gold" ? livelloGe : 200), maxLevel: datiGe?.edifici[b.cityEntityId]?.tierMax === "gold" ? 500 : 200, width: 0, length: 0, rawEntry: {} as GreatBuilding["rawEntry"] }
+                            : greatBuildingsJson.get(b.cityEntityId)}
                           gameDisplayName={gameNames.get(b.cityEntityId)}
                           upgradeBadge={b._isMergedInventory ? undefined : cityUpgradeBadges.get(b.cityEntityId)}
                           isOutdated={!b._isMergedInventory && outdatedBuildings.has(b.cityEntityId)}

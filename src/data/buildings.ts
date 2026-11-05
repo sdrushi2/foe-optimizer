@@ -131,6 +131,13 @@ export interface Building {
   imm: number;
   cityEntityId: string;
   isGreatBuilding?: boolean;
+  /** GE (Prestige, novembre 2026): bonus militari MOLTIPLICATIVI, esclusi dalle
+   *  colonne e dall'efficienza (moltiplicano il totale della città). */
+  gbMoltiplicativi?: ReadonlyArray<{ tipo: string; modalita: string; valore: number }>;
+  /** GE: tier attuale (Prestige): "oro" dal livello 101 per i GE col tier Oro, altrimenti "rame". */
+  gbTier?: "oro" | "rame";
+  /** GE (Catalogo): altri bonus senza colonna (colpo critico, raccolta doppia…), righe già leggibili. */
+  gbAltri?: readonly string[];
   /** True se l'edificio è attualmente "inattivo" (W_*Decoration nell'id):
    *  un edificio normale del catalogo, censito qui con tutte le sue
    *  statistiche, che il gioco ha declassato a puro ornamento dopo la fine
