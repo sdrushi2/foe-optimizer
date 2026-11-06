@@ -79,6 +79,9 @@ interface Voce { imp: ImportedAlly; ally: Ally; da: number; cumC: number[]; cumG
 export function consigliaPergamene(
   owned: readonly ImportedAlly[], byIdRarity: Map<string, Ally>, inherited: Map<string, Ally[]>,
   weights: Weights, budget: number,
+  /** Livelli in più agli alleati militari dal Colosseo (tier Oro): le
+   *  statistiche si calcolano al livello + boost (i livelli da salire no). */
+  boost = 0,
 ): ConsiglioPergamene {
   const c = costi();
   const voci: Voce[] = [];
@@ -89,7 +92,7 @@ export function consigliaPergamene(
     const max = Math.min(a.maxLevel || LIVELLO_MAX, LIVELLO_MAX, tettoTabella());
     const da = Math.max(1, imp.level);
     if (da >= max) continue;
-    const eff = (l: number) => weightedEff(getComputedAllyStats(a, l, inherited), weights);
+    const eff = (l: number) => weightedEff(getComputedAllyStats(a, l + boost, inherited), weights);
     const e0 = eff(da);
     const cumC = [0], cumG = [0];
     for (let l = da + 1; l <= max; l++) { cumC.push(cumC[cumC.length - 1]! + (c[l] ?? 0)); cumG.push(eff(l) - e0); }
@@ -106,7 +109,7 @@ export function consigliaPergamene(
   voci.forEach((v, i) => {
     const k = scelta[i]!;
     if (!k) return;
-    const s0 = getComputedAllyStats(v.ally, v.da, inherited), s1 = getComputedAllyStats(v.ally, v.da + k, inherited);
+    const s0 = getComputedAllyStats(v.ally, v.da + boost, inherited), s1 = getComputedAllyStats(v.ally, v.da + k + boost, inherited);
     const d = (x: number[], y: number[]): Quattro => [0, 1, 2, 3].map(j => (y[j] ?? 0) - (x[j] ?? 0)) as Quattro;
     passi.push({
       imp: v.imp, da: v.da, a: v.da + k, pergamene: v.cumC[k]!, guadagno: v.cumG[k]!,

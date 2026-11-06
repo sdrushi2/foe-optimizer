@@ -1,5 +1,18 @@
 # Novità di FoE Optimizer
 
+## Versione 2.009 (06/11/2026)
+### Novità
+- Nuovo Calcolatore dei Grandi Edifici (foe-optimizer.com/ge, anche da Database › Grandi Edifici › Calcolatore): per ogni GE e livello i PF del livello, la ricompensa di ogni posto con la percentuale della chat (Rame 90%, 95%, 100%, Oro 20% o personalizzata) e quanti PF servono per assicurarlo
+- Città: sotto i bonus moltiplicativi dei Grandi Edifici (+N%) c'è il contributo effettivo nella tua città (es. +1.670), che ora conta nell'efficienza del GE
+- Città e Inventario: nuovo pulsante Opzioni › Bonus GE, che applica ai valori militari e all'efficienza i bonus moltiplicativi dei Grandi Edifici della città
+- Statistiche militari: nuove colonne "bonus GE" e "totale con bonus", con i bonus moltiplicativi dei Grandi Edifici calcolati sul totale
+- Alleati: i livelli in più dati da Colosseo e Tempio del Loto (tier Oro) contano nelle statistiche degli alleati e nei pannelli Gettoni e Pergamene
+### Aggiornamenti
+- Grandi Edifici: i bonus moltiplicativi del tier Oro compaiono nelle colonne come +N% (non contati nell'efficienza); il +% di produzione dei beni di San Marco e dei beni speciali del Trasportatore spaziale va nelle colonne Boost beni e Boost beni speciali
+- Grandi Edifici: tutti gli altri bonus (reliquie, colpo critico, doppio incasso, lancio missilistico, bottino di guerra, ecc.) hanno l'icona del gioco con una spiegazione; i potenziamenti di monete e materiali di San Marco, Royal Albert Hall e Faro di Alessandria ora si vedono anche nelle città importate
+
+---
+
 ## Versione 2.008 (05/11/2026)
 ### Novità
 - Database: nuovo catalogo Grandi Edifici, con tutti i GE del gioco nella tabella degli edifici (stesse colonne, efficienza e ordinamenti) e un selettore del livello (1, 101, 201, 301, 401, 500) per vedere come cambiano le statistiche; riga e badge in oro o in rame secondo il tier

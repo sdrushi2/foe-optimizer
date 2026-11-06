@@ -79,11 +79,30 @@ export function prefissoFile(nome: string | null | undefined): string {
   return s || "foe";
 }
 
-/** Formatta produzioni con valori grandi (es. Monete, Materiali, CAP IQ):
- *  "-" se zero, "k" arrotondato all'intero per valori >= 1000 (es. 632750 ->
- *  "633k", non "632,8k"), altrimenti il numero con separatore delle migliaia. */
+/** Formatta produzioni con valori grandi (es. Monete, Materiali, Medaglie, CAP IQ):
+ *  "-" se zero, "M" con un decimale da un milione (10279000 -> "10,3M"), "k"
+ *  arrotondato all'intero per valori >= 1000 (es. 632750 -> "633k", non
+ *  "632,8k"), altrimenti il numero con separatore delle migliaia. */
+/** Valori militari come nel gioco (novembre 2026, utente): da 1000 in su in
+ *  migliaia con una cifra decimale ("36,7k", senza ",0"), sotto interi. */
+export function formatMilK(value: number): string {
+  if (Math.abs(Math.round(value / 100)) >= 10) {
+    const k = Math.round(value / 100) / 10;
+    return `${Number.isInteger(k) ? k : k.toFixed(1).replace(".", ",")}k`;
+  }
+  return formatInt(value);
+}
+
 export function formatProdK(value: number): string {
   if (value === 0) return "-";
+  // Milioni (novembre 2026, utente): "10,3M" invece di "10279k", una cifra
+  // decimale con la virgola come formatEff, senza ",0" ("1M"), senza spazio
+  // prima di k/M (provato e scartato dall'utente). Soglia sul
+  // valore già arrotondato a migliaia, così 999.600 diventa "1M" e non "1000k".
+  if (Math.abs(Math.round(value / 1000)) >= 1000) {
+    const m = Math.round(value / 100_000) / 10;
+    return `${Number.isInteger(m) ? m : m.toFixed(1).replace(".", ",")}M`;
+  }
   if (value >= 1000 || value <= -1000) return `${Math.round(value / 1000)}k`;
   return formatInt(value);
 }

@@ -67,6 +67,8 @@ interface GbBonus {
   /** Prestige (novembre 2026): bonus MOLTIPLICATIVO (moltiplica il totale della
    *  città per quella modalità invece di sommarsi). */
   isBonusMultiplier?: boolean;
+  /** Seconda quantità di alcuni bonus (es. totem_drop: % di trovare la reliquia). */
+  amount?: number;
 }
 
 interface GbProduct {
@@ -406,13 +408,31 @@ export class BuildingModel {
     // città: NON vanno nelle colonne né nell'efficienza (prima si sommavano come
     // un normale +%). Restano in `gbMoltiplicativi` per il tooltip della tabella.
     const moltiplicativi: Array<{ tipo: string; modalita: string; valore: number }> = [];
+    let benibGe = 0, benispbGe = 0;
+    // Tempio delle Reliquie (totem_drop): amount = % di trovare una reliquia
+    // nelle Spedizioni dopo un incontro, value = % che sia rara
+    const tot = allBonuses.find(b => b?.type === "totem_drop");
+    const reliquie = tot ? { probabilita: Number(tot.amount ?? 0), rara: Number(tot.value ?? 0) } : null;
+    // Colpo critico (Serra Artica, Catalizzatore cosmico): Rame contro unità
+    // della stessa era, Oro contro unità di tutte le altre ere
+    const critico = {
+      rame: Number(allBonuses.find(b => b?.type === "critical_hit_chance")?.value ?? 0),
+      oro: Number(allBonuses.find(b => b?.type === "all_units_critical_hit_chance")?.value ?? 0),
+    };
     for (const b of allBonuses) {
       // +% produzione di beni / beni speciali (San Marco, Trasportatore spaziale,
       // Oro): percentuali sulla città, nessuna colonna → solo nel tooltip del ×
-      // (anche i boost agli alleati del Colosseo / Tempio del Loto, Oro: per ora
-      // solo nel tooltip, il calcolo sugli alleati attende una città da verificare)
-      if (b?.type === "goods_production_boost" || b?.type === "special_goods_production_boost"
-        || b?.type === "military_ally_boost" || b?.type === "science_ally_boost") {
+      // +% produzione di beni / beni speciali (San Marco, Trasportatore spaziale,
+      // Oro): nelle colonne Boost beni / Boost beni speciali, come gli edifici
+      // normali (frazione: 5 → 0,05)
+      if (b?.type === "goods_production_boost" || b?.type === "special_goods_production_boost") {
+        const v = Number(b.value ?? 0);
+        if (Number.isFinite(v) && v) { if (b.type === "goods_production_boost") benibGe += v / 100; else benispbGe += v / 100; }
+        continue;
+      }
+      // (boost agli alleati del Colosseo / Tempio del Loto, Oro: per ora solo nel
+      // tooltip, il calcolo sugli alleati attende una città da verificare)
+      if (b?.type === "military_ally_boost" || b?.type === "science_ally_boost") {
         const v = Number(b.value ?? 0);
         if (Number.isFinite(v) && v) moltiplicativi.push({ tipo: b.type, modalita: "all", valore: v });
         continue;
@@ -439,9 +459,8 @@ export class BuildingModel {
     // IQmatB/IQmon/IQmat/IQBeni/... restano 0 via createBaseBuilding): i bonus
     // IQ dei GE sono solo quelli militari su guild_raids, gestiti qui sopra.
     // Se Inno ne introducesse altri, vanno mappati qui seguendo BOOST_MAP.
-    // NOTA FUTURA (agosto 2026, BeniSpB): nessun GE oggi ha il BoostHint
-    // "special_goods_production" (l'unico edificio noto, W_MultiAge_SUM25E1,
-    // non è un GE). `benispb` resta sempre 0 per i GE (via createBaseBuilding).
+    // (novembre 2026, Prestige: benib/benispb dei GE ora dai bonus Oro di San Marco
+    // e del Trasportatore spaziale, goods_production_boost / special_goods_production_boost)
 
     // Produzioni
     let beniG = 0, beni = 0, beniP = 0, beniS = 0, beniSp = 0, fp = 0, tr = 0, fel = 0, pop = 0, mon = 0, mat = 0, med = 0;
@@ -517,6 +536,78 @@ export class BuildingModel {
       size, area,
       road: BuildingModel.getRoadForGreatBuildingSize(size), roadLvl: 1,
       pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat, med,
+      benib: benibGe, benispb: benispbGe,
+      ...(reliquie && (reliquie.probabilita || reliquie.rara) ? { gbReliquie: reliquie } : {}),
+      ...(critico.rame || critico.oro ? { gbCritico: critico } : {}),
+      // Galassia blu: double_collection (Rame, città) / guild_raids_double_collection (Oro, IQ):
+      // value = % di raddoppio, amount = edifici raccolti
+      ...(() => {
+        const r = allBonuses.find(b => b?.type === "double_collection"), o = allBonuses.find(b => b?.type === "guild_raids_double_collection");
+        const x = (b: typeof r) => b && Number(b.value) ? { probabilita: Number(b.value), edifici: Number(b.amount ?? 0) } : undefined;
+        const rame = x(r), oro = x(o);
+        return rame || oro ? { gbRaccoltaDoppia: { ...(rame ? { rame } : {}), ...(oro ? { oro } : {}) } } : {};
+      })(),
+      // Trasportatore spaziale (diplomatic_gifts): value = %, amount = negoziazioni
+      ...(() => { const p = allBonuses.find(b => b?.type === "diplomatic_gifts"); return p && p.value ? { gbRegaliDiplomatici: { probabilita: Number(p.value), negoziazioni: Number(p.amount ?? 0) } } : {}; })(),
+      // Progetto della Vergine: missile_launch (Rame, 1ª ondata) / missile_launch_wave_2 (Oro, 2ª ondata):
+      // value = % di uccidere metà delle unità nemiche, amount = battaglie
+      ...(() => {
+        const x = (tipo: string) => { const b = allBonuses.find(q => q?.type === tipo); return b && Number(b.value) ? { probabilita: Number(b.value), battaglie: Number(b.amount ?? 0) } : undefined; };
+        const rame = x("missile_launch"), oro = x("missile_launch_wave_2");
+        return rame || oro ? { gbMissili: { ...(rame ? { rame } : {}), ...(oro ? { oro } : {}) } } : {};
+      })(),
+      // Isola volante (mysterious_shards): amount = % di generare una Scheggia, value = % che sia rara
+      ...(() => { const p = allBonuses.find(b => b?.type === "mysterious_shards"); return p && (p.value || p.amount) ? { gbSchegge: { probabilita: Number(p.amount ?? 0), rara: Number(p.value ?? 0) } } : {}; })(),
+      // Voyager V1 (plunder_goods): value = beni casuali, amount = saccheggi
+      ...(() => { const p = allBonuses.find(b => b?.type === "plunder_goods"); return p && p.value ? { gbSaccheggiaBeni: { beni: Number(p.value), volte: Number(p.amount ?? 0) } } : {}; })(),
+      // Torre della tregua (aid_goods): value = beni casuali (1), amount = assistenze
+      ...(() => { const p = allBonuses.find(b => b?.type === "aid_goods"); return p && p.value ? { gbBeniAiuti: { beni: Number(p.value), volte: Number(p.amount ?? 0) } } : {}; })(),
+      // Kraken: first_strike (Rame, 1ª ondata) / second_strike (Oro, 2ª ondata):
+      // value = % di uccidere un'unità nemica, amount = battaglie
+      ...(() => {
+        const x = (tipo: string) => { const b = allBonuses.find(q => q?.type === tipo); return b && Number(b.value) ? { probabilita: Number(b.value), battaglie: Number(b.amount ?? 0) } : undefined; };
+        const rame = x("first_strike"), oro = x("second_strike");
+        return rame || oro ? { gbColpo: { ...(rame ? { rame } : {}), ...(oro ? { oro } : {}) } } : {};
+      })(),
+      // Château Frontenac: quest_boost (Rame, missioni) / allies_quest_boost (Oro, Taverna Eroica): value = %
+      ...(() => {
+        const rame = Number(allBonuses.find(b => b?.type === "quest_boost")?.value ?? 0), oro = Number(allBonuses.find(b => b?.type === "allies_quest_boost")?.value ?? 0);
+        return rame || oro ? { gbMissioni: { rame, oro } } : {};
+      })(),
+      // Castello di Himeji: spoils_of_war (Rame) / spoils_of_war_enhanced (Oro):
+      // value = % di ricompensa casuale, amount = battaglie vinte nella città principale
+      ...(() => {
+        const x = (tipo: string) => { const b = allBonuses.find(q => q?.type === tipo); return b && Number(b.value) ? { probabilita: Number(b.value), battaglie: Number(b.amount ?? 0) } : undefined; };
+        const rame = x("spoils_of_war"), oro = x("spoils_of_war_enhanced");
+        return rame || oro ? { gbBottino: { ...(rame ? { rame } : {}), ...(oro ? { oro } : {}) } } : {};
+      })(),
+      // San Marco (money_boost) / Royal Albert Hall e Faro di Alessandria (supplies_boost), Rame:
+      // value = % in più sulla quantità di base, amount = prime raccolte
+      ...(() => {
+        const x = (tipo: string) => { const b = allBonuses.find(q => q?.type === tipo); return b && Number(b.value) ? { percentuale: Number(b.value), raccolte: Number(b.amount ?? 0) } : undefined; };
+        const monete = x("money_boost"), materiali = x("supplies_boost");
+        return monete || materiali ? { gbBoostRaccolte: { ...(monete ? { monete } : {}), ...(materiali ? { materiali } : {}) } } : {};
+      })(),
+      // Nucleo I.A. (algorithmic_core): value = % di beni speciali in più, amount = raccolte
+      ...(() => { const p = allBonuses.find(b => b?.type === "algorithmic_core"); return p && p.value ? { gbNucleoIA: { percentuale: Number(p.value), raccolte: Number(p.amount ?? 0) } } : {}; })(),
+      // Museo di Atlantide (plunder_and_pillage): value = %, amount = moltiplicatore (2)
+      ...(() => { const p = allBonuses.find(b => b?.type === "plunder_and_pillage"); return p && p.value ? { gbSaccheggio: { probabilita: Number(p.value), moltiplicatore: Number(p.amount ?? 0) } } : {}; })(),
+      // Progetto Foresta Pluviale (aid_boost): progetti aiutando i GE altrui
+      ...(() => { const v = Number(allBonuses.find(b => b?.type === "aid_boost")?.value ?? 0); return v ? { gbProgettiAiuti: v } : {}; })(),
+      // Arca / Sifone: bonus di contributo Rame e Oro
+      ...(() => {
+        const c = { rame: Number(allBonuses.find(b => b?.type === "contribution_boost")?.value ?? 0), oro: Number(allBonuses.find(b => b?.type === "contribution_boost_gold")?.value ?? 0) };
+        return c.rame || c.oro ? { gbContributo: c } : {};
+      })(),
+      // Deposito di sementi: mani amiche (Rame) e mani amiche migliorate (Oro)
+      ...(() => {
+        const m = { rame: Number(allBonuses.find(b => b?.type === "helping_hands")?.value ?? 0), oro: Number(allBonuses.find(b => b?.type === "helping_hands_boosted")?.value ?? 0) };
+        return m.rame || m.oro ? { gbManiAmiche: m } : {};
+      })(),
+      // Torre di Galata (plunder_repel): value = % di respingere, amount = tentativi
+      ...(() => { const r = allBonuses.find(b => b?.type === "plunder_repel"); return r && r.value ? { gbRespingi: { probabilita: Number(r.value), tentativi: Number(r.amount ?? 0) } } : {}; })(),
+      // (colonne che vengono solo dal tier Oro: i +% di beni e beni speciali)
+      ...(benibGe || benispbGe ? { gbColonneOro: [...(benibGe ? ["benib"] : []), ...(benispbGe ? ["benispb"] : [])] } : {}),
       cityEntityId: gb.entityId,
       hash,
       ...(moltiplicativi.length ? { gbMoltiplicativi: moltiplicativi } : {}),

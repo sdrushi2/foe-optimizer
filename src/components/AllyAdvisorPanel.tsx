@@ -30,6 +30,8 @@ interface Props {
   byIdRarity: Map<string, Ally>;
   inherited: Map<string, Ally[]>;
   weights: Weights;
+  /** Livelli in più agli alleati militari dal Colosseo (tier Oro). */
+  boostLivelli?: number;
   resources: Record<string, number>;
   uiLang: UiLang;
   gameLang: Lang;
@@ -66,7 +68,7 @@ function heat(x: number): string {
 }
 
 export default function AllyAdvisorPanel({
-  owned, byIdRarity, inherited, weights, resources, uiLang, gameLang, allyName,
+  owned, byIdRarity, inherited, weights, boostLivelli = 0, resources, uiLang, gameLang, allyName,
   groupHeaders, statHeaders, renderBoostCells,
 }: Props) {
   // 2.0: niente apri/chiudi nel pannello: lo mostra o nasconde il pulsante
@@ -78,8 +80,8 @@ export default function AllyAdvisorPanel({
   const valor = resources[VALOR_RESOURCE] ?? 0;
 
   const advice = useMemo(
-    () => computeAllyAdvice(owned, byIdRarity, inherited, weights),
-    [owned, byIdRarity, inherited, weights],
+    () => computeAllyAdvice(owned, byIdRarity, inherited, weights, MAX_TARGET_RARITY, boostLivelli),
+    [owned, byIdRarity, inherited, weights, boostLivelli],
   );
 
   const { rows, min, max } = useMemo(() => {
@@ -92,7 +94,7 @@ export default function AllyAdvisorPanel({
       if (!row) {
         row = {
           allyId: imp.allyId,
-          eff: TIERS.map(r => allyEffAt100(imp.allyId, r, byIdRarity, inherited, weights)),
+          eff: TIERS.map(r => allyEffAt100(imp.allyId, r, byIdRarity, inherited, weights, boostLivelli)),
           owned: new Map(),
           unplaced: 0,
           steps: [],
@@ -108,7 +110,7 @@ export default function AllyAdvisorPanel({
     let lo = Infinity, hi = -Infinity;
     for (const r of byAlly.values()) for (const e of r.eff) if (e !== null) { lo = Math.min(lo, e); hi = Math.max(hi, e); }
     return { rows: [...byAlly.values()], min: lo, max: hi };
-  }, [owned, byIdRarity, inherited, weights, advice]);
+  }, [owned, byIdRarity, inherited, weights, advice, boostLivelli]);
 
   const sorted = useMemo(() => {
     const names = new Map(rows.map(r => [r.allyId, allyName(r.allyId, gameLang)]));

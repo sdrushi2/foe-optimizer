@@ -11,7 +11,7 @@ import type { Building } from "./data/buildings";
 import { getImageUrl, noRush, isEraMutable } from "./data/buildings";
 import type { Weights } from "./utils/calculator";
 import { calculateEfficiency } from "./utils/calculator";
-import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, isStaleField, localDateStamp, prefissoFile } from "./utils/format";
+import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, formatMilK, isStaleField, localDateStamp, prefissoFile } from "./utils/format";
 import * as Allies from "./data/allies";
 import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, type UpgradeKitEntry, type SpecialKits, type InventoryStore } from "./data/inventory";
 import { parseBuildingsCsv } from "./data/buildings";
@@ -20,7 +20,7 @@ import type { CityStore } from "./data/cityStore";
 import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -73,7 +73,7 @@ import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilita
   BUILDING_ROW_COLORS, ROW_DISCONNECTED_OVERLAY, RARITY_FROM_GAME } from "./data/buildingClassification";
 import {
   iconSize, iconRoad, iconPop, iconFel, iconFP, iconFPB, iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG,
-  iconMon, iconMat, iconLimitati,
+  iconMon, iconMat, iconLimitati, allies_military, allies_science, iconReliquie, iconCritico, iconCriticoOro, iconRespingi, iconManiAmiche, iconManiAmicheOro, iconContributo, iconContributoOro, iconProgettiAiuti, iconSaccheggio, iconNucleoIA, iconRegaliDiplomatici, iconMissili, iconMissiliOro, iconSchegge, iconSaccheggiaBeni, iconBeniAiuti, iconColpo, iconColpoOro, iconMissioni, iconMissioniOro, iconBottino, iconBottinoOro, iconRaccoltaDoppia, iconRaccoltaDoppiaOro, iconSword, iconCampi, iconIQ, iconProduzioni, iconSpedizioni,
   iconGenAtk_A as iconGenAtkA, iconGenDef_A as iconGenDefA,
   iconGenAtk_D as iconGenAtkD, iconGenDef_D as iconGenDefD,
   iconCampiAtk_A as iconCampiAtkA, iconCampiDef_A as iconCampiDefA,
@@ -717,6 +717,57 @@ function DebugKitsByTier({ kits, qtyColorClass, uiLang, onSelect }: {
   );
 }
 
+/** Colonne (Att/Att, Dif/Att, Att/Dif, Dif/Dif) dei bonus militari dei GE,
+ *  per i moltiplicativi IQ nelle colonne IQ (come GB_MILITARY_SLOTS di BuildingModel). */
+const GB_SLOT_IQ: Record<string, number[]> = {
+  military_boost: [0, 1], fierce_resistance: [2, 3], advanced_tactics: [0, 1, 2, 3],
+  attack_boost: [0], attacker_defense_boost: [1], defender_attack_boost: [2], defense_boost: [3],
+};
+
+/** Somma colonna per colonna di due quaterne di moltiplicativi (vuote = 0). */
+function somma4(a?: readonly number[], b?: readonly number[]): number[] {
+  return [0, 1, 2, 3].map(i => (a?.[i] ?? 0) + (b?.[i] ?? 0));
+}
+
+/** GE (Prestige): i moltiplicativi di Campi/Spedizioni/IQ (mostrati come "+N%" nelle
+ *  colonne) contano nell'ordinamento come spareggio dopo il valore normale:
+ *  valore + N/1000 (i valori militari sono interi, N < 100). */
+function moltOrd(b: Building, modalita: string, slot: number): number {
+  let n = 0;
+  for (const m of b.gbMoltiplicativi ?? []) if (m.modalita === modalita && GB_SLOT_IQ[m.tipo]?.includes(slot)) n += m.valore;
+  return n / 1000;
+}
+
+/** Cella militare di un GE con un bonus moltiplicativo: "+N%" in giallo; se la
+ *  colonna ha anche un valore normale, il valore sopra e il moltiplicativo
+ *  sotto, stessa grandezza (utente: bonus molto potente). Senza moltiplicativo: BoostCell normale. */
+function CellaMolt({ value, molt, color, first, uiLang, segno, ge, contributo }: { value: number; molt: number; color: "red" | "blue"; first: boolean; uiLang?: UiLang; segno?: boolean; ge?: number;
+  /** Scheda Città: contributo effettivo del moltiplicativo (% × totale della città), sotto il +N%. */
+  contributo?: number }) {
+  if (!molt) return <BoostCell value={value} color={color} className={first ? "section-divider" : ""} uiLang={uiLang} segno={segno} ge={ge} />;
+  const tit = uiLang ? (contributo ? `${t("gbMultSpedTitle", uiLang)}\n${t("gbContribCellTitle", uiLang, molt, contributo)}` : t("gbMultSpedTitle", uiLang)) : undefined;
+  const contr = contributo ? <span className={`block text-[10px] leading-tight cell-${color}`}>+{formatInt(contributo)}</span> : null;
+  if (!value) return <td className={`cell-num${first ? " section-divider" : ""}`} title={tit}><span className="text-amber-300">+{molt}%</span>{contr}</td>;
+  return (
+    <td className={`cell-num cell-${color}${ge ? ` cell-${color}-ge` : ""}${first ? " section-divider" : ""}`} title={ge && uiLang ? `${t("gbBonusCellTitle", uiLang, ge)}\n${tit ?? ""}` : tit}>
+      {segno && value > 0 ? "+" : ""}{formatInt(value)}
+      <span className="block text-amber-300">+{molt}%</span>
+      {contr}
+    </td>
+  );
+}
+
+/** Titolo di un gruppo di colonne (riga alta dell'intestazione) con l'icona
+ *  del gioco davanti (novembre 2026: al posto delle emoji ⚔️🔰⚡✊🏾📦). */
+function TitoloGruppo({ icona, testo }: { icona: string; testo: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 align-middle">
+      <img src={icona} alt="" aria-hidden="true" className="inline-block h-4 w-4 object-contain" />
+      {testo}
+    </span>
+  );
+}
+
 const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = "", spostata = true }: { src: string; alt: string; className?: string;
   /** false = senza "relative top-[1px]" (es. icona dei limitati). */
   spostata?: boolean }) {
@@ -728,17 +779,21 @@ const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = ""
 
 
 
-const BoostCell = memo(function BoostCell({ value, color, className = "", suffix = "", uiLang, segno }: { value: number; color: "red" | "blue"; className?: string; suffix?: string; uiLang?: UiLang;
+const BoostCell = memo(function BoostCell({ value, color, className = "", suffix = "", uiLang, segno, ge }: { value: number; color: "red" | "blue"; className?: string; suffix?: string; uiLang?: UiLang;
   /** "+" davanti ai valori positivi (aumenti, es. pannello Pergamene). */
-  segno?: boolean }) {
+  segno?: boolean;
+  /** % dei bonus moltiplicativi dei GE già applicata al valore (Opzioni › Bonus GE): colore diverso + tooltip. */
+  ge?: number }) {
   if (isStaleField(value)) {
     return <td className={className ? `cell-num ${className}` : "cell-num"} title={uiLang ? t("staleDataWarning", uiLang) : undefined}>⚠️</td>;
   }
   if (value === 0) {
     return <td className={className ? `cell-num ${className}` : "cell-num"}>-</td>;
   }
+  const conGe = !!ge && !segno;
+  const classe = conGe ? `cell-${color} cell-${color}-ge` : `cell-${color}`;
   return (
-    <td className={className ? `cell-num cell-${color} ${className}` : `cell-num cell-${color}`}>
+    <td className={className ? `cell-num ${classe} ${className}` : `cell-num ${classe}`} title={conGe && uiLang ? t("gbBonusCellTitle", uiLang, ge) : undefined}>
       {segno && value > 0 ? "+" : ""}{formatInt(value)}{suffix}
     </td>
   );
@@ -763,13 +818,20 @@ function StaleFieldCell({ value, className = "cell-num cell-white", uiLang, chil
  *  blocco di bonus (Generale, Campi, Spedizioni...). I colori sono sempre
  *  nello stesso ordine fisso: questo pattern si ripete 3 volte dentro
  *  MilitaryBoostCells (general/gbg/sped), qui factorizzato una volta. */
-function Boost4({ values, uiLang, segno }: { values: [number, number, number, number]; uiLang?: UiLang; segno?: boolean }) {
+function Boost4({ values, uiLang, segno, molt, ge, contributo }: { values: [number, number, number, number]; uiLang?: UiLang; segno?: boolean;
+  /** Scheda Città: contributo effettivo dei moltiplicativi per colonna. */
+  contributo?: readonly number[];
+  /** GE (Prestige): moltiplicativi per colonna, mostrati come "+N%" in giallo (fuori dall'efficienza). */
+  molt?: readonly number[];
+  /** % dei bonus GE già applicata per colonna (Opzioni › Bonus GE). */
+  ge?: readonly number[] }) {
+  if (molt && molt.some(v => v)) return <>{([0, 1, 2, 3] as const).map(i => <CellaMolt key={i} value={values[i]} molt={molt[i] ?? 0} color={i < 2 ? "red" : "blue"} first={i === 0} uiLang={uiLang} segno={segno} ge={ge?.[i]} contributo={contributo?.[i]} />)}</>;
   return (
     <>
-      <BoostCell value={values[0]} color="red" className="section-divider" uiLang={uiLang} segno={segno} />
-      <BoostCell value={values[1]} color="red" uiLang={uiLang} segno={segno} />
-      <BoostCell value={values[2]} color="blue" uiLang={uiLang} segno={segno} />
-      <BoostCell value={values[3]} color="blue" uiLang={uiLang} segno={segno} />
+      <BoostCell value={values[0]} color="red" className="section-divider" uiLang={uiLang} segno={segno} ge={ge?.[0]} />
+      <BoostCell value={values[1]} color="red" uiLang={uiLang} segno={segno} ge={ge?.[1]} />
+      <BoostCell value={values[2]} color="blue" uiLang={uiLang} segno={segno} ge={ge?.[2]} />
+      <BoostCell value={values[3]} color="blue" uiLang={uiLang} segno={segno} ge={ge?.[3]} />
     </>
   );
 }
@@ -816,6 +878,12 @@ type TabFilters = {
 type ProcessedBuilding = Building & {
   currentEff: number;
   searchName: string;
+  /** Opzioni › Bonus GE (Città/Inventario): % dei moltiplicativi dei GE già
+   *  applicate ai valori militari, per colonna (0 = valore invariato). */
+  _bonusGe?: { gen: number[]; gbg: number[]; sped: number[]; iq: number[] };
+  /** Scheda Città, GE con bonus moltiplicativi: contributo effettivo per colonna
+   *  (% × totale della città di quella statistica), contato nell'efficienza. */
+  _contribGe?: { gen: number[]; gbg: number[]; sped: number[]; iq: number[] };
   isFromKit?: boolean;
   kitCount?: number;
   /** true SOLO per le righe iniettate nella tab Città dal toggle "Mostra
@@ -844,6 +912,37 @@ interface InventoryRowBuilding extends ProcessedBuilding {
   _fabChoices?: string[] | null;
 }
 
+/** Opzioni › Bonus GE: % da evidenziare per colonna (solo dove il valore c'è). */
+function evidGe(v: readonly number[], pct: readonly number[]): number[] {
+  return [0, 1, 2, 3].map(i => (v[i] ? pct[i] ?? 0 : 0));
+}
+/** Come evidGe per le colonne Σ (Generali + Campi/Spedizioni): la % della
+ *  parte che ha cambiato il valore (quella della modalità se c'è, se no i globali). */
+function evidGeSomma(g: readonly number[], pg: readonly number[], m: readonly number[], pm: readonly number[]): number[] {
+  return [0, 1, 2, 3].map(i => (m[i] && pm[i] ? pm[i]! : g[i] && pg[i] ? pg[i]! : 0));
+}
+
+/** Efficienza contando anche il contributo dei moltiplicativi di un GE (_contribGe). */
+function effConContributo(b: ProcessedBuilding, weights: Weights): number {
+  const c = b._contribGe;
+  if (!c) return calculateEfficiency(b, weights);
+  const add = (v: number[], d: number[]) => v.map((x, i) => x + (d[i] ?? 0));
+  return calculateEfficiency({ ...b, general: add(b.general, c.gen) as Building["general"], gbg: add(b.gbg, c.gbg) as Building["gbg"],
+    sped: add(b.sped, c.sped) as Building["sped"], iq: add(b.iq, c.iq) as Building["iq"] }, weights);
+}
+
+/** Opzioni › Bonus GE: valori militari moltiplicati per le % dei GE (arrotondati
+ *  all'intero). null = nessun valore cambia. */
+function conBonusGe<T extends ProcessedBuilding>(b: T, pct: NonNullable<ProcessedBuilding["_bonusGe"]>, weights: Weights): T | null {
+  const mul = (v: number[], p: number[]) => v.map((x, i) => (p[i] && x ? Math.round(x * (1 + p[i]! / 100)) : x));
+  const toccato = (v: number[], p: number[]) => v.some((x, i) => x && p[i]);
+  if (!toccato(b.general, pct.gen) && !toccato(b.gbg, pct.gbg) && !toccato(b.sped, pct.sped) && !toccato(b.iq, pct.iq)) return null;
+  const nb = { ...b,
+    general: mul(b.general, pct.gen) as Building["general"], gbg: mul(b.gbg, pct.gbg) as Building["gbg"],
+    sped: mul(b.sped, pct.sped) as Building["sped"], iq: mul(b.iq, pct.iq) as Building["iq"], _bonusGe: pct };
+  return { ...nb, currentEff: effConContributo(nb, weights) };
+}
+
 const MilitaryBoostCells = memo(function MilitaryBoostCells({
   general,
   gbg,
@@ -852,6 +951,11 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
   spedizioniEnabled,
   uiLang,
   segno,
+  moltSped,
+  moltGbg,
+  moltGen,
+  bonusGe,
+  contribGe,
 }: {
   general: number[];
   gbg: number[];
@@ -860,6 +964,16 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
   spedizioniEnabled: boolean;
   uiLang?: UiLang;
   segno?: boolean;
+  /** GE (Prestige): moltiplicativi delle Spedizioni per colonna (Att/Att, Dif/Att, Att/Dif, Dif/Dif). */
+  moltSped?: readonly number[];
+  /** GE (Prestige): moltiplicativi dei Campi per colonna. */
+  moltGbg?: readonly number[];
+  /** GE (Prestige): moltiplicativi "ovunque" (Sifone) per colonna. */
+  moltGen?: readonly number[];
+  /** Opzioni › Bonus GE: % già applicate per colonna. */
+  bonusGe?: ProcessedBuilding["_bonusGe"];
+  /** Scheda Città: contributo effettivo dei moltiplicativi del GE. */
+  contribGe?: ProcessedBuilding["_contribGe"];
 }) {
   const sigmaGbg: [number, number, number, number] = [
     showSigmaColumns ? general[0] + gbg[0] : gbg[0],
@@ -875,9 +989,15 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
   ];
   return (
     <>
-      {!showSigmaColumns && <Boost4 values={general as [number, number, number, number]} uiLang={uiLang} segno={segno} />}
-      <Boost4 values={sigmaGbg} uiLang={uiLang} segno={segno} />
-      {spedizioniEnabled && <Boost4 values={sigmaSped} uiLang={uiLang} segno={segno} />}
+      {/* moltiplicativi "ovunque" (Sifone): nei Generali; con Σ, che nasconde i
+          Generali, nelle colonne Gen + Campi e Gen + Spedizioni */}
+      {!showSigmaColumns && <Boost4 values={general as [number, number, number, number]} uiLang={uiLang} segno={segno} molt={moltGen} ge={bonusGe && evidGe(general, bonusGe.gen)} contributo={contribGe?.gen} />}
+      <Boost4 values={sigmaGbg} uiLang={uiLang} segno={segno} molt={showSigmaColumns || contribGe ? somma4(moltGbg, moltGen) : moltGbg}
+        contributo={contribGe && (showSigmaColumns ? somma4(contribGe.gen, contribGe.gbg) : contribGe.gbg)}
+        ge={bonusGe && (showSigmaColumns ? evidGeSomma(general, bonusGe.gen, gbg, bonusGe.gbg) : evidGe(gbg, bonusGe.gbg))} />
+      {spedizioniEnabled && <Boost4 values={sigmaSped} uiLang={uiLang} segno={segno} molt={showSigmaColumns || contribGe ? somma4(moltSped, moltGen) : moltSped}
+        contributo={contribGe && (showSigmaColumns ? somma4(contribGe.gen, contribGe.sped) : contribGe.sped)}
+        ge={bonusGe && (showSigmaColumns ? evidGeSomma(general, bonusGe.gen, sped, bonusGe.sped) : evidGe(sped, bonusGe.sped))} />}
     </>
   );
 });
@@ -948,6 +1068,10 @@ interface BuildingRowProps {
    *  qualunque filtro/ordinamento attivo senza bisogno di ricalcolo
    *  dedicato: l'indice nell'array già filtrato è sempre quello giusto. */
   isEven: boolean;
+  /** Catalogo › Grandi Edifici: niente cella dei limitati. */
+  senzaLimitati?: boolean;
+  /** Catalogo › Grandi Edifici: niente celle delle produzioni delle Incursioni. */
+  senzaIq?: boolean;
   isDeclassable: boolean;
   allySlots: Array<{ filled: boolean; allyDisplayName?: string }> | undefined;
   declassablePopData: { popCurr: number; popBronze: number; statsBronze: EraStats } | undefined;
@@ -979,11 +1103,15 @@ const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, senzaIq, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentsProduced,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
 }: BuildingRowProps) {
+  // icone della colonna ❔ (BONUS nel catalogo dei GE): 24 px nel catalogo dei GE, 16 px nelle altre tabelle (utente)
+  const dimIcona = senzaLimitati ? "h-6 w-6" : "h-4 w-4";
+  // GE (Prestige): colonne di produzione con valore solo dal tier Oro in oro
+  const classeProd = (col: string) => (b.gbColonneOro?.includes(col) ? " cell-prod-gold" : " cell-prod");
   return (
     <tr
       key={b.id}
@@ -1005,7 +1133,10 @@ const BuildingRow = memo(function BuildingRow({
               // confondeva con lo stile "errore/urgente" — bug segnalato
               // luglio 2026.
               const cat = b._isMergedInventory ? "mergedInventory"
-                : b.isGreatBuilding ? "great"
+                // (novembre 2026, utente: GE senza sfondo colorato, il tier è nel
+                // colore del nome. Per tornare allo sfondo oro/rame: "great" qui sotto
+                // e la riga " row-copper" più giù)
+                // : b.isGreatBuilding ? "great"
                 : b.isMilitary ? "military"
                 : b.isGoods ? "goods"
                 : (b.isInactive && activeTab === "propria_citta") ? "inactive"
@@ -1014,8 +1145,8 @@ const BuildingRow = memo(function BuildingRow({
               const disconnected = activeTab === "propria_citta" && !b._isMergedInventory && (disconnectedCount) > 0;
               const notInCsv = b.cityEntityId && !CSV_ENTITY_IDS_SET.has(b.cityEntityId);
               return BUILDING_ROW_COLORS[cat]
-                // GE nel tier Rame: tinta rame invece dell'oro (Prestige)
-                + (cat === "great" && b.gbTier === "rame" ? " row-copper" : "")
+                // GE nel tier Rame: tinta rame invece dell'oro (Prestige) — disattivato con lo sfondo dei GE
+                // + (cat === "great" && b.gbTier === "rame" ? " row-copper" : "")
                 + (isEven ? " row-even" : "")
                 + (disconnected ? " " + ROW_DISCONNECTED_OVERLAY : "")
                 // shadow inset invece di border-left: un vero border
@@ -1029,7 +1160,7 @@ const BuildingRow = memo(function BuildingRow({
             })()
       } transition-colors ${activeTab === "propria_citta" && !b.isFallback ? "cursor-pointer" : ""}`}
     >
-      <td className="cell-checkbox">
+      {!senzaLimitati && <td className="cell-checkbox">
         <label className="inline-flex cursor-pointer" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"
@@ -1054,7 +1185,7 @@ const BuildingRow = memo(function BuildingRow({
             )}
           </span>
         </label>
-      </td>
+      </td>}
       <td className="cell-eye">
         {(() => {
           const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
@@ -1114,8 +1245,10 @@ const BuildingRow = memo(function BuildingRow({
         })()}
       </td>
       <td
-        className={`cell-name${activeTab === "database" && b.unique ? " unique" : ""} ${b.isGreatBuilding ? "text-slate-100" : ""}`}
+        className={`cell-name${activeTab === "database" && b.unique ? " unique" : ""}`}
       >
+        {/* (contenitore flex: la <td> resta una cella di tabella, così è centrata in verticale come le altre) */}
+        <div className="cell-name-flex">
         {/* Wrapper truncabile SOLO sul testo nome: .cell-name (index.css) è ora
             un flex row, non più un blocco con `truncate` diretto — così i
             badge fratelli dopo questo span (es. 🧩 frammenti) restano
@@ -1178,12 +1311,13 @@ const BuildingRow = memo(function BuildingRow({
             if (b.isGreatBuilding) {
               return (
                 <>
-                  <span className={hasIt ? "font-bold" : "font-bold italic"}>
+                  {/* nome in oro (tier Oro) o rame (tier Rame) */}
+                  <span className={`${hasIt ? "font-bold" : "font-bold italic"} ${b.gbTier === "rame" ? "ge-name-copper" : "ge-name-gold"}`}>
                     {displayNameText}
                   </span>
                   {(() => {
                     const gb = greatBuildingInfo;
-                    return gb ? <span className="font-normal text-slate-400"> - Lv. {gb.level}/{gb.maxLevel}</span> : null;
+                    return gb ? <span className={`font-normal ${b.gbTier === "rame" ? "ge-name-copper" : "ge-name-gold"}`}> - Lv. {gb.level}/{gb.maxLevel}</span> : null;
                   })()}
                 </>
               );
@@ -1550,9 +1684,10 @@ const BuildingRow = memo(function BuildingRow({
             // mostra solo la quantità, senza badge colorati
             return <>{qtyBadge}</>;
          })()}
+        </div>
       </td>
-      {/* Colonna ⏱ (limitati / ascesi): 2.0, sempre visibile. */}
-      <td>
+      {/* Colonna ⏱ (limitati / ascesi): 2.0, sempre visibile tranne nel catalogo dei GE. */}
+      {!senzaLimitati && <td>
         {(() => {
           const propDisplay = getPropDisplay(b, uiLang);
           if (!propDisplay) return null;
@@ -1562,7 +1697,7 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
-      </td>
+      </td>}
       <td className="cell-icons">
         <div className="flex flex-row flex-nowrap items-center justify-center gap-0.5">
           {/* Un'icona per carattere di allyType (oggi sempre 0 o 1 carattere,
@@ -1570,26 +1705,132 @@ const BuildingRow = memo(function BuildingRow({
               data/buildings.ts). "M" -> ⭐ militare, "S" -> 🔬 scienza; un
               carattere non riconosciuto (mai osservato) non produce icona. */}
           {[...b.allyType].map((kind, i) =>
+            // (novembre 2026: icone del gioco al posto di ⭐/🔬)
             kind === "M" ? (
-              <span key={`ally-${i}`} title={t("historicalAllySlotTitleMilitary", uiLang)}>⭐</span>
+              <img key={`ally-${i}`} src={allies_military} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("historicalAllySlotTitleMilitary", uiLang)} />
             ) : kind === "S" ? (
-              <span key={`ally-${i}`} title={t("historicalAllySlotTitleScience", uiLang)}>🔬</span>
+              <img key={`ally-${i}`} src={allies_science} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("historicalAllySlotTitleScience", uiLang)} />
             ) : null
           )}
+          {/* (icone dei gruppi Campi / Incursioni dell'intestazione al posto di 🔰/✊🏾) */}
           {isBattlegroundsPrizeId(b.cityEntityId) && (
-            <span title={t("wonInGbgTitle", uiLang)}>🔰</span>
+            <img src={iconCampi} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("wonInGbgTitle", uiLang)} />
           )}
           {isQuantumIncursionsPrizeId(b.cityEntityId) && (
-            <span title={t("wonInQiTitle", uiLang)}>✊🏾</span>
+            <img src={iconIQ} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("wonInQiTitle", uiLang)} />
           )}
           {(() => {
             const info = getSettlementInfo(b.cityEntityId);
             return info ? <span title={t(info.nameKey, uiLang)}>{info.icon}</span> : null;
           })()}
-          {b.gbMoltiplicativi && b.gbMoltiplicativi.length > 0 && (
-            // GE con bonus moltiplicativi (Prestige): non contati nelle colonne
-            <span className="cursor-help font-black text-amber-300"
-              title={[t("gbMultTitle", uiLang), ...b.gbMoltiplicativi.map(m => t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore))].join("\n")}>×</span>
+          {(() => {
+            // GE (Prestige): bonus non ancora gestiti nelle colonne (moltiplicativi
+            // di Campi/Spedizioni, +% di produzione, boost alleati). Quelli IQ
+            // e Spedizioni moltiplicativi stanno già nelle loro colonne: qui non si ripetono.
+            const daMostrare = (b.gbMoltiplicativi ?? []).filter(m => !((m.modalita === "guild_raids" || m.modalita === "battleground" || m.modalita === "all" || (m.modalita === "guild_expedition" && spedizioniEnabled)) && GB_SLOT_IQ[m.tipo]));
+            // boost agli alleati (Colosseo, Tempio del Loto): icona dell'alleato al posto del ×
+            const alleati = daMostrare.filter(m => m.tipo === "military_ally_boost" || m.tipo === "science_ally_boost");
+            const altri = daMostrare.filter(m => !alleati.includes(m));
+            return (
+              <>
+                {alleati.map(m => (
+                  <img key={m.tipo} src={m.tipo === "military_ally_boost" ? allies_military : allies_science} alt=""
+                    className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore).replace(/^• /, "")} />
+                ))}
+                {altri.length > 0 && (altri.every(m => m.modalita === "guild_expedition")
+                  // (solo bonus delle Spedizioni, con quelle colonne spente: icona delle Spedizioni)
+                  ? <img src={iconSpedizioni} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`}
+                      title={[t("gbMultTitle", uiLang), ...altri.map(m => t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore))].join("\n")} />
+                  : <span className="cursor-help font-black text-amber-300"
+                      title={[t("gbMultTitle", uiLang), ...altri.map(m => t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore))].join("\n")}>×</span>
+                )}
+              </>
+            );
+          })()}
+          {b.gbReliquie && (
+            // Tempio delle Reliquie: probabilità di reliquie nelle Spedizioni
+            <img src={iconReliquie} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`}
+              title={t("gbRelicsTitle", uiLang, b.gbReliquie.probabilita, b.gbReliquie.rara)} />
+          )}
+          {b.gbCritico?.rame ? (
+            <img src={iconCritico} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCritCopperTitle", uiLang, b.gbCritico.rame)} />
+          ) : null}
+          {b.gbCritico?.oro ? (
+            <img src={iconCriticoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCritGoldTitle", uiLang, b.gbCritico.oro)} />
+          ) : null}
+          {b.gbSaccheggio && (
+            <img src={iconSaccheggio} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbPillageTitle", uiLang, b.gbSaccheggio.probabilita)} />
+          )}
+          {b.gbRaccoltaDoppia?.rame && (
+            <img src={iconRaccoltaDoppia} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDoubleCollectTitle", uiLang, b.gbRaccoltaDoppia.rame.probabilita, b.gbRaccoltaDoppia.rame.edifici)} />
+          )}
+          {b.gbRaccoltaDoppia?.oro && (
+            <img src={iconRaccoltaDoppiaOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDoubleCollectGoldTitle", uiLang, b.gbRaccoltaDoppia.oro.probabilita, b.gbRaccoltaDoppia.oro.edifici)} />
+          )}
+          {b.gbBottino?.rame && (
+            <img src={iconBottino} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSpoilsTitle", uiLang, b.gbBottino.rame.probabilita, b.gbBottino.rame.battaglie)} />
+          )}
+          {b.gbBottino?.oro && (
+            <img src={iconBottinoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSpoilsGoldTitle", uiLang, b.gbBottino.oro.probabilita, b.gbBottino.oro.battaglie)} />
+          )}
+          {b.gbColpo?.rame && (
+            <img src={iconColpo} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbStrikeTitle", uiLang, b.gbColpo.rame.probabilita, b.gbColpo.rame.battaglie)} />
+          )}
+          {b.gbColpo?.oro && (
+            <img src={iconColpoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbStrikeGoldTitle", uiLang, b.gbColpo.oro.probabilita, b.gbColpo.oro.battaglie)} />
+          )}
+          {b.gbMissili?.rame && (
+            <img src={iconMissili} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMissileTitle", uiLang, b.gbMissili.rame.probabilita, b.gbMissili.rame.battaglie)} />
+          )}
+          {b.gbMissili?.oro && (
+            <img src={iconMissiliOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMissileGoldTitle", uiLang, b.gbMissili.oro.probabilita, b.gbMissili.oro.battaglie)} />
+          )}
+          {b.gbSchegge && (
+            <img src={iconSchegge} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbShardsTitle", uiLang, b.gbSchegge.probabilita, b.gbSchegge.rara)} />
+          )}
+          {b.gbRegaliDiplomatici && (
+            <img src={iconRegaliDiplomatici} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDiploGiftsTitle", uiLang, b.gbRegaliDiplomatici.probabilita, b.gbRegaliDiplomatici.negoziazioni)} />
+          )}
+          {b.gbSaccheggiaBeni && (
+            <img src={iconSaccheggiaBeni} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbPlunderGoodsTitle", uiLang, b.gbSaccheggiaBeni.beni, b.gbSaccheggiaBeni.volte)} />
+          )}
+          {b.gbBeniAiuti && (
+            <img src={iconBeniAiuti} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAidGoodsTitle", uiLang, b.gbBeniAiuti.beni, b.gbBeniAiuti.volte)} />
+          )}
+          {b.gbMissioni?.rame ? (
+            <img src={iconMissioni} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbQuestTitle", uiLang, b.gbMissioni.rame)} />
+          ) : null}
+          {b.gbMissioni?.oro ? (
+            <img src={iconMissioniOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbQuestGoldTitle", uiLang, b.gbMissioni.oro)} />
+          ) : null}
+          {b.gbBoostRaccolte?.monete && (
+            <img src={iconMon} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCoinBoostTitle", uiLang, b.gbBoostRaccolte.monete.percentuale, b.gbBoostRaccolte.monete.raccolte)} />
+          )}
+          {b.gbBoostRaccolte?.materiali && (
+            <img src={iconMat} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSupplyBoostTitle", uiLang, b.gbBoostRaccolte.materiali.percentuale, b.gbBoostRaccolte.materiali.raccolte)} />
+          )}
+          {b.gbNucleoIA && (
+            <img src={iconNucleoIA} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAiCoreTitle", uiLang, b.gbNucleoIA.percentuale, b.gbNucleoIA.raccolte)} />
+          )}
+          {b.gbProgettiAiuti ? (
+            <img src={iconProgettiAiuti} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAidBlueprintsTitle", uiLang, b.gbProgettiAiuti)} />
+          ) : null}
+          {b.gbContributo?.rame ? (
+            <img src={iconContributo} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbContribCopperTitle", uiLang, b.gbContributo.rame)} />
+          ) : null}
+          {b.gbContributo?.oro ? (
+            <img src={iconContributoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbContribGoldTitle", uiLang, b.gbContributo.oro)} />
+          ) : null}
+          {b.gbManiAmiche?.rame ? (
+            <img src={iconManiAmiche} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbHelpCopperTitle", uiLang, b.gbManiAmiche.rame)} />
+          ) : null}
+          {b.gbManiAmiche?.oro ? (
+            <img src={iconManiAmicheOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbHelpGoldTitle", uiLang, b.gbManiAmiche.oro)} />
+          ) : null}
+          {b.gbRespingi && (
+            // Torre di Galata: respingi saccheggi
+            <img src={iconRespingi} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`}
+              title={t("gbRepelTitle", uiLang, b.gbRespingi.probabilita, b.gbRespingi.tentativi)} />
           )}
           {b.gbAltri && b.gbAltri.length > 0 && (
             // GE del Catalogo: bonus senza colonna (meccaniche di battaglia, aiuti…)
@@ -1602,7 +1843,7 @@ const BuildingRow = memo(function BuildingRow({
             if (!set) return null;
             const titolo = t("setBuildingTitle", uiLang, set.nome);
             return set.icona
-              ? <img src={set.icona} alt={set.nome} title={titolo} className="inline-block h-5 w-5 cursor-help object-contain" />
+              ? <img src={set.icona} alt={set.nome} title={titolo} className={`inline-block ${dimIcona} cursor-help object-contain`} />
               : <span className="cursor-help" title={titolo}>🧩</span>;
           })()}
         </div>
@@ -1651,13 +1892,35 @@ const BuildingRow = memo(function BuildingRow({
          </StaleFieldCell>
        )}
 
-      <MilitaryBoostCells general={b.general} gbg={b.gbg} sped={b.sped} showSigmaColumns={showSigmaColumns} spedizioniEnabled={spedizioniEnabled} uiLang={uiLang} />
+      {(() => {
+        // GE (Prestige): moltiplicativi di Campi e Spedizioni nelle loro colonne come "+N%"
+        const moltSped = [0, 0, 0, 0], moltGbg = [0, 0, 0, 0], moltGen = [0, 0, 0, 0];
+        for (const m of b.gbMoltiplicativi ?? []) {
+          const dest = m.modalita === "guild_expedition" ? moltSped : m.modalita === "battleground" ? moltGbg : m.modalita === "all" ? moltGen : null;
+          if (dest) for (const i of GB_SLOT_IQ[m.tipo] ?? []) dest[i] += m.valore;
+        }
+        return <MilitaryBoostCells general={b.general} gbg={b.gbg} sped={b.sped} showSigmaColumns={showSigmaColumns} spedizioniEnabled={spedizioniEnabled} uiLang={uiLang} moltSped={moltSped} moltGbg={moltGbg} moltGen={moltGen} bonusGe={b._bonusGe} contribGe={b._contribGe} />;
+      })()}
 
 
-      <BoostCell value={b.iq[0]} color="red" className="section-divider" uiLang={uiLang} />
-      <BoostCell value={b.iq[1]} color="red" uiLang={uiLang} />
-      <BoostCell value={b.iq[2]} color="blue" uiLang={uiLang} />
-      <BoostCell value={b.iq[3]} color="blue" uiLang={uiLang} />
+      {(() => {
+        // GE (Prestige): i bonus IQ moltiplicativi del tier Oro nelle colonne IQ
+        // come "+N%" in oro (come nel gioco, che li distingue con lo sfondo),
+        // fuori dall'efficienza; gli altri come sempre
+        const molt = [0, 0, 0, 0];
+        for (const m of b.gbMoltiplicativi ?? []) {
+          if (m.modalita !== "guild_raids") continue;
+          for (const i of GB_SLOT_IQ[m.tipo] ?? []) molt[i] += m.valore;
+        }
+        return ([0, 1, 2, 3] as const).map(i => molt[i]
+          ? <td key={i} className={`cell-num${i === 0 ? " section-divider" : ""}`} title={b._contribGe?.iq[i] ? `${t("gbMultIqTitle", uiLang)}\n${t("gbContribCellTitle", uiLang, molt[i]!, b._contribGe.iq[i]!)}` : t("gbMultIqTitle", uiLang)}>
+              <span className="text-amber-300">+{molt[i]}%</span>
+              {b._contribGe?.iq[i] ? <span className={`block text-[10px] leading-tight cell-${i < 2 ? "red" : "blue"}`}>+{formatInt(b._contribGe.iq[i]!)}</span> : null}
+            </td>
+          : <BoostCell key={i} value={b.iq[i]} color={i < 2 ? "red" : "blue"} className={i === 0 ? "section-divider" : ""} uiLang={uiLang} ge={b.iq[i] ? b._bonusGe?.iq[i] : 0} />);
+      })()}
+      {/* produzioni delle Incursioni: non nel catalogo dei GE (nessun GE le ha) */}
+      {!senzaIq && <>
       {showIqProdColumns && (
         <>
           <StaleFieldCell value={b.iqMon} className="cell-num cell-white border-l border-slate-800" uiLang={uiLang}>
@@ -1686,77 +1949,81 @@ const BuildingRow = memo(function BuildingRow({
       <StaleFieldCell value={b.iqCap} uiLang={uiLang}>
         {formatProdK(b.iqCap)}
       </StaleFieldCell>
+      </>}
       {showProdColumns && (
         <>
-          <StaleFieldCell value={b.mon} className={`cell-num section-divider${b.mon > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.mon} className={`cell-num section-divider${b.mon > 0 ? classeProd("mon") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.mon)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.mat} className={`cell-num${b.mat > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.mat} className={`cell-num${b.mat > 0 ? classeProd("mat") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.mat)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.fp} className={`cell-num${b.fp > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.fp} className={`cell-num${b.fp > 0 ? classeProd("fp") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fp)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.fpb} className={`cell-num${b.fpb > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.fpb} className={`cell-num${b.fpb > 0 ? classeProd("fpb") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.fpb)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.med} className={`cell-num${b.med > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.med} className={`cell-num${b.med > 0 ? classeProd("med") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.med)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.fur} className={`cell-num${b.fur > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.fur} className={`cell-num${b.fur > 0 ? classeProd("fur") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fur)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.tr} className={`cell-num${b.tr > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.tr} className={`cell-num${b.tr > 0 ? classeProd("tr") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.tr)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.trne} className={`cell-num${b.trne > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.trne} className={`cell-num${b.trne > 0 ? classeProd("trne") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.trne)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.beni} className={`cell-num${b.beni > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.beni} className={`cell-num${b.beni > 0 ? classeProd("beni") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.beni)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.benib} className={`cell-num${b.benib > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.benib} className={`cell-num${b.benib > 0 ? classeProd("benib") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.benib)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.benip} className={`cell-num${b.benip > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.benip} className={`cell-num${b.benip > 0 ? classeProd("benip") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benip)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.benis} className={`cell-num${b.benis > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.benis} className={`cell-num${b.benis > 0 ? classeProd("benis") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benis)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.benisp} className={`cell-num${b.benisp > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.benisp} className={`cell-num${b.benisp > 0 ? classeProd("benisp") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benisp)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.benispb} className={`cell-num${b.benispb > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.benispb} className={`cell-num${b.benispb > 0 ? classeProd("benispb") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.benispb)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.benig} className={`cell-num${b.benig > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.benig} className={`cell-num${b.benig > 0 ? classeProd("benig") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benig)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.bp} className={`cell-num${b.bp > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          {/* progetti, frammenti e kit: non nel catalogo dei GE (nessun GE li produce) */}
+          {!senzaIq && <>
+          <StaleFieldCell value={b.bp} className={`cell-num${b.bp > 0 ? classeProd("bp") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.bp)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.fsp} className={`cell-num${b.fsp > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.fsp} className={`cell-num${b.fsp > 0 ? classeProd("fsp") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fsp)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.tpm} className={`cell-num${b.tpm > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.tpm} className={`cell-num${b.tpm > 0 ? classeProd("tpm") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.tpm)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.tpb} className={`cell-num${b.tpb > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.tpb} className={`cell-num${b.tpb > 0 ? classeProd("tpb") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.tpb)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.adm} className={`cell-num${b.adm > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.adm} className={`cell-num${b.adm > 0 ? classeProd("adm") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.adm)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.mod} className={`cell-num${b.mod > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.mod} className={`cell-num${b.mod > 0 ? classeProd("mod") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.mod)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.rin} className={`cell-num${b.rin > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.rin} className={`cell-num${b.rin > 0 ? classeProd("rin") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.rin)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.imm} className={`cell-num${b.imm > 0 ? " cell-prod" : ""}`} uiLang={uiLang}>
+          <StaleFieldCell value={b.imm} className={`cell-num${b.imm > 0 ? classeProd("imm") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.imm)}
           </StaleFieldCell>
+          </>}
         </>
       )}
     </tr>
@@ -2965,7 +3232,7 @@ export default function App() {
   });
   // 2.0: colonne Spedizioni della tabella edifici (Visualizza), separate dal
   // peso nell'efficienza (Opzioni). Senza valore salvato si parte come il peso.
-  const [showSpedColumns, setShowSpedColumns] = useState<boolean>(() => {
+  const [showSpedColumnsPref, setShowSpedColumns] = useState<boolean>(() => {
     const v = localStorage.getItem(SPED_COLUMNS_KEY);
     return v === null ? localStorage.getItem(SPED_ENABLED_KEY) === "true" : v === "true";
   });
@@ -2977,6 +3244,8 @@ export default function App() {
   });
   // Pulsante Σ: somma General+Campi (e General+Spedizioni se abilitate)
   const [showSigmaColumns, setShowSigmaColumns] = useState<boolean>(() => localStorage.getItem(SIGMA_KEY) === "true");
+  // Opzioni › Bonus GE (Città/Inventario): valori militari ed efficienza con i moltiplicativi dei GE
+  const [bonusGeTabella, setBonusGeTabella] = useState<boolean>(() => localStorage.getItem(BONUS_GE_KEY) === "true");
   // Colonne Pop/Fel/IQ-Mon-Mat: globali (non per-tab) come Sigma, di default
   // nascoste. Prima erano dentro TabFilters (per-tab); rese globali su
   // richiesta esplicita dell'utente.
@@ -2991,7 +3260,11 @@ export default function App() {
   // prodFilterMode) restano invece dentro TabFilters/DEFAULT_FILTERS: solo
   // la visibilità del pannello è resa globale e persistente, non la
   // selezione dei filtri al suo interno.
-  const [showProdColumns, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
+  const [showProdColumnsPref, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
+  // Catalogo › Grandi Edifici: Spedizioni e Produzioni sempre visibili (utente, 06/11; niente pulsanti nel nastro)
+  const catalogoGeAperto = activeTab === "database" && catalogo === "ge";
+  const showProdColumns = showProdColumnsPref || catalogoGeAperto;
+  const showSpedColumns = showSpedColumnsPref || catalogoGeAperto;
   // (2.0: "Non accelerabili" e "Auto aggiornabili" sono voci a tre stati di
   // TabFilters.tri; come prima non persistenti: ripartono da "tutti".)
   // Lingua della GUI (etichette/tooltip statici): scelta esplicita
@@ -3368,7 +3641,7 @@ export default function App() {
   // allySortValue in compareAllies non richiede chiavi nuove.
   const renderAllyProductionGroupHeader = () => (
     <th className="py-2 px-2 text-center group-header-orange text-orange-400/80 whitespace-nowrap" colSpan={3}>
-      {t("groupProductions", uiLang)}
+      <TitoloGruppo icona={iconProduzioni} testo={t("groupProductions", uiLang)} />
     </th>
   );
   const renderAllyProductionHeaders = (scope: SortScope) => {
@@ -3390,9 +3663,17 @@ export default function App() {
   // renderMilitaryHeaders. Anche questo legge solo state già in scope.
   const renderMilitaryGroupHeaders = (sped: boolean = showSpedColumns) => (
     <>
-      {!showSigmaColumns && <th className="py-2 px-2 text-center group-header-amber text-amber-400/80" colSpan={4}>{t("groupGenerals", uiLang)}</th>}
-      <th className="py-2 px-2 text-center group-header-emerald text-emerald-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGbg", uiLang) : t("groupGbg", uiLang)}</th>
-      {sped && <th className="py-2 px-2 text-center group-header-violet text-violet-400/80" colSpan={4}>{showSigmaColumns ? t("groupGenPlusGe", uiLang) : t("groupGe", uiLang)}</th>}
+      {!showSigmaColumns && <th className="py-2 px-2 text-center group-header-amber text-amber-400/80" colSpan={4}><TitoloGruppo icona={iconSword} testo={t("groupGenerals", uiLang)} /></th>}
+      <th className="py-2 px-2 text-center group-header-emerald text-emerald-400/80" colSpan={4}>
+        {showSigmaColumns
+          ? <><TitoloGruppo icona={iconSword} testo={t("groupGenShort", uiLang)} /> + <TitoloGruppo icona={iconCampi} testo={t("groupGbgShort", uiLang)} /></>
+          : <TitoloGruppo icona={iconCampi} testo={t("groupGbg", uiLang)} />}
+      </th>
+      {sped && <th className="py-2 px-2 text-center group-header-violet text-violet-400/80" colSpan={4}>
+        {showSigmaColumns
+          ? <><TitoloGruppo icona={iconSword} testo={t("groupGenShort", uiLang)} /> + <TitoloGruppo icona={iconSpedizioni} testo={t("groupGeShort", uiLang)} /></>
+          : <TitoloGruppo icona={iconSpedizioni} testo={t("groupGe", uiLang)} />}
+      </th>}
     </>
   );
 
@@ -3486,34 +3767,34 @@ export default function App() {
       case "fel": return b.fel;
       case "eff": return b.currentEff;
       case "ally_level": return 0;
-      case "gen_atk_a": return b.general[0];
-      case "gen_def_a": return b.general[1];
-      case "gen_atk_d": return b.general[2];
-      case "gen_def_d": return b.general[3];
-      case "gbg_atk_a": return b.gbg[0];
-      case "gbg_def_a": return b.gbg[1];
-      case "gbg_atk_d": return b.gbg[2];
-      case "gbg_def_d": return b.gbg[3];
-      case "sped_atk_a": return b.sped[0];
-      case "sped_def_a": return b.sped[1];
-      case "sped_atk_d": return b.sped[2];
-      case "sped_def_d": return b.sped[3];
-      case "sig_gen_campi_atk_a": return b.general[0] + b.gbg[0];
-      case "sig_gen_campi_def_a": return b.general[1] + b.gbg[1];
-      case "sig_gen_campi_atk_d": return b.general[2] + b.gbg[2];
-      case "sig_gen_campi_def_d": return b.general[3] + b.gbg[3];
-      case "sig_gen_sped_atk_a": return b.general[0] + b.sped[0];
-      case "sig_gen_sped_def_a": return b.general[1] + b.sped[1];
-      case "sig_gen_sped_atk_d": return b.general[2] + b.sped[2];
-      case "sig_gen_sped_def_d": return b.general[3] + b.sped[3];
+      case "gen_atk_a": return b.general[0] + moltOrd(b, "all", 0);
+      case "gen_def_a": return b.general[1] + moltOrd(b, "all", 1);
+      case "gen_atk_d": return b.general[2] + moltOrd(b, "all", 2);
+      case "gen_def_d": return b.general[3] + moltOrd(b, "all", 3);
+      case "gbg_atk_a": return b.gbg[0] + moltOrd(b, "battleground", 0);
+      case "gbg_def_a": return b.gbg[1] + moltOrd(b, "battleground", 1);
+      case "gbg_atk_d": return b.gbg[2] + moltOrd(b, "battleground", 2);
+      case "gbg_def_d": return b.gbg[3] + moltOrd(b, "battleground", 3);
+      case "sped_atk_a": return b.sped[0] + moltOrd(b, "guild_expedition", 0);
+      case "sped_def_a": return b.sped[1] + moltOrd(b, "guild_expedition", 1);
+      case "sped_atk_d": return b.sped[2] + moltOrd(b, "guild_expedition", 2);
+      case "sped_def_d": return b.sped[3] + moltOrd(b, "guild_expedition", 3);
+      case "sig_gen_campi_atk_a": return b.general[0] + b.gbg[0] + moltOrd(b, "battleground", 0) + moltOrd(b, "all", 0);
+      case "sig_gen_campi_def_a": return b.general[1] + b.gbg[1] + moltOrd(b, "battleground", 1) + moltOrd(b, "all", 1);
+      case "sig_gen_campi_atk_d": return b.general[2] + b.gbg[2] + moltOrd(b, "battleground", 2) + moltOrd(b, "all", 2);
+      case "sig_gen_campi_def_d": return b.general[3] + b.gbg[3] + moltOrd(b, "battleground", 3) + moltOrd(b, "all", 3);
+      case "sig_gen_sped_atk_a": return b.general[0] + b.sped[0] + moltOrd(b, "guild_expedition", 0) + moltOrd(b, "all", 0);
+      case "sig_gen_sped_def_a": return b.general[1] + b.sped[1] + moltOrd(b, "guild_expedition", 1) + moltOrd(b, "all", 1);
+      case "sig_gen_sped_atk_d": return b.general[2] + b.sped[2] + moltOrd(b, "guild_expedition", 2) + moltOrd(b, "all", 2);
+      case "sig_gen_sped_def_d": return b.general[3] + b.sped[3] + moltOrd(b, "guild_expedition", 3) + moltOrd(b, "all", 3);
       case "iq_mon_b": return b.iqMonB;
       case "iq_mat_b": return b.iqMatB;
       case "iq_mon": return b.iqMon;
       case "iq_mat": return b.iqMat;
-      case "iq_atk_a": return b.iq[0];
-      case "iq_def_a": return b.iq[1];
-      case "iq_atk_d": return b.iq[2];
-      case "iq_def_d": return b.iq[3];
+      case "iq_atk_a": return b.iq[0] + moltOrd(b, "guild_raids", 0);
+      case "iq_def_a": return b.iq[1] + moltOrd(b, "guild_raids", 1);
+      case "iq_atk_d": return b.iq[2] + moltOrd(b, "guild_raids", 2);
+      case "iq_def_d": return b.iq[3] + moltOrd(b, "guild_raids", 3);
       case "iq_beni": return b.iqBeni;
       case "iq_truppe": return b.iqTruppe;
       case "iq_azioni": return b.iqAzioni;
@@ -3550,12 +3831,13 @@ export default function App() {
     localStorage.setItem(SPED_ENABLED_KEY, spedizioniEnabled.toString());
     localStorage.setItem(SPED_ATTACK_KEY, spedizioniAttack.toString());
     localStorage.setItem(SIGMA_KEY, showSigmaColumns.toString());
+    localStorage.setItem(BONUS_GE_KEY, bonusGeTabella.toString());
     localStorage.setItem(POP_COLUMN_KEY, showPopColumn.toString());
     localStorage.setItem(FEL_COLUMN_KEY, showFelColumn.toString());
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
-    localStorage.setItem(PROD_COLUMNS_KEY, showProdColumns.toString());
-    localStorage.setItem(SPED_COLUMNS_KEY, showSpedColumns.toString());
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, showSpedColumns]);
+    localStorage.setItem(PROD_COLUMNS_KEY, showProdColumnsPref.toString());
+    localStorage.setItem(SPED_COLUMNS_KEY, showSpedColumnsPref.toString());
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, bonusGeTabella, showPopColumn, showFelColumn, showIqProdColumns, showProdColumnsPref, showSpedColumnsPref]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -4290,7 +4572,7 @@ export default function App() {
     if (activeTab === "inventario") {
       return showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings;
     }
-    if (catalogo === "ge") return processedGeCatalogo;
+    if (activeTab === "database" && catalogo === "ge") return processedGeCatalogo;
     return processedBuildings;
   }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity, catalogo, processedGeCatalogo]);
 
@@ -4300,6 +4582,67 @@ export default function App() {
   // rifatto dentro il loop di filtro a OGNI battitura nella ricerca; ora dipende
   // solo dai dati che lo influenzano davvero. Ogni elemento porta con sé il
   // proprio `searchName` già minuscolizzato per il match della ricerca.
+  // Opzioni › Bonus GE: % dei moltiplicativi dei GE della città per colonna
+  // (somma dei GE dello stesso tipo): Generali × globali, Campi e Spedizioni ×
+  // modalità + globali, IQ × IQ (utente, 06/11: i Generali solo coi globali)
+  const pctBonusGe = useMemo<ProcessedBuilding["_bonusGe"] | null>(() => {
+    const p = { all: [0, 0, 0, 0], battleground: [0, 0, 0, 0], guild_expedition: [0, 0, 0, 0], guild_raids: [0, 0, 0, 0] } as Record<string, number[]>;
+    for (const gb of processedGreatBuildings) {
+      if (!cityEntityIds.has(gb.cityEntityId)) continue;
+      for (const m of gb.gbMoltiplicativi ?? []) { const d = p[m.modalita]; if (d) for (const i of GB_SLOT_IQ[m.tipo] ?? []) d[i]! += m.valore; }
+    }
+    const r = { gen: p.all!, gbg: somma4(p.battleground, p.all), sped: somma4(p.guild_expedition, p.all), iq: p.guild_raids! };
+    return [...r.gen, ...r.gbg, ...r.sped, ...r.iq].some(v => v) ? r : null;
+  }, [processedGreatBuildings, cityEntityIds]);
+
+  // Totali militari della città per colonna, come il pannello Valori militari
+  // (edifici + fallback + GE + alleati piazzati al livello reale + boost dei GE),
+  // per il contributo dei moltiplicativi dei GE nella scheda Città
+  const totaliMilCitta = useMemo(() => {
+    type K = "general" | "gbg" | "sped" | "iq";
+    const tot: Record<K, number[]> = { general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0] };
+    const somma = (b: Building, n: number) => { for (const k of ["general", "gbg", "sped", "iq"] as K[]) for (let i = 0; i < 4; i++) tot[k][i]! += (b[k][i] ?? 0) * n; };
+    for (const b of BUILDINGS_FROM_CSV) {
+      if (b.isInactive || b.isGreatBuilding || !cityEntityIds.has(b.cityEntityId)) continue;
+      somma(applyEraStats(b), cityEntityIds.get(b.cityEntityId) || 0);
+    }
+    for (const b of fallbackBuildings.values()) if (cityEntityIds.has(b.cityEntityId)) somma(b, cityEntityIds.get(b.cityEntityId) || 0);
+    let boostMil = 0, boostSci = 0;
+    for (const gb of processedGreatBuildings) {
+      if (!cityEntityIds.has(gb.cityEntityId)) continue;
+      somma(gb, 1);
+      for (const m of gb.gbMoltiplicativi ?? []) { if (m.tipo === "military_ally_boost") boostMil += m.valore; else if (m.tipo === "science_ally_boost") boostSci += m.valore; }
+    }
+    for (const imp of importedAllies) {
+      if (!imp.isPlaced || imp.isFragment) continue;
+      const a = ALLIES_BY_ID_RARITY.get(`${imp.allyId}__${imp.rarity}`);
+      if (!a) continue;
+      const s = Allies.getComputedAllyStats(a, imp.level + (a.allyType === "S" ? boostSci : boostMil), INHERITED_ALLIES_MAP);
+      for (let i = 0; i < 4; i++) { tot.general[i]! += s.computedGeneral[i] ?? 0; tot.gbg[i]! += s.computedGbg[i] ?? 0; tot.sped[i]! += s.computedSped[i] ?? 0; tot.iq[i]! += s.computedIq[i] ?? 0; }
+    }
+    return tot;
+  }, [cityEntityIds, applyEraStats, fallbackBuildings, processedGreatBuildings, importedAllies]);
+
+  /** Contributo dei moltiplicativi di un GE (utente, 06/11): Generali = %
+   *  globale × totale Generali; Campi / Spedizioni = % della modalità × (Generali +
+   *  modalità) + % globale × modalità (così il Sifone conta anche su Campi e
+   *  Spedizioni senza contare due volte i Generali); IQ = % IQ × totale IQ. */
+  const contributoGe = useCallback((b: ProcessedBuilding): ProcessedBuilding => {
+    if (!b.isGreatBuilding || !b.gbMoltiplicativi?.length) return b;
+    const m: Record<string, number[]> = { all: [0, 0, 0, 0], battleground: [0, 0, 0, 0], guild_expedition: [0, 0, 0, 0], guild_raids: [0, 0, 0, 0] };
+    for (const x of b.gbMoltiplicativi) { const d = m[x.modalita]; if (d) for (const i of GB_SLOT_IQ[x.tipo] ?? []) d[i]! += x.valore; }
+    const T = totaliMilCitta, r = (v: number) => Math.round(v / 100);
+    const c = {
+      gen: [0, 1, 2, 3].map(i => r(m.all![i]! * T.general[i]!)),
+      gbg: [0, 1, 2, 3].map(i => r(m.battleground![i]! * (T.general[i]! + T.gbg[i]!) + m.all![i]! * T.gbg[i]!)),
+      sped: [0, 1, 2, 3].map(i => r(m.guild_expedition![i]! * (T.general[i]! + T.sped[i]!) + m.all![i]! * T.sped[i]!)),
+      iq: [0, 1, 2, 3].map(i => r(m.guild_raids![i]! * T.iq[i]!)),
+    };
+    if (![...c.gen, ...c.gbg, ...c.sped, ...c.iq].some(v => v)) return b;
+    const nb = { ...b, _contribGe: c };
+    return { ...nb, currentEff: effConContributo(nb, weights) };
+  }, [totaliMilCitta, weights]);
+
   const eraAdjustedSource = useMemo<ProcessedBuilding[]>(() => {
     const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
     if (!isGameTab) {
@@ -4310,7 +4653,8 @@ export default function App() {
         return searchName === b.searchName ? b : { ...b, searchName };
       });
     }
-    return filterSourceBuildings.map(b => {
+    const pct = bonusGeTabella ? pctBonusGe : null;
+    const base = filterSourceBuildings.map(b => {
       const overridden = applyEraStats(b);
       const gameName = b.cityEntityId ? gameNames.get(b.cityEntityId) : undefined;
       const resolvedName = gameName ?? displayName(b.cityEntityId, b.name, gameLang);
@@ -4326,7 +4670,10 @@ export default function App() {
       const searchName = resolvedName.toLowerCase();
       return searchName === b.searchName ? b : { ...b, searchName };
     });
-  }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights]);
+    // scheda Città: contributo dei moltiplicativi dei GE (prima del Bonus GE, sui valori base)
+    const conContributo = activeTab === "propria_citta" ? base.map(contributoGe) : base;
+    return pct ? conContributo.map(b => conBonusGe(b, pct, weights) ?? b) : conContributo;
+  }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights, bonusGeTabella, pctBonusGe, contributoGe]);
 
   const filteredBuildings = useMemo(() => {
     const sourceBuildings: ProcessedBuilding[] = eraAdjustedSource;
@@ -4396,7 +4743,8 @@ export default function App() {
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
       // Catalogo › Grandi Edifici: solo la ricerca (niente filtri né Nascondi /
       // Mostra solo, che restano impostati per il catalogo Edifici)
-      if (catalogo === "ge") {
+      // (solo nel Database: il catalogo scelto resta "ge" anche andando in Città/Inventario)
+      if (activeTab === "database" && catalogo === "ge") {
         if (tierGe === "tutti" || datiGe?.edifici[b.cityEntityId]?.tierMax === tierGe) filtered.push(b);
         continue;
       }
@@ -4573,6 +4921,8 @@ export default function App() {
     // lo sticky: meglio due segnali che uno).
     showSigmaColumns,
     showIqProdColumns,
+    // (catalogo dei GE: colonne diverse)
+    catalogo,
   ]);
 
   // Verticale su mobile: niente sticky sulla colonna nome anche se lo
@@ -4683,6 +5033,18 @@ export default function App() {
 
 
 
+  // Boost agli alleati dei GE della città (Prestige, tier Oro): livelli in più
+  // per tutti gli alleati militari (Colosseo) e scienza (Tempio del Loto), anche
+  // oltre il 100 (utente: +10 = un alleato al 100 vale come al 110)
+  const boostAlleati = useMemo(() => {
+    let militari = 0, scienza = 0;
+    for (const b of processedGreatBuildings) for (const m of b.gbMoltiplicativi ?? []) {
+      if (m.tipo === "military_ally_boost") militari += m.valore;
+      else if (m.tipo === "science_ally_boost") scienza += m.valore;
+    }
+    return { militari, scienza };
+  }, [processedGreatBuildings]);
+
   const processedImportedAllies = useMemo(() => {
     if (importedAllies.length === 0) return [];
 
@@ -4697,6 +5059,8 @@ export default function App() {
         fragmentCount: number;
         currentEff: number;
         placedInEntityId?: string;
+        /** Livelli in più dai GE (Colosseo / Tempio del Loto), già nelle statistiche. */
+        boostLivello: number;
       }
     > = [];
     for (const imp of importedAllies) {
@@ -4716,7 +5080,9 @@ export default function App() {
 
       // Opzione "Livello 100" (2.0): statistiche come a livello massimo.
       const livello = alleatiLivello100 ? ALLY_DB_LEVEL : imp.level;
-      const { computedGeneral, computedGbg, computedSped, computedIq, computedPf, computedBeni, computedBeniP } = Allies.getComputedAllyStats(csvAlly, livello, INHERITED_ALLIES_MAP);
+      // statistiche al livello + boost dei GE (Colosseo / Tempio del Loto)
+      const boost = csvAlly.allyType === "S" ? boostAlleati.scienza : boostAlleati.militari;
+      const { computedGeneral, computedGbg, computedSped, computedIq, computedPf, computedBeni, computedBeniP } = Allies.getComputedAllyStats(csvAlly, livello + boost, INHERITED_ALLIES_MAP);
 
       // Inline efficiency — avoids second getComputedAllyStats call inside calculateAllyEfficiency
       const currentEff =
@@ -4748,6 +5114,7 @@ export default function App() {
         ...csvAlly,
         jsonId: imp.jsonId,
         level: livello,
+        boostLivello: boost,
         isPlaced: imp.isPlaced,
         isFragment,
         fragmentCount: imp.fragmentCount ?? 0,
@@ -4782,7 +5149,7 @@ export default function App() {
     });
 
     return result;
-  }, [importedAllies, deferredSearch, sortCriteriaAlleatiOwn, weights, allyRarityFilters, mostraMilitari, mostraScienza, mostraFrammentiAlleati, alleatiLivello100, gameLang]);
+  }, [importedAllies, deferredSearch, sortCriteriaAlleatiOwn, weights, allyRarityFilters, mostraMilitari, mostraScienza, mostraFrammentiAlleati, alleatiLivello100, gameLang, boostAlleati]);
 
   // Larghezza minima della tabella edifici in base alle colonne attive.
   // Con table-fixed il browser può comprimere le colonne sotto il loro min-w
@@ -5029,16 +5396,26 @@ export default function App() {
   // delle col), ma tenere la somma esatta protegge anche il breakpoint
   // buildingTableNeedsScroll da falsi positivi. Quando si tocca il colgroup
   // (vedi invariante #12 in docs/SKILL.md), aggiornare anche qui.
+  // Catalogo › Grandi Edifici: niente colonna dei limitati (nessun GE è a tempo)
+  const senzaLimitati = activeTab === "database" && catalogo === "ge";
+  // ...e niente colonne delle Incursioni (nessun GE ha bonus IQ da colonna:
+  // quelli Oro sono moltiplicativi, nel tooltip ×) né il "IQ mon/mat" del nastro
+  // (stesso flag: niente progetti, frammenti e kit — le ultime 8 colonne delle
+  // Produzioni, BP/FSP/TPM/TPB/aiuti/1-up/rinnovo/immagazzina — che nessun GE produce)
+  const senzaIq = senzaLimitati;
   const tableMinWidth = useMemo(() => {
-    const base = 32 + 14 + 260 + 32 + 50 + 48 + 44; // checkbox+occhio+nome+❔+eff+size+road
-    const time = 50; // colonna ⏱ sempre visibile (2.0)
+    const base = (senzaLimitati ? 26 : 32 + 14) + 320 + /* nome: 320 (era 260, utente 06/11: GE troncati) */ (senzaLimitati ? 56 : 32) + 50 + 48 + 44; // checkbox+occhio+nome+❔ (BONUS da 56 nel catalogo dei GE: icone da 24 px)+eff+size+road
+    const time = senzaLimitati ? 0 : 50; // colonna ⏱ (2.0; non nel catalogo dei GE)
     const pop = showPopColumn ? 66 : 0;
     const fel = showFelColumn ? 66 : 0;
     const milCols = showSigmaColumns ? (showSpedColumns ? 8 : 4) : (showSpedColumns ? 12 : 8); // gen+gbg+(sped) | sig-gc+(sig-gs)
-    const iq = (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
-    const prod = showProdColumns ? 23 * 36 : 0; // Mon+Mat+Med + le 20 colonne esistenti (incl. BeniSp, BeniSpB)
+    const iq = senzaIq ? 4 * 42 : (showIqProdColumns ? 12 : 8) * 42; // (IQmonB/IQmatB/IQmon/IQmat +) IQAtk/Def + IQBeni+IQTruppe+IQAzioni + IQCap
+    // (catalogo dei GE: l'ultima colonna, i beni di gilda, è da 56 px: un valore
+    // lungo come "15.555" che sbordava dal bordo destro faceva credere alla
+    // tabella di dover scorrere, col nome bloccato a 260 px; le altre restano da 36)
+    const prod = showProdColumns ? (senzaIq ? 14 * 36 + 56 : 23 * 36) : 0; // Mon+Mat+Med + le 20 colonne esistenti (incl. BeniSp, BeniSpB)
     return base + time + pop + fel + milCols * 42 + iq + prod;
-  }, [showSigmaColumns, showSpedColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns]);
+  }, [showSigmaColumns, showSpedColumns, showPopColumn, showFelColumn, showIqProdColumns, showProdColumns, senzaLimitati, senzaIq]);
 
   // Sticky solo quando serve DAVVERO lo scroll orizzontale (scrollWidth >
   // clientWidth, stesso confronto già usato per la scrollbar flottante
@@ -5443,44 +5820,47 @@ export default function App() {
     const getAllySum = (idx: number, key: "computedGeneral" | "computedGbg" | "computedSped" | "computedIq") =>
       placedAllies.reduce((s, a) => { const arr = a[key] as unknown as number[] | undefined; return s + (arr ? arr[idx] : 0); }, 0);
 
+    // GE (Prestige): % moltiplicativi per modalità e slot (Att/Dif rosso, Att/Dif blu)
+    const moltGe = (modalita: string, slot: number) => filteredGBs.reduce((s, gb) => s
+      + (gb.gbMoltiplicativi ?? []).reduce((t, m) => t + (m.modalita === modalita && GB_SLOT_IQ[m.tipo]?.includes(slot) ? m.valore : 0), 0), 0);
     const statsRows = [
-      { label: t("statRowGlobal", uiLang), color: "red" as const,
+      { label: t("statRowGlobal", uiLang), color: "red" as const, modalita: "all",
         bA: getBuildingSum(0, "general"), bD: getBuildingSum(1, "general"),
         gA: getGESum(0, "general"), gD: getGESum(1, "general"),
         aA: getAllySum(0, "computedGeneral"), aD: getAllySum(1, "computedGeneral") },
-      { label: t("statRowGlobal", uiLang), color: "blue" as const,
+      { label: t("statRowGlobal", uiLang), color: "blue" as const, modalita: "all",
         bA: getBuildingSum(2, "general"), bD: getBuildingSum(3, "general"),
         gA: getGESum(2, "general"), gD: getGESum(3, "general"),
         aA: getAllySum(2, "computedGeneral"), aD: getAllySum(3, "computedGeneral") },
-      { label: t("sectionGbg", uiLang), color: "red" as const,
+      { label: t("sectionGbg", uiLang), color: "red" as const, modalita: "battleground",
         bA: getBuildingSum(0, "gbg"), bD: getBuildingSum(1, "gbg"),
         gA: getGESum(0, "gbg"), gD: getGESum(1, "gbg"),
         aA: getAllySum(0, "computedGbg"), aD: getAllySum(1, "computedGbg"),
         extraA: getBuildingSum(0, "general") + getGESum(0, "general") + getAllySum(0, "computedGeneral"),
         extraD: getBuildingSum(1, "general") + getGESum(1, "general") + getAllySum(1, "computedGeneral") },
-      { label: t("sectionGbg", uiLang), color: "blue" as const,
+      { label: t("sectionGbg", uiLang), color: "blue" as const, modalita: "battleground",
         bA: getBuildingSum(2, "gbg"), bD: getBuildingSum(3, "gbg"),
         gA: getGESum(2, "gbg"), gD: getGESum(3, "gbg"),
         aA: getAllySum(2, "computedGbg"), aD: getAllySum(3, "computedGbg"),
         extraA: getBuildingSum(2, "general") + getGESum(2, "general") + getAllySum(2, "computedGeneral"),
         extraD: getBuildingSum(3, "general") + getGESum(3, "general") + getAllySum(3, "computedGeneral") },
-      { label: t("sectionGe", uiLang), color: "red" as const,
+      { label: t("sectionGe", uiLang), color: "red" as const, modalita: "guild_expedition",
         bA: getBuildingSum(0, "sped"), bD: getBuildingSum(1, "sped"),
         gA: getGESum(0, "sped"), gD: getGESum(1, "sped"),
         aA: getAllySum(0, "computedSped"), aD: getAllySum(1, "computedSped"),
         extraA: getBuildingSum(0, "general") + getGESum(0, "general") + getAllySum(0, "computedGeneral"),
         extraD: getBuildingSum(1, "general") + getGESum(1, "general") + getAllySum(1, "computedGeneral") },
-      { label: t("sectionGe", uiLang), color: "blue" as const,
+      { label: t("sectionGe", uiLang), color: "blue" as const, modalita: "guild_expedition",
         bA: getBuildingSum(2, "sped"), bD: getBuildingSum(3, "sped"),
         gA: getGESum(2, "sped"), gD: getGESum(3, "sped"),
         aA: getAllySum(2, "computedSped"), aD: getAllySum(3, "computedSped"),
         extraA: getBuildingSum(2, "general") + getGESum(2, "general") + getAllySum(2, "computedGeneral"),
         extraD: getBuildingSum(3, "general") + getGESum(3, "general") + getAllySum(3, "computedGeneral") },
-      { label: t("sectionQi", uiLang), color: "red" as const,
+      { label: t("sectionQi", uiLang), color: "red" as const, modalita: "guild_raids",
         bA: getBuildingSum(0, "iq"), bD: getBuildingSum(1, "iq"),
         gA: getGESum(0, "iq"), gD: getGESum(1, "iq"),
         aA: getAllySum(0, "computedIq"), aD: getAllySum(1, "computedIq") },
-      { label: t("sectionQi", uiLang), color: "blue" as const,
+      { label: t("sectionQi", uiLang), color: "blue" as const, modalita: "guild_raids",
         bA: getBuildingSum(2, "iq"), bD: getBuildingSum(3, "iq"),
         gA: getGESum(2, "iq"), gD: getGESum(3, "iq"),
         aA: getAllySum(2, "computedIq"), aD: getAllySum(3, "computedIq") },
@@ -5655,6 +6035,8 @@ export default function App() {
                       <th className="py-1 px-1 text-right">{t("statColFromGB", uiLang)}</th>
                       <th className="py-1 px-1 text-right">{t("statColFromAllies", uiLang)}</th>
                       <th className="py-1 px-1 text-right">{t("statColTotal", uiLang)}</th>
+                      <th className="py-1 px-1 text-right" title={t("statColGbBonusTitle", uiLang)}>{t("statColGbBonus", uiLang)}</th>
+                      <th className="py-1 px-1 text-right">{t("statColTotalWithBonus", uiLang)}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5664,13 +6046,26 @@ export default function App() {
                       const totalA = row.bA + row.gA + row.aA + extraA;
                       const totalD = row.bD + row.gD + row.aD + extraD;
                       const colorClass = row.color === "red" ? "text-red-400" : "text-blue-400";
+                      // Bonus moltiplicativi dei GE sul totale: quelli della modalità
+                      // più quelli globali (tranne nelle IQ, dove i boost globali della
+                      // città non contano), sommati fra loro (ipotesi: additivi)
+                      const s0 = row.color === "red" ? 0 : 2;
+                      const pct = (slot: number) => moltGe(row.modalita, slot) + (row.modalita !== "all" && row.modalita !== "guild_raids" ? moltGe("all", slot) : 0);
+                      const pA = pct(s0), pD = pct(s0 + 1);
+                      const bonA = Math.round(totalA * pA / 100), bonD = Math.round(totalD * pD / 100);
+                      // come nel gioco: "36,7k / 34,1k" (IQ: numeri piccoli, interi)
+                      const fm = (a: number, d: number) => row.modalita === "guild_raids" ? `${formatInt(a)} / ${formatInt(d)}` : `${formatMilK(a)} / ${formatMilK(d)}`;
                       return (
                         <tr key={idx} className="border-b border-slate-800/50 last:border-0">
                           <td className={`py-0.5 px-1 font-semibold ${colorClass}`}>{row.label}</td>
-                          <td className="py-0.5 px-1 text-right font-mono">{formatInt(row.bA)}/{formatInt(row.bD)}</td>
-                          <td className="py-0.5 px-1 text-right font-mono text-amber-400/80">{formatInt(row.gA)}/{formatInt(row.gD)}</td>
-                          <td className="py-0.5 px-1 text-right font-mono text-slate-400">{formatInt(row.aA)}/{formatInt(row.aD)}</td>
-                          <td className={`py-0.5 px-1 text-right font-mono font-bold ${colorClass}`}>{formatInt(totalA)}/{formatInt(totalD)}</td>
+                          <td className="py-0.5 px-1 text-right font-mono">{fm(row.bA, row.bD)}</td>
+                          <td className="py-0.5 px-1 text-right font-mono text-amber-400/80">{fm(row.gA, row.gD)}</td>
+                          <td className="py-0.5 px-1 text-right font-mono text-slate-400">{fm(row.aA, row.aD)}</td>
+                          <td className={`py-0.5 px-1 text-right font-mono font-bold cursor-help ${colorClass}`} title={`${formatInt(totalA)} / ${formatInt(totalD)}`}>{fm(totalA, totalD)}</td>
+                          <td className="py-0.5 px-1 text-right font-mono text-amber-300" title={t("statGbBonusCellTitle", uiLang, pA, pD)}>
+                            {pA || pD ? <>{fm(bonA, bonD)} <span className="text-[10px] text-amber-300/70">(+{pA}%/+{pD}%)</span></> : <span className="text-slate-600">{fm(0, 0)}</span>}
+                          </td>
+                          <td className={`py-0.5 px-1 text-right font-mono font-bold cursor-help ${colorClass}`} title={`${formatInt(totalA + bonA)} / ${formatInt(totalD + bonD)}`}>{fm(totalA + bonA, totalD + bonD)}</td>
                         </tr>
                       );
                     })}
@@ -6031,6 +6426,7 @@ export default function App() {
       };
     })(),
     tri: { stati: currentFilters.tri, gira: giraTri },
+    bonusGe: { attivo: bonusGeTabella, cambia: () => setBonusGeTabella(v => !v), disponibile: !!pctBonusGe },
     esporta: {
       n: selectedIds.size, onClick: exportSelectedAsCsv,
       titolo: selectedIds.size === 0 ? t("exportSelectFirstTitle", uiLang) : t("exportSelectedCsvTitle", uiLang, selectedIds.size),
@@ -6051,12 +6447,12 @@ export default function App() {
       },
     },
     vista: {
-      dettaglioProd: { attivo: showProdColumns, cambia: () => setShowProdColumns(v => !v) },
+      dettaglioProd: { attivo: showProdColumnsPref, cambia: () => setShowProdColumns(v => !v) },
       somme: { attivo: showSigmaColumns, cambia: () => setShowSigmaColumns(v => !v) },
       iqProd: { attivo: showIqProdColumns, cambia: () => setShowIqProdColumns(v => !v) },
       pop: { attivo: showPopColumn, cambia: () => setShowPopColumn(v => !v) },
       fel: { attivo: showFelColumn, cambia: () => setShowFelColumn(v => !v) },
-      sped: { attivo: showSpedColumns, cambia: () => setShowSpedColumns(v => !v) },
+      sped: { attivo: showSpedColumnsPref, cambia: () => setShowSpedColumns(v => !v) },
     },
     spedNeiPesi: spedizioniEnabled,
     pesi: {
@@ -6440,13 +6836,13 @@ export default function App() {
                   onScroll={() => syncBuildingTableScroll("table")} {...guidaScroll("table")}
                   className="overflow-x-auto"
                 >
-                  <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}`} style={{ minWidth: tableMinWidth }}>
+                  <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}${senzaLimitati ? " senza-selezione" : ""}`} style={{ minWidth: tableMinWidth }}>
                     <colgroup>
-                      <col className="w-[32px]" />
-                      <col className="w-[14px]" />
-                      <col className={buildingTableNeedsScroll ? "w-[260px]" : "w-full min-w-[260px]"} />
-                      <col className="w-[50px]" />
-                      <col className="w-[32px]" />
+                      {!senzaLimitati && <col className="w-[32px]" />}
+                      <col className={senzaLimitati ? "w-[26px]" : "w-[14px]"} />
+                      <col className={buildingTableNeedsScroll ? "w-[320px]" : "w-full min-w-[320px]"} />
+                      {!senzaLimitati && <col className="w-[50px]" />}
+                      <col className={senzaLimitati ? "w-[56px]" : "w-[32px]"} />
                       <col className="w-[50px]" />
                       <col className="w-[48px]" />
                       <col className="w-[44px]" />
@@ -6458,34 +6854,36 @@ export default function App() {
                        {!showSigmaColumns && showSpedColumns && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
                        {showSigmaColumns && showSpedColumns && Array.from({ length: 4 }).map((_, i) => <col key={`sig-gs-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 4 }).map((_, i) => <col key={`iq-ad-${i}`} className="w-[42px]" />)}
+                       {!senzaIq && <>
                        {showIqProdColumns && Array.from({ length: 4 }).map((_, i) => <col key={`iq-mm-${i}`} className="w-[42px]" />)}
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
                        <col className="w-[42px]" />
-                       {showProdColumns && Array.from({ length: 23 }).map((_, i) => <col key={`prod-${i}`} className="w-[36px]" />)}
+                       </>}
+                       {showProdColumns && Array.from({ length: senzaIq ? 15 : 23 }).map((_, i) => <col key={`prod-${i}`} className={senzaIq && i === 14 ? "w-[56px]" : "w-[36px]"} />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                         {/* Sticky + sfondo opaco vivono in index.css (th-export-summary /
                             th-name-summary, scoped sotto .has-sticky-name): niente più stili
                             inline condizionali qui. */}
-                        <th className="th-export-summary py-1 px-1 text-center" colSpan={2}>
+                        <th className="th-export-summary py-1 px-1 text-center" colSpan={senzaLimitati ? 1 : 2}>
                           {/* 2.0: Export degli edifici selezionati → nastro, Opzioni. */}
                         </th>
                         <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
-                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : processedBuildings.length}</span>
+                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : catalogo === "ge" ? processedGeCatalogo.length : processedBuildings.length}</span>
                         </th>
-                        <th className="py-2 px-0" colSpan={5 + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
+                        <th className="py-2 px-0" colSpan={(senzaLimitati ? 4 : 5) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
                             <div style={{ minWidth: "82px" }} />
                             {/* 2.0: l'efficienza minima è nel nastro (Filtri). */}
                           </div>
                         </th>
                         {renderMilitaryGroupHeaders()}
-                        <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={showIqProdColumns ? 12 : 8}>{t("groupIq", uiLang)}</th>
+                        <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={senzaIq ? 4 : showIqProdColumns ? 12 : 8}><TitoloGruppo icona={iconIQ} testo={t("groupIq", uiLang)} /></th>
                         {showProdColumns && (
-                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={23}>
+                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={senzaIq ? 15 : 23}>
                             {/* 2.0: Nascondi 🚫/^ sono nel nastro (Visualizza: Non accelerabili, Auto aggiornabili). */}
-                            {t("groupProductions", uiLang)}
+                            <TitoloGruppo icona={iconProduzioni} testo={t("groupProductions", uiLang)} />
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
                                 salta applyEraStats (isGameTab è falso), quindi i valori sono
                                 SEMPRE quelli del CSV statico all'era MASSIMA (BOOST_ERA/
@@ -6508,7 +6906,8 @@ export default function App() {
                                 da cityEntities) ma è un'eccezione più unica che rara, non la
                                 norma: non usare più "Inventario ha valori misti" come premessa
                                 di design altrove nel codice. */}
-                            {activeTab === "database" && (
+                            {/* (catalogo dei GE: le produzioni dei GE non dipendono dall'era) */}
+                            {activeTab === "database" && catalogo !== "ge" && (
                               <span className="ml-1.5 font-normal normal-case text-orange-300/70">
                                 ({t("prodValuesOfEra", uiLang, ageName(FALLBACK_ERA, uiLang))})
                               </span>
@@ -6522,7 +6921,7 @@ export default function App() {
                         )}
                       </tr>
                       <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <th className="cell-checkbox py-0.5 px-1 w-[32px] text-center">
+                        {!senzaLimitati && <th className="cell-checkbox py-0.5 px-1 w-[32px] text-center">
                           {(() => {
                             const allSelected = filteredBuildings.length > 0 && filteredBuildings.every(b => selectedIds.has(b.id));
                             return (
@@ -6552,7 +6951,7 @@ export default function App() {
                               </label>
                             );
                           })()}
-                        </th>
+                        </th>}
                         <th className="cell-eye py-0.5 px-1 text-center w-[14px]"></th>
                         {/* className STATICA, senza larghezze condizionali: la larghezza della
                             colonna nome è già interamente governata dal <col> del colgroup
@@ -6565,8 +6964,8 @@ export default function App() {
                             repaint dello sfondo su Chrome (solo questo th, a caso). */}
                         <SortableHeader label={t("colBuilding", uiLang)} sortKey="name" onClick={() => handleSort("name")} active={sortBy === "name"} order={sortOrder} className="cell-name py-0.5 px-2 text-left" />
                         
-                        <th className="pt-1 pb-0 px-1 text-center w-[50px]" title={t("r2Limited", uiLang)}><TableHeaderIcon src={iconLimitati} alt={t("r2Limited", uiLang)} spostata={false} /></th>
-                        <th className="py-0.5 px-1 text-center w-[32px]">❔</th>
+                        {!senzaLimitati && <th className="pt-1 pb-0 px-1 text-center w-[50px]" title={t("r2Limited", uiLang)}><TableHeaderIcon src={iconLimitati} alt={t("r2Limited", uiLang)} spostata={false} /></th>}
+                        <th className={`py-0.5 px-1 text-center ${senzaLimitati ? "w-[56px]" : "w-[32px]"}`}>{senzaLimitati ? "BONUS" : "❔"}</th>
                         <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSort("eff")} active={sortBy === "eff"} order={sortOrder} className="th-eff" />
                         <SortableHeader label={<TableHeaderIcon src={iconSize} alt={t("colSize", uiLang)} />} sortKey="size" onClick={() => handleSort("size")} active={sortBy === "size"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[48px] section-divider" title={t("colSize", uiLang)} />
                         <SortableHeader label={<TableHeaderIcon src={iconRoad} alt={t("colRoad", uiLang)} />} sortKey="road" onClick={() => handleSort("road")} active={sortBy === "road"} order={sortOrder} className="pt-1 pb-0 px-1.5 text-center w-[44px]" title={t("colRoad", uiLang)} />
@@ -6583,6 +6982,7 @@ export default function App() {
                         <SortableHeader label={<TableHeaderIcon src={iconIQDefA} alt={boostTitle(uiLang, "def", "red", t("sectionQi", uiLang))} />} sortKey="iq_def_a" onClick={() => handleSort("iq_def_a")} active={sortBy === "iq_def_a"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionQi", uiLang))} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionQi", uiLang))} />} sortKey="iq_atk_d" onClick={() => handleSort("iq_atk_d")} active={sortBy === "iq_atk_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionQi", uiLang))} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionQi", uiLang))} />} sortKey="iq_def_d" onClick={() => handleSort("iq_def_d")} active={sortBy === "iq_def_d"} order={sortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionQi", uiLang))} />
+                        {!senzaIq && <>
                         {showIqProdColumns && (
                           <>
                             <SortableHeader label={<TableHeaderIcon src={iconIQMon} alt={t("iqCoinsStart", uiLang)} />} sortKey="iq_mon" onClick={() => handleSort("iq_mon")} active={sortBy === "iq_mon"} order={sortOrder} className="th-col border-l border-slate-800" title={t("iqCoinsStart", uiLang)} />
@@ -6595,6 +6995,7 @@ export default function App() {
                         <SortableHeader label={<TableHeaderIcon src={iconIQTruppe} alt={t("iqUnits", uiLang)} />} sortKey="iq_truppe" onClick={() => handleSort("iq_truppe")} active={sortBy === "iq_truppe"} order={sortOrder} className="th-col" title={t("iqUnits", uiLang)} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQAzioni} alt={t("iqActions", uiLang)} />} sortKey="iq_azioni" onClick={() => handleSort("iq_azioni")} active={sortBy === "iq_azioni"} order={sortOrder} className="th-col" title={t("iqActions", uiLang)} />
                         <SortableHeader label={<TableHeaderIcon src={iconIQCap} alt={t("iqCap", uiLang)} />} sortKey="iq_cap" onClick={() => handleSort("iq_cap")} active={sortBy === "iq_cap"} order={sortOrder} className="th-col" title={t("iqCap", uiLang)} />
+                        </>}
                         {showProdColumns && (
                           <>
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMon} alt={t("prodCoins", uiLang)} />} sortKey="mon" onClick={() => handleSort("mon")} active={sortBy === "mon"} order={sortOrder} className="th-col section-divider" title={t("prodCoins", uiLang)} />
@@ -6612,6 +7013,7 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} />} sortKey="benisp" onClick={() => handleSort("benisp")} active={sortBy === "benisp"} order={sortOrder} className="th-col" title={t("prodGoodsSpecial", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} />} sortKey="benispb" onClick={() => handleSort("benispb")} active={sortBy === "benispb"} order={sortOrder} className="th-col" title={t("prodGoodsSpecialBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
+                            {!senzaIq && <>
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFSP} alt={t("prodRushSpecial", uiLang)} />} sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col" title={t("prodRushSpecial", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTPM} alt={t("prodRushMaterials", uiLang)} />} sortKey="tpm" onClick={() => handleSort("tpm")} active={sortBy === "tpm"} order={sortOrder} className="th-col" title={t("prodRushMaterials", uiLang)} />
@@ -6620,6 +7022,7 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconOneUp} alt={t("prodOneUpKit", uiLang)} />} sortKey="mod" onClick={() => handleSort("mod")} active={sortBy === "mod"} order={sortOrder} className="th-col text-sm" title={t("prodOneUpKit", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconRinn} alt={t("prodRenovationKit", uiLang)} />} sortKey="rin" onClick={() => handleSort("rin")} active={sortBy === "rin"} order={sortOrder} className="th-col text-sm" title={t("prodRenovationKit", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconImm} alt={t("prodStoreBuilding", uiLang)} />} sortKey="imm" onClick={() => handleSort("imm")} active={sortBy === "imm"} order={sortOrder} className="th-col text-sm" title={t("prodStoreBuilding", uiLang)} />
+                            </>}
                           </>
                         )}
                       </tr>
@@ -6630,6 +7033,8 @@ export default function App() {
                           key={b.id}
                           b={b}
                           isEven={rowIndex % 2 === 1}
+                          senzaLimitati={senzaLimitati}
+                          senzaIq={senzaIq}
                           activeTab={activeTab}
                           uiLang={uiLang}
                           gameLang={gameLang}
@@ -6710,7 +7115,7 @@ export default function App() {
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>
-                            <td colSpan={28 - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? 23 : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                            <td colSpan={28 - (senzaLimitati ? 1 : 0) - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) - (senzaIq ? (showIqProdColumns ? 8 : 4) : 0) - (senzaLimitati ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? (senzaIq ? 15 : 23) : 0)} className="text-center py-12 text-slate-400 font-semibold">
                               <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
                                 <span>{emptyMessagePrefix}</span>
                                 {/* SOLO riferimento visivo al pulsante reale della toolbar
@@ -6767,6 +7172,7 @@ export default function App() {
                 byIdRarity={ALLIES_BY_ID_RARITY}
                 inherited={INHERITED_ALLIES_MAP}
                 weights={weights}
+                boostLivelli={boostAlleati.militari}
                 resources={playerResources}
                 uiLang={uiLang}
                 gameLang={gameLang}
@@ -6780,7 +7186,7 @@ export default function App() {
             )}
             {!alleatiDaDb && mostraPergamene && playerResources && (
               <PannelloPergamene owned={importedAllies} byIdRarity={ALLIES_BY_ID_RARITY} inherited={INHERITED_ALLIES_MAP} weights={weights}
-                pergamene={playerResources[PERGAMENE_RESOURCE] ?? 0} uiLang={uiLang} gameLang={gameLang} allyName={allyName}
+                pergamene={playerResources[PERGAMENE_RESOURCE] ?? 0} boostLivelli={boostAlleati.militari} uiLang={uiLang} gameLang={gameLang} allyName={allyName}
                 groupHeaders={renderMilitaryGroupHeaders(true)} statHeaders={renderMilitaryIconHeaders(true)}
                 renderBoostCells={(g, c, sp) => (
                   <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled uiLang={uiLang} segno />
@@ -6864,6 +7270,10 @@ export default function App() {
                               <span className="inline-block w-12 rounded border border-slate-700 bg-slate-950/70 px-1 py-0.5 text-center font-mono text-sm text-slate-400">
                                 {a.level}
                               </span>
+                            )}
+                            {/* + livelli dei GE (Colosseo / Tempio del Loto): statistiche calcolate al livello più questo */}
+                            {!a.isFragment && a.boostLivello > 0 && (
+                              <span className="ml-1 font-mono text-[12px] font-bold text-amber-300" title={t("allyBoostLevelTitle", uiLang, a.boostLivello, a.level + a.boostLivello)}>+{a.boostLivello}</span>
                             )}
                           </td>
                           <td className="cell-eff">

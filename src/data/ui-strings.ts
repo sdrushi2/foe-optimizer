@@ -123,6 +123,124 @@ const UI_STRINGS = {
     it: "Statistiche dei Grandi Edifici al livello scelto: i soli livelli noti dai dati del gioco (fra due livelli la crescita non è lineare). I GE solo Rame si fermano al 200: dal 201 in su mostrano i valori del 200.",
     en: "Great Building stats at the chosen level: only the levels known from the game data (growth between two levels is not linear). Copper-only GBs stop at 200: from 201 up they show the level 200 values.",
   },
+  gbRelicsTitle: {
+    it: (p: number, r: number) => {
+      const ass = (p * r / 100).toLocaleString("it-IT", { maximumFractionDigits: 2 });
+      return `Reliquie nelle Spedizioni di gilda (dopo ogni incontro risolto):\n• ${p}% di probabilità di trovare una reliquia nascosta sulla mappa\n• se la trovi, ${r}% che sia rara (giada); altrimenti è comune o non comune\n• in tutto: ${ass}% di trovare una reliquia rara a ogni incontro`;
+    },
+    en: (p: number, r: number) => {
+      const ass = (p * r / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });
+      return `Relics in Guild Expeditions (after each solved encounter):\n• ${p}% chance to find a relic hidden on the map\n• if you find one, ${r}% chance it is rare (jade); otherwise it is common or uncommon\n• overall: ${ass}% chance of a rare relic per encounter`;
+    },
+  },
+  gbCritCopperTitle: {
+    it: (v: number) => `Colpo critico (tier Rame): ${v}% di probabilità che una tua unità infligga il 150% del danno quando colpisce un'unità nemica della sua stessa era.\nVale in tutte le battaglie tranne Arena PvP, Incursioni quantiche e Insediamento egizio.`,
+    en: (v: number) => `Critical hit (Copper tier): ${v}% chance that one of your units deals 150% damage when it hits an enemy unit of its same age.\nApplies to all battles except the PvP Arena, Quantum Incursions and the Egyptian settlement.`,
+  },
+  gbCritGoldTitle: {
+    it: (v: number) => `Colpo critico potenziato (tier Oro): ${v}% di probabilità che una tua unità infligga il 150% del danno quando colpisce un'unità nemica di un'era diversa dalla sua (il Rame vale solo per la stessa era).\nNon vale per i Furfanti.`,
+    en: (v: number) => `Enhanced critical hit (Gold tier): ${v}% chance that one of your units deals 150% damage when it hits an enemy unit of a different age from its own (Copper only covers the same age).\nDoes not apply to Rogues.`,
+  },
+  gbRepelTitle: {
+    it: (p: number, n: number) => `Respingi saccheggi: quando un altro giocatore che ti ha sconfitto prova a saccheggiare un tuo edificio, ${p}% di probabilità che il saccheggio venga respinto.${n ? `\nVale per ${n === 1 ? "1 tentativo" : `${n} tentativi`} di saccheggio; il contatore si ricarica a ogni raccolta della Torre (di solito ogni 24 ore, oppure subito quando la fai salire di livello).` : ""}`,
+    en: (p: number, n: number) => `Repel plunder: when another player who defeated you tries to plunder one of your buildings, ${p}% chance that the plunder is repelled.${n ? `\nCovers ${n === 1 ? "1 plunder attempt" : `${n} plunder attempts`}; the counter refills at every collection of the Tower (usually every 24 hours, or right away when you level it up).` : ""}`,
+  },
+  gbHelpCopperTitle: {
+    it: (v: number) => `Mani amiche (tier Rame): ogni volta che aiuti un altro giocatore, ${v}% di probabilità di ricevere anche una risorsa casuale (monete, materiali, beni, medaglie o diamanti).`,
+    en: (v: number) => `Helping hands (Copper tier): every time you aid another player, ${v}% chance to also receive a random resource (coins, supplies, goods, medals or diamonds).`,
+  },
+  gbHelpGoldTitle: {
+    it: (v: number) => `Mani amiche migliorate (tier Oro): ogni volta che aiuti un altro giocatore, ${v}% di probabilità di ottenere una ricompensa migliore.`,
+    en: (v: number) => `Improved helping hands (Gold tier): every time you aid another player, ${v}% chance of getting a better reward.`,
+  },
+  gbContribCopperTitle: {
+    it: (v: number) => `Bonus di contributo (tier Rame): +${v}% sulle ricompense quando versi Punti Forge nei Grandi Edifici degli altri giocatori, sui livelli del tier Rame (fino al livello 100, o su tutti i livelli dei GE solo Rame).`,
+    en: (v: number) => `Contribution boost (Copper tier): +${v}% on rewards when you contribute Forge Points to other players' Great Buildings, on Copper tier levels (up to level 100, or every level of Copper-only GBs).`,
+  },
+  gbContribGoldTitle: {
+    it: (v: number) => `Bonus di contributo Oro (tier Oro): +${v}% sulle ricompense quando versi Punti Forge nei livelli del tier Oro dei Grandi Edifici degli altri giocatori (dal livello 101 dei GE con il tier Oro).\nSi somma agli altri bonus di contributo Oro (Arca, Sifone, tecnologie dell'Era Stellare).`,
+    en: (v: number) => `Gold contribution boost (Gold tier): +${v}% on rewards when you contribute Forge Points to Gold tier levels of other players' Great Buildings (from level 101 of GBs with a Gold tier).\nAdds up with the other Gold contribution boosts (Arc, Siphon, Stellar Age technologies).`,
+  },
+  gbAidBlueprintsTitle: {
+    it: (v: number) => `Assistenza Progetti rame (tier Rame): +${v.toLocaleString("it-IT")}% di probabilità in più, rispetto a quella normale, di trovare un Progetto rame quando aiuti un altro giocatore.`,
+    en: (v: number) => `Copper blueprint assistance (Copper tier): +${v.toLocaleString("en-US")}% chance, compared to the normal one, to find a Copper blueprint when you aid another player.`,
+  },
+  allyBoostLevelTitle: {
+    it: (b: number, l: number) => `+${b} livelli dal Grande Edificio (Colosseo o Tempio del Loto, tier Oro): le statistiche sono calcolate come al livello ${l}`,
+    en: (b: number, l: number) => `+${b} levels from the Great Building (Colosseum or Lotus Temple, Gold tier): stats are computed as at level ${l}`,
+  },
+  gbDoubleCollectTitle: {
+    it: (p: number, n: number) => `Doppio incasso (tier Rame): per i primi ${n} edifici raccolti nella città, c'è una probabilità del ${p}% che le risorse raccolte vengano raddoppiate. Sono esclusi il Municipio e i Grandi Edifici. Si aggiorna a ogni raccolta di questo edificio.`,
+    en: (p: number, n: number) => `Double collection (Copper tier): for the first ${n} buildings collected in your city, ${p}% chance that the collected resources are doubled. Town Hall and Great Buildings excluded. Refreshes at every collection of this building.`,
+  },
+  gbDoubleCollectGoldTitle: {
+    it: (p: number, n: number) => `Doppio incasso nell'insediamento IQ (tier Oro): per i primi ${n} edifici raccolti nel tuo insediamento IQ attivo, c'è una probabilità del ${p}% che le risorse raccolte vengano raddoppiate. Escluso il municipio. Si aggiorna a ogni raccolta di questo edificio.`,
+    en: (p: number, n: number) => `QI settlement double collection (Gold tier): for the first ${n} buildings collected in your active QI settlement, ${p}% chance that the collected resources are doubled. Town hall excluded. Refreshes at every collection of this building.`,
+  },
+  gbShardsTitle: {
+    it: (p: number, r: number) => `Schegge misteriose (tier Rame): ${p}% di probabilità di generare una Scheggia Premio nel tuo Insediamento culturale attivo una volta ogni 4 ore; ${r}% di probabilità che la Scheggia sia rara. Ogni Scheggia va raccolta a mano, altrimenti scompare dopo 1 giorno. La Scheggia dà una ricompensa casuale (comune, non comune o rara: punti forge, beni, unità, progetti, kit…).`,
+    en: (p: number, r: number) => `Mysterious Shards (Copper tier): ${p}% chance to spawn a Reward Shard in your active Cultural Settlement once every 4 hours; ${r}% chance that the Shard is rare. Each Shard must be collected by hand, otherwise it disappears after 1 day. The Shard gives a random reward (common, uncommon or rare: forge points, goods, units, blueprints, kits…).`,
+  },
+  gbPlunderGoodsTitle: {
+    it: (g: number, n: number) => `Saccheggia Beni (tier Rame): le prime ${n} volte che saccheggi un edificio, ricevi ${g} beni casuali dell'età a cui quell'edificio appartiene.`,
+    en: (g: number, n: number) => `Plunder Goods (Copper tier): the first ${n} times you plunder a building, you receive ${g} random goods of the age that building belongs to.`,
+  },
+  gbAidGoodsTitle: {
+    it: (g: number, n: number) => `Beni per bene (tier Rame): le prime ${n} volte che assisti un edificio, ricevi ${g === 1 ? "un bene casuale" : `${g} beni casuali`} dell'età a cui quell'edificio appartiene.`,
+    en: (g: number, n: number) => `Goods for Good (Copper tier): the first ${n} times you aid a building, you receive ${g === 1 ? "a random good" : `${g} random goods`} of the age that building belongs to.`,
+  },
+  gbStrikeTitle: {
+    it: (p: number, n: number) => `Primo colpo (tier Rame): nelle prime ${n} battaglie ci sarà un ${p}% di probabilità di uccidere un'unità nemica all'inizio della battaglia. Nelle battaglie a due ondate funziona soltanto nella prima. Non utilizzabile nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `First Strike (Copper tier): in the first ${n} battles there is a ${p}% chance to kill one enemy unit at the start of the battle. In two-wave battles it works only in the first wave. Not usable in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbStrikeGoldTitle: {
+    it: (p: number, n: number) => `Secondo colpo (tier Oro): nelle prime ${n} battaglie c'è una probabilità del ${p}% di uccidere un'unità nemica all'inizio della seconda ondata. Non utilizzabile nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Second Strike (Gold tier): in the first ${n} battles there is a ${p}% chance to kill one enemy unit at the start of the second wave. Not usable in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbQuestTitle: {
+    it: (p: number) => `Incrementa le ricompense delle missioni (tier Rame): quando ottieni monete, materiali, beni, diamanti o medaglie come ricompense per le missioni, ricevi il ${p}% in più.`,
+    en: (p: number) => `Quest Reward Boost (Copper tier): when you get coins, supplies, goods, diamonds or medals as quest rewards, you receive ${p}% more.`,
+  },
+  gbQuestGoldTitle: {
+    it: (p: number) => `Potenziamento ricompense missioni Taverna Eroica (tier Oro): quando ottieni ricompense dalle missioni della Taverna Eroica, ricevi il ${p}% in più.`,
+    en: (p: number) => `Heroic Tavern Quest Reward Boost (Gold tier): when you get rewards from Heroic Tavern quests, you receive ${p}% more.`,
+  },
+  gbSpoilsTitle: {
+    it: (p: number, n: number) => `Bottino di Guerra (tier Rame): nelle prime ${n} battaglie vinte nella città principale ci sarà il ${p}% di possibilità di ricevere una ricompensa casuale. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Spoils of War (Copper tier): in the first ${n} battles won in your main city there is a ${p}% chance to receive a random reward. Refreshes at every collection.`,
+  },
+  gbSpoilsGoldTitle: {
+    it: (p: number, n: number) => `Bottino di guerra migliorato (tier Oro): nelle prime ${n} battaglie vinte nella città principale ci sarà il ${p}% di possibilità di ricevere una ricompensa casuale (migliore). Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Enhanced Spoils of War (Gold tier): in the first ${n} battles won in your main city there is a ${p}% chance to receive a (better) random reward. Refreshes at every collection.`,
+  },
+  gbCoinBoostTitle: {
+    it: (p: number, n: number) => `Potenziamento monete (tier Rame): le prime ${n} raccolte di monete aumentano del ${p}% la quantità di base. Si aggiorna con la raccolta successiva di questo edificio.`,
+    en: (p: number, n: number) => `Coin Boost (Copper tier): the first ${n} coin collections increase the base amount by ${p}%. Refreshes with the next collection of this building.`,
+  },
+  gbSupplyBoostTitle: {
+    it: (p: number, n: number) => `Potenziamento materiali (tier Rame): le prime ${n} raccolte di materiali aumentano del ${p}% la quantità di base. Si aggiorna con la raccolta successiva di questo edificio.`,
+    en: (p: number, n: number) => `Supply Boost (Copper tier): the first ${n} supply collections increase the base amount by ${p}%. Refreshes with the next collection of this building.`,
+  },
+  gbMissileTitle: {
+    it: (p: number, n: number) => `Lancio missilistico (tier Rame): nelle prime ${n} battaglie ci sarà una possibilità del ${p}% di uccidere metà delle unità nemiche all'inizio della battaglia. Nelle battaglie a due ondate funziona soltanto nella prima. Non utilizzabile contro i giocatori né nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Missile Launch (Copper tier): in the first ${n} battles there is a ${p}% chance to kill half of the enemy units at the start of the battle. In two-wave battles it works only in the first wave. Not usable against players or in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbMissileGoldTitle: {
+    it: (p: number, n: number) => `Lancio missilistico - Seconda ondata (tier Oro): nelle prime ${n} battaglie ci sarà una possibilità del ${p}% di uccidere metà delle unità nemiche all'inizio della seconda ondata. Non utilizzabile contro i giocatori né nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Missile Launch - Second Wave (Gold tier): in the first ${n} battles there is a ${p}% chance to kill half of the enemy units at the start of the second wave. Not usable against players or in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbDiploGiftsTitle: {
+    it: (p: number, n: number) => `Regali diplomatici (tier Rame): nelle prime ${n} negoziazioni riuscite ci sarà un ${p}% di possibilità di fornirti una ricompensa casuale. Si aggiorna con ogni raccolta.`,
+    en: (p: number, n: number) => `Diplomatic Gifts (Copper tier): in the first ${n} successful negotiations there is a ${p}% chance to give you a random reward. Refreshes with every collection.`,
+  },
+  gbAiCoreTitle: {
+    it: (p: number, n: number) => `Nucleo I.A. (tier Rame): per le prime ${n} raccolte nella città principale di edifici che producono Beni speciali, raccogli il ${p}% in più di Beni speciali dopo aver raggiunto il Futuro Artico. Vale solo per Porto Artico, Terminal Oceanico, Sintetizzatori di Beni speciali ed edifici Evento che offrono Beni speciali.`,
+    en: (p: number, n: number) => `A.I. Core (Copper tier): for the first ${n} collections in your main city of buildings producing Special Goods, collect ${p}% more Special Goods after reaching Arctic Future. Applies only to Arctic Harbor, Oceanic Terminal, Special Goods Synthesizers and Event buildings offering Special Goods.`,
+  },
+  gbPillageTitle: {
+    it: (p: number) => `Saccheggio raddoppiato (tier Rame): ${p}% di probabilità di raddoppiare quello che saccheggi dagli edifici degli altri giocatori.`,
+    en: (p: number) => `Plunder and Pillage (Copper tier): ${p}% chance to double what you plunder from other players' buildings.`,
+  },
   gbOtherTitle: { it: "Altri bonus, senza colonna:", en: "Other bonuses, without a column:" },
   r2GreatBuildings: { it: "Grandi edifici", en: "Great buildings" },
   r2Map: { it: "Mappa", en: "Map" },
@@ -377,6 +495,14 @@ const UI_STRINGS = {
   r2ProdDetail: { it: "Produzioni", en: "Productions" },
   r2ProdDetailTitle: { it: "Mostra le colonne delle produzioni", en: "Show the production columns" },
   r2Sums: { it: "Somma %", en: "Sum %" },
+  r2Patrons: { it: "Calcolatore", en: "Calculator" },
+  r2PatronsTitle: { it: "Calcolatore dei Grandi Edifici: posti mecenate di ogni livello (foe-optimizer.com/ge, si apre in una nuova scheda)", en: "Great Building calculator: patron spots of each level (foe-optimizer.com/ge, opens in a new tab, Italian only)" },
+  r2GbBonus: { it: "Bonus GE", en: "GB bonus" },
+  r2GbBonusTitle: {
+    it: "Valori militari ed efficienza con i bonus moltiplicativi dei Grandi Edifici della città (tier Oro e Sifone; più GE dello stesso tipo si sommano): Generali × bonus globali, Campi e Spedizioni × bonus della modalità + globali, IQ × bonus IQ. I valori cambiati sono in azzurro / rosa.",
+    en: "Military values and efficiency with the multiplicative bonuses of the city's Great Buildings (Gold tier and Siphon; GBs of the same type add up): Generals × global bonuses, Battlegrounds and Expeditions × that mode's bonuses + global ones, QI × QI bonuses. Changed values are in light blue / pink.",
+  },
+  r2GbBonusNone: { it: "Nessun Grande Edificio della città ha bonus moltiplicativi", en: "No Great Building in the city has multiplicative bonuses" },
   r2Export: { it: "Export", en: "Export" },
   r2SumsTitle: {
     it: "Mostra le colonne con la somma delle statistiche (Generale + Campi, e Generale + Spedizioni)",
@@ -900,34 +1026,16 @@ const UI_STRINGS = {
   },
 
   // ── Titoli di gruppo header tabella (Generale/Campi/Spedizioni) ──────
-  groupGenerals: {
-    it: "⚔️ Generali",
-    en: "⚔️ Generals",
-  },
-  groupGbg: {
-    it: "🔰 Campi",
-    en: "🔰 GBG-Only",
-  },
-  groupGenPlusGbg: {
-    it: "⚔️ GEN + 🔰 CAMPI",
-    en: "⚔️ GEN + 🔰 GBG",
-  },
-  groupGe: {
-    it: "⚡ Spedizioni",
-    en: "⚡ GE-Only",
-  },
-  groupGenPlusGe: {
-    it: "⚔️ GEN + ⚡ SPED.",
-    en: "⚔️ GEN + ⚡ GE",
-  },
-  groupIq: {
-    it: "✊🏾 Incursioni",
-    en: "✊🏾 Incursions",
-  },
-  groupProductions: {
-    it: "📦 Produzioni",
-    en: "📦 Productions",
-  },
+  // (novembre 2026: l'icona del gioco la mette TitoloGruppo in App.tsx; con Σ
+  // "GEN + CAMPI" / "GEN + SPED." si compongono le forme brevi)
+  groupGenerals: { it: "Generali", en: "Generals" },
+  groupGbg: { it: "Campi", en: "GBG-Only" },
+  groupGe: { it: "Spedizioni", en: "GE-Only" },
+  groupGenShort: { it: "GEN", en: "GEN" },
+  groupGbgShort: { it: "CAMPI", en: "GBG" },
+  groupGeShort: { it: "SPED.", en: "GE" },
+  groupIq: { it: "Incursioni", en: "Incursions" },
+  groupProductions: { it: "Produzioni", en: "Productions" },
 
   // ── Colonne scalari IQ (Beni/Truppe/Azioni/CAP quantistici) ──────────
   iqCoinsBoost: {
@@ -1038,13 +1146,21 @@ const UI_STRINGS = {
     it: "L'edificio può ospitare un Alleato Storico (scienza)",
     en: "The building can host a Historical Ally (science)",
   },
+  gbMultSpedTitle: {
+    it: "Bonus moltiplicativo (tier Oro, in giallo): moltiplica il totale della città per questa modalità, non è contato nell'efficienza",
+    en: "Multiplicative bonus (Gold tier, in yellow): multiplies the city total for this mode, not counted in the efficiency",
+  },
+  gbMultIqTitle: {
+    it: "Bonus moltiplicativo (tier Oro): moltiplica il totale della città nelle Incursioni, non è contato nell'efficienza",
+    en: "Multiplicative bonus (Gold tier): multiplies the city total in Incursions, not counted in the efficiency",
+  },
   gbMultTitle: {
     it: "Bonus del tier Oro che agiscono sul totale della città o sugli alleati: non sono contati nelle colonne né nell'efficienza.",
     en: "Gold tier bonuses acting on the city total or on allies: not counted in the columns or in the efficiency.",
   },
   gbMultLine: {
-    it: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacco esercito attaccante", attacker_defense_boost: "Difesa esercito attaccante", defender_attack_boost: "Attacco esercito in difesa", defense_boost: "Difesa esercito in difesa", military_boost: "Attacco e difesa esercito attaccante", fierce_resistance: "Attacco e difesa esercito in difesa", advanced_tactics: "Attacco e difesa di entrambi gli eserciti", goods_production_boost: "Produzione di beni", special_goods_production_boost: "Produzione di beni speciali", military_ally_boost: "Alleati militari", science_ally_boost: "Alleati scienza" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} (come livelli in più, anche oltre il 100)` : ` (${({ all: "ovunque", battleground: "Campi di battaglia", guild_expedition: "Spedizioni", guild_raids: "Incursioni quantiche" } as Record<string, string>)[mod] ?? mod}): ${tipo.endsWith("_production_boost") ? "+" : "×"}${v}%`}`,
-    en: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacking army attack", attacker_defense_boost: "Attacking army defense", defender_attack_boost: "Defending army attack", defense_boost: "Defending army defense", military_boost: "Attacking army attack and defense", fierce_resistance: "Defending army attack and defense", advanced_tactics: "Attack and defense of both armies", goods_production_boost: "Goods production", special_goods_production_boost: "Special goods production", military_ally_boost: "Military allies", science_ally_boost: "Science allies" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} (like extra levels, even past 100)` : ` (${({ all: "everywhere", battleground: "Battlegrounds", guild_expedition: "Expeditions", guild_raids: "Quantum Incursions" } as Record<string, string>)[mod] ?? mod}): ${tipo.endsWith("_production_boost") ? "+" : "×"}${v}%`}`,
+    it: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacco esercito attaccante", attacker_defense_boost: "Difesa esercito attaccante", defender_attack_boost: "Attacco esercito in difesa", defense_boost: "Difesa esercito in difesa", military_boost: "Attacco e difesa esercito attaccante", fierce_resistance: "Attacco e difesa esercito in difesa", advanced_tactics: "Attacco e difesa di entrambi gli eserciti", goods_production_boost: "Produzione di beni", special_goods_production_boost: "Produzione di beni speciali", military_ally_boost: "Alleati militari", science_ally_boost: "Alleati scienza" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} livelli a tutti gli alleati di questo tipo (un alleato al 100 vale come al ${100 + v})` : ` (${({ all: "ovunque", battleground: "Campi di battaglia", guild_expedition: "Spedizioni", guild_raids: "Incursioni quantiche" } as Record<string, string>)[mod] ?? mod}): +${v}%`}`,
+    en: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacking army attack", attacker_defense_boost: "Attacking army defense", defender_attack_boost: "Defending army attack", defense_boost: "Defending army defense", military_boost: "Attacking army attack and defense", fierce_resistance: "Defending army attack and defense", advanced_tactics: "Attack and defense of both armies", goods_production_boost: "Goods production", special_goods_production_boost: "Special goods production", military_ally_boost: "Military allies", science_ally_boost: "Science allies" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} levels to every ally of this type (an ally at level 100 counts as level ${100 + v})` : ` (${({ all: "everywhere", battleground: "Battlegrounds", guild_expedition: "Expeditions", guild_raids: "Quantum Incursions" } as Record<string, string>)[mod] ?? mod}): +${v}%`}`,
   },
   setBuildingTitle: {
     it: (nome: string) => `Fa parte di un set: ${nome}.\nI bonus in tabella sono quelli massimi: si ottengono solo con gli altri edifici del set accanto.`,
@@ -1261,6 +1377,30 @@ const UI_STRINGS = {
   statColTotal: {
     it: "totale",
     en: "total",
+  },
+  gbContribCellTitle: {
+    it: (p: number, n: number) => `Nella tua città questo +${p}% vale +${n.toLocaleString("it-IT")} (sul totale della statistica): contato nell'efficienza.`,
+    en: (p: number, n: number) => `In your city this +${p}% is worth +${n.toLocaleString("en-US")} (on the stat total): counted in efficiency.`,
+  },
+  gbBonusCellTitle: {
+    it: (p: number) => `Con i bonus moltiplicativi dei GE: +${p}%`,
+    en: (p: number) => `With the multiplicative GB bonuses: +${p}%`,
+  },
+  statColGbBonus: {
+    it: "bonus GE",
+    en: "GB bonus",
+  },
+  statColGbBonusTitle: {
+    it: "Bonus moltiplicativi dei Grandi Edifici (tier Oro e Sifone): percentuale applicata al totale. Per Campi e Spedizioni si sommano anche quelli globali.",
+    en: "Multiplicative Great Building bonuses (Gold tier and Siphon): percentage applied to the total. For Battlegrounds and Expeditions the global ones are added too.",
+  },
+  statGbBonusCellTitle: {
+    it: (a: number, d: number) => `Attacco +${a}%, difesa +${d}% sul totale`,
+    en: (a: number, d: number) => `Attack +${a}%, defense +${d}% on the total`,
+  },
+  statColTotalWithBonus: {
+    it: "totale con bonus",
+    en: "total with bonus",
   },
   statTotalsFootnote: {
     it: "* Nei totali non sono considerate alcune produzioni extra (Castello, Emissari, ecc.)",

@@ -422,13 +422,19 @@ html, body { overflow-x: clip; }
   /* Edifici "unici" (Building.unique, vedi data/uniqueBuildings.ts): SOLO in
      tab Database, per ora (className condizionale applicata in App.tsx solo
      quando activeTab === "database"). Colora solo il testo del nome, oro. */
+  /* (novembre 2026, utente: ciano invece dell'oro, che ora è dei GE nel tier Oro) */
   .building-table tbody td.cell-name.unique {
-    color: gold;
+    color: var(--color-cyan-300);
   }
-  /* tema chiaro: "gold" su bianco non si legge → oro scuro */
+  /* tema chiaro: ciano scuro, leggibile su bianco */
   :root[data-theme="light"] .building-table tbody td.cell-name.unique {
-    color: #a16207;
+    color: #0e7490;
   }
+  /* Nome dei GE: oro per il tier Oro, rame per il tier Rame (Prestige) */
+  .ge-name-gold { color: #fbbf24; }
+  .ge-name-copper { color: #d4895a; }
+  :root[data-theme="light"] .ge-name-gold { color: #a16207; }
+  :root[data-theme="light"] .ge-name-copper { color: #9a4a1f; }
 
   /* Variante flex: SOLO <td> del body della tabella principale edifici
      (.has-name-divider, sempre presente su di essa, mai sulle tabelle
@@ -450,8 +456,15 @@ html, body { overflow-x: clip; }
      sempre visibili, spingendo l'ellissi del nome più a sinistra se serve
      spazio. Ridichiara `truncate` → `overflow:visible` implicito via flex:
      l'overflow ora vive sullo <span> interno, non più sul <td>. */
+  /* (novembre 2026: il flex è sul contenitore interno .cell-name-flex, non
+     più sulla <td>: una <td> flex non è più una cella di tabella, non si
+     allunga all'altezza della riga e restava in alto nelle righe alte, es.
+     Alcatraz con il +N% su due righe — segnalazione dell'utente) */
   .has-name-divider tbody td.cell-name {
-    @apply flex items-center overflow-visible whitespace-normal;
+    @apply overflow-visible whitespace-normal align-middle;
+  }
+  .has-name-divider tbody td.cell-name > .cell-name-flex {
+    @apply flex items-center min-w-0;
   }
 
   /* Variante sticky della cella nome: SOLO per la tabella principale
@@ -508,7 +521,7 @@ html, body { overflow-x: clip; }
   .has-sticky-name tbody td.cell-name {
     @apply sticky z-10;
     left: 46px;
-    width: 260px;
+    width: 320px; /* (era 260: utente 06/11, nomi dei GE troncati) */
     background-color: inherit;
     background-image: inherit;
     box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
@@ -516,7 +529,7 @@ html, body { overflow-x: clip; }
   .has-sticky-name thead th.cell-name {
     @apply sticky z-20;
     left: 46px;
-    width: 260px;
+    width: 320px; /* (era 260: utente 06/11, nomi dei GE troncati) */
     background-color: inherit;
     box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
   }
@@ -538,10 +551,19 @@ html, body { overflow-x: clip; }
   .has-sticky-name thead th.th-name-summary {
     @apply sticky z-20;
     left: 46px;
-    width: 260px;
+    width: 320px; /* (era 260: utente 06/11, nomi dei GE troncati) */
     background-color: inherit;
     box-shadow: inset -1px 0 0 0 var(--color-slate-800); /* 2.0: niente ombra esterna */
   }
+
+  /* Catalogo › Grandi Edifici: niente colonna di selezione (utente, 06/11),
+     le celle sticky partono 32px prima */
+  /* (colonna occhio 26px invece di 14, con 12px di margine a sinistra) */
+  .senza-selezione .cell-eye { padding-left: 12px; }
+  .has-sticky-name.senza-selezione .cell-eye { left: 0; }
+  .has-sticky-name.senza-selezione tbody td.cell-name,
+  .has-sticky-name.senza-selezione thead th.cell-name,
+  .has-sticky-name.senza-selezione thead th.th-name-summary { left: 26px; }
 
   /* Padding orizzontale intermedio (es. colonna frammenti alleati) */
   .cell-px-md {
@@ -599,8 +621,14 @@ html, body { overflow-x: clip; }
   /* Boost blu (Attacco difensore) */
   .cell-blue { @apply text-blue-400; }
 
+  /* Valori con i bonus moltiplicativi dei GE (Opzioni › Bonus GE, Città/Inventario) */
+  .cell-red-ge  { @apply text-rose-300 font-bold; }
+  .cell-blue-ge { @apply text-sky-300 font-bold; }
+
   /* Produzioni (FP, beni, truppe, ecc.) quando il valore è > 0 */
   .cell-prod { @apply text-orange-500; }
+  /* GE: produzione che viene solo dal tier Oro (stesso giallo dei moltiplicativi) */
+  .cell-prod-gold { @apply text-amber-300; }
 
   /* Testo bianco/neutro: dimensione edificio, valori Incursioni Quantistiche */
   .cell-white { @apply text-slate-300; }
@@ -612,6 +640,12 @@ html, body { overflow-x: clip; }
   /* Bordo sinistro per separare le macro sezioni della tabella */
   .section-divider {
     border-left: 1px solid var(--color-slate-800);
+  }
+  /* Prima cella di ogni gruppo: qualche pixel di aria dal separatore, così i
+     valori lunghi (es. "1200k" nelle monete) non toccano la linea (novembre
+     2026, utente: problema di tutte le tabelle). .cell-num ha px-0. */
+  td.cell-num.section-divider {
+    padding-left: 4px;
   }
 
   /* Sfondo per gli header di gruppo (Generali/Campi/Spedizioni/Incursioni/

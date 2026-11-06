@@ -185,6 +185,23 @@ function editorCondivisoPlugin(): Plugin {
   };
 }
 
+// Calcolatore dei GE (public/ge/index.html): in dev Vite serve i file di public/
+// solo col percorso esatto, e /ge o /ge/ finivano nel fallback dell'app (la
+// pagina iniziale). Qui li riscriviamo in /ge/index.html; in produzione ci
+// pensa GitHub Pages (index.html della cartella).
+function calcolatoreGePlugin(): Plugin {
+  return {
+    name: "foe-calcolatore-ge",
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const [percorso, query] = (req.url ?? "").split("?");
+        if (percorso === "/ge" || percorso === "/ge/") req.url = "/ge/index.html" + (query ? `?${query}` : "");
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   define: {
     __BUILD_VERSION__: JSON.stringify(BUILD_VERSION),
@@ -197,6 +214,7 @@ export default defineConfig({
     sitemapPlugin(BUILD_DATE),
     ogImagePlugin(),
     editorCondivisoPlugin(),
+    calcolatoreGePlugin(),
   ],
   // 2.0: il codice principale (App) supera i 500 kB minificati; il Planner
   // è già un pezzo a parte. Soglia dell'avviso alzata di conseguenza.

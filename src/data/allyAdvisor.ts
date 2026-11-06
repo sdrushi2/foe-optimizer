@@ -113,11 +113,15 @@ export function computeAllyAdvice(
   inherited: Map<string, Ally[]>,
   weights: Weights,
   maxRarity: number = MAX_TARGET_RARITY,
+  /** Livelli in più agli alleati militari dai GE (Colosseo, tier Oro): la
+   *  valutazione è al livello 100 + questo. */
+  boost = 0,
 ): AdvisorResult {
+  const livello = ADVISOR_LEVEL + boost;
   const effCache = new Map<string, number | null>();
   const effAt = (allyId: string, rarity: number): number | null => {
     const key = `${allyId}__${rarity}`;
-    if (!effCache.has(key)) effCache.set(key, allyEffAt100(allyId, rarity, byIdRarity, inherited, weights));
+    if (!effCache.has(key)) effCache.set(key, allyEffAt100(allyId, rarity, byIdRarity, inherited, weights, boost));
     return effCache.get(key) ?? null;
   };
   /** Gettoni per passare da `from` a `to` (somma di EvoValor delle rarità from..to-1). */
@@ -194,8 +198,8 @@ export function computeAllyAdvice(
     if (!pick) break;
     const imp = byJson.get(pickId)!;
     const from = cur.get(pickId)!;
-    const sFrom = getComputedAllyStats(byIdRarity.get(`${imp.allyId}__${from}`)!, ADVISOR_LEVEL, inherited);
-    const sTo = getComputedAllyStats(byIdRarity.get(`${imp.allyId}__${pick.to}`)!, ADVISOR_LEVEL, inherited);
+    const sFrom = getComputedAllyStats(byIdRarity.get(`${imp.allyId}__${from}`)!, livello, inherited);
+    const sTo = getComputedAllyStats(byIdRarity.get(`${imp.allyId}__${pick.to}`)!, livello, inherited);
     const delta = (a: number[], b: number[]): [number, number, number, number] =>
       [(b[0] ?? 0) - (a[0] ?? 0), (b[1] ?? 0) - (a[1] ?? 0), (b[2] ?? 0) - (a[2] ?? 0), (b[3] ?? 0) - (a[3] ?? 0)];
     cumulative += pick.cost;
@@ -226,7 +230,8 @@ export function computeAllyAdvice(
 }
 
 /** Efficienza al livello 100 di un alleato a una data rarità (per la UI). */
-export function allyEffAt100(allyId: string, rarity: number, byIdRarity: Map<string, Ally>, inherited: Map<string, Ally[]>, weights: Weights): number | null {
+export function allyEffAt100(allyId: string, rarity: number, byIdRarity: Map<string, Ally>, inherited: Map<string, Ally[]>, weights: Weights, boost = 0): number | null {
   const a = byIdRarity.get(`${allyId}__${rarity}`);
-  return a ? weightedEff(getComputedAllyStats(a, ADVISOR_LEVEL, inherited), weights) : null;
+  // (boost: livelli in più dal Colosseo, tier Oro → valutato al 100 + boost)
+  return a ? weightedEff(getComputedAllyStats(a, ADVISOR_LEVEL + boost, inherited), weights) : null;
 }

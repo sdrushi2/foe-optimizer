@@ -25,6 +25,8 @@ interface Props {
   weights: Weights;
   /** Pergamene Eroiche nel magazzino. */
   pergamene: number;
+  /** Livelli in più agli alleati militari dal Colosseo (tier Oro). */
+  boostLivelli?: number;
   uiLang: UiLang;
   gameLang: Lang;
   allyName: (id: string, lang: Lang) => string;
@@ -38,10 +40,10 @@ interface Props {
 type Quattro = [number, number, number, number];
 const somma = (l: Quattro[]): Quattro => l.reduce<Quattro>((s, x) => [s[0] + x[0], s[1] + x[1], s[2] + x[2], s[3] + x[3]], [0, 0, 0, 0]);
 
-export default function PannelloPergamene({ owned, byIdRarity, inherited, weights, pergamene, uiLang, gameLang, allyName, groupHeaders, statHeaders, renderBoostCells }: Props) {
+export default function PannelloPergamene({ owned, byIdRarity, inherited, weights, pergamene, boostLivelli = 0, uiLang, gameLang, allyName, groupHeaders, statHeaders, renderBoostCells }: Props) {
   const intero = (n: number) => (uiLang === "en" ? n.toLocaleString("en-US") : formatInt(n));
   const decimale = (n: number) => n.toLocaleString(uiLang === "en" ? "en-US" : "it-IT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const c = useMemo(() => consigliaPergamene(owned, byIdRarity, inherited, weights, pergamene), [owned, byIdRarity, inherited, weights, pergamene]);
+  const c = useMemo(() => consigliaPergamene(owned, byIdRarity, inherited, weights, pergamene, boostLivelli), [owned, byIdRarity, inherited, weights, pergamene, boostLivelli]);
   const passi = useMemo(() => [...c.passi].sort((a, b) => b.guadagno - a.guadagno), [c]);
   // riga dei totali: aumento complessivo di ogni colonna
   const tot = useMemo(() => ({

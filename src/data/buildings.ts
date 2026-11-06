@@ -136,6 +136,41 @@ export interface Building {
   gbMoltiplicativi?: ReadonlyArray<{ tipo: string; modalita: string; valore: number }>;
   /** GE: tier attuale (Prestige): "oro" dal livello 101 per i GE col tier Oro, altrimenti "rame". */
   gbTier?: "oro" | "rame";
+  /** GE Tempio delle Reliquie (totem_drop): % di trovare una reliquia nelle
+   *  Spedizioni dopo un incontro e % che sia rara. */
+  gbReliquie?: { probabilita: number; rara: number };
+  /** GE (Serra Artica, Catalizzatore cosmico): % di colpo critico (150% di
+   *  danno) contro unità della stessa era (Rame) e di ogni altra era (Oro). */
+  gbCritico?: { rame: number; oro: number };
+  /** GE Torre di Galata (plunder_repel): % di respingere un saccheggio e numero
+   *  di tentativi respingibili prima della prossima raccolta. */
+  gbRespingi?: { probabilita: number; tentativi: number };
+  /** GE Deposito di sementi: % "mani amiche" (risorsa casuale aiutando, Rame) e %
+   *  che la ricompensa sia migliore (Oro). */
+  gbManiAmiche?: { rame: number; oro: number };
+  /** GE Arca / Sifone: % di bonus di contributo (Rame: sui livelli Rame dei GE
+   *  altrui; Oro: sui livelli Oro). */
+  gbContributo?: { rame: number; oro: number };
+  /** GE Progetto Foresta Pluviale (aid_boost): % in più di probabilità di un
+   *  progetto quando si aiuta un Grande Edificio altrui. */
+  gbProgettiAiuti?: number;
+  /** GE Museo di Atlantide (plunder_and_pillage): % che un tuo saccheggio renda
+   *  `moltiplicatore` volte le risorse (×2). */
+  gbSaccheggio?: { probabilita: number; moltiplicatore: number };
+  gbNucleoIA?: { percentuale: number; raccolte: number };
+  gbBoostRaccolte?: { monete?: { percentuale: number; raccolte: number }; materiali?: { percentuale: number; raccolte: number } };
+  gbBottino?: { rame?: { probabilita: number; battaglie: number }; oro?: { probabilita: number; battaglie: number } };
+  gbMissioni?: { rame: number; oro: number };
+  gbColpo?: { rame?: { probabilita: number; battaglie: number }; oro?: { probabilita: number; battaglie: number } };
+  gbBeniAiuti?: { beni: number; volte: number };
+  gbSaccheggiaBeni?: { beni: number; volte: number };
+  gbSchegge?: { probabilita: number; rara: number };
+  gbMissili?: { rame?: { probabilita: number; battaglie: number }; oro?: { probabilita: number; battaglie: number } };
+  gbRegaliDiplomatici?: { probabilita: number; negoziazioni: number };
+  gbRaccoltaDoppia?: { rame?: { probabilita: number; edifici: number }; oro?: { probabilita: number; edifici: number } };
+  /** GE: colonne di produzione il cui valore viene SOLO da bonus del tier Oro
+   *  (chiavi come "benib", "benig"…): in tabella in oro. */
+  gbColonneOro?: readonly string[];
   /** GE (Catalogo): altri bonus senza colonna (colpo critico, raccolta doppia…), righe già leggibili. */
   gbAltri?: readonly string[];
   /** True se l'edificio è attualmente "inattivo" (W_*Decoration nell'id):

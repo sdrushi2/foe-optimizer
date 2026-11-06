@@ -11,7 +11,7 @@
 //  Opzioni (Pesi).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { BookOpen, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
+import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
 import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
@@ -81,6 +81,8 @@ export interface ContestoNastri {
   giocatore: DatiGiocatore | null;
   /** Export CSV degli edifici selezionati (tabelle edifici). */
   esporta: { n: number; onClick: () => void; titolo: string };
+  /** Città / Inventario › Opzioni: valori militari ed efficienza con i bonus moltiplicativi dei GE. */
+  bonusGe: Interruttore & { disponibile: boolean };
   /** Pannello Debug della scheda (Città o Inventario). */
   debug: Interruttore;
   /** Catalogo del Database. */
@@ -180,12 +182,23 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   ]] };
   // Opzioni della tabella (2.0): Somma statistiche; nelle tabelle edifici
   // anche l'Export CSV degli edifici selezionati (grigio senza selezione).
+  // Pesi statistiche (Opzioni)
+  const pesi: RibbonGroup = { id: "pesi", label: L("r2GrpWeights"), icon: Scale, priority: 2, rows: [[
+    { kind: "custom", id: "pesi", render: () => <BloccoPesi s={c.pesi} /> },
+  ]] };
   const opzioniTabella: RibbonGroup = { id: "opzioni-tabella", label: L("r2GrpTableOptions"), icon: SlidersHorizontal, rows: [[
     interruttore("somme", Sigma, "r2Sums", "r2SumsTitle"),
   ]] };
   const opzioniEdifici: RibbonGroup = { ...opzioniTabella, rows: [[...opzioniTabella.rows[0]!,
     { kind: "button", id: "esporta", icon: Download, label: c.esporta.n ? `${L("r2Export")} (${c.esporta.n})` : L("r2Export"),
       title: c.esporta.titolo, onClick: c.esporta.onClick, disabled: c.esporta.n === 0 },
+  ]] };
+  // Città / Inventario: anche "Bonus GE" (moltiplicativi dei GE nei valori e nell'efficienza)
+  const opzioniCitta: RibbonGroup = { ...opzioniEdifici, rows: [[opzioniEdifici.rows[0]![0]!,
+    { kind: "button", id: "bonus-ge", icon: Landmark, img: iconGE, label: L("r2GbBonus"),
+      title: L(c.bonusGe.disponibile ? "r2GbBonusTitle" : "r2GbBonusNone"), active: c.bonusGe.attivo && c.bonusGe.disponibile,
+      onClick: c.bonusGe.cambia, disabled: !c.bonusGe.disponibile } as RibbonItem,
+    ...opzioniEdifici.rows[0]!.slice(1),
   ]] };
   // "Nascondi / Mostra solo" (2.0): ogni voce gira su tre stati con un clic:
   // tutti → nascosti (rosso) → solo questi (verde) → tutti.
@@ -247,7 +260,14 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
             </span>
           ) },
         ]] };
-        return [catalogo, livello, tier, ricerca, vista(), opzioniEdifici];
+        // (Visualizza senza "IQ mon/mat": il catalogo dei GE non ha colonne delle Incursioni)
+        // (Spedizioni e Produzioni sempre visibili, niente selezione né Export: utente, 06/11)
+        return [catalogo, livello, tier, ricerca, { ...vista(), rows: [vistaBase.filter(i => i.id !== "iqProd" && i.id !== "sped" && i.id !== "dettaglioProd")] }, opzioniTabella,
+          // Calcolatore dei GE, posti mecenate (pagina a parte /ge/, come la guida; solo in italiano)
+          { id: "strumenti-ge", label: L("r2GrpTools"), icon: Calculator, rows: [[
+            { kind: "button", id: "mecenati", icon: Calculator, label: L("r2Patrons"), title: L("r2PatronsTitle"),
+              onClick: () => window.open("/ge/", "_blank", "noopener") },
+          ]] }];
       }
       return [catalogo, ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici];
     }
@@ -259,7 +279,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         vista([
           { ...tasto("inventario", k.inventario, PackagePlus, "r2PlusInv", "showInventoryInCityTitle"), img: iconInventario } as RibbonItem,
         ]),
-        opzioniEdifici,
+        opzioniCitta,
         { id: "statistiche", label: L("r2GrpStats"), icon: ChartColumn, priority: 1, rows: [[
           tasto("strade", k.statistiche.strade, Route, "r2StatRoads", "roadEfficiencyTitle"),
           tasto("produzione", k.statistiche.produzione, Factory, "r2StatProd"),
@@ -280,7 +300,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       ];
     }
     case "inventario":
-      return [ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici, { id: "strumenti", label: L("r2GrpTools"), icon: Bug, rows: [[
+      return [ricerca, filtri, vista(), nascondiMostra(), opzioniCitta, { id: "strumenti", label: L("r2GrpTools"), icon: Bug, rows: [[
         tasto("debug", c.debug, Bug, "r2Debug"),
       ]] }];
     case "alleati":
@@ -320,9 +340,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       ]] }, { id: "backup", label: L("r2GrpBackup"), icon: Download, priority: 1, rows: [[
         { kind: "button", id: "esporta", icon: Download, label: L("r2ExportAll"), onClick: c.onEsporta, disabled: !c.haCitteSalvate },
         { kind: "button", id: "ripristina", icon: Upload, label: L("r2Restore"), onClick: c.onRipristina },
-      ]] }, { id: "pesi", label: L("r2GrpWeights"), icon: Scale, priority: 2, rows: [[
-        { kind: "custom", id: "pesi", render: () => <BloccoPesi s={c.pesi} /> },
-      ]] }, { id: "tema", label: L("r2GrpTheme"), icon: Moon, rows: [[
+      ]] }, pesi, { id: "tema", label: L("r2GrpTheme"), icon: Moon, rows: [[
         { kind: "button", id: "scuro", icon: Moon, label: L("r2Dark"), active: c.tema === "dark", onClick: () => c.setTema("dark") },
         { kind: "button", id: "chiaro", icon: Sun, label: L("r2Light"), active: c.tema === "light", onClick: () => c.setTema("light") },
       ]] }, { id: "azzera", label: L("r2GrpReset"), icon: Eraser, rows: [[

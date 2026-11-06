@@ -1,5 +1,18 @@
 # FoE Optimizer Changelog
 
+## Version 2.009 (06/11/2026)
+### New
+- New Great Building Calculator (foe-optimizer.com/ge, also from Database › Great Buildings › Calculator, Italian only): for each GB and level the level's FP, each spot's reward with the chat percentage (Copper 90%, 95%, 100%, Gold 20% or custom) and how many FP you need to secure it
+- City: under the multiplicative Great Building bonuses (+N%) you see their actual contribution in your city (e.g. +1,670), which now counts in the GB's efficiency
+- City and Inventory: new Options › GB bonus button, which applies the multiplicative bonuses of the city's Great Buildings to military values and efficiency
+- Military statistics: new "GB bonus" and "total with bonus" columns, with the multiplicative Great Building bonuses computed on the total
+- Allies: the extra levels from the Colosseum and the Lotus Temple (Gold tier) count in the allies' stats and in the Tokens and Scrolls panels
+### Update
+- Great Buildings: Gold tier multiplicative bonuses appear in the columns as +N% (not counted in efficiency); the goods production +% of St. Mark's Basilica and the special goods +% of the Space Carrier go into the Goods boost and Special goods boost columns
+- Great Buildings: all other bonuses (relics, critical hit, double collection, missile launch, spoils of war, etc.) have the game icon with an explanation; the coin and supply boosts of St. Mark's Basilica, Royal Albert Hall and Lighthouse of Alexandria are now shown in imported cities too
+
+---
+
 ## Version 2.008 (05/11/2026)
 ### New
 - Database: new Great Buildings catalog, with every GB in the game in the buildings table (same columns, efficiency and sorting) and a level selector (1, 101, 201, 301, 401, 500) to see how the stats change; row and badge in gold or copper depending on the tier
