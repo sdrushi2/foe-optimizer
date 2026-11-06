@@ -107,9 +107,11 @@
       tr.vuoto td { color: var(--text-faint); }
       tr.vuoto td.pos { color: var(--text-faint); }
       /* testo da copiare in chat: nome del giocatore + GE + posti */
+      /* riga 1: il testo intero (va a capo, niente troncature); riga 2: nome + Copia */
       .copia { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-      .copia #giocatore { width: 110px; }
-      .copia #testo { flex: 1; min-width: 200px; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; }
+      .copia #testo { flex-basis: 100%; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; line-height: 1.4;
+        background: var(--bg-deep); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; overflow-wrap: anywhere; user-select: all; }
+      .copia #giocatore { flex: 1; min-width: 0; }
       .sicuro { color: var(--green); font-weight: 700; }
       .pieno { color: var(--red); }
       footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
@@ -185,8 +187,8 @@
       </div>
 
       <div class="card copia">
-        <input id="giocatore" aria-label="Il tuo nome nel gioco" placeholder="Nome">
-        <input id="testo" readonly aria-label="Testo da copiare in chat">
+        <div id="testo" aria-label="Testo da copiare in chat"></div>
+        <input id="giocatore" aria-label="Il tuo nome nel gioco" placeholder="Il tuo nome (facoltativo)">
         <button type="button" id="copia">Copia</button>
       </div>
 
@@ -302,7 +304,7 @@
             const parti = [];
             for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].base > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].versa + ")");
             const chi = String(S.giocatore || "").trim();
-            $("testo").value = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? ": " + parti.join(" ") : "");
+            $("testo").textContent = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? ": " + parti.join(" ") : "");
             salva();
           }
 
@@ -321,8 +323,12 @@
           $("custom").addEventListener("input", e => { S.custom = e.target.value; applicaChat("custom"); });
           $("giocatore").addEventListener("input", e => { S.giocatore = e.target.value; mostra(); });
           $("copia").addEventListener("click", async () => {
-            const inp = $("testo");
-            try { await navigator.clipboard.writeText(inp.value); } catch (e) { inp.select(); document.execCommand("copy"); }
+            const el = $("testo");
+            try { await navigator.clipboard.writeText(el.textContent); }
+            catch (e) { // (senza https o permessi: selezione + copia classica)
+              const sel = getSelection(), rng = document.createRange();
+              rng.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(rng); document.execCommand("copy");
+            }
             $("copia").textContent = "Copiato";
             setTimeout(() => { $("copia").textContent = "Copia"; }, 1200);
           });
