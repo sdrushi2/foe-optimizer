@@ -943,6 +943,31 @@ function conBonusGe<T extends ProcessedBuilding>(b: T, pct: NonNullable<Processe
   return { ...nb, currentEff: effConContributo(nb, weights) };
 }
 
+/** Tabella degli edifici (utente, 06/11): scorrendo in basso l'intestazione non
+ *  si vede più, quindi passando il mouse su una cella compare come tooltip il
+ *  nome della sua colonna (lo stesso dell'intestazione, es. "Attacco
+ *  attaccante – Campi"). UN solo gestore sulla <table> (delega): niente
+ *  attributi su migliaia di celle né lavoro in più nei ridisegni di React.
+ *  Il title viene messo solo sulla cella sotto il mouse e ricalcolato ogni
+ *  volta (le colonne cambiano con Pop/Fel/Σ/Spedizioni…); le celle col LORO
+ *  tooltip (bonus GE, contributi, ⚠️…) restano come sono: le riconosce perché
+ *  il loro title non è quello messo qui (data-col-auto). */
+function titoloColonna(e: React.MouseEvent<HTMLTableElement>) {
+  const td = (e.target as HTMLElement).closest?.("td");
+  if (!td || td.colSpan > 1) return;
+  const tr = td.parentElement as HTMLTableRowElement | null;
+  const intest = e.currentTarget.tHead?.rows[1];
+  if (!tr || !intest || tr.cells.length !== intest.cells.length) return;
+  const th = intest.cells[td.cellIndex];
+  if (!th || th.matches(".cell-checkbox, .cell-eye, .cell-name")) return;
+  if (td.title && td.title !== td.dataset.colAuto) return; // tooltip suo
+  const img = th.querySelector("img");
+  const nome = th.title || img?.alt || th.textContent?.trim() || "";
+  if (!nome || nome === "❔") return; // (colonna dei bonus: le icone hanno già il loro tooltip)
+  td.title = nome;
+  td.dataset.colAuto = nome;
+}
+
 const MilitaryBoostCells = memo(function MilitaryBoostCells({
   general,
   gbg,
@@ -3742,7 +3767,7 @@ export default function App() {
           <SortableHeader label={<TableHeaderIcon src={iconSpedAtkA} alt={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />} sortKey="sped_atk_a" onClick={() => onSort("sped_atk_a")} active={activeSortBy === "sped_atk_a"} order={activeSortOrder} className="th-col section-divider" title={boostTitle(uiLang, "atk", "red", t("sectionGe", uiLang))} />
           <SortableHeader label={<TableHeaderIcon src={iconSpedDefA} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_a" onClick={() => onSort("sped_def_a")} active={activeSortBy === "sped_def_a"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />
           <SortableHeader label={<TableHeaderIcon src={iconSpedAtkD} alt={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />} sortKey="sped_atk_d" onClick={() => onSort("sped_atk_d")} active={activeSortBy === "sped_atk_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "atk", "blue", t("sectionGe", uiLang))} />
-          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "red", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => onSort("sped_def_d")} active={activeSortBy === "sped_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />
+          <SortableHeader label={<TableHeaderIcon src={iconSpedDefD} alt={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />} sortKey="sped_def_d" onClick={() => onSort("sped_def_d")} active={activeSortBy === "sped_def_d"} order={activeSortOrder} className="th-col" title={boostTitle(uiLang, "def", "blue", t("sectionGe", uiLang))} />
         </>
       )}
       {sped && showSigmaColumns && (
@@ -6836,7 +6861,7 @@ export default function App() {
                   onScroll={() => syncBuildingTableScroll("table")} {...guidaScroll("table")}
                   className="overflow-x-auto"
                 >
-                  <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}${senzaLimitati ? " senza-selezione" : ""}`} style={{ minWidth: tableMinWidth }}>
+                  <table className={`building-table has-name-divider w-full table-fixed text-left border-collapse ${buildingTableNeedsScroll ? "has-sticky-name" : ""}${senzaLimitati ? " senza-selezione" : ""}`} style={{ minWidth: tableMinWidth }} onMouseOver={titoloColonna}>
                     <colgroup>
                       {!senzaLimitati && <col className="w-[32px]" />}
                       <col className={senzaLimitati ? "w-[26px]" : "w-[14px]"} />

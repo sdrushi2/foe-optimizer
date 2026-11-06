@@ -8,6 +8,7 @@
 - Military statistics: new "GB bonus" and "total with bonus" columns, with the multiplicative Great Building bonuses computed on the total
 - Allies: the extra levels from the Colosseum and the Lotus Temple (Gold tier) count in the allies' stats and in the Tokens and Scrolls panels
 ### Update
+- Building tables: hovering a value shows the name of its column, handy when the header is off screen
 - Great Buildings: Gold tier multiplicative bonuses appear in the columns as +N% (not counted in efficiency); the goods production +% of St. Mark's Basilica and the special goods +% of the Space Carrier go into the Goods boost and Special goods boost columns
 - Great Buildings: all other bonuses (relics, critical hit, double collection, missile launch, spoils of war, etc.) have the game icon with an explanation; the coin and supply boosts of St. Mark's Basilica, Royal Albert Hall and Lighthouse of Alexandria are now shown in imported cities too
 

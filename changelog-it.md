@@ -8,6 +8,7 @@
 - Statistiche militari: nuove colonne "bonus GE" e "totale con bonus", con i bonus moltiplicativi dei Grandi Edifici calcolati sul totale
 - Alleati: i livelli in più dati da Colosseo e Tempio del Loto (tier Oro) contano nelle statistiche degli alleati e nei pannelli Gettoni e Pergamene
 ### Aggiornamenti
+- Tabelle degli edifici: passando il mouse su un valore compare il nome della sua colonna, utile quando l'intestazione è fuori schermo
 - Grandi Edifici: i bonus moltiplicativi del tier Oro compaiono nelle colonne come +N% (non contati nell'efficienza); il +% di produzione dei beni di San Marco e dei beni speciali del Trasportatore spaziale va nelle colonne Boost beni e Boost beni speciali
 - Grandi Edifici: tutti gli altri bonus (reliquie, colpo critico, doppio incasso, lancio missilistico, bottino di guerra, ecc.) hanno l'icona del gioco con una spiegazione; i potenziamenti di monete e materiali di San Marco, Royal Albert Hall e Faro di Alessandria ora si vedono anche nelle città importate
 
