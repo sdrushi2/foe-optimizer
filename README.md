@@ -24,6 +24,12 @@ rearranges your buildings with as few roads as possible.
   and your own priorities (PvP, GBG, Guild Expedition, Quantum Incursions).
 - **Allies manager** — track owned allies and rarity, with database comparison and an
   ally advisor.
+- **Great Building calculator** — for every Great Building and level: the level's
+  Forge Points, how much each patron spot pays with the usual chat rates (Copper
+  90/95/100%, Gold 20% or custom) and how many FP the owner needs to secure each
+  spot, with a ready-to-paste chat line. Mobile friendly, in English
+  ([foe-optimizer.com/gb](https://foe-optimizer.com/gb)) and Italian
+  ([foe-optimizer.com/ge](https://foe-optimizer.com/ge)).
 - **Pirate Settlement planner** — a dedicated building placement solver for the
   in-game Pirate Settlement map.
 - **Saved cities** — your own cities, visited ones and JSON imports, all stored

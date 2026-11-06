@@ -1,0 +1,119 @@
+/* Calcolatore dei GE (/ge italiano, /gb inglese): stile comune. */
+:root {
+  color-scheme: dark;
+  --bg: #0f172a;
+  --bg-deep: #020617;
+  --panel: #1e293b;
+  --panel-2: #172033;
+  --border: #334155;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-faint: #64748b;
+  --amber: #fbbf24;
+  --amber-dim: #d97706;
+  --green: #34d399;
+  --red: #f87171;
+  --copper: #e0915a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(circle at 50% -10%, var(--panel) 0%, var(--bg) 45%, var(--bg-deep) 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.5;
+}
+.wrap { max-width: 640px; margin: 0 auto; padding: 10px 10px 24px; }
+
+/* header come quello dell'editor (public/editor.html) e della testata del tool */
+#bar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px;
+  padding: 6px 10px;
+  background: rgba(15, 23, 42, .6);
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(245, 158, 11, .1);
+}
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; text-decoration: none; }
+.logo {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 11px; border: 1.5px solid rgba(245, 158, 11, .8);
+  background: rgba(2, 6, 23, .8); color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, .15);
+}
+.brand h1 {
+  margin: 0; font-size: 20px; line-height: 1; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .025em; white-space: nowrap;
+  background: linear-gradient(to right, #fcd34d, #fbbf24, #f59e0b);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: 9px;
+  background: #1e293b; color: #cbd5e1; border: 1px solid #334155;
+  font-weight: 700; font-size: 12px; text-decoration: none;
+}
+.btn:hover { background: #334155; }
+.card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+select, input { font: inherit; font-size: .9rem; color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; }
+select:focus, input:focus { outline: none; border-color: var(--amber-dim); }
+button { font: inherit; font-weight: 700; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--amber-dim); color: var(--amber); }
+/* riga 1: GE + livello */
+.riga { display: flex; gap: 6px; align-items: center; }
+.riga select { flex: 1; min-width: 0; }
+.liv { display: flex; gap: 4px; align-items: center; }
+.liv input { width: 56px; text-align: center; padding: 6px 4px; }
+.liv button { padding: 6px 9px; }
+/* riga 2: chat (3 Rame / Oro + Custom) */
+.chat { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 6px; }
+.chat button { grid-column: span 2; font-size: .72rem; padding: 6px 2px; white-space: nowrap; }
+.chat button.oro { grid-column: span 3; }
+.chat .custom { grid-column: span 3; display: flex; gap: 4px; align-items: center; }
+.chat .custom button { flex: 1; }
+.chat .custom input { width: 52px; text-align: center; padding: 5px 4px; font-size: .8rem; }
+.chat .custom span { font-size: .8rem; color: var(--text-dim); }
+.chat button.attivo { border-color: var(--amber); color: var(--bg-deep); background: var(--amber); }
+.chat button.oro { color: var(--amber); }
+.chat button.oro.attivo { color: var(--bg-deep); background: var(--amber); border-color: var(--amber); }
+.chat button.rame { color: var(--copper); } .chat button.rame.attivo { color: var(--bg-deep); background: var(--copper); border-color: var(--copper); }
+.chat button:disabled { opacity: .35; cursor: not-allowed; border-color: var(--border); }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; }
+.stat .k { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); line-height: 1.2; }
+.stat .v { font-family: ui-monospace, Consolas, monospace; font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+
+.card.tabella { padding: 4px 8px; }
+table { width: 100%; border-collapse: collapse; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+th { font-family: inherit; font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; line-height: 1.2; color: var(--text-dim); padding: 5px 4px; text-align: right; border-bottom: 1px solid var(--border); }
+th:first-child, td:first-child { text-align: left; }
+td { padding: 4px; text-align: right; border-bottom: 1px solid rgba(51, 65, 85, .5); }
+tr:last-child td { border-bottom: 0; }
+td.pos { font-weight: 800; font-size: 1.05rem; color: var(--amber); }
+tr.vuoto td { color: var(--text-faint); }
+tr.vuoto td.pos { color: var(--text-faint); }
+/* testo da copiare in chat: nome del giocatore + GE + posti */
+/* riga 1: il testo intero (va a capo, niente troncature); riga 2: nome + Copia */
+.copia { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.copia #testo { flex-basis: 100%; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; line-height: 1.4;
+  background: var(--bg-deep); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; overflow-wrap: anywhere; user-select: all; }
+.copia #giocatore { flex: 1; min-width: 0; }
+.sicuro { color: var(--green); font-weight: 700; }
+.pieno { color: var(--red); }
+footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
+footer p { margin: 0; }
+#errore { color: var(--red); margin: 4px 0 8px; }
+/* cambio lingua nell'header (come la guida) */
+.lingue { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 700; }
+.lingue a { color: var(--text-faint); text-decoration: none; padding: 2px 0; border-bottom: 2px solid transparent; }
+.lingue a.attiva { color: var(--amber); border-color: var(--amber); }
+.lingue a:not(.attiva):hover { color: var(--text); }
+.lingue span { color: var(--text-faint); }
+
+@media (max-width: 420px) {
+  .brand h1 { font-size: 17px; }
+  .btn { padding: 6px 10px; }
+}

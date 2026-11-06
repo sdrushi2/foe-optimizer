@@ -496,7 +496,8 @@ const UI_STRINGS = {
   r2ProdDetailTitle: { it: "Mostra le colonne delle produzioni", en: "Show the production columns" },
   r2Sums: { it: "Somma %", en: "Sum %" },
   r2Patrons: { it: "Calcolatore", en: "Calculator" },
-  r2PatronsTitle: { it: "Calcolatore dei Grandi Edifici: posti mecenate di ogni livello (foe-optimizer.com/ge, si apre in una nuova scheda)", en: "Great Building calculator: patron spots of each level (foe-optimizer.com/ge, opens in a new tab, Italian only)" },
+  r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
+  r2PatronsTitle: { it: "Calcolatore dei Grandi Edifici: posti mecenate di ogni livello (foe-optimizer.com/ge, si apre in una nuova scheda)", en: "Great Building calculator: patron spots of each level (foe-optimizer.com/gb, opens in a new tab)" },
   r2GbBonus: { it: "Bonus GE", en: "GB bonus" },
   r2GbBonusTitle: {
     it: "Valori militari ed efficienza con i bonus moltiplicativi dei Grandi Edifici della città (tier Oro e Sifone; più GE dello stesso tipo si sommano): Generali × bonus globali, Campi e Spedizioni × bonus della modalità + globali, IQ × bonus IQ. I valori cambiati sono in azzurro / rosa.",

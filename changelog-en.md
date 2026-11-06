@@ -2,7 +2,7 @@
 
 ## Version 2.009 (06/11/2026)
 ### New
-- New Great Building Calculator (foe-optimizer.com/ge, also from Database › Great Buildings › Calculator, Italian only): for each GB and level the level's FP, each spot's reward with the chat percentage (Copper 90%, 95%, 100%, Gold 20% or custom) and how many FP you need to secure it
+- New Great Building Calculator (foe-optimizer.com/gb, in Italian foe-optimizer.com/ge; also from Guide › GB Calculator and Database › Great Buildings › Calculator): for each GB and level the level's FP, each spot's reward with the chat percentage (Copper 90%, 95%, 100%, Gold 20% or custom) and how many FP you need to secure it
 - City: under the multiplicative Great Building bonuses (+N%) you see their actual contribution in your city (e.g. +1,670), which now counts in the GB's efficiency
 - City and Inventory: new Options › GB bonus button, which applies the multiplicative bonuses of the city's Great Buildings to military values and efficiency
 - Military statistics: new "GB bonus" and "total with bonus" columns, with the multiplicative Great Building bonuses computed on the total

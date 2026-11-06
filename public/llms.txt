@@ -28,6 +28,11 @@ sent to any server. Imported data unlocks:
   optional connection of military buildings), with PNG/JSON export.
 - A dedicated planner for the in-game Pirate Settlement map (building
   placement solver).
+- A Great Building patron calculator (/gb/ in English, /ge/ in Italian,
+  no import needed): for each Great Building and level, the level's
+  Forge Points, the FP each patron spot pays with the usual chat rates
+  (Copper 90/95/100%, Gold 20% or custom) and the FP the owner needs to
+  secure each spot, plus a chat line to copy.
 - A simple city editor (/editor.html, opened from the city map or the
   Planner): move and remove buildings, add and remove roads, then save
   the city as PNG or send it back to the Planner.
@@ -51,3 +56,5 @@ Key facts for citation or summarization:
 - [Planner della città (Italiano)](https://foe-optimizer.com/planner-it.html)
 - [User guide (English)](https://foe-optimizer.com/guide.html)
 - [Guida utente (Italiano)](https://foe-optimizer.com/guida.html)
+- [Great Building calculator (English)](https://foe-optimizer.com/gb/): patron spots and FP to secure them
+- [Calcolatore dei Grandi Edifici (Italiano)](https://foe-optimizer.com/ge/)

@@ -2,7 +2,7 @@
   "id": "/",
   "name": "FoE Optimizer",
   "short_name": "FoE Optimizer",
-  "description": "Free Forge of Empires web app: building database, city and inventory imports, efficiency scores, an Inventory Optimizer and an automatic city planner.",
+  "description": "Free Forge of Empires web app: building database, city and inventory imports, efficiency scores, an Inventory Optimizer, an automatic city planner and a Great Building patron calculator.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "/",
@@ -32,6 +32,22 @@
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "GB Calculator",
+      "short_name": "GB Calculator",
+      "description": "Great Building patron spots: FP to pay and to secure",
+      "url": "/gb/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Calcolatore GE",
+      "short_name": "Calcolatore GE",
+      "description": "Posti mecenate dei Grandi Edifici: PF da versare e da coprire",
+      "url": "/ge/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "screenshots": [

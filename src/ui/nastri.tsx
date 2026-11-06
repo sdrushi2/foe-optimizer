@@ -263,10 +263,10 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         // (Visualizza senza "IQ mon/mat": il catalogo dei GE non ha colonne delle Incursioni)
         // (Spedizioni e Produzioni sempre visibili, niente selezione né Export: utente, 06/11)
         return [catalogo, livello, tier, ricerca, { ...vista(), rows: [vistaBase.filter(i => i.id !== "iqProd" && i.id !== "sped" && i.id !== "dettaglioProd")] }, opzioniTabella,
-          // Calcolatore dei GE, posti mecenate (pagina a parte /ge/, come la guida; solo in italiano)
+          // Calcolatore dei GE, posti mecenate (pagina a parte come la guida: /ge/ italiano, /gb/ inglese)
           { id: "strumenti-ge", label: L("r2GrpTools"), icon: Calculator, rows: [[
             { kind: "button", id: "mecenati", icon: Calculator, label: L("r2Patrons"), title: L("r2PatronsTitle"),
-              onClick: () => window.open("/ge/", "_blank", "noopener") },
+              onClick: () => window.open(c.uiLang === "it" ? "/ge/" : "/gb/", "_blank", "noopener") },
           ]] }];
       }
       return [catalogo, ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici];
@@ -357,6 +357,8 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       return [
         { id: "impara", label: L("r2GrpLearn"), icon: BookOpen, rows: [[
           { kind: "button", id: "guida", icon: BookOpen, label: L("r2Guide"), onClick: () => window.open(c.uiLang === "it" ? "/guida.html" : "/guide.html", "_blank", "noopener") },
+          { kind: "button", id: "calcolatore-ge", icon: Calculator, label: L("r2GbCalc"), title: L("r2PatronsTitle"),
+            onClick: () => window.open(c.uiLang === "it" ? "/ge/" : "/gb/", "_blank", "noopener") },
           tasto("bacchetta", c.comeImportare, Wand2, "r2ImportHow"),
           tasto("planner", c.comeUsarePlanner, MapIcon, "r2PlannerHow"),
         ]] },

@@ -185,7 +185,7 @@ function editorCondivisoPlugin(): Plugin {
   };
 }
 
-// Calcolatore dei GE (public/ge/index.html): in dev Vite serve i file di public/
+// Calcolatore dei GE (public/ge/ italiano, public/gb/ inglese): in dev Vite serve i file di public/
 // solo col percorso esatto, e /ge o /ge/ finivano nel fallback dell'app (la
 // pagina iniziale). Qui li riscriviamo in /ge/index.html; in produzione ci
 // pensa GitHub Pages (index.html della cartella).
@@ -195,7 +195,8 @@ function calcolatoreGePlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         const [percorso, query] = (req.url ?? "").split("?");
-        if (percorso === "/ge" || percorso === "/ge/") req.url = "/ge/index.html" + (query ? `?${query}` : "");
+        const m = /^\/(ge|gb)\/?$/.exec(percorso ?? "");
+        if (m) req.url = `/${m[1]}/index.html` + (query ? `?${query}` : "");
         next();
       });
     },
