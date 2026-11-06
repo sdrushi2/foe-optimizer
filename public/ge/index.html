@@ -106,6 +106,10 @@
       td.pos { font-weight: 800; font-size: 1.05rem; color: var(--amber); }
       tr.vuoto td { color: var(--text-faint); }
       tr.vuoto td.pos { color: var(--text-faint); }
+      /* testo da copiare in chat: nome del giocatore + GE + posti */
+      .copia { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+      .copia #giocatore { width: 110px; }
+      .copia #testo { flex: 1; min-width: 200px; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; }
       .sicuro { color: var(--green); font-weight: 700; }
       .pieno { color: var(--red); }
       footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
@@ -180,6 +184,12 @@
         </table>
       </div>
 
+      <div class="card copia">
+        <input id="giocatore" aria-label="Il tuo nome nel gioco" placeholder="Nome">
+        <input id="testo" readonly aria-label="Testo da copiare in chat">
+        <button type="button" id="copia">Copia</button>
+      </div>
+
       <footer>
         <p>Forge of Empires è un marchio di InnoGames GmbH. FoE Optimizer è un progetto amatoriale indipendente, non affiliato a InnoGames.</p>
       </footer>
@@ -211,7 +221,7 @@
           const nome = id => dati[id].nome || id;
           const oro = id => !!dati[id].oro;
           // chat scelta per tier (livelli Rame 5 posti, livelli Oro 7), validata in calcola()
-          const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "80", chat: { rame: "r90", oro: "o20" } };
+          const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "80", giocatore: "", chat: { rame: "r90", oro: "o20" } };
           try { Object.assign(S, JSON.parse(localStorage.getItem(CHIAVE) || "{}")); } catch (e) { /* niente */ }
           if (!costi[S.ge]) S.ge = ids[0];
           if (!S.chat || typeof S.chat !== "object") S.chat = {}; // (salvataggio vecchio o rovinato)
@@ -288,6 +298,11 @@
                 t.textContent = fmt(o.tuoi);
               }
             });
+            // testo per la chat, dall'ultimo posto al primo: "Nome GE: P7(3) P6(6) … P1(4275)"
+            const parti = [];
+            for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].base > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].versa + ")");
+            const chi = String(S.giocatore || "").trim();
+            $("testo").value = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? ": " + parti.join(" ") : "");
             salva();
           }
 
@@ -304,9 +319,17 @@
           };
           document.querySelectorAll("#chat button").forEach(b => b.addEventListener("click", () => applicaChat(b.dataset.chat)));
           $("custom").addEventListener("input", e => { S.custom = e.target.value; applicaChat("custom"); });
+          $("giocatore").addEventListener("input", e => { S.giocatore = e.target.value; mostra(); });
+          $("copia").addEventListener("click", async () => {
+            const inp = $("testo");
+            try { await navigator.clipboard.writeText(inp.value); } catch (e) { inp.select(); document.execCommand("copy"); }
+            $("copia").textContent = "Copiato";
+            setTimeout(() => { $("copia").textContent = "Copia"; }, 1200);
+          });
 
           $("ge").value = S.ge;
           $("custom").value = S.custom || "";
+          $("giocatore").value = S.giocatore || "";
           sincronizza();
           mostra();
         }
