@@ -31,7 +31,7 @@ sent to any server. Imported data unlocks:
 - A Great Building patron calculator (/gb/ in English, /ge/ in Italian,
   no import needed): for each Great Building and level, the level's
   Forge Points, the FP each patron spot pays with the usual chat rates
-  (Copper 90/95/100%, Gold 20% or custom) and the FP the owner needs to
+  (Copper 90/95/100%, Gold 20%, 25% or custom) and the FP the owner needs to
   secure each spot, plus a chat line to copy.
 - A simple city editor (/editor.html, opened from the city map or the
   Planner): move and remove buildings, add and remove roads, then save

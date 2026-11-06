@@ -16,7 +16,8 @@
     it: {
       titolo: "Calcolatore GE", torna: "← Torna al tool",
       ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo",
-      rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata",
+      rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "es. 92",
+      customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
       pfLivello: "PF del livello", pfProp: "PF proprietario", pfContr: "PF contribuzioni",
       pfPropT: "PF che restano a carico del proprietario per completare il livello",
       pfContrT: "PF versati in tutto dai mecenati dei posti (con la percentuale della chat)",
@@ -34,7 +35,8 @@
     en: {
       titolo: "GB Calculator", torna: "← Back to the tool",
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level",
-      rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage",
+      rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "e.g. 92",
+      customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
       pfLivello: "Level FP", pfProp: "Owner FP", pfContr: "Contributions FP",
       pfPropT: "FP left to the owner to complete the level",
       pfContrT: "FP paid in total by the patrons of the spots (with the chat percentage)",
@@ -56,7 +58,7 @@
   // Divisione dei premi fra i posti (Rame 5 posti, Oro 7 posti)
   const QUOTE = { 5: [120, 60, 20, 5, 1].map(x => x / 206), 7: [5040, 2520, 840, 210, 42, 7, 1].map(x => x / 8660) };
   const CHIAVE = "foe-optimizer-calcolatore-ge";   // (stesso stato per /ge e /gb)
-  const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20 };
+  const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20, o25: 25 };
   const $ = id => document.getElementById(id);
   // migliaia sempre separate (anche a 4 cifre): punto in italiano, virgola in inglese
   const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, LINGUA === "en" ? "," : ".");
@@ -101,9 +103,10 @@
           ${chat("r95", "rame", T.rame + " 95%", T.chatRame + " 95%")}
           ${chat("r100", "rame", T.rame + " 100%", T.chatRame + " 100%")}
           ${chat("o20", "oro", T.oro + " 20%", T.chatOro + " 20%")}
-          <span class="custom">
+          ${chat("o25", "oro", T.oro + " 25%", T.chatOro + " 25%")}
+          <span class="custom" id="customBox" title="${esc(T.customT)}">
             <button type="button" data-chat="custom">${esc(T.custom)}</button>
-            <input id="custom" inputmode="decimal" aria-label="${esc(T.customAl)}" placeholder="%"><span>%</span>
+            <input id="custom" inputmode="decimal" aria-label="${esc(T.customAl)}" placeholder="${esc(T.customEs)}"><span>%</span>
           </span>
         </div>
       </div>
@@ -142,7 +145,7 @@
   const nome = id => { const n = dati[id].nome; return (typeof n === "string" ? n : n && (n[LINGUA] || n.it || n.en)) || id; };
   const oro = id => !!dati[id].oro;
   // chat scelta per tier (livelli Rame 5 posti, livelli Oro 7), validata in calcola()
-  const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "80", giocatore: "", chat: { rame: "r90", oro: "o20" } };
+  const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "", giocatore: "", chat: { rame: "r90", oro: "o20" } };
   try { Object.assign(S, JSON.parse(localStorage.getItem(CHIAVE) || "{}")); } catch (e) { /* niente */ }
   if (!costi[S.ge]) S.ge = ids[0];
   if (!S.chat || typeof S.chat !== "object") S.chat = {}; // (salvataggio vecchio o rovinato)
@@ -158,7 +161,7 @@
     const quota = (FASCE.find(f => lvl <= f[0]) || FASCE[FASCE.length - 1])[1];
     const n = oro(S.ge) && lvl >= 101 ? 7 : 5, tier = n === 7 ? "oro" : "rame";
     // % della chat scelta per questo tier (la stessa per tutti i posti; fattore = 1 + % / 100)
-    const valida = tier === "oro" ? ["o20", "custom"] : ["r90", "r95", "r100", "custom"];
+    const valida = tier === "oro" ? ["o20", "o25", "custom"] : ["r90", "r95", "r100", "custom"];
     if (!valida.includes(S.chat[tier])) S.chat[tier] = tier === "oro" ? "o20" : "r90";
     const perc = S.chat[tier] === "custom" ? numero(S.custom, 0) : CHAT[S.chat[tier]];
     // (montepremi NON arrotondato prima della divisione: così fa il gioco, come
@@ -199,6 +202,7 @@
       b.classList.toggle("attivo", attivo);
       b.setAttribute("aria-pressed", String(attivo));
     });
+    $("customBox").classList.toggle("attivo", S.chat[r.tier] === "custom");
     $("totale").textContent = fmt(r.costo);
     $("contribuzioni").textContent = fmt(r.contribuzioni);
     $("proprietario").textContent = fmt(r.proprietario);
@@ -235,6 +239,8 @@
   const applicaChat = c => { S.chat[calcola().tier] = c; mostra(); };
   document.querySelectorAll("#chat button").forEach(b => b.addEventListener("click", () => applicaChat(b.dataset.chat)));
   $("custom").addEventListener("input", e => { S.custom = e.target.value; applicaChat("custom"); });
+  // (toccare la casella della % sceglie già la chat personalizzata)
+  $("custom").addEventListener("focus", () => applicaChat("custom"));
   $("giocatore").addEventListener("input", e => { S.giocatore = e.target.value; mostra(); });
   $("copia").addEventListener("click", async () => {
     const el = $("testo");

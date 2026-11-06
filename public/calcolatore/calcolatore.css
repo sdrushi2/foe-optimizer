@@ -67,14 +67,19 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .liv { display: flex; gap: 4px; align-items: center; }
 .liv input { width: 56px; text-align: center; padding: 6px 4px; }
 .liv button { padding: 6px 9px; }
-/* riga 2: chat (3 Rame / Oro + Custom) */
-.chat { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 6px; }
-.chat button { grid-column: span 2; font-size: .72rem; padding: 6px 2px; white-space: nowrap; }
-.chat button.oro { grid-column: span 3; }
-.chat .custom { grid-column: span 3; display: flex; gap: 4px; align-items: center; }
-.chat .custom button { flex: 1; }
-.chat .custom input { width: 52px; text-align: center; padding: 5px 4px; font-size: .8rem; }
+/* riga 2: chat (3 Rame / 2 Oro + Custom) */
+.chat { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 6px; }
+.chat button { grid-column: span 4; font-size: .72rem; padding: 6px 2px; white-space: nowrap; }
+.chat button.oro { grid-column: span 4; }  /* tutti larghi 1/3: 3 Rame, poi 2 Oro + Custom */
+/* CUSTOM: pulsante e percentuale in un'unica "pillola", così si capisce che il
+   numero è la % della chat personalizzata; casella tratteggiata = da scrivere */
+.chat .custom { grid-column: span 4; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 2px 4px 2px 2px;
+  border: 1px solid var(--border); border-radius: 7px; background: var(--panel); }
+.chat .custom button { flex: 1; min-width: 0; border: 0; padding: 5px 2px; overflow: hidden; text-overflow: clip; }
+.chat .custom input { width: 46px; flex-shrink: 0; text-align: center; padding: 3px 4px; font-size: .8rem; border-style: dashed; border-color: var(--amber-dim); }
 .chat .custom span { font-size: .8rem; color: var(--text-dim); }
+.chat .custom.attivo { border-color: var(--amber); }
+.chat .custom.attivo button { border-radius: 5px; }
 .chat button.attivo { border-color: var(--amber); color: var(--bg-deep); background: var(--amber); }
 .chat button.oro { color: var(--amber); }
 .chat button.oro.attivo { color: var(--bg-deep); background: var(--amber); border-color: var(--amber); }
@@ -114,6 +119,9 @@ footer p { margin: 0; }
 .lingue span { color: var(--text-faint); }
 
 @media (max-width: 420px) {
+  /* (CUSTOM in 1/3 di riga: casella più stretta, senza il "%" accanto) */
+  .chat .custom input { width: 38px; padding: 3px 2px; }
+  .chat .custom span { display: none; }
   .brand h1 { font-size: 17px; }
   .btn { padding: 6px 10px; }
 }
