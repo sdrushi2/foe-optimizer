@@ -165,13 +165,16 @@
     if (!valida.includes(S.chat[tier])) S.chat[tier] = tier === "oro" ? "o20" : "r90";
     const perc = S.chat[tier] === "custom" ? numero(S.custom, 0) : CHAT[S.chat[tier]];
     // (montepremi NON arrotondato prima della divisione: così fa il gioco, come
-    // mostra FoE Helper; Linnun lo arrotonda e sbaglia di 1 PF qua e là, es.
-    // Osservatorio 156: posto 2 = 3.801 e non 3.802)
+    // mostra FoE Helper, es. Osservatorio 156: posto 2 = 3.801 e non 3.802;
+    // oggi anche il calcolatore di Linnun fa così)
     const premi = costo * quota;
     let somma = 0, prec = 0;
     const righe = [];
     for (let i = 0; i < n; i++) {
-      const base = Math.round(premi * QUOTE[n][i]);
+      // (le ricompense piccole il gioco le dà pari: 1 → 2 e 3 → 4; verificato
+      // sulla Galassia blu 199, posto 7 = 4 e non 3; stessa correzione di Linnun)
+      let base = Math.round(premi * QUOTE[n][i]);
+      if (base === 1 || base === 3) base += 1;
       const versa = Math.max(0, Math.round(base * (1 + perc / 100)));
       somma += versa;
       // sicuro quando quello che resta (costo - posti 1..i - i tuoi) non supera questo posto
