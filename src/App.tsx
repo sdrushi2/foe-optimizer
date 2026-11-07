@@ -3299,8 +3299,9 @@ export default function App() {
   // 2.0: colonne Spedizioni della tabella edifici (Visualizza), separate dal
   // peso nell'efficienza (Opzioni). Senza valore salvato si parte come il peso.
   const [showSpedColumnsPref, setShowSpedColumns] = useState<boolean>(() => {
+    // (senza preferenza salvata, prima apertura o dopo Cancella tutto: accese; utente 07/11)
     const v = localStorage.getItem(SPED_COLUMNS_KEY);
-    return v === null ? localStorage.getItem(SPED_ENABLED_KEY) === "true" : v === "true";
+    return v === null ? true : v === "true";
   });
   const [spedizioniAttack, setSpedizioniAttack] = useState<number>(() => {
     const saved = localStorage.getItem(SPED_ATTACK_KEY);
@@ -3326,7 +3327,8 @@ export default function App() {
   // prodFilterMode) restano invece dentro TabFilters/DEFAULT_FILTERS: solo
   // la visibilità del pannello è resa globale e persistente, non la
   // selezione dei filtri al suo interno.
-  const [showProdColumnsPref, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) === "true");
+  // (senza preferenza salvata, prima apertura o dopo Cancella tutto: accese; utente 07/11)
+  const [showProdColumnsPref, setShowProdColumns] = useState<boolean>(() => localStorage.getItem(PROD_COLUMNS_KEY) !== "false");
   // Catalogo › Grandi Edifici: Spedizioni e Produzioni sempre visibili (utente, 06/11; niente pulsanti nel nastro)
   const catalogoGeAperto = activeTab === "database" && catalogo === "ge";
   const showProdColumns = showProdColumnsPref || catalogoGeAperto;
