@@ -123,6 +123,31 @@ function Grafico({ n, serie, da, a, h, log = false, yFmt, uiLang }: {
 
 interface Zoom { titolo: string; sotto: string; disegna: (h: number) => ReactNode }
 
+/** Icona del bonus (public/data/ge-icone/<icona>.png, scaricate da wiki_ge.py: le
+ *  stesse delle intestazioni della wiki) al posto del titolo del grafico, con il nome
+ *  nel tooltip; per le colonne a due valori un piccolo segno ("#" quante volte, "%"
+ *  probabilità…). Se l'icona manca, il nome scritto come prima. */
+function IconaBonus({ chiave, nome, oro, uiLang, conNome }: { chiave: string; nome: string; oro: boolean; uiLang: UiLang;
+  /** anche il nome dopo l'icona (tabella "Cosa guadagni": fa da legenda dei grafici) */
+  conNome?: boolean }) {
+  // prima l'icona con la chiave intera (es. ..._guild_goods è un'icona sua, non
+  // "guild" + "_goods"), poi quella senza il suffisso della sottocolonna, poi il nome
+  const [tentativo, setTentativo] = useState(0);
+  const m = /^(.+?)_(n|pct|goods|rare_totem|rare_reward|2)$/.exec(chiave);
+  const ridotta = m && /^(icon_great_building_bonus_|(att|def|att_def)_boost_)/.test(m[1]!) ? m[1]! : null;
+  const candidati = ridotta ? [chiave, ridotta] : [chiave];
+  const segni: Record<string, [string, string]> = { n: ["#", "#"], pct: ["%", "%"], goods: ["beni", "goods"], rare_totem: ["rara", "rare"], rare_reward: ["rara", "rare"] };
+  const segno = tentativo === 1 && m ? segni[m[2]!]?.[uiLang === "en" ? 1 : 0] : undefined;
+  if (tentativo >= candidati.length) return <span className={oro ? "text-amber-300" : ""}>{nome}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1 ${conNome ? "" : "cursor-help"}`} title={conNome ? undefined : nome}>
+      <img key={candidati[tentativo]} src={`/data/ge-icone/${candidati[tentativo]}.png`} alt={nome} className={`${conNome ? "h-5 w-5" : "h-6 w-6"} shrink-0 object-contain`} onError={() => setTentativo(t => t + 1)} />
+      {segno && <span className={`text-[11px] font-bold ${oro ? "text-amber-300" : "text-slate-300"}`}>{segno}</span>}
+      {conNome && <span className={`ml-1 ${oro ? "text-amber-300" : ""}`}>{nome}</span>}
+    </span>
+  );
+}
+
 function Box({ titolo, nota, onZoom, children }: { titolo: ReactNode; nota?: ReactNode; onZoom?: () => void; children: ReactNode }) {
   return (
     <div className="relative rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-2">
@@ -220,7 +245,7 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
               const g = lb.v[k]! - la.v[k]!;
               return (
                 <tr key={c.chiave} className="border-t border-slate-800">
-                  <td className={`px-1.5 py-1 text-left font-sans ${r.info[k]!.oro ? "text-amber-300" : ""}`}>{c.nome}</td>
+                  <td className={`px-1.5 py-1 text-left font-sans ${r.info[k]!.oro ? "text-amber-300" : ""}`}><IconaBonus chiave={c.chiave} nome={c.nome} oro={r.info[k]!.oro} uiLang={uiLang} conNome /></td>
                   <td className="px-1.5 py-1 text-right">{la.v[k] ? vf(k)(la.v[k]!) : "–"}</td>
                   <td className="px-1.5 py-1 text-right">{lb.v[k] ? vf(k)(lb.v[k]!) : "–"}</td>
                   <td className={`px-1.5 py-1 text-right ${g > 0 ? "text-emerald-400" : "text-slate-500"}`}>{g > 0 ? `+${vf(k)(g)}` : "="}</td>
@@ -237,7 +262,7 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
             const i = r.info[k]!, nota = `${i.oro ? `${T.tierOro} · ` : ""}${T.maxAl(vf(k)(i.max), i.lmax)}`;
             const attivo = L.slice(A0 - 1, B0).some(l => l.v[k]);
             return (
-              <Box key={c.chiave} titolo={<span className={i.oro ? "text-amber-300" : ""}>{c.nome}</span>} nota={nota}
+              <Box key={c.chiave} titolo={<IconaBonus chiave={c.chiave} nome={c.nome} oro={i.oro} uiLang={uiLang} />} nota={nota}
                 onZoom={attivo ? () => setZoom({ titolo: c.nome, sotto: T.livelli(A0, B0), disegna: graficoBonus(k) }) : undefined}>
                 {attivo ? graficoBonus(k)(90) : <div className="grid h-[90px] place-items-center text-[12px] text-slate-500">{T.inattivo(A0, B0, i.oro)}</div>}
               </Box>
