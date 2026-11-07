@@ -4630,11 +4630,15 @@ export default function App() {
       return [...allProcessedBuildings, ...mergedInventory];
     }
     if (activeTab === "inventario") {
+      // filtri Era / Beni dell'era: sempre gli edifici posseduti così come sono
+      // (nella vista con i kit un edificio aggiornabile compare solo come
+      // risultato dell'aggiornamento, non con la sua copia d'inventario)
+      if (eraInventario !== null || beniEraInventario !== null) return processedInventoryRawBuildings;
       return showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings;
     }
     if (activeTab === "database" && catalogo === "ge") return processedGeCatalogo;
     return processedBuildings;
-  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity, catalogo, processedGeCatalogo]);
+  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity, catalogo, processedGeCatalogo, eraInventario, beniEraInventario]);
 
   // Applica UNA VOLTA l'override era corrente (stats + nome + efficienza) per le
   // tab Città/Inventario, indipendentemente dalla ricerca. Prima questo lavoro
@@ -4739,8 +4743,7 @@ export default function App() {
     if (activeTab !== "inventario" || (eraInventario === null && beniEraInventario === null)) return finale;
     const out: ProcessedBuilding[] = [];
     for (const b of finale) {
-      const posseduto = b.id.startsWith("raw-") || (b as InventoryRowBuilding)._invBadge === "INV";
-      if (!posseduto) continue;
+      if (!b.id.startsWith("raw-")) continue; // (sorgente: processedInventoryRawBuildings, vedi filterSourceBuildings)
       for (const c of copieInventario.get(b.cityEntityId) ?? []) {
         if (eraInventario !== null && c.era !== eraInventario) continue;
         const col = beniEraInventario !== null ? colonnaBeniEra(c.stats, c.era, beniEraInventario) : null;
