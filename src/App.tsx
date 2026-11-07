@@ -5,6 +5,7 @@ import {
   Upload,
   Check,
   Wand2,
+  ChartColumn,
 } from "lucide-react";
 
 import type { Building } from "./data/buildings";
@@ -95,6 +96,8 @@ import {
 // Planner (motore, editor, Modifica città): caricato solo quando lo si apre
 // (2.0, build a più file: un pezzo di codice a parte).
 const PlannerView = lazy(() => import("./planner/PlannerView"));
+// Report di un GE (Catalogo › Grandi Edifici, pulsante 📊): a parte, scaricato solo aprendolo
+const PannelloReportGe = lazy(() => import("./components/PannelloReportGe"));
 
 const { buildings: buildingsCsv, allies: alliesCsv, events: eventsCsv, kit: kitData } = datiGioco();
 const BUILDINGS_FROM_CSV: Building[] = parseBuildingsCsv(buildingsCsv);
@@ -1095,6 +1098,8 @@ interface BuildingRowProps {
   isEven: boolean;
   /** Catalogo › Grandi Edifici: niente cella dei limitati. */
   senzaLimitati?: boolean;
+  /** Catalogo › Grandi Edifici: apre il report del GE (pulsante accanto al nome). */
+  onReport?: (id: string) => void;
   /** Catalogo › Grandi Edifici: niente celle delle produzioni delle Incursioni. */
   senzaIq?: boolean;
   isDeclassable: boolean;
@@ -1128,7 +1133,7 @@ const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, senzaIq, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, onReport, senzaIq, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentsProduced,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
@@ -1365,6 +1370,13 @@ const BuildingRow = memo(function BuildingRow({
             );
           })()}
         </span>
+        {onReport && b.isGreatBuilding && (
+          <button type="button" onClick={e => { e.stopPropagation(); onReport(b.cityEntityId); }}
+            className="ml-1.5 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-amber-300 hover:border-amber-500"
+            title={t("gbReportOpen", uiLang)} aria-label={t("gbReportOpen", uiLang)}>
+            <ChartColumn size={13} />
+          </button>
+        )}
         {noRush(b) && (
           <span className="ml-1 inline-flex flex-shrink-0 cursor-help relative top-px" title={t("noRushBadgeTitle", uiLang)}>
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5">
@@ -1381,8 +1393,8 @@ const BuildingRow = memo(function BuildingRow({
             </svg>
           </span>
         )}
-        {b.isGreatBuilding && (
-          // badge GE: oro per il tier Oro, rame per il tier Rame (Prestige)
+        {b.isGreatBuilding && !senzaLimitati && (
+          // badge GE: oro per il tier Oro, rame per il tier Rame (Prestige); non nel catalogo dei GE (sono tutti GE)
           <span title={b.gbTier ? t(b.gbTier === "oro" ? "gbTierGold" : "gbTierCopper", uiLang) : undefined}
             className={`ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded border ${b.gbTier === "rame"
               ? "gb-badge-copper"
@@ -2503,6 +2515,8 @@ export default function App() {
   // Catalogo › Grandi Edifici: livello del selettore e dati (ge.json, scaricato
   // la prima volta che si apre il catalogo)
   const [livelloGe, setLivelloGe] = useState<number>(201);
+  // Catalogo › Grandi Edifici: GE di cui è aperto il report (null = chiuso)
+  const [reportGe, setReportGe] = useState<string | null>(null);
   /** Filtro per tier massimo: tutti, solo Rame, con anche l'Oro. */
   const [tierGe, setTierGe] = useState<"tutti" | "copper" | "gold">("tutti");
   const [datiGe, setDatiGe] = useState<DatiGe | null>(null);
@@ -7059,6 +7073,7 @@ export default function App() {
                           b={b}
                           isEven={rowIndex % 2 === 1}
                           senzaLimitati={senzaLimitati}
+                          onReport={senzaLimitati ? setReportGe : undefined}
                           senzaIq={senzaIq}
                           activeTab={activeTab}
                           uiLang={uiLang}
@@ -7517,6 +7532,16 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {reportGe && datiGe?.edifici[reportGe] && (() => {
+        const g = datiGe.edifici[reportGe]!, b = BUILDING_BY_ID.get(reportGe);
+        return (
+          <Suspense fallback={null}>
+            <PannelloReportGe id={reportGe} nome={displayName(reportGe, g.nome[uiLang === "en" ? "en" : "it"], uiLang)} oro={g.tierMax === "gold"}
+              era={g.era} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)} />
+          </Suspense>
+        );
+      })()}
 
       {imagePopup && (
         <div

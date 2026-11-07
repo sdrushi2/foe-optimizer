@@ -23,10 +23,20 @@ const FILE = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.c
 
 export interface ManifestDati { versione: string; file: Record<string, string> }
 
+/** Valori livello per livello dei GE (RECUPERO DATI/wiki_ge.py, lanciato a mano):
+ *  un file per GE, scaricato SOLO dal dettaglio del GE nel catalogo
+ *  (datiGioco.caricaLivelliGe). Nel manifest con il loro hash (chiave
+ *  "ge-livelli/<id>.json"), ma NON nel precache del service worker. */
+export const DIR_GE_LIVELLI = "ge-livelli";
+function fileGeLivelli(dir: string): string[] {
+  const d = path.join(dir, DIR_GE_LIVELLI);
+  return fs.existsSync(d) ? fs.readdirSync(d).filter(f => f.endsWith(".json")).sort().map(f => `${DIR_GE_LIVELLI}/${f}`) : [];
+}
+
 export function manifestDati(dir: string): ManifestDati {
   const file: Record<string, string> = {};
   const tutto = createHash("sha256");
-  for (const f of FILE) {
+  for (const f of [...FILE, ...fileGeLivelli(dir)]) {
     const p = path.join(dir, f);
     if (!fs.existsSync(p)) continue;
     const buf = fs.readFileSync(p);
@@ -140,5 +150,17 @@ export function verificaDati(dir: string): string[] {
   json("kit.json", ["buildingUpgrades", "selectionKits"]);
   json("catene.json", ["edifici"]);
   json("ge.json", ["versione", "edifici"]);   // Grandi Edifici (ge.py, Prestige)
+  // valori livello per livello dei GE (wiki_ge.py): colonne e righe coerenti
+  for (const f of fileGeLivelli(dir)) {
+    try {
+      const o = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")) as { colonne?: unknown; righe?: unknown };
+      if (!Array.isArray(o.colonne) || !Array.isArray(o.righe) || !o.righe.length) { errori.push(`${f}: servono "colonne" e "righe"`); continue; }
+      const n = o.colonne.length;
+      const i = (o.righe as unknown[]).findIndex(r => !Array.isArray(r) || r.length !== n || r.some(v => typeof v !== "number"));
+      if (i >= 0) errori.push(`${f}: riga ${i + 1} (livello ${i + 1}) non ha ${n} numeri`);
+    } catch (e) {
+      errori.push(`${f}: JSON non valido (${(e as Error).message})`);
+    }
+  }
   return errori;
 }

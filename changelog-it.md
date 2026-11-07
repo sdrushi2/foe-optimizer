@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.010 (07/11/2026)
+### Novità
+- Catalogo dei Grandi Edifici: con il pulsante 📊 accanto al nome si apre il report del GE, con i bonus e i costi livello per livello dalla wiki ufficiale, un intervallo di livelli a scelta, quanti PF ti costa ogni +1 di bonus con la chat e i grafici a schermo intero
+
+---
+
 ## Versione 2.009 (06/11/2026)
 ### Novità
 - Nuovo Calcolatore dei Grandi Edifici (foe-optimizer.com/ge, in inglese foe-optimizer.com/gb; anche da Guida › Calcolatore GE e da Database › Grandi Edifici › Calcolatore): per ogni GE e livello i PF del livello, la ricompensa di ogni posto con la percentuale della chat (Rame 90%, 95%, 100%, Oro 20%, 25% o personalizzata) e quanti PF servono per assicurarlo

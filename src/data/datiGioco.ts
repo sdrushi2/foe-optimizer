@@ -71,6 +71,27 @@ export function caricaGe(): Promise<unknown> {
   return ge;
 }
 
+/** Valori di un GE livello per livello (RECUPERO DATI/wiki_ge.py, dalla wiki
+ *  ufficiale): riga i = livello i+1, una colonna per bonus (nomi delle icone
+ *  della wiki, es. "strategy_points", "att_def_boost_attacker"), bonus non
+ *  attivo = 0. */
+export interface LivelliGe { versione: number; scaricato: string; colonne: string[]; righe: number[][] }
+const livelliGe = new Map<string, Promise<LivelliGe | null>>();
+/** Scarica i valori livello per livello di UN GE (pochi KB), solo quando
+ *  serve (dettaglio del GE nel catalogo), una volta sola per GE; null se
+ *  manca o non si scarica (si riprova alla prossima richiesta). */
+export function caricaLivelliGe(id: string): Promise<LivelliGe | null> {
+  let p = livelliGe.get(id);
+  if (!p) {
+    const f = `ge-livelli/${id}.json`, h = manifestAvvio.file?.[f];
+    p = scarica(h ? `/data/${f}?v=${h}` : `/data/${f}`)
+      .then(r => r.json() as Promise<LivelliGe>)
+      .catch(() => { livelliGe.delete(id); return null; });
+    livelliGe.set(id, p);
+  }
+  return p;
+}
+
 /** Dati caricati. Lancia un errore se chiamata prima di `caricaDatiGioco()`. */
 export function datiGioco(): DatiGioco {
   if (!dati) throw new Error("datiGioco(): dati non ancora caricati (vedi main.tsx)");

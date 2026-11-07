@@ -497,6 +497,7 @@ const UI_STRINGS = {
   r2Sums: { it: "Somma %", en: "Sum %" },
   r2Patrons: { it: "Calcolatore", en: "Calculator" },
   r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
+  gbReportOpen: { it: "Report del GE: bonus e costi livello per livello", en: "GB report: bonuses and costs level by level" },
   r2PatronsTitle: { it: "Calcolatore dei Grandi Edifici: posti mecenate di ogni livello (foe-optimizer.com/ge, si apre in una nuova scheda)", en: "Great Building calculator: patron spots of each level (foe-optimizer.com/gb, opens in a new tab)" },
   r2GbBonus: { it: "Bonus GE", en: "GB bonus" },
   r2GbBonusTitle: {

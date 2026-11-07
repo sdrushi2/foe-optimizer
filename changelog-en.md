@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.010 (07/11/2026)
+### New
+- Great Buildings catalog: the 📊 button next to the name opens the GB report, with bonuses and costs level by level from the official wiki, a level range of your choice, how many FP each +1 of bonus costs you with the chat, and full-screen charts
+
+---
+
 ## Version 2.009 (06/11/2026)
 ### New
 - New Great Building Calculator (foe-optimizer.com/gb, in Italian foe-optimizer.com/ge; also from Guide › GB Calculator and Database › Great Buildings › Calculator): for each GB and level the level's FP, each spot's reward with the chat percentage (Copper 90%, 95%, 100%, Gold 20%, 25% or custom) and how many FP you need to secure it

@@ -114,7 +114,8 @@ function filePrecache(): string[] {
   const dirAssets = path.resolve(__dirname, "dist", "assets");
   const assets = fs.existsSync(dirAssets) ? fs.readdirSync(dirAssets).map(f => `/assets/${f}`) : [];
   const { file } = manifestDati(DIR_DATI);
-  const dati = Object.entries(file).map(([f, h]) => `/data/${f}?v=${h}`);
+  // (i valori livello per livello dei GE no: si scaricano solo aprendo il dettaglio di un GE)
+  const dati = Object.entries(file).filter(([f]) => !f.startsWith("ge-livelli/")).map(([f, h]) => `/data/${f}?v=${h}`);
   return [...assets, "/data/manifest.json", ...dati];
 }
 
