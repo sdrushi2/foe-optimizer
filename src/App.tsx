@@ -7594,6 +7594,7 @@ export default function App() {
             <PannelloReportGe id={reportGe} nome={displayName(reportGe, g.nome[uiLang === "en" ? "en" : "it"], uiLang)} nomeEn={g.nome.en} oro={g.tierMax === "gold"}
               era={eraGe} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)}
               livello={activeTab === "propria_citta" ? greatBuildingsJson.get(reportGe)?.level : undefined}
+              kitEra={activeTab === "propria_citta" ? { invecchiatore: specialKits.oneDownKit, inversione: specialKits.reversionKit, nomeInvecchiatore: specialKits.oneDownKitName, nomeInversione: specialKits.reversionKitName } : undefined}
               ereIndietro={activeTab === "propria_citta" && currentEraId >= 0 && AGE_BY_CODE.has(eraGe) ? Math.max(0, currentEraId - AGE_BY_CODE.get(eraGe)!.id) : undefined} />
           </Suspense>
         );

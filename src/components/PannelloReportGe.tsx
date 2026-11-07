@@ -13,6 +13,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { iconKitInvecchiatore, iconKitInversione } from "../assets/icons";
 import { caricaLivelliGe } from "../data/datiGioco";
 import { preparaReport, type Report } from "../data/reportGe";
 import type { UiLang } from "../data/ui-strings";
@@ -23,6 +24,8 @@ import type { Lang } from "../data/languages";
 const TESTI = {
   it: {
     eraIndietro: "era indietro", ereIndietro: "ere indietro", tuaEra: "la tua era",
+    kitInvecchiatore: "Kit Invecchiatore", kitInversione: "Kit di Inversione",
+    inMagazzino: (k: string) => `${k} in magazzino:`,
     ereIndietroT: "Ere fra quella del GE e la tua: per sbloccare i livelli servono i beni dell'era del GE (filtro Inventario › Beni dell'era)",
     prossimi10T: "I prossimi 10 livelli del tuo GE", tutteEre: "Tutte le ere", carico: "Carico i dati del GE…", errore: "Non riesco a scaricare i dati di questo GE.", chiudi: "Chiudi", chiudiEsc: "Chiudi (Esc)",
     dal: "Dal livello", al: "al livello", tutti: "Tutti", intervalloT: "Hai il GE al primo livello e lo porti al secondo: si pagano i livelli in mezzo",
@@ -38,6 +41,8 @@ const TESTI = {
   },
   en: {
     eraIndietro: "age behind", ereIndietro: "ages behind", tuaEra: "your age",
+    kitInvecchiatore: "One Down Kit", kitInversione: "Reversion Kit",
+    inMagazzino: (k: string) => `${k} in stock:`,
     ereIndietroT: "Ages between the GB's and yours: unlocking levels needs goods of the GB's age (Inventory › Goods of age filter)",
     prossimi10T: "The next 10 levels of your GB", tutteEre: "All ages", carico: "Loading the GB data…", errore: "Couldn't download the data of this GB.", chiudi: "Close", chiudiEsc: "Close (Esc)",
     dal: "From level", al: "to level", tutti: "All", intervalloT: "You have the GB at the first level and take it to the second: you pay the levels in between",
@@ -128,7 +133,7 @@ function Box({ titolo, nota, onZoom, children }: { titolo: ReactNode; nota?: Rea
   );
 }
 
-export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, immagine, livello, ereIndietro, uiLang, onClose }: {
+export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, immagine, livello, ereIndietro, kitEra, uiLang, onClose }: {
   id: string; nome: string;
   /** nome inglese del gioco = titolo della pagina sulla wiki (link della fonte) */
   nomeEn?: string;
@@ -138,6 +143,9 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
   livello?: number;
   /** Dalla scheda Città: ere fra quella del GE e la tua (0 = la tua era). */
   ereIndietro?: number;
+  /** Dalla scheda Città: Kit Invecchiatore e Kit di Inversione in inventario (per
+   *  portare un edificio all'era del GE e avere i beni per sbloccarne i livelli). */
+  kitEra?: { invecchiatore: number; inversione: number; nomeInvecchiatore?: string; nomeInversione?: string };
   uiLang: UiLang; onClose: () => void;
 }) {
   const T: Testi = TESTI[uiLang === "en" ? "en" : "it"];
@@ -294,7 +302,22 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
               {oro && <span className="ml-1 rounded border border-amber-500/60 bg-amber-500/15 px-1.5 text-[11px] font-bold text-amber-300">ORO 101–500</span>}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="ml-auto text-xl text-slate-400 hover:text-amber-300" aria-label={T.chiudi}>✕</button>
+          {/* kit per cambiare l'era di un edificio, in inventario (solo dalla Città) */}
+          {kitEra && (
+            <div className="ml-auto flex shrink-0 items-center gap-3 rounded-lg border border-slate-700/80 bg-slate-900/60 px-2.5 py-1.5">
+              {([[iconKitInvecchiatore, kitEra.invecchiatore, kitEra.nomeInvecchiatore ?? T.kitInvecchiatore], [iconKitInversione, kitEra.inversione, kitEra.nomeInversione ?? T.kitInversione]] as const).map(([ic, n, nm]) => (
+                // tooltip nostro (non title): "Kit … in magazzino: N" con N verde se > 0, rosso se 0
+                <span key={nm} className="group relative flex cursor-help items-center gap-1">
+                  <img src={ic} alt={nm} className="h-6 w-6 object-contain" />
+                  <span className={`font-mono text-[13px] font-bold ${n > 0 ? "text-slate-100" : "text-slate-500"}`}>{fmt(n)}</span>
+                  <span className="pointer-events-none absolute right-0 top-full z-10 mt-1.5 hidden whitespace-nowrap rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-[12px] font-normal text-slate-200 shadow-xl group-hover:block">
+                    {T.inMagazzino(nm)} <b className={n > 0 ? "text-emerald-400" : "text-red-400"}>{fmt(n)}</b>
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+          <button type="button" onClick={onClose} className={`${kitEra ? "ml-2" : "ml-auto"} text-xl text-slate-400 hover:text-amber-300`} aria-label={T.chiudi}>✕</button>
         </div>
         <div className="px-4 py-3 text-[13px] text-slate-300">
           <div className="mb-3 flex flex-wrap items-center gap-2" title={T.intervalloT}>

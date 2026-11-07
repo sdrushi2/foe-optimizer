@@ -67,6 +67,9 @@ export { default as iconContributoOro } from "./icons/bonus_contribution_gold.pn
 export { default as iconProgettiAiuti } from "./icons/bonus_aid_blueprints.png";
 export { default as iconSaccheggio } from "./icons/bonus_plunder_and_pillage.png";
 export { default as iconNucleoIA } from "./icons/bonus_algorithmic_core.png";
+// kit per cambiare l'era di un edificio (CDN del gioco: one_down_kit, reversion_kit)
+export { default as iconKitInvecchiatore } from "./icons/kit_invecchiatore.png";
+export { default as iconKitInversione } from "./icons/kit_inversione.png";
 export { default as iconBottino } from "./icons/bonus_spoils_of_war.png";
 export { default as iconBottinoOro } from "./icons/bonus_spoils_of_war_gold.png";
 export { default as iconMissioni } from "./icons/bonus_scroll.png";
