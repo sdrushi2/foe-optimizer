@@ -22,6 +22,8 @@ import type { Lang } from "../data/languages";
 
 const TESTI = {
   it: {
+    eraIndietro: "era indietro", ereIndietro: "ere indietro", tuaEra: "la tua era",
+    ereIndietroT: "Ere fra quella del GE e la tua: per sbloccare i livelli servono i beni dell'era del GE (filtro Inventario › Beni dell'era)",
     prossimi10T: "I prossimi 10 livelli del tuo GE", tutteEre: "Tutte le ere", carico: "Carico i dati del GE…", errore: "Non riesco a scaricare i dati di questo GE.", chiudi: "Chiudi", chiudiEsc: "Chiudi (Esc)",
     dal: "Dal livello", al: "al livello", tutti: "Tutti", intervalloT: "Hai il GE al primo livello e lo porti al secondo: si pagano i livelli in mezzo",
     pfSalire: "PF per salire", tuoi: "A carico tuo (chat)", mecenati: "Dai mecenati", maxDal: "Bonus al massimo dal liv.",
@@ -35,6 +37,8 @@ const TESTI = {
     fonte: ["Valori della ", "wiki ufficiale", " di Forge of Empires (aggiornati al ", ")."],
   },
   en: {
+    eraIndietro: "age behind", ereIndietro: "ages behind", tuaEra: "your age",
+    ereIndietroT: "Ages between the GB's and yours: unlocking levels needs goods of the GB's age (Inventory › Goods of age filter)",
     prossimi10T: "The next 10 levels of your GB", tutteEre: "All ages", carico: "Loading the GB data…", errore: "Couldn't download the data of this GB.", chiudi: "Close", chiudiEsc: "Close (Esc)",
     dal: "From level", al: "to level", tutti: "All", intervalloT: "You have the GB at the first level and take it to the second: you pay the levels in between",
     pfSalire: "FP to level up", tuoi: "Your share (chat)", mecenati: "From patrons", maxDal: "Bonuses maxed from lv.",
@@ -124,7 +128,7 @@ function Box({ titolo, nota, onZoom, children }: { titolo: ReactNode; nota?: Rea
   );
 }
 
-export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, immagine, livello, uiLang, onClose }: {
+export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, immagine, livello, ereIndietro, uiLang, onClose }: {
   id: string; nome: string;
   /** nome inglese del gioco = titolo della pagina sulla wiki (link della fonte) */
   nomeEn?: string;
@@ -132,6 +136,8 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
   /** Livello attuale del GE nella tua città (aperto dalla scheda Città): intervallo
    *  predefinito livello → livello + 10, con il suo pulsante prima di "Tutti". */
   livello?: number;
+  /** Dalla scheda Città: ere fra quella del GE e la tua (0 = la tua era). */
+  ereIndietro?: number;
   uiLang: UiLang; onClose: () => void;
 }) {
   const T: Testi = TESTI[uiLang === "en" ? "en" : "it"];
@@ -278,7 +284,12 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
           <div className="min-w-0">
             <h2 className={`truncate text-lg font-bold ${oro ? "ge-name-gold" : "ge-name-copper"}`}>{nome}</h2>
             <div className="text-[12px] text-slate-400">
-              {era === "AllAge" ? T.tutteEre : ageName(era, uiLang as Lang)} · {w}×{h} · 1–{N}{" "}
+              {era === "AllAge" ? T.tutteEre : ageName(era, uiLang as Lang)}
+              {/* (dalla Città: quante ere dietro la tua è il GE, perché lo sblocco dei livelli chiede beni della sua era) */}
+              {ereIndietro !== undefined && era !== "AllAge" && (
+                <span title={T.ereIndietroT}> ({ereIndietro > 0 ? <><b className="text-amber-300">{ereIndietro}</b> {ereIndietro === 1 ? T.eraIndietro : T.ereIndietro}</> : <b className="text-amber-300">{T.tuaEra}</b>})</span>
+              )}
+              {" "}· {w}×{h}{" "}
               <span className="gb-badge-copper ml-1 rounded border px-1.5 text-[11px] font-bold">RAME 1–{oro ? 100 : 200}</span>
               {oro && <span className="ml-1 rounded border border-amber-500/60 bg-amber-500/15 px-1.5 text-[11px] font-bold text-amber-300">ORO 101–500</span>}
             </div>

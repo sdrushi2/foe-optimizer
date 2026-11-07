@@ -7590,7 +7590,8 @@ export default function App() {
           <Suspense fallback={null}>
             <PannelloReportGe id={reportGe} nome={displayName(reportGe, g.nome[uiLang === "en" ? "en" : "it"], uiLang)} nomeEn={g.nome.en} oro={g.tierMax === "gold"}
               era={g.era} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)}
-              livello={activeTab === "propria_citta" ? greatBuildingsJson.get(reportGe)?.level : undefined} />
+              livello={activeTab === "propria_citta" ? greatBuildingsJson.get(reportGe)?.level : undefined}
+              ereIndietro={activeTab === "propria_citta" && currentEraId >= 0 && AGE_BY_CODE.has(g.era) ? Math.max(0, currentEraId - AGE_BY_CODE.get(g.era)!.id) : undefined} />
           </Suspense>
         );
       })()}
