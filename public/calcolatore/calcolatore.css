@@ -110,6 +110,8 @@ tr.vuoto td.pos { color: var(--text-faint); }
 .pieno { color: var(--red); }
 footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
 footer p { margin: 0; }
+footer p + p { margin-top: 4px; }
+footer a { color: var(--amber); }
 #errore { color: var(--red); margin: 4px 0 8px; }
 /* cambio lingua nell'header (come la guida) */
 .lingue { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 700; }

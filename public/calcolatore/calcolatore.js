@@ -30,6 +30,7 @@
       testoAl: "Testo da copiare in chat", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
       copia: "Copia", copiato: "Copiato",
       errore: "Non riesco a caricare i dati dei Grandi Edifici (data/mecenati-dati.js). Ricarica la pagina.",
+      fonte: ["Valori della ", "wiki ufficiale", " di Forge of Empires (aggiornati al ", ")."],
       disclaimer: "Forge of Empires è un marchio di InnoGames GmbH. FoE Optimizer è un progetto amatoriale indipendente, non affiliato a InnoGames.",
     },
     en: {
@@ -49,6 +50,7 @@
       testoAl: "Text to copy into chat", nome: "Your name (optional)", nomeAl: "Your in-game name",
       copia: "Copy", copiato: "Copied",
       errore: "Couldn't load the Great Building data (data/mecenati-dati.js). Reload the page.",
+      fonte: ["Values from the ", "official Forge of Empires wiki", " (updated ", ")."],
       disclaimer: "Forge of Empires is a trademark of InnoGames GmbH. FoE Optimizer is an independent fan project, not affiliated with InnoGames.",
     },
   }[LINGUA];
@@ -132,7 +134,7 @@
         <input id="giocatore" aria-label="${esc(T.nomeAl)}" placeholder="${esc(T.nome)}">
         <button type="button" id="copia">${esc(T.copia)}</button>
       </div>
-      <footer><p>${esc(T.disclaimer)}</p></footer>
+      <footer><p id="fonte" hidden></p><p>${esc(T.disclaimer)}</p></footer>
     </div>`;
 
   const dati = window.MECENATI && window.MECENATI.edifici;
@@ -229,6 +231,15 @@
     for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].base > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].versa + ")");
     const chi = String(S.giocatore || "").trim();
     $("testo").textContent = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? ": " + parti.join(" ") : "");
+    // fonte in calce, solo se i costi di questo GE vengono dalla wiki: link alla sua pagina
+    const agg = window.MECENATI.aggiornato, fonte = $("fonte");
+    fonte.hidden = !(dati[S.ge].wiki && agg);
+    if (!fonte.hidden) {
+      const nomeEn = (dati[S.ge].nome && dati[S.ge].nome.en) || nome(S.ge);
+      const url = "https://en.wiki.forgeofempires.com/index.php?title=" + encodeURIComponent(nomeEn.replace(/ /g, "_"));
+      const data = LINGUA === "en" ? agg : agg.split("-").reverse().join("-");
+      fonte.innerHTML = esc(T.fonte[0]) + '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(T.fonte[1]) + "</a>" + esc(T.fonte[2] + data + T.fonte[3]);
+    }
     salva();
   }
 
