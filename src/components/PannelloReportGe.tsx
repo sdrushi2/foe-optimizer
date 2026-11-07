@@ -43,6 +43,7 @@ const TESTI = {
     sblocco: (a: number, b: number) => `Costo di sblocco da ${a} a ${b}`, nessunSblocco: "Nessun costo di sblocco in questo intervallo.",
     sbloccoT: "Per sbloccare ogni livello, prima di poterci mettere PF. Beni: quantità di OGNUNO dei beni richiesti",
     risorse: { set_rame: "Set di progetti Rame", set_oro: "Set di progetti Oro", monete: "Monete", materiali: "Materiali", medaglie: "Medaglie", beni: "Beni (ciascuno)" } as Record<string, string>,
+    costiSblocco: "Quanto costa sbloccare", costoLivello: (r: string) => `${r} per sbloccare il livello`, nessunoQui: (a: number, b: number) => `Non serve fra i livelli ${a} e ${b}`,
     fonteSblocchi: ["Costi di sblocco dal foglio pubblico ", "GB Update - PUBLIC", " (letto il ", ")."],
   },
   en: {
@@ -64,6 +65,7 @@ const TESTI = {
     sblocco: (a: number, b: number) => `Unlock cost from ${a} to ${b}`, nessunSblocco: "No unlock cost in this range.",
     sbloccoT: "To unlock each level, before you can put FP in it. Goods: amount of EACH required good",
     risorse: { set_rame: "Copper blueprint sets", set_oro: "Gold blueprint sets", monete: "Coins", materiali: "Supplies", medaglie: "Medals", beni: "Goods (each)" } as Record<string, string>,
+    costiSblocco: "Cost of unlocking", costoLivello: (r: string) => `${r} to unlock the level`, nessunoQui: (a: number, b: number) => `Not needed between levels ${a} and ${b}`,
     fonteSblocchi: ["Unlock costs from the public sheet ", "GB Update - PUBLIC", " (read ", ")."],
   },
 };
@@ -72,6 +74,9 @@ type Testi = typeof TESTI.it;
 const COLORI = ["#60a5fa", "#f87171", "#34d399", "#c084fc", "#f472b6", "#22d3ee", "#a3e635"];
 const ORO = "#fbbf24";
 const RAPIDI: Array<[number, number]> = [[1, 50], [50, 100], [100, 150], [150, 200], [200, 300], [300, 400], [400, 500]];
+/** Icone e colori delle risorse di sblocco (riquadri del costo e grafici). */
+const ICONE_SBLOCCO: Record<string, string> = { set_rame: iconBP, set_oro: iconBPOro, monete: iconMon, materiali: iconMat, medaglie: iconMed, beni: iconBeni };
+const COLORI_SBLOCCO: Record<string, string> = { set_rame: "#d97706", set_oro: ORO, monete: "#facc15", materiali: "#94a3b8", medaglie: "#c084fc", beni: "#34d399" };
 const TAPPE = [10, 25, 50, 80, 100, 101, 150, 200, 250, 300, 400];
 
 interface Serie { nome: string; col: string; val: (i: number) => number; area?: boolean; fmt: (v: number) => string }
@@ -275,7 +280,6 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
         {/* costo di sblocco dei livelli A+1…B (riga i della tabella = livello i+1) */}
         {sblocchi && (() => {
           const tot = sblocchi.colonne.map((_, k) => sblocchi.righe.slice(A0, B0).reduce((s, x) => s + (x[k] ?? 0), 0));
-          const ic: Record<string, string> = { set_rame: iconBP, set_oro: iconBPOro, monete: iconMon, materiali: iconMat, medaglie: iconMed, beni: iconBeni };
           const voci = sblocchi.colonne.map((c, k) => [c, tot[k]!] as const).filter(([, v]) => v > 0);
           return (
             <>
@@ -283,7 +287,7 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
               <div className="flex flex-wrap gap-2">
                 {voci.length ? voci.map(([c, v]) => (
                   <div key={c} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5" title={`${T.risorse[c] ?? c}: ${fmt(v)}`}>
-                    <img src={ic[c] ?? iconBP} alt="" className="h-6 w-6 object-contain" />
+                    <img src={ICONE_SBLOCCO[c] ?? iconBP} alt="" className="h-6 w-6 object-contain" />
                     <span className="flex flex-col leading-tight">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{T.risorse[c] ?? c}</span>
                       <span className={`font-mono text-[15px] font-bold ${c === "set_oro" ? "text-amber-300" : "text-slate-100"}`}>{v >= 1e6 ? fk(v) : fmt(v)}</span>
@@ -338,6 +342,38 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
           </div>
           {graficoCosti(160)}
         </Box>
+
+        {/* un grafico per risorsa di sblocco (costo del singolo livello), come quelli dei bonus */}
+        {sblocchi && (() => {
+          const S = sblocchi.righe;
+          const usate = sblocchi.colonne.map((c, k) => [c, k] as const).filter(([, k]) => S.some(x => x[k]));
+          if (!usate.length) return null;
+          const grafico = (c: string, k: number) => (hh: number) => (
+            <Grafico n={S.length} da={A0} a={B0} h={hh} uiLang={uiLang}
+              serie={[{ nome: T.costoLivello(T.risorse[c] ?? c), col: COLORI_SBLOCCO[c] ?? COLORI[k % COLORI.length]!, val: i => S[i]?.[k] ?? 0, area: true, fmt }]}
+              yFmt={fk} />
+          );
+          return (
+            <>
+              <h3 className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wider text-amber-400" title={T.sbloccoT}>{T.costiSblocco}</h3>
+              <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+                {usate.map(([c, k]) => {
+                  let max = 0, lmax = 1;
+                  S.forEach((x, i) => { if ((x[k] ?? 0) > max) { max = x[k]!; lmax = i + 1; } });
+                  const nome = T.risorse[c] ?? c;
+                  const attivo = S.slice(A0 - 1, B0).some(x => x[k]);
+                  return (
+                    <Box key={c} titolo={<span className="inline-flex items-center gap-1.5" title={nome}><img src={ICONE_SBLOCCO[c] ?? iconBP} alt="" className="h-6 w-6 object-contain" />{nome}</span>}
+                      nota={T.maxAl(fmt(max), lmax)}
+                      onZoom={attivo ? () => setZoom({ titolo: nome, sotto: T.livelli(A0, B0), disegna: grafico(c, k) }) : undefined}>
+                      {attivo ? grafico(c, k)(90) : <div className="grid h-[90px] place-items-center text-[12px] text-slate-500">{T.nessunoQui(A0, B0)}</div>}
+                    </Box>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
 
         <h3 className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wider text-amber-400">{T.tappe}</h3>
         <div className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5">
