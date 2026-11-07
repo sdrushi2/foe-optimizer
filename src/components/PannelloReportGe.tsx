@@ -22,7 +22,7 @@ import type { Lang } from "../data/languages";
 
 const TESTI = {
   it: {
-    tutteEre: "Tutte le ere", carico: "Carico i dati del GE…", errore: "Non riesco a scaricare i dati di questo GE.", chiudi: "Chiudi", chiudiEsc: "Chiudi (Esc)",
+    prossimi10T: "I prossimi 10 livelli del tuo GE", tutteEre: "Tutte le ere", carico: "Carico i dati del GE…", errore: "Non riesco a scaricare i dati di questo GE.", chiudi: "Chiudi", chiudiEsc: "Chiudi (Esc)",
     dal: "Dal livello", al: "al livello", tutti: "Tutti", intervalloT: "Hai il GE al primo livello e lo porti al secondo: si pagano i livelli in mezzo",
     pfSalire: "PF per salire", tuoi: "A carico tuo (chat)", mecenati: "Dai mecenati", maxDal: "Bonus al massimo dal liv.",
     chatT: "Con la chat Rame 100% sui livelli Rame e Oro 20% sui livelli Oro, come il Calcolatore GE",
@@ -32,10 +32,10 @@ const TESTI = {
     costi: "Quanto costa livellare", costiTit: "PF del livello e quota tua con la chat", log: "scala logaritmica",
     pfLivello: "PF del livello", tuoiLeg: "tuoi (Rame 100% / Oro 20%)", tappe: "Tappe", tuoiCum: "Tuoi cumulati", tuoiCol: "Tuoi (chat)",
     livello: "Livello", schermo: "Schermo intero", livelli: (a: number, b: number) => `livelli ${a}–${b}`,
-    fonte: (d: string) => `Valori della wiki ufficiale di Forge of Empires (aggiornati al ${d}).`,
+    fonte: ["Valori della ", "wiki ufficiale", " di Forge of Empires (aggiornati al ", ")."],
   },
   en: {
-    tutteEre: "All ages", carico: "Loading the GB data…", errore: "Couldn't download the data of this GB.", chiudi: "Close", chiudiEsc: "Close (Esc)",
+    prossimi10T: "The next 10 levels of your GB", tutteEre: "All ages", carico: "Loading the GB data…", errore: "Couldn't download the data of this GB.", chiudi: "Close", chiudiEsc: "Close (Esc)",
     dal: "From level", al: "to level", tutti: "All", intervalloT: "You have the GB at the first level and take it to the second: you pay the levels in between",
     pfSalire: "FP to level up", tuoi: "Your share (chat)", mecenati: "From patrons", maxDal: "Bonuses maxed from lv.",
     chatT: "With Copper 100% chat on Copper levels and Gold 20% on Gold levels, as in the GB Calculator",
@@ -45,7 +45,7 @@ const TESTI = {
     costi: "Cost of leveling", costiTit: "Level FP and your share with the chat", log: "log scale",
     pfLivello: "Level FP", tuoiLeg: "yours (Copper 100% / Gold 20%)", tappe: "Milestones", tuoiCum: "Yours, cumulative", tuoiCol: "Yours (chat)",
     livello: "Level", schermo: "Full screen", livelli: (a: number, b: number) => `levels ${a}–${b}`,
-    fonte: (d: string) => `Values from the official Forge of Empires wiki (updated ${d}).`,
+    fonte: ["Values from the ", "official Forge of Empires wiki", " (updated ", ")."],
   },
 };
 type Testi = typeof TESTI.it;
@@ -124,8 +124,15 @@ function Box({ titolo, nota, onZoom, children }: { titolo: ReactNode; nota?: Rea
   );
 }
 
-export default function PannelloReportGe({ id, nome, oro, era, w, h, immagine, uiLang, onClose }: {
-  id: string; nome: string; oro: boolean; era: string; w: number; h: number; immagine?: string | null; uiLang: UiLang; onClose: () => void;
+export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, immagine, livello, uiLang, onClose }: {
+  id: string; nome: string;
+  /** nome inglese del gioco = titolo della pagina sulla wiki (link della fonte) */
+  nomeEn?: string;
+  oro: boolean; era: string; w: number; h: number; immagine?: string | null;
+  /** Livello attuale del GE nella tua città (aperto dalla scheda Città): intervallo
+   *  predefinito livello → livello + 10, con il suo pulsante prima di "Tutti". */
+  livello?: number;
+  uiLang: UiLang; onClose: () => void;
 }) {
   const T: Testi = TESTI[uiLang === "en" ? "en" : "it"];
   const [stato, setStato] = useState<{ r: Report; data: string } | "carico" | "errore">("carico");
@@ -140,10 +147,12 @@ export default function PannelloReportGe({ id, nome, oro, era, w, h, immagine, u
       const r = d ? preparaReport(d, oro, uiLang) : null;
       if (!r || !d) { setStato("errore"); return; }
       setStato({ r, data: d.scaricato });
-      setDa(1); setA(r.livelli.length);
+      const n = r.livelli.length;
+      if (livello && livello >= 1 && livello < n) { setDa(livello); setA(Math.min(n, livello + 10)); }
+      else { setDa(1); setA(n); }
     });
     return () => { vivo = false; };
-  }, [id, oro, uiLang]);
+  }, [id, oro, uiLang, livello]);
   // Esc: prima chiude lo schermo intero, poi il report
   useEffect(() => {
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { if (zoom) setZoom(null); else onClose(); } };
@@ -249,7 +258,12 @@ export default function PannelloReportGe({ id, nome, oro, era, w, h, immagine, u
             })}</tbody>
           </table>
         </div>
-        <p className="mt-3 text-[11px] text-slate-500">{T.fonte(stato.data)}</p>
+        {/* fonte: link alla pagina del GE sulla wiki; data gg-mm-aaaa in italiano */}
+        <p className="mt-3 text-[11px] text-slate-500">
+          {T.fonte[0]}<a href={`https://en.wiki.forgeofempires.com/index.php?title=${encodeURIComponent((nomeEn || nome).replace(/ /g, "_"))}`}
+            target="_blank" rel="noopener noreferrer" className="text-amber-400 underline hover:text-amber-300">{T.fonte[1]}</a>
+          {T.fonte[2]}{uiLang === "en" ? stato.data : stato.data.split("-").reverse().join("-")}{T.fonte[3]}
+        </p>
       </>
     );
     // (fmt/fk dipendono solo dalla lingua)
@@ -275,10 +289,12 @@ export default function PannelloReportGe({ id, nome, oro, era, w, h, immagine, u
           <div className="mb-3 flex flex-wrap items-center gap-2" title={T.intervalloT}>
             {T.dal} <input type="number" min={1} value={A0} onChange={e => setDa(Number(e.currentTarget.value) || 1)} className="w-16 rounded-md border border-slate-700 bg-slate-950 px-1.5 py-1 text-center" />
             {T.al} <input type="number" min={2} value={B0} onChange={e => setA(Number(e.currentTarget.value) || N)} className="w-16 rounded-md border border-slate-700 bg-slate-950 px-1.5 py-1 text-center" />
-            {[[1, N] as [number, number], ...RAPIDI.filter(([, y]) => y <= N)].map(([x, y], i) => (
-              <button key={i} type="button" onClick={() => { setDa(x); setA(y); }}
+            {/* (dalla Città: prima i prossimi 10 livelli del TUO GE, es. 191–201) */}
+            {[...(livello && livello < N ? [[livello, Math.min(N, livello + 10)] as [number, number]] : []), [1, N] as [number, number], ...RAPIDI.filter(([, y]) => y <= N)].map(([x, y], i) => (
+              <button key={`${x}-${y}-${i}`} type="button" onClick={() => { setDa(x); setA(y); }}
+                title={livello && i === 0 && x === livello ? T.prossimi10T : undefined}
                 className={`rounded-md border px-2 py-1 text-[12px] font-bold ${A0 === x && B0 === y ? "border-amber-400 bg-amber-400 text-slate-950" : "border-slate-700 bg-slate-800 text-slate-200 hover:border-amber-500"}`}>
-                {i === 0 ? T.tutti : `${x}–${y}`}
+                {x === 1 && y === N ? T.tutti : `${x}–${y}`}
               </button>
             ))}
           </div>

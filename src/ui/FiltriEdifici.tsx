@@ -53,6 +53,10 @@ export interface StatoFiltri {
   /** Caselle in più della scheda (es. Città: Da aggiornare, Declassabili):
    *  filtri a sé, in AND con il resto, in una colonna separata. */
   extra?: Array<{ id: string; label: string; title?: string; checked: boolean; toggle: () => void; disabled?: boolean }>;
+  /** Inventario: era degli edifici posseduti (null = tutte), tra quelle presenti. */
+  era?: { valore: number | null; opzioni: Array<{ id: number; nome: string }>; imposta: (id: number | null) => void };
+  /** Inventario: edifici posseduti che producono beni di quest'era (null = tutti). */
+  beniEra?: { valore: number | null; opzioni: Array<{ id: number; nome: string }>; imposta: (id: number | null) => void };
 }
 
 /** Rientro degli eventi sotto l'anno nel menu (spazi non separabili). */
@@ -215,6 +219,22 @@ export function BloccoFiltri({ s }: { s: StatoFiltri }) {
               {x.label}
             </label>
           ))}
+          {s.era && (
+            <select value={s.era.valore ?? ""} onChange={(e) => s.era!.imposta(e.currentTarget.value === "" ? null : Number(e.currentTarget.value))}
+              title={t("r2EraInvTitle", s.uiLang)} disabled={!s.era.opzioni.length}
+              className={`${campo} w-[150px] ${s.era.valore !== null ? ATTIVO : ""} disabled:opacity-35`}>
+              <option value="" className="bg-slate-900 text-slate-100">{t("r2EraInvAll", s.uiLang)}</option>
+              {s.era.opzioni.map(o => <option key={o.id} value={o.id} className="bg-slate-900 text-slate-100">{o.nome}</option>)}
+            </select>
+          )}
+          {s.beniEra && (
+            <select value={s.beniEra.valore ?? ""} onChange={(e) => s.beniEra!.imposta(e.currentTarget.value === "" ? null : Number(e.currentTarget.value))}
+              title={t("r2BeniEraInvTitle", s.uiLang)} disabled={!s.beniEra.opzioni.length}
+              className={`${campo} w-[150px] ${s.beniEra.valore !== null ? ATTIVO : ""} disabled:opacity-35`}>
+              <option value="" className="bg-slate-900 text-slate-100">{t("r2BeniEraInvAll", s.uiLang)}</option>
+              {s.beniEra.opzioni.map(o => <option key={o.id} value={o.id} className="bg-slate-900 text-slate-100">{t("r2BeniEraInvVoce", s.uiLang, o.nome)}</option>)}
+            </select>
+          )}
         </div>
       )}
     </div>

@@ -629,6 +629,8 @@ html, body { overflow-x: clip; }
   .cell-prod { @apply text-orange-500; }
   /* GE: produzione che viene solo dal tier Oro (stesso giallo dei moltiplicativi) */
   .cell-prod-gold { @apply text-amber-300; }
+  /* Inventario › Beni dell'era: la colonna che dà i beni dell'era scelta */
+  .cell-beni-evid { @apply font-bold text-emerald-300 bg-emerald-500/15; }
 
   /* Testo bianco/neutro: dimensione edificio, valori Incursioni Quantistiche */
   .cell-white { @apply text-slate-300; }

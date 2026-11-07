@@ -887,6 +887,10 @@ type ProcessedBuilding = Building & {
   /** Scheda Città, GE con bonus moltiplicativi: contributo effettivo per colonna
    *  (% × totale della città di quella statistica), contato nell'efficienza. */
   _contribGe?: { gen: number[]; gbg: number[]; sped: number[]; iq: number[] };
+  /** Inventario, filtri Era / Beni dell'era: era della copia posseduta mostrata. */
+  _eraCopia?: number;
+  /** Inventario › Beni dell'era: colonna che dà i beni dell'era scelta (evidenziata). */
+  _beniEvid?: "beni" | "benip" | "benis";
   isFromKit?: boolean;
   kitCount?: number;
   /** true SOLO per le righe iniettate nella tab Città dal toggle "Mostra
@@ -923,6 +927,22 @@ function evidGe(v: readonly number[], pct: readonly number[]): number[] {
  *  parte che ha cambiato il valore (quella della modalità se c'è, se no i globali). */
 function evidGeSomma(g: readonly number[], pg: readonly number[], m: readonly number[], pm: readonly number[]): number[] {
   return [0, 1, 2, 3].map(i => (m[i] && pm[i] ? pm[i]! : g[i] && pg[i] ? pg[i]! : 0));
+}
+
+/** Copia di un edificio con le statistiche di un'era (EraStats da CityEntities):
+ *  usata dall'override dell'era corrente (applyEraStats) e dai filtri Era / Beni
+ *  dell'era dell'Inventario (valori all'era della copia posseduta). */
+function conStatsEra<T extends Building>(b: T, stats: EraStats): T {
+  return {
+    ...b,
+    pop: stats.pop, fel: stats.fel, general: stats.general, gbg: stats.gbg, sped: stats.sped, iq: stats.iq,
+    iqMonB: stats.iqMonB, iqMatB: stats.iqMatB, iqMon: stats.iqMon, iqMat: stats.iqMat, iqBeni: stats.iqBeni,
+    iqTruppe: stats.iqTruppe, iqAzioni: stats.iqAzioni, iqCap: stats.iqCap,
+    bp: stats.bp, fp: stats.fp, fpb: stats.fpb, med: stats.med, fur: stats.fur, tr: stats.tr, trne: stats.trne,
+    beni: stats.beni, benip: stats.benip, benis: stats.benis, benisp: stats.benisp, benispb: stats.benispb,
+    benib: stats.benib, benig: stats.benig, mon: stats.mon, mat: stats.mat,
+    fsp: stats.fsp, tpm: stats.tpm, tpb: stats.tpb, adm: stats.adm, mod: stats.mod, rin: stats.rin, imm: stats.imm,
+  };
 }
 
 /** Efficienza contando anche il contributo dei moltiplicativi di un GE (_contribGe). */
@@ -1098,7 +1118,7 @@ interface BuildingRowProps {
   isEven: boolean;
   /** Catalogo › Grandi Edifici: niente cella dei limitati. */
   senzaLimitati?: boolean;
-  /** Catalogo › Grandi Edifici: apre il report del GE (pulsante accanto al nome). */
+  /** Apre il report del GE (pulsante 📊 accanto al nome, al posto del vecchio badge "GE"). */
   onReport?: (id: string) => void;
   /** Catalogo › Grandi Edifici: niente celle delle produzioni delle Incursioni. */
   senzaIq?: boolean;
@@ -1141,7 +1161,7 @@ const BuildingRow = memo(function BuildingRow({
   // icone della colonna ❔ (BONUS nel catalogo dei GE): 24 px nel catalogo dei GE, 16 px nelle altre tabelle (utente)
   const dimIcona = senzaLimitati ? "h-6 w-6" : "h-4 w-4";
   // GE (Prestige): colonne di produzione con valore solo dal tier Oro in oro
-  const classeProd = (col: string) => (b.gbColonneOro?.includes(col) ? " cell-prod-gold" : " cell-prod");
+  const classeProd = (col: string) => (b._beniEvid === col ? " cell-prod cell-beni-evid" : b.gbColonneOro?.includes(col) ? " cell-prod-gold" : " cell-prod");
   return (
     <tr
       key={b.id}
@@ -1391,15 +1411,6 @@ const BuildingRow = memo(function BuildingRow({
               <circle cx="12" cy="12" r="10" />
               <polyline points="8 14 12 10 16 14" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </span>
-        )}
-        {b.isGreatBuilding && !senzaLimitati && (
-          // badge GE: oro per il tier Oro, rame per il tier Rame (Prestige); non nel catalogo dei GE (sono tutti GE)
-          <span title={b.gbTier ? t(b.gbTier === "oro" ? "gbTierGold" : "gbTierCopper", uiLang) : undefined}
-            className={`ml-1.5 inline-block flex-shrink-0 text-xs font-mono font-bold px-1 rounded border ${b.gbTier === "rame"
-              ? "gb-badge-copper"
-              : "bg-amber-500/15 text-amber-400 border-amber-500/40"}`}>
-            {t("greatBuildingBadge", uiLang)}
           </span>
         )}
         {(activeTab === "inventario" || b._isMergedInventory) && b.isUnresolved && (
@@ -2410,6 +2421,11 @@ export default function App() {
   // caselle di categoria "alleati"/"frammenti" (TabFilters.categorie).
   // Filtra nella tab Inventario: mostra solo gli edifici fisicamente già in inventario
   const [showOnlyReadyBuildings, setShowOnlyReadyBuildings] = useState(false);
+  // Inventario: solo gli edifici posseduti di un'era (id di ages.csv; null = tutte)
+  const [eraInventario, setEraInventario] = useState<number | null>(null);
+  // Inventario: edifici posseduti che producono beni di un'era (della loro era,
+  // dell'era precedente se sono un'era sopra, della successiva se sono un'era sotto)
+  const [beniEraInventario, setBeniEraInventario] = useState<number | null>(null);
   const [cityMapCellSize, setCityMapCellSize] = useState(9);
   const [cityMapView, setCityMapView] = useState<"vertical" | "isometric">("isometric");
   const [cityMapPan, setCityMapPan] = useState({ x: 0, y: 0 });
@@ -2515,17 +2531,18 @@ export default function App() {
   // Catalogo › Grandi Edifici: livello del selettore e dati (ge.json, scaricato
   // la prima volta che si apre il catalogo)
   const [livelloGe, setLivelloGe] = useState<number>(201);
-  // Catalogo › Grandi Edifici: GE di cui è aperto il report (null = chiuso)
+  // GE di cui è aperto il report (null = chiuso): pulsante 📊 accanto al nome, in tutte le tabelle
   const [reportGe, setReportGe] = useState<string | null>(null);
   /** Filtro per tier massimo: tutti, solo Rame, con anche l'Oro. */
   const [tierGe, setTierGe] = useState<"tutti" | "copper" | "gold">("tutti");
   const [datiGe, setDatiGe] = useState<DatiGe | null>(null);
   useEffect(() => {
-    if (catalogo !== "ge" || datiGe) return;
+    // (anche per il report di un GE aperto da Città / Inventario / Database)
+    if ((catalogo !== "ge" && !reportGe) || datiGe) return;
     let vivo = true;
     void caricaGe().then(d => { if (vivo) setDatiGe(leggiGe(d)); });
     return () => { vivo = false; };
-  }, [catalogo, datiGe]);
+  }, [catalogo, datiGe, reportGe]);
   const [alleatiDaDb, setAlleatiDaDb] = useState(false);
   // Tipi di alleato mostrati (colonna Tipo di allies.csv; "" = come militare).
   const [mostraMilitari, setMostraMilitari] = useState(true);
@@ -3223,6 +3240,16 @@ export default function App() {
       CSV_ENTITY_IDS_SET,
     );
 
+    // statistiche di ogni copia d'inventario alla SUA era (filtri Era / Beni dell'era)
+    const entitaGioco = (parsed.CityEntities ?? {}) as Record<string, CityEntityDefinition>;
+    for (const mappa of [matched, unmatched]) mappa.forEach(e => {
+      const def = entitaGioco[e.cityEntityId];
+      if (!def || !e.ere) return;
+      const st: Record<number, EraStats> = {};
+      for (const k of Object.keys(e.ere)) { const a = AGES_BY_ID.get(Number(k)); if (a) st[Number(k)] = BuildingModel.extractEraStats(def, a.age); }
+      e.statsEra = st;
+    });
+
     setInventoryMatched(matched);
     setInventoryUnmatched(unmatched);
     setInventorySelectionKits(selectionKits);
@@ -3401,6 +3428,8 @@ export default function App() {
   };
 
   const resetFilters = () => {
+    setEraInventario(null);
+    setBeniEraInventario(null);
     setTabFilters({
       database: { ...DEFAULT_FILTERS, prodFilter: new Set(), prodNo: new Set(), categorie: new Set() },
       alleati: { ...DEFAULT_FILTERS, prodFilter: new Set(), prodNo: new Set(), categorie: new Set() },
@@ -4233,46 +4262,7 @@ export default function App() {
     // reward speciali). Il CSV resta usato solo per la scheda Info. Le produzioni
     // estratte da CityEntities sostituiscono quelle del CSV (che sono fissate a
     // FALLBACK_ERA, oggi Stellar Age: Discovery) così le ere intermedie sono precise.
-    return {
-      ...b,
-      pop: stats.pop,
-      fel: stats.fel,
-      general: stats.general,
-      gbg: stats.gbg,
-      sped: stats.sped,
-      iq: stats.iq,
-      iqMonB: stats.iqMonB,
-      iqMatB: stats.iqMatB,
-      iqMon: stats.iqMon,
-      iqMat: stats.iqMat,
-      iqBeni: stats.iqBeni,
-      iqTruppe: stats.iqTruppe,
-      iqAzioni: stats.iqAzioni,
-      iqCap: stats.iqCap,
-      bp: stats.bp,
-      fp: stats.fp,
-      fpb: stats.fpb,
-      med: stats.med,
-      fur: stats.fur,
-      tr: stats.tr,
-      trne: stats.trne,
-      beni: stats.beni,
-      benip: stats.benip,
-      benis: stats.benis,
-      benisp: stats.benisp,
-      benispb: stats.benispb,
-      benib: stats.benib,
-      benig: stats.benig,
-      mon: stats.mon,
-      mat: stats.mat,
-      fsp: stats.fsp,
-      tpm: stats.tpm,
-      tpb: stats.tpb,
-      adm: stats.adm,
-      mod: stats.mod,
-      rin: stats.rin,
-      imm: stats.imm,
-    };
+    return conStatsEra(b, stats);
   }, [eraStats]);
 
   const processedBuildings = useMemo<ProcessedBuilding[]>(() => {
@@ -4563,6 +4553,37 @@ export default function App() {
     return rows;
   }, [inventoryMatched, inventoryUnmatched, resolveInventoryBase]);
 
+  // Inventario › filtri Era e Beni dell'era: le copie possedute per edificio
+  // (InventoryEntry.ere da item.level, con le statistiche alla loro era).
+  // (era 1 = Età del bronzo esclusa: sono edifici di tutte le ere, utente 07/11)
+  const copieInventario = useMemo(() => {
+    const m = new Map<string, Array<{ era: number; n: number; stats?: EraStats }>>();
+    const aggiungi = (e: InventoryEntry) => {
+      const c = Object.entries(e.ere ?? {}).map(([k, n]) => ({ era: Number(k), n, stats: e.statsEra?.[Number(k)] })).filter(x => x.era !== 1);
+      if (c.length) m.set(e.cityEntityId, c);
+    };
+    inventoryMatched.forEach(aggiungi);
+    inventoryUnmatched.forEach(aggiungi);
+    return m;
+  }, [inventoryMatched, inventoryUnmatched]);
+  const ereInventario = useMemo(() => [...new Set([...copieInventario.values()].flatMap(c => c.map(x => x.era)))].sort((a, b) => a - b), [copieInventario]);
+  /** Colonna di beni di una copia (all'era `era`) che dà beni dell'era `x`, o null. */
+  const colonnaBeniEra = (s0: Pick<EraStats, "beni" | "benip" | "benis"> | undefined, era: number, x: number): "beni" | "benip" | "benis" | null =>
+    !s0 ? null : era === x && s0.beni > 0 ? "beni" : era === x + 1 && s0.benip > 0 ? "benip" : era === x - 1 && s0.benis > 0 ? "benis" : null;
+  const ereBeniInventario = useMemo(() => {
+    const ere = new Set<number>();
+    copieInventario.forEach(c => c.forEach(({ era, stats }) => {
+      if (!stats) return;
+      if (stats.beni > 0) ere.add(era);
+      if (stats.benip > 0 && era > 0) ere.add(era - 1);
+      if (stats.benis > 0) ere.add(era + 1);
+    }));
+    return [...ere].filter(e => AGES_BY_ID.has(e)).sort((a, b) => a - b);
+  }, [copieInventario]);
+  // (un'era sparita dopo un nuovo import: il filtro torna a "tutte")
+  useEffect(() => { if (eraInventario !== null && !ereInventario.includes(eraInventario)) setEraInventario(null); }, [ereInventario, eraInventario]);
+  useEffect(() => { if (beniEraInventario !== null && !ereBeniInventario.includes(beniEraInventario)) setBeniEraInventario(null); }, [ereBeniInventario, beniEraInventario]);
+
   const allProcessedBuildings = useMemo<ProcessedBuilding[]>(
     () => [...processedBuildings, ...processedGreatBuildings, ...processedFallbackBuildings],
     [processedBuildings, processedGreatBuildings, processedFallbackBuildings]
@@ -4711,8 +4732,26 @@ export default function App() {
     });
     // scheda Città: contributo dei moltiplicativi dei GE (prima del Bonus GE, sui valori base)
     const conContributo = activeTab === "propria_citta" ? base.map(contributoGe) : base;
-    return pct ? conContributo.map(b => conBonusGe(b, pct, weights) ?? b) : conContributo;
-  }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights, bonusGeTabella, pctBonusGe, contributoGe]);
+    const finale = pct ? conContributo.map(b => conBonusGe(b, pct, weights) ?? b) : conContributo;
+    // Inventario › filtri Era / Beni dell'era: solo edifici POSSEDUTI (righe raw- di
+    // Solo pronti o badge INV; quelli fatti con i kit nascono all'era attuale), una
+    // riga per ogni era delle copie che soddisfa i filtri, con i valori di quell'era
+    if (activeTab !== "inventario" || (eraInventario === null && beniEraInventario === null)) return finale;
+    const out: ProcessedBuilding[] = [];
+    for (const b of finale) {
+      const posseduto = b.id.startsWith("raw-") || (b as InventoryRowBuilding)._invBadge === "INV";
+      if (!posseduto) continue;
+      for (const c of copieInventario.get(b.cityEntityId) ?? []) {
+        if (eraInventario !== null && c.era !== eraInventario) continue;
+        const col = beniEraInventario !== null ? colonnaBeniEra(c.stats, c.era, beniEraInventario) : null;
+        if (beniEraInventario !== null && !col) continue;
+        const nb = c.stats ? conStatsEra(b, c.stats) : b;
+        out.push({ ...nb, id: `${b.id}@${c.era}`, kitCount: c.n, currentEff: c.stats ? calculateEfficiency(nb, weights) : b.currentEff,
+          _eraCopia: c.era, ...(col ? { _beniEvid: col } : {}) });
+      }
+    }
+    return out;
+  }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights, bonusGeTabella, pctBonusGe, contributoGe, eraInventario, beniEraInventario, copieInventario]);
 
   const filteredBuildings = useMemo(() => {
     const sourceBuildings: ProcessedBuilding[] = eraAdjustedSource;
@@ -4761,6 +4800,7 @@ export default function App() {
       } else if (isInventario) {
         // Tutti i building in processedInventoryKitBuildings sono già pre-filtrati
         // dall'optimizer: non serve ulteriore membership check.
+        // (filtri Era / Beni dell'era: già applicati in eraAdjustedSource)
       }
 
       // L'override era e il nome visibile sono già stati applicati in
@@ -6407,6 +6447,14 @@ export default function App() {
         { id: "pronti", label: t("r2ReadyOnly", uiLang), title: t("onlyReadyBuildingsTitle", uiLang), checked: showOnlyReadyBuildings,
           toggle: () => setShowOnlyReadyBuildings(v => !v) },
       ] : undefined,
+      era: schedaCorrente === "inventario" ? {
+        valore: eraInventario, imposta: setEraInventario,
+        opzioni: ereInventario.map(id => { const a = AGES_BY_ID.get(id); return { id, nome: a ? ageName(a.age, uiLang as Lang) : String(id) }; }),
+      } : undefined,
+      beniEra: schedaCorrente === "inventario" ? {
+        valore: beniEraInventario, imposta: setBeniEraInventario,
+        opzioni: ereBeniInventario.map(id => { const a = AGES_BY_ID.get(id); return { id, nome: a ? ageName(a.age, uiLang as Lang) : String(id) }; }),
+      } : undefined,
     },
     catalogo, setCatalogo,
     livelloGe: { valore: livelloGe, imposta: setLivelloGe },
@@ -7073,7 +7121,7 @@ export default function App() {
                           b={b}
                           isEven={rowIndex % 2 === 1}
                           senzaLimitati={senzaLimitati}
-                          onReport={senzaLimitati ? setReportGe : undefined}
+                          onReport={setReportGe}
                           senzaIq={senzaIq}
                           activeTab={activeTab}
                           uiLang={uiLang}
@@ -7537,8 +7585,9 @@ export default function App() {
         const g = datiGe.edifici[reportGe]!, b = BUILDING_BY_ID.get(reportGe);
         return (
           <Suspense fallback={null}>
-            <PannelloReportGe id={reportGe} nome={displayName(reportGe, g.nome[uiLang === "en" ? "en" : "it"], uiLang)} oro={g.tierMax === "gold"}
-              era={g.era} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)} />
+            <PannelloReportGe id={reportGe} nome={displayName(reportGe, g.nome[uiLang === "en" ? "en" : "it"], uiLang)} nomeEn={g.nome.en} oro={g.tierMax === "gold"}
+              era={g.era} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)}
+              livello={activeTab === "propria_citta" ? greatBuildingsJson.get(reportGe)?.level : undefined} />
           </Suspense>
         );
       })()}

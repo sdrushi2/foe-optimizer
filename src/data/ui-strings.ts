@@ -497,6 +497,11 @@ const UI_STRINGS = {
   r2Sums: { it: "Somma %", en: "Sum %" },
   r2Patrons: { it: "Calcolatore", en: "Calculator" },
   r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
+  r2EraInvAll: { it: "Tutte le ere", en: "All ages" },
+  r2BeniEraInvAll: { it: "Beni di tutte le ere", en: "Goods of all ages" },
+  r2BeniEraInvVoce: { it: (e: string) => `Beni: ${e}`, en: (e: string) => `Goods: ${e}` },
+  r2BeniEraInvTitle: { it: "Mostra gli edifici posseduti che producono beni di quest'era: quelli della stessa era (beni), dell'era dopo (beni dell'era precedente) e dell'era prima (beni dell'era successiva), con i valori della loro era; la colonna che dà quei beni è evidenziata", en: "Show the owned buildings that produce goods of this age: those of the same age (goods), of the next age (previous age goods) and of the previous age (next age goods), with the values of their own age; the column giving those goods is highlighted" },
+  r2EraInvTitle: { it: "Mostra solo gli edifici posseduti di quest'era (gli edifici fabbricati con i kit nascono all'era attuale). Per vedere le ere serve un import dell'inventario recente.", en: "Show only the owned buildings of this age (buildings made with kits are born at your current age). Ages need a recent inventory import." },
   gbReportOpen: { it: "Report del GE: bonus e costi livello per livello", en: "GB report: bonuses and costs level by level" },
   r2PatronsTitle: { it: "Calcolatore dei Grandi Edifici: posti mecenate di ogni livello (foe-optimizer.com/ge, si apre in una nuova scheda)", en: "Great Building calculator: patron spots of each level (foe-optimizer.com/gb, opens in a new tab)" },
   r2GbBonus: { it: "Bonus GE", en: "GB bonus" },
@@ -1648,12 +1653,6 @@ const UI_STRINGS = {
   showGreatBuildingsTitle: {
     it: "Mostra Grandi Edifici",
     en: "Show Great Buildings",
-  },
-  gbTierGold: { it: "Tier Oro", en: "Gold tier" },
-  gbTierCopper: { it: "Tier Rame", en: "Copper tier" },
-  greatBuildingBadge: {
-    it: "GE",
-    en: "GB",
   },
   /** Tooltip del badge 🔒 (noRush(b), derivato da b.flags): testo ufficiale
    *  mostrato dal gioco stesso sull'edificio ("Instant production finish

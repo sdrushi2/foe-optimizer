@@ -1,11 +1,21 @@
 import type { InventoryItem } from "./bookmarklet";
 import { CONSUMABLE_ASSET_NAMES } from "./buildingClassification";
+import type { EraStats } from "../models/BuildingModel";
 
 export interface InventoryEntry {
   cityEntityId: string;
   name: string;
   inStock: number;
   rawEntry: InventoryItem;
+  /** Copie per era (id di ages.csv → quante): dal campo `item.level` degli
+   *  edifici d'inventario, che è l'indice dell'era (es. 21 = Titano; utente,
+   *  07/11/2026). Solo le copie che ce l'hanno (filtro Era dell'Inventario);
+   *  assente nei salvataggi fatti prima (serve un nuovo import). */
+  ere?: Record<number, number>;
+  /** Statistiche dell'edificio a ciascuna di quelle ere (calcolate all'import da
+   *  CityEntities, in App): i filtri Era / Beni dell'era mostrano i valori veri
+   *  della copia, non quelli della tua era. */
+  statsEra?: Record<number, EraStats>;
 }
 
 export interface SelectionKitEntry {
@@ -195,17 +205,24 @@ export function parseInventory(
     const stock = Number(item.inStock ?? 1);
     if (stock <= 0) continue;
 
+    // era dell'edificio (item.level = indice dell'era, vedi InventoryEntry.ere)
+    const lv = Number(item.item?.level);
+    const era = Number.isInteger(lv) && lv >= 0 ? lv : null;
+
     const entry: InventoryEntry = {
       cityEntityId,
       name: item.name ?? cityEntityId,
       inStock: stock,
       rawEntry: item,
+      ...(era !== null ? { ere: { [era]: stock } } : {}),
     };
 
     const target = csvIdsSet.has(cityEntityId) ? matched : unmatched;
     const existing = target.get(cityEntityId);
-    if (existing) existing.inStock += entry.inStock;
-    else target.set(cityEntityId, entry);
+    if (existing) {
+      existing.inStock += entry.inStock;
+      if (era !== null) existing.ere = { ...existing.ere, [era]: (existing.ere?.[era] ?? 0) + stock };
+    } else target.set(cityEntityId, entry);
   }
 
   return { matched, unmatched, selectionKits, upgradeKits, specialKits };
