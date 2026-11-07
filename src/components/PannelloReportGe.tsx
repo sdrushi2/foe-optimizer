@@ -4,6 +4,8 @@
 //  - intervallo di livelli ("dal livello A al B" = hai il GE ad A e lo porti
 //    a B: si pagano i livelli A+1…B) con pulsanti rapidi;
 //  - riepilogo (PF per salire, a carico tuo con la chat, dai mecenati);
+//  - costo di sblocco dei livelli A+1…B (set di progetti, monete, materiali,
+//    medaglie, beni: datiGioco.caricaSblocchiGe, RECUPERO DATI/sblocchi_ge.py);
 //  - cosa guadagni da A a B (PF tuoi per ogni +1 del bonus);
 //  - come crescono i bonus (un grafico per bonus) e quanto costa livellare;
 //  - tappe; ogni grafico si apre a schermo intero (⛶, Esc per chiudere).
@@ -13,8 +15,8 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { iconKitInvecchiatore, iconKitInversione } from "../assets/icons";
-import { caricaLivelliGe } from "../data/datiGioco";
+import { iconBeni, iconBP, iconBPOro, iconKitInvecchiatore, iconKitInversione, iconMat, iconMed, iconMon } from "../assets/icons";
+import { caricaLivelliGe, caricaSblocchiGe, type SblocchiGe } from "../data/datiGioco";
 import { preparaReport, type Report } from "../data/reportGe";
 import type { UiLang } from "../data/ui-strings";
 import { formatInt } from "../utils/format";
@@ -38,6 +40,10 @@ const TESTI = {
     pfLivello: "PF del livello", tuoiLeg: "tuoi (Rame 100% / Oro 20%)", tappe: "Tappe", tuoiCum: "Tuoi cumulati", tuoiCol: "Tuoi (chat)",
     livello: "Livello", schermo: "Schermo intero", livelli: (a: number, b: number) => `livelli ${a}–${b}`,
     fonte: ["Valori della ", "wiki ufficiale", " di Forge of Empires (aggiornati al ", ")."],
+    sblocco: (a: number, b: number) => `Costo di sblocco da ${a} a ${b}`, nessunSblocco: "Nessun costo di sblocco in questo intervallo.",
+    sbloccoT: "Per sbloccare ogni livello, prima di poterci mettere PF. Beni: quantità di OGNUNO dei beni richiesti",
+    risorse: { set_rame: "Set di progetti Rame", set_oro: "Set di progetti Oro", monete: "Monete", materiali: "Materiali", medaglie: "Medaglie", beni: "Beni (ciascuno)" } as Record<string, string>,
+    fonteSblocchi: ["Costi di sblocco dal foglio pubblico ", "GB Update - PUBLIC", " (letto il ", ")."],
   },
   en: {
     eraIndietro: "age behind", ereIndietro: "ages behind", tuaEra: "your age",
@@ -55,6 +61,10 @@ const TESTI = {
     pfLivello: "Level FP", tuoiLeg: "yours (Copper 100% / Gold 20%)", tappe: "Milestones", tuoiCum: "Yours, cumulative", tuoiCol: "Yours (chat)",
     livello: "Level", schermo: "Full screen", livelli: (a: number, b: number) => `levels ${a}–${b}`,
     fonte: ["Values from the ", "official Forge of Empires wiki", " (updated ", ")."],
+    sblocco: (a: number, b: number) => `Unlock cost from ${a} to ${b}`, nessunSblocco: "No unlock cost in this range.",
+    sbloccoT: "To unlock each level, before you can put FP in it. Goods: amount of EACH required good",
+    risorse: { set_rame: "Copper blueprint sets", set_oro: "Gold blueprint sets", monete: "Coins", materiali: "Supplies", medaglie: "Medals", beni: "Goods (each)" } as Record<string, string>,
+    fonteSblocchi: ["Unlock costs from the public sheet ", "GB Update - PUBLIC", " (read ", ")."],
   },
 };
 type Testi = typeof TESTI.it;
@@ -148,6 +158,25 @@ function IconaBonus({ chiave, nome, oro, uiLang, conNome }: { chiave: string; no
   );
 }
 
+/** Campo del livello scritto a mano: testo libero mentre scrivi (niente frecce,
+ *  niente correzioni a ogni tasto), il valore si applica con Invio o uscendo dal
+ *  campo; un valore non valido torna a quello di prima. */
+function CampoLivello({ valore, onCambia }: { valore: number; onCambia: (v: number) => void }) {
+  const [testo, setTesto] = useState<string | null>(null);
+  const applica = () => {
+    const v = Number(testo);
+    if (testo !== null && Number.isInteger(v) && v >= 1) onCambia(v);
+    setTesto(null);
+  };
+  return (
+    <input type="text" inputMode="numeric" value={testo ?? String(valore)}
+      onFocus={e => e.currentTarget.select()}
+      onChange={e => setTesto(e.currentTarget.value.replace(/\D/g, ""))}
+      onBlur={applica} onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); else if (e.key === "Escape") { e.stopPropagation(); setTesto(null); } }}
+      className="w-16 rounded-md border border-slate-700 bg-slate-950 px-1.5 py-1 text-center" />
+  );
+}
+
 function Box({ titolo, nota, onZoom, children }: { titolo: ReactNode; nota?: ReactNode; onZoom?: () => void; children: ReactNode }) {
   return (
     <div className="relative rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-2">
@@ -176,6 +205,14 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
   const T: Testi = TESTI[uiLang === "en" ? "en" : "it"];
   const [stato, setStato] = useState<{ r: Report; data: string } | "carico" | "errore">("carico");
   const [zoom, setZoom] = useState<Zoom | null>(null);
+  // costi di sblocco: file a parte (uno per tutti i GE); se manca, la sezione non c'è
+  const [sblocchi, setSblocchi] = useState<SblocchiGe | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    setSblocchi(null);
+    void caricaSblocchiGe(id).then(s => { if (vivo) setSblocchi(s); });
+    return () => { vivo = false; };
+  }, [id]);
   const [da, setDa] = useState(1);
   const [a, setA] = useState(oro ? 500 : 200);
   useEffect(() => {
@@ -234,6 +271,29 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
             </div>
           ))}
         </div>
+
+        {/* costo di sblocco dei livelli A+1…B (riga i della tabella = livello i+1) */}
+        {sblocchi && (() => {
+          const tot = sblocchi.colonne.map((_, k) => sblocchi.righe.slice(A0, B0).reduce((s, x) => s + (x[k] ?? 0), 0));
+          const ic: Record<string, string> = { set_rame: iconBP, set_oro: iconBPOro, monete: iconMon, materiali: iconMat, medaglie: iconMed, beni: iconBeni };
+          const voci = sblocchi.colonne.map((c, k) => [c, tot[k]!] as const).filter(([, v]) => v > 0);
+          return (
+            <>
+              <h3 className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wider text-amber-400" title={T.sbloccoT}>{T.sblocco(A0, B0)}</h3>
+              <div className="flex flex-wrap gap-2">
+                {voci.length ? voci.map(([c, v]) => (
+                  <div key={c} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5" title={`${T.risorse[c] ?? c}: ${fmt(v)}`}>
+                    <img src={ic[c] ?? iconBP} alt="" className="h-6 w-6 object-contain" />
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{T.risorse[c] ?? c}</span>
+                      <span className={`font-mono text-[15px] font-bold ${c === "set_oro" ? "text-amber-300" : "text-slate-100"}`}>{v >= 1e6 ? fk(v) : fmt(v)}</span>
+                    </span>
+                  </div>
+                )) : <p className="text-slate-400">{T.nessunSblocco}</p>}
+              </div>
+            </>
+          );
+        })()}
 
         <h3 className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wider text-amber-400">{T.guadagni(A0, B0)}</h3>
         <div className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/70 px-2.5 py-1.5">
@@ -302,12 +362,15 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
           {T.fonte[0]}<a href={`https://en.wiki.forgeofempires.com/index.php?title=${encodeURIComponent((nomeEn || nome).replace(/ /g, "_"))}`}
             target="_blank" rel="noopener noreferrer" className="text-amber-400 underline hover:text-amber-300">{T.fonte[1]}</a>
           {T.fonte[2]}{uiLang === "en" ? stato.data : stato.data.split("-").reverse().join("-")}{T.fonte[3]}
+          {sblocchi && <>{" "}{T.fonteSblocchi[0]}<a href={sblocchi.fonte ?? "https://docs.google.com/spreadsheets/d/1Y4nFA5R8MLuWI1ACUHK9AfpWOYAGN3M_1Q5kCdYKDmA"}
+            target="_blank" rel="noopener noreferrer" className="text-amber-400 underline hover:text-amber-300">{T.fonteSblocchi[1]}</a>
+            {T.fonteSblocchi[2]}{uiLang === "en" ? sblocchi.scaricato : sblocchi.scaricato.split("-").reverse().join("-")}{T.fonteSblocchi[3]}</>}
         </p>
       </>
     );
     // (fmt/fk dipendono solo dalla lingua)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stato, A0, B0, uiLang]);
+  }, [stato, sblocchi, A0, B0, uiLang]);
 
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-sm sm:p-6" onClick={onClose}>
@@ -346,8 +409,8 @@ export default function PannelloReportGe({ id, nome, nomeEn, oro, era, w, h, imm
         </div>
         <div className="px-4 py-3 text-[13px] text-slate-300">
           <div className="mb-3 flex flex-wrap items-center gap-2" title={T.intervalloT}>
-            {T.dal} <input type="number" min={1} value={A0} onChange={e => setDa(Number(e.currentTarget.value) || 1)} className="w-16 rounded-md border border-slate-700 bg-slate-950 px-1.5 py-1 text-center" />
-            {T.al} <input type="number" min={2} value={B0} onChange={e => setA(Number(e.currentTarget.value) || N)} className="w-16 rounded-md border border-slate-700 bg-slate-950 px-1.5 py-1 text-center" />
+            {T.dal} <CampoLivello valore={A0} onCambia={setDa} />
+            {T.al} <CampoLivello valore={B0} onCambia={setA} />
             {/* (dalla Città: prima i prossimi 10 livelli del TUO GE, es. 191–201) */}
             {[...(livello && livello < N ? [[livello, Math.min(N, livello + 10)] as [number, number]] : []), [1, N] as [number, number], ...RAPIDI.filter(([, y]) => y <= N)].map(([x, y], i) => (
               <button key={`${x}-${y}-${i}`} type="button" onClick={() => { setDa(x); setA(y); }}

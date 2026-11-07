@@ -4,6 +4,7 @@
 ### New
 - Inventory: new Age and Goods of age filters (Filters group). The first shows the owned buildings of one age; the second those producing goods of one age, i.e. buildings of that age, of the next age with previous age goods and of the previous age with next age goods, with the values of their own age and the goods column highlighted (needs a new inventory import)
 - Great Buildings catalog: the 📊 button next to the name (also in City, Inventory and Database, replacing the "GB" badge) opens the GB report, with bonuses and costs level by level from the official wiki, a level range of your choice (from the City it starts with the next 10 levels of your GB), how many FP each +1 of bonus costs you with the chat, and full-screen charts
+- Great Buildings report: new "Unlock cost" section, with the Copper and Gold blueprint sets, coins, supplies, medals and goods needed to unlock the levels of the chosen range
 
 ---
 

@@ -92,6 +92,27 @@ export function caricaLivelliGe(id: string): Promise<LivelliGe | null> {
   return p;
 }
 
+/** Costi di SBLOCCO dei livelli dei GE (RECUPERO DATI/sblocchi_ge.py, dal foglio
+ *  pubblico "GB Update - PUBLIC"): ge-livelli/_sblocchi.json ha solo le tabelle
+ *  diverse (molti GE costano uguale) e, per ogni GE, l'indice della sua tabella.
+ *  Riga i = livello i+1 (costo per sbloccare quel livello); colonne fra
+ *  set_rame, set_oro, monete, materiali, medaglie, beni (beni = ognuno dei beni). */
+export interface SblocchiGe { scaricato: string; fonte?: string; colonne: string[]; righe: number[][] }
+let fileSblocchi: Promise<{ scaricato: string; fonte?: string; tabelle: { colonne: string[]; righe: number[][] }[]; edifici: Record<string, number> } | null> | null = null;
+/** Costi di sblocco di UN GE (scarica il file una volta sola); null se manca. */
+export function caricaSblocchiGe(id: string): Promise<SblocchiGe | null> {
+  if (!fileSblocchi) {
+    const f = "ge-livelli/_sblocchi.json", h = manifestAvvio.file?.[f];
+    fileSblocchi = scarica(h ? `/data/${f}?v=${h}` : `/data/${f}`)
+      .then(r => r.json() as Promise<NonNullable<Awaited<typeof fileSblocchi>>>)
+      .catch(() => { fileSblocchi = null; return null; });
+  }
+  return fileSblocchi.then(d => {
+    const t = d ? d.tabelle[d.edifici[id] ?? -1] : undefined;
+    return d && t ? { scaricato: d.scaricato, fonte: d.fonte, colonne: t.colonne, righe: t.righe } : null;
+  });
+}
+
 /** Dati caricati. Lancia un errore se chiamata prima di `caricaDatiGioco()`. */
 export function datiGioco(): DatiGioco {
   if (!dati) throw new Error("datiGioco(): dati non ancora caricati (vedi main.tsx)");

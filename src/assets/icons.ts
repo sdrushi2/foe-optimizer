@@ -50,6 +50,7 @@ export { default as iconBeniS } from "./icons/BeniS.png";
 export { default as iconBeniB } from "./icons/BeniB.png";
 export { default as iconBeniG } from "./icons/BeniG.png";
 export { default as iconBP } from "./icons/BP.png";
+export { default as iconBPOro } from "./icons/BP_gold.png";
 export { default as iconOneUp } from "./icons/OneUp.png";
 export { default as iconImm } from "./icons/Imm.png";
 export { default as iconRinn } from "./icons/Rinn.png";

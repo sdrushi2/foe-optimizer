@@ -33,6 +33,28 @@ function fileGeLivelli(dir: string): string[] {
   return fs.existsSync(d) ? fs.readdirSync(d).filter(f => f.endsWith(".json")).sort().map(f => `${DIR_GE_LIVELLI}/${f}`) : [];
 }
 
+/** Costi di sblocco dei livelli dei GE (RECUPERO DATI/sblocchi_ge.py): solo le
+ *  tabelle diverse + id del GE -> indice della tabella (datiGioco.caricaSblocchiGe). */
+export const FILE_SBLOCCHI_GE = `${DIR_GE_LIVELLI}/_sblocchi.json`;
+function controllaSblocchi(dir: string, errori: string[]): void {
+  const f = FILE_SBLOCCHI_GE;
+  try {
+    const o = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")) as { tabelle?: { colonne?: unknown; righe?: unknown }[]; edifici?: Record<string, unknown> };
+    if (!Array.isArray(o.tabelle) || !o.edifici || typeof o.edifici !== "object") { errori.push(`${f}: servono "tabelle" ed "edifici"`); return; }
+    o.tabelle.forEach((t, k) => {
+      if (!Array.isArray(t.colonne) || !Array.isArray(t.righe) || !t.righe.length) { errori.push(`${f}: tabella ${k} senza "colonne" e "righe"`); return; }
+      const n = t.colonne.length;
+      const i = (t.righe as unknown[]).findIndex(r => !Array.isArray(r) || r.length !== n || r.some(v => typeof v !== "number"));
+      if (i >= 0) errori.push(`${f}: tabella ${k}, riga ${i + 1} non ha ${n} numeri`);
+    });
+    for (const [id, k] of Object.entries(o.edifici)) {
+      if (typeof k !== "number" || !o.tabelle[k]) errori.push(`${f}: ${id} punta a una tabella inesistente (${String(k)})`);
+    }
+  } catch (e) {
+    errori.push(`${f}: JSON non valido (${(e as Error).message})`);
+  }
+}
+
 export function manifestDati(dir: string): ManifestDati {
   const file: Record<string, string> = {};
   const tutto = createHash("sha256");
@@ -152,6 +174,7 @@ export function verificaDati(dir: string): string[] {
   json("ge.json", ["versione", "edifici"]);   // Grandi Edifici (ge.py, Prestige)
   // valori livello per livello dei GE (wiki_ge.py): colonne e righe coerenti
   for (const f of fileGeLivelli(dir)) {
+    if (f === FILE_SBLOCCHI_GE) { controllaSblocchi(dir, errori); continue; }
     try {
       const o = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")) as { colonne?: unknown; righe?: unknown };
       if (!Array.isArray(o.colonne) || !Array.isArray(o.righe) || !o.righe.length) { errori.push(`${f}: servono "colonne" e "righe"`); continue; }

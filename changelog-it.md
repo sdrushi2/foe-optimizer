@@ -4,6 +4,7 @@
 ### Novità
 - Inventario: nuovi filtri Era e Beni dell'era (gruppo Filtri). Il primo mostra gli edifici posseduti di un'era; il secondo quelli che producono beni di un'era, cioè gli edifici di quell'era, quelli dell'era dopo con i beni dell'era precedente e quelli dell'era prima con i beni dell'era successiva, con i valori della loro era e la colonna dei beni evidenziata (serve un nuovo import dell'inventario)
 - Catalogo dei Grandi Edifici: con il pulsante 📊 accanto al nome (anche in Città, Inventario e Database, al posto del badge "GE") si apre il report del GE, con i bonus e i costi livello per livello dalla wiki ufficiale, un intervallo di livelli a scelta (dalla Città parte dai prossimi 10 livelli del tuo GE), quanti PF ti costa ogni +1 di bonus con la chat e i grafici a schermo intero
+- Report dei Grandi Edifici: nuova sezione "Costo di sblocco", con i set di progetti Rame e Oro, le monete, i materiali, le medaglie e i beni che servono per sbloccare i livelli dell'intervallo scelto
 
 ---
 
