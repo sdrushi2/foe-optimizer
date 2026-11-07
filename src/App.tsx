@@ -7586,12 +7586,15 @@ export default function App() {
 
       {reportGe && datiGe?.edifici[reportGe] && (() => {
         const g = datiGe.edifici[reportGe]!, b = BUILDING_BY_ID.get(reportGe);
+        // GE "AllAge" (Osservatorio, Oracolo, Tempio delle Reliquie): nel gioco sono
+        // dell'Età del bronzo, e i beni per sbloccarne i livelli sono di quell'era (utente)
+        const eraGe = g.era === "AllAge" ? "BronzeAge" : g.era;
         return (
           <Suspense fallback={null}>
             <PannelloReportGe id={reportGe} nome={displayName(reportGe, g.nome[uiLang === "en" ? "en" : "it"], uiLang)} nomeEn={g.nome.en} oro={g.tierMax === "gold"}
-              era={g.era} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)}
+              era={eraGe} w={g.w} h={g.h} immagine={b ? getImageUrl(reportGe, b.hash) : null} uiLang={uiLang} onClose={() => setReportGe(null)}
               livello={activeTab === "propria_citta" ? greatBuildingsJson.get(reportGe)?.level : undefined}
-              ereIndietro={activeTab === "propria_citta" && currentEraId >= 0 && AGE_BY_CODE.has(g.era) ? Math.max(0, currentEraId - AGE_BY_CODE.get(g.era)!.id) : undefined} />
+              ereIndietro={activeTab === "propria_citta" && currentEraId >= 0 && AGE_BY_CODE.has(eraGe) ? Math.max(0, currentEraId - AGE_BY_CODE.get(eraGe)!.id) : undefined} />
           </Suspense>
         );
       })()}

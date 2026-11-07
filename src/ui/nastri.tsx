@@ -262,7 +262,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         ]] };
         // (Visualizza senza "IQ mon/mat": il catalogo dei GE non ha colonne delle Incursioni)
         // (Spedizioni e Produzioni sempre visibili, niente selezione né Export: utente, 06/11)
-        return [catalogo, livello, tier, ricerca, { ...vista(), rows: [vistaBase.filter(i => i.id !== "iqProd" && i.id !== "sped" && i.id !== "dettaglioProd")] }, opzioniTabella,
+        return [catalogo, ricerca, livello, tier, { ...vista(), rows: [vistaBase.filter(i => i.id !== "iqProd" && i.id !== "sped" && i.id !== "dettaglioProd")] }, opzioniTabella,
           // Calcolatore dei GE, posti mecenate (pagina a parte come la guida: /ge/ italiano, /gb/ inglese)
           { id: "strumenti-ge", label: L("r2GrpTools"), icon: Calculator, rows: [[
             { kind: "button", id: "mecenati", icon: Calculator, label: L("r2Patrons"), title: L("r2PatronsTitle"),
