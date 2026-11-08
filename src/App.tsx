@@ -875,6 +875,22 @@ type TabFilters = {
   minEff: string;
 };
 
+/** Copie possedute di un edificio a una certa era (filtri Era / Beni dell'era di
+ *  Città e Inventario), con le statistiche a quell'era se note. */
+interface CopiaEra { era: number; n: number; stats?: EraStats }
+/** Ere di cui le copie producono beni: della loro era, della precedente (benip,
+ *  un'era sopra), della successiva (benis, un'era sotto). */
+function ereDeiBeni(copie: Map<string, CopiaEra[]>): number[] {
+  const ere = new Set<number>();
+  copie.forEach(c => c.forEach(({ era, stats }) => {
+    if (!stats) return;
+    if (stats.beni > 0) ere.add(era);
+    if (stats.benip > 0 && era > 0) ere.add(era - 1);
+    if (stats.benis > 0) ere.add(era + 1);
+  }));
+  return [...ere].filter(e => AGES_BY_ID.has(e)).sort((a, b) => a - b);
+}
+
 /** Building "elaborato" per la tabella: aggiunge l'efficienza calcolata e i
  *  campi usati per ricerca/ordinamento/provenienza-da-kit. Tipo modulo-level
  *  (non locale ad App) cosi' da poter essere usato anche da BuildingRow. */
@@ -887,7 +903,8 @@ type ProcessedBuilding = Building & {
   /** Scheda Città, GE con bonus moltiplicativi: contributo effettivo per colonna
    *  (% × totale della città di quella statistica), contato nell'efficienza. */
   _contribGe?: { gen: number[]; gbg: number[]; sped: number[]; iq: number[] };
-  /** Inventario, filtri Era / Beni dell'era: era della copia posseduta mostrata. */
+  /** Città / Inventario, filtri Era / Beni dell'era: era della copia posseduta mostrata
+   *  (kitCount = quante copie a quell'era). */
   _eraCopia?: number;
   /** Inventario › Beni dell'era: colonna che dà i beni dell'era scelta (evidenziata). */
   _beniEvid?: "beni" | "benip" | "benis";
@@ -2406,8 +2423,8 @@ export default function App() {
   // Gruppi del nastro consegnati dallo strumento Pirati (Calcolo, Espansioni).
   const [gruppiPirati, setGruppiPirati] = useState<RibbonGroup[]>([]);
   // (2.0: il Planner resta aperto anche senza città: usa la sorgente JSON.)
-  // Filtra gli edifici vecchi nella tab Città
-  const [showOnlyOutdated, setShowOnlyOutdated] = useState(false);
+  // (08/11/2026: la casella "Edifici vecchi" della Città è sostituita dai filtri
+  // Era e Beni dell'era, come nell'Inventario: eraCitta / beniEraCitta)
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
   const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
   // Merge Città+Inventario: quando attivo, la tabella Città mostra anche le
@@ -2415,7 +2432,7 @@ export default function App() {
   // tab Inventario), marcate con ProcessedBuilding._isMergedInventory per
   // colore riga diverso e per disattivare azioni/filtri Città-specifici su
   // di esse (vedi filterSourceBuildings/handleCityRowClick più sotto). Non
-  // persistito, stesso pattern di showOnlyOutdated/showOnlyDeclassable.
+  // persistito, stesso pattern di showOnlyDeclassable.
   const [showInventoryInCity, setShowInventoryInCity] = useState(false);
   // 2.0: "solo con slot alleato" e "solo che producono frammenti" sono ora le
   // caselle di categoria "alleati"/"frammenti" (TabFilters.categorie).
@@ -2426,6 +2443,9 @@ export default function App() {
   // Inventario: edifici posseduti che producono beni di un'era (della loro era,
   // dell'era precedente se sono un'era sopra, della successiva se sono un'era sotto)
   const [beniEraInventario, setBeniEraInventario] = useState<number | null>(null);
+  // Città: gli stessi due filtri, sulle copie piazzate in città (era di ogni copia)
+  const [eraCitta, setEraCitta] = useState<number | null>(null);
+  const [beniEraCitta, setBeniEraCitta] = useState<number | null>(null);
   const [cityMapCellSize, setCityMapCellSize] = useState(9);
   const [cityMapView, setCityMapView] = useState<"vertical" | "isometric">("isometric");
   const [cityMapPan, setCityMapPan] = useState({ x: 0, y: 0 });
@@ -4559,7 +4579,7 @@ export default function App() {
   // (InventoryEntry.ere da item.level, con le statistiche alla loro era).
   // (era 1 = Età del bronzo esclusa: sono edifici di tutte le ere, utente 07/11)
   const copieInventario = useMemo(() => {
-    const m = new Map<string, Array<{ era: number; n: number; stats?: EraStats }>>();
+    const m = new Map<string, CopiaEra[]>();
     const aggiungi = (e: InventoryEntry) => {
       const c = Object.entries(e.ere ?? {}).map(([k, n]) => ({ era: Number(k), n, stats: e.statsEra?.[Number(k)] })).filter(x => x.era !== 1);
       if (c.length) m.set(e.cityEntityId, c);
@@ -4572,16 +4592,31 @@ export default function App() {
   /** Colonna di beni di una copia (all'era `era`) che dà beni dell'era `x`, o null. */
   const colonnaBeniEra = (s0: Pick<EraStats, "beni" | "benip" | "benis"> | undefined, era: number, x: number): "beni" | "benip" | "benis" | null =>
     !s0 ? null : era === x && s0.beni > 0 ? "beni" : era === x + 1 && s0.benip > 0 ? "benip" : era === x - 1 && s0.benis > 0 ? "benis" : null;
-  const ereBeniInventario = useMemo(() => {
-    const ere = new Set<number>();
-    copieInventario.forEach(c => c.forEach(({ era, stats }) => {
-      if (!stats) return;
-      if (stats.beni > 0) ere.add(era);
-      if (stats.benip > 0 && era > 0) ere.add(era - 1);
-      if (stats.benis > 0) ere.add(era + 1);
-    }));
-    return [...ere].filter(e => AGES_BY_ID.has(e)).sort((a, b) => a - b);
-  }, [copieInventario]);
+  const ereBeniInventario = useMemo(() => ereDeiBeni(copieInventario), [copieInventario]);
+  // Città: le copie piazzate per edificio, per era (entityLevelsList), con le
+  // statistiche di quell'era (entityInstanceEraStats; se tutte le copie sono
+  // all'era attuale, eraStats). Esclusi GE (il "livello" è quello del GE), edifici
+  // di tutte le ere, militari, ed era 1 come nell'Inventario.
+  const copieCitta = useMemo(() => {
+    const m = new Map<string, CopiaEra[]>();
+    entityLevelsList.forEach((livelli, id) => {
+      if (isGreatBuildingId(id) || isAllAgeBuildingId(id) || isMilitaryBuildingId(id)) return;
+      const perEra = new Map<number, number>();
+      for (const l of livelli) if (l !== 1 && AGES_BY_ID.has(l)) perEra.set(l, (perEra.get(l) ?? 0) + 1);
+      if (!perEra.size) return;
+      const gruppi = entityInstanceEraStats.get(id);
+      m.set(id, [...perEra].map(([era, n]) => {
+        const age = AGES_BY_ID.get(era)?.age;
+        const g = gruppi?.find(([a]) => a === age);
+        return { era, n, stats: g ? g[2] : age === currentEra ? eraStats.get(id) : undefined };
+      }));
+    });
+    return m;
+  }, [entityLevelsList, entityInstanceEraStats, eraStats, currentEra]);
+  const ereCitta = useMemo(() => [...new Set([...copieCitta.values()].flatMap(c => c.map(x => x.era)))].sort((a, b) => a - b), [copieCitta]);
+  const ereBeniCitta = useMemo(() => ereDeiBeni(copieCitta), [copieCitta]);
+  useEffect(() => { if (eraCitta !== null && !ereCitta.includes(eraCitta)) setEraCitta(null); }, [ereCitta, eraCitta]);
+  useEffect(() => { if (beniEraCitta !== null && !ereBeniCitta.includes(beniEraCitta)) setBeniEraCitta(null); }, [ereBeniCitta, beniEraCitta]);
   // (un'era sparita dopo un nuovo import: il filtro torna a "tutte")
   useEffect(() => { if (eraInventario !== null && !ereInventario.includes(eraInventario)) setEraInventario(null); }, [ereInventario, eraInventario]);
   useEffect(() => { if (beniEraInventario !== null && !ereBeniInventario.includes(beniEraInventario)) setBeniEraInventario(null); }, [ereBeniInventario, beniEraInventario]);
@@ -4742,21 +4777,26 @@ export default function App() {
     // Inventario › filtri Era / Beni dell'era: solo edifici POSSEDUTI (righe raw- di
     // Solo pronti o badge INV; quelli fatti con i kit nascono all'era attuale), una
     // riga per ogni era delle copie che soddisfa i filtri, con i valori di quell'era
-    if (activeTab !== "inventario" || (eraInventario === null && beniEraInventario === null)) return finale;
+    // (stessa cosa nella Città, sulle copie piazzate: una riga per era, ×N copie di quell'era)
+    const inCitta = activeTab === "propria_citta";
+    if (!inCitta && activeTab !== "inventario") return finale;
+    const fEra = inCitta ? eraCitta : eraInventario, fBeni = inCitta ? beniEraCitta : beniEraInventario;
+    if (fEra === null && fBeni === null) return finale;
+    const copie = inCitta ? copieCitta : copieInventario;
     const out: ProcessedBuilding[] = [];
     for (const b of finale) {
-      if (!b.id.startsWith("raw-")) continue; // (sorgente: processedInventoryRawBuildings, vedi filterSourceBuildings)
-      for (const c of copieInventario.get(b.cityEntityId) ?? []) {
-        if (eraInventario !== null && c.era !== eraInventario) continue;
-        const col = beniEraInventario !== null ? colonnaBeniEra(c.stats, c.era, beniEraInventario) : null;
-        if (beniEraInventario !== null && !col) continue;
+      if (inCitta ? b._isMergedInventory : !b.id.startsWith("raw-")) continue; // (Inventario: sorgente processedInventoryRawBuildings, vedi filterSourceBuildings)
+      for (const c of copie.get(b.cityEntityId) ?? []) {
+        if (fEra !== null && c.era !== fEra) continue;
+        const col = fBeni !== null ? colonnaBeniEra(c.stats, c.era, fBeni) : null;
+        if (fBeni !== null && !col) continue;
         const nb = c.stats ? conStatsEra(b, c.stats) : b;
         out.push({ ...nb, id: `${b.id}@${c.era}`, kitCount: c.n, currentEff: c.stats ? calculateEfficiency(nb, weights) : b.currentEff,
           _eraCopia: c.era, ...(col ? { _beniEvid: col } : {}) });
       }
     }
     return out;
-  }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights, bonusGeTabella, pctBonusGe, contributoGe, eraInventario, beniEraInventario, copieInventario]);
+  }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights, bonusGeTabella, pctBonusGe, contributoGe, eraInventario, beniEraInventario, copieInventario, eraCitta, beniEraCitta, copieCitta]);
 
   const filteredBuildings = useMemo(() => {
     const sourceBuildings: ProcessedBuilding[] = eraAdjustedSource;
@@ -4818,12 +4858,8 @@ export default function App() {
         if (!searchTerms.some(t => testo.includes(t))) continue;
       }
 
-      // 3. Filtered outdated (solo tab Città). Le righe merged da Inventario
-      // non sono istanze piazzate: non hanno un'era da confrontare, quindi
-      // vengono escluse quando uno di questi due filtri è attivo (un match
-      // per cityEntityId condiviso con un'istanza reale sarebbe comunque
-      // fuorviante, non un'informazione utile sulla riga merged stessa).
-      if (isPropriacitta && showOnlyOutdated && (b._isMergedInventory || (b.cityEntityId && !outdatedBuildings.has(b.cityEntityId)))) continue;
+      // 3. Declassabili (solo tab Città). Le righe merged da Inventario non sono
+      // istanze piazzate, quindi vengono escluse quando il filtro è attivo.
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
       // Catalogo › Grandi Edifici: solo la ricerca (niente filtri né Nascondi /
       // Mostra solo, che restano impostati per il catalogo Edifici)
@@ -4903,7 +4939,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyOutdated, outdatedBuildings, showOnlyDeclassable, declassableBuildings, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -6444,8 +6480,6 @@ export default function App() {
       categorie: currentFilters.categorie, toggleCategoria,
       azzera: resetFilters,
       extra: schedaCorrente === "citta" ? [
-        { id: "vecchi", label: t("r2Outdated", uiLang), title: t("showOnlyOldBuildingsTitle", uiLang), checked: showOnlyOutdated,
-          toggle: () => setShowOnlyOutdated(v => !v), disabled: outdatedBuildings.size === 0 && !showOnlyOutdated },
         { id: "declassabili", label: t("r2Declassable", uiLang), title: t("showOnlyDeclassableTitle", uiLang), checked: showOnlyDeclassable,
           toggle: () => setShowOnlyDeclassable(v => !v), disabled: declassableBuildings.size === 0 && !showOnlyDeclassable },
       ] : schedaCorrente === "inventario" ? [
@@ -6455,10 +6489,16 @@ export default function App() {
       era: schedaCorrente === "inventario" ? {
         valore: eraInventario, imposta: setEraInventario,
         opzioni: ereInventario.map(id => { const a = AGES_BY_ID.get(id); return { id, nome: a ? ageName(a.age, uiLang as Lang) : String(id) }; }),
+      } : schedaCorrente === "citta" ? {
+        valore: eraCitta, imposta: setEraCitta,
+        opzioni: ereCitta.map(id => { const a = AGES_BY_ID.get(id); return { id, nome: a ? ageName(a.age, uiLang as Lang) : String(id) }; }),
       } : undefined,
       beniEra: schedaCorrente === "inventario" ? {
         valore: beniEraInventario, imposta: setBeniEraInventario,
         opzioni: ereBeniInventario.map(id => { const a = AGES_BY_ID.get(id); return { id, nome: a ? ageName(a.age, uiLang as Lang) : String(id) }; }),
+      } : schedaCorrente === "citta" ? {
+        valore: beniEraCitta, imposta: setBeniEraCitta,
+        opzioni: ereBeniCitta.map(id => { const a = AGES_BY_ID.get(id); return { id, nome: a ? ageName(a.age, uiLang as Lang) : String(id) }; }),
       } : undefined,
     },
     catalogo, setCatalogo,
@@ -7148,14 +7188,14 @@ export default function App() {
                           isHighlighted={!b._isMergedInventory && highlightedCityEntityIds.has(b.cityEntityId)}
                           disconnectedCount={b._isMergedInventory ? 0 : cityEntityDisconnected.get(b.cityEntityId) ?? 0}
                           needlessCount={b._isMergedInventory ? 0 : cityEntityNeedlessCount.get(b.cityEntityId) ?? 0}
-                          importedCount={b._isMergedInventory ? 0 : importedCityEntityLookup.get(b.cityEntityId) ?? 0}
+                          importedCount={b._isMergedInventory ? 0 : b._eraCopia !== undefined ? (b.kitCount ?? 1) : importedCityEntityLookup.get(b.cityEntityId) ?? 0}
                           greatBuildingInfo={activeTab === "database" && catalogo === "ge"
                             // (Catalogo › GE: livello del selettore, non quello della tua città)
                             ? { entityId: b.cityEntityId, name: "", level: Math.min(livelloGe, datiGe?.edifici[b.cityEntityId]?.tierMax === "gold" ? livelloGe : 200), maxLevel: datiGe?.edifici[b.cityEntityId]?.tierMax === "gold" ? 500 : 200, width: 0, length: 0, rawEntry: {} as GreatBuilding["rawEntry"] }
                             : greatBuildingsJson.get(b.cityEntityId)}
                           gameDisplayName={gameNames.get(b.cityEntityId)}
                           upgradeBadge={b._isMergedInventory ? undefined : cityUpgradeBadges.get(b.cityEntityId)}
-                          isOutdated={!b._isMergedInventory && outdatedBuildings.has(b.cityEntityId)}
+                          isOutdated={!b._isMergedInventory && outdatedBuildings.has(b.cityEntityId) && (b._eraCopia === undefined || b._eraCopia < currentEraId)}
                           isDeclassable={!b._isMergedInventory && declassableBuildings.has(b.cityEntityId)}
                           allySlots={b._isMergedInventory ? undefined : allySlotsPerBuilding.get(b.cityEntityId)}
                           declassablePopData={b._isMergedInventory ? undefined : declassableBuildings.get(b.cityEntityId)}

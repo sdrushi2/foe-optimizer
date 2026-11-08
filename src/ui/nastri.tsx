@@ -203,17 +203,18 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   // "Nascondi / Mostra solo" (2.0): ogni voce gira su tre stati con un clic:
   // tutti → nascosti (rosso) → solo questi (verde) → tutti.
   // (icone del gioco, 24×24: vedi assets/icons.ts)
-  const tri3 = (v: keyof ContestoNastri["tri"]["stati"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], img: string): RibbonItem => {
+  const tri3 = (v: keyof ContestoNastri["tri"]["stati"], icon: LucideIcon, etichetta: Parameters<typeof t>[0], img: string, spiega?: Parameters<typeof t>[0]): RibbonItem => {
     const stato = c.tri.stati[v];
     return {
       kind: "button", id: `tri-${v}`, icon, img, label: L(etichetta), onClick: () => c.tri.gira(v),
       active: stato !== 0, danger: stato === 1, success: stato === 2,
-      title: `${L(etichetta)}: ${L(stato === 1 ? "r2TriHidden" : stato === 2 ? "r2TriOnly" : "r2TriAll")}`,
+      // (spiega: cosa sono questi edifici, sotto lo stato del filtro)
+      title: `${L(etichetta)}: ${L(stato === 1 ? "r2TriHidden" : stato === 2 ? "r2TriOnly" : "r2TriAll")}${spiega ? `\n${L(spiega)}` : ""}`,
     };
   };
   const nascondiMostra = (extra: RibbonItem[] = []): RibbonGroup => ({ id: "nascondi", label: L("r2GrpHideShow"), icon: EyeOff, rows: [[
     tri3("nonAcc", ZapOff, "r2NonRush", iconNoRush),
-    tri3("autoAge", ChevronsUp, "r2AutoAge", iconAutoAge),
+    tri3("autoAge", ChevronsUp, "r2AutoAge", iconAutoAge, "r2AutoAgeTitle"),
     tri3("limitati", Clock4, "r2Limited", iconLimitati),
     tri3("iq", Atom, "r2HideIq", iconIQ),
     tri3("alleati", Users, "r2HideAlly", allies_slot_full),

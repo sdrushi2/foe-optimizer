@@ -1,5 +1,12 @@
 # Novità di FoE Optimizer
 
+## Versione 2.011 (08/11/2026)
+### Novità
+- Città: nuovi filtri Era e Beni dell'era (gruppo Filtri), come nell'Inventario ma sugli edifici piazzati, una riga per ogni era delle copie con i valori di quell'era; sostituiscono la casella "Edifici vecchi"
+- "Auto aggiornabili" diventa "Era automatica": sono edifici che prendono da soli l'era della tua città e non si possono portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione, come ora spiegano i tooltip
+
+---
+
 ## Versione 2.010 (07/11/2026)
 ### Novità
 - Inventario: nuovi filtri Era e Beni dell'era (gruppo Filtri). Il primo mostra gli edifici posseduti di un'era; il secondo quelli che producono beni di un'era, cioè gli edifici di quell'era, quelli dell'era dopo con i beni dell'era precedente e quelli dell'era prima con i beni dell'era successiva, con i valori della loro era e la colonna dei beni evidenziata (serve un nuovo import dell'inventario)

@@ -1,5 +1,12 @@
 # FoE Optimizer Changelog
 
+## Version 2.011 (08/11/2026)
+### New
+- City: new Age and Goods of age filters (Filters group), as in the Inventory but on the placed buildings, one row per age of the copies with that age's values; they replace the "Outdated" box
+- "Self-upgrading" becomes "Auto age": these buildings take your city's age by themselves and can't be taken back to a previous age with the One Down Kit or the Reversion Kit, as the tooltips now explain
+
+---
+
 ## Version 2.010 (07/11/2026)
 ### New
 - Inventory: new Age and Goods of age filters (Filters group). The first shows the owned buildings of one age; the second those producing goods of one age, i.e. buildings of that age, of the next age with previous age goods and of the previous age with next age goods, with the values of their own age and the goods column highlighted (needs a new inventory import)

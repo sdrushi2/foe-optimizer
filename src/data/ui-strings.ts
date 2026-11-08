@@ -482,10 +482,12 @@ const UI_STRINGS = {
     it: "Mostra gli edifici che non si possono accelerare (🚫)",
     en: "Show buildings that cannot be rushed (🚫)",
   },
-  r2AutoAge: { it: "Auto aggiornabili", en: "Self-upgrading" },
+  r2AutoAge: { it: "Era automatica", en: "Auto age" },
+  /** (nov. 2026) Gli edifici a era automatica prendono da soli l'era della città e
+   *  NON si possono riportare a un'era precedente con i kit: va detto chiaramente. */
   r2AutoAgeTitle: {
-    it: "Mostra gli edifici che passano da soli all'era successiva (^)",
-    en: "Show buildings that move up to the next era on their own (^)",
+    it: "Edifici a era automatica (^): prendono da soli l'era della tua città e salgono con te. Non si possono portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione",
+    en: "Auto-age buildings (^): they take your city's age by themselves and move up with you. They can't be taken back to a previous age with the One Down Kit or the Reversion Kit",
   },
   r2Limited: { it: "Limitati / Ascesi", en: "Limited / Ascended" },
   r2LimitedTitle: {
@@ -872,12 +874,12 @@ const UI_STRINGS = {
     en: "Hide",
   },
   hideEraMutableTitle: {
-    it: "Nascondi tutti gli edifici che si aggiornano automaticamente",
-    en: "Hide all auto-aging buildings",
+    it: "Nascondi tutti gli edifici a era automatica",
+    en: "Hide all auto-age buildings",
   },
   hideEraMutableActiveTitle: {
-    it: "Mostra di nuovo gli edifici che si aggiornano automaticamente",
-    en: "Show auto-aging buildings again",
+    it: "Mostra di nuovo gli edifici a era automatica",
+    en: "Show auto-age buildings again",
   },
   filterLabel: {
     it: "Filtra",
@@ -1665,8 +1667,8 @@ const UI_STRINGS = {
    *  l'edificio si aggiorna automaticamente all'era corrente della città,
    *  senza bisogno di un kit di aggiornamento manuale. */
   eraMutableBadgeTitle: {
-    it: "Si aggiorna automaticamente alla tua era",
-    en: "Automatically upgrades to your age",
+    it: "Era automatica: prende da solo l'era della tua città. Non si può portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione",
+    en: "Auto age: it takes your city's age by itself. It can't be taken back to a previous age with the One Down Kit or the Reversion Kit",
   },
   daySuffix: {
     it: "g",
