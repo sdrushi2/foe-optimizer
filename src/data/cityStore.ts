@@ -110,6 +110,9 @@ export interface CityStore {
   /** Versione del bookmarklet usato per l'ultimo import (campo `_v` del payload).
    *  Assente nei profili importati prima dell'introduzione del versionamento. */
   bookmarkletVersion?:     number;
+  /** Livello del Castello del giocatore (bacchetta v8, Castle.curLevel); assente
+   *  nei profili importati prima, nelle città visitate e con l'helper senza dati. */
+  castleLevel?:            number;
   /** URL dell'avatar del giocatore sul CDN di FoE (es. "https://foeit.innogamescdn.com/assets/shared/avatars/portrait_359-xxx.jpg").
    *  Assente nei profili importati con bookmarklet precedenti alla versione che cattura ExtPlayerAvatar. */
   portraitUrl?:            string;

@@ -1325,6 +1325,15 @@ const UI_STRINGS = {
     it: "kit/anno",
     en: "kit/yr",
   },
+  prodFragmentsPanel: { it: "Produzione frammenti", en: "Fragment production" },
+  prodFpGoodsPanel: { it: "Produzione Punti Forge e beni", en: "Forge Points and goods production" },
+  prodGoodsTotal: { it: "Totale beni", en: "Total goods" },
+  prodCastle: { it: (n: number) => `Castello (liv. ${n})`, en: (n: number) => `Castle (lv. ${n})` },
+  prodGoodsDetailTitle: { it: "Clic: dettaglio per edificio", en: "Click: detail by building" },
+  prodGoodsBoostTitle: {
+    it: (p: number) => `Con il bonus produzione beni della città: +${p}%`,
+    en: (p: number) => `With the city's goods production bonus: +${p}%`,
+  },
   dailyQuantityLabel: {
     it: "Quantità giornaliera",
     en: "Daily quantity",
@@ -1411,9 +1420,14 @@ const UI_STRINGS = {
     it: "totale con bonus",
     en: "total with bonus",
   },
+  statColCastle: { it: (n: number) => `castello (liv. ${n})`, en: (n: number) => `castle (lv. ${n})` },
+  statColCastleTitle: {
+    it: "Bonus permanente del Castello per il tuo livello: attacco e difesa dell'esercito attaccante (righe rosse) e difensore (righe blu). Entra nel totale, quindi anche lui viene moltiplicato dai bonus dei GE; non vale nelle Incursioni quantiche",
+    en: "Permanent Castle bonus for your level: attack and defense of the attacking army (red rows) and defending army (blue rows). It is part of the total, so the GB multipliers apply to it too; it doesn't apply in Quantum Incursions",
+  },
   statTotalsFootnote: {
-    it: "* Nei totali non sono considerate alcune produzioni extra (Castello, Emissari, ecc.)",
-    en: "* Some additional production sources (Castle, Emissaries, etc.) are not included in the totals",
+    it: "*Nei totali non sono considerati i bonus temporanei",
+    en: "*Temporary bonuses are not included in the totals",
   },
 
   // ── Pannelli Debug (tab Città e Inventario) ──────────────────────────

@@ -2,8 +2,10 @@
 
 ## Versione 2.011 (08/11/2026)
 ### Novità
+- Nuova versione della bacchetta (va ricreata, trascinandola di nuovo nella barra dei preferiti): importa anche il livello del Castello: i Punti Forge e i beni giornalieri del Castello contano nel pannello Produzione, e il suo bonus di attacco e difesa ha una colonna nei Valori militari, compresa nel totale (e quindi moltiplicata dai bonus dei GE)
 - Città: nuovi filtri Era e Beni dell'era (gruppo Filtri), come nell'Inventario ma sugli edifici piazzati, una riga per ogni era delle copie con i valori di quell'era; sostituiscono la casella "Edifici vecchi"
 - "Auto aggiornabili" diventa "Era automatica": sono edifici che prendono da soli l'era della tua città e non si possono portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione, come ora spiegano i tooltip
+- Città › Statistiche › Produzione: due pannelli, "Produzione frammenti" e "Produzione Punti Forge e beni". Nel secondo i beni sono divisi per era (es. Beni Titano, Beni Hub Spaziale), contando l'era di ogni copia degli edifici e il bonus di produzione dei beni, con il totale in fondo; cliccando su una riga (un frammento, i Punti Forge, i beni gilda, i beni speciali o i beni di un'era) si vedono gli edifici che la producono e quanto dà ognuno
 
 ---
 

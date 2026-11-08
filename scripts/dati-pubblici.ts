@@ -19,7 +19,9 @@ import path from "path";
 /** Stessa lista di FILE_DATI in src/data/datiGioco.ts. */
 const FILE = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json", "pergamene.csv",
   // 2.0: scaricati solo quando servono (es. datiGioco.caricaBuildingsExtra), ma con hash come gli altri
-  "buildings_extra.csv", "ge.json"] as const;
+  "buildings_extra.csv", "ge.json",
+  // livelli del Castello (RECUPERO DATI/castello.py), scaricati solo con un livello importato
+  "castello.json"] as const;
 
 export interface ManifestDati { versione: string; file: Record<string, string> }
 
@@ -172,6 +174,7 @@ export function verificaDati(dir: string): string[] {
   json("kit.json", ["buildingUpgrades", "selectionKits"]);
   json("catene.json", ["edifici"]);
   json("ge.json", ["versione", "edifici"]);   // Grandi Edifici (ge.py, Prestige)
+  json("castello.json", ["versione", "livelli"]);   // livelli del Castello (castello.py)
   // valori livello per livello dei GE (wiki_ge.py): colonne e righe coerenti
   for (const f of fileGeLivelli(dir)) {
     if (f === FILE_SBLOCCHI_GE) { controllaSblocchi(dir, errori); continue; }

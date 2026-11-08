@@ -113,6 +113,23 @@ export function caricaSblocchiGe(id: string): Promise<SblocchiGe | null> {
   });
 }
 
+/** Livelli del Castello (RECUPERO DATI/castello.py, CastleSystemLevels del
+ *  MainParser): punti, PF e beni al giorno (beni = era del giocatore, beniPrec =
+ *  era precedente) e bonus permanenti già cumulati. */
+export interface LivelloCastello { livello: number; punti: number; pf: number; beni: number; beniPrec: number; bonus: Record<string, number> }
+let fileCastello: Promise<LivelloCastello[] | null> | null = null;
+/** Scarica i livelli del Castello (una volta sola); null se manca. */
+export function caricaCastello(): Promise<LivelloCastello[] | null> {
+  if (!fileCastello) {
+    const f = "castello.json", h = manifestAvvio.file?.[f];
+    fileCastello = scarica(h ? `/data/${f}?v=${h}` : `/data/${f}`)
+      .then(r => r.json() as Promise<{ livelli?: LivelloCastello[] }>)
+      .then(d => (Array.isArray(d.livelli) ? d.livelli : null))
+      .catch(() => { fileCastello = null; return null; });
+  }
+  return fileCastello;
+}
+
 /** Dati caricati. Lancia un errore se chiamata prima di `caricaDatiGioco()`. */
 export function datiGioco(): DatiGioco {
   if (!dati) throw new Error("datiGioco(): dati non ancora caricati (vedi main.tsx)");

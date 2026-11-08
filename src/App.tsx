@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, Fragment, type ReactNode } from "react";
 import {
   X as XIcon,
   RotateCcw,
@@ -6,6 +6,7 @@ import {
   Check,
   Wand2,
   ChartColumn,
+  ChevronRight,
 } from "lucide-react";
 
 import type { Building } from "./data/buildings";
@@ -18,7 +19,7 @@ import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, t
 import { parseBuildingsCsv } from "./data/buildings";
 import { type CityMapBuilding, type CityMapBounds } from "./data/cityMap";
 import type { CityStore } from "./data/cityStore";
-import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
+import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizeCastleLevel, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
 import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
@@ -28,7 +29,7 @@ import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_A
   isStorageOutdated, PROFILE_SLOTS
 } from "./utils/storage";
 
-import { caricaBuildingsExtra, caricaGe, datiGioco } from "./data/datiGioco";
+import { caricaBuildingsExtra, caricaGe, datiGioco, caricaCastello, type LivelloCastello } from "./data/datiGioco";
 import { leggiGe, statisticheGe, type DatiGe } from "./data/geBonus";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
@@ -2274,6 +2275,7 @@ export default function App() {
     // sanitizePortraitUrl anche in rilettura da localStorage: un profilo può
     // essere stato importato da un file di terzi prima che il filtro esistesse.
     setPortraitUrl(sanitizePortraitUrl(city?.portraitUrl));
+    setLivelloCastello(sanitizeCastleLevel(city?.castleLevel));
     setInventoryMatched(reviveMap<InventoryEntry>(inv?.inventoryMatched));
     setInventoryUnmatched(reviveMap<InventoryEntry>(inv?.inventoryUnmatched));
     setInventorySelectionKits(reviveMap<SelectionKitEntry>(inv?.inventorySelectionKits));
@@ -2488,6 +2490,16 @@ export default function App() {
     return s === "it" || s === "en" ? s : "it";
   });
   const [portraitUrl, setPortraitUrl] = useState<string>(() => sanitizePortraitUrl(getInitCity()?.portraitUrl));
+  // Livello del Castello (bacchetta v8); null = non importato
+  const [livelloCastello, setLivelloCastello] = useState<number | null>(() => sanitizeCastleLevel(getInitCity()?.castleLevel));
+  // Livelli del Castello (castello.json), scaricati solo se il livello è noto
+  const [livelliCastello, setLivelliCastello] = useState<LivelloCastello[] | null>(null);
+  useEffect(() => {
+    if (livelloCastello === null || livelliCastello) return;
+    let vivo = true;
+    void caricaCastello().then(l => { if (vivo) setLivelliCastello(l); });
+    return () => { vivo = false; };
+  }, [livelloCastello, livelliCastello]);
   const [selectedJsonEntry, setSelectedJsonEntry] = useState<DebugJsonEntry | null>(null);
   const [upgradeTooltip, setUpgradeTooltip] = useState<{ x: number; y: number; targets: string[]; kits: Array<{ name: string; count: number }> } | null>(null);
   // Popup anteprima immagine edificio: posizione + url + nome (alt/titolo).
@@ -2576,6 +2588,9 @@ export default function App() {
   const [avvisoCitta, setAvvisoCitta] = useState<string | null>(null);
   const [tema, setTema] = useTema();
   const [isProdSummaryOpen, setIsProdSummaryOpen] = useState(false);
+  // Pannello Produzione: righe aperte nel dettaglio per edificio (clic sulla riga,
+  // anche più di una: "fr-<frammento>", "fp", "benig", "benisp", "era-<id>")
+  const [righeProdAperte, setRigheProdAperte] = useState<ReadonlySet<string>>(() => new Set());
   const [isRoadSummaryOpen, setIsRoadSummaryOpen] = useState(false);
   // 2.0: seconda metà del vecchio PROD + STAT (valori militari), pannello a sé.
   const [isMilSummaryOpen, setIsMilSummaryOpen] = useState(false);
@@ -3133,6 +3148,7 @@ export default function App() {
       setGameNames(gameNames);
       setGameLang(gameLang);
       setPortraitUrl(sanitizePortraitUrl(preloadedData.portraitUrl));
+      setLivelloCastello(sanitizeCastleLevel(preloadedData.castleLevel));
       setEntityLevels(entityLevels);
       setEntityLevelsList(entityLevelsList);
 
@@ -3218,6 +3234,7 @@ export default function App() {
         // nemmeno salvato nel profilo (vedi sanitizePortraitUrl).
         portraitUrl: sanitizePortraitUrl(preloadedData.portraitUrl) || undefined,
         bookmarkletVersion: typeof preloadedData._v === "number" ? preloadedData._v : 0,
+        ...(sanitizeCastleLevel(preloadedData.castleLevel) ? { castleLevel: sanitizeCastleLevel(preloadedData.castleLevel)! } : {}),
         // `satisfies CityStore`: writeStoredJson accetta `unknown`, quindi senza
         // questa verifica strutturale un campo dimenticato o con typo
         // compilerebbe e persisterebbe profili incompleti in silenzio (il
@@ -4092,9 +4109,10 @@ export default function App() {
       } else {
         // v5+: l'helper non ha esposto alcune sezioni (struttura cambiata dopo un
         // suo aggiornamento): l'import è andato a buon fine ma è incompleto.
-        // 'avatar' (cosmetico) e 'outpost' (riguarda solo la tab Pirati) esclusi.
+        // 'avatar' (cosmetico), 'outpost' (riguarda solo la tab Pirati) e 'castle'
+        // (l'helper può non aver ancora ricevuto i dati del castello) esclusi.
         const diag = readPayloadDiagnostics(data);
-        const missing = diag.warnings.filter((w) => w !== "avatar" && w !== "outpost");
+        const missing = diag.warnings.filter((w) => w !== "avatar" && w !== "outpost" && w !== "castle");
         if (missing.length > 0) {
           const helper = [diag.helperName, diag.helperVersion].filter(Boolean).join(" ") || "?";
           alert(t("bookmarkletWarningsAlert", uiLang, missing.join(", "), helper));
@@ -6072,8 +6090,112 @@ export default function App() {
           const totalBeniG = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benig"), 0)
             + processedGreatBuildings.reduce((sum, b) => sum + b.benig, 0);
 
+          // Beni per era (08/11/2026): ogni copia dà beni della sua era (beni),
+          // dell'era prima (benip) e dell'era dopo (benis), con il bonus % dei beni
+          // (ceil per gruppo, come boostedExactBuildingSum); i GE all'era del
+          // giocatore. Edifici di tutte le ere: il loro "livello" non è un'era,
+          // contano all'era attuale. Un'era inesistente (prima della prima o dopo
+          // l'ultima) resta su quella della copia.
+          const eraAttuale = AGE_BY_CODE.get(currentEra || FALLBACK_ERA)?.id ?? -1;
+          const beniPerEra = new Map<number, number>();
+          // dettaglio per edificio: era → id → nome, copie che danno quei beni, quantità
+          const dettaglioBeni = new Map<number, Map<string, { nome: string; copie: number; v: number }>>();
+          const aggiungiBeni = (era: number, delta: number, v: number, chi?: { id: string; nome: string; copie: number }) => {
+            if (v <= 0) return;
+            const e = AGES_BY_ID.has(era + delta) ? era + delta : era;
+            beniPerEra.set(e, (beniPerEra.get(e) ?? 0) + v);
+            if (!chi) return;
+            const m = dettaglioBeni.get(e) ?? new Map<string, { nome: string; copie: number; v: number }>();
+            dettaglioBeni.set(e, m);
+            const x = m.get(chi.id);
+            if (x) { x.copie += chi.copie; x.v += v; } else m.set(chi.id, { nome: chi.nome, copie: chi.copie, v });
+          };
+          for (const b of cityBuildings) {
+            const groups = entityInstanceEraStats.get(b.cityEntityId);
+            const tutteLeEre = isAllAgeBuildingId(b.cityEntityId);
+            const copie: Array<{ era: number; n: number; s: Pick<EraStats, "beni" | "benip" | "benis"> }> = groups
+              ? groups.map(([age, n, s]) => ({ era: tutteLeEre ? eraAttuale : AGE_BY_CODE.get(age)?.id ?? eraAttuale, n, s }))
+              : [{ era: eraAttuale, n: cityEntityIds.get(b.cityEntityId) || 0, s: b }];
+            const nome = gameNames.get(b.cityEntityId) ?? b.name;
+            for (const { era, n, s } of copie) {
+              const chi = { id: b.cityEntityId, nome, copie: n };
+              aggiungiBeni(era, 0, Math.ceil((s.beni || 0) * (1 + totalBeniB)) * n, chi);
+              aggiungiBeni(era, -1, Math.ceil((s.benip || 0) * (1 + totalBeniB)) * n, chi);
+              aggiungiBeni(era, 1, Math.ceil((s.benis || 0) * (1 + totalBeniB)) * n, chi);
+            }
+          }
+          for (const g of processedGreatBuildings) {
+            const chi = { id: g.cityEntityId, nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1 };
+            aggiungiBeni(eraAttuale, 0, g.beni, chi);
+            aggiungiBeni(eraAttuale, -1, g.benip, chi);
+            aggiungiBeni(eraAttuale, 1, g.benis, chi);
+          }
+          // Castello (bacchetta v8 + castello.json): ricompensa giornaliera del suo livello,
+          // PF e beni a caso dell'era attuale e della precedente (senza bonus % dei beni)
+          const castello = livelloCastello !== null ? livelliCastello?.find(l => l.livello === livelloCastello) ?? null : null;
+          const voceCastello = castello ? { id: "__castello", nome: t("prodCastle", uiLang, castello.livello), copie: 1 } : null;
+          if (castello && voceCastello) {
+            aggiungiBeni(eraAttuale, 0, castello.beni, voceCastello);
+            aggiungiBeni(eraAttuale, -1, castello.beniPrec, voceCastello);
+          }
+          const ereBeni = [...beniPerEra].filter(([, v]) => v > 0).sort((x, y) => y[0] - x[0]);
+          const totaleBeniEre = ereBeni.reduce((s, [, v]) => s + v, 0);
+          const nomeBeniEra = (id: number) => {
+            const a = AGES_BY_ID.get(id), n = a ? ageName(a.age, uiLang as Lang) : String(id);
+            return uiLang === "en" ? `${n} goods` : `Beni ${n}`;
+          };
+          // (nel pannello dei frammenti il nome senza "Frammenti di" / "Fragments of")
+          const senzaFrammenti = (s: string) => s.replace(/^(Frammenti di |Fragments of )/, "");
+          const titoloPannello = (s: string) => <div className="px-1 pb-1 text-[11px] font-bold uppercase tracking-wider text-amber-400">{s}</div>;
+
+          // Dettaglio per edificio (clic su una riga; restano aperte tutte quelle cliccate: righeProdAperte):
+          // nome di gioco, ×copie, quantità al giorno (già con i bonus), dal più produttivo.
+          type VoceDett = { nome: string; copie: number; v: number };
+          const ordina = (l: VoceDett[]) => l.filter(x => x.v > 0).sort((x, y) => y.v - x.v || x.nome.localeCompare(y.nome));
+          const perEdificio = (val: (b: (typeof cityBuildings)[number]) => number, ge?: (g: (typeof processedGreatBuildings)[number]) => number, altre: VoceDett[] = []): VoceDett[] => ordina([
+            ...cityBuildings.map(b => ({ nome: gameNames.get(b.cityEntityId) ?? b.name, copie: cityEntityIds.get(b.cityEntityId) || 0, v: val(b) })),
+            ...(ge ? processedGreatBuildings.map(g => ({ nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1, v: ge(g) })) : []),
+            ...altre,
+          ]);
+          const apri = (k: string) => setRigheProdAperte(s => { const n = new Set(s); if (!n.delete(k)) n.add(k); return n; });
+          const freccia = (aperta: boolean | null) => aperta === null
+            ? <span className="w-3 shrink-0" />
+            : <ChevronRight size={12} strokeWidth={2.5} className={`shrink-0 text-slate-500 transition-transform duration-150 ${aperta ? "rotate-90 text-amber-400" : ""}`} />;
+          /** Righe del dettaglio sotto una riga aperta: `celle` colonne, valore nella colonna `colValore` (0 = la prima). */
+          const righeDettaglio = (k: string, elenco: VoceDett[], celle: number, colValore: number) => elenco.map(x => (
+            <tr key={`${k}-${x.nome}`} className="border-b border-slate-800/30 bg-slate-900/40 text-[11px]">
+              <td className="py-0.5 pl-8 pr-1 text-slate-400">
+                <span className="whitespace-nowrap">{x.nome}</span>
+                {x.copie > 1 && <span className="ml-1 font-mono text-emerald-400">×{x.copie}</span>}
+              </td>
+              {Array.from({ length: celle - 1 }, (_, i) => (
+                <td key={i} className="py-0.5 px-1 text-right font-mono text-slate-300">{i + 1 === colValore ? formatInt(x.v) : ""}</td>
+              ))}
+            </tr>
+          ));
+          const rigaGiornaliera = (key: string, icona: string, nome: string, valore: number, opz?: { evid?: boolean; ultima?: boolean; titolo?: string; dettaglio?: VoceDett[] }) => {
+            const apribile = !!opz?.dettaglio?.length, aperta = apribile && righeProdAperte.has(key);
+            return (
+              <Fragment key={key}>
+                <tr className={`${opz?.ultima ? "" : "border-b border-slate-800/50"} ${apribile ? "cursor-pointer hover:bg-slate-800/40" : ""} ${aperta ? "bg-slate-800/30" : ""}`}
+                  onClick={apribile ? () => apri(key) : undefined} title={opz?.titolo ?? (apribile ? t("prodGoodsDetailTitle", uiLang) : undefined)}>
+                  <td className="py-1 px-1 flex items-center gap-1">
+                    {freccia(apribile ? aperta : null)}
+                    <TableHeaderIcon src={icona} alt={nome} className="!h-4 !w-4 object-contain" />
+                    <span className={`whitespace-nowrap ${opz?.evid ? "font-bold text-slate-100" : "text-slate-300"}`}>{nome}</span>
+                  </td>
+                  <td className={`py-1 px-1 text-right font-mono ${opz?.evid ? "font-bold text-amber-200" : "text-amber-300"}`}>{formatInt(valore)}</td>
+                </tr>
+                {aperta && righeDettaglio(key, opz!.dettaglio!, 2, 1)}
+              </Fragment>
+            );
+          };
+
           return (
-            <div className="border border-slate-800 bg-slate-950 p-2 space-y-2 text-xs w-max min-w-[420px] max-w-full overflow-x-auto">
+            <>
+            {/* 2.011: due pannelli, frammenti e PF/beni (con i beni divisi per era); ogni riga si apre nel dettaglio per edificio */}
+            <div className="border border-slate-800 bg-slate-950 p-2 text-xs w-max max-w-full overflow-x-auto">
+              {titoloPannello(t("prodFragmentsPanel", uiLang))}
               <table className="w-full">
                 <thead>
                   <tr className="text-slate-400 border-b border-slate-800">
@@ -6086,65 +6208,67 @@ export default function App() {
                 </thead>
                 <tbody>
                   {prodTypes.map(pt => {
-                    const totalFrPerDay = cityBuildings.reduce((sum, b) => {
-                      return sum + exactBuildingSum(b, pt.key as keyof EraStats & keyof Building);
-                    }, 0);
+                    const campo = pt.key as keyof EraStats & keyof Building;
+                    const totalFrPerDay = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, campo), 0);
                     const kitsPerYear = totalFrPerDay / pt.cost * 365;
                     const kitsPerMonth = kitsPerYear / 12;
                     const qty = (specialKits[pt.invKey] as number) ?? 0;
+                    const k = `fr-${pt.key}`, aperta = righeProdAperte.has(k), apribile = totalFrPerDay > 0;
                     return (
-                      <tr key={pt.key} className="border-b border-slate-800/50 last:border-0">
-                        <td className="py-1 px-1 flex items-center gap-1"><span className="text-sm">{pt.icon}</span><span className="text-slate-300 whitespace-nowrap">{pt.name}</span></td>
-                        <td className={`py-1 px-1 text-right font-mono font-bold ${qty > 0 ? "text-emerald-300" : "text-slate-600"}`}>{formatInt(qty)}</td>
-                        <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalFrPerDay)}</td>
-                        <td className="py-1 px-1 text-right font-mono text-emerald-300">{formatInt(kitsPerMonth)}</td>
-                        <td className="py-1 px-1 text-right font-mono text-blue-300">{formatInt(kitsPerYear)}</td>
-                      </tr>
+                      <Fragment key={pt.key}>
+                        <tr className={`border-b border-slate-800/50 ${apribile ? "cursor-pointer hover:bg-slate-800/40" : ""} ${aperta ? "bg-slate-800/30" : ""}`}
+                          onClick={apribile ? () => apri(k) : undefined} title={pt.name}>
+                          <td className="py-1 px-1 flex items-center gap-1">{freccia(apribile ? aperta : null)}<span className="text-sm">{pt.icon}</span><span className="text-slate-300 whitespace-nowrap">{senzaFrammenti(pt.name)}</span></td>
+                          <td className={`py-1 px-1 text-right font-mono font-bold ${qty > 0 ? "text-emerald-300" : "text-slate-600"}`}>{formatInt(qty)}</td>
+                          <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalFrPerDay)}</td>
+                          <td className="py-1 px-1 text-right font-mono text-emerald-300">{formatInt(kitsPerMonth)}</td>
+                          <td className="py-1 px-1 text-right font-mono text-blue-300">{formatInt(kitsPerYear)}</td>
+                        </tr>
+                        {/* (frammenti al giorno di ogni edificio, nella colonna framm/g) */}
+                        {aperta && righeDettaglio(k, perEdificio(b => exactBuildingSum(b, campo)), 5, 2)}
+                      </Fragment>
                     );
                   })}
                 </tbody>
               </table>
-
-              <div className="border-t border-slate-800 pt-1.5">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-slate-400 border-b border-slate-800">
-                      <th className="py-1 px-1 text-left">{t("prodColumnLabel", uiLang)}</th>
-                      <th className="py-1 px-1 text-right">{t("dailyQuantityLabel", uiLang)}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-slate-800/50">
-                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconFP} alt={t("prodForgePoints", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodForgePoints", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt((totalPFNormal * (1 + totalPFB)) + totalPFGB)}</td>
-                    </tr>
-                    <tr className="border-b border-slate-800/50">
-                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsCurrent", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniBoosted)}</td>
-                    </tr>
-                    <tr className="border-b border-slate-800/50">
-                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsPrevious", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniPBoosted)}</td>
-                    </tr>
-                    <tr className="border-b border-slate-800/50">
-                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsNext", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniSBoosted)}</td>
-                    </tr>
-                    <tr className="border-b border-slate-800/50">
-                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGoodsSpecial", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniSpBoosted)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 px-1 flex items-center gap-1"><TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="!h-4 !w-4 object-contain" /><span className="text-slate-300 whitespace-nowrap">{t("prodGuildGoods", uiLang)}</span></td>
-                      <td className="py-1 px-1 text-right font-mono text-amber-300">{formatInt(totalBeniG)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
             </div>
+
+            <div className="border border-slate-800 bg-slate-950 p-2 text-xs w-max min-w-[260px] max-w-full overflow-x-auto">
+              {titoloPannello(t("prodFpGoodsPanel", uiLang))}
+              <table className="w-full">
+                <thead>
+                  <tr className="text-slate-400 border-b border-slate-800">
+                    <th className="py-1 px-1 text-left">{t("prodColumnLabel", uiLang)}</th>
+                    <th className="py-1 px-1 text-right">{t("dailyQuantityLabel", uiLang)}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* (dettagli: stessi calcoli dei totali, edificio per edificio) */}
+                  {rigaGiornaliera("fp", iconFP, t("prodForgePoints", uiLang), (totalPFNormal * (1 + totalPFB)) + totalPFGB + (castello?.pf ?? 0),
+                    { dettaglio: perEdificio(b => exactBuildingSum(b, "fp") * (1 + totalPFB), g => g.fp, castello && voceCastello ? [{ nome: voceCastello.nome, copie: 1, v: castello.pf }] : []) })}
+                  {rigaGiornaliera("benig", iconBeniG, t("prodGuildGoods", uiLang), totalBeniG,
+                    { dettaglio: perEdificio(b => exactBuildingSum(b, "benig"), g => g.benig) })}
+                  {rigaGiornaliera("benisp", iconBeniSp, t("prodGoodsSpecial", uiLang), totalBeniSpBoosted,
+                    { dettaglio: perEdificio(b => boostedExactBuildingSum(b, "benisp", totalBeniSpB), g => g.benisp) })}
+                  {/* beni divisi per era, dalla più recente (con il dettaglio delle copie a quell'era); in fondo il totale */}
+                  {ereBeni.map(([id, v]) => rigaGiornaliera(`era-${id}`, id === eraAttuale ? iconBeni : id < eraAttuale ? iconBeniP : iconBeniS, nomeBeniEra(id), v,
+                    { dettaglio: ordina([...(dettaglioBeni.get(id)?.values() ?? [])]) }))}
+                  {rigaGiornaliera("beni-tot", iconBeni, t("prodGoodsTotal", uiLang), totaleBeniEre, { evid: true, ultima: true,
+                    // (tooltip: le tre quote rispetto alla tua era, come nel vecchio pannello, e il bonus % applicato)
+                    titolo: `${t("prodGoodsCurrent", uiLang)}: ${formatInt(totalBeniBoosted)} · ${t("prodGoodsPrevious", uiLang)}: ${formatInt(totalBeniPBoosted)} · ${t("prodGoodsNext", uiLang)}: ${formatInt(totalBeniSBoosted)}`
+                      + (totalBeniB > 0 ? `\n${t("prodGoodsBoostTitle", uiLang, Math.round(totalBeniB * 100))}` : "") })}
+                </tbody>
+              </table>
+            </div>
+            </>
           );
         })()}
-        {isMilSummaryOpen && (
+        {isMilSummaryOpen && (() => {
+          // Castello (bacchetta v8 + castello.json): +X% attacco e difesa all'esercito
+          // attaccante / difensore, bonus permanente del livello
+          const lc = livelloCastello !== null ? livelliCastello?.find(l => l.livello === livelloCastello) : undefined;
+          const bonusCastello = lc ? { livello: lc.livello, att: lc.bonus.att_def_boost_attacker ?? 0, dif: lc.bonus.att_def_boost_defender ?? 0 } : null;
+          return (
             <div className="border border-slate-800 bg-slate-950 p-2 space-y-2 text-xs w-max min-w-[420px] max-w-full overflow-x-auto">
               <div>
                 <table className="w-full text-xs">
@@ -6154,6 +6278,7 @@ export default function App() {
                       <th className="py-1 px-1 text-right">{t("statColFromBuildings", uiLang)}</th>
                       <th className="py-1 px-1 text-right">{t("statColFromGB", uiLang)}</th>
                       <th className="py-1 px-1 text-right">{t("statColFromAllies", uiLang)}</th>
+                      {bonusCastello && <th className="py-1 px-1 text-right" title={t("statColCastleTitle", uiLang)}>{t("statColCastle", uiLang, bonusCastello.livello)}</th>}
                       <th className="py-1 px-1 text-right">{t("statColTotal", uiLang)}</th>
                       <th className="py-1 px-1 text-right" title={t("statColGbBonusTitle", uiLang)}>{t("statColGbBonus", uiLang)}</th>
                       <th className="py-1 px-1 text-right">{t("statColTotalWithBonus", uiLang)}</th>
@@ -6163,8 +6288,11 @@ export default function App() {
                     {statsRows.map((row, idx) => {
                       const extraA = (row as { extraA?: number }).extraA ?? 0;
                       const extraD = (row as { extraD?: number }).extraD ?? 0;
-                      const totalA = row.bA + row.gA + row.aA + extraA;
-                      const totalD = row.bD + row.gD + row.aD + extraD;
+                      // Castello: punti percentuali su attacco e difesa (righe rosse: esercito
+                      // attaccante, blu: difensore), nel totale PRIMA dei moltiplicativi dei GE; non nelle IQ
+                      const cas = !bonusCastello || row.modalita === "guild_raids" ? 0 : row.color === "red" ? bonusCastello.att : bonusCastello.dif;
+                      const totalA = row.bA + row.gA + row.aA + extraA + cas;
+                      const totalD = row.bD + row.gD + row.aD + extraD + cas;
                       const colorClass = row.color === "red" ? "text-red-400" : "text-blue-400";
                       // Bonus moltiplicativi dei GE sul totale: quelli della modalità
                       // più quelli globali (tranne nelle IQ, dove i boost globali della
@@ -6181,6 +6309,7 @@ export default function App() {
                           <td className="py-0.5 px-1 text-right font-mono">{fm(row.bA, row.bD)}</td>
                           <td className="py-0.5 px-1 text-right font-mono text-amber-400/80">{fm(row.gA, row.gD)}</td>
                           <td className="py-0.5 px-1 text-right font-mono text-slate-400">{fm(row.aA, row.aD)}</td>
+                          {bonusCastello && <td className="py-0.5 px-1 text-right font-mono text-violet-300">{cas ? fm(cas, cas) : <span className="text-slate-600">{fm(0, 0)}</span>}</td>}
                           <td className={`py-0.5 px-1 text-right font-mono font-bold cursor-help ${colorClass}`} title={`${formatInt(totalA)} / ${formatInt(totalD)}`}>{fm(totalA, totalD)}</td>
                           <td className="py-0.5 px-1 text-right font-mono text-amber-300" title={t("statGbBonusCellTitle", uiLang, pA, pD)}>
                             {pA || pD ? <>{fm(bonA, bonD)} <span className="text-[10px] text-amber-300/70">(+{pA}%/+{pD}%)</span></> : <span className="text-slate-600">{fm(0, 0)}</span>}
@@ -6195,7 +6324,8 @@ export default function App() {
 
               <p className="text-[9px] text-slate-400 italic text-center pt-0.5">{t("statTotalsFootnote", uiLang)}</p>
             </div>
-        )}
+          );
+        })()}
       </>
     );
   };

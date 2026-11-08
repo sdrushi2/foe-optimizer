@@ -185,8 +185,14 @@
  * ⚠️ Nel template qui sotto le barre della regola sono raddoppiate (\\d,
  * \\.): in un template literal `\d` diventerebbe `d` e la regola non
  * riconoscerebbe più nessun server.
+ *
+ * v8 (08/11/2026, utente): campo `castleLevel` = livello del Castello
+ * (`Castle.curLevel`, variabile globale sia di FoE Helper sia di Forge Hammer,
+ * popolata da CastleSystemService all'avvio del gioco). Solo nella propria
+ * città; 0/assente → warning `castle` (non bloccante, non mostrato all'utente:
+ * l'helper potrebbe non aver ancora ricevuto i dati del castello).
  */
-export const CURRENT_BOOKMARKLET_VERSION = 7;
+export const CURRENT_BOOKMARKLET_VERSION = 8;
 
 /**
  * Versione minima del bookmarklet il cui blocco `pirateOutpost` è ancora
@@ -223,7 +229,7 @@ export const MIN_PIRATE_BOOKMARKLET_VERSION = 4;
  * iniziale ("helper non trovato"): è un controllo `if`, non un accesso a
  * campo annidato, non può lanciare.
  */
-export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();var ok=document.execCommand('copy');document.body.removeChild(t);if(!ok)throw new Error('browser refused the copy');}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}function serverId(){var m=location.hostname.match(/^([a-z]+[1-9]\\d*)\\.forgeofempires\\.com$/);return m?m[1]:null}var K=typeof MainParser!='undefined';var S=K?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S){alert(serverId()===null?'Click this bookmarklet while on the game tab, after logging in.':'This bookmarklet only works if FoE Helper or Forge Hammer is installed.');return;}var N=serverId();if(N===null){alert('Server not recognized. Open the game on your world page and try again.');return;}try{var W=[];var V=E=='OtherPlayer';var C=typeof CityMap!='undefined'?CityMap:null;var M=(C&&(V?C.OtherPlayer:C.Main))||{};var P=typeof FH!='undefined'&&FH.Player?FH.Player:{};var AO=typeof Allies!='undefined'?Allies:S.Allies;var A=null;try{if(typeof srcLinks!='undefined'){A=srcLinks.GetPortrait(V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:P.Avatar));}}catch(e){A=null;}var CM=V?M.mapData:S.CityMapData;if(!Object.keys(CM||{}).length||!Object.keys(S.CityEntities||{}).length){alert('Game data not loaded yet. Wait for the city to finish loading, or reload the game, then try again.');return;}if(!V&&!AO)W.push('allies');if(!V&&!S.Inventory)W.push('inventory');if(!M.unlockedAreas)W.push('areas');if(!A)W.push('avatar');var d={_v:${CURRENT_BOOKMARKLET_VERSION},helper:{n:K?'FoE Helper':'Forge Hammer',v:K?(typeof extVersion!='undefined'?extVersion:null):(typeof FH!='undefined'&&FH.BaseData?FH.BaseData.extVersion:null)},activeMap:E,server:N,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((AO||{}).allyList)||{},CityMapData:CM||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){var x=o.x||0,y=o.y||0;return o.width==4&&o.length==4?{x:x,y:y}:{x:x,y:y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:P.Name)};if(!V){var o=C&&(C.cultural_outpost||C.CulturalOutpost);if(o&&o.areas&&o.areas.length){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:o.areas.map(function(a){return{x:a.x||0,y:a.y||0,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x||0,y:e.y||0,cityentity_id:e.cityentity_id,type:e.type};})};}else if(!C||(!('cultural_outpost' in C)&&!('CulturalOutpost' in C))){W.push('outpost');}}if(!V){var R=K?(typeof ResourceStock!='undefined'?ResourceStock:null):(typeof FH!='undefined'?(FH.RessourceStock||FH.ResourceStock):null);if(!R||typeof R!='object'||Array.isArray(R)||!Object.keys(R).length){W.push('resources');}else{d.resources=R;}}d.warn=W;c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
+export const BOOKMARKLET_JS = `javascript:(function(){var E=(typeof ActiveMap!='undefined'?ActiveMap:(typeof FH!='undefined'?FH.ActiveMap:null))||'main';function c(s){function f(){try{var t=document.createElement('textarea');t.value=s;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.focus();t.select();var ok=document.execCommand('copy');document.body.removeChild(t);if(!ok)throw new Error('browser refused the copy');}catch(e){alert('Copy failed: '+e.message);}}navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(s).catch(f):f();}function serverId(){var m=location.hostname.match(/^([a-z]+[1-9]\\d*)\\.forgeofempires\\.com$/);return m?m[1]:null}var K=typeof MainParser!='undefined';var S=K?MainParser:(typeof FH!='undefined'?FH.Main:null);if(!S){alert(serverId()===null?'Click this bookmarklet while on the game tab, after logging in.':'This bookmarklet only works if FoE Helper or Forge Hammer is installed.');return;}var N=serverId();if(N===null){alert('Server not recognized. Open the game on your world page and try again.');return;}try{var W=[];var V=E=='OtherPlayer';var C=typeof CityMap!='undefined'?CityMap:null;var M=(C&&(V?C.OtherPlayer:C.Main))||{};var P=typeof FH!='undefined'&&FH.Player?FH.Player:{};var AO=typeof Allies!='undefined'?Allies:S.Allies;var A=null;try{if(typeof srcLinks!='undefined'){A=srcLinks.GetPortrait(V?(typeof Profile!='undefined'&&Profile.otherPlayer&&Profile.otherPlayer.other_player?Profile.otherPlayer.other_player.avatar:null):(typeof ExtPlayerAvatar!='undefined'?ExtPlayerAvatar:P.Avatar));}}catch(e){A=null;}var CM=V?M.mapData:S.CityMapData;if(!Object.keys(CM||{}).length||!Object.keys(S.CityEntities||{}).length){alert('Game data not loaded yet. Wait for the city to finish loading, or reload the game, then try again.');return;}if(!V&&!AO)W.push('allies');if(!V&&!S.Inventory)W.push('inventory');if(!M.unlockedAreas)W.push('areas');if(!A)W.push('avatar');var d={_v:${CURRENT_BOOKMARKLET_VERSION},helper:{n:K?'FoE Helper':'Forge Hammer',v:K?(typeof extVersion!='undefined'?extVersion:null):(typeof FH!='undefined'&&FH.BaseData?FH.BaseData.extVersion:null)},activeMap:E,server:N,inventory:V?[]:Object.values(S.Inventory||{}),allies:V?{}:((AO||{}).allyList)||{},CityMapData:CM||{},CityEntities:S.CityEntities||{},UnlockedAreas:(M.unlockedAreas||[]).map(function(o){var x=o.x||0,y=o.y||0;return o.width==4&&o.length==4?{x:x,y:y}:{x:x,y:y,width:o.width,length:o.length};}),portraitUrl:A,playerName:V?M.name:(typeof ExtPlayerName!='undefined'?ExtPlayerName:P.Name)};if(!V){var o=C&&(C.cultural_outpost||C.CulturalOutpost);if(o&&o.areas&&o.areas.length){d.pirateOutpost={_v:${CURRENT_BOOKMARKLET_VERSION},areas:o.areas.map(function(a){return{x:a.x||0,y:a.y||0,width:a.width,length:a.length};}),entities:Object.values(o.data||{}).filter(Boolean).map(function(e){return{x:e.x||0,y:e.y||0,cityentity_id:e.cityentity_id,type:e.type};})};}else if(!C||(!('cultural_outpost' in C)&&!('CulturalOutpost' in C))){W.push('outpost');}}if(!V){var R=K?(typeof ResourceStock!='undefined'?ResourceStock:null):(typeof FH!='undefined'?(FH.RessourceStock||FH.ResourceStock):null);if(!R||typeof R!='object'||Array.isArray(R)||!Object.keys(R).length){W.push('resources');}else{d.resources=R;}var Q=typeof Castle!='undefined'&&Castle?Castle.curLevel:0;if(Q>0){d.castleLevel=Q;}else{W.push('castle');}}d.warn=W;c(JSON.stringify(d));}catch(e){alert('Magic wand error: '+e.message);}})();`;
 
 // ─── Tipi del payload ──────────────────────────────────────────────────────
 
@@ -402,6 +408,9 @@ export interface BookmarkletData {
   /** v6+: magazzino risorse del giocatore (risorsa → quantità). Dato non
    *  fidato: passare SEMPRE da {@link sanitizeResources}. */
   resources?: unknown;
+  /** v8+: livello del Castello (Castle.curLevel). Dato non fidato: passare da
+   *  {@link sanitizeCastleLevel}. */
+  castleLevel?: unknown;
 }
 
 // ─── Payload Insediamento dei Pirati ───────────────────────────────────────
@@ -542,7 +551,12 @@ export interface PayloadDiagnostics {
   warnings: string[];
 }
 
-const KNOWN_WARNINGS = ["allies", "inventory", "map", "entities", "areas", "avatar", "outpost", "resources"];
+const KNOWN_WARNINGS = ["allies", "inventory", "map", "entities", "areas", "avatar", "outpost", "resources", "castle"];
+
+/** Livello del Castello del payload v8: intero 1…50 (oggi 20 livelli), altrimenti null. */
+export function sanitizeCastleLevel(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 50 ? value : null;
+}
 
 /** Limiti di sanità per `resources` (v6): ~344 chiavi reali, nomi snake_case. */
 const RESOURCES_MAX_KEYS = 5000;

@@ -2,8 +2,10 @@
 
 ## Version 2.011 (08/11/2026)
 ### New
+- New version of the magic wand (it must be recreated, dragging it again to the bookmarks bar): it also imports the Castle level: the Castle's daily Forge Points and goods count in the Production panel, and its attack and defense bonus has a column in Military values, included in the total (and so multiplied by the GB bonuses)
 - City: new Age and Goods of age filters (Filters group), as in the Inventory but on the placed buildings, one row per age of the copies with that age's values; they replace the "Outdated" box
 - "Self-upgrading" becomes "Auto age": these buildings take your city's age by themselves and can't be taken back to a previous age with the One Down Kit or the Reversion Kit, as the tooltips now explain
+- City › Statistics › Production: two panels, "Fragment production" and "Forge Points and goods production". In the second one goods are split by age (e.g. Space Age Titan goods, Space Age Space Hub goods), counting the age of every building copy and the goods production bonus, with the total at the bottom; clicking a row (a fragment, Forge Points, guild goods, special goods or the goods of an age) shows the buildings producing it and how much each one gives
 
 ---
 
