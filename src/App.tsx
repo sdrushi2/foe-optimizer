@@ -7,6 +7,7 @@ import {
   Wand2,
   ChartColumn,
   ChevronRight,
+  Calculator,
 } from "lucide-react";
 
 import type { Building } from "./data/buildings";
@@ -1344,7 +1345,7 @@ const BuildingRow = memo(function BuildingRow({
             appare più fuori dal nome. Ricalcola lo stesso displayNameText
             usato più sotto: duplicazione minima, ma evita di sollevare lo
             stato fuori dalla IIFE. Per le Grandi Opere include anche
-            " - Lv. X/Y" (stessa stringa del ramo isGreatBuilding più sotto):
+            " - X/Y" (stessa stringa del ramo isGreatBuilding più sotto):
             è spesso proprio quella parte, non il nome, a restare tagliata
             dal truncate — bug segnalato luglio 2026 su "Cancello di Saturno
             VI IDRA - Lv. 100/100". */}
@@ -1356,7 +1357,7 @@ const BuildingRow = memo(function BuildingRow({
               ? (gameDisplayName ?? displayName(b.cityEntityId, b.name, gameLang))
               : displayName(b.cityEntityId, b.name, uiLang);
             if (b.isGreatBuilding && greatBuildingInfo) {
-              return `${nameText} - Lv. ${greatBuildingInfo.level}/${greatBuildingInfo.maxLevel}`;
+              return `${nameText} - ${greatBuildingInfo.level}/${greatBuildingInfo.maxLevel}`;
             }
             return nameText;
           })()}
@@ -1385,7 +1386,7 @@ const BuildingRow = memo(function BuildingRow({
                   </span>
                   {(() => {
                     const gb = greatBuildingInfo;
-                    return gb ? <span className={`font-normal ${b.gbTier === "rame" ? "ge-name-copper" : "ge-name-gold"}`}> - Lv. {gb.level}/{gb.maxLevel}</span> : null;
+                    return gb ? <span className={`font-normal ${b.gbTier === "rame" ? "ge-name-copper" : "ge-name-gold"}`}> - {gb.level}/{gb.maxLevel}</span> : null;
                   })()}
                 </>
               );
@@ -1414,6 +1415,16 @@ const BuildingRow = memo(function BuildingRow({
             title={t("gbReportOpen", uiLang)} aria-label={t("gbReportOpen", uiLang)}>
             <ChartColumn size={13} />
           </button>
+        )}
+        {/* scheda Città: il Calcolatore GE su questo GE, al livello da costruire (livello attuale + 1;
+            anche se non ancora sbloccato: max_level del gioco è il livello sbloccato, non il massimo) */}
+        {activeTab === "propria_citta" && !b._isMergedInventory && b.isGreatBuilding && greatBuildingInfo && greatBuildingInfo.level < (greatBuildingInfo.tierMax === "copper" ? 200 : 500) && (
+          <a href={`/${uiLang === "it" ? "ge" : "gb"}/?ge=${encodeURIComponent(b.cityEntityId)}&livello=${greatBuildingInfo.level + 1}`}
+            target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
+            className="ml-1 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-amber-300 hover:border-amber-500"
+            title={t("gbCalcOpen", uiLang, greatBuildingInfo.level + 1)} aria-label={t("gbCalcOpen", uiLang, greatBuildingInfo.level + 1)}>
+            <Calculator size={13} />
+          </a>
         )}
         {noRush(b) && (
           <span className="ml-1 inline-flex flex-shrink-0 cursor-help relative top-px" title={t("noRushBadgeTitle", uiLang)}>
@@ -2248,6 +2259,7 @@ export default function App() {
 
     setCityEntityIds(reviveMap<number>(city?.cityEntityIds));
     setCityEntityDisconnected(reviveMap<number>(city?.cityEntityDisconnected));
+    setIstanzeScollegate(Array.isArray(city?.istanzeScollegate) ? city.istanzeScollegate : null);
     setCityEntityNeedlessCount(reviveMap<number>(city?.cityEntityNeedlessCount));
     setCityMapBuildings(Array.isArray(city?.cityMapBuildings) ? city.cityMapBuildings : []);
     setCityMapBounds(city?.cityMapBounds ?? null);
@@ -2399,6 +2411,11 @@ export default function App() {
 
   const [cityEntityIds, setCityEntityIds] = useState<Map<string, number>>(() => reviveMap<number>(getInitCity()?.cityEntityIds));
   const [cityEntityDisconnected, setCityEntityDisconnected] = useState<Map<string, number>>(() => reviveMap<number>(getInitCity()?.cityEntityDisconnected));
+  // Istanze scollegate (chiave mappa, entityId, era); null = profilo importato prima del 09/11/2026
+  const [istanzeScollegate, setIstanzeScollegate] = useState<Array<[string, string, number]> | null>(() => {
+    const v = getInitCity()?.istanzeScollegate;
+    return Array.isArray(v) ? v : null;
+  });
   const [cityEntityNeedlessCount, setCityEntityNeedlessCount] = useState<Map<string, number>>(() => reviveMap<number>(getInitCity()?.cityEntityNeedlessCount));
 
   const [cityMapBuildings, setCityMapBuildings] = useState<CityMapBuilding[]>(() => { const s = getInitCity(); return Array.isArray(s?.cityMapBuildings) ? s.cityMapBuildings : []; });
@@ -2779,6 +2796,7 @@ export default function App() {
       const matched = new Map<string, CityMapEntry>();
       const unmatched = new Map<string, CityMapEntry>();
       const disconnected = new Map<string, number>();
+      const istanzeScollegateImp: Array<[string, string, number]> = [];
       const needlessRoadKeys = new Set<string>();
       const needlessCountByEntity = new Map<string, number>();
 
@@ -2914,6 +2932,7 @@ export default function App() {
 
         if (requiredRoadLevel > 0 && connectedLevel < requiredRoadLevel) {
           disconnected.set(id, (disconnected.get(id) ?? 0) + 1);
+          istanzeScollegateImp.push([key, id, typeof entry.level === "number" ? entry.level : -1]);
         }
 
         // I GE sono riconosciuti dal solo prefisso "X_" (stessa regola di
@@ -3008,6 +3027,7 @@ export default function App() {
 
       setCityEntityIds(ids);
       setCityEntityDisconnected(disconnected);
+      setIstanzeScollegate(istanzeScollegateImp);
       setCityEntityNeedlessCount(needlessCountByEntity);
       setGreatBuildingsJson(gbs);
       setMatchedJson(matched);
@@ -3212,6 +3232,7 @@ export default function App() {
       writeStoredJson(cityKey, {
         cityEntityIds: Array.from(ids.entries()),
         cityEntityDisconnected: Array.from(disconnected.entries()),
+        istanzeScollegate: istanzeScollegateImp,
         cityEntityNeedlessCount: Array.from(needlessCountByEntity.entries()),
         cityMapBuildings: mapBuildings,
         cityMapBounds: nextCityMapBounds,
@@ -4704,15 +4725,32 @@ export default function App() {
   // Opzioni › Bonus GE: % dei moltiplicativi dei GE della città per colonna
   // (somma dei GE dello stesso tipo): Generali × globali, Campi e Spedizioni ×
   // modalità + globali, IQ × IQ (utente, 06/11: i Generali solo coi globali)
+  // Valori militari e bonus (09/11/2026, utente): un edificio che richiede la strada
+  // e NON è collegato non dà nulla, né i valori fissi né (GE) i bonus moltiplicativi.
+  // Copie collegate = in città − scollegate (cityEntityDisconnected conta solo chi
+  // richiede strada); GE: rawEntry.connected assente = scollegato (vedi efficienza strade).
+  const copieCollegate = useCallback((id: string) => Math.max(0, (cityEntityIds.get(id) || 0) - (cityEntityDisconnected.get(id) ?? 0)), [cityEntityIds, cityEntityDisconnected]);
+  const geCollegato = useCallback((gb: { cityEntityId: string; road: number }) =>
+    cityEntityIds.has(gb.cityEntityId) && (gb.road <= 0 || Number(greatBuildingsJson.get(gb.cityEntityId)?.rawEntry?.connected ?? 0) >= 1), [cityEntityIds, greatBuildingsJson]);
+  // Alleato che conta (utente, 09/11): piazzato, non frammento, e ospitato in un edificio
+  // collegato. Con i profili importati prima del 09/11 (istanzeScollegate assente) si sa
+  // solo quante copie sono scollegate: l'alleato non conta se lo sono TUTTE.
+  const chiaviScollegate = useMemo(() => new Set((istanzeScollegate ?? []).map(x => x[0])), [istanzeScollegate]);
+  const alleatoAttivo = useCallback((a: { isPlaced: boolean; isFragment?: boolean; placedInEntityId?: string; placedInMapEntityId?: string }) => {
+    if (!a.isPlaced || a.isFragment) return false;
+    if (istanzeScollegate) return !(a.placedInMapEntityId && chiaviScollegate.has(a.placedInMapEntityId));
+    return !(a.placedInEntityId && cityEntityIds.has(a.placedInEntityId) && copieCollegate(a.placedInEntityId) === 0);
+  }, [istanzeScollegate, chiaviScollegate, cityEntityIds, copieCollegate]);
+
   const pctBonusGe = useMemo<ProcessedBuilding["_bonusGe"] | null>(() => {
     const p = { all: [0, 0, 0, 0], battleground: [0, 0, 0, 0], guild_expedition: [0, 0, 0, 0], guild_raids: [0, 0, 0, 0] } as Record<string, number[]>;
     for (const gb of processedGreatBuildings) {
-      if (!cityEntityIds.has(gb.cityEntityId)) continue;
+      if (!geCollegato(gb)) continue;
       for (const m of gb.gbMoltiplicativi ?? []) { const d = p[m.modalita]; if (d) for (const i of GB_SLOT_IQ[m.tipo] ?? []) d[i]! += m.valore; }
     }
     const r = { gen: p.all!, gbg: somma4(p.battleground, p.all), sped: somma4(p.guild_expedition, p.all), iq: p.guild_raids! };
     return [...r.gen, ...r.gbg, ...r.sped, ...r.iq].some(v => v) ? r : null;
-  }, [processedGreatBuildings, cityEntityIds]);
+  }, [processedGreatBuildings, geCollegato]);
 
   // Totali militari della città per colonna, come il pannello Valori militari
   // (edifici + fallback + GE + alleati piazzati al livello reale + boost dei GE),
@@ -4723,31 +4761,32 @@ export default function App() {
     const somma = (b: Building, n: number) => { for (const k of ["general", "gbg", "sped", "iq"] as K[]) for (let i = 0; i < 4; i++) tot[k][i]! += (b[k][i] ?? 0) * n; };
     for (const b of BUILDINGS_FROM_CSV) {
       if (b.isInactive || b.isGreatBuilding || !cityEntityIds.has(b.cityEntityId)) continue;
-      somma(applyEraStats(b), cityEntityIds.get(b.cityEntityId) || 0);
+      somma(applyEraStats(b), copieCollegate(b.cityEntityId));
     }
-    for (const b of fallbackBuildings.values()) if (cityEntityIds.has(b.cityEntityId)) somma(b, cityEntityIds.get(b.cityEntityId) || 0);
+    for (const b of fallbackBuildings.values()) if (cityEntityIds.has(b.cityEntityId)) somma(b, copieCollegate(b.cityEntityId));
     let boostMil = 0, boostSci = 0;
     for (const gb of processedGreatBuildings) {
-      if (!cityEntityIds.has(gb.cityEntityId)) continue;
+      if (!geCollegato(gb)) continue;
       somma(gb, 1);
       for (const m of gb.gbMoltiplicativi ?? []) { if (m.tipo === "military_ally_boost") boostMil += m.valore; else if (m.tipo === "science_ally_boost") boostSci += m.valore; }
     }
     for (const imp of importedAllies) {
-      if (!imp.isPlaced || imp.isFragment) continue;
+      if (!alleatoAttivo(imp)) continue;
       const a = ALLIES_BY_ID_RARITY.get(`${imp.allyId}__${imp.rarity}`);
       if (!a) continue;
       const s = Allies.getComputedAllyStats(a, imp.level + (a.allyType === "S" ? boostSci : boostMil), INHERITED_ALLIES_MAP);
       for (let i = 0; i < 4; i++) { tot.general[i]! += s.computedGeneral[i] ?? 0; tot.gbg[i]! += s.computedGbg[i] ?? 0; tot.sped[i]! += s.computedSped[i] ?? 0; tot.iq[i]! += s.computedIq[i] ?? 0; }
     }
     return tot;
-  }, [cityEntityIds, applyEraStats, fallbackBuildings, processedGreatBuildings, importedAllies]);
+  }, [cityEntityIds, applyEraStats, fallbackBuildings, processedGreatBuildings, importedAllies, copieCollegate, geCollegato, alleatoAttivo]);
 
   /** Contributo dei moltiplicativi di un GE (utente, 06/11): Generali = %
    *  globale × totale Generali; Campi / Spedizioni = % della modalità × (Generali +
    *  modalità) + % globale × modalità (così il Sifone conta anche su Campi e
    *  Spedizioni senza contare due volte i Generali); IQ = % IQ × totale IQ. */
   const contributoGe = useCallback((b: ProcessedBuilding): ProcessedBuilding => {
-    if (!b.isGreatBuilding || !b.gbMoltiplicativi?.length) return b;
+    // (GE scollegato dalla strada: nessun contributo)
+    if (!b.isGreatBuilding || !b.gbMoltiplicativi?.length || !geCollegato(b)) return b;
     const m: Record<string, number[]> = { all: [0, 0, 0, 0], battleground: [0, 0, 0, 0], guild_expedition: [0, 0, 0, 0], guild_raids: [0, 0, 0, 0] };
     for (const x of b.gbMoltiplicativi) { const d = m[x.modalita]; if (d) for (const i of GB_SLOT_IQ[x.tipo] ?? []) d[i]! += x.valore; }
     const T = totaliMilCitta, r = (v: number) => Math.round(v / 100);
@@ -4760,7 +4799,7 @@ export default function App() {
     if (![...c.gen, ...c.gbg, ...c.sped, ...c.iq].some(v => v)) return b;
     const nb = { ...b, _contribGe: c };
     return { ...nb, currentEff: effConContributo(nb, weights) };
-  }, [totaliMilCitta, weights]);
+  }, [totaliMilCitta, weights, geCollegato]);
 
   const eraAdjustedSource = useMemo<ProcessedBuilding[]>(() => {
     const isGameTab = activeTab === "propria_citta" || activeTab === "inventario";
@@ -5176,12 +5215,12 @@ export default function App() {
   // oltre il 100 (utente: +10 = un alleato al 100 vale come al 110)
   const boostAlleati = useMemo(() => {
     let militari = 0, scienza = 0;
-    for (const b of processedGreatBuildings) for (const m of b.gbMoltiplicativi ?? []) {
+    for (const b of processedGreatBuildings) if (geCollegato(b)) for (const m of b.gbMoltiplicativi ?? []) {
       if (m.tipo === "military_ally_boost") militari += m.valore;
       else if (m.tipo === "science_ally_boost") scienza += m.valore;
     }
     return { militari, scienza };
-  }, [processedGreatBuildings]);
+  }, [processedGreatBuildings, geCollegato]);
 
   const processedImportedAllies = useMemo(() => {
     if (importedAllies.length === 0) return [];
@@ -5197,6 +5236,7 @@ export default function App() {
         fragmentCount: number;
         currentEff: number;
         placedInEntityId?: string;
+        placedInMapEntityId?: string;
         /** Livelli in più dai GE (Colosseo / Tempio del Loto), già nelle statistiche. */
         boostLivello: number;
       }
@@ -5258,6 +5298,7 @@ export default function App() {
         fragmentCount: imp.fragmentCount ?? 0,
         currentEff,
         placedInEntityId: imp.placedInEntityId,
+        placedInMapEntityId: imp.placedInMapEntityId,
         computedGeneral,
         computedGbg,
         computedSped,
@@ -5943,16 +5984,19 @@ export default function App() {
       { key: "rin", name: t("prodRenovationKit", uiLang),   icon: <img src={iconRinn} alt="" className="icon-16" />, cost: 30, invKey: "renovationKit"         as keyof SpecialKits },
       { key: "imm", name: t("prodStoreBuilding", uiLang),   icon: <img src={iconImm} alt="" className="icon-16" />, cost: 15, invKey: "storeBuilding"         as keyof SpecialKits },
     ];
-    const placedAllies = processedImportedAllies.filter(a => a.isPlaced && !a.isFragment);
+    // (solo gli alleati ospitati in un edificio collegato alla strada, vedi alleatoAttivo)
+    const placedAllies = processedImportedAllies.filter(alleatoAttivo);
 
-    const filteredGBs = processedGreatBuildings.filter(gb => cityEntityIds.has(gb.cityEntityId));
+    // (solo i GE collegati alla strada: uno scollegato non dà valori né bonus moltiplicativi)
+    const filteredGBs = processedGreatBuildings.filter(geCollegato);
     // Edifici fallback presenti in città (creati al volo perché non nel CSV):
     // i loro bonus militari reali vanno inclusi nei totali, altrimenti le
     // statistiche risultano sottostimate.
     const cityFallbacks = Array.from(fallbackBuildings.values()).filter(b => cityEntityIds.has(b.cityEntityId));
+    // (solo le copie collegate alla strada, vedi copieCollegate)
     const getBuildingSum = (idx: number, key: "general" | "gbg" | "sped" | "iq") =>
-      cityBuildings.reduce((s, b) => s + b[key][idx] * (cityEntityIds.get(b.cityEntityId) || 0), 0) +
-      cityFallbacks.reduce((s, b) => s + b[key][idx] * (cityEntityIds.get(b.cityEntityId) || 0), 0);
+      cityBuildings.reduce((s, b) => s + b[key][idx] * copieCollegate(b.cityEntityId), 0) +
+      cityFallbacks.reduce((s, b) => s + b[key][idx] * copieCollegate(b.cityEntityId), 0);
     const getGESum = (idx: number, key: "general" | "gbg" | "sped" | "iq") =>
       filteredGBs.reduce((s, gb) => s + gb[key][idx], 0);
     const getAllySum = (idx: number, key: "computedGeneral" | "computedGbg" | "computedSped" | "computedIq") =>
@@ -6015,16 +6059,32 @@ export default function App() {
           // Per gli edifici con tutte le copie alla stessa era usa count × valore
           // corrente (come prima). Per quelli con copie in ere diverse usa la
           // somma dei (count_per_era × valore_per_era) precalcolata all'import.
-          const exactBuildingSum = (b: Building & { cityEntityId: string }, field: keyof EraStats & keyof Building): number => {
-            const groups = entityInstanceEraStats.get(b.cityEntityId);
-            if (groups) {
-              // Somma esatta: ogni gruppo ha già (eraAge, count, stats)
-              return groups.reduce((s, [, count, stats]) => s + (stats[field] as number ?? 0) * count, 0);
-            }
-            // Nessuna era mista: count totale × valore corrente
-            const count = cityEntityIds.get(b.cityEntityId) || 0;
-            return ((b[field] as number) || 0) * count;
+          // (09/11/2026, utente) Le copie scollegate dalla strada non producono: ogni
+          // gruppo per era si divide in copie collegate (on) e scollegate (off). L'era delle
+          // scollegate viene da istanzeScollegate; nei profili importati prima si sa solo
+          // quante sono, e si tolgono prima dall'era attuale, poi dalle altre.
+          const scollegatePerEra = new Map<string, Map<string, number>>();
+          for (const [, id, lvl] of istanzeScollegate ?? []) {
+            const age = AGES_BY_ID.get(lvl)?.age ?? (currentEra || FALLBACK_ERA);
+            const m = scollegatePerEra.get(id) ?? new Map<string, number>();
+            scollegatePerEra.set(id, m);
+            m.set(age, (m.get(age) ?? 0) + 1);
+          }
+          type GruppoCopie = { age: string; on: number; off: number; s: Record<string, unknown> };
+          const gruppiCopie = (b: Building & { cityEntityId: string }): GruppoCopie[] => {
+            const groups: Array<[string, number, Record<string, unknown>]> = (entityInstanceEraStats.get(b.cityEntityId) as Array<[string, number, Record<string, unknown>]> | undefined)
+              ?? [[currentEra || FALLBACK_ERA, cityEntityIds.get(b.cityEntityId) || 0, b as unknown as Record<string, unknown>]];
+            const perEra = scollegatePerEra.get(b.cityEntityId);
+            let resto = istanzeScollegate ? 0 : cityEntityDisconnected.get(b.cityEntityId) ?? 0;
+            const ordinati = istanzeScollegate ? groups : [...groups].sort((x, y) => (y[0] === currentEra ? 1 : 0) - (x[0] === currentEra ? 1 : 0));
+            return ordinati.map(([age, n, s]) => {
+              let off = Math.min(n, perEra?.get(age) ?? 0);
+              if (resto > 0) { const k = Math.min(n - off, resto); off += k; resto -= k; }
+              return { age, on: n - off, off, s };
+            });
           };
+          const exactBuildingSum = (b: Building & { cityEntityId: string }, field: keyof EraStats & keyof Building, quali: "on" | "off" = "on"): number =>
+            gruppiCopie(b).reduce((s, g) => s + ((g.s[field] as number) || 0) * g[quali], 0);
 
           // Unico edificio noto (agosto 2026) che usa each_special_goods_up_to_age:
           // il suo campo `benisp` NON è un valore-per-bene ma un totale già
@@ -6050,7 +6110,7 @@ export default function App() {
           // ma con Math.ceil(valore × (1+boost)) applicato a ogni gruppo — o,
           // per EACH_SPECIAL_GOOD_BUILDING_ID, scomposto prima in valore
           // unitario × countSpecialGoodEras (vedi commento sopra).
-          const boostedExactBuildingSum = (b: Building & { cityEntityId: string }, field: keyof EraStats & keyof Building, boost: number): number => {
+          const boostedExactBuildingSum = (b: Building & { cityEntityId: string }, field: keyof EraStats & keyof Building, boost: number, quali: "on" | "off" = "on"): number => {
             const ceilBoosted = (value: number, era: string): number => {
               if (b.cityEntityId === EACH_SPECIAL_GOOD_BUILDING_ID && field === "benisp") {
                 const eraId = AGE_BY_CODE.get(era)?.id;
@@ -6059,24 +6119,22 @@ export default function App() {
               }
               return Math.ceil(value * (1 + boost));
             };
-            const groups = entityInstanceEraStats.get(b.cityEntityId);
-            if (groups) {
-              return groups.reduce((s, [eraAge, count, stats]) => s + ceilBoosted(stats[field] as number ?? 0, eraAge) * count, 0);
-            }
-            const count = cityEntityIds.get(b.cityEntityId) || 0;
-            return ceilBoosted((b[field] as number) || 0, currentEra || FALLBACK_ERA) * count;
+            return gruppiCopie(b).reduce((s, g) => s + ceilBoosted((g.s[field] as number) || 0, g.age) * g[quali], 0);
           };
+          // (GE scollegati: non producono; restano nei dettagli in rosso)
+          const geProd = processedGreatBuildings.filter(geCollegato);
+          const geSpenti = processedGreatBuildings.filter(g => cityEntityIds.has(g.cityEntityId) && !geCollegato(g));
 
           const totalPFNormal = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "fp"), 0);
-          const totalPFGB = processedGreatBuildings.reduce((sum, b) => sum + b.fp, 0);
+          const totalPFGB = geProd.reduce((sum, b) => sum + b.fp, 0);
           const totalPFB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "fpb"), 0);
-          const totalBeniGB = processedGreatBuildings.reduce((sum, b) => sum + b.beni, 0);
-          const totalBeniPGB = processedGreatBuildings.reduce((sum, b) => sum + b.benip, 0);
-          const totalBeniSGB = processedGreatBuildings.reduce((sum, b) => sum + b.benis, 0);
+          const totalBeniGB = geProd.reduce((sum, b) => sum + b.beni, 0);
+          const totalBeniPGB = geProd.reduce((sum, b) => sum + b.benip, 0);
+          const totalBeniSGB = geProd.reduce((sum, b) => sum + b.benis, 0);
           // BeniSp (Beni Speciali): boost applicato tramite totalBeniSpB
           // (special_goods_production, agosto 2026) — separato da totalBeniB
           // (goods_production), che boosta solo Beni/BeniP/BeniS "normali".
-          const totalBeniSpGB = processedGreatBuildings.reduce((sum, b) => sum + b.benisp, 0);
+          const totalBeniSpGB = geProd.reduce((sum, b) => sum + b.benisp, 0);
           const totalBeniSpB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benispb"), 0);
           const totalBeniB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benib"), 0);
           // Beni/BeniP/BeniS/BeniSp "boostati": ceil per-gruppo (vedi
@@ -6088,7 +6146,7 @@ export default function App() {
           const totalBeniSBoosted = cityBuildings.reduce((sum, b) => sum + boostedExactBuildingSum(b, "benis", totalBeniB), 0) + totalBeniSGB;
           const totalBeniSpBoosted = cityBuildings.reduce((sum, b) => sum + boostedExactBuildingSum(b, "benisp", totalBeniSpB), 0) + totalBeniSpGB;
           const totalBeniG = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "benig"), 0)
-            + processedGreatBuildings.reduce((sum, b) => sum + b.benig, 0);
+            + geProd.reduce((sum, b) => sum + b.benig, 0);
 
           // Beni per era (08/11/2026): ogni copia dà beni della sua era (beni),
           // dell'era prima (benip) e dell'era dopo (benis), con il bonus % dei beni
@@ -6099,33 +6157,38 @@ export default function App() {
           const eraAttuale = AGE_BY_CODE.get(currentEra || FALLBACK_ERA)?.id ?? -1;
           const beniPerEra = new Map<number, number>();
           // dettaglio per edificio: era → id → nome, copie che danno quei beni, quantità
-          const dettaglioBeni = new Map<number, Map<string, { nome: string; copie: number; v: number }>>();
-          const aggiungiBeni = (era: number, delta: number, v: number, chi?: { id: string; nome: string; copie: number }) => {
+          // dettaglio per edificio: era → id → nome, copie, quantità (spento = copie scollegate:
+          // v è quello che darebbero, mostrato a 0 in rosso)
+          type VoceBeni = { nome: string; copie: number; v: number; spento?: boolean };
+          const dettaglioBeni = new Map<number, Map<string, VoceBeni>>();
+          const aggiungiBeni = (era: number, delta: number, v: number, chi?: { id: string; nome: string; copie: number; spento?: boolean }) => {
             if (v <= 0) return;
             const e = AGES_BY_ID.has(era + delta) ? era + delta : era;
-            beniPerEra.set(e, (beniPerEra.get(e) ?? 0) + v);
+            if (!chi?.spento) beniPerEra.set(e, (beniPerEra.get(e) ?? 0) + v);
             if (!chi) return;
-            const m = dettaglioBeni.get(e) ?? new Map<string, { nome: string; copie: number; v: number }>();
+            const m = dettaglioBeni.get(e) ?? new Map<string, VoceBeni>();
             dettaglioBeni.set(e, m);
-            const x = m.get(chi.id);
-            if (x) { x.copie += chi.copie; x.v += v; } else m.set(chi.id, { nome: chi.nome, copie: chi.copie, v });
+            const k = chi.spento ? `${chi.id}#off` : chi.id;
+            const x = m.get(k);
+            if (x) { x.copie += chi.copie; x.v += v; } else m.set(k, { nome: chi.nome, copie: chi.copie, v, spento: chi.spento });
           };
           for (const b of cityBuildings) {
-            const groups = entityInstanceEraStats.get(b.cityEntityId);
             const tutteLeEre = isAllAgeBuildingId(b.cityEntityId);
-            const copie: Array<{ era: number; n: number; s: Pick<EraStats, "beni" | "benip" | "benis"> }> = groups
-              ? groups.map(([age, n, s]) => ({ era: tutteLeEre ? eraAttuale : AGE_BY_CODE.get(age)?.id ?? eraAttuale, n, s }))
-              : [{ era: eraAttuale, n: cityEntityIds.get(b.cityEntityId) || 0, s: b }];
             const nome = gameNames.get(b.cityEntityId) ?? b.name;
-            for (const { era, n, s } of copie) {
-              const chi = { id: b.cityEntityId, nome, copie: n };
-              aggiungiBeni(era, 0, Math.ceil((s.beni || 0) * (1 + totalBeniB)) * n, chi);
-              aggiungiBeni(era, -1, Math.ceil((s.benip || 0) * (1 + totalBeniB)) * n, chi);
-              aggiungiBeni(era, 1, Math.ceil((s.benis || 0) * (1 + totalBeniB)) * n, chi);
+            for (const g of gruppiCopie(b)) {
+              const era = tutteLeEre ? eraAttuale : AGE_BY_CODE.get(g.age)?.id ?? eraAttuale;
+              const s = g.s as unknown as Pick<EraStats, "beni" | "benip" | "benis">;
+              for (const [n, spento] of [[g.on, false], [g.off, true]] as const) {
+                if (n <= 0) continue;
+                const chi = { id: b.cityEntityId, nome, copie: n, spento };
+                aggiungiBeni(era, 0, Math.ceil((s.beni || 0) * (1 + totalBeniB)) * n, chi);
+                aggiungiBeni(era, -1, Math.ceil((s.benip || 0) * (1 + totalBeniB)) * n, chi);
+                aggiungiBeni(era, 1, Math.ceil((s.benis || 0) * (1 + totalBeniB)) * n, chi);
+              }
             }
           }
-          for (const g of processedGreatBuildings) {
-            const chi = { id: g.cityEntityId, nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1 };
+          for (const g of [...geProd, ...geSpenti]) {
+            const chi = { id: g.cityEntityId, nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1, spento: !geCollegato(g) };
             aggiungiBeni(eraAttuale, 0, g.beni, chi);
             aggiungiBeni(eraAttuale, -1, g.benip, chi);
             aggiungiBeni(eraAttuale, 1, g.benis, chi);
@@ -6150,11 +6213,23 @@ export default function App() {
 
           // Dettaglio per edificio (clic su una riga; restano aperte tutte quelle cliccate: righeProdAperte):
           // nome di gioco, ×copie, quantità al giorno (già con i bonus), dal più produttivo.
-          type VoceDett = { nome: string; copie: number; v: number };
-          const ordina = (l: VoceDett[]) => l.filter(x => x.v > 0).sort((x, y) => y.v - x.v || x.nome.localeCompare(y.nome));
-          const perEdificio = (val: (b: (typeof cityBuildings)[number]) => number, ge?: (g: (typeof processedGreatBuildings)[number]) => number, altre: VoceDett[] = []): VoceDett[] => ordina([
-            ...cityBuildings.map(b => ({ nome: gameNames.get(b.cityEntityId) ?? b.name, copie: cityEntityIds.get(b.cityEntityId) || 0, v: val(b) })),
-            ...(ge ? processedGreatBuildings.map(g => ({ nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1, v: ge(g) })) : []),
+          // (spento: copie scollegate dalla strada, v = quanto darebbero; in fondo, in rosso, a 0)
+          type VoceDett = { nome: string; copie: number; v: number; spento?: boolean };
+          const ordina = (l: VoceDett[]) => [
+            ...l.filter(x => !x.spento && x.v > 0).sort((x, y) => y.v - x.v || x.nome.localeCompare(y.nome)),
+            ...l.filter(x => x.spento && x.v > 0).sort((x, y) => y.v - x.v || x.nome.localeCompare(y.nome)),
+          ];
+          const perEdificio = (val: (b: (typeof cityBuildings)[number], quali: "on" | "off") => number, ge?: (g: (typeof processedGreatBuildings)[number]) => number, altre: VoceDett[] = []): VoceDett[] => ordina([
+            ...cityBuildings.flatMap(b => {
+              const nome = gameNames.get(b.cityEntityId) ?? b.name, gr = gruppiCopie(b);
+              const on = gr.reduce((s, g) => s + g.on, 0), off = gr.reduce((s, g) => s + g.off, 0);
+              return [
+                ...(on ? [{ nome, copie: on, v: val(b, "on") }] : []),
+                ...(off ? [{ nome, copie: off, v: val(b, "off"), spento: true }] : []),
+              ];
+            }),
+            ...(ge ? geProd.map(g => ({ nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1, v: ge(g) })) : []),
+            ...(ge ? geSpenti.map(g => ({ nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1, v: ge(g), spento: true })) : []),
             ...altre,
           ]);
           const apri = (k: string) => setRigheProdAperte(s => { const n = new Set(s); if (!n.delete(k)) n.add(k); return n; });
@@ -6163,13 +6238,15 @@ export default function App() {
             : <ChevronRight size={12} strokeWidth={2.5} className={`shrink-0 text-slate-500 transition-transform duration-150 ${aperta ? "rotate-90 text-amber-400" : ""}`} />;
           /** Righe del dettaglio sotto una riga aperta: `celle` colonne, valore nella colonna `colValore` (0 = la prima). */
           const righeDettaglio = (k: string, elenco: VoceDett[], celle: number, colValore: number) => elenco.map(x => (
-            <tr key={`${k}-${x.nome}`} className="border-b border-slate-800/30 bg-slate-900/40 text-[11px]">
-              <td className="py-0.5 pl-8 pr-1 text-slate-400">
+            <tr key={`${k}-${x.nome}-${x.spento ? "off" : "on"}`} className="border-b border-slate-800/30 bg-slate-900/40 text-[11px]"
+              title={x.spento ? t("prodDisconnectedTitle", uiLang, formatInt(x.v)) : undefined}>
+              <td className={`py-0.5 pl-8 pr-1 ${x.spento ? "text-red-400" : "text-slate-400"}`}>
                 <span className="whitespace-nowrap">{x.nome}</span>
-                {x.copie > 1 && <span className="ml-1 font-mono text-emerald-400">×{x.copie}</span>}
+                {x.copie > 1 && <span className={`ml-1 font-mono ${x.spento ? "text-red-400" : "text-emerald-400"}`}>×{x.copie}</span>}
+                {x.spento && <span className="ml-1 italic">{t("prodDisconnected", uiLang)}</span>}
               </td>
               {Array.from({ length: celle - 1 }, (_, i) => (
-                <td key={i} className="py-0.5 px-1 text-right font-mono text-slate-300">{i + 1 === colValore ? formatInt(x.v) : ""}</td>
+                <td key={i} className={`py-0.5 px-1 text-right font-mono ${x.spento ? "text-red-400" : "text-slate-300"}`}>{i + 1 === colValore ? (x.spento ? `(${formatInt(x.v)})` : formatInt(x.v)) : ""}</td>
               ))}
             </tr>
           ));
@@ -6213,7 +6290,9 @@ export default function App() {
                     const kitsPerYear = totalFrPerDay / pt.cost * 365;
                     const kitsPerMonth = kitsPerYear / 12;
                     const qty = (specialKits[pt.invKey] as number) ?? 0;
-                    const k = `fr-${pt.key}`, aperta = righeProdAperte.has(k), apribile = totalFrPerDay > 0;
+                    // (apribile anche se tutti i produttori sono scollegati: si vedono in rosso)
+                    const dett = perEdificio((b, q) => exactBuildingSum(b, campo, q));
+                    const k = `fr-${pt.key}`, aperta = righeProdAperte.has(k), apribile = dett.length > 0;
                     return (
                       <Fragment key={pt.key}>
                         <tr className={`border-b border-slate-800/50 ${apribile ? "cursor-pointer hover:bg-slate-800/40" : ""} ${aperta ? "bg-slate-800/30" : ""}`}
@@ -6225,7 +6304,7 @@ export default function App() {
                           <td className="py-1 px-1 text-right font-mono text-blue-300">{formatInt(kitsPerYear)}</td>
                         </tr>
                         {/* (frammenti al giorno di ogni edificio, nella colonna framm/g) */}
-                        {aperta && righeDettaglio(k, perEdificio(b => exactBuildingSum(b, campo)), 5, 2)}
+                        {aperta && righeDettaglio(k, dett, 5, 2)}
                       </Fragment>
                     );
                   })}
@@ -6245,11 +6324,11 @@ export default function App() {
                 <tbody>
                   {/* (dettagli: stessi calcoli dei totali, edificio per edificio) */}
                   {rigaGiornaliera("fp", iconFP, t("prodForgePoints", uiLang), (totalPFNormal * (1 + totalPFB)) + totalPFGB + (castello?.pf ?? 0),
-                    { dettaglio: perEdificio(b => exactBuildingSum(b, "fp") * (1 + totalPFB), g => g.fp, castello && voceCastello ? [{ nome: voceCastello.nome, copie: 1, v: castello.pf }] : []) })}
+                    { dettaglio: perEdificio((b, q) => exactBuildingSum(b, "fp", q) * (1 + totalPFB), g => g.fp, castello && voceCastello ? [{ nome: voceCastello.nome, copie: 1, v: castello.pf }] : []) })}
                   {rigaGiornaliera("benig", iconBeniG, t("prodGuildGoods", uiLang), totalBeniG,
-                    { dettaglio: perEdificio(b => exactBuildingSum(b, "benig"), g => g.benig) })}
+                    { dettaglio: perEdificio((b, q) => exactBuildingSum(b, "benig", q), g => g.benig) })}
                   {rigaGiornaliera("benisp", iconBeniSp, t("prodGoodsSpecial", uiLang), totalBeniSpBoosted,
-                    { dettaglio: perEdificio(b => boostedExactBuildingSum(b, "benisp", totalBeniSpB), g => g.benisp) })}
+                    { dettaglio: perEdificio((b, q) => boostedExactBuildingSum(b, "benisp", totalBeniSpB, q), g => g.benisp) })}
                   {/* beni divisi per era, dalla più recente (con il dettaglio delle copie a quell'era); in fondo il totale */}
                   {ereBeni.map(([id, v]) => rigaGiornaliera(`era-${id}`, id === eraAttuale ? iconBeni : id < eraAttuale ? iconBeniP : iconBeniS, nomeBeniEra(id), v,
                     { dettaglio: ordina([...(dettaglioBeni.get(id)?.values() ?? [])]) }))}

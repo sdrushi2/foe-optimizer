@@ -2,7 +2,11 @@
 
 ## Versione 2.011 (08/11/2026)
 ### Novità
+- Calcolatore GE e report dei GE: il livello 101 dei GE Oro si calcola ancora con la chat Rame (il GE è al 100, ancora Rame); la chat Oro parte dal 102
+- Città: accanto al 📊 dei Grandi Edifici c'è l'icona della calcolatrice, che apre il Calcolatore GE su quel GE al livello da costruire
+- Calcolatore GE: nuovi campi "PF già versati da te" e "Esterni" (i PF già messi da altri giocatori in ogni posto). Un posto preso da altri non va più assicurato, i PF da versare per gli altri si ricalcolano e il testo da copiare contiene solo i posti liberi
 - Nuova versione della bacchetta (va ricreata, trascinandola di nuovo nella barra dei preferiti): importa anche il livello del Castello: i Punti Forge e i beni giornalieri del Castello contano nel pannello Produzione, e il suo bonus di attacco e difesa ha una colonna nei Valori militari, compresa nel totale (e quindi moltiplicata dai bonus dei GE)
+- Valori militari e bonus dei Grandi Edifici: contano solo gli edifici collegati alla strada. Un edificio scollegato non dà i suoi valori, e un GE scollegato non dà né i valori né i bonus moltiplicativi (anche i livelli in più agli alleati); non contano nemmeno gli alleati ospitati in un edificio scollegato. Lo stesso nel pannello Produzione, dove nei dettagli gli edifici scollegati compaiono in rosso, con "(scollegato)" e tra parentesi quanto produrrebbero
 - Città: nuovi filtri Era e Beni dell'era (gruppo Filtri), come nell'Inventario ma sugli edifici piazzati, una riga per ogni era delle copie con i valori di quell'era; sostituiscono la casella "Edifici vecchi"
 - "Auto aggiornabili" diventa "Era automatica": sono edifici che prendono da soli l'era della tua città e non si possono portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione, come ora spiegano i tooltip
 - Città › Statistiche › Produzione: due pannelli, "Produzione frammenti" e "Produzione Punti Forge e beni". Nel secondo i beni sono divisi per era (es. Beni Titano, Beni Hub Spaziale), contando l'era di ogni copia degli edifici e il bonus di produzione dei beni, con il totale in fondo; cliccando su una riga (un frammento, i Punti Forge, i beni gilda, i beni speciali o i beni di un'era) si vedono gli edifici che la producono e quanto dà ognuno

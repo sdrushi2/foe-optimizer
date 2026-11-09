@@ -7,6 +7,9 @@
 //  Regole: quota mecenati per fascia di livello, divisione fra i posti (5 Rame,
 //  7 per i GE Oro dal livello 101), montepremi NON arrotondato prima della
 //  divisione (come il gioco e FoE Helper), da versare = ricompensa × (1 + %).
+//  (09/11/2026, come il calcolatore di Linnun) PF già versati da te e PF già messi
+//  da altri giocatori nei posti ("Esterni"): un posto preso non va più assicurato
+//  e i PF degli altri contano nel calcolo di quanto serve per assicurare gli altri.
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
   "use strict";
@@ -26,7 +29,10 @@
       versareT: "PF che il mecenate versa per riavere esattamente la ricompensa con la sua percentuale",
       coprireT: "PF del proprietario in più per assicurare questo posto, oltre ai precedenti",
       totaleT: "PF del proprietario in totale per assicurare questo posto (e tutti quelli sopra)",
-      sicuro: "sicuro", pieno: "pieno",
+      sicuro: "sicuro", pieno: "pieno", preso: "preso",
+      versati: "PF già versati da te", versatiT: "PF che hai già messo tu in questo livello: contano per assicurare i posti",
+      esterni: "Esterni", esterniT: "PF già messi da altri giocatori: il posto che occupano è preso e non va più assicurato",
+      esterniAl: n => "PF di altri giocatori nel posto " + n,
       testoAl: "Testo da copiare in chat", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
       copia: "Copia", copiato: "Copiato",
       errore: "Non riesco a caricare i dati dei Grandi Edifici (data/mecenati-dati.js). Ricarica la pagina.",
@@ -46,7 +52,10 @@
       versareT: "FP the patron pays to get back exactly the reward with their percentage",
       coprireT: "Extra owner FP to secure this spot, on top of the previous ones",
       totaleT: "Total owner FP to secure this spot (and all the ones above)",
-      sicuro: "safe", pieno: "full",
+      sicuro: "safe", pieno: "full", preso: "taken",
+      versati: "FP you already paid", versatiT: "FP you already put into this level: they count to secure the spots",
+      esterni: "External", esterniT: "FP already put by other players: the spot they hold is taken and no longer needs securing",
+      esterniAl: n => "FP of other players in spot " + n,
       testoAl: "Text to copy into chat", nome: "Your name (optional)", nomeAl: "Your in-game name",
       copia: "Copy", copiato: "Copied",
       errore: "Couldn't load the Great Building data (data/mecenati-dati.js). Reload the page.",
@@ -96,9 +105,11 @@
           <select id="ge" aria-label="${esc(T.ge)}"></select>
           <div class="liv" title="${esc(T.livello)}">
             <button type="button" id="meno" aria-label="${esc(T.livMeno)}">−</button>
-            <input id="livello" type="number" min="1" inputmode="numeric" aria-label="${esc(T.livello)}">
+            <input id="livello" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="${esc(T.livello)}">
             <button type="button" id="piu" aria-label="${esc(T.livPiu)}">+</button>
           </div>
+          <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
+            <input id="versati" type="text" inputmode="numeric" autocomplete="off"></label>
         </div>
         <div class="chat" id="chat">
           ${chat("r90", "rame", T.rame + " 90%", T.chatRame + " 90%")}
@@ -125,6 +136,7 @@
             <th title="${esc(T.versareT)}">${esc(T.versare)}</th>
             <th title="${esc(T.coprireT)}">${esc(T.coprire)}</th>
             <th title="${esc(T.totaleT)}">${esc(T.totale)}</th>
+            <th title="${esc(T.esterniT)}">${esc(T.esterni)}</th>
           </tr></thead>
           <tbody id="righe"></tbody>
         </table>
@@ -147,10 +159,24 @@
   const nome = id => { const n = dati[id].nome; return (typeof n === "string" ? n : n && (n[LINGUA] || n.it || n.en)) || id; };
   const oro = id => !!dati[id].oro;
   // chat scelta per tier (livelli Rame 5 posti, livelli Oro 7), validata in calcola()
-  const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "", giocatore: "", chat: { rame: "r90", oro: "o20" } };
+  // versati: PF già messi da te; esterni: PF di altri giocatori per posto (azzerati cambiando GE o livello)
+  const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "", giocatore: "", chat: { rame: "r90", oro: "o20" }, versati: "", esterni: [] };
   try { Object.assign(S, JSON.parse(localStorage.getItem(CHIAVE) || "{}")); } catch (e) { /* niente */ }
   if (!costi[S.ge]) S.ge = ids[0];
   if (!S.chat || typeof S.chat !== "object") S.chat = {}; // (salvataggio vecchio o rovinato)
+  if (!Array.isArray(S.esterni)) S.esterni = [];
+  // (09/11/2026) aperto dalla scheda Città dell'app: ?ge=<id>&livello=<livello da costruire>
+  // sceglie quel GE e quel livello (PF già versati ed esterni ripartono da zero), con la
+  // chat Rame 100% / Oro 20% (le stesse della quota "a carico tuo" del report del GE)
+  try {
+    const q = new URLSearchParams(location.search), qGe = q.get("ge"), qLiv = parseInt(q.get("livello") || "");
+    if (qGe && costi[qGe]) {
+      if (qGe !== S.ge || (qLiv && qLiv !== S.livello)) { S.versati = ""; S.esterni = []; }
+      S.ge = qGe;
+      if (qLiv) S.livello = qLiv;
+      S.chat = { rame: "r100", oro: "o20" };
+    }
+  } catch (e) { /* niente */ }
   const salva = () => { try { localStorage.setItem(CHIAVE, JSON.stringify(S)); } catch (e) { /* niente */ } };
   const maxLiv = () => costi[S.ge].length;
   const livOk = v => Math.min(maxLiv(), Math.max(1, parseInt(v) || 1));
@@ -161,7 +187,9 @@
   function calcola() {
     const lvl = livOk(S.livello), costo = costi[S.ge][lvl - 1];
     const quota = (FASCE.find(f => lvl <= f[0]) || FASCE[FASCE.length - 1])[1];
-    const n = oro(S.ge) && lvl >= 101 ? 7 : 5, tier = n === 7 ? "oro" : "rame";
+    // (7 posti dal 101, ma la chat Oro dal 102: il 101 si fa ancora a tariffa Rame perché
+    // il GE è al 100, ancora Rame; utente 09/11, come il calcolatore di Linnun)
+    const n = oro(S.ge) && lvl >= 101 ? 7 : 5, tier = n === 7 && lvl > 101 ? "oro" : "rame";
     // % della chat scelta per questo tier (la stessa per tutti i posti; fattore = 1 + % / 100)
     const valida = tier === "oro" ? ["o20", "o25", "custom"] : ["r90", "r95", "r100", "custom"];
     if (!valida.includes(S.chat[tier])) S.chat[tier] = tier === "oro" ? "o20" : "r90";
@@ -170,23 +198,49 @@
     // mostra FoE Helper, es. Osservatorio 156: posto 2 = 3.801 e non 3.802;
     // oggi anche il calcolatore di Linnun fa così)
     const premi = costo * quota;
-    let somma = 0, prec = 0;
     const righe = [];
     for (let i = 0; i < n; i++) {
       // (le ricompense piccole il gioco le dà pari: 1 → 2 e 3 → 4; verificato
       // sulla Galassia blu 199, posto 7 = 4 e non 3; stessa correzione di Linnun)
       let base = Math.round(premi * QUOTE[n][i]);
       if (base === 1 || base === 3) base += 1;
-      const versa = Math.max(0, Math.round(base * (1 + perc / 100)));
-      somma += versa;
-      // sicuro quando quello che resta (costo - posti 1..i - i tuoi) non supera questo posto
-      const serve = Math.max(0, costo - somma - versa);
-      const tuoi = Math.max(prec, serve);
-      righe.push({ base, versa, assicura: tuoi - prec, tuoi, pieno: tuoi + somma > costo });
-      prec = tuoi;
+      righe.push({ base, versa: Math.max(0, Math.round(base * (1 + perc / 100))) });
     }
-    // contribuzioni dei posti (mai oltre il costo del livello) e resto al proprietario
-    const contribuzioni = Math.min(costo, somma);
+    // PF già versati da te e PF degli altri giocatori (stesso calcolo di Linnun): ogni
+    // versamento esterno, dal più grande, occupa il primo posto libero che non supera
+    const versati = Math.min(costo, Math.round(numero(S.versati)));
+    const esterni = S.esterni.slice(0, n).map(v => Math.round(numero(v))).filter(v => v > 0).sort((a, b) => b - a).map(p => ({ p, posto: -1 }));
+    for (const e of esterni) {
+      const i = righe.findIndex(r => r.preso === undefined && r.versa <= e.p);
+      if (i >= 0) { righe[i].preso = e.p; e.posto = i; }
+    }
+    const totEsterni = esterni.reduce((s, e) => s + e.p, 0);
+    // un posto è sicuro quando i PF ancora liberi (costo − posti fino a questo − i tuoi −
+    // i versamenti esterni più piccoli) non possono più superarlo
+    let fino = 0, prec = 0, tuoiFinali = versati;
+    righe.forEach((r, i) => {
+      const f = r.preso || r.versa;
+      fino += f;
+      if (r.preso) return;
+      const altri = esterni.filter(e => e.posto < 0 || e.posto > i).map(e => e.p);
+      const sommaAltri = altri.reduce((s, v) => s + v, 0);
+      const minori = altri.length > 1 ? sommaAltri - Math.max(...altri) : 0;
+      const serve = Math.max(0, costo - fino - f - minori);
+      r.tuoi = Math.max(prec, serve);
+      r.assicura = Math.max(0, r.tuoi - Math.max(versati, prec));
+      r.pieno = Math.max(versati, r.tuoi) + fino + sommaAltri > costo;
+      if (!r.pieno) tuoiFinali = Math.max(versati, r.tuoi);
+      prec = r.tuoi;
+    });
+    // quanto possono ancora versare i mecenati nei posti liberi (testo da copiare)
+    let liberi = costo - tuoiFinali - totEsterni;
+    for (const r of righe) {
+      if (r.preso) continue;
+      r.copia = Math.max(0, Math.min(r.versa, liberi));
+      liberi -= r.copia;
+    }
+    // contribuzioni (posti liberi + esterni, mai oltre il costo) e resto al proprietario
+    const contribuzioni = Math.min(costo, totEsterni + righe.reduce((s, r) => s + (r.copia || 0), 0));
     return { costo, n, tier, righe, contribuzioni, proprietario: costo - contribuzioni };
   }
 
@@ -194,7 +248,11 @@
   const corpo = $("righe");
   for (let i = 0; i < 7; i++) {
     const tr = document.createElement("tr");
-    tr.innerHTML = '<td class="pos">' + (i + 1) + '</td><td class="b"></td><td class="c"></td><td class="a"></td><td class="t"></td>';
+    tr.innerHTML = '<td class="pos">' + (i + 1) + '</td><td class="b"></td><td class="c"></td><td class="a"></td><td class="t"></td>'
+      + '<td class="x"><input type="text" inputmode="numeric" autocomplete="off" aria-label="' + esc(T.esterniAl(i + 1)) + '"></td>';
+    const x = tr.querySelector("input");
+    x.value = S.esterni[i] || "";
+    x.addEventListener("input", () => { S.esterni[i] = x.value.replace(/\D/g, ""); if (x.value !== S.esterni[i]) x.value = S.esterni[i]; mostra(); });
     corpo.append(tr);
   }
 
@@ -215,12 +273,13 @@
       tr.hidden = i >= r.n;
       if (i >= r.n) return;
       const o = r.righe[i];
-      tr.className = o.base > 0 ? "" : "vuoto";
+      tr.className = o.preso ? "preso" : o.base > 0 ? "" : "vuoto";
       tr.querySelector(".b").textContent = fmt(o.base);
       tr.querySelector(".c").textContent = fmt(o.versa);
       const a = tr.querySelector(".a"), t = tr.querySelector(".t");
       a.className = "a";
-      if (o.pieno) { a.innerHTML = t.innerHTML = '<span class="pieno">' + esc(T.pieno) + '</span>'; }
+      if (o.preso) { a.innerHTML = t.innerHTML = '<span class="preso">' + esc(T.preso) + '</span>'; }
+      else if (o.pieno) { a.innerHTML = t.innerHTML = '<span class="pieno">' + esc(T.pieno) + '</span>'; }
       else {
         if (o.assicura) a.textContent = fmt(o.assicura); else { a.textContent = T.sicuro; a.classList.add("sicuro"); }
         t.textContent = fmt(o.tuoi);
@@ -228,7 +287,8 @@
     });
     // testo per la chat, dall'ultimo posto al primo: "Nome GE: P7(3) P6(6) … P1(4275)"
     const parti = [];
-    for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].base > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].versa + ")");
+    // (solo i posti liberi, con quanto si può ancora versare; i presi da altri no)
+    for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].base > 0 && r.righe[i].copia > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].copia + ")");
     const chi = String(S.giocatore || "").trim();
     $("testo").textContent = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? ": " + parti.join(" ") : "");
     // fonte in calce, solo se i costi di questo GE vengono dalla wiki: link alla sua pagina
@@ -243,12 +303,17 @@
     salva();
   }
 
-  const sincronizza = () => { S.livello = livOk(S.livello); $("livello").value = S.livello; $("livello").max = maxLiv(); };
-  $("ge").addEventListener("change", e => { S.ge = e.target.value; sincronizza(); mostra(); });
-  $("livello").addEventListener("input", e => { S.livello = e.target.value; mostra(); });
+  const sincronizza = () => { S.livello = livOk(S.livello); $("livello").value = S.livello; };
+  // (altro GE o altro livello: PF già versati e PF degli altri si azzerano, sono di quel livello)
+  const azzera = () => { S.versati = ""; S.esterni = []; $("versati").value = ""; corpo.querySelectorAll("input").forEach(x => { x.value = ""; }); };
+  const cambiaLivello = v => { const prima = livOk(S.livello); S.livello = v; if (livOk(v) !== prima) azzera(); };
+  $("ge").addEventListener("change", e => { S.ge = e.target.value; azzera(); sincronizza(); mostra(); });
+  // (campo di testo, niente frecce: solo cifre, al massimo 3)
+  $("livello").addEventListener("input", e => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); if (v !== e.target.value) e.target.value = v; if (v) cambiaLivello(v); mostra(); });
   $("livello").addEventListener("change", () => { sincronizza(); mostra(); });
-  $("meno").addEventListener("click", () => { S.livello = livOk(S.livello) - 1; sincronizza(); mostra(); });
-  $("piu").addEventListener("click", () => { S.livello = livOk(S.livello) + 1; sincronizza(); mostra(); });
+  $("meno").addEventListener("click", () => { cambiaLivello(livOk(S.livello) - 1); sincronizza(); mostra(); });
+  $("piu").addEventListener("click", () => { cambiaLivello(livOk(S.livello) + 1); sincronizza(); mostra(); });
+  $("versati").addEventListener("input", e => { S.versati = e.target.value.replace(/\D/g, ""); if (e.target.value !== S.versati) e.target.value = S.versati; mostra(); });
   // chat: la stessa % in tutti i posti, per il tier del livello mostrato
   const applicaChat = c => { S.chat[calcola().tier] = c; mostra(); };
   document.querySelectorAll("#chat button").forEach(b => b.addEventListener("click", () => applicaChat(b.dataset.chat)));
@@ -270,6 +335,7 @@
   $("ge").value = S.ge;
   $("custom").value = S.custom || "";
   $("giocatore").value = S.giocatore || "";
+  $("versati").value = S.versati || "";
   sincronizza();
   mostra();
 })();

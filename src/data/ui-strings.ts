@@ -499,6 +499,7 @@ const UI_STRINGS = {
   r2Sums: { it: "Somma %", en: "Sum %" },
   r2Patrons: { it: "Calcolatore", en: "Calculator" },
   r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
+  gbCalcOpen: { it: (l: number) => `Calcolatore GE: posti mecenate del livello ${l}`, en: (l: number) => `GB Calculator: patron spots of level ${l}` },
   r2EraInvAll: { it: "Tutte le ere", en: "All ages" },
   r2BeniEraInvAll: { it: "Beni di tutte le ere", en: "Goods of all ages" },
   r2BeniEraInvVoce: { it: (e: string) => `Beni: ${e}`, en: (e: string) => `Goods: ${e}` },
@@ -1328,6 +1329,11 @@ const UI_STRINGS = {
   prodFragmentsPanel: { it: "Produzione frammenti", en: "Fragment production" },
   prodFpGoodsPanel: { it: "Produzione Punti Forge e beni", en: "Forge Points and goods production" },
   prodGoodsTotal: { it: "Totale beni", en: "Total goods" },
+  prodDisconnected: { it: "(scollegato)", en: "(disconnected)" },
+  prodDisconnectedTitle: {
+    it: (v: string) => `Scollegato dalla strada: non produce. Collegato darebbe ${v}`,
+    en: (v: string) => `Disconnected from the road: it doesn't produce. Connected it would give ${v}`,
+  },
   prodCastle: { it: (n: number) => `Castello (liv. ${n})`, en: (n: number) => `Castle (lv. ${n})` },
   prodGoodsDetailTitle: { it: "Clic: dettaglio per edificio", en: "Click: detail by building" },
   prodGoodsBoostTitle: {

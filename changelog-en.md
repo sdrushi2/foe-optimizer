@@ -2,7 +2,11 @@
 
 ## Version 2.011 (08/11/2026)
 ### New
+- GB Calculator and GB report: level 101 of Gold GBs is still calculated with the Copper chat (the GB is at 100, still Copper); the Gold chat starts at 102
+- City: next to the 📊 of Great Buildings there's a calculator icon that opens the GB Calculator on that GB at the level to build
+- GB Calculator: new "FP you already paid" and "External" fields (FP already put by other players in each spot). A spot taken by others no longer needs securing, the FP to secure the others are recalculated and the text to copy only has the free spots
 - New version of the magic wand (it must be recreated, dragging it again to the bookmarks bar): it also imports the Castle level: the Castle's daily Forge Points and goods count in the Production panel, and its attack and defense bonus has a column in Military values, included in the total (and so multiplied by the GB bonuses)
+- Military values and Great Building bonuses: only buildings connected to the road count. A disconnected building gives no values, and a disconnected GB gives neither values nor multiplicative bonuses (ally levels included); allies hosted in a disconnected building don't count either. The same goes for the Production panel, where disconnected buildings appear in red in the details, with "(disconnected)" and in brackets what they would produce
 - City: new Age and Goods of age filters (Filters group), as in the Inventory but on the placed buildings, one row per age of the copies with that age's values; they replace the "Outdated" box
 - "Self-upgrading" becomes "Auto age": these buildings take your city's age by themselves and can't be taken back to a previous age with the One Down Kit or the Reversion Kit, as the tooltips now explain
 - City › Statistics › Production: two panels, "Fragment production" and "Forge Points and goods production". In the second one goods are split by age (e.g. Space Age Titan goods, Space Age Space Hub goods), counting the age of every building copy and the goods production bonus, with the total at the bottom; clicking a row (a fragment, Forge Points, guild goods, special goods or the goods of an age) shows the buildings producing it and how much each one gives

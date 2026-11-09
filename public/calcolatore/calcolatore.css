@@ -62,7 +62,7 @@ select:focus, input:focus { outline: none; border-color: var(--amber-dim); }
 button { font: inherit; font-weight: 700; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
 button:hover { border-color: var(--amber-dim); color: var(--amber); }
 /* riga 1: GE + livello */
-.riga { display: flex; gap: 6px; align-items: center; }
+.riga { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .riga select { flex: 1; min-width: 0; }
 .liv { display: flex; gap: 4px; align-items: center; }
 .liv input { width: 56px; text-align: center; padding: 6px 4px; }
@@ -108,6 +108,14 @@ tr.vuoto td.pos { color: var(--text-faint); }
 .copia #giocatore { flex: 1; min-width: 0; }
 .sicuro { color: var(--green); font-weight: 700; }
 .pieno { color: var(--red); }
+/* (09/11/2026) PF già versati da te e PF degli altri giocatori per posto */
+.versati { display: flex; gap: 6px; align-items: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-dim); }
+.versati input { width: 76px; text-align: right; padding: 6px 6px; }
+td.x { width: 76px; }
+td.x input { width: 70px; text-align: right; padding: 2px 5px; font-size: .8rem; }
+tr.preso td { color: var(--text-faint); }
+tr.preso td.x input { color: var(--text); border-color: var(--amber-dim); }
+.preso { color: var(--copper); font-weight: 700; }
 footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
 footer p { margin: 0; }
 footer p + p { margin-top: 4px; }

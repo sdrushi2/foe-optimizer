@@ -83,10 +83,11 @@ export function colonnaGe(chiave: string, lang: UiLang): ColonnaGe {
 const FASCE: Array<[number, number]> = [[9, .25], [39, .30], [69, .40], [100, .25], [200, .15], [300, .10], [400, .07], [500, .05]];
 const QUOTE: Record<5 | 7, number[]> = { 5: [120, 60, 20, 5, 1].map(x => x / 206), 7: [5040, 2520, 840, 210, 42, 7, 1].map(x => x / 8660) };
 /** PF a carico del proprietario per completare il livello `lvl` (costo `costo`)
- *  con la chat: Rame 100% sui livelli Rame, Oro 20% sui livelli Oro (GE Oro dal 101). */
+ *  con la chat: Rame 100% sui livelli Rame, Oro 20% sui livelli Oro (GE Oro: 7 posti dal 101,
+ *  ma il 101 si fa ancora a tariffa Rame perché il GE è al 100, ancora Rame; utente 09/11). */
 export function pfProprietario(costo: number, lvl: number, oro: boolean): number {
   const quota = (FASCE.find(f => lvl <= f[0]) ?? FASCE[FASCE.length - 1]!)[1];
-  const n: 5 | 7 = oro && lvl >= 101 ? 7 : 5, perc = n === 7 ? 20 : 100;
+  const n: 5 | 7 = oro && lvl >= 101 ? 7 : 5, perc = n === 7 && lvl > 101 ? 20 : 100;
   let somma = 0;
   for (const q of QUOTE[n]) {
     let base = Math.round(costo * quota * q);

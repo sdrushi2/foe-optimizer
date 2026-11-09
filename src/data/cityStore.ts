@@ -34,6 +34,10 @@ export interface CityStore {
   cityEntityIds:           Array<[string, number]>;
   /** entityId → numero di istanze non connesse a strade */
   cityEntityDisconnected:  Array<[string, number]>;
+  /** (09/11/2026) Istanze scollegate dalla strada: [chiave sulla mappa, entityId, livello/era].
+   *  Servono per sapere a che era sono le copie scollegate (pannello Produzione) e se un
+   *  alleato è ospitato in un edificio scollegato. Assente nei profili importati prima. */
+  istanzeScollegate?:      Array<[string, string, number]>;
   /** entityId → numero di strade inutili collegate */
   cityEntityNeedlessCount: Array<[string, number]>;
   /** Dati per la mappa visuale della città */
