@@ -6148,7 +6148,8 @@ export default function App() {
           const totalPFNormal = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "fp"), 0);
           const totalPFGB = geProd.reduce((sum, b) => sum + b.fp, 0);
           const totalPFB = cityBuildings.reduce((sum, b) => sum + exactBuildingSum(b, "fpb"), 0);
-          const totalBeniGB = geProd.reduce((sum, b) => sum + b.beni, 0);
+          // (senza le riserve della Royal Albert Hall: vanno alle ere delle fabbriche, vedi sotto)
+          const totalBeniGB = geProd.reduce((sum, b) => sum + b.beni - (b.gbRiserve ?? 0), 0);
           const totalBeniPGB = geProd.reduce((sum, b) => sum + b.benip, 0);
           const totalBeniSGB = geProd.reduce((sum, b) => sum + b.benis, 0);
           // BeniSp (Beni Speciali): boost applicato tramite totalBeniSpB
@@ -6206,9 +6207,22 @@ export default function App() {
               }
             }
           }
+          // Riserve della Royal Albert Hall (Oro, age_reserves; utente 09/11): a ogni raccolta un
+          // bene a caso fra le fabbriche di beni (G_) della città, collegate o no, ognuna con lo
+          // stesso peso: valore atteso diviso fra le ere delle fabbriche (era dall'id, es.
+          // G_IndustrialAge_… → Età industriale). Senza fabbriche non producono niente.
+          const fabbriche = new Map<number, number>();
+          cityEntityIds.forEach((n, id) => {
+            if (!id.startsWith("G_")) return;
+            const e = AGE_BY_CODE.get(id.split("_")[1] ?? "")?.id;
+            if (e !== undefined && n > 0) fabbriche.set(e, (fabbriche.get(e) ?? 0) + n);
+          });
+          const nFabbriche = [...fabbriche.values()].reduce((s, n) => s + n, 0);
           for (const g of [...geProd, ...geSpenti]) {
             const chi = { id: g.cityEntityId, nome: gameNames.get(g.cityEntityId) ?? g.name, copie: 1, spento: !geCollegato(g) };
-            aggiungiBeni(eraAttuale, 0, g.beni, chi);
+            const riserve = g.gbRiserve ?? 0;
+            aggiungiBeni(eraAttuale, 0, g.beni - riserve, chi);
+            if (riserve > 0 && nFabbriche > 0) fabbriche.forEach((n, e) => aggiungiBeni(e, 0, riserve * n / nFabbriche, chi));
             aggiungiBeni(eraAttuale, -1, g.benip, chi);
             aggiungiBeni(eraAttuale, 1, g.benis, chi);
           }

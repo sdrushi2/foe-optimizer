@@ -139,6 +139,9 @@ export interface Building {
   /** GE Tempio delle Reliquie (totem_drop): % di trovare una reliquia nelle
    *  Spedizioni dopo un incontro e % che sia rara. */
   gbReliquie?: { probabilita: number; rara: number };
+  /** GE Royal Albert Hall (Oro, age_reserves): beni al giorno di un tipo casuale fra le
+   *  fabbriche di beni (G_) della città; compresi anche in `beni`. */
+  gbRiserve?: number;
   /** GE (Serra Artica, Catalizzatore cosmico): % di colpo critico (150% di
    *  danno) contro unità della stessa era (Rame) e di ogni altra era (Oro). */
   gbCritico?: { rame: number; oro: number };

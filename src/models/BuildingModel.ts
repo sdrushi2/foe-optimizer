@@ -478,7 +478,7 @@ export class BuildingModel {
     const currentProduct = gb.rawEntry?.state?.current_product as GbCurrentProduct | undefined;
     // Produzioni del tier Oro (Prestige, novembre 2026): viste nel prodotto
     // corrente? Altrimenti si usa il bonus come per clan_goods (sotto).
-    let visteEstese = false, visteRiserve = false;
+    let visteEstese = false, visteRiserve = false, riserve = 0;
     if (currentProduct) {
       const products: GbProduct[] = currentProduct.products || (currentProduct.name ? [currentProduct] : []);
       const sumRes = (res: Record<string, number> | undefined) =>
@@ -487,7 +487,7 @@ export class BuildingModel {
         const resources = p.product?.resources ?? {};
         if (p.name === "clan_goods") beniG += Array.isArray(p.goods) ? p.goods.reduce((s, g) => s + Number(g.value ?? 0), 0) : 0;
         else if (p.name === "clan_goods_extended") { visteEstese = true; beniG += Array.isArray(p.goods) ? p.goods.reduce((s, g) => s + Number(g.value ?? 0), 0) : sumRes(resources); }
-        else if (p.name === "age_reserves") { visteRiserve = true; beni += sumRes(resources); }
+        else if (p.name === "age_reserves") { visteRiserve = true; riserve += sumRes(resources); beni += sumRes(resources); }
         else if (p.name === "strategy_points") fp += Number(resources.strategy_points ?? 0);
         else if (p.name === "previous_era_goods") beniP += sumRes(resources);
         else if (p.name === "random_goods" || p.name === "current_era_goods" || p.name === "goods") beni += sumRes(resources);
@@ -519,7 +519,7 @@ export class BuildingModel {
     }
     if (!visteRiserve) {
       const ris = allBonuses.find((b) => b?.type === "age_reserves");
-      if (ris) beni += Number(ris.value ?? 0);
+      if (ris) { riserve += Number(ris.value ?? 0); beni += Number(ris.value ?? 0); }
     }
     // BeniSp (agosto 2026): X_SpaceAgeAsteroidBelt_Landmark1 è l'UNICO GE con
     // una produzione di beni speciali (bonus type="special_goods",
@@ -544,6 +544,7 @@ export class BuildingModel {
       pop, fel, general, gbg, sped, iq, fp, tr, beni, benip: beniP, benis: beniS, benisp: beniSp, benig: beniG, mon, mat, med,
       benib: benibGe, benispb: benispbGe,
       ...(reliquie && (reliquie.probabilita || reliquie.rara) ? { gbReliquie: reliquie } : {}),
+      ...(riserve > 0 ? { gbRiserve: riserve } : {}),
       ...(critico.rame || critico.oro ? { gbCritico: critico } : {}),
       // Galassia blu: double_collection (Rame, città) / guild_raids_double_collection (Oro, IQ):
       // value = % di raddoppio, amount = edifici raccolti

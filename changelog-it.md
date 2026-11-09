@@ -2,6 +2,7 @@
 
 ## Versione 2.011 (08/11/2026)
 ### Novità
+- Pannello Produzione: le riserve di beni della Royal Albert Hall (tier Oro) vanno alle ere delle fabbriche di beni della città, in proporzione al numero di fabbriche di ogni era (collegate o no); senza fabbriche non producono
 - Pannello Produzione: i beni con il bonus % si calcolano come nel gioco, arrotondando ogni singolo bene di ogni produzione e poi applicando la probabilità (es. Excalibur: 1.410 + 25% di 6.970 = 3.152,5); serve un nuovo import della città
 - Calcolatore GE e report dei GE: il livello 101 dei GE Oro si calcola ancora con la chat Rame (il GE è al 100, ancora Rame); la chat Oro parte dal 102
 - Città: accanto al 📊 dei Grandi Edifici c'è l'icona della calcolatrice, che apre il Calcolatore GE su quel GE al livello da costruire

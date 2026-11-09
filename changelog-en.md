@@ -2,6 +2,7 @@
 
 ## Version 2.011 (08/11/2026)
 ### New
+- Production panel: the goods reserves of the Royal Albert Hall (Gold tier) go to the ages of the city's goods factories, in proportion to the number of factories of each age (connected or not); without factories they produce nothing
 - Production panel: goods with the % bonus are calculated as in the game, rounding each single good of each production and then applying the chance (e.g. Excalibur: 1,410 + 25% of 6,970 = 3,152.5); needs a new city import
 - GB Calculator and GB report: level 101 of Gold GBs is still calculated with the Copper chat (the GB is at 100, still Copper); the Gold chat starts at 102
 - City: next to the 📊 of Great Buildings there's a calculator icon that opens the GB Calculator on that GB at the level to build
