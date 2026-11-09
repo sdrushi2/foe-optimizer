@@ -3,7 +3,7 @@
 //  Codice comune alle due pagine: /ge/ (italiano) e /gb/ (inglese); la lingua
 //  è quella di <html lang>, il cambio lingua passa all'altra pagina.
 //  Dati: ../data/mecenati-dati.js (RECUPERO DATI/gecosti.py: costi per livello
-//  dal calcolatore di Linnun, nomi it/en e tier dai MainParser via ge.json).
+//  dalla wiki ufficiale, wiki_ge.json, nomi it/en e tier dai MainParser via ge.json).
 //  Regole: quota mecenati per fascia di livello, divisione fra i posti (5 Rame,
 //  7 per i GE Oro dal livello 101), montepremi NON arrotondato prima della
 //  divisione (come il gioco e FoE Helper), da versare = ricompensa × (1 + %).
