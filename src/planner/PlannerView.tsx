@@ -208,7 +208,8 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
       if (!b) continue;
       // Palette della vista MAPPA (unica fonte: coloreEdificioMappa), senza la
       // zebra dei collegati senza bisogno.
-      ctx.fillStyle = coloreEdificioMappa({ ...b, isGreatBuilding: ge.has(id) });
+      // (scollegati lasciati senza strada: il colore della strada che richiedono in città, come nel PNG)
+      ctx.fillStyle = coloreEdificioMappa({ ...b, roadLevel: b.roadLevelVero ?? b.roadLevel, isGreatBuilding: ge.has(id) });
       ctx.fillRect(px(p.x) + 1, py(p.y) + 1, b.w * CELL - 3, b.h * CELL - 3);
       // aggiunto con "Modifica città": bordo bianco
       if (eNuovo(id)) { ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.strokeRect(px(p.x) + 2, py(p.y) + 2, b.w * CELL - 5, b.h * CELL - 5); }
@@ -1152,7 +1153,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       const b = perId.get(mid);
       if (b) colori[jid] = coloreEdificioMappa({
         ...b, isTownhall: b.type === "main_building", isStreet: b.type === "street",
-        isGreatBuilding: b.isGreatBuilding || grandiEdifici.has(mid), roadLevel: byIdDi(e.n).get(mid)?.roadLevel ?? b.roadLevel,
+        isGreatBuilding: b.isGreatBuilding || grandiEdifici.has(mid), roadLevel: (() => { const pb = byIdDi(e.n).get(mid); return pb ? pb.roadLevelVero ?? pb.roadLevel : b.roadLevel; })(),
       });
     }
     // edifici aggiunti con "Modifica città" (id del JSON) e riquadro delle modifiche, per il PNG dell'editor

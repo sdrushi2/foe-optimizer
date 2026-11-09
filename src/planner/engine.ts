@@ -36,6 +36,10 @@ export interface PlannerBuilding {
   h: number;
   /** 0 = nessuna strada, 1 = strada 1×1, 2 = strada 2×2. */
   roadLevel: number;
+  /** Strada richiesta nella città quando il Planner la toglie perché l'edificio è
+   *  scollegato e l'utente lo lascia così (senzaStrada): serve solo al colore, che
+   *  resta quello vero (verde / verde scuro) come nel PNG. */
+  roadLevelVero?: number;
   isTownhall: boolean;
   /** Edificio militare (colore marrone sulle mappe del Planner). */
   isMilitary?: boolean;
@@ -161,10 +165,11 @@ export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[]
     // Militare: flag della mappa oppure prefisso "M_" (profili salvati senza il flag).
     const militare = eMilitare(b);
     if (militare && geRifornimento.length && !militariCollegati.has(b.entityId)) roadLevel = 0;
+    const roadLevelVero = senzaStrada.has(b.mapEntityId) && roadLevel > 0 ? roadLevel : undefined;
     if (senzaStrada.has(b.mapEntityId)) roadLevel = 0;
     buildings.push({
       id: b.mapEntityId, entityId: b.entityId, name: b.name, w: b.w, h: b.h,
-      roadLevel,
+      roadLevel, ...(roadLevelVero ? { roadLevelVero } : {}),
       isTownhall: b.type === "main_building",
       isMilitary: militare,
       isInactive: b.isInactive,
