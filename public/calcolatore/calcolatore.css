@@ -116,6 +116,13 @@ td.x input { width: 70px; text-align: right; padding: 2px 5px; font-size: .8rem;
 tr.preso td { color: var(--text-faint); }
 tr.preso td.x input { color: var(--text); border-color: var(--amber-dim); }
 .preso { color: var(--copper); font-weight: 700; }
+.esterno { color: #60a5fa; font-weight: 700; }
+td small.meno { color: var(--green); } td small.piu { color: var(--text-faint); }
+.pericolo { color: var(--red); font-weight: 700; }
+td.chiude { color: var(--amber); }
+#note { margin: 4px 2px 2px; font-size: .75rem; color: var(--text-dim); }
+.stats { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 520px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
 footer p { margin: 0; }
 footer p + p { margin-top: 4px; }
