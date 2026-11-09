@@ -3,7 +3,7 @@
 ## Version 2.012 (09/11/2026)
 ### New
 - Planner: new "Buildings disconnected in the city" box with a switch for each type of building that needs a road but is disconnected in the city (e.g. houses kept for population, factories for the Royal Albert Hall): off they stay without a road in the new layout too, on they get connected
-- Planner: when the optimizer stops finding improvements, an 8-second Smooth starts by itself, visible, just like pausing and pressing Smooth; then the search resumes from the smoothed map
+- Planner: when the optimizer stops finding improvements, an 8-second Smooth starts by itself, visible, just like pausing and pressing Smooth; then the search resumes from the smoothed map. If a Smooth improves nothing, the next one waits twice as many attempts (up to 16 times as many), and at least 30 seconds of search pass between them
 - Production panel: the goods reserves of the Royal Albert Hall (Gold tier) go to the ages of the city's goods factories, in proportion to the number of factories of each age (connected or not); without factories they produce nothing
 - Production panel: goods with the % bonus are calculated as in the game, rounding each single good of each production and then applying the chance (e.g. Excalibur: 1,410 + 25% of 6,970 = 3,152.5); needs a new city import
 - GB Calculator and GB report: level 101 of Gold GBs is still calculated with the Copper chat (the GB is at 100, still Copper); the Gold chat starts at 102

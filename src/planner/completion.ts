@@ -3096,6 +3096,15 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
    *  a mano. (Prima: 1,5 s, invisibile, con ferma anche la parte ovest, e la migliore
    *  mostrata restava quella di prima.) */
   const SCOSSA_DOPO = 6000, SCOSSA_MS = 8000;
+  /** (utente 09/11) Su una soluzione già buona 6.000 prove passano in un attimo e lo
+   *  Smussa ripartiva subito senza trovare niente: la soglia RADDOPPIA a ogni Smussa
+   *  che non migliora la migliore (6.000 → 12.000 → … → SCOSSA_MAX) e torna a
+   *  SCOSSA_DOPO appena qualcosa migliora (ricerca o Smussa); in più fra la fine di
+   *  uno Smussa e l'inizio del successivo devono passare almeno SCOSSA_PAUSA_MS di ricerca. */
+  const SCOSSA_MAX = 96000, SCOSSA_PAUSA_MS = 30000;
+  let sogliaScossa = SCOSSA_DOPO, fineScossa = performance.now();
+  /** Punteggio della migliore all'inizio dell'ultimo Smussa automatico (null = nessuno in sospeso). */
+  let puntiPrimaScossa: Punti | null = null;
   let ultimaScossa = 0;
   /** Ultima disposizione in cui la migliore ha tolto strade o edifici fuori. */
   let ultimoGuadagno = 0;
@@ -3128,6 +3137,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       if (!migliore || manuale.punti[0] < migliore.punti[0] || manuale.punti[3] < migliore.punti[3]) ultimoGuadagno = valutate;
       migliore = { pl: new Map(manuale.pl), rd: new Set(manuale.rd), punti: manuale.punti, bl: manuale.bl };
       senzaMigliorare = 0;
+      if (!azzera) sogliaScossa = SCOSSA_DOPO; // (la ricerca ha migliorato: Smussa di nuovo presto)
       return !azzera;
     }
     return false;
@@ -3474,9 +3484,11 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
       const ad = opts.adotta?.();
       if (ad) { adottata = true; return ad; }
-      if (valutate - ultimoGuadagno >= SCOSSA_DOPO && valutate - ultimaScossa >= SCOSSA_DOPO && !opts.limiteValutate) {
+      if (valutate - ultimoGuadagno >= sogliaScossa && valutate - ultimaScossa >= sogliaScossa
+        && performance.now() - fineScossa >= SCOSSA_PAUSA_MS && !opts.limiteValutate) {
         ultimaScossa = valutate;
         const M = migliore!, t0 = performance.now();
+        puntiPrimaScossa = M.punti;
         // (come Smussa a mano: dalla mappa mostrata, cioè la migliore compattata)
         if (M.bl.length || blocchiCorr.length) impostaBlocchi(M.bl);
         const base = compattato(M, () => ({ placements: M.pl, roads: M.rd }), true) ?? { placements: M.pl, roads: M.rd };
@@ -3491,6 +3503,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           shouldStop: () => performance.now() - t0 > SCOSSA_MS || opts.shouldStop() || !!opts.shouldFinishSearch?.() || !!opts.isPaused?.(),
         });
         lastYield = performance.now();
+        fineScossa = performance.now();
         // la disposizione smussata riparte come una modifica a mano (scossa = false: diventa la mostrata)
         if (!opts.shouldStop() && !opts.shouldFinishSearch?.()) { scossa = false; return { placements: r.placements, roads: r.roads }; }
       }
@@ -3584,6 +3597,11 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   } else {
     trovataAl = valutate;
     fotografa(true);
+    // dopo uno Smussa automatico: se non ha migliorato la migliore, la prossima attesa raddoppia
+    if (puntiPrimaScossa && migliore) {
+      sogliaScossa = confronta((migliore as StatoS).punti, puntiPrimaScossa) < 0 ? SCOSSA_DOPO : Math.min(SCOSSA_MAX, sogliaScossa * 2);
+      puntiPrimaScossa = null;
+    }
   }
   }
   // Dopo la ricerca dalla disposizione manuale: si riparte dalla migliore trovata.
