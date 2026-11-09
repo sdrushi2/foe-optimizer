@@ -1425,7 +1425,7 @@ const BuildingRow = memo(function BuildingRow({
           return (
             <a href={`/${uiLang === "it" ? "ge" : "gb"}/?ge=${encodeURIComponent(b.cityEntityId)}&livello=${greatBuildingInfo.level + 1}`}
               target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
-              className="ml-1 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-amber-300 hover:border-amber-500"
+              className="ml-1 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-sky-300 hover:border-sky-500"
               title={titolo} aria-label={titolo}>
               <Calculator size={13} />
             </a>

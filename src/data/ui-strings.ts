@@ -499,7 +499,7 @@ const UI_STRINGS = {
   r2Sums: { it: "Somma %", en: "Sum %" },
   r2Patrons: { it: "Calcolatore", en: "Calculator" },
   r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
-  gbCalcOpen: { it: (l: number) => `Calcolatore GE: posti mecenate del livello ${l}`, en: (l: number) => `GB Calculator: patron spots of level ${l}` },
+  gbCalcOpen: { it: (l: number) => `Calcolatore GE per il livello ${l}`, en: (l: number) => `GB Calculator for level ${l}` },
   r2EraInvAll: { it: "Tutte le ere", en: "All ages" },
   r2BeniEraInvAll: { it: "Beni di tutte le ere", en: "Goods of all ages" },
   r2BeniEraInvVoce: { it: (e: string) => `Beni: ${e}`, en: (e: string) => `Goods: ${e}` },
