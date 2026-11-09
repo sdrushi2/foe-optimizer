@@ -247,7 +247,9 @@ export interface CityMapEntry {
   max_level?: number;
   bonuses?: unknown[];
   bonus?: unknown;
-  state?: { current_product?: unknown };
+  /** (GE) invested_forge_points = PF già nel livello in corso, di tutti i giocatori insieme;
+   *  forge_points_for_level_up = PF del livello. */
+  state?: { current_product?: unknown; invested_forge_points?: unknown; forge_points_for_level_up?: unknown };
   [key: string]: unknown;
 }
 

@@ -1418,14 +1418,19 @@ const BuildingRow = memo(function BuildingRow({
         )}
         {/* scheda Città: il Calcolatore GE su questo GE, al livello da costruire (livello attuale + 1;
             anche se non ancora sbloccato: max_level del gioco è il livello sbloccato, non il massimo) */}
-        {activeTab === "propria_citta" && !b._isMergedInventory && b.isGreatBuilding && greatBuildingInfo && greatBuildingInfo.level < (greatBuildingInfo.tierMax === "copper" ? 200 : 500) && (
-          <a href={`/${uiLang === "it" ? "ge" : "gb"}/?ge=${encodeURIComponent(b.cityEntityId)}&livello=${greatBuildingInfo.level + 1}`}
-            target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
-            className="ml-1 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-amber-300 hover:border-amber-500"
-            title={t("gbCalcOpen", uiLang, greatBuildingInfo.level + 1)} aria-label={t("gbCalcOpen", uiLang, greatBuildingInfo.level + 1)}>
-            <Calculator size={13} />
-          </a>
-        )}
+        {activeTab === "propria_citta" && !b._isMergedInventory && b.isGreatBuilding && greatBuildingInfo && greatBuildingInfo.level < (greatBuildingInfo.tierMax === "copper" ? 200 : 500) && (() => {
+          // (niente PF già messi: il totale della città è di tutti i giocatori, e la classifica
+          // del GE costerebbe un import a ogni GE aperto; utente 09/11)
+          const titolo = t("gbCalcOpen", uiLang, greatBuildingInfo.level + 1);
+          return (
+            <a href={`/${uiLang === "it" ? "ge" : "gb"}/?ge=${encodeURIComponent(b.cityEntityId)}&livello=${greatBuildingInfo.level + 1}`}
+              target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
+              className="ml-1 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-amber-300 hover:border-amber-500"
+              title={titolo} aria-label={titolo}>
+              <Calculator size={13} />
+            </a>
+          );
+        })()}
         {noRush(b) && (
           <span className="ml-1 inline-flex flex-shrink-0 cursor-help relative top-px" title={t("noRushBadgeTitle", uiLang)}>
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#7f1d1d" strokeWidth="2.5">
@@ -6073,7 +6078,8 @@ export default function App() {
           type GruppoCopie = { age: string; on: number; off: number; s: Record<string, unknown> };
           const gruppiCopie = (b: Building & { cityEntityId: string }): GruppoCopie[] => {
             const groups: Array<[string, number, Record<string, unknown>]> = (entityInstanceEraStats.get(b.cityEntityId) as Array<[string, number, Record<string, unknown>]> | undefined)
-              ?? [[currentEra || FALLBACK_ERA, cityEntityIds.get(b.cityEntityId) || 0, b as unknown as Record<string, unknown>]];
+              // (tutte all'era attuale: le sue statistiche dall'import, con beniParti, se ci sono)
+              ?? [[currentEra || FALLBACK_ERA, cityEntityIds.get(b.cityEntityId) || 0, (eraStats.get(b.cityEntityId) ?? b) as unknown as Record<string, unknown>]];
             const perEra = scollegatePerEra.get(b.cityEntityId);
             let resto = istanzeScollegate ? 0 : cityEntityDisconnected.get(b.cityEntityId) ?? 0;
             const ordinati = istanzeScollegate ? groups : [...groups].sort((x, y) => (y[0] === currentEra ? 1 : 0) - (x[0] === currentEra ? 1 : 0));
@@ -6082,6 +6088,19 @@ export default function App() {
               if (resto > 0) { const k = Math.min(n - off, resto); off += k; resto -= k; }
               return { age, on: n - off, off, s };
             });
+          };
+          // Beni con il bonus % (09/11/2026, utente: Excalibur 1.410 + 25% × 6.970 = 3.152,5 e non
+          // 3.154): il gioco applica il bonus e arrotonda per singolo bene di ogni produzione
+          // (all_goods_of_age 850 = 5 × 170 → 5 × round(170 × 1,66) = 1.410), poi la
+          // probabilità. Con EraStats.beniParti (import dal 09/11) si fa così; se mancano, o non
+          // tornano col totale, come prima: arrotondato per eccesso sul totale della copia.
+          const beniConBonus = (s: Record<string, unknown>, field: "beni" | "benip" | "benis", boost: number): number => {
+            const tot = (s[field] as number) || 0, i = field === "beni" ? 0 : field === "benip" ? 1 : 2;
+            const parti = (s.beniParti as EraStats["beniParti"])?.filter(p => p[0] === i);
+            if (parti?.length && Math.abs(parti.reduce((a, p) => a + p[1] * p[2], 0) - tot) < 1e-6) {
+              return parti.reduce((a, [, v, prob, n]) => a + Math.round((v / n) * (1 + boost)) * n * prob, 0);
+            }
+            return Math.ceil(tot * (1 + boost));
           };
           const exactBuildingSum = (b: Building & { cityEntityId: string }, field: keyof EraStats & keyof Building, quali: "on" | "off" = "on"): number =>
             gruppiCopie(b).reduce((s, g) => s + ((g.s[field] as number) || 0) * g[quali], 0);
@@ -6119,7 +6138,8 @@ export default function App() {
               }
               return Math.ceil(value * (1 + boost));
             };
-            return gruppiCopie(b).reduce((s, g) => s + ceilBoosted((g.s[field] as number) || 0, g.age) * g[quali], 0);
+            return gruppiCopie(b).reduce((s, g) => s + (field === "beni" || field === "benip" || field === "benis"
+              ? beniConBonus(g.s, field, boost) : ceilBoosted((g.s[field] as number) || 0, g.age)) * g[quali], 0);
           };
           // (GE scollegati: non producono; restano nei dettagli in rosso)
           const geProd = processedGreatBuildings.filter(geCollegato);
@@ -6177,13 +6197,12 @@ export default function App() {
             const nome = gameNames.get(b.cityEntityId) ?? b.name;
             for (const g of gruppiCopie(b)) {
               const era = tutteLeEre ? eraAttuale : AGE_BY_CODE.get(g.age)?.id ?? eraAttuale;
-              const s = g.s as unknown as Pick<EraStats, "beni" | "benip" | "benis">;
               for (const [n, spento] of [[g.on, false], [g.off, true]] as const) {
                 if (n <= 0) continue;
                 const chi = { id: b.cityEntityId, nome, copie: n, spento };
-                aggiungiBeni(era, 0, Math.ceil((s.beni || 0) * (1 + totalBeniB)) * n, chi);
-                aggiungiBeni(era, -1, Math.ceil((s.benip || 0) * (1 + totalBeniB)) * n, chi);
-                aggiungiBeni(era, 1, Math.ceil((s.benis || 0) * (1 + totalBeniB)) * n, chi);
+                aggiungiBeni(era, 0, beniConBonus(g.s, "beni", totalBeniB) * n, chi);
+                aggiungiBeni(era, -1, beniConBonus(g.s, "benip", totalBeniB) * n, chi);
+                aggiungiBeni(era, 1, beniConBonus(g.s, "benis", totalBeniB) * n, chi);
               }
             }
           }

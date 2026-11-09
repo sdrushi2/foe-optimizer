@@ -208,6 +208,7 @@
     }
     // PF già versati da te e PF degli altri giocatori (stesso calcolo di Linnun): ogni
     // versamento esterno, dal più grande, occupa il primo posto libero che non supera
+    // (provato a usare il posto della riga come la classifica del gioco: l'utente preferisce così)
     const versati = Math.min(costo, Math.round(numero(S.versati)));
     const esterni = S.esterni.slice(0, n).map(v => Math.round(numero(v))).filter(v => v > 0).sort((a, b) => b - a).map(p => ({ p, posto: -1 }));
     for (const e of esterni) {

@@ -33,6 +33,12 @@ export interface EraStats {
   beni: number;     // beni era attuale
   benip: number;    // beni era precedente
   benis: number;    // beni era successiva
+  /** (09/11/2026) Le singole produzioni di beni che compongono beni/benip/benis:
+   *  [colonna 0=beni 1=benip 2=benis, valore, probabilità, quanti beni diversi].
+   *  Il gioco applica il bonus % e arrotonda PER SINGOLO BENE di ogni produzione
+   *  (es. Excalibur: all_goods_of_age 850 = 5 × 170, +66% → 5 × 282 = 1.410), non sul
+   *  totale: serve per il pannello Produzione. Assente nei profili importati prima. */
+  beniParti?: Array<[number, number, number, number]>;
   benisp: number;   // beni speciali (random_special_good_up_to_age / each_special_goods_up_to_age)
   benispb: number;  // boost % beni speciali (special_goods_production)
   benib: number;    // boost % beni
@@ -685,16 +691,22 @@ export class BuildingModel {
   }
 
   /** Beni, BeniP, BeniS, BeniSp (produzione beni) e BeniB (boost % beni) per l'era data. */
-  private static extractGoods(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; benisp: number; benispb: number; benib: number } {
+  private static extractGoods(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; benisp: number; benispb: number; benib: number; parti: Array<[number, number, number, number]> } {
     const totals = { beni: 0, benip: 0, benis: 0, benisp: 0 };
     let found = false;
     const cols: Array<keyof typeof totals> = ["beni", "benip", "benis", "benisp"];
+    // singole produzioni di beni (vedi EraStats.beniParti): all_goods_* = 5 beni diversi
+    const parti: Array<[number, number, number, number]> = [];
+    const parte = (col: keyof typeof totals, key: string, v: number, prob: number) => {
+      const i = col === "beni" ? 0 : col === "benip" ? 1 : col === "benis" ? 2 : -1;
+      if (i >= 0) parti.push([i, v, prob, key.startsWith("all_goods") ? 5 : 1]);
+    };
 
     const addFromResources = (res: Record<string, unknown>, mult: number) => {
       for (const col of cols) {
         for (const key of GOODS_KEYS[col]) {
           const v = BuildingModel.num(res[key]);
-          if (v) { totals[col] += goodsValue(key, v, era) * mult; found = true; }
+          if (v) { totals[col] += goodsValue(key, v, era) * mult; found = true; parte(col, key, v, mult); }
         }
       }
     };
@@ -733,7 +745,7 @@ export class BuildingModel {
         for (const col of cols) {
           for (const key of GOODS_KEYS[col]) {
             const v = BuildingModel.num(res[key]);
-            if (v) { totals[col] += goodsValue(key, v, era); found = true; eraFound = true; }
+            if (v) { totals[col] += goodsValue(key, v, era); found = true; eraFound = true; parte(col, key, v, 1); }
           }
         }
         if (eraFound) break;
@@ -787,6 +799,7 @@ export class BuildingModel {
                 if (BuildingModel.str(pv.type) === resKey) {
                   totals.beni += BuildingModel.num(pv.value);
                   found = true;
+                  parte("beni", resKey, BuildingModel.num(pv.value), 1);
                 }
               }
             }
@@ -807,7 +820,7 @@ export class BuildingModel {
           for (const col of cols) {
             for (const key of GOODS_KEYS[col]) {
               const v = BuildingModel.num(res[key]);
-              if (v) { totals[col] += goodsValue(key, v, era); eraFound = true; }
+              if (v) { totals[col] += goodsValue(key, v, era); eraFound = true; parte(col, key, v, 1); }
             }
           }
           if (eraFound) break;
@@ -835,6 +848,7 @@ export class BuildingModel {
               if (Number.isFinite(amount)) {
                 totals.beni += (BuildingModel.num(pr.drop_chance) / 100) * amount;
                 found = true;
+                parte("beni", "random_good_of_age", amount, BuildingModel.num(pr.drop_chance) / 100);
               }
             }
           }
@@ -858,7 +872,7 @@ export class BuildingModel {
       }
     }
 
-    return { beni: totals.beni, benip: totals.benip, benis: totals.benis, benisp: totals.benisp, benispb, benib };
+    return { beni: totals.beni, benip: totals.benip, benis: totals.benis, benisp: totals.benisp, benispb, benib, parti };
   }
 
   /** PF (strategy_points boostabili), PFB (boost % FP), BeniG (beni di gilda). */
@@ -1692,6 +1706,8 @@ export class BuildingModel {
       pop, fel: fel + adjBonus.fel, general, gbg, sped, iq, iqMonB, iqMatB, iqMon, iqMat, iqBeni, iqTruppe, iqAzioni, iqCap,
       bp, fp: prod.fp + adjBonus.fp, fpb: prod.fpb, med: BuildingModel.extractMedals(cityEntity, era) + adjBonus.med, fur, tr, trne,
       beni: goods.beni + adjBonus.beni, benip: goods.benip + adjBonus.benip, benis: goods.benis + adjBonus.benis, benisp: goods.benisp, benispb: goods.benispb, benib: goods.benib, benig: prod.benig,
+      // (le parti valgono solo senza bonus di adiacenza: con quello il pannello usa il totale)
+      ...(goods.parti.length && !adjBonus.beni && !adjBonus.benip && !adjBonus.benis ? { beniParti: goods.parti } : {}),
       mon: monMat.mon + adjBonus.mon, mat: monMat.mat + adjBonus.mat,
       fsp: BuildingModel.extractReward(cityEntity, era, "fsp"),
       tpm: BuildingModel.extractReward(cityEntity, era, "tpm"),
