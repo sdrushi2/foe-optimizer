@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CityMapBuilding } from "../data/cityMap";
-import { buildPlannerProblem, runPlaceholderPlanner, tipiMilitari, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
+import { buildPlannerProblem, eMilitare, GE_RIFORNIMENTO_MILITARE, runPlaceholderPlanner, tipiMilitari, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { runBuilder, type BuilderVariant } from "./builder";
 import type { CompletionOptions, StatoManuale } from "./completion";
 import { runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
@@ -47,6 +47,10 @@ interface Props {
   /** 2.0: tipi militari collegati alla strada nella città vera (almeno una
    *  copia collegata): valore iniziale degli interruttori dei militari. */
   militariCollegatiIniziali?: ReadonlySet<string>;
+  /** Istanze (mapEntityId) che richiedono strada ma in città sono scollegate:
+   *  interruttori "Edifici scollegati in città" (09/11/2026, utente), di default
+   *  restano senza strada anche nella nuova disposizione. */
+  scollegatiIniziali?: ReadonlySet<string>;
   /** 2.0: mappa della città (la stessa della scheda Città, mostrata da App
    *  sopra il Planner): pulsante "Mappa" nel gruppo Città del nastro. */
   mappa?: { attiva: boolean; cambia: () => void };
@@ -259,7 +263,7 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
  *  città che mandano gli utenti. Non viene salvata da nessuna parte. */
 export interface CittaEsterna extends CittaJson { nome: string }
 
-export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang, esterna: esternaProp, onNastro, militariCollegatiIniziali, mappa }: Props) {
+export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang, esterna: esternaProp, onNastro, militariCollegatiIniziali, scollegatiIniziali, mappa }: Props) {
   // 2.0: la città da JSON arriva dal nastro (App), non più da un pulsante qui.
   const esterna = esternaProp ?? null;
   /** Città vera (profilo o JSON esterno) e modifiche temporanee ("Modifica città"):
@@ -271,6 +275,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Entità militari da collegare comunque alla strada con Alcatraz / Nave
    *  (interruttori nel riquadro informativo; di default nessuna). */
   const [militariCollegati, setMilitariCollegati] = useState<ReadonlySet<string>>(() => new Set(militariCollegatiIniziali ?? []));
+  /** Edifici scollegati in città (per tipo, entityId) che l'utente vuole collegare
+   *  nella nuova disposizione; gli altri scollegati restano senza strada. */
+  const [scollegatiDaCollegare, setScollegatiDaCollegare] = useState<ReadonlySet<string>>(() => new Set());
   // Edifici a catena (catene.ts): ogni inizio con i suoi anelli diventa UN
   // blocco rettangolare che il Planner sposta intero; tutti gli anelli
   // collegati (regola dell'utente). `catene.blocchi` serve a riscomporre i
@@ -278,11 +285,27 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   // Con la città da JSON le celle del profilo non servono (e non devono far
   // ricalcolare il problema: il ricalcolo azzera gli scenari).
   const celle = esterna ? esterna.cells : celleProfilo;
+  // Scollegati in città (solo città del profilo: il JSON non lo dice), per tipo; i
+  // militari con Alcatraz / Nave hanno già i loro interruttori.
+  const haRifornimento = cityMapBuildings.some(b => GE_RIFORNIMENTO_MILITARE.includes(b.entityId));
+  const scollegatiTipi = useMemo(() => {
+    const m = new Map<string, { entityId: string; name: string; n: number; roadLevel: number }>();
+    if (esterna || !scollegatiIniziali?.size) return [];
+    for (const b of cityMapBuildings) {
+      if (!scollegatiIniziali.has(b.mapEntityId) || (haRifornimento && eMilitare(b))) continue;
+      const x = m.get(b.entityId);
+      if (x) x.n++; else m.set(b.entityId, { entityId: b.entityId, name: b.name, n: 1, roadLevel: b.roadLevel ?? 1 });
+    }
+    return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [esterna, scollegatiIniziali, cityMapBuildings, haRifornimento]);
+  const senzaStrada = useMemo(() => new Set(esterna ? [] : cityMapBuildings
+    .filter(b => scollegatiIniziali?.has(b.mapEntityId) && !(haRifornimento && eMilitare(b)) && !scollegatiDaCollegare.has(b.entityId))
+    .map(b => b.mapEntityId)), [esterna, cityMapBuildings, scollegatiIniziali, haRifornimento, scollegatiDaCollegare]);
   const catene = useMemo(() => {
-    if (!esterna) return raggruppaCatene(buildPlannerProblem(cityMapBuildings, celle, militariCollegati));
+    if (!esterna) return raggruppaCatene(buildPlannerProblem(cityMapBuildings, celle, militariCollegati, senzaStrada));
     // L'export JSON non ha le posizioni delle strade, solo il loro numero.
     return raggruppaCatene({ ...buildPlannerProblem(cityMapBuildings, celle, militariCollegati), originalRoadCells: esterna.strade });
-  }, [esterna, cityMapBuildings, celle, militariCollegati]);
+  }, [esterna, cityMapBuildings, celle, militariCollegati, senzaStrada]);
   const militariTipi = useMemo(() => tipiMilitari(cityMapBuildings), [cityMapBuildings]);
   const problem = catene.problem;
   /** Scenario "Configurazione attuale" (richiesta dell'utente): strade ed
@@ -1308,6 +1331,28 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                 title={t(running && !paused ? "plannerSwitchLocked" : on ? "plannerSwitchOn" : "plannerSwitchOff", uiLang)}>
                 <button type="button" role="switch" aria-checked={on} disabled={running && !paused}
                   onClick={() => setMilitariCollegati(prev => { const n = new Set(prev); if (n.has(m.entityId)) n.delete(m.entityId); else n.add(m.entityId); return n; })}
+                  className={`relative h-4 w-7 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-slate-600"}`}>
+                  <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-3.5" : "left-0.5"}`} />
+                </button>
+                <span>{m.name}{m.n > 1 ? ` ×${m.n}` : ""}{m.roadLevel >= 2 ? t("plannerTwoLaneTag", uiLang) : ""}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {scollegatiTipi.length > 0 && (
+        // Edifici che richiedono strada ma in città sono scollegati (scelta tattica
+        // del giocatore): acceso = collegarli nella nuova disposizione, spento = lasciarli
+        // senza strada; di default spenti, come sono ora in città.
+        <div className="mx-3 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded border border-slate-700 bg-slate-950 px-3 py-1.5 text-[12px]">
+          <span className="font-semibold text-slate-300" title={t("r2PlDisconnectedTitle", uiLang)}>{t("r2PlDisconnected", uiLang)}</span>
+          {scollegatiTipi.map(m => {
+            const on = scollegatiDaCollegare.has(m.entityId);
+            return (
+              <label key={m.entityId} className={`flex items-center gap-1.5 ${running && !paused ? "opacity-50" : "cursor-pointer"}`}
+                title={t(running && !paused ? "plannerSwitchLocked" : on ? "plannerSwitchOn" : "plannerSwitchOff", uiLang)}>
+                <button type="button" role="switch" aria-checked={on} disabled={running && !paused}
+                  onClick={() => setScollegatiDaCollegare(prev => { const n = new Set(prev); if (n.has(m.entityId)) n.delete(m.entityId); else n.add(m.entityId); return n; })}
                   className={`relative h-4 w-7 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-slate-600"}`}>
                   <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-3.5" : "left-0.5"}`} />
                 </button>

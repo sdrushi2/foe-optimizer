@@ -587,6 +587,11 @@ const UI_STRINGS = {
   r2StChains: { it: "A catena", en: "Chain" },
   r2StSets: { it: "Set", en: "Sets" },
   r2PlMilitaryRoad: { it: "Edifici militari da collegare a strada:", en: "Military buildings to connect to a road:" },
+  r2PlDisconnected: { it: "Edifici scollegati in città da collegare a strada:", en: "Buildings disconnected in the city to connect to a road:" },
+  r2PlDisconnectedTitle: {
+    it: "Edifici che richiedono la strada ma nella tua città sono scollegati (es. case tenute per la popolazione, fabbriche per la Royal Albert Hall). Spento: restano senza strada anche nella nuova disposizione; acceso: la nuova disposizione li collega",
+    en: "Buildings that need a road but are disconnected in your city (e.g. houses kept for population, factories for the Royal Albert Hall). Off: they stay without a road in the new layout too; on: the new layout connects them",
+  },
   r2GrpLayout: { it: "Disposizione", en: "Layout" },
   r2GrpCpu: { it: "Processore", en: "Processor" },
   r2GrpHelp: { it: "Aiuto", en: "Help" },

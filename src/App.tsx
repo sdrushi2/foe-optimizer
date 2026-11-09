@@ -6601,6 +6601,19 @@ export default function App() {
     }
     return out;
   }, [cityMapBuildings, cityEntityIds, cityEntityDisconnected]);
+  // Planner: istanze che richiedono strada ma in città sono scollegate (interruttori
+  // "Edifici scollegati in città"). Dall'import con istanzeScollegate (dal 09/11); nei
+  // profili importati prima si sa solo quante: le si prendono solo se lo sono tutte.
+  const scollegatiOra = useMemo(() => {
+    if (istanzeScollegate) return new Set(istanzeScollegate.map(x => x[0]));
+    const out = new Set<string>();
+    for (const b of cityMapBuildings) {
+      if (b.type === "street" || b.isGreatBuilding) continue;
+      const tot = cityEntityIds.get(b.entityId) ?? 0, off = cityEntityDisconnected.get(b.entityId) ?? 0;
+      if (tot > 0 && off >= tot) out.add(b.mapEntityId);
+    }
+    return out;
+  }, [istanzeScollegate, cityMapBuildings, cityEntityIds, cityEntityDisconnected]);
   // Il Planner può usare la città selezionata solo se ha mappa e aree sbloccate.
   const haCittaPlanner = haCitta && cityMapUnlockedCells.size > 0;
   // 2.0: Mappa della città importata da JSON nel Planner (stessi dati che
@@ -7192,6 +7205,7 @@ export default function App() {
                   uiLang={uiLang}
                   onNastro={setGruppiPlanner}
                   militariCollegatiIniziali={usaJson ? undefined : militariCollegatiOra}
+                  scollegatiIniziali={usaJson ? undefined : scollegatiOra}
                   mappa={{ attiva: showCityMap, cambia: () => { const v = !showCityMap; setShowCityMap(v); localStorage.setItem(SHOW_CITY_MAP_KEY, String(v)); } }}
                 />
               </Suspense>

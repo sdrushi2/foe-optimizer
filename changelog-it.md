@@ -2,6 +2,7 @@
 
 ## Versione 2.012 (09/11/2026)
 ### Novità
+- Planner: nuovo riquadro "Edifici scollegati in città" con un interruttore per ogni tipo di edificio che richiede la strada ma in città è scollegato (es. case tenute per la popolazione, fabbriche per la Royal Albert Hall): spento restano senza strada anche nella nuova disposizione, acceso vengono collegati
 - Planner: quando l'ottimizzatore non trova più miglioramenti parte da solo uno Smussa di 8 secondi, visibile, uguale a mettere in pausa e premere Smussa; poi la ricerca riprende dalla mappa smussata
 - Pannello Produzione: le riserve di beni della Royal Albert Hall (tier Oro) vanno alle ere delle fabbriche di beni della città, in proporzione al numero di fabbriche di ogni era (collegate o no); senza fabbriche non producono
 - Pannello Produzione: i beni con il bonus % si calcolano come nel gioco, arrotondando ogni singolo bene di ogni produzione e poi applicando la probabilità (es. Excalibur: 1.410 + 25% di 6.970 = 3.152,5); serve un nuovo import della città

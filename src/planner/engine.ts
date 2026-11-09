@@ -98,7 +98,7 @@ export interface PlannerProblem {
 
 /** GE che producono ogni 24 ore truppe di un edificio militare della città
  *  anche se l'edificio non è collegato alla strada. */
-const GE_RIFORNIMENTO_MILITARE = ["X_ProgressiveEra_Landmark1", "X_SpaceAgeSpaceHub_Landmark1"];
+export const GE_RIFORNIMENTO_MILITARE = ["X_ProgressiveEra_Landmark1", "X_SpaceAgeSpaceHub_Landmark1"];
 
 export interface PlannerFrame {
   placements: Map<string, { x: number; y: number }>;
@@ -122,7 +122,7 @@ export interface PlannerFrame {
 }
 
 /** Edificio militare (flag della mappa oppure prefisso "M_"), esclusi i Grandi Edifici. */
-const eMilitare = (b: CityMapBuilding) => (b.isMilitary || isMilitaryBuildingId(b.entityId)) && !b.isGreatBuilding;
+export const eMilitare = (b: CityMapBuilding) => (b.isMilitary || isMilitaryBuildingId(b.entityId)) && !b.isGreatBuilding;
 
 /** Tipi di edificio militare della città (per gli interruttori del Planner):
  *  entità, nome, quanti, livello di strada richiesto (1 = una corsia, 2 = due). */
@@ -138,8 +138,11 @@ export function tipiMilitari(cityMapBuildings: readonly CityMapBuilding[]): Arra
 
 /** Costruisce il problema dai dati della mappa città già importati.
  *  `militariCollegati`: entità militari da collegare comunque alla strada
- *  anche con Alcatraz / Nave da guerra stellare (scelta dell'utente). */
-export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[], unlockedCells: ReadonlySet<string>, militariCollegati: ReadonlySet<string> = new Set()): PlannerProblem {
+ *  anche con Alcatraz / Nave da guerra stellare (scelta dell'utente).
+ *  `senzaStrada`: istanze (mapEntityId) da lasciare senza strada anche se la
+ *  richiedono: quelle scollegate in città che l'utente sceglie di tenere così
+ *  (es. case per la sola popolazione, fabbriche per la Royal Albert Hall). */
+export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[], unlockedCells: ReadonlySet<string>, militariCollegati: ReadonlySet<string> = new Set(), senzaStrada: ReadonlySet<string> = new Set()): PlannerProblem {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const k of unlockedCells) {
     const [x, y] = k.split(",").map(Number) as [number, number];
@@ -158,6 +161,7 @@ export function buildPlannerProblem(cityMapBuildings: readonly CityMapBuilding[]
     // Militare: flag della mappa oppure prefisso "M_" (profili salvati senza il flag).
     const militare = eMilitare(b);
     if (militare && geRifornimento.length && !militariCollegati.has(b.entityId)) roadLevel = 0;
+    if (senzaStrada.has(b.mapEntityId)) roadLevel = 0;
     buildings.push({
       id: b.mapEntityId, entityId: b.entityId, name: b.name, w: b.w, h: b.h,
       roadLevel,
