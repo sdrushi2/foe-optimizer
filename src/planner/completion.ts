@@ -3086,13 +3086,16 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   /** Tentativi senza migliorare la migliore: oltre STALLO il cammino riparte dalla migliore. */
   let senzaMigliorare = 0;
   const STALLO = 300;
-  /** "Scossa" (idea dell'utente: in pausa, Smussa per 2-3 s e poi Riprendi
-   *  sblocca la ricerca ferma): dopo SCOSSA_DOPO disposizioni senza
-   *  togliere strade (o edifici fuori), la migliore viene smussata per SCOSSA_MS (stesse strade,
-   *  edifici spostati/scambiati per ridurre angoli e buchi) e il cammino
-   *  riparte da lì; la migliore mostrata resta quella finché non si trova di
-   *  meglio. */
-  const SCOSSA_DOPO = 6000, SCOSSA_MS = 1500;
+  /** "Scossa" (idea dell'utente: in pausa, Smussa per qualche secondo e poi
+   *  Riprendi sblocca la ricerca ferma): dopo SCOSSA_DOPO disposizioni senza
+   *  togliere strade (o edifici fuori), parte uno Smussa automatico IDENTICO a
+   *  pausa + Smussa a mano (utente 09/11: "si trovano soluzioni migliori"): sulla
+   *  mappa mostrata (la migliore, compattata), con fermi solo gli edifici fissi dello
+   *  scenario, visibile passo per passo, per SCOSSA_MS (8 s); poi la disposizione
+   *  smussata diventa la mappa mostrata e il punto di ripartenza, come una modifica
+   *  a mano. (Prima: 1,5 s, invisibile, con ferma anche la parte ovest, e la migliore
+   *  mostrata restava quella di prima.) */
+  const SCOSSA_DOPO = 6000, SCOSSA_MS = 8000;
   let ultimaScossa = 0;
   /** Ultima disposizione in cui la migliore ha tolto strade o edifici fuori. */
   let ultimoGuadagno = 0;
@@ -3474,12 +3477,22 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       if (valutate - ultimoGuadagno >= SCOSSA_DOPO && valutate - ultimaScossa >= SCOSSA_DOPO && !opts.limiteValutate) {
         ultimaScossa = valutate;
         const M = migliore!, t0 = performance.now();
-        const r = await smussaBordi(problem, { placements: M.pl, roads: M.rd }, {
-          fissi: new Set([...(opts.girandola ? [] : fissi), ...fissiBuilder]), onFrame: () => {},
+        // (come Smussa a mano: dalla mappa mostrata, cioè la migliore compattata)
+        if (M.bl.length || blocchiCorr.length) impostaBlocchi(M.bl);
+        const base = compattato(M, () => ({ placements: M.pl, roads: M.rd }), true) ?? { placements: M.pl, roads: M.rd };
+        const r = await smussaBordi(problem, base, {
+          fissi: new Set(fissiBuilder),
+          // si vede passo per passo, come Smussa a mano
+          onFrame: f => opts.onFrame({
+            ...f, lastPath: [...f.roads].filter(k => !opts.initial.roads.has(k)), done: false, iterations: valutate,
+            ...(M.bl.length ? { due: M.bl } : {}),
+            label: `Ricerca locale · ${valutate.toLocaleString()} disposizioni · smussa automatico (${Math.max(0, Math.ceil((SCOSSA_MS - (performance.now() - t0)) / 1000))} s)`,
+          }),
           shouldStop: () => performance.now() - t0 > SCOSSA_MS || opts.shouldStop() || !!opts.shouldFinishSearch?.() || !!opts.isPaused?.(),
         });
         lastYield = performance.now();
-        if (!opts.shouldStop() && !opts.shouldFinishSearch?.()) { scossa = true; return { placements: r.placements, roads: r.roads }; }
+        // la disposizione smussata riparte come una modifica a mano (scossa = false: diventa la mostrata)
+        if (!opts.shouldStop() && !opts.shouldFinishSearch?.()) { scossa = false; return { placements: r.placements, roads: r.roads }; }
       }
     }
     // ultima occasione (es. dopo COMPLETA): si completa la migliore della squadra
