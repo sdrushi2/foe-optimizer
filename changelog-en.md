@@ -2,14 +2,14 @@
 
 ## Version 2.012 (09/11/2026)
 ### New
-- Planner: new "Buildings disconnected in the city" box with a switch for each type of building that needs a road but is disconnected in the city (e.g. houses kept for population, factories for the Royal Albert Hall): off they stay without a road in the new layout too, on they get connected
-- Planner: when the optimizer stops finding improvements, an 8-second Smooth starts by itself, visible, just like pausing and pressing Smooth; then the search resumes from the smoothed map. If a Smooth improves nothing, the next one waits twice as many attempts (up to 16 times as many), and at least 30 seconds of search pass between them
-- Production panel: the goods reserves of the Royal Albert Hall (Gold tier) go to the ages of the city's goods factories, in proportion to the number of factories of each age (connected or not); without factories they produce nothing
-- Production panel: goods with the % bonus are calculated as in the game, rounding each single good of each production and then applying the chance (e.g. Excalibur: 1,410 + 25% of 6,970 = 3,152.5); needs a new city import
-- GB Calculator and GB report: level 101 of Gold GBs is still calculated with the Copper chat (the GB is at 100, still Copper); the Gold chat starts at 102
-- City: next to the 📊 of Great Buildings there's a calculator icon that opens the GB Calculator on that GB at the level to build
-- GB Calculator: new "FP you already paid" and "External" fields (FP already put by other players in each spot). Same calculation as FoE Helper: whoever already paid enough (even less than the price, if the missing FP can't overtake them) keeps the spot, spots at risk are marked "danger", there is the total of FP missing to the level and the text to copy only has the spots for patrons
-- Military values and Great Building bonuses: only buildings connected to the road count. A disconnected building gives no values, and a disconnected GB gives neither values nor multiplicative bonuses (ally levels included); allies hosted in a disconnected building don't count either. The same goes for the Production panel, where disconnected buildings appear in red in the details, with "(disconnected)" and in brackets what they would produce
+- Planner: switches for buildings disconnected in the city, to leave without a road or to connect
+- Planner: when the optimizer stalls, an 8-second Smooth starts by itself, spaced further apart when it finds nothing
+- Production panel: the Royal Albert Hall goods reserves go to the ages of the city's goods factories
+- Production panel: goods with the % bonus rounded as in the game (needs a new import)
+- GB Calculator: level 101 is still at Copper rate
+- City: calculator icon next to Great Buildings, opens the GB Calculator at the level to build
+- GB Calculator: "FP you already paid" and "External" fields, with taken spots, spots in danger and missing FP as in FoE Helper
+- Buildings disconnected from the road: no longer counted in military values, GB bonuses, hosted allies and productions (in red in the details)
 
 ---
 

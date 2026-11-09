@@ -2,14 +2,14 @@
 
 ## Versione 2.012 (09/11/2026)
 ### Novità
-- Planner: nuovo riquadro "Edifici scollegati in città" con un interruttore per ogni tipo di edificio che richiede la strada ma in città è scollegato (es. case tenute per la popolazione, fabbriche per la Royal Albert Hall): spento restano senza strada anche nella nuova disposizione, acceso vengono collegati
-- Planner: quando l'ottimizzatore non trova più miglioramenti parte da solo uno Smussa di 8 secondi, visibile, uguale a mettere in pausa e premere Smussa; poi la ricerca riprende dalla mappa smussata. Se uno Smussa non migliora niente, il successivo aspetta il doppio delle prove (fino a 16 volte tanto), e fra uno e l'altro passano almeno 30 secondi di ricerca
-- Pannello Produzione: le riserve di beni della Royal Albert Hall (tier Oro) vanno alle ere delle fabbriche di beni della città, in proporzione al numero di fabbriche di ogni era (collegate o no); senza fabbriche non producono
-- Pannello Produzione: i beni con il bonus % si calcolano come nel gioco, arrotondando ogni singolo bene di ogni produzione e poi applicando la probabilità (es. Excalibur: 1.410 + 25% di 6.970 = 3.152,5); serve un nuovo import della città
-- Calcolatore GE e report dei GE: il livello 101 dei GE Oro si calcola ancora con la chat Rame (il GE è al 100, ancora Rame); la chat Oro parte dal 102
-- Città: accanto al 📊 dei Grandi Edifici c'è l'icona della calcolatrice, che apre il Calcolatore GE su quel GE al livello da costruire
-- Calcolatore GE: nuovi campi "PF già versati da te" e "Esterni" (i PF già messi da altri giocatori in ogni posto). Con lo stesso calcolo di FoE Helper: chi ha già versato abbastanza (anche meno del prezzo, se i PF mancanti non bastano a superarlo) si tiene il posto, i posti a rischio sono segnati "pericolo", c'è il totale dei PF mancanti al livello e il testo da copiare contiene solo i posti per i mecenati
-- Valori militari e bonus dei Grandi Edifici: contano solo gli edifici collegati alla strada. Un edificio scollegato non dà i suoi valori, e un GE scollegato non dà né i valori né i bonus moltiplicativi (anche i livelli in più agli alleati); non contano nemmeno gli alleati ospitati in un edificio scollegato. Lo stesso nel pannello Produzione, dove nei dettagli gli edifici scollegati compaiono in rosso, con "(scollegato)" e tra parentesi quanto produrrebbero
+- Planner: interruttori per gli edifici scollegati in città, da lasciare senza strada o da collegare
+- Planner: quando l'ottimizzatore si ferma parte da solo uno Smussa di 8 secondi, sempre più distanziato se non trova niente
+- Pannello Produzione: le riserve di beni della Royal Albert Hall vanno alle ere delle fabbriche di beni della città
+- Pannello Produzione: beni con il bonus % arrotondati come nel gioco (serve un nuovo import)
+- Calcolatore GE: il livello 101 si fa ancora a tariffa Rame
+- Città: icona della calcolatrice accanto ai Grandi Edifici, apre il Calcolatore GE al livello da costruire
+- Calcolatore GE: campi "PF già versati da te" ed "Esterni", con posti presi, posti in pericolo e PF mancanti come in FoE Helper
+- Edifici scollegati dalla strada: non contano più nei valori militari, nei bonus dei GE, negli alleati ospitati e nelle produzioni (nei dettagli in rosso)
 
 ---
 
