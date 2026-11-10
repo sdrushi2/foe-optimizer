@@ -236,6 +236,8 @@ const detectBrowserUiLang = (): UiLang => {
 
 // ── Confronto statistiche per "se aggiorni all'era corrente" ────────────────
 // Una voce di differenza tra l'era vecchia e quella corrente di un edificio.
+// Campi confrontabili che sono percentuali di boost (frazioni: 0,03 = 3%): nei popup con "%".
+const PERCENT_DIFF_KEYS = new Set(["fpb", "monb", "matb", "medb", "benib", "benispb", "iqMonB", "iqMatB"]);
 type EraDiffEntry = { key: string; icon: string; emoji?: string; labelKey: UiKey; from: number; to: number };
 
 // Campi con valori potenzialmente molto larghi (5-6+ cifre: pop/fel/mon/mat)
@@ -309,20 +311,23 @@ const buildDiffFields = (icons: Record<string, string>): DiffField[] => {
     { key: "pop", labelKey: "diffPopulation", icon: icons.iconPop, get: sca("pop") },
     { key: "fel", labelKey: "diffHappiness", icon: icons.iconFel, get: sca("fel") },
     { key: "mon", labelKey: "diffCoins", icon: icons.iconMon, get: sca("mon") },
+    { key: "monb", labelKey: "prodCoinsBoost", icon: icons.iconMonB, get: sca("monb") },
     { key: "mat", labelKey: "diffMaterials", icon: icons.iconMat, get: sca("mat") },
+    { key: "matb", labelKey: "prodMaterialsBoost", icon: icons.iconMatB, get: sca("matb") },
     { key: "fp", labelKey: "diffForgePoints", icon: icons.iconFP, get: sca("fp") },
     { key: "fpb", labelKey: "diffForgePointsBoost", icon: icons.iconFPB, get: sca("fpb") },
     { key: "med", labelKey: "diffMedals", icon: icons.iconMed, get: sca("med") },
-    { key: "fur", labelKey: "diffRogues", icon: icons.iconFUR, get: sca("fur") },
-    { key: "tr", labelKey: "diffUnits", icon: icons.iconTR, get: sca("tr") },
-    { key: "trne", labelKey: "diffUnitsNextEra", icon: icons.iconTRNE, get: sca("trne") },
+    { key: "medb", labelKey: "prodMedalsBoost", icon: icons.iconMedB, get: sca("medb") },
     { key: "beni", labelKey: "diffGoods", icon: icons.iconBeni, get: sca("beni") },
+    { key: "benib", labelKey: "diffGoodsBoost", icon: icons.iconBeniB, get: sca("benib") },
     { key: "benip", labelKey: "diffGoodsPreviousEra", icon: icons.iconBeniP, get: sca("benip") },
     { key: "benis", labelKey: "diffGoodsNextEra", icon: icons.iconBeniS, get: sca("benis") },
     { key: "benisp", labelKey: "diffGoodsSpecial", icon: icons.iconBeniSp, get: sca("benisp") },
     { key: "benispb", labelKey: "diffGoodsSpecialBoost", icon: icons.iconBeniSpB, get: sca("benispb") },
-    { key: "benib", labelKey: "diffGoodsBoost", icon: icons.iconBeniB, get: sca("benib") },
     { key: "benig", labelKey: "diffTreasuryGoods", icon: icons.iconBeniG, get: sca("benig") },
+    { key: "fur", labelKey: "diffRogues", icon: icons.iconFUR, get: sca("fur") },
+    { key: "tr", labelKey: "diffUnits", icon: icons.iconTR, get: sca("tr") },
+    { key: "trne", labelKey: "diffUnitsNextEra", icon: icons.iconTRNE, get: sca("trne") },
     { key: "bp", labelKey: "diffBlueprints", icon: icons.iconBP, get: sca("bp") },
     { key: "fsp", labelKey: "prodRushSpecial", icon: icons.iconFSP, get: sca("fsp") },
     { key: "tpm", labelKey: "prodRushMaterials", icon: icons.iconTPM, get: sca("tpm") },
@@ -2064,15 +2069,6 @@ const BuildingRow = memo(function BuildingRow({
           <StaleFieldCell value={b.medb} className={`cell-num${b.medb > 0 ? classeProd("medb") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.medb)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.fur} className={`cell-num${b.fur > 0 ? classeProd("fur") : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fur)}
-          </StaleFieldCell>
-          <StaleFieldCell value={b.tr} className={`cell-num${b.tr > 0 ? classeProd("tr") : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.tr)}
-          </StaleFieldCell>
-          <StaleFieldCell value={b.trne} className={`cell-num${b.trne > 0 ? classeProd("trne") : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.trne)}
-          </StaleFieldCell>
           <StaleFieldCell value={b.beni} className={`cell-num${b.beni > 0 ? classeProd("beni") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.beni)}
           </StaleFieldCell>
@@ -2093,6 +2089,15 @@ const BuildingRow = memo(function BuildingRow({
           </StaleFieldCell>
           <StaleFieldCell value={b.benig} className={`cell-num${b.benig > 0 ? classeProd("benig") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benig)}
+          </StaleFieldCell>
+          <StaleFieldCell value={b.fur} className={`cell-num${b.fur > 0 ? classeProd("fur") : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fur)}
+          </StaleFieldCell>
+          <StaleFieldCell value={b.tr} className={`cell-num${b.tr > 0 ? classeProd("tr") : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.tr)}
+          </StaleFieldCell>
+          <StaleFieldCell value={b.trne} className={`cell-num${b.trne > 0 ? classeProd("trne") : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.trne)}
           </StaleFieldCell>
           {/* progetti, frammenti e kit: non nel catalogo dei GE (nessun GE li produce) */}
           {!senzaIq && <>
@@ -4289,7 +4294,7 @@ export default function App() {
       "IQAtk_A", "IQDef_A", "IQAtk_D", "IQDef_D",
       "IQmon", "IQmonB", "IQmat", "IQmatB",
       "IQBeni", "IQTruppe", "IQAzioni", "IQCap",
-      "Mon", "MonB", "Mat", "MatB", "PF", "PFB", "Med", "MedB", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
+      "Mon", "MonB", "Mat", "MatB", "PF", "PFB", "Med", "MedB", "Beni", "BeniB", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniG", "FUR", "TR", "TRNE", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
     ];
     const rows = selectedBuildings.map(b => [
       b.cityEntityId, b.name, b.currentEff, b.size, b.road, b.pop, b.fel,
@@ -4299,7 +4304,7 @@ export default function App() {
       b.iq[0], b.iq[1], b.iq[2], b.iq[3],
       b.iqMon, b.iqMonB, b.iqMat, b.iqMatB,
       b.iqBeni, b.iqTruppe, b.iqAzioni, b.iqCap,
-      b.mon, b.monb, b.mat, b.matb, b.fp, b.fpb, b.med, b.medb, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benisp, b.benispb, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
+      b.mon, b.monb, b.mat, b.matb, b.fp, b.fpb, b.med, b.medb, b.beni, b.benib, b.benip, b.benis, b.benisp, b.benispb, b.benig, b.fur, b.tr, b.trne, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
     ]);
 
     const escapeCsv = (val: string | number) => {
@@ -4959,9 +4964,12 @@ export default function App() {
         if (!searchTerms.some(t => testo.includes(t))) continue;
       }
 
-      // 3. Declassabili (solo tab Città). Le righe merged da Inventario non sono
-      // istanze piazzate, quindi vengono escluse quando il filtro è attivo.
-      if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
+      // 3. Invecchiabili (solo tab Città). Righe di +Inventario (10/11/2026, utente:
+      // prima escluse sempre): stesso criterio del filtro dell'Inventario, colonna
+      // Invecchiabile del CSV o calcolo della città.
+      if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory
+        ? !(b.invecchiabile || (!!b.cityEntityId && declassableBuildings.has(b.cityEntityId)))
+        : (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
       // Database › Invecchiabili (catalogo Edifici)
       if (activeTab === "database" && catalogo !== "ge" && soloInvecchiabiliDb && !b.invecchiabile) continue;
       // Catalogo › Grandi Edifici: solo la ricerca (niente filtri né Nascondi /
@@ -5389,7 +5397,7 @@ export default function App() {
     iconIQAtkA, iconIQDefA, iconIQAtkD, iconIQDefD,
     iconIQMonB, iconIQMatB, iconIQMon, iconIQMat,
     iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap,
-    iconMon, iconMat, iconFP, iconFPB, iconMed, iconFUR, iconTR, iconTRNE,
+    iconMon, iconMonB, iconMat, iconMatB, iconFP, iconFPB, iconMed, iconMedB, iconFUR, iconTR, iconTRNE,
     iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG, iconBP,
     iconOneUp, iconImm, iconRinn, iconAiuto,
     iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB,
@@ -5536,7 +5544,7 @@ export default function App() {
     // con formatProdPercent nelle celle della tabella principale, righe
     // 1625/1631/1659/1680): il valore grezzo è una frazione (0,03 = 3%), va
     // moltiplicato per 100 e mostrato con "%" invece che come decimale nudo.
-    const percentFields = ["fpb", "benib", "benispb", "iqMonB", "iqMatB"];
+    const percentFields = [...PERCENT_DIFF_KEYS];
     const fmtField = (field: DiffField, v: number) => {
       if (percentFields.includes(field.key)) return formatProdPercent(v);
       if (["pop", "fel", "mon", "mat", "med", "iqMon", "iqMat", "fp"].includes(field.key)) return formatInt(Math.round(v));
@@ -6732,9 +6740,6 @@ export default function App() {
     { key: "fpb", icon: <img src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} className="icon-16" />, title: t("prodForgePointsBoost", uiLang) },
     { key: "med", icon: <img src={iconMed} alt={t("prodMedals", uiLang)} className="icon-16" />, title: t("prodMedals", uiLang) },
     { key: "medb", icon: <img src={iconMedB} alt={t("prodMedalsBoost", uiLang)} className="icon-16" />, title: t("prodMedalsBoost", uiLang) },
-    { key: "fur", icon: <img src={iconFUR} alt={t("prodRogues", uiLang)} className="icon-16" />, title: t("prodRogues", uiLang) },
-    { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
-    { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
     { key: "beni", icon: <img src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="icon-16" />, title: t("prodGoodsCurrent", uiLang) },
     { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
     { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
@@ -6742,6 +6747,9 @@ export default function App() {
     { key: "benisp", icon: <img src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} className="icon-16" />, title: t("prodGoodsSpecial", uiLang) },
     { key: "benispb", icon: <img src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} className="icon-16" />, title: t("prodGoodsSpecialBoost", uiLang) },
     { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
+    { key: "fur", icon: <img src={iconFUR} alt={t("prodRogues", uiLang)} className="icon-16" />, title: t("prodRogues", uiLang) },
+    { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
+    { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
     { key: "bp", icon: <img src={iconBP} alt={t("prodBlueprints", uiLang)} className="icon-16" />, title: t("prodBlueprints", uiLang) },
     { key: "fsp", icon: <img src={iconFSP} alt={t("prodRushSpecial", uiLang)} className="icon-16" />, title: t("prodRushSpecial", uiLang) },
     { key: "tpm", icon: <img src={iconTPM} alt={t("prodRushMaterials", uiLang)} className="icon-16" />, title: t("prodRushMaterials", uiLang) },
@@ -7294,7 +7302,7 @@ export default function App() {
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
                        <col className="w-[42px]" />
                        </>}
-                       {showProdColumns && Array.from({ length: senzaIq ? 18 : 26 }).map((_, i) => <col key={`prod-${i}`} className={senzaIq && i === 17 ? "w-[56px]" : "w-[36px]"} />)}
+                       {showProdColumns && Array.from({ length: senzaIq ? 18 : 26 }).map((_, i) => <col key={`prod-${i}`} className={senzaIq && i === 14 ? "w-[56px]" : "w-[36px]"} />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
@@ -7441,9 +7449,6 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} />} sortKey="fpb" onClick={() => handleSort("fpb")} active={sortBy === "fpb"} order={sortOrder} className="th-col" title={t("prodForgePointsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMed} alt={t("prodMedals", uiLang)} />} sortKey="med" onClick={() => handleSort("med")} active={sortBy === "med"} order={sortOrder} className="th-col" title={t("prodMedals", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMedB} alt={t("prodMedalsBoost", uiLang)} />} sortKey="medb" onClick={() => handleSort("medb")} active={sortBy === "medb"} order={sortOrder} className="th-col" title={t("prodMedalsBoost", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconFUR} alt={t("prodRogues", uiLang)} />} sortKey="fur" onClick={() => handleSort("fur")} active={sortBy === "fur"} order={sortOrder} className="th-col" title={t("prodRogues", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => handleSort("beni")} active={sortBy === "beni"} order={sortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
@@ -7451,6 +7456,9 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} />} sortKey="benisp" onClick={() => handleSort("benisp")} active={sortBy === "benisp"} order={sortOrder} className="th-col" title={t("prodGoodsSpecial", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} />} sortKey="benispb" onClick={() => handleSort("benispb")} active={sortBy === "benispb"} order={sortOrder} className="th-col" title={t("prodGoodsSpecialBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconFUR} alt={t("prodRogues", uiLang)} />} sortKey="fur" onClick={() => handleSort("fur")} active={sortBy === "fur"} order={sortOrder} className="th-col" title={t("prodRogues", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
                             {!senzaIq && <>
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBP} alt={t("prodBlueprints", uiLang)} />} sortKey="bp" onClick={() => handleSort("bp")} active={sortBy === "bp"} order={sortOrder} className="th-col" title={t("prodBlueprints", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFSP} alt={t("prodRushSpecial", uiLang)} />} sortKey="fsp" onClick={() => handleSort("fsp")} active={sortBy === "fsp"} order={sortOrder} className="th-col" title={t("prodRushSpecial", uiLang)} />
@@ -8083,9 +8091,9 @@ export default function App() {
                             {d.icon
                               ? <img src={d.icon} alt={t(d.labelKey, uiLang)} className="h-4 w-4 shrink-0 object-contain" />
                               : <span className="w-4 shrink-0 text-center">{d.emoji}</span>}
-                            <span className="text-slate-400 tabular-nums">{useFormatInt ? formatInt(d.from) : d.from}</span>
+                            <span className="text-slate-400 tabular-nums">{PERCENT_DIFF_KEYS.has(d.key) ? formatProdPercent(d.from) : useFormatInt ? formatInt(d.from) : d.from}</span>
                             <span className="text-slate-600">→</span>
-                            <span className={`font-bold tabular-nums ${up ? "text-emerald-400" : "text-red-400"}`}>{useFormatInt ? formatInt(d.to) : d.to}</span>
+                            <span className={`font-bold tabular-nums ${up ? "text-emerald-400" : "text-red-400"}`}>{PERCENT_DIFF_KEYS.has(d.key) ? formatProdPercent(d.to) : useFormatInt ? formatInt(d.to) : d.to}</span>
                           </div>
                         );
                       })}
@@ -8227,9 +8235,9 @@ export default function App() {
                       {d.icon
                         ? <img src={d.icon} alt={t(d.labelKey, uiLang)} className="h-4 w-4 shrink-0 object-contain" />
                         : <span className="w-4 shrink-0 text-center text-[10px]">{d.emoji}</span>}
-                      <span className="text-slate-400 tabular-nums font-mono">{useFormatInt ? formatInt(d.from) : d.from}</span>
+                      <span className="text-slate-400 tabular-nums font-mono">{PERCENT_DIFF_KEYS.has(d.key) ? formatProdPercent(d.from) : useFormatInt ? formatInt(d.from) : d.from}</span>
                       <span className="text-slate-600">→</span>
-                      <span className={`font-bold tabular-nums font-mono ${up ? "text-emerald-400" : "text-red-400"}`}>{useFormatInt ? formatInt(d.to) : d.to}</span>
+                      <span className={`font-bold tabular-nums font-mono ${up ? "text-emerald-400" : "text-red-400"}`}>{PERCENT_DIFF_KEYS.has(d.key) ? formatProdPercent(d.to) : useFormatInt ? formatInt(d.to) : d.to}</span>
                     </div>
                   );
                 })}
