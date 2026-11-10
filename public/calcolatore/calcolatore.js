@@ -18,7 +18,7 @@
     it: {
       titolo: "Calcolatore GE", torna: "← Torna al tool",
       aiutoLiv: "Il livello da selezionare è il NUOVO (quello sotto la lista dei contribuenti) e NON il livello attuale del GE",
-      ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo",
+      ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo", livMeno10: "10 livelli indietro", livPiu10: "10 livelli avanti",
       rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "es. 92",
       customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
       pfLivello: "PF del livello", pfProp: "PF proprietario", pfContr: "PF contribuzioni",
@@ -47,7 +47,7 @@
     en: {
       titolo: "GB Calculator", torna: "← Back to the tool",
       aiutoLiv: "The level to select is the NEW one (the one under the contributors list), NOT the GB's current level",
-      ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level",
+      ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level", livMeno10: "10 levels back", livPiu10: "10 levels forward",
       rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "e.g. 92",
       customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
       pfLivello: "Level FP", pfProp: "Owner FP", pfContr: "Contributions FP",
@@ -115,9 +115,7 @@
         <div class="riga">
           <select id="ge" aria-label="${esc(T.ge)}"></select>
           <div class="liv" title="${esc(T.livello)}">
-            <button type="button" id="meno" aria-label="${esc(T.livMeno)}">−</button>
             <input id="livello" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="${esc(T.livello)}">
-            <button type="button" id="piu" aria-label="${esc(T.livPiu)}">+</button>
           </div>
           <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
             <input id="versati" type="text" inputmode="numeric" autocomplete="off"></label>
@@ -125,10 +123,13 @@
         <!-- (10/11/2026, utente) quale livello inserire: il selettore del livello sotto la classifica
              della finestra del GE, ridisegnato (non un'immagine del gioco), con il livello scelto -->
         <div class="aiuto-liv">
-          <div class="pager-liv" aria-hidden="true">
-            <span class="fr doppia"></span><span class="fr singola"></span>
+          <!-- (frecce: ±1 e ±10 livelli, come nel gioco) -->
+          <div class="pager-liv">
+            <button type="button" class="fr doppia" data-passo="-10" title="${esc(T.livMeno10)}" aria-label="${esc(T.livMeno10)}"></button>
+            <button type="button" class="fr singola" data-passo="-1" title="${esc(T.livMeno)}" aria-label="${esc(T.livMeno)}"></button>
             <span class="tag-liv" id="livA"></span>
-            <span class="fr singola dx"></span><span class="fr doppia dx"></span>
+            <button type="button" class="fr singola dx" data-passo="1" title="${esc(T.livPiu)}" aria-label="${esc(T.livPiu)}"></button>
+            <button type="button" class="fr doppia dx" data-passo="10" title="${esc(T.livPiu10)}" aria-label="${esc(T.livPiu10)}"></button>
           </div>
           <div class="nota-liv">${esc(T.aiutoLiv)}</div>
         </div>
@@ -298,7 +299,8 @@
     $("customBox").classList.toggle("attivo", S.chat[r.tier] === "custom");
     $("totale").textContent = fmt(r.costo);
     { const l = livOk(S.livello), w = LINGUA === "en" ? "Level" : "Livello";
-      $("livA").textContent = `${w} ${l}`; }
+      $("livA").textContent = `${w} ${l}`;
+      document.querySelectorAll(".pager-liv .fr").forEach(b => { b.disabled = Number(b.dataset.passo) < 0 ? l <= 1 : l >= maxLiv(); }); }
     $("contribuzioni").textContent = fmt(r.contribuzioni);
     $("proprietario").textContent = fmt(r.proprietario);
     $("mancanti").textContent = fmt(r.mancanti);
@@ -358,8 +360,9 @@
   // (campo di testo, niente frecce: solo cifre, al massimo 3)
   $("livello").addEventListener("input", e => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); if (v !== e.target.value) e.target.value = v; if (v) cambiaLivello(v); mostra(); });
   $("livello").addEventListener("change", () => { sincronizza(); mostra(); });
-  $("meno").addEventListener("click", () => { cambiaLivello(livOk(S.livello) - 1); sincronizza(); mostra(); });
-  $("piu").addEventListener("click", () => { cambiaLivello(livOk(S.livello) + 1); sincronizza(); mostra(); });
+  document.querySelectorAll(".pager-liv .fr").forEach(b => b.addEventListener("click", () => {
+    cambiaLivello(livOk(livOk(S.livello) + Number(b.dataset.passo))); sincronizza(); mostra();
+  }));
   $("versati").addEventListener("input", e => { S.versati = e.target.value.replace(/\D/g, ""); if (e.target.value !== S.versati) e.target.value = S.versati; mostra(); });
   // chat: la stessa % in tutti i posti, per il tier del livello mostrato
   const applicaChat = c => { S.chat[calcola().tier] = c; mostra(); };
@@ -384,8 +387,12 @@
   // aprire il tool una seconda volta (segnalazione dell'utente, 10/11/2026). Una scheda
   // nuova ha la cronologia lunga 1 e il browser la lascia chiudere; se non la chiude
   // (pagina aperta a mano, cronologia più lunga), il link porta al tool come prima.
+  // (10/11/2026, utente) Solo se l'ha aperta l'app (?da=app): aperto dalla scorciatoia
+  // dell'app installata (tieni premuta l'icona › Calcolatore GE) la "scheda" è la finestra
+  // dell'app stessa, con cronologia lunga 1, e window.close() chiudeva l'app.
+  const apertoDallApp = new URLSearchParams(location.search).get("da") === "app";
   $("torna").addEventListener("click", e => {
-    if (history.length > 1) return;
+    if (!apertoDallApp || history.length > 1) return;
     e.preventDefault();
     window.close();
     setTimeout(() => { location.href = "/"; }, 150);

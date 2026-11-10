@@ -1433,7 +1433,7 @@ const BuildingRow = memo(function BuildingRow({
           // del GE costerebbe un import a ogni GE aperto; utente 09/11)
           const titolo = t("gbCalcOpen", uiLang, greatBuildingInfo.level + 1);
           return (
-            <a href={`/${uiLang === "it" ? "ge" : "gb"}/?ge=${encodeURIComponent(b.cityEntityId)}&livello=${greatBuildingInfo.level + 1}`}
+            <a href={`/${uiLang === "it" ? "ge" : "gb"}/?ge=${encodeURIComponent(b.cityEntityId)}&livello=${greatBuildingInfo.level + 1}&da=app`}
               target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
               className="ml-1 inline-flex flex-shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1 py-px text-sky-300 hover:border-sky-500"
               title={titolo} aria-label={titolo}>
