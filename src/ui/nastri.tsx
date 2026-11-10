@@ -102,7 +102,7 @@ export interface ContestoNastri {
   pergamene: Interruttore & { n: number | null };
 }
 
-type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge" | "pronti";
 
 interface Interruttore { attivo: boolean; cambia: () => void }
 
@@ -301,7 +301,8 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       ];
     }
     case "inventario":
-      return [ricerca, filtri, vista(), nascondiMostra(), opzioniCitta, { id: "strumenti", label: L("r2GrpTools"), icon: Bug, rows: [[
+      // ("Pronti": edifici già in inventario; prima la casella "Solo pronti" dei Filtri)
+      return [ricerca, filtri, vista(), nascondiMostra([tri3("pronti", Package, "r2Ready", iconInventario, "onlyReadyBuildingsTitle")]), opzioniCitta, { id: "strumenti", label: L("r2GrpTools"), icon: Bug, rows: [[
         tasto("debug", c.debug, Bug, "r2Debug"),
       ]] }];
     case "alleati":

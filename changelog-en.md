@@ -3,6 +3,7 @@
 ## Version 2.013 (10/11/2026)
 ### New
 - City and Database: "Downgradable" becomes "Ageable": buildings that, taken to the Bronze Age, give the same goods and the same military values, to produce goods of an old age without losing anything (in the Database after the next data update)
+- Inventory: Ageable filter; "Ready only" becomes the "Ready" item of Hide / Show only, to see only ready buildings or only the ones made with kits
 
 ---
 

@@ -857,9 +857,9 @@ const HASH_SCHEDA: Record<string, Scheda> = {
 };
 
 /** Voci a tre stati del gruppo "Nascondi / Mostra solo". */
-type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge" | "pronti";
 type StatoTri = 0 | 1 | 2;
-const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, strada: 0, aiuto: 0, immagazzina: 0, ge: 0 };
+const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, strada: 0, aiuto: 0, immagazzina: 0, ge: 0, pronti: 0 };
 /** true = riga da scartare: stato 1 scarta chi ha la caratteristica, stato 2 chi non ce l'ha. */
 const scartaTri = (stato: StatoTri, ha: boolean) => (stato === 1 ? ha : stato === 2 ? !ha : false);
 
@@ -2463,7 +2463,11 @@ export default function App() {
   // 2.0: "solo con slot alleato" e "solo che producono frammenti" sono ora le
   // caselle di categoria "alleati"/"frammenti" (TabFilters.categorie).
   // Filtra nella tab Inventario: mostra solo gli edifici fisicamente già in inventario
-  const [showOnlyReadyBuildings, setShowOnlyReadyBuildings] = useState(false);
+  // (10/11/2026) "Solo pronti" è ora la voce "Pronti" di Nascondi / Mostra solo dell'Inventario
+  // (a tre stati, più sotto, dopo tabFilters): mostra solo = sorgente "raw" come prima,
+  // nascondi = vista con i kit senza le righe INV (già in inventario, pronte da piazzare).
+  // Inventario › Invecchiabili (al posto di "Solo pronti" nei Filtri)
+  const [soloInvecchiabiliInv, setSoloInvecchiabiliInv] = useState(false);
   // Inventario: solo gli edifici posseduti di un'era (id di ages.csv; null = tutte)
   const [eraInventario, setEraInventario] = useState<number | null>(null);
   // Inventario: edifici posseduti che producono beni di un'era (della loro era,
@@ -3446,6 +3450,8 @@ export default function App() {
     propria_citta: { ...DEFAULT_FILTERS },
     inventario: { ...DEFAULT_FILTERS },
   });
+  const statoPronti = tabFilters.inventario.tri.pronti ?? 0;
+  const showOnlyReadyBuildings = statoPronti === 2;
 
   // "pirati" non ha filtri propri (pagina placeholder, non ancora
   // integrata) e non fa parte di TabType/tabFilters: fallback a
@@ -4919,6 +4925,10 @@ export default function App() {
         // Tutti i building in processedInventoryKitBuildings sono già pre-filtrati
         // dall'optimizer: non serve ulteriore membership check.
         // (filtri Era / Beni dell'era: già applicati in eraAdjustedSource)
+        // Nascondi › Pronti: via le righe già in inventario (INV), restano quelle da fare con i kit
+        if (statoPronti === 1 && (b as InventoryRowBuilding)._invBadge === "INV") continue;
+        // Filtri › Invecchiabili: colonna del CSV (pipeline) o calcolo della città
+        if (soloInvecchiabiliInv && !(b.invecchiabile || (!!b.cityEntityId && declassableBuildings.has(b.cityEntityId)))) continue;
       }
 
       // L'override era e il nome visibile sono già stati applicati in
@@ -5014,7 +5024,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, statoPronti, soloInvecchiabiliInv, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -6754,8 +6764,8 @@ export default function App() {
         { id: "invecchiabili", label: t("r2Declassable", uiLang), title: t("showOnlyDeclassableDbTitle", uiLang), checked: soloInvecchiabiliDb,
           toggle: () => setSoloInvecchiabiliDb(v => !v), disabled: !BUILDINGS_FROM_CSV.some(b => b.invecchiabile) && !soloInvecchiabiliDb },
       ] : schedaCorrente === "inventario" ? [
-        { id: "pronti", label: t("r2ReadyOnly", uiLang), title: t("onlyReadyBuildingsTitle", uiLang), checked: showOnlyReadyBuildings,
-          toggle: () => setShowOnlyReadyBuildings(v => !v) },
+        { id: "invecchiabili", label: t("r2Declassable", uiLang), title: t("showOnlyDeclassableDbTitle", uiLang), checked: soloInvecchiabiliInv,
+          toggle: () => setSoloInvecchiabiliInv(v => !v) },
       ] : undefined,
       era: schedaCorrente === "inventario" ? {
         valore: eraInventario, imposta: setEraInventario,

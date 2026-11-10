@@ -556,7 +556,7 @@ const UI_STRINGS = {
   r2HideAid: { it: "Fr. auto-aiuto", en: "Mass aid fr." },
   r2HideStore: { it: "Fr. immagazzina", en: "Store bld. fr." },
   r2Debug: { it: "Debug", en: "Debug" },
-  r2ExportCityJson: { it: "Esporta JSON città", en: "Export city JSON" },
+  r2ExportCityJson: { it: "JSON", en: "JSON" },
   r2ExportCityJsonTitle: {
     it: "Scarica la città in JSON, come il pulsante JSON della Mappa",
     en: "Downloads the city as JSON, like the Map's JSON button",
@@ -564,6 +564,7 @@ const UI_STRINGS = {
   r2Outdated: { it: "Edifici vecchi", en: "Outdated" },
   r2Declassable: { it: "Invecchiabili", en: "Ageable" },
   r2ReadyOnly: { it: "Solo pronti", en: "Ready only" },
+  r2Ready: { it: "Pronti", en: "Ready" },
   // Alleati (2.0)
   r2AllyTypeMil: { it: "Militari", en: "Military" },
   r2AllyTypeSci: { it: "Scienza", en: "Science" },
@@ -1495,8 +1496,8 @@ const UI_STRINGS = {
     en: "Only ready buildings",
   },
   onlyReadyBuildingsTitle: {
-    it: "Mostra solo gli edifici già presenti in inventario",
-    en: "Show only buildings already in inventory",
+    it: "Edifici già presenti in inventario, da piazzare subito (gli altri si fanno con i kit)",
+    en: "Buildings already in inventory, ready to place (the others are made with kits)",
   },
 
   // ── Mappa città (CityMapView.tsx) ────────────────────────────────────
