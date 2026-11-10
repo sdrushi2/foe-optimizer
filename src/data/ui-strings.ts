@@ -1343,6 +1343,7 @@ const UI_STRINGS = {
     it: (v: string) => `Scollegato dalla strada: non produce. Collegato darebbe ${v}`,
     en: (v: string) => `Disconnected from the road: it doesn't produce. Connected it would give ${v}`,
   },
+  prodGoodsScienceAllies: { it: "Alleati scienza", en: "Science allies" },
   prodCastle: { it: (n: number) => `Castello (liv. ${n})`, en: (n: number) => `Castle (lv. ${n})` },
   prodGoodsDetailTitle: { it: "Clic: dettaglio per edificio", en: "Click: detail by building" },
   prodGoodsBoostTitle: {

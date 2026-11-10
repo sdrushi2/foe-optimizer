@@ -6231,9 +6231,9 @@ export default function App() {
           // dettaglio per edificio: era → id → nome, copie che danno quei beni, quantità
           // dettaglio per edificio: era → id → nome, copie, quantità (spento = copie scollegate:
           // v è quello che darebbero, mostrato a 0 in rosso)
-          type VoceBeni = { nome: string; copie: number; v: number; spento?: boolean };
+          type VoceBeni = { nome: string; copie: number; v: number; spento?: boolean; nonEdificio?: boolean };
           const dettaglioBeni = new Map<number, Map<string, VoceBeni>>();
-          const aggiungiBeni = (era: number, delta: number, v: number, chi?: { id: string; nome: string; copie: number; spento?: boolean }) => {
+          const aggiungiBeni = (era: number, delta: number, v: number, chi?: { id: string; nome: string; copie: number; spento?: boolean; nonEdificio?: boolean }) => {
             if (v <= 0) return;
             const e = AGES_BY_ID.has(era + delta) ? era + delta : era;
             if (!chi?.spento) beniPerEra.set(e, (beniPerEra.get(e) ?? 0) + v);
@@ -6242,7 +6242,7 @@ export default function App() {
             dettaglioBeni.set(e, m);
             const k = chi.spento ? `${chi.id}#off` : chi.id;
             const x = m.get(k);
-            if (x) { x.copie += chi.copie; x.v += v; } else m.set(k, { nome: chi.nome, copie: chi.copie, v, spento: chi.spento });
+            if (x) { x.copie += chi.copie; x.v += v; } else m.set(k, { nome: chi.nome, copie: chi.copie, v, spento: chi.spento, nonEdificio: chi.nonEdificio });
           };
           for (const b of cityBuildings) {
             const tutteLeEre = isAllAgeBuildingId(b.cityEntityId);
@@ -6280,10 +6280,34 @@ export default function App() {
           // Castello (bacchetta v8 + castello.json): ricompensa giornaliera del suo livello,
           // PF e beni a caso dell'era attuale e della precedente (senza bonus % dei beni)
           const castello = livelloCastello !== null ? livelliCastello?.find(l => l.livello === livelloCastello) ?? null : null;
-          const voceCastello = castello ? { id: "__castello", nome: t("prodCastle", uiLang, castello.livello), copie: 1 } : null;
+          const voceCastello = castello ? { id: "__castello", nome: t("prodCastle", uiLang, castello.livello), copie: 1, nonEdificio: true } : null;
           if (castello && voceCastello) {
             aggiungiBeni(eraAttuale, 0, castello.beni, voceCastello);
             aggiungiBeni(eraAttuale, -1, castello.beniPrec, voceCastello);
+          }
+          // Alleati scienza (10/11/2026, utente): producono solo se piazzati (non i frammenti), al
+          // loro livello + i livelli dei GE (Tempio del Loto). I beni sono dell'era della COPIA che
+          // li ospita (il MainParser ha una tabella per era; confermato in gioco: nave retrocessa a
+          // Giove → beni di Giove), "era prec." = quella prima; ospite di tutte le ere, GE o senza
+          // era nota: era attuale. Ospite scollegato: in rosso, non conta. Senza bonus % (come il Castello).
+          const copieMappa = new Map(cityMapBuildings.map(m => [m.mapEntityId, m]));
+          const vociPfAlleati: VoceDett[] = [];
+          let pfAlleati = 0, beniAlleati = 0;
+          for (const imp of importedAllies) {
+            if (!imp.isPlaced || imp.isFragment) continue;
+            const a = ALLIES_BY_ID_RARITY.get(`${imp.allyId}__${imp.rarity}`);
+            if (!a || a.allyType !== "S") continue;
+            const st = Allies.getComputedAllyStats(a, imp.level + boostAlleati.scienza, INHERITED_ALLIES_MAP);
+            const spento = !alleatoAttivo(imp);
+            const copia = imp.placedInMapEntityId ? copieMappa.get(imp.placedInMapEntityId) : undefined;
+            const ospite = copia?.entityId ?? imp.placedInEntityId ?? "";
+            const era = ospite && !isAllAgeBuildingId(ospite) && copia?.era ? AGE_BY_CODE.get(copia.era)?.id ?? eraAttuale : eraAttuale;
+            const nome = `${allyName(a.id, gameLang)} (${gameNames.get(ospite) ?? copia?.name ?? ospite})`;
+            const chi = { id: `__alleato${imp.jsonId}`, nome, copie: 1, spento, nonEdificio: true };
+            aggiungiBeni(era, 0, st.computedBeni, chi);
+            aggiungiBeni(era, -1, st.computedBeniP, chi);
+            if (!spento) { pfAlleati += st.computedPf; beniAlleati += st.computedBeni + st.computedBeniP; }
+            if (st.computedPf > 0) vociPfAlleati.push({ nome, copie: 1, v: st.computedPf, spento, nonEdificio: true });
           }
           const ereBeni = [...beniPerEra].filter(([, v]) => v > 0).sort((x, y) => y[0] - x[0]);
           const totaleBeniEre = ereBeni.reduce((s, [, v]) => s + v, 0);
@@ -6298,7 +6322,8 @@ export default function App() {
           // Dettaglio per edificio (clic su una riga; restano aperte tutte quelle cliccate: righeProdAperte):
           // nome di gioco, ×copie, quantità al giorno (già con i bonus), dal più produttivo.
           // (spento: copie scollegate dalla strada, v = quanto darebbero; in fondo, in rosso, a 0)
-          type VoceDett = { nome: string; copie: number; v: number; spento?: boolean };
+          // (nonEdificio: Castello e alleati scienza, in un altro colore: non sono edifici)
+          type VoceDett = { nome: string; copie: number; v: number; spento?: boolean; nonEdificio?: boolean };
           const ordina = (l: VoceDett[]) => [
             ...l.filter(x => !x.spento && x.v > 0).sort((x, y) => y.v - x.v || x.nome.localeCompare(y.nome)),
             ...l.filter(x => x.spento && x.v > 0).sort((x, y) => y.v - x.v || x.nome.localeCompare(y.nome)),
@@ -6324,13 +6349,13 @@ export default function App() {
           const righeDettaglio = (k: string, elenco: VoceDett[], celle: number, colValore: number) => elenco.map(x => (
             <tr key={`${k}-${x.nome}-${x.spento ? "off" : "on"}`} className="border-b border-slate-800/30 bg-slate-900/40 text-[11px]"
               title={x.spento ? t("prodDisconnectedTitle", uiLang, formatInt(x.v)) : undefined}>
-              <td className={`py-0.5 pl-8 pr-1 ${x.spento ? "text-red-400" : "text-slate-400"}`}>
+              <td className={`py-0.5 pl-8 pr-1 ${x.spento ? "text-red-400" : x.nonEdificio ? "text-sky-300" : "text-slate-400"}`}>
                 <span className="whitespace-nowrap">{x.nome}</span>
                 {x.copie > 1 && <span className={`ml-1 font-mono ${x.spento ? "text-red-400" : "text-emerald-400"}`}>×{x.copie}</span>}
                 {x.spento && <span className="ml-1 italic">{t("prodDisconnected", uiLang)}</span>}
               </td>
               {Array.from({ length: celle - 1 }, (_, i) => (
-                <td key={i} className={`py-0.5 px-1 text-right font-mono ${x.spento ? "text-red-400" : "text-slate-300"}`}>{i + 1 === colValore ? (x.spento ? `(${formatInt(x.v)})` : formatInt(x.v)) : ""}</td>
+                <td key={i} className={`py-0.5 px-1 text-right font-mono ${x.spento ? "text-red-400" : x.nonEdificio ? "text-sky-300" : "text-slate-300"}`}>{i + 1 === colValore ? (x.spento ? `(${formatInt(x.v)})` : formatInt(x.v)) : ""}</td>
               ))}
             </tr>
           ));
@@ -6407,8 +6432,8 @@ export default function App() {
                 </thead>
                 <tbody>
                   {/* (dettagli: stessi calcoli dei totali, edificio per edificio) */}
-                  {rigaGiornaliera("fp", iconFP, t("prodForgePoints", uiLang), (totalPFNormal * (1 + totalPFB)) + totalPFGB + (castello?.pf ?? 0),
-                    { dettaglio: perEdificio((b, q) => exactBuildingSum(b, "fp", q) * (1 + totalPFB), g => g.fp, castello && voceCastello ? [{ nome: voceCastello.nome, copie: 1, v: castello.pf }] : []) })}
+                  {rigaGiornaliera("fp", iconFP, t("prodForgePoints", uiLang), (totalPFNormal * (1 + totalPFB)) + totalPFGB + (castello?.pf ?? 0) + pfAlleati,
+                    { dettaglio: perEdificio((b, q) => exactBuildingSum(b, "fp", q) * (1 + totalPFB), g => g.fp, [...(castello && voceCastello ? [{ nome: voceCastello.nome, copie: 1, v: castello.pf, nonEdificio: true }] : []), ...vociPfAlleati]) })}
                   {rigaGiornaliera("benig", iconBeniG, t("prodGuildGoods", uiLang), totalBeniG,
                     { dettaglio: perEdificio((b, q) => exactBuildingSum(b, "benig", q), g => g.benig) })}
                   {rigaGiornaliera("benisp", iconBeniSp, t("prodGoodsSpecial", uiLang), totalBeniSpBoosted,
@@ -6419,6 +6444,7 @@ export default function App() {
                   {rigaGiornaliera("beni-tot", iconBeni, t("prodGoodsTotal", uiLang), totaleBeniEre, { evid: true, ultima: true,
                     // (tooltip: le tre quote rispetto alla tua era, come nel vecchio pannello, e il bonus % applicato)
                     titolo: `${t("prodGoodsCurrent", uiLang)}: ${formatInt(totalBeniBoosted)} · ${t("prodGoodsPrevious", uiLang)}: ${formatInt(totalBeniPBoosted)} · ${t("prodGoodsNext", uiLang)}: ${formatInt(totalBeniSBoosted)}`
+                      + (beniAlleati > 0 ? ` · ${t("prodGoodsScienceAllies", uiLang)}: ${formatInt(beniAlleati)}` : "")
                       + (totalBeniB > 0 ? `\n${t("prodGoodsBoostTitle", uiLang, Math.round(totalBeniB * 100))}` : "") })}
                 </tbody>
               </table>
