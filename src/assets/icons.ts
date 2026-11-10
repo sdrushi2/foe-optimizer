@@ -94,6 +94,10 @@ export { default as allies_token } from "./icons/allies_token.png";
 export { default as allies_train } from "./icons/allies_train.png";
 export { default as iconFragment } from "./icons/Fragment.png";
 export { default as iconMed } from "./icons/Med.png";
+// (10/11/2026) boost % di produzione di monete, materiali e medaglie: Mon/Mat/Med con il + verde di FPB
+export { default as iconMonB } from "./icons/MonB.png";
+export { default as iconMatB } from "./icons/MatB.png";
+export { default as iconMedB } from "./icons/MedB.png";
 // Gruppo "Nascondi / Mostra solo" del nastro (24×24): clessidra, castello dei
 // GE, scudo IQ e freccia verde dalle immagini del gioco (via FoE Helper,
 // js/web/x_img), ritagliate e ridotte a 24×24; NoRush è il divieto rosso

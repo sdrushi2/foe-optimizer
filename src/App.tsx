@@ -76,7 +76,7 @@ import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilita
   BUILDING_ROW_COLORS, ROW_DISCONNECTED_OVERLAY, RARITY_FROM_GAME } from "./data/buildingClassification";
 import {
   iconSize, iconRoad, iconPop, iconFel, iconFP, iconFPB, iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG,
-  iconMon, iconMat, iconLimitati, allies_military, allies_science, iconReliquie, iconCritico, iconCriticoOro, iconRespingi, iconManiAmiche, iconManiAmicheOro, iconContributo, iconContributoOro, iconProgettiAiuti, iconSaccheggio, iconNucleoIA, iconRegaliDiplomatici, iconMissili, iconMissiliOro, iconSchegge, iconSaccheggiaBeni, iconBeniAiuti, iconColpo, iconColpoOro, iconMissioni, iconMissioniOro, iconBottino, iconBottinoOro, iconRaccoltaDoppia, iconRaccoltaDoppiaOro, iconSword, iconCampi, iconIQ, iconProduzioni, iconSpedizioni,
+  iconMon, iconMonB, iconMat, iconMatB, iconMedB, iconLimitati, allies_military, allies_science, iconReliquie, iconCritico, iconCriticoOro, iconRespingi, iconManiAmiche, iconManiAmicheOro, iconContributo, iconContributoOro, iconProgettiAiuti, iconSaccheggio, iconNucleoIA, iconRegaliDiplomatici, iconMissili, iconMissiliOro, iconSchegge, iconSaccheggiaBeni, iconBeniAiuti, iconColpo, iconColpoOro, iconMissioni, iconMissioniOro, iconBottino, iconBottinoOro, iconRaccoltaDoppia, iconRaccoltaDoppiaOro, iconSword, iconCampi, iconIQ, iconProduzioni, iconSpedizioni,
   iconGenAtk_A as iconGenAtkA, iconGenDef_A as iconGenDefA,
   iconGenAtk_D as iconGenAtkD, iconGenDef_D as iconGenDefD,
   iconCampiAtk_A as iconCampiAtkA, iconCampiDef_A as iconCampiDefA,
@@ -959,7 +959,7 @@ function conStatsEra<T extends Building>(b: T, stats: EraStats): T {
     iqTruppe: stats.iqTruppe, iqAzioni: stats.iqAzioni, iqCap: stats.iqCap,
     bp: stats.bp, fp: stats.fp, fpb: stats.fpb, med: stats.med, fur: stats.fur, tr: stats.tr, trne: stats.trne,
     beni: stats.beni, benip: stats.benip, benis: stats.benis, benisp: stats.benisp, benispb: stats.benispb,
-    benib: stats.benib, benig: stats.benig, mon: stats.mon, mat: stats.mat,
+    benib: stats.benib, benig: stats.benig, mon: stats.mon, mat: stats.mat, monb: stats.monb ?? 0, matb: stats.matb ?? 0, medb: stats.medb ?? 0,
     fsp: stats.fsp, tpm: stats.tpm, tpb: stats.tpb, adm: stats.adm, mod: stats.mod, rin: stats.rin, imm: stats.imm,
   };
 }
@@ -2043,8 +2043,14 @@ const BuildingRow = memo(function BuildingRow({
           <StaleFieldCell value={b.mon} className={`cell-num section-divider${b.mon > 0 ? classeProd("mon") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.mon)}
           </StaleFieldCell>
+          <StaleFieldCell value={b.monb} className={`cell-num${b.monb > 0 ? classeProd("monb") : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.monb)}
+          </StaleFieldCell>
           <StaleFieldCell value={b.mat} className={`cell-num${b.mat > 0 ? classeProd("mat") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.mat)}
+          </StaleFieldCell>
+          <StaleFieldCell value={b.matb} className={`cell-num${b.matb > 0 ? classeProd("matb") : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.matb)}
           </StaleFieldCell>
           <StaleFieldCell value={b.fp} className={`cell-num${b.fp > 0 ? classeProd("fp") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fp)}
@@ -2054,6 +2060,9 @@ const BuildingRow = memo(function BuildingRow({
           </StaleFieldCell>
           <StaleFieldCell value={b.med} className={`cell-num${b.med > 0 ? classeProd("med") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdK(b.med)}
+          </StaleFieldCell>
+          <StaleFieldCell value={b.medb} className={`cell-num${b.medb > 0 ? classeProd("medb") : ""}`} uiLang={uiLang}>
+            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.medb)}
           </StaleFieldCell>
           <StaleFieldCell value={b.fur} className={`cell-num${b.fur > 0 ? classeProd("fur") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.fur)}
@@ -2158,7 +2167,7 @@ type SortKey =
   | "sig_gen_campi_atk_a" | "sig_gen_campi_def_a" | "sig_gen_campi_atk_d" | "sig_gen_campi_def_d"
   | "sig_gen_sped_atk_a" | "sig_gen_sped_def_a" | "sig_gen_sped_atk_d" | "sig_gen_sped_def_d"
   | "iq_mon_b" | "iq_mat_b" | "iq_mon" | "iq_mat" | "iq_atk_a" | "iq_def_a" | "iq_atk_d" | "iq_def_d" | "iq_beni" | "iq_truppe" | "iq_azioni" | "iq_cap"
-  | "mon" | "mat" | "fp" | "fpb" | "med" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
+  | "mon" | "monb" | "mat" | "matb" | "fp" | "fpb" | "med" | "medb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
 type SortCriterion = { key: SortKey; order: "asc" | "desc" };
 // Ambito di ordinamento indipendente: le 3 viste della tabella edifici
 // (Database/Città/Inventario, distinte da TabType) più le 2 tabelle Alleati
@@ -3956,10 +3965,13 @@ export default function App() {
       case "iq_azioni": return b.iqAzioni;
       case "iq_cap": return b.iqCap;
       case "mon": return b.mon;
+      case "monb": return b.monb;
       case "mat": return b.mat;
+      case "matb": return b.matb;
       case "fp": return b.fp;
       case "fpb": return b.fpb;
       case "med": return b.med;
+      case "medb": return b.medb;
       case "fur": return b.fur;
       case "tr": return b.tr;
       case "trne": return b.trne;
@@ -4277,7 +4289,7 @@ export default function App() {
       "IQAtk_A", "IQDef_A", "IQAtk_D", "IQDef_D",
       "IQmon", "IQmonB", "IQmat", "IQmatB",
       "IQBeni", "IQTruppe", "IQAzioni", "IQCap",
-      "Mon", "Mat", "PF", "PFB", "Med", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
+      "Mon", "MonB", "Mat", "MatB", "PF", "PFB", "Med", "MedB", "FUR", "TR", "TRNE", "Beni", "BeniP", "BeniS", "BeniSp", "BeniSpB", "BeniB", "BeniG", "BP", "FSP", "TPM", "TPB", "ADM", "MOD", "RIN", "IMM",
     ];
     const rows = selectedBuildings.map(b => [
       b.cityEntityId, b.name, b.currentEff, b.size, b.road, b.pop, b.fel,
@@ -4287,7 +4299,7 @@ export default function App() {
       b.iq[0], b.iq[1], b.iq[2], b.iq[3],
       b.iqMon, b.iqMonB, b.iqMat, b.iqMatB,
       b.iqBeni, b.iqTruppe, b.iqAzioni, b.iqCap,
-      b.mon, b.mat, b.fp, b.fpb, b.med, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benisp, b.benispb, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
+      b.mon, b.monb, b.mat, b.matb, b.fp, b.fpb, b.med, b.medb, b.fur, b.tr, b.trne, b.beni, b.benip, b.benis, b.benisp, b.benispb, b.benib, b.benig, b.bp, b.fsp, b.tpm, b.tpb, b.adm, b.mod, b.rin, b.imm,
     ]);
 
     const escapeCsv = (val: string | number) => {
@@ -4453,7 +4465,7 @@ export default function App() {
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "",
       fp: 0, fpb: 0, med: 0, fur: 0, tr: 0, trne: 0,
-      beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0,
+      beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0, monb: 0, matb: 0, medb: 0,
       bp: 0, fsp: 0, tpm: 0, tpb: 0, adm: 0, mod: 0, rin: 0, imm: 0,
       fragments: "", isGreatBuilding: false, isInactive: false,
       isFallback: true, isUnresolved: true, isMilitary: false,
@@ -6710,13 +6722,16 @@ export default function App() {
     if (schedaSpenta) scegliScheda(haCitta ? "citta" : "database");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedaSpenta]);
-  // Le 23 produzioni filtrabili (nastro: menu Produzione; vecchia barra: icone).
+  // Le 26 produzioni filtrabili (nastro: menu Produzione; vecchia barra: icone).
   const opzioniProduzione: OpzioneProduzione[] = [
     { key: "mon", icon: <img src={iconMon} alt={t("prodCoins", uiLang)} className="icon-16" />, title: t("prodCoins", uiLang) },
+    { key: "monb", icon: <img src={iconMonB} alt={t("prodCoinsBoost", uiLang)} className="icon-16" />, title: t("prodCoinsBoost", uiLang) },
     { key: "mat", icon: <img src={iconMat} alt={t("prodMaterials", uiLang)} className="icon-16" />, title: t("prodMaterials", uiLang) },
+    { key: "matb", icon: <img src={iconMatB} alt={t("prodMaterialsBoost", uiLang)} className="icon-16" />, title: t("prodMaterialsBoost", uiLang) },
     { key: "fp", icon: <img src={iconFP} alt={t("prodForgePoints", uiLang)} className="icon-16" />, title: t("prodForgePoints", uiLang) },
     { key: "fpb", icon: <img src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} className="icon-16" />, title: t("prodForgePointsBoost", uiLang) },
     { key: "med", icon: <img src={iconMed} alt={t("prodMedals", uiLang)} className="icon-16" />, title: t("prodMedals", uiLang) },
+    { key: "medb", icon: <img src={iconMedB} alt={t("prodMedalsBoost", uiLang)} className="icon-16" />, title: t("prodMedalsBoost", uiLang) },
     { key: "fur", icon: <img src={iconFUR} alt={t("prodRogues", uiLang)} className="icon-16" />, title: t("prodRogues", uiLang) },
     { key: "tr", icon: <img src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} className="icon-16" />, title: t("prodUnitsCurrentEra", uiLang) },
     { key: "trne", icon: <img src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} className="icon-16" />, title: t("prodUnitsNextEra", uiLang) },
@@ -7279,7 +7294,7 @@ export default function App() {
                        {Array.from({ length: 3 }).map((_, i) => <col key={`iq-extra-${i}`} className="w-[42px]" />)}
                        <col className="w-[42px]" />
                        </>}
-                       {showProdColumns && Array.from({ length: senzaIq ? 15 : 23 }).map((_, i) => <col key={`prod-${i}`} className={senzaIq && i === 14 ? "w-[56px]" : "w-[36px]"} />)}
+                       {showProdColumns && Array.from({ length: senzaIq ? 18 : 26 }).map((_, i) => <col key={`prod-${i}`} className={senzaIq && i === 17 ? "w-[56px]" : "w-[36px]"} />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
@@ -7301,7 +7316,7 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={senzaIq ? 4 : showIqProdColumns ? 12 : 8}><TitoloGruppo icona={iconIQ} testo={t("groupIq", uiLang)} /></th>
                         {showProdColumns && (
-                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={senzaIq ? 15 : 23}>
+                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={senzaIq ? 18 : 26}>
                             {/* 2.0: Nascondi 🚫/^ sono nel nastro (Visualizza: Non accelerabili, Auto aggiornabili). */}
                             <TitoloGruppo icona={iconProduzioni} testo={t("groupProductions", uiLang)} />
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
@@ -7419,10 +7434,13 @@ export default function App() {
                         {showProdColumns && (
                           <>
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMon} alt={t("prodCoins", uiLang)} />} sortKey="mon" onClick={() => handleSort("mon")} active={sortBy === "mon"} order={sortOrder} className="th-col section-divider" title={t("prodCoins", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconMonB} alt={t("prodCoinsBoost", uiLang)} />} sortKey="monb" onClick={() => handleSort("monb")} active={sortBy === "monb"} order={sortOrder} className="th-col" title={t("prodCoinsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMat} alt={t("prodMaterials", uiLang)} />} sortKey="mat" onClick={() => handleSort("mat")} active={sortBy === "mat"} order={sortOrder} className="th-col" title={t("prodMaterials", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconMatB} alt={t("prodMaterialsBoost", uiLang)} />} sortKey="matb" onClick={() => handleSort("matb")} active={sortBy === "matb"} order={sortOrder} className="th-col" title={t("prodMaterialsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFP} alt={t("prodForgePoints", uiLang)} />} sortKey="fp" onClick={() => handleSort("fp")} active={sortBy === "fp"} order={sortOrder} className="th-col" title={t("prodForgePoints", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} />} sortKey="fpb" onClick={() => handleSort("fpb")} active={sortBy === "fpb"} order={sortOrder} className="th-col" title={t("prodForgePointsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMed} alt={t("prodMedals", uiLang)} />} sortKey="med" onClick={() => handleSort("med")} active={sortBy === "med"} order={sortOrder} className="th-col" title={t("prodMedals", uiLang)} />
+                            <SortableHeader noGap label={<TableHeaderIcon src={iconMedB} alt={t("prodMedalsBoost", uiLang)} />} sortKey="medb" onClick={() => handleSort("medb")} active={sortBy === "medb"} order={sortOrder} className="th-col" title={t("prodMedalsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFUR} alt={t("prodRogues", uiLang)} />} sortKey="fur" onClick={() => handleSort("fur")} active={sortBy === "fur"} order={sortOrder} className="th-col" title={t("prodRogues", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTR} alt={t("prodUnitsCurrentEra", uiLang)} />} sortKey="tr" onClick={() => handleSort("tr")} active={sortBy === "tr"} order={sortOrder} className="th-col" title={t("prodUnitsCurrentEra", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconTRNE} alt={t("prodUnitsNextEra", uiLang)} />} sortKey="trne" onClick={() => handleSort("trne")} active={sortBy === "trne"} order={sortOrder} className="th-col" title={t("prodUnitsNextEra", uiLang)} />
@@ -7537,7 +7555,7 @@ export default function App() {
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>
-                            <td colSpan={28 - (senzaLimitati ? 1 : 0) - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) - (senzaIq ? (showIqProdColumns ? 8 : 4) : 0) - (senzaLimitati ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? (senzaIq ? 15 : 23) : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                            <td colSpan={28 - (senzaLimitati ? 1 : 0) - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) - (senzaIq ? (showIqProdColumns ? 8 : 4) : 0) - (senzaLimitati ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? (senzaIq ? 18 : 26) : 0)} className="text-center py-12 text-slate-400 font-semibold">
                               <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
                                 <span>{emptyMessagePrefix}</span>
                                 {/* SOLO riferimento visivo al pulsante reale della toolbar

@@ -45,6 +45,11 @@ export interface EraStats {
   benig: number;    // beni di gilda
   mon: number;      // monete prodotte giornalmente
   mat: number;      // materiali prodotti giornalmente
+  /** (10/11/2026) Boost % di produzione della città (coin/supply/medal_production,
+   *  "all"), valore/100 come benib: colonne MonB / MatB / MedB. */
+  monb: number;
+  matb: number;
+  medb: number;
   fsp: number; tpm: number; tpb: number; adm: number; mod: number; rin: number; imm: number; // reward speciali (valore atteso frammenti)
 }
 
@@ -103,10 +108,17 @@ const BOOST_MAP: Record<string, Record<string, string[]>> = {
   "guild_raids_action_points_collection": { "all": ["IQAzioni"] },
   "guild_raids_action_points_capacity": { "all": ["IQCap"] },
   "guild_raids_coins_production": { "all": ["IQmonB"] },
+  // boost % di produzione della città (10/11/2026, colonne MonB/MatB/MedB)
+  "coin_production": { "all": ["MonB"] },
+  "supply_production": { "all": ["MatB"] },
+  "medal_production": { "all": ["MedB"] },
   "guild_raids_supplies_production": { "all": ["IQmatB"] },
   "guild_raids_coins_start": { "all": ["IQmon"] },
   "guild_raids_supplies_start": { "all": ["IQmat"] },
 };
+
+/** Arrotonda a 6 decimali (le percentuali /100 come round(x, 6) di buildings.py). */
+const arrot6 = (x: number) => Math.round(x * 1e6) / 1e6;
 
 // ── Costanti produzioni (tradotte da buildings.py, ex city_entities_to_csv.py) ──
 // Chiavi delle risorse beni per colonna.
@@ -270,7 +282,7 @@ export class BuildingModel {
       general: [0, 0, 0, 0], gbg: [0, 0, 0, 0], sped: [0, 0, 0, 0], iq: [0, 0, 0, 0],
       iqMonB: 0, iqMatB: 0, iqMon: 0, iqMat: 0,
       iqBeni: 0, iqTruppe: 0, iqAzioni: 0, iqCap: 0, ally: 0, allyType: "", fp: 0, fpb: 0, med: 0, fur: 0, tr: 0, trne: 0,
-      beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0, bp: 0, fsp: 0, tpm: 0, tpb: 0,
+      beni: 0, benip: 0, benis: 0, benisp: 0, benispb: 0, benib: 0, benig: 0, mon: 0, mat: 0, monb: 0, matb: 0, medb: 0, bp: 0, fsp: 0, tpm: 0, tpb: 0,
       adm: 0, mod: 0, rin: 0, imm: 0, fragments: ""
     };
   }
@@ -1015,8 +1027,8 @@ export class BuildingModel {
    *
    * Revenue: fp, beni/benip/benis, monete, materiali, medaglie. Boost
    * (novembre 2026): felicità qui; i boost militari li aggiunge extractEraStats
-   * (setAdjacencyBoosts). Le percentuali coin_production/supply_production
-   * restano fuori (scelta dell'utente, nessuna colonna).
+   * (setAdjacencyBoosts), insieme (10/11/2026) alle percentuali
+   * coin_production/supply_production/medal_production (monb/matb/medb).
    */
   private static extractSetAdjacencyBonus(cityEntity: CityEntityDefinition, era: string): { beni: number; benip: number; benis: number; fp: number; mon: number; mat: number; med: number; fel: number } {
     let beni = 0, benip = 0, benis = 0, fp = 0, mon = 0, mat = 0, med = 0, fel = 0;
@@ -1636,6 +1648,7 @@ export class BuildingModel {
     const sped: [number, number, number, number] = [0, 0, 0, 0];
     const iq: [number, number, number, number] = [0, 0, 0, 0];
     let iqMonB = 0, iqMatB = 0, iqMon = 0, iqMat = 0;
+    let monb = 0, matb = 0, medb = 0;
     let iqBeni = 0, iqTruppe = 0, iqAzioni = 0, iqCap = 0;
 
     const allBoosts: BoostHint[] = [];
@@ -1682,6 +1695,7 @@ export class BuildingModel {
         else if (col === "IQAtk_A") iq[0] += val; else if (col === "IQDef_A") iq[1] += val; else if (col === "IQAtk_D") iq[2] += val; else if (col === "IQDef_D") iq[3] += val;
         else if (col === "IQmonB") iqMonB += val / 100; else if (col === "IQmatB") iqMatB += val / 100; else if (col === "IQmon") iqMon += val; else if (col === "IQmat") iqMat += val;
         else if (col === "IQBeni") iqBeni += val; else if (col === "IQTruppe") iqTruppe += val; else if (col === "IQAzioni") iqAzioni += val; else if (col === "IQCap") iqCap += val;
+        else if (col === "MonB") monb += val / 100; else if (col === "MatB") matb += val / 100; else if (col === "MedB") medb += val / 100;
       });
     });
 
@@ -1710,6 +1724,7 @@ export class BuildingModel {
       // (le parti valgono solo senza bonus di adiacenza: con quello il pannello usa il totale)
       ...(goods.parti.length && !adjBonus.beni && !adjBonus.benip && !adjBonus.benis ? { beniParti: goods.parti } : {}),
       mon: monMat.mon + adjBonus.mon, mat: monMat.mat + adjBonus.mat,
+      monb: arrot6(monb), matb: arrot6(matb), medb: arrot6(medb),
       fsp: BuildingModel.extractReward(cityEntity, era, "fsp"),
       tpm: BuildingModel.extractReward(cityEntity, era, "tpm"),
       tpb: BuildingModel.extractReward(cityEntity, era, "tpb"),
@@ -1765,7 +1780,7 @@ export class BuildingModel {
       // davvero tutti i dati, quindi niente più "?" per questi edifici.
       bp: stats.bp, fp: stats.fp, fpb: stats.fpb, med: stats.med, fur: stats.fur, tr: stats.tr, trne: stats.trne,
       beni: stats.beni, benip: stats.benip, benis: stats.benis, benisp: stats.benisp, benispb: stats.benispb, benib: stats.benib, benig: stats.benig,
-      mon: stats.mon, mat: stats.mat,
+      mon: stats.mon, mat: stats.mat, monb: stats.monb, matb: stats.matb, medb: stats.medb,
       fsp: stats.fsp, tpm: stats.tpm, tpb: stats.tpb, adm: stats.adm, mod: stats.mod, rin: stats.rin, imm: stats.imm,
       cityEntityId: entityId,
       isGreatBuilding: isGreatBuildingId(entityId),

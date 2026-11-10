@@ -966,6 +966,9 @@ const UI_STRINGS = {
     it: "Beni Speciali Boost",
     en: "Special Goods Boost",
   },
+  prodCoinsBoost: { it: "Monete Boost", en: "Coins Boost" },
+  prodMaterialsBoost: { it: "Materiali Boost", en: "Supplies Boost" },
+  prodMedalsBoost: { it: "Medaglie Boost", en: "Medals Boost" },
   prodGoodsBoost: {
     it: "Beni Boost",
     en: "Goods Boost",

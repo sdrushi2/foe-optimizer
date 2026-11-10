@@ -121,6 +121,11 @@ export interface Building {
   mon: number;
   /** Materiali prodotti giornalmente (produzione generica, non IQ). */
   mat: number;
+  /** (10/11/2026) Boost % di produzione di monete, materiali e medaglie della città
+   *  (colonne MonB / MatB / MedB, es. 0.25 = +25%), come nel foglio di Linnun. */
+  monb: number;
+  matb: number;
+  medb: number;
   bp: number;
   fsp: number;
   tpm: number;
@@ -449,6 +454,9 @@ export function parseBuildingsCsv(csv: string): Building[] {
       benig: getNumber(parts, "BeniG"),
       mon: getNumber(parts, "Mon"),
       mat: getNumber(parts, "Mat"),
+      monb: getNumber(parts, "MonB"),
+      matb: getNumber(parts, "MatB"),
+      medb: getNumber(parts, "MedB"),
       bp: getNumber(parts, "BP"),
       general: [
         getNumber(parts, "GenAtk_A"),
