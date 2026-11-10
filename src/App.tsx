@@ -237,6 +237,8 @@ const detectBrowserUiLang = (): UiLang => {
 // ── Confronto statistiche per "se aggiorni all'era corrente" ────────────────
 // Una voce di differenza tra l'era vecchia e quella corrente di un edificio.
 // Campi confrontabili che sono percentuali di boost (frazioni: 0,03 = 3%): nei popup con "%".
+// Colonne di produzione che sono boost % (10/11/2026, utente): colore cell-prod-b, più chiaro verso l'oro.
+const COLONNE_BOOST_PROD = new Set(["monb", "matb", "fpb", "medb", "benib", "benispb"]);
 const PERCENT_DIFF_KEYS = new Set(["fpb", "monb", "matb", "medb", "benib", "benispb", "iqMonB", "iqMatB"]);
 type EraDiffEntry = { key: string; icon: string; emoji?: string; labelKey: UiKey; from: number; to: number };
 
@@ -1188,7 +1190,7 @@ const BuildingRow = memo(function BuildingRow({
   // icone della colonna ❔ (BONUS nel catalogo dei GE): 24 px nel catalogo dei GE, 16 px nelle altre tabelle (utente)
   const dimIcona = senzaLimitati ? "h-6 w-6" : "h-4 w-4";
   // GE (Prestige): colonne di produzione con valore solo dal tier Oro in oro
-  const classeProd = (col: string) => (b._beniEvid === col ? " cell-prod cell-beni-evid" : b.gbColonneOro?.includes(col) ? " cell-prod-gold" : " cell-prod");
+  const classeProd = (col: string) => { const base = COLONNE_BOOST_PROD.has(col) ? " cell-prod-b" : " cell-prod"; return b._beniEvid === col ? `${base} cell-beni-evid` : b.gbColonneOro?.includes(col) ? " cell-prod-gold" : base; };
   return (
     <tr
       key={b.id}

@@ -627,6 +627,8 @@ html, body { overflow-x: clip; }
 
   /* Produzioni (FP, beni, truppe, ecc.) quando il valore è > 0 */
   .cell-prod { @apply text-orange-500; }
+  /* Boost % delle produzioni (monete, materiali, PF, medaglie, beni): più chiaro, verso l'oro */
+  .cell-prod-b { @apply text-amber-400; }
   /* GE: produzione che viene solo dal tier Oro (stesso giallo dei moltiplicativi) */
   .cell-prod-gold { @apply text-amber-300; }
   /* Inventario › Beni dell'era: la colonna che dà i beni dell'era scelta */

@@ -2,7 +2,7 @@
 
 ## Versione 2.013 (10/11/2026)
 ### Novità
-- Nuove colonne Boost monete, Boost materiali e Boost medaglie nelle produzioni (Database dopo il prossimo aggiornamento dei dati, Città e Inventario dopo un nuovo import), anche nei filtri Produzione e nell'export CSV; le colonne dei beni ora seguono le medaglie, furfanti e truppe vanno dopo i beni di gilda
+- Nuove colonne Boost monete, Boost materiali e Boost medaglie nelle produzioni (Database dopo il prossimo aggiornamento dei dati, Città e Inventario dopo un nuovo import), anche nei filtri Produzione e nell'export CSV; le colonne dei beni ora seguono le medaglie, furfanti e truppe vanno dopo i beni di gilda; tutti i boost % hanno un colore più chiaro, verso l'oro
 - Città e Database: "Declassabili" diventa "Invecchiabili": gli edifici che portati all'Età del Bronzo danno gli stessi beni e gli stessi valori militari, per produrre beni di un'era vecchia senza perdere niente (nel Database dopo il prossimo aggiornamento dei dati); gli edifici limitati / ascesi hanno un ⚠, perché riascesi a scadenza tornano all'era più alta
 - Città: il filtro Invecchiabili mostra anche gli edifici aggiunti con +Inventario
 - Inventario: filtro Invecchiabili; "Solo pronti" diventa la voce "Pronti" di Nascondi / Mostra solo, per vedere solo gli edifici pronti o solo quelli da fare con i kit
