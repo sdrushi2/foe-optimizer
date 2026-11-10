@@ -2,7 +2,7 @@
 
 ## Versione 2.013 (10/11/2026)
 ### Novità
-- Città e Database: "Declassabili" diventa "Invecchiabili": gli edifici che portati all'Età del Bronzo danno gli stessi beni e gli stessi valori militari, per produrre beni di un'era vecchia senza perdere niente (nel Database dopo il prossimo aggiornamento dei dati)
+- Città e Database: "Declassabili" diventa "Invecchiabili": gli edifici che portati all'Età del Bronzo danno gli stessi beni e gli stessi valori militari, per produrre beni di un'era vecchia senza perdere niente (nel Database dopo il prossimo aggiornamento dei dati); gli edifici limitati / ascesi hanno un ⚠, perché riascesi a scadenza tornano all'era più alta
 - Inventario: filtro Invecchiabili; "Solo pronti" diventa la voce "Pronti" di Nascondi / Mostra solo, per vedere solo gli edifici pronti o solo quelli da fare con i kit
 
 ---

@@ -2266,6 +2266,10 @@ const UI_STRINGS = {
     it: "Mostra solo gli edifici che portati all'Età del Bronzo con i kit danno gli stessi beni (era attuale, precedente e successiva) e gli stessi valori militari dell'era più recente",
     en: "Show only the buildings that, taken to the Bronze Age with kits, give the same goods (current, previous and next age) and the same military values as the latest age",
   },
+  ageableLimitedWarning: {
+    it: "Attenzione: edificio limitato / asceso. Se lo invecchi, alla scadenza riascendendolo torna all'era più alta che hai raggiunto e perdi l'invecchiamento. Per toglierli dall'elenco: Nascondi › Limitati / Ascesi",
+    en: "Warning: limited / ascended building. If you age it down, when it expires re-ascending it brings it back to the highest age you reached and the aging is lost. To remove them from the list: Hide › Limited / Ascended",
+  },
   declassableTooltipHeader: {
     it: "Edificio invecchiabile",
     en: "Ageable building",

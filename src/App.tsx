@@ -1142,6 +1142,9 @@ interface BuildingRowProps {
   /** Catalogo › Grandi Edifici: niente celle delle produzioni delle Incursioni. */
   senzaIq?: boolean;
   isDeclassable: boolean;
+  /** (10/11/2026) Filtro Invecchiabili attivo su un edificio limitato / asceso: avviso
+   *  che, invecchiato e poi riasceso a scadenza, torna all'era massima del giocatore. */
+  avvisoLimitato?: boolean;
   allySlots: Array<{ filled: boolean; allyDisplayName?: string }> | undefined;
   declassablePopData: { popCurr: number; popBronze: number; statsBronze: EraStats } | undefined;
   setDeclassableTooltip: (v: { x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null) => void;
@@ -1172,7 +1175,7 @@ const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, onReport, senzaIq, isDeclassable, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, onReport, senzaIq, isDeclassable, avvisoLimitato, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentsProduced,
   handleCityRowClick, toggleSelect, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
@@ -1597,6 +1600,9 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
+        {avvisoLimitato && (
+          <span className="ml-1.5 inline-flex flex-shrink-0 cursor-help text-[12px] leading-none text-amber-400" title={t("ageableLimitedWarning", uiLang)}>⚠</span>
+        )}
         {activeTab === "propria_citta" && !b._isMergedInventory && allySlots && allySlots.map((slot, i) => (
           <span
             // Le icone non hanno un id stabile proprio (sono slot posizionali
@@ -7479,6 +7485,7 @@ export default function App() {
                           upgradeBadge={b._isMergedInventory ? undefined : cityUpgradeBadges.get(b.cityEntityId)}
                           isOutdated={!b._isMergedInventory && outdatedBuildings.has(b.cityEntityId) && (b._eraCopia === undefined || b._eraCopia < currentEraId)}
                           isDeclassable={!b._isMergedInventory && declassableBuildings.has(b.cityEntityId)}
+                          avvisoLimitato={b.time > 0 && (activeTab === "propria_citta" ? showOnlyDeclassable : activeTab === "inventario" ? soloInvecchiabiliInv : activeTab === "database" && soloInvecchiabiliDb)}
                           allySlots={b._isMergedInventory ? undefined : allySlotsPerBuilding.get(b.cityEntityId)}
                           declassablePopData={b._isMergedInventory ? undefined : declassableBuildings.get(b.cityEntityId)}
                           setDeclassableTooltip={setDeclassableTooltip}
