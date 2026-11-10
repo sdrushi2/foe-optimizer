@@ -31,6 +31,10 @@ export interface Ally {
   pf: number;
   beni: number;
   beniP: number;
+  /** (10/11/2026) Quantità prodotta a ogni livello (indice 0 = livello 1, fino al
+   *  110), colonna ProdLiv di allies.csv; il tipo è quello di pf/beni/beniP.
+   *  Vuoto per i militari o con un CSV più vecchio (allora pf/beni/beniP, al 100). */
+  prodLiv: number[];
   /** Descrizione testuale dell'abilità speciale dell'alleato, per lingua
    *  (colonne abilityIta/abilityEng del CSV). Vuota per la maggior parte
    *  degli alleati (solo alcuni hanno un'abilità speciale documentata).
@@ -73,10 +77,7 @@ export interface ComputedAllyStats {
   computedSped: [number, number, number, number];
   computedIq: [number, number, number, number];
   /** Somma di pf/beni/beniP su tutte le rarità ereditate (stessa logica di
-   *  computedGeneral ecc.), MA senza moltiplicatore di livello: a differenza
-   *  dei boost di combattimento (che scalano con getAllyStatValue/val1+livello),
-   *  la produzione degli alleati "science" è un valore FISSO per rarità letto
-   *  al livello 100 — vedi Ally.pf/beni/beniP. */
+   *  computedGeneral ecc.), al livello richiesto (tabella Ally.prodLiv). */
   computedPf: number;
   computedBeni: number;
   computedBeniP: number;
@@ -129,6 +130,7 @@ export function parseAlliesCsv(csv: string): Ally[] {
   const idxAbilityEng = colIndex("abilityEng");
   const idxTipo = colIndex("Tipo");
   const idxEvoValor = colIndex("EvoValor");
+  const idxProdLiv = colIndex("ProdLiv");
 
   // Helper: converte una colonna CSV in numero, restituisce 0 se assente o NaN
   const toNumber = (s: string | undefined) => parseFloat(s || "") || 0;
@@ -166,6 +168,7 @@ export function parseAlliesCsv(csv: string): Ally[] {
       abilityEng: (at(cols, idxAbilityEng) || "").trim(),
       allyType: (at(cols, idxTipo) || "").trim(),
       evoValor: toNumber(at(cols, idxEvoValor)),
+      prodLiv: (at(cols, idxProdLiv) || "").trim().split("|").filter(Boolean).map(Number),
     };
   });
 
@@ -316,13 +319,18 @@ export function getComputedAllyStats(ally: Ally, level: number, inheritedAlliesM
   const cat = (key: StatCategory): [number, number, number, number] =>
     [sumCategory(key, 0), sumCategory(key, 1), sumCategory(key, 2), sumCategory(key, 3)];
 
-  // pf/beni/beniP: somma diretta sulle rarità ereditate, SENZA
-  // getAllyStatValue — a differenza dei boost di combattimento (che scalano
-  // con val1+livello), la produzione degli alleati "science" è un valore
-  // fisso già letto al livello 100 (vedi Ally.pf/beni/beniP): non dipende
-  // dal parametro `level` di questa funzione.
+  // pf/beni/beniP: somma sulle rarità ereditate della quantità AL LIVELLO
+  // `level` (10/11/2026, utente: prima era sempre quella al livello 100, es.
+  // Fibonacci comune 60 PF invece di 15), dalla tabella prodLiv del gioco
+  // (oltre l'ultimo livello, es. 100 + Tempio del Loto > 110: l'ultimo valore).
+  // Senza prodLiv (CSV vecchio): il valore al livello 100 di pf/beni/beniP.
   const sumProduction = (key: "pf" | "beni" | "beniP") =>
-    inherited.reduce((s, a) => s + a[key], 0);
+    inherited.reduce((s, a) => {
+      if (!a[key]) return s;
+      if (!a.prodLiv?.length) return s + a[key];
+      if (level <= 0) return s;
+      return s + (a.prodLiv[Math.min(level, a.prodLiv.length) - 1] ?? 0);
+    }, 0);
 
   return {
     computedGeneral: cat("general"),

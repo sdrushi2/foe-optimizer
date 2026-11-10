@@ -8,6 +8,9 @@
 - Città: il filtro Invecchiabili mostra anche gli edifici aggiunti con +Inventario
 - Inventario: filtro Invecchiabili; "Solo pronti" diventa la voce "Pronti" di Nascondi / Mostra solo, per vedere solo gli edifici pronti o solo quelli da fare con i kit
 
+### Correzioni
+- Alleati scienza: PF e beni dei tuoi alleati sono quelli del loro livello, non più sempre quelli del livello 100
+
 ---
 
 ## Versione 2.012 (09/11/2026)

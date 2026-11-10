@@ -8,6 +8,9 @@
 - City: the Ageable filter also shows buildings added with +Inventory
 - Inventory: Ageable filter; "Ready only" becomes the "Ready" item of Hide / Show only, to see only ready buildings or only the ones made with kits
 
+### Fixes
+- Science allies: FP and goods of your allies are those of their level, no longer always those of level 100
+
 ---
 
 ## Version 2.012 (09/11/2026)
