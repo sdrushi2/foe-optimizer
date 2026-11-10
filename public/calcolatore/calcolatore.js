@@ -17,6 +17,7 @@
   const T = {
     it: {
       titolo: "Calcolatore GE", torna: "← Torna al tool",
+      aiutoLiv: "Il livello da selezionare è il NUOVO (quello sotto la lista dei contribuenti) e NON il livello attuale del GE",
       ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo",
       rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "es. 92",
       customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
@@ -45,6 +46,7 @@
     },
     en: {
       titolo: "GB Calculator", torna: "← Back to the tool",
+      aiutoLiv: "The level to select is the NEW one (the one under the contributors list), NOT the GB's current level",
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level",
       rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "e.g. 92",
       customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
@@ -119,6 +121,16 @@
           </div>
           <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
             <input id="versati" type="text" inputmode="numeric" autocomplete="off"></label>
+        </div>
+        <!-- (10/11/2026, utente) quale livello inserire: il selettore del livello sotto la classifica
+             della finestra del GE, ridisegnato (non un'immagine del gioco), con il livello scelto -->
+        <div class="aiuto-liv">
+          <div class="pager-liv" aria-hidden="true">
+            <span class="fr doppia"></span><span class="fr singola"></span>
+            <span class="tag-liv" id="livA"></span>
+            <span class="fr singola dx"></span><span class="fr doppia dx"></span>
+          </div>
+          <div class="nota-liv">${esc(T.aiutoLiv)}</div>
         </div>
         <div class="chat" id="chat">
           ${chat("r90", "rame", T.rame + " 90%", T.chatRame + " 90%")}
@@ -285,6 +297,8 @@
     });
     $("customBox").classList.toggle("attivo", S.chat[r.tier] === "custom");
     $("totale").textContent = fmt(r.costo);
+    { const l = livOk(S.livello), w = LINGUA === "en" ? "Level" : "Livello";
+      $("livA").textContent = `${w} ${l}`; }
     $("contribuzioni").textContent = fmt(r.contribuzioni);
     $("proprietario").textContent = fmt(r.proprietario);
     $("mancanti").textContent = fmt(r.mancanti);

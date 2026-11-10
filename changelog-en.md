@@ -6,6 +6,7 @@
 - New Coins Boost, Supplies Boost and Medals Boost columns in productions (Database after the next data update, City and Inventory after a new import), also in the Production filters and in the CSV export; goods columns now follow medals, rogues and units go after guild goods; all % boosts have a lighter, golden colour
 - City and Database: "Downgradable" becomes "Ageable": buildings that, taken to the Bronze Age, give the same goods and the same military values, to produce goods of an old age without losing anything (in the Database after the next data update); limited / ascended buildings get a ⚠, because re-ascended on expiry they go back to the highest age
 - Production panel: FP and goods of placed science allies, with the goods of the age of the building hosting them
+- GB Calculator: the level selector of the GB window under the level, as a reminder to enter the level being built, not the current one
 - City: the Ageable filter also shows buildings added with +Inventory
 - Inventory: Ageable filter; "Ready only" becomes the "Ready" item of Hide / Show only, to see only ready buildings or only the ones made with kits
 
