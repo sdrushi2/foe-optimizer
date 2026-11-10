@@ -207,6 +207,10 @@ export interface Building {
    *  il commento sopra KNOWN_FLAGS a inizio file. */
   flags?: number;
   fragments: string;
+  /** (10/11/2026) Colonna Invecchiabile di buildings.csv (buildings.py,
+   *  extract_invecchiabile): all'Età del Bronzo dà gli stessi beni e valori
+   *  militari dell'era più recente. Filtro Database › Invecchiabili. */
+  invecchiabile?: boolean;
 }
 
 /** True se la produzione dell'edificio NON può essere terminata all'istante
@@ -488,6 +492,7 @@ export function parseBuildingsCsv(csv: string): Building[] {
       rin: getNumber(parts, "RIN"),
       imm: getNumber(parts, "IMM"),
       fragments: getText(parts, "Fragments"),
+      ...(getText(parts, "Invecchiabile") === "1" ? { invecchiabile: true } : {}),
       isGreatBuilding: isGreatBuildingId(cityEntityId),
       isInactive: isInactiveBuildingId(cityEntityId),
       isMilitary: isMilitaryBuildingId(cityEntityId),

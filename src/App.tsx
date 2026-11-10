@@ -2451,6 +2451,8 @@ export default function App() {
   // Era e Beni dell'era, come nell'Inventario: eraCitta / beniEraCitta)
   // Filtra gli edifici declassabili all'Era del Bronzo nella tab Città
   const [showOnlyDeclassable, setShowOnlyDeclassable] = useState(false);
+  // Database › Invecchiabili: colonna Invecchiabile di buildings.csv (pipeline)
+  const [soloInvecchiabiliDb, setSoloInvecchiabiliDb] = useState(false);
   // Merge Città+Inventario: quando attivo, la tabella Città mostra anche le
   // righe dell'ottimizzatore inventario (stesso identico set che si vede in
   // tab Inventario), marcate con ProcessedBuilding._isMergedInventory per
@@ -3210,20 +3212,29 @@ export default function App() {
       }
       setEntityInstanceEraStats(entityInstanceEraStats);
 
-      // ── declassableBuildings ─────────────────────────────────────────────
-      // Edifici in città con pop negativa in entrambe le ere (corrente e
-      // BronzeAge) ma con statistiche militari invariate tra le due ere:
-      // declassarli al'Era del Bronzo fa risparmiare popolazione senza perdere boost.
+      // ── declassableBuildings = "Invecchiabili" (10/11/2026, utente) ──────
+      // Edifici che portati all'Età del Bronzo (con i kit) danno la STESSA
+      // quantità di beni (era attuale, precedente e successiva) e gli stessi
+      // valori militari dell'era attuale: servono a produrre beni di un'era
+      // vecchia (per sbloccare i livelli dei GE di quell'era) senza perdere
+      // niente. Le produzioni calano in modo progressivo con l'era (utente),
+      // quindi basta il confronto era attuale ↔ Bronzo. Solo edifici che
+      // producono beni; esclusi GE, militari, edifici di tutte le ere ed edifici
+      // a era automatica (non si invecchiano con i kit). (Prima "Declassabili":
+      // stessi valori militari e meno popolazione.)
       const declassableMap = new Map<string, { popCurr: number; popBronze: number; statsBronze: EraStats }>();
       for (const [entityId] of ids) {
-        if (isMilitaryBuildingId(entityId)) continue;
+        if (isMilitaryBuildingId(entityId) || isGreatBuildingId(entityId) || isAllAgeBuildingId(entityId)) continue;
+        const csv = BUILDING_BY_ID.get(entityId);
+        if (csv && isEraMutable(csv)) continue;
         const entityDef = cityEntities[entityId];
         if (!entityDef) continue;
         const statsCurr = eraStatsMap.get(entityId) ?? BuildingModel.extractEraStats(entityDef, currentEra || FALLBACK_ERA);
         const statsBronze = BuildingModel.extractEraStats(entityDef, "BronzeAge");
         const popCurr = statsCurr.pop;
         const popBronze = statsBronze.pop;
-        if (!(popCurr < 0 && popBronze < 0 && popCurr !== popBronze)) continue;
+        if (statsCurr.beni + statsCurr.benip + statsCurr.benis <= 0) continue;
+        if (statsCurr.beni !== statsBronze.beni || statsCurr.benip !== statsBronze.benip || statsCurr.benis !== statsBronze.benis) continue;
         if (
           !statsCurr.general.every((v, i) => v === statsBronze.general[i]) ||
           !statsCurr.gbg.every((v, i) => v === statsBronze.gbg[i]) ||
@@ -4923,6 +4934,8 @@ export default function App() {
       // 3. Declassabili (solo tab Città). Le righe merged da Inventario non sono
       // istanze piazzate, quindi vengono escluse quando il filtro è attivo.
       if (isPropriacitta && showOnlyDeclassable && (b._isMergedInventory || (b.cityEntityId && !declassableBuildings.has(b.cityEntityId)))) continue;
+      // Database › Invecchiabili (catalogo Edifici)
+      if (activeTab === "database" && catalogo !== "ge" && soloInvecchiabiliDb && !b.invecchiabile) continue;
       // Catalogo › Grandi Edifici: solo la ricerca (niente filtri né Nascondi /
       // Mostra solo, che restano impostati per il catalogo Edifici)
       // (solo nel Database: il catalogo scelto resta "ge" anche andando in Città/Inventario)
@@ -5001,7 +5014,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
+  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -6737,6 +6750,9 @@ export default function App() {
       extra: schedaCorrente === "citta" ? [
         { id: "declassabili", label: t("r2Declassable", uiLang), title: t("showOnlyDeclassableTitle", uiLang), checked: showOnlyDeclassable,
           toggle: () => setShowOnlyDeclassable(v => !v), disabled: declassableBuildings.size === 0 && !showOnlyDeclassable },
+      ] : schedaCorrente === "database" && catalogo !== "ge" ? [
+        { id: "invecchiabili", label: t("r2Declassable", uiLang), title: t("showOnlyDeclassableDbTitle", uiLang), checked: soloInvecchiabiliDb,
+          toggle: () => setSoloInvecchiabiliDb(v => !v), disabled: !BUILDINGS_FROM_CSV.some(b => b.invecchiabile) && !soloInvecchiabiliDb },
       ] : schedaCorrente === "inventario" ? [
         { id: "pronti", label: t("r2ReadyOnly", uiLang), title: t("onlyReadyBuildingsTitle", uiLang), checked: showOnlyReadyBuildings,
           toggle: () => setShowOnlyReadyBuildings(v => !v) },
@@ -8185,14 +8201,11 @@ export default function App() {
               </div>
               </div>
             )}
-            {/* Pop savings summary */}
-            <div className="flex items-center justify-between border-t border-slate-700/60 pt-1.5 pb-2 text-xs">
-              <span className="text-slate-400 flex items-center gap-1">
-                <img src={iconPop} alt="" className="h-3.5 w-3.5 object-contain" />
-                {t("declassablePopGainLabel", uiLang)}
-              </span>
-              <span className="font-mono font-bold text-emerald-400 tabular-nums">+{formatInt(popSavings)}</span>
-            </div>
+            {/* Invecchiabile: stessi beni e valori militari (sopra, cosa cambia invece) */}
+            <p className="border-t border-slate-700/60 pt-1.5 pb-2 text-xs text-emerald-300">
+              {t("declassableSame", uiLang, bronzeEraName)}
+              {popSavings > 0 && <span className="ml-1 text-slate-400">· <img src={iconPop} alt="" className="inline h-3.5 w-3.5 object-contain align-[-2px]" /> +{formatInt(popSavings)}</span>}
+            </p>
             {/* Kit */}
             <div className="border-t border-slate-700/60 pt-2">
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">{t("declassableKitSection", uiLang)}</p>

@@ -562,7 +562,7 @@ const UI_STRINGS = {
     en: "Downloads the city as JSON, like the Map's JSON button",
   },
   r2Outdated: { it: "Edifici vecchi", en: "Outdated" },
-  r2Declassable: { it: "Declassabili", en: "Downgradable" },
+  r2Declassable: { it: "Invecchiabili", en: "Ageable" },
   r2ReadyOnly: { it: "Solo pronti", en: "Ready only" },
   // Alleati (2.0)
   r2AllyTypeMil: { it: "Militari", en: "Military" },
@@ -2258,12 +2258,20 @@ const UI_STRINGS = {
     en: "Show only buildings that produce fragments of buildings or selection/upgrade kits",
   },
   showOnlyDeclassableTitle: {
-    it: "Mostra solo gli edifici che possono essere declassati senza conseguenze (stesse stat. militari, meno popolazione)",
-    en: "Show only the buildings that can be downgraded without consequences (same military stats, less population)",
+    it: "Mostra solo gli edifici che portati all'Età del Bronzo con i kit danno gli stessi beni (era attuale, precedente e successiva) e gli stessi valori militari: per produrre beni di un'era vecchia senza perdere niente",
+    en: "Show only the buildings that, taken to the Bronze Age with kits, give the same goods (current, previous and next age) and the same military values: to produce goods of an old age without losing anything",
+  },
+  showOnlyDeclassableDbTitle: {
+    it: "Mostra solo gli edifici che portati all'Età del Bronzo con i kit danno gli stessi beni (era attuale, precedente e successiva) e gli stessi valori militari dell'era più recente",
+    en: "Show only the buildings that, taken to the Bronze Age with kits, give the same goods (current, previous and next age) and the same military values as the latest age",
   },
   declassableTooltipHeader: {
-    it: "Edificio declassabile",
-    en: "Downgradable building",
+    it: "Edificio invecchiabile",
+    en: "Ageable building",
+  },
+  declassableSame: {
+    it: (era: string) => `Stessi beni e stessi valori militari anche all'${era}`,
+    en: (era: string) => `Same goods and same military values in the ${era} too`,
   },
   declassablePopGainLabel: {
     it: "Risparmio",
