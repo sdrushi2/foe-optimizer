@@ -28,6 +28,8 @@ export const SPED_ENABLED_KEY = `foe_global_spedizioni_enabled_${V}`;
 export const SPED_ATTACK_KEY = `foe_global_spedizioni_attack_${V}`;
 export const SIGMA_KEY = `foe_global_sigma_enabled_${V}`;
 export const POP_COLUMN_KEY = `foe_global_show_pop_column_${V}`;
+/** (10/11/2026) Tipo di efficienza della colonna EFF: mil | beni | pf | benig. */
+export const TIPO_EFF_KEY = `foe_global_tipo_eff_${V}`;
 export const FEL_COLUMN_KEY = `foe_global_show_fel_column_${V}`;
 /** Città / Inventario: valori militari ed efficienza con i bonus moltiplicativi dei GE. */
 export const BONUS_GE_KEY = `foe_global_gb_multipliers_in_table_${V}`;

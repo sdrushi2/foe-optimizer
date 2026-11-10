@@ -459,6 +459,14 @@ const UI_STRINGS = {
   r2CatFragments: { it: "Producono frammenti", en: "Produce fragments" },
   r2NeedsRoad: { it: "Richiede strada", en: "Needs road" },
   r2AllEvents: { it: "Tutti gli eventi", en: "All events" },
+  effTypeMil: { it: "Efficienza militare", en: "Military efficiency" },
+  effTypeBeni: { it: "Efficienza beni", en: "Goods efficiency" },
+  effTypePf: { it: "Efficienza Punti Forge", en: "Forge Points efficiency" },
+  effTypeBenig: { it: "Efficienza beni di gilda", en: "Guild goods efficiency" },
+  effTypeTitle: {
+    it: "Cosa misura la colonna EFF, per casella di area più strade: valori militari con i pesi, oppure produzione al giorno di beni (era attuale, precedente e successiva), Punti Forge o beni di gilda. In Città e Inventario i boost % di beni e PF contano sulla produzione della tua città",
+    en: "What the EFF column measures, per tile of area plus roads: military values with the weights, or daily production of goods (current, previous and next age), Forge Points or guild goods. In City and Inventory the goods and FP % boosts count on your city's production",
+  },
   r2Production: { it: "Produzione", en: "Production" },
   r2ProdFilterTitle: {
     it: "Edifici che producono (verde) o non producono (rosso) le risorse scelte: un clic sì, due no, tre niente",

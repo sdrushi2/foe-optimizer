@@ -2,6 +2,7 @@
 
 ## Versione 2.013 (10/11/2026)
 ### Novità
+- Città, Inventario e Database: menu sopra la tabella per scegliere cosa misura la colonna EFF: efficienza militare, beni, Punti Forge o beni di gilda per casella (in Città e Inventario i boost % contano sulla produzione della città)
 - Nuove colonne Boost monete, Boost materiali e Boost medaglie nelle produzioni (Database dopo il prossimo aggiornamento dei dati, Città e Inventario dopo un nuovo import), anche nei filtri Produzione e nell'export CSV; le colonne dei beni ora seguono le medaglie, furfanti e truppe vanno dopo i beni di gilda; tutti i boost % hanno un colore più chiaro, verso l'oro
 - Città e Database: "Declassabili" diventa "Invecchiabili": gli edifici che portati all'Età del Bronzo danno gli stessi beni e gli stessi valori militari, per produrre beni di un'era vecchia senza perdere niente (nel Database dopo il prossimo aggiornamento dei dati); gli edifici limitati / ascesi hanno un ⚠, perché riascesi a scadenza tornano all'era più alta
 - Pannello Produzione: PF e beni degli alleati scienza piazzati, con i beni dell'era dell'edificio che li ospita

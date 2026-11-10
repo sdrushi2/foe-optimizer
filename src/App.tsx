@@ -12,8 +12,8 @@ import {
 
 import type { Building } from "./data/buildings";
 import { getImageUrl, noRush, isEraMutable } from "./data/buildings";
-import type { Weights } from "./utils/calculator";
-import { calculateEfficiency } from "./utils/calculator";
+import type { Weights, TipoEff } from "./utils/calculator";
+import { calculateEfficiency, calculateProductionEfficiency } from "./utils/calculator";
 import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, formatMilK, isStaleField, localDateStamp, prefissoFile } from "./utils/format";
 import * as Allies from "./data/allies";
 import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, type UpgradeKitEntry, type SpecialKits, type InventoryStore } from "./data/inventory";
@@ -23,7 +23,7 @@ import type { CityStore } from "./data/cityStore";
 import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizeCastleLevel, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, TIPO_EFF_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -3417,6 +3417,11 @@ export default function App() {
   // nascoste. Prima erano dentro TabFilters (per-tab); rese globali su
   // richiesta esplicita dell'utente.
   const [showPopColumn, setShowPopColumn] = useState<boolean>(() => localStorage.getItem(POP_COLUMN_KEY) === "true");
+  // (10/11/2026) Tipo di efficienza della colonna EFF (menu sopra la tabella degli edifici)
+  const [tipoEff, setTipoEff] = useState<TipoEff>(() => {
+    const v = localStorage.getItem(TIPO_EFF_KEY);
+    return v === "beni" || v === "pf" || v === "benig" ? v : "mil";
+  });
   const [showFelColumn, setShowFelColumn] = useState<boolean>(() => localStorage.getItem(FEL_COLUMN_KEY) === "true");
   const [showIqProdColumns, setShowIqProdColumns] = useState<boolean>(() => localStorage.getItem(IQ_PROD_COLUMNS_KEY) === "true");
   // Toggle "Produzioni" (mostra/nasconde le colonne Mon/Mat + le altre
@@ -4008,11 +4013,12 @@ export default function App() {
     localStorage.setItem(SIGMA_KEY, showSigmaColumns.toString());
     localStorage.setItem(BONUS_GE_KEY, bonusGeTabella.toString());
     localStorage.setItem(POP_COLUMN_KEY, showPopColumn.toString());
+    localStorage.setItem(TIPO_EFF_KEY, tipoEff);
     localStorage.setItem(FEL_COLUMN_KEY, showFelColumn.toString());
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
     localStorage.setItem(PROD_COLUMNS_KEY, showProdColumnsPref.toString());
     localStorage.setItem(SPED_COLUMNS_KEY, showSpedColumnsPref.toString());
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, bonusGeTabella, showPopColumn, showFelColumn, showIqProdColumns, showProdColumnsPref, showSpedColumnsPref]);
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, bonusGeTabella, showPopColumn, tipoEff, showFelColumn, showIqProdColumns, showProdColumnsPref, showSpedColumnsPref]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -4827,6 +4833,20 @@ export default function App() {
     return tot;
   }, [cityEntityIds, applyEraStats, fallbackBuildings, processedGreatBuildings, importedAllies, copieCollegate, geCollegato, alleatoAttivo]);
 
+  // Efficienza beni / PF (10/11/2026): produzione di base della città su cui contano i
+  // boost % (BeniB, FPB) — edifici collegati all'era attuale, senza i GE (non ricevono
+  // i boost); stessa base del pannello Produzione (beni dell'era, precedente e successiva).
+  const baseProdCitta = useMemo(() => {
+    let beni = 0, pf = 0;
+    const somma = (b: Building, n: number) => { beni += (b.beni + b.benip + b.benis) * n; pf += b.fp * n; };
+    for (const b of BUILDINGS_FROM_CSV) {
+      if (b.isInactive || b.isGreatBuilding || !cityEntityIds.has(b.cityEntityId)) continue;
+      somma(applyEraStats(b), copieCollegate(b.cityEntityId));
+    }
+    for (const b of fallbackBuildings.values()) if (cityEntityIds.has(b.cityEntityId)) somma(b, copieCollegate(b.cityEntityId));
+    return { beni, pf };
+  }, [cityEntityIds, applyEraStats, fallbackBuildings, copieCollegate]);
+
   /** Contributo dei moltiplicativi di un GE (utente, 06/11): Generali = %
    *  globale × totale Generali; Campi / Spedizioni = % della modalità × (Generali +
    *  modalità) + % globale × modalità (così il Sifone conta anche su Campi e
@@ -4903,7 +4923,13 @@ export default function App() {
   }, [filterSourceBuildings, activeTab, applyEraStats, gameNames, gameLang, uiLang, weights, bonusGeTabella, pctBonusGe, contributoGe, eraInventario, beniEraInventario, copieInventario, eraCitta, beniEraCitta, copieCitta]);
 
   const filteredBuildings = useMemo(() => {
-    const sourceBuildings: ProcessedBuilding[] = eraAdjustedSource;
+    // Tipo di efficienza (10/11/2026): con beni / PF / beni di gilda la colonna EFF
+    // (ordinamento, Eff min, export CSV) usa l'efficienza di produzione; il resto
+    // dell'app (Planner, ottimizzatore) resta sull'efficienza militare (currentEff
+    // degli edifici elaborati, non toccato).
+    const conBase = activeTab === "propria_citta" || activeTab === "inventario";
+    const sourceBuildings: ProcessedBuilding[] = tipoEff === "mil" ? eraAdjustedSource
+      : eraAdjustedSource.map(b => ({ ...b, currentEff: calculateProductionEfficiency(b, tipoEff, conBase ? baseProdCitta : { beni: 0, pf: 0 }) }));
 
     const isIdSearch = deferredSearch.startsWith("\\");
     const deferredSearchLower = isIdSearch
@@ -5052,7 +5078,7 @@ export default function App() {
     });
 
     return filtered;
-  }, [eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, statoPronti, soloInvecchiabiliInv, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
+  }, [tipoEff, baseProdCitta, eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, statoPronti, soloInvecchiabiliInv, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
@@ -7344,9 +7370,19 @@ export default function App() {
                           {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : catalogo === "ge" ? processedGeCatalogo.length : processedBuildings.length}</span>
                         </th>
                         <th className="py-2 px-0" colSpan={(senzaLimitati ? 4 : 5) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
-                            <div style={{ minWidth: "82px" }} />
-                            {/* 2.0: l'efficienza minima è nel nastro (Filtri). */}
+                          <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                            {/* 2.0: l'efficienza minima è nel nastro (Filtri). (10/11/2026) Tipo di efficienza della colonna EFF;
+                                cambiandolo si azzera Eff min in tutte le schede (i valori non sono confrontabili). */}
+                            <select value={tipoEff} title={t("effTypeTitle", uiLang)}
+                              onChange={(e) => {
+                                setTipoEff(e.currentTarget.value as TipoEff);
+                                setTabFilters(prev => Object.fromEntries(Object.entries(prev).map(([k, f]) => [k, { ...f, minEff: "" }])) as typeof prev);
+                              }}
+                              className={`h-6 rounded border px-1 text-[11px] font-semibold normal-case tracking-normal focus:outline-none ${tipoEff === "mil" ? "border-slate-700 bg-slate-900 text-slate-300" : "border-emerald-600 bg-emerald-900/40 text-emerald-200"}`}>
+                              {(["mil", "beni", "pf", "benig"] as const).map(k => (
+                                <option key={k} value={k} className="bg-slate-900 text-slate-100">{t(k === "mil" ? "effTypeMil" : k === "beni" ? "effTypeBeni" : k === "pf" ? "effTypePf" : "effTypeBenig", uiLang)}</option>
+                              ))}
+                            </select>
                           </div>
                         </th>
                         {renderMilitaryGroupHeaders()}

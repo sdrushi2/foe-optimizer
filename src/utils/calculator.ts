@@ -36,3 +36,23 @@ export function calculateEfficiency(building: Building, weights: Weights): numbe
   const rounded = Math.round(raw * 10) / 10;
   return rounded;
 }
+
+/** (10/11/2026) Tipo di efficienza della colonna EFF (menu sopra la tabella). */
+export type TipoEff = "mil" | "beni" | "pf" | "benig";
+
+/**
+ * Efficienza di produzione: come calculateEfficiency ma col numeratore della
+ * produzione scelta, al giorno: beni (era attuale + precedente + successiva),
+ * Punti Forge o beni di gilda. I boost % (BeniB, FPB) contano come beni / PF
+ * veri sulla produzione di base della città (`base`, 0 senza città: Database).
+ */
+export function calculateProductionEfficiency(
+  b: Building, tipo: Exclude<TipoEff, "mil">, base: { beni: number; pf: number }
+): number {
+  const totalSpace = b.area + (b.road || 0);
+  if (totalSpace <= 0) return 0;
+  const num = tipo === "beni" ? b.beni + b.benip + b.benis + (b.benib || 0) * base.beni
+    : tipo === "pf" ? b.fp + (b.fpb || 0) * base.pf
+    : b.benig;
+  return Math.round((num / totalSpace) * 10) / 10;
+}
