@@ -105,7 +105,7 @@
         <a href="${pagina("ge")}" hreflang="it" lang="it" class="${LINGUA === "it" ? "attiva" : ""}">IT</a><span>/</span>
         <a href="${pagina("gb")}" hreflang="en" lang="en" class="${LINGUA === "en" ? "attiva" : ""}">EN</a>
       </nav>
-      <a class="btn" href="/">${esc(T.torna)}</a>
+      <a class="btn" id="torna" href="/">${esc(T.torna)}</a>
     </header>
     <div class="wrap">
       <p id="errore" hidden></p>
@@ -363,6 +363,18 @@
     }
     $("copia").textContent = T.copiato;
     setTimeout(() => { $("copia").textContent = T.copia; }, 1200);
+  });
+
+  // "Torna al tool": se il Calcolatore è in una scheda nuova (aperta dall'app, dall'icona
+  // della Città o dal nastro), la chiude e si torna alla scheda dell'app, invece di
+  // aprire il tool una seconda volta (segnalazione dell'utente, 10/11/2026). Una scheda
+  // nuova ha la cronologia lunga 1 e il browser la lascia chiudere; se non la chiude
+  // (pagina aperta a mano, cronologia più lunga), il link porta al tool come prima.
+  $("torna").addEventListener("click", e => {
+    if (history.length > 1) return;
+    e.preventDefault();
+    window.close();
+    setTimeout(() => { location.href = "/"; }, 150);
   });
 
   $("ge").value = S.ge;
