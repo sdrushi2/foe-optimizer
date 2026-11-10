@@ -201,6 +201,28 @@ function calcolatoreGePlugin(): Plugin {
         next();
       });
     },
+    // (10/11/2026) Nella build il ?v=… di calcolatore.js, calcolatore.css e mecenati-dati.js
+    // nelle due pagine diventa l'hash del file: prima era un numero da cambiare a mano, e
+    // un mecenati-dati.js rigenerato dalla pipeline con lo stesso ?v restava in cache
+    // (service worker cache-first e cache HTTP) con i costi vecchi.
+    closeBundle() {
+      if (process.env.FOE_EDITOR_BUILD) return;
+      const dist = path.resolve(__dirname, "dist");
+      const hash = (rel: string) => {
+        const f = path.join(dist, rel);
+        return fs.existsSync(f) ? crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10) : null;
+      };
+      const versioni: Record<string, string | null> = {
+        "calcolatore.js": hash("calcolatore/calcolatore.js"), "calcolatore.css": hash("calcolatore/calcolatore.css"), "mecenati-dati.js": hash("data/mecenati-dati.js"),
+      };
+      for (const pagina of ["ge/index.html", "gb/index.html"]) {
+        const f = path.join(dist, pagina);
+        if (!fs.existsSync(f)) continue;
+        const html = fs.readFileSync(f, "utf-8").replace(/(calcolatore\.js|calcolatore\.css|mecenati-dati\.js)\?v=[\w-]+/g,
+          (m, nome: string) => (versioni[nome] ? `${nome}?v=${versioni[nome]}` : m));
+        fs.writeFileSync(f, html, "utf-8");
+      }
+    },
   };
 }
 

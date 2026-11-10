@@ -2,8 +2,11 @@
 // =============================================================================
 // Service Worker — FoE Optimizer
 // =============================================================================
-// Strategia: CACHE-FIRST con aggiornamento in background (stale-while-revalidate
-// per il documento HTML).
+// Strategie (10/11/2026):
+// - app "/" (index.html): stale-while-revalidate, si apre subito dalla cache;
+// - altre pagine (Calcolatore /ge/ e /gb/, guide, editor): network-first, cache solo offline;
+// - /data/manifest.json: network-first;
+// - tutto il resto (assets con hash, dati e file del Calcolatore con ?v=hash): cache-first.
 //
 // - Prima visita: scarica e mette in cache l'app (index.html, tutti i file di
 //   dist/assets/ con hash, i dati di gioco di /data/ e le icone/manifest).
@@ -17,7 +20,8 @@
 // - Offline: l'app funziona comunque (e' tutto client-side).
 //
 // IL NOME DELLA CACHE INCLUDE LA VERSIONE DI BUILD (__SW_VERSION__, iniettata dal
-// plugin Vite a build-time): ad ogni nuova build il nome cambia, quindi la vecchia
+// plugin Vite a build-time: versione del giorno + timestamp, quindi unica per ogni
+// build, anche più build nello stesso giorno): ad ogni nuova build il nome cambia, quindi la vecchia
 // cache viene cancellata in 'activate' e gli utenti non restano bloccati su una
 // versione vecchia. Questo risolve la classica "trappola di caching" dei SW.
 // =============================================================================
@@ -94,17 +98,37 @@ self.addEventListener("fetch", (event) => {
   // non mettere in cache (cache.put rifiuta le 206 e il seek si romperebbe).
   if (request.headers.has("range") || url.pathname.endsWith(".mp4")) return;
 
-  // Navigazioni (richiesta di un documento HTML): STALE-WHILE-REVALIDATE.
-  // Serviamo subito la cache (istantaneo), e in parallelo aggiorniamo la cache
-  // con la versione di rete per la prossima volta.
+  // Navigazioni: la chiave di cache e' l'URL RICHIESTO, non sempre "/" (le pagine
+  // fuori dall'app, es. /guida.html, mostravano l'ultima pagina cachata sotto "/").
   //
-  // IMPORTANTE: la chiave di cache usata e' l'URL RICHIESTO (request), non
-  // sempre "/". La root "/" (l'app) resta il caso
-  // principale, ma il sito ha anche pagine statiche indipendenti fuori dal
-  // bundle (es. /guida.html, /guide.html): usare sempre "/" come chiave
-  // faceva si' che navigare verso una di queste pagine mostrasse comunque
-  // l'ultima pagina cachata sotto "/", finche' un refresh non "sbloccava"
-  // l'aggiornamento di quella chiave specifica.
+  // (10/11/2026) Pagine fuori dall'app (Calcolatore /ge/ e /gb/, guide, editor):
+  // NETWORK-FIRST, la cache solo offline. Con lo stale-while-revalidate il Calcolatore
+  // aperto dall'app usciva dalla cache con il codice vecchio finche' non si ricaricava.
+  // "no-cache" rivalida anche la cache HTTP del browser (GitHub Pages: 10 min); i
+  // browser che non accettano opzioni su una richiesta di navigazione la rifanno senza.
+  if (request.mode === "navigate" && url.pathname !== "/" && url.pathname !== "/index.html") {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
+        let response = null;
+        try {
+          response = await fetch(request, { cache: "no-cache" });
+        } catch (err) {
+          try { response = await fetch(request); } catch (err2) { response = null; }
+        }
+        if (response) {
+          if (response.ok) cache.put(request, response.clone());
+          return response;
+        }
+        return (await cache.match(request)) || (await cache.match(request, { ignoreSearch: true })) || Response.error();
+      })()
+    );
+    return;
+  }
+
+  // App "/": STALE-WHILE-REVALIDATE. Serviamo subito la cache (istantaneo) e in
+  // parallelo aggiorniamo la cache con la versione di rete per la prossima volta
+  // (una versione nuova la porta comunque il nuovo service worker: avviso e ricarica).
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
