@@ -246,7 +246,7 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
               <thead><tr>
                 {COLONNE_DELTA.map(c => (
                   <th key={c.k} title={t(c.label, uiLang)} className={`px-1.5 pb-0.5 pt-1 ${c.gruppo ? "border-l border-slate-700" : ""}`}>
-                    <img src={c.icon} alt={t(c.label, uiLang)} className="mx-auto h-5 w-5 object-contain" />
+                    <img src={c.icon} alt={t(c.label, uiLang)} className="mx-auto h-5 w-5 max-w-none object-contain" />
                   </th>
                 ))}
               </tr></thead>
