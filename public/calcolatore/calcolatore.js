@@ -113,7 +113,7 @@
       </nav>
       <a class="btn" id="torna" href="/">${esc(T.torna)}</a>
     </header>
-    <div class="wrap">
+    <main class="wrap">
       <p id="errore" hidden></p>
       <div class="card">
         <div class="riga">
@@ -182,7 +182,7 @@
         <button type="button" id="copia">${esc(T.copia)}</button>
       </div>
       <footer><p id="fonte" hidden></p><p>${esc(T.disclaimer)}</p></footer>
-    </div>`;
+    </main>`;
 
   const dati = window.MECENATI && window.MECENATI.edifici;
   if (!dati) { $("errore").hidden = false; $("errore").textContent = T.errore; return; }

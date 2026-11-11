@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { build, defineConfig, type Plugin } from "vite";
+import { build, defineConfig, minify, type Plugin } from "vite";
 import { manifestDati, verificaDati } from "./scripts/dati-pubblici.ts";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -205,9 +205,17 @@ function calcolatoreGePlugin(): Plugin {
     // nelle due pagine diventa l'hash del file: prima era un numero da cambiare a mano, e
     // un mecenati-dati.js rigenerato dalla pipeline con lo stesso ?v restava in cache
     // (service worker cache-first e cache HTTP) con i costi vecchi.
-    closeBundle() {
+    async closeBundle() {
       if (process.env.FOE_EDITOR_BUILD) return;
       const dist = path.resolve(__dirname, "dist");
+      // (11/11/2026, PageSpeed) codice del calcolatore compresso nella build (in public/
+      // resta leggibile, con i commenti), PRIMA di calcolarne l'hash
+      const js = path.join(dist, "calcolatore/calcolatore.js");
+      if (fs.existsSync(js)) {
+        const r = await minify(js, fs.readFileSync(js, "utf-8"), {});
+        if (r.errors.length) this.error(`calcolatore.js: ${r.errors.map(e => e.message).join("; ")}`);
+        fs.writeFileSync(js, r.code, "utf-8");
+      }
       const hash = (rel: string) => {
         const f = path.join(dist, rel);
         return fs.existsSync(f) ? crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10) : null;
