@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.014 (11/11/2026)
+### Novità
+- Calcolatore GE: al posto del selettore del livello, la barra di avanzamento della finestra del GE (uguale da PC e da cellulare) con i PF già versati e il livello da inserire evidenziato; le frecce ±1 / ±10 sono accanto al campo del livello
+
+---
+
 ## Versione 2.013 (10/11/2026)
 ### Novità
 - Città, Inventario e Database: menu sopra la tabella per scegliere cosa misura la colonna EFF: efficienza militare, beni, Punti Forge o beni di gilda per casella (in Città e Inventario i boost % contano sulla produzione della città)

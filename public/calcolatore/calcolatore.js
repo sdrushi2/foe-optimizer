@@ -17,7 +17,7 @@
   const T = {
     it: {
       titolo: "Calcolatore GE", torna: "← Torna al tool",
-      aiutoLiv: "Il livello da selezionare è il NUOVO (quello sotto la lista dei contribuenti) e NON il livello attuale del GE",
+      aiutoLiv: "Il livello da selezionare è il NUOVO (quello a destra della barra) e NON il livello attuale del GE",
       ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo", livMeno10: "10 livelli indietro", livPiu10: "10 livelli avanti",
       rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "es. 92",
       customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
@@ -30,14 +30,14 @@
       coprireT: "PF del proprietario in più per assicurare questo posto, oltre ai precedenti",
       totaleT: "PF del proprietario in totale per assicurare questo posto (e tutti quelli sopra)",
       sicuro: "sicuro", pieno: "pieno", preso: "preso",
-      versati: "PF già versati da te", versatiT: "PF che hai già messo tu in questo livello: contano per assicurare i posti",
+      versati: "PF versati da te", versatiT: "PF che hai messo tu in questo livello: contano per assicurare i posti",
       esterni: "Esterni", esterniT: "PF già messi da altri giocatori, uno per casella in qualunque ordine: come nella classifica del gioco, il più alto è il primo",
       esterniAl: n => "PF già versati da un altro giocatore (" + n + ")",
       mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF già versati da te e dagli altri)",
       esternoT: "Posto già di chi ha versato questi PF: tra parentesi la differenza con quanto si paga il posto",
       chiudeT: "Questo versamento chiude il livello: basta il resto",
       pericolo: v => "pericolo (" + v + ")", pericoloT: "Posto non sicuro: chi versa può essere superato; tra parentesi i PF di troppo che restano liberi",
-      fuori: v => "Spinti fuori dai posti: " + v, finale: v => "PF finali del proprietario: " + v,
+      fuori: v => "Spinti fuori dai posti: " + v, finale: v => "PF finali del proprietario per chiudere il livello: " + v,
       testoAl: "Testo da copiare in chat", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
       copia: "Copia", copiato: "Copiato",
       errore: "Non riesco a caricare i dati dei Grandi Edifici (data/mecenati-dati.js). Ricarica la pagina.",
@@ -46,7 +46,7 @@
     },
     en: {
       titolo: "GB Calculator", torna: "← Back to the tool",
-      aiutoLiv: "The level to select is the NEW one (the one under the contributors list), NOT the GB's current level",
+      aiutoLiv: "The level to select is the NEW one (the one on the right of the bar), NOT the GB's current level",
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level", livMeno10: "10 levels back", livPiu10: "10 levels forward",
       rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "e.g. 92",
       customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
@@ -59,14 +59,14 @@
       coprireT: "Extra owner FP to secure this spot, on top of the previous ones",
       totaleT: "Total owner FP to secure this spot (and all the ones above)",
       sicuro: "safe", pieno: "full", preso: "taken",
-      versati: "FP you already paid", versatiT: "FP you already put into this level: they count to secure the spots",
+      versati: "FP you paid", versatiT: "FP you already put into this level: they count to secure the spots",
       esterni: "External", esterniT: "FP already put by other players, one per box in any order: as in the game ranking, the highest is first",
       esterniAl: n => "FP already put by another player (" + n + ")",
       mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP already put by you and by others)",
       esternoT: "Spot already held by whoever put these FP: in brackets the difference with the spot price",
       chiudeT: "This payment closes the level: the rest is enough",
       pericolo: v => "danger (" + v + ")", pericoloT: "Spot not safe: the patron can be overtaken; in brackets the extra FP left free",
-      fuori: v => "Pushed out of the spots: " + v, finale: v => "Owner's final FP: " + v,
+      fuori: v => "Pushed out of the spots: " + v, finale: v => "Owner's final FP to close the level: " + v,
       testoAl: "Text to copy into chat", nome: "Your name (optional)", nomeAl: "Your in-game name",
       copia: "Copy", copiato: "Copied",
       errore: "Couldn't load the Great Building data (data/mecenati-dati.js). Reload the page.",
@@ -114,22 +114,27 @@
       <div class="card">
         <div class="riga">
           <select id="ge" aria-label="${esc(T.ge)}"></select>
+          <!-- (frecce del gioco: ±1 e ±10 livelli) -->
           <div class="liv" title="${esc(T.livello)}">
+            <button type="button" class="fr doppia" data-passo="-10" title="${esc(T.livMeno10)}" aria-label="${esc(T.livMeno10)}"></button>
+            <button type="button" class="fr singola" data-passo="-1" title="${esc(T.livMeno)}" aria-label="${esc(T.livMeno)}"></button>
             <input id="livello" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="${esc(T.livello)}">
+            <button type="button" class="fr singola dx" data-passo="1" title="${esc(T.livPiu)}" aria-label="${esc(T.livPiu)}"></button>
+            <button type="button" class="fr doppia dx" data-passo="10" title="${esc(T.livPiu10)}" aria-label="${esc(T.livPiu10)}"></button>
           </div>
           <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
             <input id="versati" type="text" inputmode="numeric" autocomplete="off"></label>
         </div>
-        <!-- (10/11/2026, utente) quale livello inserire: il selettore del livello sotto la classifica
-             della finestra del GE, ridisegnato (non un'immagine del gioco), con il livello scelto -->
+        <!-- (11/11/2026, utente) quale livello inserire: la barra di avanzamento della finestra del GE
+             (grafica ritagliata dal gioco, scritte tolte), con i PF versati, il livello attuale a
+             sinistra e quello da fare a destra, evidenziato; c'è sia da PC sia da cellulare -->
         <div class="aiuto-liv">
-          <!-- (frecce: ±1 e ±10 livelli, come nel gioco) -->
-          <div class="pager-liv">
-            <button type="button" class="fr doppia" data-passo="-10" title="${esc(T.livMeno10)}" aria-label="${esc(T.livMeno10)}"></button>
-            <button type="button" class="fr singola" data-passo="-1" title="${esc(T.livMeno)}" aria-label="${esc(T.livMeno)}"></button>
-            <span class="tag-liv" id="livA"></span>
-            <button type="button" class="fr singola dx" data-passo="1" title="${esc(T.livPiu)}" aria-label="${esc(T.livPiu)}"></button>
-            <button type="button" class="fr doppia dx" data-passo="10" title="${esc(T.livPiu10)}" aria-label="${esc(T.livPiu10)}"></button>
+          <div class="barra-ge" aria-hidden="true">
+            <div class="bg-fill" id="bgFill"></div>
+            <div class="bg-testo" id="bgTesto"></div>
+            <span class="bg-liv sx" id="livDa"></span>
+            <span class="bg-evid"></span>
+            <span class="bg-liv dx" id="livA"></span>
           </div>
           <div class="nota-liv">${esc(T.aiutoLiv)}</div>
         </div>
@@ -299,8 +304,11 @@
     $("customBox").classList.toggle("attivo", S.chat[r.tier] === "custom");
     $("totale").textContent = fmt(r.costo);
     { const l = livOk(S.livello), w = LINGUA === "en" ? "Level" : "Livello";
-      $("livA").textContent = `${w} ${l}`;
-      document.querySelectorAll(".pager-liv .fr").forEach(b => { b.disabled = Number(b.dataset.passo) < 0 ? l <= 1 : l >= maxLiv(); }); }
+      $("livDa").textContent = `${w} ${l - 1}`; $("livA").textContent = `${w} ${l}`;
+      const fatti = Math.max(0, r.costo - r.mancanti);
+      $("bgFill").style.width = `${r.costo > 0 ? Math.min(100, fatti / r.costo * 100) * .8278 : 0}%`;
+      $("bgTesto").textContent = `${fmt(fatti)}/${fmt(r.costo)}`;
+      document.querySelectorAll(".liv .fr").forEach(b => { b.disabled = Number(b.dataset.passo) < 0 ? l <= 1 : l >= maxLiv(); }); }
     $("contribuzioni").textContent = fmt(r.contribuzioni);
     $("proprietario").textContent = fmt(r.proprietario);
     $("mancanti").textContent = fmt(r.mancanti);
@@ -332,7 +340,9 @@
       }
     });
     // versamenti spinti fuori dai posti e PF finali del proprietario, sotto la tabella
-    $("note").textContent = [r.fuori.length ? T.fuori(r.fuori.map(fmt).join(", ")) : "", r.finale ? T.finale(fmt(r.finale)) : ""].filter(Boolean).join(" · ");
+    // (i numeri in bianco, utente 11/11; esc: testo dentro innerHTML)
+    const num = v => `<b class="num">${esc(v)}</b>`;
+    $("note").innerHTML = [r.fuori.length ? esc(T.fuori("\u0000")).replace("\u0000", r.fuori.map(v => num(fmt(v))).join(", ")) : "", r.finale ? esc(T.finale("\u0000")).replace("\u0000", num(fmt(r.finale))) : ""].filter(Boolean).join(" · ");
     $("note").hidden = !$("note").textContent;
     // testo per la chat, dall'ultimo posto al primo: "Nome GE: P7(3) P6(6) … P1(4275)"
     const parti = [];
@@ -360,7 +370,7 @@
   // (campo di testo, niente frecce: solo cifre, al massimo 3)
   $("livello").addEventListener("input", e => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); if (v !== e.target.value) e.target.value = v; if (v) cambiaLivello(v); mostra(); });
   $("livello").addEventListener("change", () => { sincronizza(); mostra(); });
-  document.querySelectorAll(".pager-liv .fr").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".liv .fr").forEach(b => b.addEventListener("click", () => {
     cambiaLivello(livOk(livOk(S.livello) + Number(b.dataset.passo))); sincronizza(); mostra();
   }));
   $("versati").addEventListener("input", e => { S.versati = e.target.value.replace(/\D/g, ""); if (e.target.value !== S.versati) e.target.value = S.versati; mostra(); });

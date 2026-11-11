@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.014 (11/11/2026)
+### New
+- GB Calculator: instead of the level selector, the progress bar of the GB window (the same on PC and mobile) with the FP already paid and the level to enter highlighted; the ±1 / ±10 arrows are next to the level field
+
+---
+
 ## Version 2.013 (10/11/2026)
 ### New
 - City, Inventory and Database: menu above the table to choose what the EFF column measures: military, goods, Forge Points or guild goods efficiency per tile (in City and Inventory the % boosts count on the city's production)
