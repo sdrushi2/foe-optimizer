@@ -67,7 +67,6 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .riga select { flex: 1; min-width: 0; }
 .liv { display: flex; gap: 4px; align-items: center; }
 .liv input { width: 56px; text-align: center; padding: 6px 4px; }
-.liv button { padding: 6px 9px; }
 /* (11/11/2026) aiuto: quale livello inserire (barra di avanzamento della finestra del GE) */
 .aiuto-liv { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 /* (frecce ritagliate dalla finestra del GE del gioco, 25×26; a destra le stesse specchiate) */
@@ -96,13 +95,14 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .nota-liv { font-size: 11px; color: var(--text-dim); text-align: center; }
 /* riga 2: chat (3 Rame / 2 Oro + Custom) */
 .chat { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 6px; }
+/* tutti larghi 1/3: 3 Rame, poi 2 Oro + Custom */
 .chat button { grid-column: span 4; font-size: .72rem; padding: 6px 2px; white-space: nowrap; }
-.chat button.oro { grid-column: span 4; }  /* tutti larghi 1/3: 3 Rame, poi 2 Oro + Custom */
 /* CUSTOM: pulsante e percentuale in un'unica "pillola", così si capisce che il
    numero è la % della chat personalizzata; casella tratteggiata = da scrivere */
 .chat .custom { grid-column: span 4; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 2px 4px 2px 2px;
   border: 1px solid var(--border); border-radius: 7px; background: var(--panel); }
-.chat .custom button { flex: 1; min-width: 0; border: 0; padding: 5px 2px; overflow: hidden; text-overflow: clip; }
+/* (azzurro, utente 11/11: il giallo si confondeva con l'Oro) */
+.chat .custom button { flex: 1; min-width: 0; border: 0; padding: 5px 2px; overflow: hidden; text-overflow: clip; color: var(--sky); }
 .chat .custom input { width: 46px; flex-shrink: 0; text-align: center; padding: 3px 4px; font-size: .8rem; border-style: dashed; border-color: #0284c7; }
 .chat .custom span { font-size: .8rem; color: var(--text-dim); }
 .chat .custom.attivo { border-color: var(--sky); }
@@ -110,13 +110,11 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .chat button.attivo { border-color: var(--amber); color: var(--bg-deep); background: var(--amber); }
 .chat button.oro { color: var(--amber); }
 .chat button.oro.attivo { color: var(--bg-deep); background: var(--amber); border-color: var(--amber); }
-/* CUSTOM in azzurro (utente 11/11: il giallo si confondeva con l'Oro) */
-.chat .custom button { color: var(--sky); }
 .chat .custom button.attivo { color: var(--bg-deep); background: var(--sky); border-color: var(--sky); }
 .chat button.rame { color: var(--copper); } .chat button.rame.attivo { color: var(--bg-deep); background: var(--copper); border-color: var(--copper); }
 .chat button:disabled { opacity: .35; cursor: not-allowed; border-color: var(--border); }
 
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
 .stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; }
 .stat .k { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); line-height: 1.2; }
 .stat .v { font-family: ui-monospace, Consolas, monospace; font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
@@ -138,11 +136,9 @@ tr.vuoto td.pos { color: var(--text-faint); }
 .copia #giocatore { flex: 1; min-width: 0; }
 .sicuro { color: var(--green); font-weight: 700; }
 .pieno { color: var(--red); }
-/* (09/11/2026) PF già versati da te e PF degli altri giocatori per posto */
-.versati { display: flex; gap: 6px; align-items: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-dim); }
+/* (09/11/2026) PF del proprietario (riga sua, con il reset) e PF degli altri giocatori per posto */
+.versati { display: flex; justify-content: flex-end; margin: 0 2px 8px; gap: 6px; align-items: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-dim); }
 .versati input { width: 76px; text-align: right; padding: 6px 6px; }
-.riga-versati { justify-content: flex-end; margin: 0 2px 8px; }
-.riga-versati input { width: 76px; }
 .azzera { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; line-height: 1; border-radius: 7px; color: var(--text-dim); }
 .azzera:hover { color: var(--red); border-color: var(--red); }
 td.x { width: 76px; }
@@ -156,7 +152,6 @@ td small.meno { color: var(--green); } td small.piu { color: var(--text-faint); 
 td.chiude { color: var(--amber); }
 #note { margin: 4px 2px 2px; font-size: .75rem; color: var(--text-dim); }
 #note .num { color: #fff; font-weight: 700; }
-.stats { grid-template-columns: repeat(4, 1fr); }
 /* (11/11/2026, utente) da cellulare i 4 riquadri restano su una riga: più piccoli */
 @media (max-width: 520px) {
   .stats { gap: 4px; }

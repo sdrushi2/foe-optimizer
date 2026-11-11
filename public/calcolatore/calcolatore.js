@@ -7,7 +7,7 @@
 //  Regole: quota mecenati per fascia di livello, divisione fra i posti (5 Rame,
 //  7 per i GE Oro dal livello 101), montepremi NON arrotondato prima della
 //  divisione (come il gioco e FoE Helper), da versare = ricompensa × (1 + %).
-//  (09/11/2026) PF già versati da te e PF già messi da altri giocatori ("Esterni"):
+//  (09/11/2026) PF versati dal proprietario e PF già messi da altri giocatori ("Esterni"):
 //  posti già presi, pericoli e PF mancanti con lo stesso calcolo di FoE Helper.
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
@@ -19,7 +19,7 @@
       titolo: "Calcolatore GE", torna: "← Torna al tool",
       aiutoLiv: "Selezionare il livello NUOVO (quello a destra) NON il livello attuale",
       ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo", livMeno10: "10 livelli indietro", livPiu10: "10 livelli avanti",
-      rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "es. 92",
+      rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "92",
       customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
       pfLivello: "PF del livello", pfProp: "PF proprietario", pfContr: "PF contribuzioni",
       pfPropT: "PF che restano a carico del proprietario per completare il livello",
@@ -34,7 +34,7 @@
       azzeraT: "Cancella i PF del proprietario e degli esterni",
       esterni: "Esterni", esterniT: "PF già messi da altri giocatori, uno per casella in qualunque ordine: come nella classifica del gioco, il più alto è il primo",
       esterniAl: n => "PF già versati da un altro giocatore (" + n + ")",
-      mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF già versati da te e dagli altri)",
+      mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF versati dal proprietario e dagli altri)",
       esternoT: "Posto già di chi ha versato questi PF: tra parentesi la differenza con quanto si paga il posto",
       chiudeT: "Questo versamento chiude il livello: basta il resto",
       pericolo: v => "pericolo (" + v + ")", pericoloT: "Posto non sicuro: chi versa può essere superato; tra parentesi i PF di troppo che restano liberi",
@@ -49,7 +49,7 @@
       titolo: "GB Calculator", torna: "← Back to the tool",
       aiutoLiv: "Select the NEW level (the one on the right) NOT the current level",
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level", livMeno10: "10 levels back", livPiu10: "10 levels forward",
-      rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "e.g. 92",
+      rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "92",
       customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
       pfLivello: "Level FP", pfProp: "Owner FP", pfContr: "Contributions FP",
       pfPropT: "FP left to the owner to complete the level",
@@ -64,7 +64,7 @@
       azzeraT: "Clear the owner's and external FP",
       esterni: "External", esterniT: "FP already put by other players, one per box in any order: as in the game ranking, the highest is first",
       esterniAl: n => "FP already put by another player (" + n + ")",
-      mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP already put by you and by others)",
+      mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP paid by the owner and by others)",
       esternoT: "Spot already held by whoever put these FP: in brackets the difference with the spot price",
       chiudeT: "This payment closes the level: the rest is enough",
       pericolo: v => "danger (" + v + ")", pericoloT: "Spot not safe: the patron can be overtaken; in brackets the extra FP left free",
@@ -83,6 +83,8 @@
   const QUOTE = { 5: [120, 60, 20, 5, 1].map(x => x / 206), 7: [5040, 2520, 840, 210, 42, 7, 1].map(x => x / 8660) };
   const CHIAVE = "foe-optimizer-calcolatore-ge";   // (stesso stato per /ge e /gb)
   const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20, o25: 25 };
+  // barra del gioco: larghezza della barra in % dell'immagine (come .bg-fill / .bg-testo in calcolatore.css)
+  const LARGH_BARRA = 82.78;
   const $ = id => document.getElementById(id);
   // migliaia sempre separate (anche a 4 cifre): punto in italiano, virgola in inglese
   const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, LINGUA === "en" ? "," : ".");
@@ -157,7 +159,7 @@
         <div class="stat" title="${esc(T.mancantiT)}"><div class="k">${esc(T.mancanti)}</div><div class="v" id="mancanti"></div></div>
       </div>
       <!-- (11/11/2026, utente) PF del proprietario: riga sua, fra i riquadri e la classifica -->
-      <label class="versati riga-versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
+      <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
         <input id="versati" type="text" inputmode="numeric" autocomplete="off">
         <button type="button" id="azzera" class="azzera" title="${esc(T.azzeraT)}" aria-label="${esc(T.azzeraT)}">↺</button></label>
       <div class="card tabella">
@@ -192,14 +194,14 @@
   const nome = id => { const n = dati[id].nome; return (typeof n === "string" ? n : n && (n[LINGUA] || n.it || n.en)) || id; };
   const oro = id => !!dati[id].oro;
   // chat scelta per tier (livelli Rame 5 posti, livelli Oro 7), validata in calcola()
-  // versati: PF già messi da te; esterni: PF di altri giocatori per posto (azzerati cambiando GE o livello)
+  // versati: PF del proprietario; esterni: PF di altri giocatori per posto (azzerati cambiando GE o livello)
   const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "", giocatore: "", chat: { rame: "r90", oro: "o20" }, versati: "", esterni: [] };
   try { Object.assign(S, JSON.parse(localStorage.getItem(CHIAVE) || "{}")); } catch (e) { /* niente */ }
   if (!costi[S.ge]) S.ge = ids[0];
   if (!S.chat || typeof S.chat !== "object") S.chat = {}; // (salvataggio vecchio o rovinato)
   if (!Array.isArray(S.esterni)) S.esterni = [];
   // (09/11/2026) aperto dalla scheda Città dell'app: ?ge=<id>&livello=<livello da costruire>
-  // sceglie quel GE e quel livello (PF già versati ed esterni ripartono da zero), con la
+  // sceglie quel GE e quel livello (PF del proprietario ed esterni ripartono da zero), con la
   // chat Rame 100% / Oro 20% (le stesse della quota "a carico tuo" del report del GE)
   try {
     const q = new URLSearchParams(location.search), qGe = q.get("ge"), qLiv = parseInt(q.get("livello") || "");
@@ -239,8 +241,8 @@
       if (base === 1 || base === 3) base += 1;
       righe.push({ base, versa: Math.max(0, Math.round(base * (1 + perc / 100))) });
     }
-    // PF già versati da te e PF degli altri giocatori: stesso calcolo del calcolatore di
-    // FoE Helper (utente 09/11, Arca 85: chi ha versato 1.440 si è preso P1 anche se il posto
+    // PF del proprietario e PF degli altri giocatori: stesso calcolo del calcolatore di
+    // FoE Helper, con le sue opzioni predefinite ("sicuro" sì, "fiducia" no) (utente 09/11, Arca 85: chi ha versato 1.440 si è preso P1 anche se il posto
     // "costa" 1.844, perché i 1.287 PF che mancano al livello non bastano a superarlo).
     // I versamenti degli altri, dal più grande, sono la classifica attuale; posto per posto:
     // - se chi c'è già ha versato almeno quanto si paga il posto, o più di quanto manca al
@@ -252,7 +254,6 @@
     const versati = Math.min(costo, Math.round(numero(S.versati)));
     const M = S.esterni.slice(0, 7).map(v => Math.round(numero(v))).filter(v => v > 0).sort((x, y) => y - x);
     const totEsterni = M.reduce((s, v) => s + v, 0);
-    const SICURO = true, FIDUCIA = false; // (come le opzioni predefinite di FoE Helper)
     let resto = Math.max(0, costo - versati - totEsterni);
     const mancanti = resto;
     let propri = versati;
@@ -260,16 +261,16 @@
       const m = M[i] || 0;
       if (m > 0 && (r.versa <= m || resto <= m)) {
         // posto già preso da chi ha versato m
-        let eig = 0;
-        if (SICURO) { eig = Math.max(0, Math.ceil(resto + (FIDUCIA ? 0 : M[i + 1] || 0) - m)); resto -= eig; }
+        const eig = Math.max(0, Math.ceil(resto + (M[i + 1] || 0) - m));
+        resto -= eig;
         Object.assign(r, { stato: "esterno", esterno: m, assicura: eig, tuoi: (propri += eig) });
         return;
       }
       // (posto senza ricompensa, ai livelli bassi: nessuno ci versa)
       if (r.versa <= 0) { Object.assign(r, { stato: "libero", paga: 0, chiude: false, pericolo: 0, assicura: 0, tuoi: propri }); return; }
       if (resto <= 0) { Object.assign(r, { stato: "pieno", assicura: 0, tuoi: propri }); return; }
-      let eig = Math.ceil(resto + (FIDUCIA ? 0 : m) - 2 * r.versa), pericolo = 0;
-      if (eig < 0) { if (FIDUCIA) eig = Math.min(eig + m, 0); pericolo = Math.floor(-eig / 2); eig = 0; }
+      let eig = Math.ceil(resto + m - 2 * r.versa), pericolo = 0;
+      if (eig < 0) { pericolo = Math.floor(-eig / 2); eig = 0; }
       M.splice(i, 0, r.versa); // il mecenate entra qui, chi c'era scende di un posto
       let paga = r.versa, chiude = false;
       if (paga >= resto - eig) { chiude = true; if (pericolo > 0) pericolo = Math.max(0, pericolo - (paga - (resto - eig))); paga = resto - eig; M[i] = paga; }
@@ -310,7 +311,7 @@
     { const l = livOk(S.livello), w = LINGUA === "en" ? "Level" : "Livello";
       $("livDa").textContent = `${w} ${l - 1}`; $("livA").textContent = `${w} ${l}`;
       const fatti = Math.max(0, r.costo - r.mancanti);
-      $("bgFill").style.width = `${r.costo > 0 ? Math.min(100, fatti / r.costo * 100) * .8278 : 0}%`;
+      $("bgFill").style.width = `${r.costo > 0 ? Math.min(1, fatti / r.costo) * LARGH_BARRA : 0}%`;
       $("bgTesto").textContent = `${fmt(fatti)}/${fmt(r.costo)}`;
       document.querySelectorAll(".liv .fr").forEach(b => { b.disabled = Number(b.dataset.passo) < 0 ? l <= 1 : l >= maxLiv(); }); }
     $("contribuzioni").textContent = fmt(r.contribuzioni);
@@ -374,7 +375,8 @@
   const cambiaLivello = v => { const prima = livOk(S.livello); S.livello = v; if (livOk(v) !== prima) azzera(); };
   $("ge").addEventListener("change", e => { S.ge = e.target.value; azzera(); sincronizza(); mostra(); });
   // (campo di testo, niente frecce: solo cifre, al massimo 3)
-  $("livello").addEventListener("input", e => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); if (v !== e.target.value) e.target.value = v; if (v) cambiaLivello(v); mostra(); });
+  // (oltre il livello massimo del GE: subito il massimo, come mostrano barra e tabella)
+  $("livello").addEventListener("input", e => { let v = e.target.value.replace(/\D/g, "").slice(0, 3); if (+v > maxLiv()) v = String(maxLiv()); if (v !== e.target.value) e.target.value = v; if (v) cambiaLivello(v); mostra(); });
   $("livello").addEventListener("change", () => { sincronizza(); mostra(); });
   document.querySelectorAll(".liv .fr").forEach(b => b.addEventListener("click", () => {
     cambiaLivello(livOk(livOk(S.livello) + Number(b.dataset.passo))); sincronizza(); mostra();
