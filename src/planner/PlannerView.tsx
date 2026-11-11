@@ -756,6 +756,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (cand.length < 2) return 0;
       const ris = await Promise.all(cand.map(c => runCompletionParallela(problem, {
         ...c, delayMs: 0, onFrame: () => {}, shouldStop: fermato, limiteValutate: VALUTATE_SCELTA_MARGINE, soloRicerca: true, riposo: () => riposoRef.current,
+        attendiInPausa: () => pausedRef.current,
       })));
       const voto = (f: PlannerFrame) => [f.search?.esclusi ?? 99, f.search?.deficit ?? 0, f.roads.size];
       let mig = 0;
@@ -820,7 +821,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         let fase = "Girandola 2: scelta della posizione del municipio…";
         const centro = baseCentrale(problem);
         const scelte = await scegliGirandolaParallela(problem, {
-          shouldStop: fermato,
+          shouldStop: fermato, attendiInPausa: () => pausedRef.current,
           onProgress: (i, n) => { fase = `Girandola 2: prova della posizione del municipio ${i + 1}/${n}`; },
           onFrame: f => setF({ ...f, search: undefined, done: false, label: fase }),
         });

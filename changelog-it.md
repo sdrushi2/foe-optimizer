@@ -3,6 +3,7 @@
 ## Versione 2.014 (11/11/2026)
 ### Correzioni
 - Dopo un aggiornamento la pagina poteva restare bianca con la sola scritta "FoE Optimizer": ora il tool si ripara da solo
+- Planner: in pausa si fermano anche le prove della posizione del municipio della Girandola 2 e la scelta della partenza degli altri scenari
 
 ### Novità
 - Calcolatore GE: al posto del selettore del livello, la barra di avanzamento della finestra del GE (uguale da PC e da cellulare) con i PF già versati e il livello da inserire evidenziato; le frecce ±1 / ±10 sono accanto al campo del livello

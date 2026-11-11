@@ -203,6 +203,14 @@ export interface CompletionOptions {
    *  vera e non supporre 40 ms: alcune fette (compattazione, ripiazzamenti)
    *  durano molto di più e con una pausa fissa MED restava al 75-80%. */
   riposo?: () => number;
+  /** (11/11/2026) Pausa "semplice" per le ricerche brevi senza waitResume (scelta della
+   *  posizione della girandola, scelta della partenza): finché è vera la ricerca resta
+   *  ferma al primo punto di respiro. Prima la Girandola 2 continuava a lavorare in pausa. */
+  attendiInPausa?: () => boolean;
+}
+/** Ferma qui finché dura la pausa semplice (attendiInPausa), salvo stop. */
+async function fermoInPausa(opts: Pick<CompletionOptions, "attendiInPausa" | "shouldStop">): Promise<void> {
+  while (opts.attendiInPausa?.() && !opts.shouldStop()) await sleep(100);
 }
 /** Disposizione completa (edifici + strade) modificata a mano durante la pausa. */
 export interface StatoManuale { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string>;
@@ -3473,7 +3481,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
       const now = performance.now();
       if (migliorata || now - lastShow > 500) { mostraS(""); lastShow = now; }
-      if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); lastYield = performance.now(); }
+      if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); await fermoInPausa(opts); lastYield = performance.now(); }
       if (opts.isPaused?.() && opts.waitResume) {
         mostraS(" · in pausa");
         opts.onPaused?.(true);
@@ -3555,7 +3563,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         ripresa = compattato(best, () => statoDi(best!), true)!;
         break;
       }
-      if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); lastYield = performance.now(); }
+      if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); await fermoInPausa(opts); lastYield = performance.now(); }
       if (opts.isPaused?.() && opts.waitResume) {
         mostra(" · in pausa");
         opts.onPaused?.(true);
@@ -4278,7 +4286,7 @@ async function rifinisciSenzaStrada(
     }
     const now = performance.now();
     if (migliorata || now - lastShow > 500) { mostra(""); lastShow = now; }
-    if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); lastYield = performance.now(); }
+    if (now - lastYield > 40) { await sleep((now - lastYield) * (opts.riposo?.() ?? 0)); await fermoInPausa(opts); lastYield = performance.now(); }
     // Pausa: l'utente può spostare o togliere gli edifici senza strada; alla
     // ripresa la sua disposizione diventa la corrente e la migliore.
     if (opts.isPaused?.() && opts.waitResume) {

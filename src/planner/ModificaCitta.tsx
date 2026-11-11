@@ -188,8 +188,6 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
             className="rounded px-2 text-lg leading-none text-slate-400 hover:bg-slate-800 hover:text-white">✕</button>
         </span>
       </div>
-      {bloccato && <div className="mb-2 text-amber-300">{t("plannerEditCityLocked", uiLang)}</div>}
-      {!bloccato && inCorsa && <div className="mb-2 text-sky-300">{t("plannerEditCityRestarts", uiLang)}</div>}
 
       {/* Riepilogo */}
       <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 rounded bg-slate-900 px-2 py-1.5">
@@ -198,21 +196,6 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
         <span>{t("plannerEditFree", uiLang)} <b className={dopo.libere < prima.stradeAttuali ? "text-amber-300" : "text-slate-100"}>{dopo.libere}</b>
           <span className="text-slate-500"> {t("plannerEditFreeNow", uiLang, prima.libere, prima.stradeAttuali)}</span></span>
       </div>
-
-      {/* Avvisi */}
-      {/* Spazio (tre livelli): nessuna cella libera → impossibile; meno celle
-          delle strade di oggi → il Planner deve risparmiare strade, non è detto
-          che ci riesca; città più piena → c'è spazio sulla carta, ma non è
-          garantito (dipende da quanto riesce a ottimizzare il Planner). */}
-      {(geTolti || anelliSoli.length > 0 || celleAggiunte > celleTolte) && (
-        <ul className="mb-2 list-none space-y-0.5 text-amber-200">
-          {geTolti && <li>⚠️ {t("plannerEditWarnGe", uiLang)}</li>}
-          {anelliSoli.length > 0 && <li>⚠️ {t("plannerEditWarnChain", uiLang, anelliSoli.join(", "))}</li>}
-          {dopo.libere <= 0 ? <li className="text-red-300">⛔ {t("plannerEditWarnNoSpace", uiLang)}</li>
-            : dopo.libere < prima.stradeAttuali ? <li>⚠️ {t("plannerEditWarnSpace", uiLang, prima.stradeAttuali, dopo.libere, prima.stradeAttuali - dopo.libere)}</li>
-            : celleAggiunte > celleTolte && <li className="text-sky-200">ℹ️ {t("plannerEditWarnMaybe", uiLang, dopo.libere, prima.stradeAttuali)}</li>}
-        </ul>
-      )}
 
       {/* Elenco delle modifiche, ognuna annullabile */}
       {n > 0 && (
@@ -262,14 +245,26 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
               </tr></tbody>
             </table>
           </div>
-          {(differenze.eraMassima > 0 || differenze.senzaDati > 0 || alleatiTolti > 0) && (
-            <ul className="list-none space-y-0.5 border-t border-slate-800 px-2 py-1 text-amber-200">
-              {differenze.eraMassima > 0 && <li>⚠️ {t("plannerEditDeltaEraMax", uiLang, differenze.eraMassima, ageName(FALLBACK_ERA, uiLang))}</li>}
-              {differenze.senzaDati > 0 && <li>⚠️ {t("plannerEditDeltaNoData", uiLang, differenze.senzaDati)}</li>}
-              {alleatiTolti > 0 && <li>⚠️ {t("plannerEditDeltaAllies", uiLang, alleatiTolti)}</li>}
-            </ul>
-          )}
         </div>
+      )}
+
+      {/* Messaggi, tutti dopo la tabella (utente 11/11): stato del Planner, poi gli avvisi.
+          Spazio (tre livelli): nessuna cella libera → impossibile; meno celle delle strade
+          di oggi → il Planner deve risparmiare strade, non è detto che ci riesca; città più
+          piena → c'è spazio sulla carta, ma non è garantito (dipende dal Planner). */}
+      {bloccato && <div className="mb-2 text-amber-300">{t("plannerEditCityLocked", uiLang)}</div>}
+      {!bloccato && inCorsa && <div className="mb-2 text-sky-300">{t("plannerEditCityRestarts", uiLang)}</div>}
+      {(geTolti || anelliSoli.length > 0 || celleAggiunte > celleTolte || (differenze && (differenze.eraMassima > 0 || differenze.senzaDati > 0)) || alleatiTolti > 0) && (
+        <ul className="mb-2 list-none space-y-0.5 text-amber-200">
+          {geTolti && <li>⚠️ {t("plannerEditWarnGe", uiLang)}</li>}
+          {anelliSoli.length > 0 && <li>⚠️ {t("plannerEditWarnChain", uiLang, anelliSoli.join(", "))}</li>}
+          {dopo.libere <= 0 ? <li className="text-red-300">⛔ {t("plannerEditWarnNoSpace", uiLang)}</li>
+            : dopo.libere < prima.stradeAttuali ? <li>⚠️ {t("plannerEditWarnSpace", uiLang, prima.stradeAttuali, dopo.libere, prima.stradeAttuali - dopo.libere)}</li>
+            : celleAggiunte > celleTolte && <li className="text-sky-200">ℹ️ {t("plannerEditWarnMaybe", uiLang, dopo.libere, prima.stradeAttuali)}</li>}
+          {differenze && differenze.eraMassima > 0 && <li>⚠️ {t("plannerEditDeltaEraMax", uiLang, differenze.eraMassima, ageName(FALLBACK_ERA, uiLang))}</li>}
+          {differenze && differenze.senzaDati > 0 && <li>⚠️ {t("plannerEditDeltaNoData", uiLang, differenze.senzaDati)}</li>}
+          {alleatiTolti > 0 && <li>⚠️ {t("plannerEditDeltaAllies", uiLang, alleatiTolti)}</li>}
+        </ul>
       )}
 
       <div className="grid gap-3 md:grid-cols-2">

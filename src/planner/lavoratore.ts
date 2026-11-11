@@ -32,7 +32,7 @@ ambito.onmessage = (e: MessageEvent) => {
   else if (m.tipo === "scegli") void eseguiScelta(m as unknown as AvvioScelta);
 };
 
-type Ha = { adotta?: boolean; finish?: boolean; stopFill?: boolean; paused?: boolean; wait?: boolean; onPaused?: boolean; onSearchActive?: boolean; onFillActive?: boolean };
+type Ha = { attendiInPausa?: boolean; adotta?: boolean; finish?: boolean; stopFill?: boolean; paused?: boolean; wait?: boolean; onPaused?: boolean; onSearchActive?: boolean; onFillActive?: boolean };
 export type AvvioCompletion = {
   tipo: "completion";
   problem: Parameters<typeof runCompletion>[0];
@@ -50,6 +50,7 @@ async function eseguiCompletion(m: AvvioCompletion) {
       onFrame: f => invia({ tipo: "frame", f }),
       shouldStop: () => flag.stop,
       riposo: () => flag.riposo,
+      ...(m.ha.attendiInPausa ? { attendiInPausa: () => flag.paused } : {}),
       ...(m.ha.adotta ? { adotta: () => { const a = adozione; adozione = null; return a; } } : {}),
       ...(m.ha.finish ? { shouldFinishSearch: () => flag.finish } : {}),
       ...(m.ha.stopFill ? { shouldStopFill: () => flag.stopFill } : {}),
@@ -70,6 +71,7 @@ async function eseguiScelta(m: AvvioScelta) {
   try {
     const r = await scegliGirandola(m.problem, {
       shouldStop: () => flag.stop,
+      attendiInPausa: () => flag.paused,
       ...(m.valutazioni !== undefined ? { valutazioni: m.valutazioni } : {}),
       onProgress: (i, n) => invia({ tipo: "progresso", i, n }),
       onFrame: f => invia({ tipo: "frame", f }),

@@ -59,7 +59,7 @@ function avvia<T>(
 export function runCompletionParallela(problem: PlannerProblem, opts: CompletionOptions): Promise<PlannerFrame> {
   const leggiFlag = (): Flag => ({
     stop: opts.shouldStop(), finish: opts.shouldFinishSearch?.() ?? false,
-    paused: opts.isPaused?.() ?? false, stopFill: opts.shouldStopFill?.() ?? false,
+    paused: (opts.isPaused ?? opts.attendiInPausa)?.() ?? false, stopFill: opts.shouldStopFill?.() ?? false,
     riposo: opts.riposo?.() ?? 0,
   });
   const messaggio: AvvioCompletion = {
@@ -77,7 +77,7 @@ export function runCompletionParallela(problem: PlannerProblem, opts: Completion
       ...(opts.posizioniSenzaStrada ? { posizioniSenzaStrada: opts.posizioniSenzaStrada } : {}),
     },
     ha: {
-      adotta: !!opts.adotta,
+      attendiInPausa: !!opts.attendiInPausa, adotta: !!opts.adotta,
       finish: !!opts.shouldFinishSearch, stopFill: !!opts.shouldStopFill, paused: !!opts.isPaused, wait: !!opts.waitResume,
       onPaused: !!opts.onPaused, onSearchActive: !!opts.onSearchActive, onFillActive: !!opts.onFillActive,
     },
@@ -98,8 +98,10 @@ export function runCompletionParallela(problem: PlannerProblem, opts: Completion
 /** scegliGirandola in un worker (stessa interfaccia). */
 export function scegliGirandolaParallela(problem: PlannerProblem, opts: {
   shouldStop: () => boolean; valutazioni?: number; onProgress?: (i: number, n: number) => void; onFrame?: (f: PlannerFrame) => void;
+  /** Pausa del Planner: le prove restano ferme finché è vera. */
+  attendiInPausa?: () => boolean;
 }): Promise<BaseGirandola[]> {
-  const leggiFlag = (): Flag => ({ stop: opts.shouldStop(), finish: false, paused: false, stopFill: false, riposo: 0 });
+  const leggiFlag = (): Flag => ({ stop: opts.shouldStop(), finish: false, paused: opts.attendiInPausa?.() ?? false, stopFill: false, riposo: 0 });
   const messaggio: AvvioScelta = { tipo: "scegli", problem, ...(opts.valutazioni !== undefined ? { valutazioni: opts.valutazioni } : {}), flag: leggiFlag() };
   return avvia<BaseGirandola[]>(messaggio, leggiFlag, m => {
     if (m.tipo === "frame") opts.onFrame?.(m.f as PlannerFrame);

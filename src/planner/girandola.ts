@@ -90,6 +90,8 @@ export function baseCentrale(problem: PlannerProblem): BaseGirandola | null {
  *  2 migliori (due mappe girandola). */
 export async function scegliGirandola(problem: PlannerProblem, opts: {
   shouldStop: () => boolean; valutazioni?: number; onProgress?: (i: number, n: number) => void;
+  /** Pausa del Planner (vedi CompletionOptions.attendiInPausa). */
+  attendiInPausa?: () => boolean;
   /** Disposizioni provvisorie durante le prove (per mostrare subito qualcosa):
    *  la base appena scelta e i passi della sua breve ricerca. */
   onFrame?: (f: PlannerFrame) => void;
@@ -111,6 +113,7 @@ export async function scegliGirandola(problem: PlannerProblem, opts: {
     opts.onFrame?.({ placements: base.placements, roads: base.roads, probe: null, lastPath: [], placed: base.placements.size, unplaced: [], iterations: 0, done: false });
     const fr = await runCompletion(problem, {
       delayMs: 0, shouldStop: opts.shouldStop,
+      ...(opts.attendiInPausa ? { attendiInPausa: opts.attendiInPausa } : {}),
       onFrame: f => opts.onFrame?.(f),
       // deterministico: chiusa a n disposizioni esatte (non dai fotogrammi, che escono a tempo)
       limiteValutate: n,

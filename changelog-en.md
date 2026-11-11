@@ -3,6 +3,7 @@
 ## Version 2.014 (11/11/2026)
 ### Fixes
 - After an update the page could stay blank with just "FoE Optimizer": the tool now repairs itself
+- Planner: pausing now also stops Girandola 2's town hall position trials and the other scenarios' start choice
 
 ### New
 - GB Calculator: instead of the level selector, the progress bar of the GB window (the same on PC and mobile) with the FP already paid and the level to enter highlighted; the ±1 / ±10 arrows are next to the level field
