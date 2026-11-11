@@ -51,16 +51,16 @@
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level", livMeno10: "10 levels back", livPiu10: "10 levels forward",
       rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "92",
       customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
-      pfLivello: "Level FP", pfProp: "Owner FP", pfContr: "Contributions FP",
+      pfLivello: "Level FP", pfProp: "Owner FP", pfContr: "Contributions",
       pfPropT: "FP left to the owner to complete the level",
       pfContrT: "FP paid in total by the patrons of the spots (with the chat percentage)",
-      pos: "Pos.", ricompensa: "Reward", versare: "To pay", coprire: "To secure", totale: "Total to secure",
+      pos: "Pos.", ricompensa: "Reward", versare: "To pay", coprire: "To secure", totale: "Tot. to secure",
       ricompensaT: "FP reward of the spot, without the Arc bonus",
       versareT: "FP the patron pays to get back exactly the reward with their percentage",
       coprireT: "Extra owner FP to secure this spot, on top of the previous ones",
       totaleT: "Total owner FP to secure this spot (and all the ones above)",
       sicuro: "safe", pieno: "full", preso: "taken",
-      versati: "Forge Points paid by the owner", versatiT: "FP you already put into this level: they count to secure the spots",
+      versati: "FP already paid by the owner", versatiT: "FP you already put into this level: they count to secure the spots",
       azzeraT: "Clear the owner's and external FP",
       esterni: "External", esterniT: "FP already put by other players, one per box in any order: as in the game ranking, the highest is first",
       esterniAl: n => "FP already put by another player (" + n + ")",
@@ -357,7 +357,8 @@
     // (solo i posti che vanno ai mecenati, con quanto versare; quelli già presi no)
     for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].stato === "libero" && r.righe[i].base > 0 && r.righe[i].paga > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].paga + ")");
     const chi = String(S.giocatore || "").trim();
-    $("testo").textContent = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? ": " + parti.join(" ") : "");
+    // (senza ":" dopo il nome del GE, utente 11/11)
+    $("testo").textContent = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? " " + parti.join(" ") : "");
     // fonte in calce, solo se i costi di questo GE vengono dalla wiki: link alla sua pagina
     const agg = window.MECENATI.aggiornato, fonte = $("fonte");
     fonte.hidden = !(dati[S.ge].wiki && agg);
