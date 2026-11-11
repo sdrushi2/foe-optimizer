@@ -3,6 +3,7 @@
 ## Version 2.014 (11/11/2026)
 ### New
 - GB Calculator: instead of the level selector, the progress bar of the GB window (the same on PC and mobile) with the FP already paid and the level to enter highlighted; the ±1 / ±10 arrows are next to the level field
+- Planner, Edit city: under the changes a table with what changes, column by column (area, roads, population, happiness, military values, Quantum Incursions and productions), with warnings for Database values at the highest age and for allies in removed buildings
 - GB Calculator: the FP paid by the owner have their own row above the ranking, with a button that clears all the FP entered; on mobile the 4 boxes stay on one row
 
 ---

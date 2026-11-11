@@ -11,10 +11,13 @@
 
 import { useMemo, useState } from "react";
 import type { CityMapBuilding } from "../data/cityMap";
-import { t, type UiLang } from "../data/ui-strings";
+import { t, type UiKey, type UiLang } from "../data/ui-strings";
+import { FALLBACK_ERA, ageName } from "../data/ages";
+import { formatDecimal, formatInt } from "../utils/format";
+import * as I from "../assets/icons";
 import { MAP_COLOR_GREAT_BUILDING, MAP_COLOR_MILITARY, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_ROAD_REQUIRED } from "../components/cityMapPng";
 import { anelliSenzaInizio } from "./catene";
-import { contaModifiche, NESSUNA_MODIFICA, riepilogoCelle, type Aggiunto, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner, type Modifiche } from "./modificheCitta";
+import { CAMPI_PERCENTUALI, contaModifiche, deltaModifiche, NESSUNA_MODIFICA, riepilogoCelle, type Aggiunto, type CampoDelta, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner, type Modifiche } from "./modificheCitta";
 
 interface Props {
   /** Città vera (senza modifiche). */
@@ -38,6 +41,45 @@ function Colore({ c }: { c: Pick<CandidatoPlanner, "roadLevel" | "isGreatBuildin
   const col = c.isGreatBuilding ? MAP_COLOR_GREAT_BUILDING : c.isMilitary ? MAP_COLOR_MILITARY
     : c.roadLevel >= 2 ? MAP_COLOR_ROAD2_REQUIRED : c.roadLevel > 0 ? MAP_COLOR_ROAD_REQUIRED : MAP_COLOR_NO_ROAD_REQUIRED;
   return <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: col }} />;
+}
+
+/** Colonne della tabella delle differenze: icona ed etichetta (quelle dei confronti fra ere);
+ *  `gruppo` = prima colonna di un gruppo (bordo a sinistra, come nella tabella degli edifici). */
+const COLONNE_DELTA: ReadonlyArray<{ k: CampoDelta; icon: string; label: UiKey; gruppo?: true }> = [
+  { k: "area", icon: I.iconSize, label: "plannerEditDeltaArea" }, { k: "road", icon: I.iconRoad, label: "colRoad" },
+  { k: "pop", icon: I.iconPop, label: "diffPopulation", gruppo: true }, { k: "fel", icon: I.iconFel, label: "diffHappiness" },
+  { k: "general0", icon: I.iconGenAtk_A, label: "diffGenAtkAtk", gruppo: true }, { k: "general1", icon: I.iconGenDef_A, label: "diffGenDefAtk" },
+  { k: "general2", icon: I.iconGenAtk_D, label: "diffGenAtkDef" }, { k: "general3", icon: I.iconGenDef_D, label: "diffGenDefDef" },
+  { k: "gbg0", icon: I.iconCampiAtk_A, label: "diffGbgAtkAtk", gruppo: true }, { k: "gbg1", icon: I.iconCampiDef_A, label: "diffGbgDefAtk" },
+  { k: "gbg2", icon: I.iconCampiAtk_D, label: "diffGbgAtkDef" }, { k: "gbg3", icon: I.iconCampiDef_D, label: "diffGbgDefDef" },
+  { k: "sped0", icon: I.iconSpedAtk_A, label: "diffGeAtkAtk", gruppo: true }, { k: "sped1", icon: I.iconSpedDef_A, label: "diffGeDefAtk" },
+  { k: "sped2", icon: I.iconSpedAtk_D, label: "diffGeAtkDef" }, { k: "sped3", icon: I.iconSpedDef_D, label: "diffGeDefDef" },
+  { k: "iq0", icon: I.iconIQAtk_A, label: "diffIqAtkAtk", gruppo: true }, { k: "iq1", icon: I.iconIQDef_A, label: "diffIqDefAtk" },
+  { k: "iq2", icon: I.iconIQAtk_D, label: "diffIqAtkDef" }, { k: "iq3", icon: I.iconIQDef_D, label: "diffIqDefDef" },
+  { k: "iqMon", icon: I.iconIQMon, label: "diffIqCoins" }, { k: "iqMonB", icon: I.iconIQMonB, label: "diffIqCoinsBoost" },
+  { k: "iqMat", icon: I.iconIQMat, label: "diffIqMaterials" }, { k: "iqMatB", icon: I.iconIQMatB, label: "diffIqMaterialsBoost" },
+  { k: "iqBeni", icon: I.iconIQBeni, label: "diffIqGoods" }, { k: "iqTruppe", icon: I.iconIQTruppe, label: "diffIqUnits" },
+  { k: "iqAzioni", icon: I.iconIQAzioni, label: "diffIqActions" }, { k: "iqCap", icon: I.iconIQCap, label: "diffIqCapacity" },
+  { k: "mon", icon: I.iconMon, label: "diffCoins", gruppo: true }, { k: "monb", icon: I.iconMonB, label: "prodCoinsBoost" },
+  { k: "mat", icon: I.iconMat, label: "diffMaterials" }, { k: "matb", icon: I.iconMatB, label: "prodMaterialsBoost" },
+  { k: "fp", icon: I.iconFP, label: "diffForgePoints" }, { k: "fpb", icon: I.iconFPB, label: "diffForgePointsBoost" },
+  { k: "med", icon: I.iconMed, label: "diffMedals" }, { k: "medb", icon: I.iconMedB, label: "prodMedalsBoost" },
+  { k: "beni", icon: I.iconBeni, label: "diffGoods" }, { k: "benib", icon: I.iconBeniB, label: "diffGoodsBoost" },
+  { k: "benip", icon: I.iconBeniP, label: "diffGoodsPreviousEra" }, { k: "benis", icon: I.iconBeniS, label: "diffGoodsNextEra" },
+  { k: "benisp", icon: I.iconBeniSp, label: "diffGoodsSpecial" }, { k: "benispb", icon: I.iconBeniSpB, label: "diffGoodsSpecialBoost" },
+  { k: "benig", icon: I.iconBeniG, label: "diffTreasuryGoods" }, { k: "fur", icon: I.iconFUR, label: "diffRogues" },
+  { k: "tr", icon: I.iconTR, label: "diffUnits" }, { k: "trne", icon: I.iconTRNE, label: "diffUnitsNextEra" },
+  { k: "bp", icon: I.iconBP, label: "diffBlueprints" }, { k: "fsp", icon: I.iconFSP, label: "prodRushSpecial" },
+  { k: "tpm", icon: I.iconTPM, label: "prodRushMaterials" }, { k: "tpb", icon: I.iconTPB, label: "prodRushGoods" },
+  { k: "adm", icon: I.iconAiuto, label: "diffMassAid" }, { k: "mod", icon: I.iconOneUp, label: "diffOneUpKit" },
+  { k: "rin", icon: I.iconRinn, label: "diffRenovationKit" }, { k: "imm", icon: I.iconImm, label: "diffStoreBuilding" },
+];
+/** Differenza con il segno: "+1.250", "−0,5", "+5%"; 0 = "–". */
+function formatDelta(k: CampoDelta, v: number): string {
+  if (CAMPI_PERCENTUALI.has(k)) { const p = Math.round(v * 100); return p ? `${p > 0 ? "+" : "−"}${Math.abs(p)}%` : "–"; }
+  const r = Math.round(v * 10) / 10;
+  if (!r) return "–";
+  return `${r > 0 ? "+" : "−"}${Number.isInteger(r) ? formatInt(Math.abs(r)) : formatDecimal(Math.abs(r), 1)}`;
 }
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -118,6 +160,9 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
     return anelliSenzaInizio(cittaModificata).filter(n => !prima0.has(n));
   }, [citta, cittaModificata]);
   const n = contaModifiche(modifiche);
+  // Tabella delle differenze (11/11/2026, utente): aggiunti − tolti, colonna per colonna
+  const differenze = useMemo(() => (n && candidati.valori ? deltaModifiche(citta, modifiche, candidati.valori) : null), [n, citta, modifiche, candidati.valori]);
+  const alleatiTolti = tolti.reduce((s, b) => s + (candidati.alleati?.get(b.mapEntityId) ?? 0), 0);
 
   const etichettaLivello = (c: CandidatoPlanner) => (c.level ? t("plannerLevel", uiLang, c.level) : "");
   /** Riga delle liste: con modifiche, sfondo tinto e barra a sinistra (rosso = tolti, verde = aggiunti). */
@@ -189,6 +234,41 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
                 title={t("plannerEditUndo", uiLang)} className="px-0.5 text-emerald-300 hover:text-white disabled:opacity-30">×</button>
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Cosa cambia: una riga di icone e una di differenze (verde = di più, rosso = di meno) */}
+      {differenze && (
+        <div className="mb-2 rounded border border-slate-800">
+          <div className="border-b border-slate-800 px-2 py-1 font-bold text-slate-200">{t("plannerEditDeltaTitle", uiLang)}</div>
+          <div className="overflow-x-auto">
+            <table className="border-collapse text-[12px]">
+              <thead><tr>
+                {COLONNE_DELTA.map(c => (
+                  <th key={c.k} title={t(c.label, uiLang)} className={`px-1.5 pb-0.5 pt-1 ${c.gruppo ? "border-l border-slate-700" : ""}`}>
+                    <img src={c.icon} alt={t(c.label, uiLang)} className="mx-auto h-5 w-5 object-contain" />
+                  </th>
+                ))}
+              </tr></thead>
+              <tbody><tr>
+                {COLONNE_DELTA.map(c => {
+                  const v = differenze.delta[c.k], neutro = c.k === "area" || c.k === "road";
+                  const testo = formatDelta(c.k, v);
+                  return (
+                    <td key={c.k} title={t(c.label, uiLang)} className={`whitespace-nowrap px-1.5 pb-1 text-center font-mono ${c.gruppo ? "border-l border-slate-700" : ""} ${
+                      testo === "–" ? "text-slate-600" : neutro ? "text-slate-200" : v > 0 ? "text-emerald-400" : "text-red-400"}`}>{testo}</td>
+                  );
+                })}
+              </tr></tbody>
+            </table>
+          </div>
+          {(differenze.eraMassima > 0 || differenze.senzaDati > 0 || alleatiTolti > 0) && (
+            <ul className="list-none space-y-0.5 border-t border-slate-800 px-2 py-1 text-amber-200">
+              {differenze.eraMassima > 0 && <li>⚠️ {t("plannerEditDeltaEraMax", uiLang, differenze.eraMassima, ageName(FALLBACK_ERA, uiLang))}</li>}
+              {differenze.senzaDati > 0 && <li>⚠️ {t("plannerEditDeltaNoData", uiLang, differenze.senzaDati)}</li>}
+              {alleatiTolti > 0 && <li>⚠️ {t("plannerEditDeltaAllies", uiLang, alleatiTolti)}</li>}
+            </ul>
+          )}
         </div>
       )}
 

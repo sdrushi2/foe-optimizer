@@ -2678,6 +2678,20 @@ const UI_STRINGS = {
     en: (l: number, s: number) => `On paper there is room (${l} free cells for roads, the city uses ${s} now), but the added buildings may not fit: it depends on how well the Planner can optimize.`,
   },
   plannerEditUndo: { it: "Annulla questa modifica", en: "Undo this change" },
+  plannerEditDeltaTitle: { it: "Cosa cambia con queste modifiche", en: "What these changes do" },
+  plannerEditDeltaArea: { it: "Celle occupate dagli edifici", en: "Cells taken by buildings" },
+  plannerEditDeltaEraMax: {
+    it: (n: number, era: string) => `Valori all'era massima (${era}) per ${n} ${n === 1 ? "edificio" : "edifici"} del Database: la tua città è a un'altra era (o non è importata), i valori veri sono diversi.`,
+    en: (n: number, era: string) => `Values at the highest age (${era}) for ${n} Database ${n === 1 ? "building" : "buildings"}: your city is at another age (or not imported), the real values are different.`,
+  },
+  plannerEditDeltaNoData: {
+    it: (n: number) => `${n} ${n === 1 ? "edificio" : "edifici"} senza dati: nella tabella c'è solo la loro area.`,
+    en: (n: number) => `${n} ${n === 1 ? "building" : "buildings"} without data: the table only counts their area.`,
+  },
+  plannerEditDeltaAllies: {
+    it: (n: number) => `Negli edifici tolti ${n === 1 ? "c'è 1 alleato" : `ci sono ${n} alleati`}: i loro valori non sono nella tabella, ricordati di spostarli.`,
+    en: (n: number) => `The removed buildings host ${n} ${n === 1 ? "ally" : "allies"}: their values are not in the table, remember to move them.`,
+  },
   plannerEditInCity: { it: "In città", en: "In the city" },
   plannerEditSearch: { it: "Cerca…", en: "Search…" },
   plannerEditSortName: { it: "per nome", en: "by name" },

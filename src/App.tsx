@@ -4643,12 +4643,35 @@ export default function App() {
     }
     const efficienza = new Map<string, number>();
     for (const b of [...processedBuildings, ...processedGreatBuildings]) if (b.cityEntityId) efficienza.set(b.cityEntityId, b.currentEff);
+    // Tabella delle differenze (11/11/2026, utente): valori di ogni edificio tolto o aggiunto.
+    // Città: all'era della copia (gruppi per era dell'import), GE con i valori reali;
+    // inventario: la riga della tab Inventario (all'era dell'edificio posseduto); database:
+    // all'era del giocatore se ci sono i suoi dati, altrimenti quelli del catalogo (era massima).
+    const rigaInv = new Map<string, Building>();
+    for (const b of processedInventoryKitBuildings) if (b.cityEntityId && !rigaInv.has(b.cityEntityId)) rigaInv.set(b.cityEntityId, b);
+    const geDi = new Map(processedGreatBuildings.map(g => [g.cityEntityId, g] as const));
+    const eraMassima = currentEra === FALLBACK_ERA;
+    const valori: NonNullable<CandidatiPlanner["valori"]> = (id, fonte, era) => {
+      if (fonte === "inv") { const r = rigaInv.get(id); if (r) return { b: r }; }
+      const ge = fonte === "citta" ? geDi.get(id) : undefined;
+      if (ge) return { b: ge };
+      const csv = BUILDING_BY_ID.get(id);
+      if (!csv) { const fb = fallbackBuildings.get(id); return fb ? { b: fb } : null; }
+      if (fonte === "citta" && era && era !== currentEra) {
+        const g = entityInstanceEraStats.get(id)?.find(x => x[0] === era);
+        if (g) return { b: conStatsEra(csv, g[2]) };
+      }
+      const b = applyEraStats(csv);
+      return b === csv && !csv.isGreatBuilding && !eraMassima ? { b, eraMassima: true } : { b };
+    };
+    const alleati = new Map<string, number>();
+    for (const a of importedAllies) if (a.isPlaced && !a.isFragment && a.placedInMapEntityId) alleati.set(a.placedInMapEntityId, (alleati.get(a.placedInMapEntityId) ?? 0) + 1);
     return {
       inventario: [...inv.values()].sort((a, b) => a.name.localeCompare(b.name)),
       database: [...famiglie.values()].sort((a, b) => a.name.localeCompare(b.name)),
-      efficienza,
+      efficienza, valori, alleati, eraMassima,
     };
-  }, [cityMapBuildings, processedInventoryKitBuildings, processedBuildings, processedGreatBuildings, gameLang, uiLang]);
+  }, [cityMapBuildings, processedInventoryKitBuildings, processedBuildings, processedGreatBuildings, gameLang, uiLang, currentEra, fallbackBuildings, entityInstanceEraStats, applyEraStats, importedAllies]);
 
   const processedInventoryRawBuildings = useMemo<ProcessedBuilding[]>(() => {
     const rows: InventoryRowBuilding[] = [];

@@ -11,6 +11,7 @@
 //  "Configurazione attuale" li salta e li piazza la ricerca).
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { Building } from "../data/buildings";
 import type { CityMapBuilding } from "../data/cityMap";
 
 /** Edificio che si può aggiungere (una riga dell'inventario o un livello del database). */
@@ -44,6 +45,53 @@ export interface CandidatiPlanner {
   database: FamigliaPlanner[];
   /** Efficienza per entityId (ordinamento della colonna "In città"). */
   efficienza: ReadonlyMap<string, number>;
+  /** (11/11/2026) Valori di un edificio per la tabella delle differenze: in città
+   *  all'era della copia, dall'inventario all'era della riga, dal database all'era
+   *  del giocatore se nota (altrimenti quelli del catalogo, all'era massima). */
+  valori?: (entityId: string, fonte: FonteValori, era?: string) => ValoriEdificio | null;
+  /** Alleati ospitati per mapEntityId (gli edifici tolti li perdono). */
+  alleati?: ReadonlyMap<string, number>;
+  /** Il giocatore è all'era massima del catalogo (i valori del database sono giusti)? */
+  eraMassima?: boolean;
+}
+
+export type FonteValori = "citta" | "inv" | "db";
+/** eraMassima: valori del catalogo (era massima), quelli all'era del giocatore non ci sono. */
+export interface ValoriEdificio { b: Building; eraMassima?: boolean }
+
+/** Colonne della tabella delle differenze (stesso ordine della tabella degli edifici). */
+export const CAMPI_DELTA = [
+  "area", "road", "pop", "fel",
+  "general0", "general1", "general2", "general3", "gbg0", "gbg1", "gbg2", "gbg3",
+  "sped0", "sped1", "sped2", "sped3", "iq0", "iq1", "iq2", "iq3",
+  "iqMon", "iqMonB", "iqMat", "iqMatB", "iqBeni", "iqTruppe", "iqAzioni", "iqCap",
+  "mon", "monb", "mat", "matb", "fp", "fpb", "med", "medb",
+  "beni", "benib", "benip", "benis", "benisp", "benispb", "benig", "fur", "tr", "trne",
+  "bp", "fsp", "tpm", "tpb", "adm", "mod", "rin", "imm",
+] as const;
+export type CampoDelta = typeof CAMPI_DELTA[number];
+/** Campi in percentuale (boost: frazioni, 0,05 = 5%). */
+export const CAMPI_PERCENTUALI: ReadonlySet<CampoDelta> = new Set(["iqMonB", "iqMatB", "monb", "matb", "fpb", "medb", "benib", "benispb"]);
+
+const valoreCampo = (b: Building, k: CampoDelta): number => {
+  const m = /^(general|gbg|sped|iq)(\d)$/.exec(k);
+  if (m) return b[m[1] as "general" | "gbg" | "sped" | "iq"][Number(m[2])] ?? 0;
+  return Number((b as unknown as Record<string, unknown>)[k]) || 0;
+};
+
+/** Differenze delle modifiche: aggiunti − tolti, colonna per colonna (area dalle celle vere). */
+export function deltaModifiche(citta: readonly CityMapBuilding[], m: Modifiche, valori: NonNullable<CandidatiPlanner["valori"]>) {
+  const delta = Object.fromEntries(CAMPI_DELTA.map(k => [k, 0])) as Record<CampoDelta, number>;
+  let senzaDati = 0, eraMassima = 0;
+  const somma = (v: ValoriEdificio | null, w: number, h: number, segno: 1 | -1) => {
+    delta.area += segno * w * h;
+    if (!v) { senzaDati++; return; }
+    if (v.eraMassima) eraMassima++;
+    for (const k of CAMPI_DELTA) if (k !== "area") delta[k] += segno * valoreCampo(v.b, k);
+  };
+  for (const b of citta) if (m.tolti.has(b.mapEntityId)) somma(valori(b.entityId, "citta", b.era), b.w, b.h, -1);
+  for (const a of m.aggiunti) somma(valori(a.c.entityId, a.fonte), a.c.w, a.c.h, 1);
+  return { delta, senzaDati, eraMassima };
 }
 
 export interface Aggiunto { uid: string; c: CandidatoPlanner; fonte: "inv" | "db" }
