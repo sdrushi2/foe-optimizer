@@ -42,6 +42,25 @@ const PRECACHE_URLS = [
   "/icon-512.png",
 ];
 
+// (11/11/2026) index.html "coerente": tutti i file /assets/ che cita sono di QUESTA build
+// (nel precache). Dopo un deploy la CDN (GitHub Pages / Cloudflare) può servire per
+// qualche minuto l'index.html VECCHIO, che cita file /assets/ già cancellati: messo in
+// cache e servito subito, la pagina restava bianca (solo "FoE Optimizer", senza stile).
+const PRECACHE_SET = new Set(PRECACHE_URLS);
+const assetsDi = (html) => [...html.matchAll(/["'](\/assets\/[^"']+)["']/g)].map((m) => m[1]);
+const indexValido = (html) => { const a = assetsDi(html); return a.length > 0 && a.every((u) => PRECACHE_SET.has(u)); };
+// index.html dalla rete, saltando la cache del browser e quella della CDN (URL ogni volta
+// diverso); solo se coerente con questa build, al più 3 tentativi.
+async function scaricaIndex() {
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(`/?sw=${Date.now()}-${i}`, { cache: "no-store" });
+      if (r && r.ok && indexValido(await r.clone().text())) return r;
+    } catch (err) { /* rete assente: riprova */ }
+  }
+  return null;
+}
+
 // ── INSTALL ──────────────────────────────────────────────────────────────────
 // Pre-cache delle risorse. skipWaiting() fa si' che il nuovo SW prenda il
 // controllo il prima possibile invece di restare "in attesa" indefinitamente.
@@ -54,6 +73,8 @@ self.addEventListener("install", (event) => {
       await Promise.all(
         PRECACHE_URLS.map(async (url) => {
           try {
+            // (la root: solo un index.html di questa build, vedi scaricaIndex)
+            if (url === "/") { const r = await scaricaIndex(); if (r) await cache.put("/", r); return; }
             await cache.add(new Request(url, { cache: "reload" }));
           } catch (err) {
             // Asset non disponibile: lo ignoriamo, verra' eventualmente cachato a runtime.
@@ -133,12 +154,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match(request);
-        const networkFetch = fetch(request)
+        let cached = await cache.match(request);
+        // (copia in cache di un'altra build: non va servita, vedi indexValido)
+        if (cached && !indexValido(await cached.clone().text())) { cached = undefined; cache.delete(request); }
+        const networkFetch = scaricaIndex()
           .then((response) => {
-            if (response && response.ok) {
-              cache.put(request, response.clone());
-            }
+            if (response) cache.put(request, response.clone());
             return response;
           })
           .catch(() => null);
@@ -149,6 +170,7 @@ self.addEventListener("fetch", (event) => {
         // parametri, se in cache; altrimenti l'errore di rete del browser.
         return cached || (await networkFetch)
           || (await cache.match(request, { ignoreSearch: true }))
+          || (await fetch(request).catch(() => null))
           || Response.error();
       })()
     );

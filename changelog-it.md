@@ -1,6 +1,9 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.014 (11/11/2026)
+### Correzioni
+- Dopo un aggiornamento la pagina poteva restare bianca con la sola scritta "FoE Optimizer": ora il tool si ripara da solo
+
 ### Novità
 - Calcolatore GE: al posto del selettore del livello, la barra di avanzamento della finestra del GE (uguale da PC e da cellulare) con i PF già versati e il livello da inserire evidenziato; le frecce ±1 / ±10 sono accanto al campo del livello
 - Planner, Modifica città: sotto le modifiche una tabella con cosa cambia, colonna per colonna (area, strade, popolazione, felicità, valori militari, Incursioni e produzioni), con gli avvisi per i valori all'era massima del Database e per gli alleati negli edifici tolti

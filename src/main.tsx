@@ -50,7 +50,15 @@ function mostraErrore(err: unknown): void {
   console.error(err);
 }
 
+// (11/11/2026) Avvio riuscito: via il segno del ripristino di index.html (rete di sicurezza
+// per i file /assets/ mancanti) e il parametro ?r= che ha usato per saltare la cache.
+function avvioRiuscito(): void {
+  try { sessionStorage.removeItem("foe2-ripristino"); } catch { /* niente */ }
+  const u = new URL(window.location.href);
+  if (u.searchParams.has("r")) { u.searchParams.delete("r"); history.replaceState(history.state, "", u.pathname + u.search + u.hash); }
+}
+
 caricaDatiGioco()
   .then(() => import("./avvio"))
-  .then(({ avvia }) => avvia())
+  .then(({ avvia }) => { avvia(); avvioRiuscito(); })
   .catch(mostraErrore);
