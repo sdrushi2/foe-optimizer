@@ -141,6 +141,10 @@ tr.vuoto td.pos { color: var(--text-faint); }
 /* (09/11/2026) PF già versati da te e PF degli altri giocatori per posto */
 .versati { display: flex; gap: 6px; align-items: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-dim); }
 .versati input { width: 76px; text-align: right; padding: 6px 6px; }
+.riga-versati { justify-content: flex-end; margin: 0 2px 8px; }
+.riga-versati input { width: 76px; }
+.azzera { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; line-height: 1; border-radius: 7px; color: var(--text-dim); }
+.azzera:hover { color: var(--red); border-color: var(--red); }
 td.x { width: 76px; }
 td.x input { width: 70px; text-align: right; padding: 2px 5px; font-size: .8rem; }
 tr.preso td { color: var(--text-faint); }
@@ -153,7 +157,13 @@ td.chiude { color: var(--amber); }
 #note { margin: 4px 2px 2px; font-size: .75rem; color: var(--text-dim); }
 #note .num { color: #fff; font-weight: 700; }
 .stats { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 520px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+/* (11/11/2026, utente) da cellulare i 4 riquadri restano su una riga: più piccoli */
+@media (max-width: 520px) {
+  .stats { gap: 4px; }
+  .stat { padding: 4px 5px; border-radius: 8px; }
+  .stat .k { font-size: .5rem; letter-spacing: .02em; }
+  .stat .v { font-size: .8rem; }
+}
 footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
 footer p { margin: 0; }
 footer p + p { margin-top: 4px; }

@@ -17,7 +17,7 @@
   const T = {
     it: {
       titolo: "Calcolatore GE", torna: "← Torna al tool",
-      aiutoLiv: "Il livello da selezionare è il NUOVO (quello a destra della barra) e NON il livello attuale del GE",
+      aiutoLiv: "Selezionare il livello NUOVO (quello a destra) NON il livello attuale",
       ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo", livMeno10: "10 livelli indietro", livPiu10: "10 livelli avanti",
       rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "es. 92",
       customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
@@ -30,7 +30,8 @@
       coprireT: "PF del proprietario in più per assicurare questo posto, oltre ai precedenti",
       totaleT: "PF del proprietario in totale per assicurare questo posto (e tutti quelli sopra)",
       sicuro: "sicuro", pieno: "pieno", preso: "preso",
-      versati: "PF versati da te", versatiT: "PF che hai messo tu in questo livello: contano per assicurare i posti",
+      versati: "Punti Forge versati dal proprietario", versatiT: "PF che hai messo tu in questo livello: contano per assicurare i posti",
+      azzeraT: "Cancella i PF del proprietario e degli esterni",
       esterni: "Esterni", esterniT: "PF già messi da altri giocatori, uno per casella in qualunque ordine: come nella classifica del gioco, il più alto è il primo",
       esterniAl: n => "PF già versati da un altro giocatore (" + n + ")",
       mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF già versati da te e dagli altri)",
@@ -46,7 +47,7 @@
     },
     en: {
       titolo: "GB Calculator", torna: "← Back to the tool",
-      aiutoLiv: "The level to select is the NEW one (the one on the right of the bar), NOT the GB's current level",
+      aiutoLiv: "Select the NEW level (the one on the right) NOT the current level",
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level", livMeno10: "10 levels back", livPiu10: "10 levels forward",
       rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "e.g. 92",
       customT: "Custom chat: type any percentage (e.g. 92% for Copper, 29% for Gold)",
@@ -59,7 +60,8 @@
       coprireT: "Extra owner FP to secure this spot, on top of the previous ones",
       totaleT: "Total owner FP to secure this spot (and all the ones above)",
       sicuro: "safe", pieno: "full", preso: "taken",
-      versati: "FP you paid", versatiT: "FP you already put into this level: they count to secure the spots",
+      versati: "Forge Points paid by the owner", versatiT: "FP you already put into this level: they count to secure the spots",
+      azzeraT: "Clear the owner's and external FP",
       esterni: "External", esterniT: "FP already put by other players, one per box in any order: as in the game ranking, the highest is first",
       esterniAl: n => "FP already put by another player (" + n + ")",
       mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP already put by you and by others)",
@@ -122,8 +124,6 @@
             <button type="button" class="fr singola dx" data-passo="1" title="${esc(T.livPiu)}" aria-label="${esc(T.livPiu)}"></button>
             <button type="button" class="fr doppia dx" data-passo="10" title="${esc(T.livPiu10)}" aria-label="${esc(T.livPiu10)}"></button>
           </div>
-          <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
-            <input id="versati" type="text" inputmode="numeric" autocomplete="off"></label>
         </div>
         <!-- (11/11/2026, utente) quale livello inserire: la barra di avanzamento della finestra del GE
              (grafica ritagliata dal gioco, scritte tolte), con i PF versati, il livello attuale a
@@ -156,6 +156,10 @@
         <div class="stat" title="${esc(T.pfContrT)}"><div class="k">${esc(T.pfContr)}</div><div class="v" id="contribuzioni"></div></div>
         <div class="stat" title="${esc(T.mancantiT)}"><div class="k">${esc(T.mancanti)}</div><div class="v" id="mancanti"></div></div>
       </div>
+      <!-- (11/11/2026, utente) PF del proprietario: riga sua, fra i riquadri e la classifica -->
+      <label class="versati riga-versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
+        <input id="versati" type="text" inputmode="numeric" autocomplete="off">
+        <button type="button" id="azzera" class="azzera" title="${esc(T.azzeraT)}" aria-label="${esc(T.azzeraT)}">↺</button></label>
       <div class="card tabella">
         <table>
           <thead><tr>
@@ -365,6 +369,8 @@
   const sincronizza = () => { S.livello = livOk(S.livello); $("livello").value = S.livello; };
   // (altro GE o altro livello: PF già versati e PF degli altri si azzerano, sono di quel livello)
   const azzera = () => { S.versati = ""; S.esterni = []; $("versati").value = ""; corpo.querySelectorAll("input").forEach(x => { x.value = ""; }); };
+  // (11/11/2026, utente) pulsante di reset accanto ai PF del proprietario
+  $("azzera").addEventListener("click", e => { e.preventDefault(); azzera(); mostra(); });
   const cambiaLivello = v => { const prima = livOk(S.livello); S.livello = v; if (livOk(v) !== prima) azzera(); };
   $("ge").addEventListener("change", e => { S.ge = e.target.value; azzera(); sincronizza(); mostra(); });
   // (campo di testo, niente frecce: solo cifre, al massimo 3)
