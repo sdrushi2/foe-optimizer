@@ -57,6 +57,7 @@ body {
   font-weight: 700; font-size: 12px; text-decoration: none;
 }
 .btn:hover { background: #334155; }
+#torna .breve { display: none; }
 .card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; }
 select, input { font: inherit; font-size: .9rem; color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; }
 select:focus, input:focus { outline: none; border-color: var(--amber-dim); }
@@ -80,7 +81,7 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 /* barra del gioco: immagine 720×56 (barra.png: torri, barra vuota, nastri senza scritte); sopra, in %
    delle sue misure: riempimento verde (larghezza dal JS, già in % dell'immagine), PF,
    livello attuale (sinistra) e da fare (destra), cerchiato */
-.barra-ge { position: relative; width: 100%; max-width: 720px; aspect-ratio: 720 / 56; container-type: inline-size; border-radius: 6px; overflow: hidden;
+.barra-ge { position: relative; width: 100%; max-width: 720px; aspect-ratio: 720 / 56; container-type: inline-size; border-radius: 6px; /* (niente overflow: hidden, tagliava il lato inferiore del riquadro rosso sui telefoni) */
   background: url("barra.png") 0 0 / 100% 100% no-repeat; font-family: Arial, Helvetica, sans-serif; font-weight: 700; }
 .bg-fill { position: absolute; left: 8.056%; top: 21.43%; height: 32.14%; width: 0;
   background: url("barra-verde.png") 0 0 / 1px 100% repeat-x; }
@@ -140,8 +141,8 @@ tr.vuoto td.pos { color: var(--text-faint); }
 .pieno { color: var(--red); }
 /* (09/11/2026) PF del proprietario (riga sua, con il reset) e PF degli altri giocatori per posto */
 .versati { display: flex; justify-content: flex-end; margin: 0 2px 8px; gap: 6px; align-items: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-dim); }
-.versati input { width: 76px; text-align: right; padding: 6px 6px; }
-.azzera { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; line-height: 1; border-radius: 7px; color: var(--text-dim); }
+.versati input { width: 84px; text-align: right; padding: 2px 6px; }
+.azzera { width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; line-height: 1; border-radius: 7px; color: var(--text-dim); }
 .azzera:hover { color: var(--red); border-color: var(--red); }
 td.x { width: 76px; }
 td.x input { width: 70px; text-align: right; padding: 2px 5px; font-size: .8rem; }
@@ -177,6 +178,26 @@ footer a { color: var(--amber); }
   /* (CUSTOM in 1/3 di riga: casella più stretta, senza il "%" accanto) */
   .chat .custom input { width: 38px; padding: 3px 2px; }
   .chat .custom span { display: none; }
-  .brand h1 { font-size: 17px; }
+  /* (11/11/2026) tabella dei posti su schermi stretti (iPhone SE, 375 px): prima la colonna
+     Esterni usciva dalla card; caratteri, margini e caselle più piccoli */
+  .card.tabella { padding: 4px; overflow-x: auto; }
+  table { font-size: .72rem; }
+  th { font-size: .5rem; padding: 4px 2px; letter-spacing: .02em; }
+  td { padding: 4px 2px; }
+  td.pos { font-size: .9rem; }
+  td.x { width: 54px; }
+  td.x input { width: 52px; padding: 2px 3px; font-size: .72rem; }
+  .brand h1 { font-size: 16px; }
+  /* (11/11/2026) intestazione su una riga sola: "← Tool" invece di "← Torna al tool" */
+  #bar { flex-wrap: nowrap; gap: 8px; }
+  #torna .lungo { display: none; }
+  #torna .breve { display: inline; }
   .btn { padding: 6px 10px; }
+}
+/* (11/11/2026) telefoni molto stretti (320 px): CUSTOM non più tagliato */
+@media (max-width: 360px) {
+  .chat button { font-size: .64rem; }
+  .chat .custom input { width: 32px; }
+  .brand { gap: 6px; }
+  .brand h1 { font-size: 14px; }
 }

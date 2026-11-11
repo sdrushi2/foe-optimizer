@@ -16,28 +16,28 @@
 
   const T = {
     it: {
-      titolo: "Calcolatore GE", torna: "← Torna al tool",
+      titolo: "Calcolatore GE", torna: "← Torna al tool", tornaBreve: "← Tool",
       aiutoLiv: "Selezionare il livello NUOVO (quello a destra) NON il livello attuale",
       ge: "Grande Edificio", livello: "Livello in costruzione", livMeno: "Livello precedente", livPiu: "Livello successivo", livMeno10: "10 livelli indietro", livPiu10: "10 livelli avanti",
       rame: "RAME", oro: "ORO", chatRame: "CHAT RAME", chatOro: "CHAT ORO", custom: "CUSTOM", customAl: "Percentuale personalizzata", customEs: "92",
       customT: "Chat personalizzata: scrivi la percentuale che vuoi (es. 92% per il Rame, 29% per l'Oro)",
-      pfLivello: "PF del livello", pfProp: "PF proprietario", pfContr: "PF contribuzioni",
+      pfLivello: "PF del livello", pfProp: "PF proprietario", pfContr: "Contribuzioni",
       pfPropT: "PF che restano a carico del proprietario per completare il livello",
       pfContrT: "PF versati in tutto dai mecenati dei posti (con la percentuale della chat)",
-      pos: "Pos.", ricompensa: "Ricompensa", versare: "Da versare", coprire: "Per coprire", totale: "Totale per coprire",
-      ricompensaT: "Ricompensa del posto in PF, senza bonus dell'Arca",
+      pos: "Pos.", ricompensa: "Premio", versare: "Da versare", coprire: "Per coprire", totale: "Tot. x coprire",
+      ricompensaT: "Premio del posto in PF (come la colonna Premio del gioco), senza bonus dell'Arca",
       versareT: "PF che il mecenate versa per riavere esattamente la ricompensa con la sua percentuale",
       coprireT: "PF del proprietario in più per assicurare questo posto, oltre ai precedenti",
       totaleT: "PF del proprietario in totale per assicurare questo posto (e tutti quelli sopra)",
       sicuro: "sicuro", pieno: "pieno", preso: "preso",
-      versati: "Punti Forge versati dal proprietario", versatiT: "PF che hai messo tu in questo livello: contano per assicurare i posti",
+      versati: "PF già versati dal proprietario", versatiT: "PF che hai messo tu in questo livello: contano per assicurare i posti",
       azzeraT: "Cancella i PF del proprietario e degli esterni",
       esterni: "Esterni", esterniT: "PF già messi da altri giocatori, uno per casella in qualunque ordine: come nella classifica del gioco, il più alto è il primo",
       esterniAl: n => "PF già versati da un altro giocatore (" + n + ")",
       mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF versati dal proprietario e dagli altri)",
       esternoT: "Posto già di chi ha versato questi PF: tra parentesi la differenza con quanto si paga il posto",
       chiudeT: "Questo versamento chiude il livello: basta il resto",
-      pericolo: v => "pericolo (" + v + ")", pericoloT: "Posto non sicuro: chi versa può essere superato; tra parentesi i PF di troppo che restano liberi",
+      pericolo: v => "pericolo (" + v + ")", pericoloT: "Il premio vale più della metà dei PF che mancano: un altro giocatore può prendersi il posto versando meno del prezzo (tra parentesi quanti PF in meno). Conviene che il mecenate versi subito",
       fuori: v => "Spinti fuori dai posti: " + v, finale: v => "PF finali del proprietario per chiudere il livello: " + v,
       testoAl: "Testo da copiare in chat", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
       copia: "Copia", copiato: "Copiato",
@@ -46,7 +46,7 @@
       disclaimer: "Forge of Empires è un marchio di InnoGames GmbH. FoE Optimizer è un progetto amatoriale indipendente, non affiliato a InnoGames.",
     },
     en: {
-      titolo: "GB Calculator", torna: "← Back to the tool",
+      titolo: "GB Calculator", torna: "← Back to the tool", tornaBreve: "← Tool",
       aiutoLiv: "Select the NEW level (the one on the right) NOT the current level",
       ge: "Great Building", livello: "Level being built", livMeno: "Previous level", livPiu: "Next level", livMeno10: "10 levels back", livPiu10: "10 levels forward",
       rame: "COPPER", oro: "GOLD", chatRame: "COPPER CHAT", chatOro: "GOLD CHAT", custom: "CUSTOM", customAl: "Custom percentage", customEs: "92",
@@ -67,7 +67,7 @@
       mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP paid by the owner and by others)",
       esternoT: "Spot already held by whoever put these FP: in brackets the difference with the spot price",
       chiudeT: "This payment closes the level: the rest is enough",
-      pericolo: v => "danger (" + v + ")", pericoloT: "Spot not safe: the patron can be overtaken; in brackets the extra FP left free",
+      pericolo: v => "danger (" + v + ")", pericoloT: "The reward is worth more than half of the missing FP: another player can take the spot paying less than the price (in brackets how many FP less). The patron should pay right away",
       fuori: v => "Pushed out of the spots: " + v, finale: v => "Owner's final FP to close the level: " + v,
       testoAl: "Text to copy into chat", nome: "Your name (optional)", nomeAl: "Your in-game name",
       copia: "Copy", copiato: "Copied",
@@ -83,6 +83,8 @@
   const QUOTE = { 5: [120, 60, 20, 5, 1].map(x => x / 206), 7: [5040, 2520, 840, 210, 42, 7, 1].map(x => x / 8660) };
   const CHIAVE = "foe-optimizer-calcolatore-ge";   // (stesso stato per /ge e /gb)
   const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20, o25: 25 };
+  // pericolo segnalato solo oltre questi PF (stessa soglia di FoE Helper)
+  const PERICOLO_MIN = 5;
   // barra del gioco: larghezza della barra in % dell'immagine (come .bg-fill / .bg-testo in calcolatore.css)
   const LARGH_BARRA = 82.78;
   const $ = id => document.getElementById(id);
@@ -111,7 +113,7 @@
         <a href="${pagina("ge")}" hreflang="it" lang="it" class="${LINGUA === "it" ? "attiva" : ""}">IT</a><span>/</span>
         <a href="${pagina("gb")}" hreflang="en" lang="en" class="${LINGUA === "en" ? "attiva" : ""}">EN</a>
       </nav>
-      <a class="btn" id="torna" href="/">${esc(T.torna)}</a>
+      <a class="btn" id="torna" href="/" title="${esc(T.torna.replace("← ", ""))}"><span class="lungo">${esc(T.torna)}</span><span class="breve">${esc(T.tornaBreve)}</span></a>
     </header>
     <main class="wrap">
       <p id="errore" hidden></p>
@@ -339,7 +341,8 @@
         c.textContent = fmt(o.paga);
         if (o.chiude) { c.title = T.chiudeT; c.classList.add("chiude"); } else c.classList.remove("chiude");
         if (o.assicura) a.textContent = fmt(o.assicura);
-        else if (o.pericolo > 0) { a.innerHTML = '<span class="pericolo">' + esc(T.pericolo(fmt(o.pericolo))) + "</span>"; a.title = T.pericoloT; }
+        // (come FoE Helper: un pericolo di 5 PF o meno non si segnala, utente 11/11 — "pericolo (1)" senza versamenti)
+        else if (o.pericolo > PERICOLO_MIN) { a.innerHTML = '<span class="pericolo">' + esc(T.pericolo(fmt(o.pericolo))) + "</span>"; a.title = T.pericoloT; }
         else { a.textContent = T.sicuro; a.classList.add("sicuro"); }
         t.textContent = fmt(o.tuoi);
       }
@@ -381,7 +384,18 @@
   document.querySelectorAll(".liv .fr").forEach(b => b.addEventListener("click", () => {
     cambiaLivello(livOk(livOk(S.livello) + Number(b.dataset.passo))); sincronizza(); mostra();
   }));
-  $("versati").addEventListener("input", e => { S.versati = e.target.value.replace(/\D/g, ""); if (e.target.value !== S.versati) e.target.value = S.versati; mostra(); });
+  // (11/11/2026, utente) separatore delle migliaie mentre si scrive (punto in italiano,
+  // virgola in inglese); il cursore resta allo stesso punto fra le cifre
+  $("versati").addEventListener("input", e => {
+    const el = e.target, pos = el.selectionStart ?? el.value.length;
+    const dopo = el.value.slice(pos).replace(/\D/g, "").length; // cifre a destra del cursore
+    S.versati = el.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    el.value = S.versati ? fmt(S.versati) : "";
+    let p = el.value.length;
+    for (let n = 0; p > 0 && n < dopo; p--) if (/\d/.test(el.value[p - 1])) n++;
+    el.setSelectionRange(p, p);
+    mostra();
+  });
   // chat: la stessa % in tutti i posti, per il tier del livello mostrato
   const applicaChat = c => { S.chat[calcola().tier] = c; mostra(); };
   document.querySelectorAll("#chat button").forEach(b => b.addEventListener("click", () => applicaChat(b.dataset.chat)));
@@ -419,7 +433,7 @@
   $("ge").value = S.ge;
   $("custom").value = S.custom || "";
   $("giocatore").value = S.giocatore || "";
-  $("versati").value = S.versati || "";
+  $("versati").value = S.versati ? fmt(S.versati) : "";
   sincronizza();
   mostra();
 })();
