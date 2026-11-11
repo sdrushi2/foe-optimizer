@@ -115,7 +115,7 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .chat button:disabled { opacity: .35; cursor: not-allowed; border-color: var(--border); }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
-.stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; }
+.stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; text-align: center; }
 .stat .k { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); line-height: 1.2; }
 .stat .v { font-family: ui-monospace, Consolas, monospace; font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
 
