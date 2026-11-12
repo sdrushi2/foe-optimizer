@@ -386,3 +386,5 @@ Y_SpaceAgeMars_Ship1;Spazioporto;Spaceport;3fa3860a3;;;8x7;;;;;;;;;;;;;;;;;;;;;;
 Y_StellarAgeDiscovery_Ship1;Porto stellare;Stellarport;dc0c55af3;;;8x7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Y_Vikings_Ship1;Langskip;Langskip;e4eeff768;;;5x2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Y_VirtualFuture_Ship1;Spazioporto;Spaceport;b8474760d;;;8x7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_ONBOARD25A1;Falò;Campfire;a570e16bb;;19;2x2;;;;101;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_ONBOARD25A1Active;Falò;Campfire;W_MultiAge_ONBOARD25A1-a570e16bb;;2;2x2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

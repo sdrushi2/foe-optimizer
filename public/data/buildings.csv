@@ -1705,8 +1705,6 @@ W_MultiAge_LTE24A6;Mercato Eterno - Orizzonte Acquatico;Eternal Market - Aquatic
 W_MultiAge_LTE24A7;Mercato Eterno - Orizzonte Cibernetico;Eternal Market - Cyber Horizon;822c9bf42;;23;6x6;;;255480;;;468;;;;;540;540;;;;;;;;;;;;;210;210;210;210;;;144;144;144;144;144;144;15;15;15;15;;;;;;;;;;;;;;;;;;
 W_MultiAge_LTE24A8;Mercato Eterno - Orizzonte Rosso;Eternal Market - Red Horizon;1854a8c66;;23;6x6;;;283860;;;504;;;;;570;570;;;;;;;;;;;;;212;212;212;212;;;180;180;180;180;180;180;20;20;20;20;;;;;;;;;;;;;;;;;;
 W_MultiAge_LTE24A9;Mercato Eterno - Orizzonte d'oro;Eternal Market - Golden Horizon;40395d103;;23;6x6;;;312260;;;540;;;;;600;600;;;;;;;;;;;;;214;214;214;214;216;216;216;216;216;216;216;216;20;20;20;20;;;;;;;;;;;;;;;;;;
-W_MultiAge_ONBOARD25A1;Falò;Campfire;a570e16bb;;19;2x2;;;;101;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_ONBOARD25A1Active;Falò;Campfire;W_MultiAge_ONBOARD25A1-a570e16bb;;2;2x2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT21A1;Tempio druidico - Liv. 1;Druid Temple - Lv. 1;R_MultiAge_PatrickBonus21a-4c985e001;;19;5x4;2;1;10540;;;0.4;;;;;3;;;;;;;133750;;19850;;770;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 W_MultiAge_PAT21A10;Tempio druidico - Liv. 10;Druid Temple - Lv. 10;R_MultiAge_PatrickBonus21j-96e718d36;;19;5x4;2;1;16290;;;10;;;;;30;;;;;;;286000;;25625;;6547.5;;;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_PAT21A11;Tempio druidico dimenticato;Forgotten Druid Temple;941679a24;;19;5x4;2;1;34030;;;20;;;;;72;;;;;;;349910;;55343.75;;11547.9;;;;47;;;;;;;;;;;;;10;;;;;;;;;;;;;;;;;;;
