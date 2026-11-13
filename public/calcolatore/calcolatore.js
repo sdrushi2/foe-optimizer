@@ -78,9 +78,14 @@
   }[LINGUA];
 
   // Quota dei mecenati sul costo del livello: [ultimo livello della fascia, quota]
-  const FASCE = [[9, .25], [39, .30], [69, .40], [100, .25], [200, .15], [300, .10], [400, .07], [500, .05]];
-  // Divisione dei premi fra i posti (Rame 5 posti, Oro 7 posti)
-  const QUOTE = { 5: [120, 60, 20, 5, 1].map(x => x / 206), 7: [5040, 2520, 840, 210, 42, 7, 1].map(x => x / 8660) };
+  // (in punti percentuali: vedi calcola() per l'ordine dei conti)
+  const FASCE = [[9, 25], [39, 30], [69, 40], [100, 25], [200, 15], [300, 10], [400, 7], [500, 5]];
+  // Divisione dei premi fra i posti (Rame 5 posti, Oro 7 posti): pesi n!/k!, il posto k vale 1/k! del primo
+  const PESI = { 5: [120, 60, 20, 5, 1], 7: [5040, 2520, 840, 210, 42, 7, 1] };
+  const SOMMA_PESI = { 5: 206, 7: 8660 };
+  // arrotondamento con tolleranza per gli errori dei decimali (come FoE Helper e Forge Hammer):
+  // 30 × 2,05 fa 61,4999… in JavaScript, il gioco dà 62
+  const arrotonda = v => Math.round(v + (v >= 0 ? 1e-6 : -1e-6));
   const CHIAVE = "foe-optimizer-calcolatore-ge";   // (stesso stato per /ge e /gb)
   const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20, o25: 25 };
   // pericolo segnalato solo oltre questi PF (stessa soglia di FoE Helper)
@@ -232,16 +237,18 @@
     if (!valida.includes(S.chat[tier])) S.chat[tier] = tier === "oro" ? "o20" : "r90";
     const perc = S.chat[tier] === "custom" ? numero(S.custom, 0) : CHAT[S.chat[tier]];
     // (montepremi NON arrotondato prima della divisione: così fa il gioco, come
-    // mostra FoE Helper, es. Osservatorio 156: posto 2 = 3.801 e non 3.802;
-    // oggi anche il calcolatore di Linnun fa così)
-    const premi = costo * quota;
+    // mostra FoE Helper, es. Osservatorio 156: posto 2 = 3.801 e non 3.802)
+    // (13/11/2026) Ordine dei conti come FoE Helper: costo × quota / 100 × (peso / somma).
+    // Nei pareggi esatti a ,5 cambia l'arrotondamento: prima Santa Sofia 122, Innovation
+    // Tower 108 e Nave da guerra stellare 107 davano 1 PF in meno ai posti 2 e 3
+    // (FoE Helper e Forge Hammer concordano); ora uguale a FoE Helper su tutti i 16.100 livelli.
     const righe = [];
     for (let i = 0; i < n; i++) {
       // (le ricompense piccole il gioco le dà pari: 1 → 2 e 3 → 4; verificato
       // sulla Galassia blu 199, posto 7 = 4 e non 3; stessa correzione di Linnun)
-      let base = Math.round(premi * QUOTE[n][i]);
+      let base = Math.round(costo * quota / 100 * (PESI[n][i] / SOMMA_PESI[n]));
       if (base === 1 || base === 3) base += 1;
-      righe.push({ base, versa: Math.max(0, Math.round(base * (1 + perc / 100))) });
+      righe.push({ base, versa: Math.max(0, arrotonda(base * (1 + perc / 100))) });
     }
     // PF del proprietario e PF degli altri giocatori: stesso calcolo del calcolatore di
     // FoE Helper, con le sue opzioni predefinite ("sicuro" sì, "fiducia" no) (utente 09/11, Arca 85: chi ha versato 1.440 si è preso P1 anche se il posto

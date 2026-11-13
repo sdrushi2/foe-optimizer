@@ -1,6 +1,9 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.016 (13/11/2026)
+### Correzioni
+- Calcolatore GE: premi e PF da versare arrotondati come il gioco anche nei casi limite (per esempio 1 PF in più ai posti 2 e 3 di Santa Sofia al 122, o con la chat personalizzata al 105%)
+
 ### Novità
 - Città, Inventario e Database: nuova icona accanto agli edifici che si possono fabbricare con i frammenti prodotti da altri edifici; passandoci sopra si vedono i produttori, quanti ne hai in città e in inventario e in quanti giorni arrivi al kit. Nuovo filtro "Da frammenti" in Nascondi / Mostra solo
 

@@ -1,6 +1,9 @@
 # FoE Optimizer Changelog
 
 ## Version 2.016 (13/11/2026)
+### Fixes
+- GB Calculator: rewards and FP to pay rounded like the game also in edge cases (for example 1 FP more on spots 2 and 3 of Hagia Sophia at 122, or with a 105% custom chat)
+
 ### New
 - City, Inventory and Database: new icon next to buildings you can make from fragments produced by other buildings; hovering shows the producers, how many you have in the city and inventory and how many days to the kit. New "From fragments" filter in Hide / Show only
 
