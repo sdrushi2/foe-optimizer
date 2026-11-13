@@ -94,6 +94,7 @@
   const LARGH_BARRA = 82.78;
   const $ = id => document.getElementById(id);
   // migliaia sempre separate (anche a 4 cifre): punto in italiano, virgola in inglese
+  // eslint-disable-next-line security/detect-unsafe-regex -- (separatore delle migliaia su numeri brevi: nessun rischio)
   const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, LINGUA === "en" ? "," : ".");
   const numero = (v, d = 0) => { const x = parseFloat(String(v).replace(",", ".")); return isFinite(x) && x >= 0 ? x : d; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -203,7 +204,7 @@
   // chat scelta per tier (livelli Rame 5 posti, livelli Oro 7), validata in calcola()
   // versati: PF del proprietario; esterni: PF di altri giocatori per posto (azzerati cambiando GE o livello)
   const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "", giocatore: "", chat: { rame: "r90", oro: "o20" }, versati: "", esterni: [] };
-  try { Object.assign(S, JSON.parse(localStorage.getItem(CHIAVE) || "{}")); } catch (e) { /* niente */ }
+  try { Object.assign(S, JSON.parse(localStorage.getItem(CHIAVE) || "{}")); } catch { /* niente */ }
   if (!costi[S.ge]) S.ge = ids[0];
   if (!S.chat || typeof S.chat !== "object") S.chat = {}; // (salvataggio vecchio o rovinato)
   if (!Array.isArray(S.esterni)) S.esterni = [];
@@ -218,8 +219,8 @@
       if (qLiv) S.livello = qLiv;
       S.chat = { rame: "r100", oro: "o20" };
     }
-  } catch (e) { /* niente */ }
-  const salva = () => { try { localStorage.setItem(CHIAVE, JSON.stringify(S)); } catch (e) { /* niente */ } };
+  } catch { /* niente */ }
+  const salva = () => { try { localStorage.setItem(CHIAVE, JSON.stringify(S)); } catch { /* niente */ } };
   const maxLiv = () => costi[S.ge].length;
   const livOk = v => Math.min(maxLiv(), Math.max(1, parseInt(v) || 1));
 
@@ -414,7 +415,7 @@
   $("copia").addEventListener("click", async () => {
     const el = $("testo");
     try { await navigator.clipboard.writeText(el.textContent); }
-    catch (e) { // (senza https o permessi: selezione + copia classica)
+    catch { // (senza https o permessi: selezione + copia classica)
       const sel = getSelection(), rng = document.createRange();
       rng.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(rng); document.execCommand("copy");
     }

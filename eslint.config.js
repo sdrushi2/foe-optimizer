@@ -21,7 +21,8 @@ export default tseslint.config(
   {
     // planner-test/: città di prova locali (non in repo). sw-template.js ha
     // già il suo eslint-disable (è un template, non un modulo).
-    ignores: ["dist/**", "node_modules/**", "planner-test/**", "*.config.js", "*.config.ts", "sw-template.js"],
+    // public/data/: dati generati dalla pipeline (mecenati-dati.js è uno script di dati, non codice).
+    ignores: ["dist/**", "node_modules/**", "planner-test/**", "public/data/**", "*.config.js", "*.config.ts", "sw-template.js"],
   },
 
   // Regole base JS consigliate da eslint.
@@ -104,11 +105,10 @@ export default tseslint.config(
       // log dimenticato, quindi in whitelist come info/warn/error.
       "no-console": ["warn", { allow: ["info", "warn", "error", "groupCollapsed", "groupEnd", "table"] }],
 
-      // Variabili shadow (es. una `id` interna che ne nasconde una esterna):
-      // è esattamente il tipo di bug riscontrato in passato in questo
-      // progetto durante i refactor (sostituzioni di massa che lasciano
-      // variabili con lo stesso nome a scope diversi).
-      "no-shadow": "off", // off di default: troppi falsi positivi con i pattern map/filter del progetto; attivare manualmente per un controllo puntuale se serve
+      // Variabili shadow (una `id` interna che ne nasconde una esterna): bug già
+      // capitati nei refactor, ma la regola dà troppi falsi positivi con i pattern
+      // map/filter del progetto. Spenta: da accendere a mano per un controllo puntuale.
+      "no-shadow": "off",
 
       // ── eslint-plugin-security: disattivazioni mirate ────────────────
       // detect-object-injection segnala QUALSIASI accesso obj[key] con key
@@ -137,6 +137,13 @@ export default tseslint.config(
       "security/detect-non-literal-fs-filename": "off",
       "security/detect-object-injection": "off",
     },
+  },
+  // Calcolatore dei GE (public/calcolatore/, 13/11/2026): JavaScript del browser
+  // servito così com'è (non passa da Vite), script classico, non modulo.
+  {
+    files: ["public/**/*.js"],
+    languageOptions: { sourceType: "script", globals: { ...globals.browser } },
+    rules: { "security/detect-object-injection": "off" },
   },
   // .cjs = CommonJS: require() è il modo normale di importare.
   {

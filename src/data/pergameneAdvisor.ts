@@ -50,7 +50,7 @@ function tettoTabella(): number {
   return costi().length - 1;
 }
 
-export interface PassoPergamene {
+interface PassoPergamene {
   /** Alleato posseduto (copia) da far salire. */
   imp: ImportedAlly;
   da: number;

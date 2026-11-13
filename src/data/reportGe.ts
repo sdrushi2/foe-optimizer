@@ -47,7 +47,7 @@ const PERCENTUALI = new Set(["special_goods_production_boost", "goods_production
   "critical_hit_chance", "all_units_critical_hit_chance", "helping_hands", "helping_hands_boosted", "aid_blueprints", "plunder_and_pillage",
   "scroll", "scroll_2"]);
 
-export interface ColonnaGe {
+interface ColonnaGe {
   chiave: string;
   nome: string;
   /** valore in punti percentuali (mostrato con "%") */
@@ -57,7 +57,7 @@ export interface ColonnaGe {
 }
 
 /** Nome leggibile e tipo di una colonna della wiki. */
-export function colonnaGe(chiave: string, lang: UiLang): ColonnaGe {
+function colonnaGe(chiave: string, lang: UiLang): ColonnaGe {
   const L = lang === "en" ? 1 : 0;
   // militari: <att_def|att|def>_boost_<attacker|defender|attacker_defender>[_<gbg|gex|gr>][_multiplier]
   const m = /^(att_def|att|def)_boost_(attacker_defender|attacker|defender)(?:_(gbg|gex|gr))?(_multiplier)?$/.exec(chiave);
@@ -85,7 +85,7 @@ const QUOTE: Record<5 | 7, number[]> = { 5: [120, 60, 20, 5, 1].map(x => x / 206
 /** PF a carico del proprietario per completare il livello `lvl` (costo `costo`)
  *  con la chat: Rame 100% sui livelli Rame, Oro 20% sui livelli Oro (GE Oro: 7 posti dal 101,
  *  ma il 101 si fa ancora a tariffa Rame perché il GE è al 100, ancora Rame; utente 09/11). */
-export function pfProprietario(costo: number, lvl: number, oro: boolean): number {
+function pfProprietario(costo: number, lvl: number, oro: boolean): number {
   const quota = (FASCE.find(f => lvl <= f[0]) ?? FASCE[FASCE.length - 1]!)[1];
   const n: 5 | 7 = oro && lvl >= 101 ? 7 : 5, perc = n === 7 && lvl > 101 ? 20 : 100;
   let somma = 0;
@@ -97,7 +97,7 @@ export function pfProprietario(costo: number, lvl: number, oro: boolean): number
   return costo - Math.min(costo, somma);
 }
 
-export interface LivelloReport { lvl: number; costo: number; tuoi: number; cumTot: number; cumTuoi: number; v: number[] }
+interface LivelloReport { lvl: number; costo: number; tuoi: number; cumTot: number; cumTuoi: number; v: number[] }
 export interface Report {
   colonne: ColonnaGe[];
   livelli: LivelloReport[];

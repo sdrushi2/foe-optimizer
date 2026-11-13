@@ -30,7 +30,7 @@
          caricano (index.html di una build vecchia, i suoi file non ci sono più) si svuotano
          le cache del service worker e si ricarica UNA volta saltando la cache della CDN
          (?r=…, tolto da main.tsx). Prima la pagina restava bianca con "FoE Optimizer". -->
-    <script>addEventListener("error",function(e){var t=e.target,u=t&&(t.src||t.href)||"";if(!/\/assets\//.test(u))return;try{if(sessionStorage.getItem("foe2-ripristino"))return;sessionStorage.setItem("foe2-ripristino","1")}catch(x){return}var p=[];if(window.caches)p.push(caches.keys().then(function(k){return Promise.all(k.map(function(n){return caches.delete(n)}))}));if(navigator.serviceWorker)p.push(navigator.serviceWorker.getRegistrations().then(function(r){return Promise.all(r.map(function(x){return x.unregister()}))}));Promise.all(p).then(function(){location.replace("/?r="+Date.now())},function(){location.replace("/?r="+Date.now())})},true);</script>
+    <script>addEventListener("error",function(e){var t=e.target,u=t&&(t.src||t.href)||"";if(!t||(t.tagName!=="SCRIPT"&&t.tagName!=="LINK")||!/\/assets\//.test(u))return;try{if(sessionStorage.getItem("foe2-ripristino"))return;sessionStorage.setItem("foe2-ripristino","1")}catch(x){return}var p=[];if(window.caches)p.push(caches.keys().then(function(k){return Promise.all(k.map(function(n){return caches.delete(n)}))}));if(navigator.serviceWorker)p.push(navigator.serviceWorker.getRegistrations().then(function(r){return Promise.all(r.map(function(x){return x.unregister()}))}));Promise.all(p).then(function(){location.replace("/?r="+Date.now())},function(){location.replace("/?r="+Date.now())})},true);</script>
 
     <!-- Primary Meta -->
     <title>FoE Optimizer – Forge of Empires Tools &amp; City Planner</title>
@@ -60,7 +60,7 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://foe-optimizer.com/">
 
-    <!-- Performance hints -->
+    <!-- Niente link automatici sui numeri (Safari li scambierebbe per telefoni) -->
     <meta name="format-detection" content="telephone=no">
 
     <!-- Open Graph -->

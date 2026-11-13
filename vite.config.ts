@@ -248,9 +248,10 @@ export default defineConfig({
     editorCondivisoPlugin(),
     calcolatoreGePlugin(),
   ],
-  // 2.0: il codice principale (App) supera i 500 kB minificati; il Planner
-  // è già un pezzo a parte. Soglia dell'avviso alzata di conseguenza.
-  build: { chunkSizeWarningLimit: 900 },
+  // 2.0: il codice principale (avvio + App) è circa 1 MB minificato (440 kB compresso,
+  // 13/11/2026); Planner e report dei GE sono già pezzi a parte. Soglia dell'avviso
+  // alzata di conseguenza: l'avviso torna utile se il pezzo principale cresce ancora.
+  build: { chunkSizeWarningLimit: 1200 },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

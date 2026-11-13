@@ -1,23 +1,23 @@
 # FoE Optimizer Changelog
 
 ## Version 2.016 (13/11/2026)
-### Fixes
-- GB Calculator: rewards and FP to pay rounded like the game also in edge cases (for example 1 FP more on spots 2 and 3 of Hagia Sophia at 122, or with a 105% custom chat)
-
 ### New
 - City, Inventory and Database: new icon next to buildings you can make from fragments produced by other buildings; hovering shows the producers, how many you have in the city and inventory and how many days to the kit. New "From fragments" filter in Hide / Show only
+
+### Bug Fixes
+- GB Calculator: rewards and FP to pay rounded like the game also in edge cases (for example 1 FP more on spots 2 and 3 of Hagia Sophia at 122, or with a 105% custom chat)
 
 ---
 
 ## Version 2.014 (11/11/2026)
-### Fixes
-- After an update the page could stay blank with just "FoE Optimizer": the tool now repairs itself
-- Planner: pausing now also stops Girandola 2's town hall position trials and the other scenarios' start choice
-
 ### New
 - GB Calculator: instead of the level selector, the progress bar of the GB window (the same on PC and mobile) with the FP already paid and the level to enter highlighted; the ±1 / ±10 arrows are next to the level field
 - Planner, Edit city: under the changes a table with what changes, column by column (area, roads, population, happiness, military values, Quantum Incursions and productions), with warnings for Database values at the highest age and for allies in removed buildings
 - GB Calculator: the FP paid by the owner have their own row above the ranking, with a button that clears all the FP entered; on mobile the 4 boxes stay on one row
+
+### Bug Fixes
+- After an update the page could stay blank with just "FoE Optimizer": the tool now repairs itself
+- Planner: pausing now also stops Girandola 2's town hall position trials and the other scenarios' start choice
 
 ---
 
@@ -31,7 +31,7 @@
 - City: the Ageable filter also shows buildings added with +Inventory
 - Inventory: Ageable filter; "Ready only" becomes the "Ready" item of Hide / Show only, to see only ready buildings or only the ones made with kits
 
-### Fixes
+### Bug Fixes
 - GB Calculator opened from the installed app's shortcut: "Back to the tool" no longer closes the app
 - Science allies: FP and goods of your allies are those of their level, no longer always those of level 100
 

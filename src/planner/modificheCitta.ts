@@ -55,12 +55,12 @@ export interface CandidatiPlanner {
   eraMassima?: boolean;
 }
 
-export type FonteValori = "citta" | "inv" | "db";
+type FonteValori = "citta" | "inv" | "db";
 /** eraMassima: valori del catalogo (era massima), quelli all'era del giocatore non ci sono. */
 export interface ValoriEdificio { b: Building; eraMassima?: boolean }
 
 /** Colonne della tabella delle differenze (stesso ordine della tabella degli edifici). */
-export const CAMPI_DELTA = [
+const CAMPI_DELTA = [
   "area", "road", "pop", "fel",
   "general0", "general1", "general2", "general3", "gbg0", "gbg1", "gbg2", "gbg3",
   "sped0", "sped1", "sped2", "sped3", "iq0", "iq1", "iq2", "iq3",

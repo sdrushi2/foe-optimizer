@@ -10,7 +10,7 @@
 import type { UiLang } from "./ui-strings";
 import { formatInt } from "../utils/format";
 
-export interface BonusGe {
+interface BonusGe {
   tipo: string;
   modalita: string;
   moltiplicativo?: boolean;
@@ -100,12 +100,12 @@ const PERCENTUALI = new Set([
   "quest_boost", "allies_quest_boost",
 ]);
 
-export function nomeBonusGe(tipo: string, lang: UiLang): string {
+function nomeBonusGe(tipo: string, lang: UiLang): string {
   const n = NOMI[tipo];
   return n ? n[lang === "en" ? 1 : 0] : tipo;
 }
 
-export function modalitaGe(m: string, lang: UiLang): string {
+function modalitaGe(m: string, lang: UiLang): string {
   const it: Record<string, string> = { battleground: "Campi", guild_expedition: "Spedizioni", guild_raids: "IQ" };
   const en: Record<string, string> = { battleground: "Battlegrounds", guild_expedition: "Expeditions", guild_raids: "QI" };
   return (lang === "en" ? en : it)[m] ?? "";
@@ -113,7 +113,7 @@ export function modalitaGe(m: string, lang: UiLang): string {
 
 /** Valore leggibile: "+7%" per i moltiplicativi (come nel gioco), "320%" per le percentuali,
  *  numero con separatore per le quantità. */
-export function valoreGe(b: BonusGe, v: number, lang: UiLang): string {
+function valoreGe(b: BonusGe, v: number, lang: UiLang): string {
   // (formatInt: l'italiano di Intl non separa i numeri di 4 cifre)
   const n = lang === "en" ? v.toLocaleString("en-US") : formatInt(v);
   if (b.moltiplicativo) return `+${n}%`;

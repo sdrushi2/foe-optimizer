@@ -1,23 +1,23 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.016 (13/11/2026)
-### Correzioni
-- Calcolatore GE: premi e PF da versare arrotondati come il gioco anche nei casi limite (per esempio 1 PF in più ai posti 2 e 3 di Santa Sofia al 122, o con la chat personalizzata al 105%)
-
 ### Novità
 - Città, Inventario e Database: nuova icona accanto agli edifici che si possono fabbricare con i frammenti prodotti da altri edifici; passandoci sopra si vedono i produttori, quanti ne hai in città e in inventario e in quanti giorni arrivi al kit. Nuovo filtro "Da frammenti" in Nascondi / Mostra solo
+
+### Correzioni
+- Calcolatore GE: premi e PF da versare arrotondati come il gioco anche nei casi limite (per esempio 1 PF in più ai posti 2 e 3 di Santa Sofia al 122, o con la chat personalizzata al 105%)
 
 ---
 
 ## Versione 2.014 (11/11/2026)
-### Correzioni
-- Dopo un aggiornamento la pagina poteva restare bianca con la sola scritta "FoE Optimizer": ora il tool si ripara da solo
-- Planner: in pausa si fermano anche le prove della posizione del municipio della Girandola 2 e la scelta della partenza degli altri scenari
-
 ### Novità
 - Calcolatore GE: al posto del selettore del livello, la barra di avanzamento della finestra del GE (uguale da PC e da cellulare) con i PF già versati e il livello da inserire evidenziato; le frecce ±1 / ±10 sono accanto al campo del livello
 - Planner, Modifica città: sotto le modifiche una tabella con cosa cambia, colonna per colonna (area, strade, popolazione, felicità, valori militari, Incursioni e produzioni), con gli avvisi per i valori all'era massima del Database e per gli alleati negli edifici tolti
 - Calcolatore GE: i PF versati dal proprietario hanno una riga loro sopra la classifica, con un pulsante che cancella tutti i PF inseriti; da cellulare i 4 riquadri restano su una riga
+
+### Correzioni
+- Dopo un aggiornamento la pagina poteva restare bianca con la sola scritta "FoE Optimizer": ora il tool si ripara da solo
+- Planner: in pausa si fermano anche le prove della posizione del municipio della Girandola 2 e la scelta della partenza degli altri scenari
 
 ---
 

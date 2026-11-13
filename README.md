@@ -21,7 +21,8 @@ rearranges your buildings with as few roads as possible.
   chains and military buildings handled; built-in editor, PNG/JSON export
   ([overview](https://foe-optimizer.com/planner.html)).
 - **Weighted efficiency scoring** — rank buildings by attack/defense weight, tile size,
-  and your own priorities (PvP, GBG, Guild Expedition, Quantum Incursions).
+  and your own priorities (PvP, GBG, Guild Expedition, Quantum Incursions), or by
+  goods, Forge Points or guild goods per tile.
 - **Allies manager** — track owned allies and rarity, with database comparison and an
   ally advisor.
 - **Great Building calculator** — for every Great Building and level: the level's
