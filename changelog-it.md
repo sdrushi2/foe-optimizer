@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.016 (13/11/2026)
+### Novità
+- Città, Inventario e Database: nuova icona accanto agli edifici che si possono fabbricare con i frammenti prodotti da altri edifici; passandoci sopra si vedono i produttori, quanti ne hai in città e in inventario e in quanti giorni arrivi al kit. Nuovo filtro "Da frammenti" in Nascondi / Mostra solo
+
+---
+
 ## Versione 2.014 (11/11/2026)
 ### Correzioni
 - Dopo un aggiornamento la pagina poteva restare bianca con la sola scritta "FoE Optimizer": ora il tool si ripara da solo

@@ -87,7 +87,7 @@ import {
   iconIQAtk_D as iconIQAtkD, iconIQDef_D as iconIQDefD,
   iconIQMonB, iconIQMatB, iconIQMon, iconIQMat, 
   iconIQBeni, iconIQTruppe, iconIQAzioni, iconIQCap, iconFUR, iconBP, iconTR, iconTRNE,
-  iconOneUp, iconImm, iconRinn, iconAiuto, iconFragment, allies_slot_empty, allies_slot_full,
+  iconOneUp, iconImm, iconRinn, iconAiuto, iconFragment, iconFragmentFrom, allies_slot_empty, allies_slot_full,
   iconBeniSp, iconBeniSpB, iconFSP, iconTPM, iconTPB, iconMed,
 } from "./assets/icons";
 
@@ -452,6 +452,37 @@ for (const [kitId, entry] of Object.entries(KIT_RAW.buildingUpgrades)) {
 // Funzione di utilità per ottenere il nome leggibile di un kit nella lingua
 // scelta. Fallback: lingua richiesta -> inglese -> kit_id (coerente con
 // displayName/allyName).
+// ── (13/11/2026, utente) Edifici fabbricabili da frammenti ─────────────────────
+// Mappa inversa di FRAGMENTS_PRODUCED: per ogni edificio, i kit di SELEZIONE che lo
+// danno (fra le opzioni) e i frammenti dell'edificio stesso ("building_…"), con gli
+// edifici che li producono (quantità per raccolta, sempre ogni 24 h; colonna Fragments
+// di buildings.csv, già senza forzieri a caso). I kit di aggiornamento restano fuori
+// (utente: l'icona finirebbe su quasi tutti gli edifici con livelli).
+type FonteFrammenti = { kitId?: string; richiesti?: number; produttori: Array<{ id: string; perGiorno: number }> };
+const DA_FRAMMENTI = new Map<string, FonteFrammenti[]>();
+{
+  const fonte = (bid: string, chiave: { kitId?: string }, richiesti: number | undefined) => {
+    const l = DA_FRAMMENTI.get(bid) ?? [];
+    DA_FRAMMENTI.set(bid, l);
+    let f = l.find(x => x.kitId === chiave.kitId);
+    if (!f) { f = { ...chiave, ...(richiesti ? { richiesti } : {}), produttori: [] }; l.push(f); }
+    return f;
+  };
+  for (const [prod, lista] of FRAGMENTS_PRODUCED) {
+    for (const f of lista) {
+      const n = f.amountPerCollection ?? 0;
+      if (f.kind === "kit") {
+        const sel = KIT_RAW.selectionKits[f.id];
+        if (!sel?.options) continue;
+        for (const o of sel.options) fonte(o, { kitId: f.id }, sel.requiredFragments).produttori.push({ id: prod, perGiorno: n });
+      } else {
+        fonte(f.id, {}, KIT_RAW.requiredFragmentsByBuilding?.[f.id]).produttori.push({ id: prod, perGiorno: n });
+      }
+    }
+  }
+  for (const l of DA_FRAMMENTI.values()) for (const f of l) f.produttori.sort((a, b) => a.perGiorno - b.perGiorno || a.id.localeCompare(b.id));
+}
+
 const kitName = (kitId: string, lang: Lang = "it"): string => {
   const names = KIT_NAMES.get(kitId);
   return names?.[lang] ?? names?.en ?? kitId;
@@ -864,9 +895,9 @@ const HASH_SCHEDA: Record<string, Scheda> = {
 };
 
 /** Voci a tre stati del gruppo "Nascondi / Mostra solo". */
-type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge" | "pronti";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "daFrammenti" | "strada" | "aiuto" | "immagazzina" | "ge" | "pronti";
 type StatoTri = 0 | 1 | 2;
-const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, strada: 0, aiuto: 0, immagazzina: 0, ge: 0, pronti: 0 };
+const TRI_ZERO: Record<VoceTri, StatoTri> = { nonAcc: 0, autoAge: 0, limitati: 0, iq: 0, alleati: 0, frammenti: 0, daFrammenti: 0, strada: 0, aiuto: 0, immagazzina: 0, ge: 0, pronti: 0 };
 /** true = riga da scartare: stato 1 scarta chi ha la caratteristica, stato 2 chi non ce l'ha. */
 const scartaTri = (stato: StatoTri, ha: boolean) => (stato === 1 ? ha : stato === 2 ? !ha : false);
 
@@ -1168,6 +1199,8 @@ interface BuildingRowProps {
   setOutdatedTooltip: (v: { x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null) => void;
   setFragmentTooltip: (v: { x: number; y: number; produced: Array<{ name: string; options?: string[]; producedAmount?: number; requiredAmount?: number }> } | null) => void;
   setFabTooltip: (v: { x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null) => void;
+  /** (13/11/2026) Riquadro "Si ottiene con i frammenti di" (DA_FRAMMENTI). */
+  setDaFrammentiTooltip: (v: { x: number; y: number; id: string } | null) => void;
 }
 
 /** Riga della tabella principale edifici: estratta come componente
@@ -1185,7 +1218,7 @@ const BuildingRow = memo(function BuildingRow({
   greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, onReport, senzaIq, isDeclassable, avvisoLimitato, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentsProduced,
   handleCityRowClick, toggleSelect, getPropDisplay,
-  setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip,
+  setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip, setDaFrammentiTooltip,
 }: BuildingRowProps) {
   // icone della colonna ❔ (BONUS nel catalogo dei GE): 24 px nel catalogo dei GE, 16 px nelle altre tabelle (utente)
   const dimIcona = senzaLimitati ? "h-6 w-6" : "h-4 w-4";
@@ -1719,6 +1752,17 @@ const BuildingRow = memo(function BuildingRow({
             </span>
           );
         })()}
+        {/* (13/11/2026) Fabbricabile con i frammenti prodotti da altri edifici: stessa
+            ancora alta 1px del badge 🧩 qui sopra (vedi il suo commento) */}
+        {!!b.cityEntityId && DA_FRAMMENTI.has(b.cityEntityId) && (
+          <span
+            className="ml-1 inline-block flex-shrink-0 self-start cursor-help relative w-4 h-px align-top"
+            onMouseEnter={(e) => { const r = e.currentTarget.getBoundingClientRect(); setDaFrammentiTooltip({ x: r.left, y: r.bottom, id: b.cityEntityId! }); }}
+            onMouseLeave={() => setDaFrammentiTooltip(null)}
+          >
+            <img src={iconFragmentFrom} alt="" className="absolute inset-0 top-[3px] h-4 w-4 object-contain" />
+          </span>
+        )}
         {(activeTab === "inventario" || b._isMergedInventory) && (() => {
           const ib = b as InventoryRowBuilding;
           const badge = ib._invBadge;
@@ -2596,6 +2640,7 @@ export default function App() {
   }, [cancelImagePopupClose]);
   const [outdatedTooltip, setOutdatedTooltip] = useState<{ x: number; y: number; minLevel: number; allLevels: number[]; currentEraId: number; oneUpKit: number; renovationKit: number; oneUpKitName?: string; renovationKitName?: string; isUpgradable: boolean; upgradableTargets: string[]; upgradableKits: Array<{ name: string; count: number }>; eraComparisons: Array<{ eraId: number; eraName: string; count: number; diffs: EraDiffEntry[]; goodsInvolved: boolean }> } | null>(null);
   const [declassableTooltip, setDeclassableTooltip] = useState<{ x: number; y: number; eraAge: string; diffs: EraDiffEntry[]; popSavings: number; oneDownKit: number; oneDownKitName?: string; reversionKit: number; reversionKitName?: string } | null>(null);
+  const [daFrammentiTooltip, setDaFrammentiTooltip] = useState<{ x: number; y: number; id: string } | null>(null);
   const [fragmentTooltip, setFragmentTooltip] = useState<{ x: number; y: number; produced: Array<{ name: string; options?: string[]; producedAmount?: number; requiredAmount?: number }> } | null>(null);
   const [kitProducersTooltip, setKitProducersTooltip] = useState<{ x: number; y: number; producers: Array<{ id: string; name: string }> } | null>(null);
   const [fabTooltip, setFabTooltip] = useState<{ x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null>(null);
@@ -5048,6 +5093,7 @@ export default function App() {
       // (allySlotsPerBuilding), nel Database la colonna Ally del CSV.
       if (scartaTri(tri.alleati, (isPropriacitta || isInventario) ? !!b.cityEntityId && allySlotsPerBuilding.has(b.cityEntityId) : b.ally > 0)) continue;
       if (scartaTri(tri.frammenti, !!b.cityEntityId && FRAGMENTS_PRODUCED.has(b.cityEntityId))) continue;
+      if (scartaTri(tri.daFrammenti, !!b.cityEntityId && DA_FRAMMENTI.has(b.cityEntityId))) continue;
       // Richiede strada (fabbisogno stradale della colonna "strada" > 0)
       if (scartaTri(tri.strada, b.road > 0)) continue;
       if (scartaTri(tri.aiuto, b.adm > 0)) continue;
@@ -7614,6 +7660,7 @@ export default function App() {
                           setUpgradeTooltip={setUpgradeTooltip}
                           setOutdatedTooltip={setOutdatedTooltip}
                           setFragmentTooltip={setFragmentTooltip}
+                          setDaFrammentiTooltip={setDaFrammentiTooltip}
                           setFabTooltip={setFabTooltip}
                         />
                       ))}
@@ -8352,6 +8399,90 @@ export default function App() {
                 </span>
               </div>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* (13/11/2026) Si ottiene con i frammenti di…: kit di selezione / frammenti dell'edificio,
+          con gli edifici che li producono, quanti ne hai (città collegati, inventario) e i giorni */}
+      {daFrammentiTooltip && (() => {
+        const fonti = DA_FRAMMENTI.get(daFrammentiTooltip.id) ?? [];
+        const conCitta = cityEntityIds.size > 0;
+        const nome = (id: string) => displayName(id, ITALIAN_NAMES.get(id) ?? id, uiLang);
+        const giorni = (req: number | undefined, f: number) => (req && f > 0 ? Math.ceil(req / f) : null);
+        return (
+          <div
+            className="fixed-tooltip w-[28rem] overflow-y-auto border border-violet-600/60"
+            style={(() => {
+              // (utente 13/11: sopra l'icona usciva dallo schermo) dal lato con più spazio,
+              // alto al massimo quanto lo spazio che c'è (poi scorre)
+              const sotto = window.innerHeight - daFrammentiTooltip.y - 28, sopra = daFrammentiTooltip.y - 12;
+              const inAlto = sopra > sotto;
+              return {
+                left: Math.max(8, Math.min(daFrammentiTooltip.x, window.innerWidth - 460)),
+                maxHeight: Math.max(120, inAlto ? sopra : sotto),
+                ...(inAlto ? { bottom: window.innerHeight - daFrammentiTooltip.y + 4 } : { top: daFrammentiTooltip.y + 20 }),
+              };
+            })()}
+          >
+            <div className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-violet-300">
+              <img src={iconFragmentFrom} alt="" className="icon-16" />
+              {t("daFrammentiTitle", uiLang)}
+            </div>
+            {fonti.map((f, k) => {
+              const inCitta = (id: string) => (conCitta ? copieCollegate(id) : 0);
+              const inInv = (id: string) => inventoryMatched.get(id)?.inStock ?? 0;
+              const fCitta = f.produttori.reduce((s, p) => s + p.perGiorno * inCitta(p.id), 0);
+              const fTutti = f.produttori.reduce((s, p) => s + p.perGiorno * (inCitta(p.id) + inInv(p.id)), 0);
+              const opzioni = f.kitId ? selectionKitOptionNames(f.kitId, uiLang) : [];
+              return (
+                <div key={k} className={k ? "mt-3 border-t border-slate-700/60 pt-2" : ""}>
+                  <div className="text-xs text-slate-100">
+                    {f.kitId ? kitName(f.kitId, uiLang) : t("daFrammentiEdificio", uiLang, nome(daFrammentiTooltip.id))}
+                    {f.richiesti ? <span className="ml-1 font-mono text-slate-400">· {t("daFrammentiRichiesti", uiLang, f.richiesti)}</span> : null}
+                  </div>
+                  {opzioni.length > 1 && (
+                    <div className="ml-3 mt-0.5 text-[11px] text-slate-400">
+                      {t("daFrammentiScelta", uiLang)} <span className="font-semibold text-violet-300">{opzioni.join(" · ")}</span>
+                    </div>
+                  )}
+                  <table className="mt-1.5 w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-[9.5px] uppercase tracking-wide text-slate-400">
+                        <th className="py-0.5 pr-1 text-left font-bold">{t("daFrammentiColProd", uiLang)}</th>
+                        <th className="whitespace-nowrap px-1 text-right font-bold">{t("daFrammentiColGiorno", uiLang)}</th>
+                        {conCitta && <th className="px-1 text-right font-bold">{t("daFrammentiColCitta", uiLang)}</th>}
+                        {conCitta && <th className="px-1 text-right font-bold">{t("daFrammentiColInv", uiLang)}</th>}
+                        <th className="whitespace-nowrap pl-1 text-right font-bold">{t("daFrammentiColGiorni", uiLang)}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {f.produttori.map(p => {
+                        const c = inCitta(p.id), i = inInv(p.id), mio = c + i > 0;
+                        const g = giorni(f.richiesti, p.perGiorno);
+                        return (
+                          <tr key={p.id} className={`border-b border-slate-800/60 ${mio ? "bg-emerald-500/10" : ""}`}>
+                            <td className={`py-0.5 pr-1 ${mio ? "text-emerald-300" : "text-slate-200"}`}>{nome(p.id)}</td>
+                            <td className="px-1 text-right font-mono text-slate-200">{p.perGiorno || "?"}</td>
+                            {conCitta && <td className={`px-1 text-right font-mono ${c ? "font-bold text-emerald-400" : "text-slate-600"}`}>{c || "–"}</td>}
+                            {conCitta && <td className={`px-1 text-right font-mono ${i ? "text-amber-300" : "text-slate-600"}`}>{i || "–"}</td>}
+                            <td className="pl-1 text-right font-mono text-slate-200">{g ?? "–"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {conCitta && f.richiesti ? (
+                    <div className={`mt-1.5 rounded border px-2 py-1 text-[11px] ${fTutti ? "border-emerald-700/50 bg-emerald-950/30 text-emerald-100" : "border-slate-700 text-slate-400"}`}>
+                      {fCitta > 0 && <div>{t("daFrammentiCitta", uiLang, fCitta, Math.ceil(f.richiesti / fCitta), !!f.kitId)}</div>}
+                      {fTutti > fCitta && <div>{t("daFrammentiConInv", uiLang, fTutti, Math.ceil(f.richiesti / fTutti), !!f.kitId)}</div>}
+                      {!fTutti && <div>{t("daFrammentiNessuno", uiLang)}</div>}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+            <div className="mt-1.5 text-[10px] text-slate-500">{t("daFrammentiNota", uiLang)}</div>
           </div>
         );
       })()}

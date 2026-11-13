@@ -93,6 +93,8 @@ export { default as allies_slot_full } from "./icons/allies_slot_full.png";
 export { default as allies_token } from "./icons/allies_token.png";
 export { default as allies_train } from "./icons/allies_train.png";
 export { default as iconFragment } from "./icons/Fragment.png";
+/** (13/11/2026) Edificio fabbricabile con i frammenti prodotti da altri edifici (Fragment viola + ←). */
+export { default as iconFragmentFrom } from "./icons/FragmentFrom.png";
 export { default as iconMed } from "./icons/Med.png";
 // (10/11/2026) boost % di produzione di monete, materiali e medaglie: Mon/Mat/Med con il + verde di FPB
 export { default as iconMonB } from "./icons/MonB.png";

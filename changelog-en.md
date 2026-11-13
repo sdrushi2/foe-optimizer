@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.016 (13/11/2026)
+### New
+- City, Inventory and Database: new icon next to buildings you can make from fragments produced by other buildings; hovering shows the producers, how many you have in the city and inventory and how many days to the kit. New "From fragments" filter in Hide / Show only
+
+---
+
 ## Version 2.014 (11/11/2026)
 ### Fixes
 - After an update the page could stay blank with just "FoE Optimizer": the tool now repairs itself

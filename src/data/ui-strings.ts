@@ -1732,6 +1732,31 @@ const UI_STRINGS = {
     it: "Produce frammenti di:",
     en: "Produces fragments of:",
   },
+  daFrammentiTitle: { it: "Si ottiene con i frammenti di", en: "Made from the fragments of" },
+  daFrammentiRichiesti: { it: (n: number) => `${n} frammenti`, en: (n: number) => `${n} fragments` },
+  daFrammentiEdificio: { it: (nome: string) => `Frammenti di ${nome}`, en: (nome: string) => `${nome} fragments` },
+  daFrammentiScelta: { it: "a scelta fra:", en: "choice of:" },
+  daFrammentiColProd: { it: "Edificio che produce i frammenti", en: "Building producing the fragments" },
+  daFrammentiColGiorno: { it: "Framm/g", en: "Frag/d" },
+  daFrammentiColCitta: { it: "Città", en: "City" },
+  daFrammentiColInv: { it: "Invent.", en: "Invent." },
+  daFrammentiColGiorni: { it: "Giorni x kit", en: "Days x kit" },
+  // (kit: true = kit di selezione, false = frammenti dell'edificio stesso)
+  daFrammentiCitta: {
+    it: (f: number, g: number, kit: boolean) => `Con i tuoi edifici in città: ${f} ${f === 1 ? "frammento" : "frammenti"} al giorno → ${kit ? "un kit" : "un edificio"} ogni ${g} ${g === 1 ? "giorno" : "giorni"}.`,
+    en: (f: number, g: number, kit: boolean) => `With your city buildings: ${f} ${f === 1 ? "fragment" : "fragments"} a day → ${kit ? "a kit" : "a building"} every ${g} ${g === 1 ? "day" : "days"}.`,
+  },
+  daFrammentiConInv: {
+    it: (f: number, g: number, kit: boolean) => `Mettendo in città anche quelli in inventario: ${f} al giorno → ${kit ? "un kit" : "un edificio"} ogni ${g} ${g === 1 ? "giorno" : "giorni"}.`,
+    en: (f: number, g: number, kit: boolean) => `Also placing the ones in your inventory: ${f} a day → ${kit ? "a kit" : "a building"} every ${g} ${g === 1 ? "day" : "days"}.`,
+  },
+  daFrammentiNessuno: { it: "Non hai edifici che producono questi frammenti.", en: "You have no buildings producing these fragments." },
+  daFrammentiNota: {
+    it: "Frammenti con gli edifici motivati; esclusi i forzieri a caso. In città contano solo gli edifici collegati alla strada.",
+    en: "Fragments with motivated buildings; random chests excluded. In the city only buildings connected to a road count.",
+  },
+  r2FromFragments: { it: "Da frammenti", en: "From fragments" },
+  r2FromFragmentsTitle: { it: "Edifici che si possono fabbricare con i frammenti prodotti da altri edifici", en: "Buildings you can make from fragments produced by other buildings" },
   selectionKitOptionsTitle: {
     it: "Opzioni del kit di selezione:",
     en: "Selection kit options:",

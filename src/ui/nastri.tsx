@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
+import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -102,7 +102,7 @@ export interface ContestoNastri {
   pergamene: Interruttore & { n: number | null };
 }
 
-type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "strada" | "aiuto" | "immagazzina" | "ge" | "pronti";
+type VoceTri = "nonAcc" | "autoAge" | "limitati" | "iq" | "alleati" | "frammenti" | "daFrammenti" | "strada" | "aiuto" | "immagazzina" | "ge" | "pronti";
 
 interface Interruttore { attivo: boolean; cambia: () => void }
 
@@ -219,6 +219,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
     tri3("iq", Atom, "r2HideIq", iconIQ),
     tri3("alleati", Users, "r2HideAlly", allies_slot_full),
     tri3("frammenti", Puzzle, "r2CatFragments", iconFragment),
+    tri3("daFrammenti", Puzzle, "r2FromFragments", iconFragmentFrom, "r2FromFragmentsTitle"),
     tri3("strada", Route, "r2NeedsRoad", iconRoad),
     ...extra,
   ]] });
