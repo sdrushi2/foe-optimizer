@@ -3784,6 +3784,35 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
       return fillMask(mask, pool.map(b => ({ id: b.id, name: b.name, width: b.w, length: b.h, road_requirement: 0 })), 4096, 3000, true);
     };
+    /** Riempimento goloso: pezzi in ordine di area decrescente, ognuno nella
+     *  posizione libera con più lati a contatto con celle non libere (a
+     *  parità la prima in ordine riga/colonna). Coordinate relative a
+     *  minX/minY, come fillMask. */
+    const riempiGrandiPrima = (lista: PlannerBuilding[]) => {
+      const lib = new Uint8Array(GW * GH);
+      for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) lib[j * GW + i] = isFree(problem.minX + i, problem.minY + j) ? 1 : 0;
+      const L = (i: number, j: number) => i >= 0 && j >= 0 && i < GW && j < GH && lib[j * GW + i] === 1;
+      const placed: Array<{ id: string; x: number; y: number; w: number; l: number }> = [];
+      let area = 0;
+      const ord = lista.map((b, k) => [b, k] as const).sort((a, b) => b[0].w * b[0].h - a[0].w * a[0].h || a[1] - b[1]);
+      for (const [b] of ord) {
+        let best = -1, bi = 0, bj = 0;
+        for (let j = 0; j + b.h <= GH; j++) for (let i = 0; i + b.w <= GW; i++) {
+          let ok = true;
+          for (let dy = 0; dy < b.h && ok; dy++) for (let dx = 0; dx < b.w; dx++) if (!lib[(j + dy) * GW + i + dx]) { ok = false; break; }
+          if (!ok) continue;
+          let c = 0;
+          for (let dx = 0; dx < b.w; dx++) { if (!L(i + dx, j - 1)) c++; if (!L(i + dx, j + b.h)) c++; }
+          for (let dy = 0; dy < b.h; dy++) { if (!L(i - 1, j + dy)) c++; if (!L(i + b.w, j + dy)) c++; }
+          if (c > best) { best = c; bi = i; bj = j; }
+        }
+        if (best < 0) continue;
+        for (let dy = 0; dy < b.h; dy++) for (let dx = 0; dx < b.w; dx++) lib[(bj + dy) * GW + bi + dx] = 0;
+        placed.push({ id: b.id, x: bi, y: bj, w: b.w, l: b.h });
+        area += b.w * b.h;
+      }
+      return { placed, area };
+    };
     let fm = riempi();
     // Gli scambi grandi↔fine strada si tengono solo se non fanno restare
     // fuori più edifici senza strada (stesso riempimento senza gli scambi).
@@ -3808,15 +3837,30 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         else sposta(false);
       }
     }
-    if (fm) {
-      const every = Math.max(1, Math.ceil(fm.vincitore.placed.length / 60));
-      for (const p of fm.vincitore.placed) {
+    // Alternativa "i più grandi per primi, dove toccano di più" (novembre
+    // 2026, segnalazione dell'utente su Lady r5: fase 2 divide lo spazio
+    // libero in rettangoli e massimizza la copertura di ciascuno, e un 4×4
+    // restava fuori pur con 90 celle libere; questo riempimento li piazza
+    // tutti). Si usa solo se lascia fuori meno area (stesso primo criterio
+    // della rifinitura C): dove fase 2 piazza già tutto, nulla cambia.
+    let scelta: { nome: string; placed: Array<{ id: string; x: number; y: number; w: number; l: number }> } | null = fm ? { nome: fm.vincitore.nome, placed: fm.vincitore.placed } : null;
+    {
+      const areaFm = scelta ? scelta.placed.reduce((t, q) => t + q.w * q.l, 0) : 0;
+      const areaPool = pool.reduce((t, b) => t + b.w * b.h, 0);
+      if (areaFm < areaPool) {
+        const gr = riempiGrandiPrima(pool);
+        if (gr.area > areaFm) scelta = { nome: "grandi prima", placed: gr.placed };
+      }
+    }
+    if (scelta) {
+      const every = Math.max(1, Math.ceil(scelta.placed.length / 60));
+      for (const p of scelta.placed) {
         if (opts.shouldStop()) break;
         const x = p.x + problem.minX, yy = p.y + problem.minY;
         if (!fits(x, yy, p.w, p.l)) continue; // (difensivo: non dovrebbe mai succedere)
         placements.set(p.id, { x, y: yy });
         occupy(x, yy, p.w, p.l);
-        await emit(`${LBL} · ${fm.vincitore.nome}`, { x, y: yy, w: p.w, h: p.l }, [], every);
+        await emit(`${LBL} · ${scelta.nome}`, { x, y: yy, w: p.w, h: p.l }, [], every);
       }
     }
   }

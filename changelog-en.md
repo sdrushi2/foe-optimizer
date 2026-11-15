@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.018 (15/11/2026)
+### Bug Fixes
+- Planner: completing no longer leaves out large buildings without road (for example a 4×4) when there is enough free space; if the usual filling cannot fit them all, one that places the largest first is tried
+
+---
+
 ## Version 2.016 (13/11/2026)
 ### New
 - City, Inventory and Database: new icon next to buildings you can make from fragments produced by other buildings; hovering shows the producers, how many you have in the city and inventory and how many days to the kit. New "From fragments" filter in Hide / Show only

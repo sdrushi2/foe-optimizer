@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.018 (15/11/2026)
+### Correzioni
+- Planner: al completamento non restano più fuori edifici senza strada grandi (per esempio un 4×4) quando lo spazio libero basta; se il solito riempimento non li fa entrare tutti, ne viene provato uno che piazza prima i più grandi
+
+---
+
 ## Versione 2.016 (13/11/2026)
 ### Novità
 - Città, Inventario e Database: nuova icona accanto agli edifici che si possono fabbricare con i frammenti prodotti da altri edifici; passandoci sopra si vedono i produttori, quanti ne hai in città e in inventario e in quanti giorni arrivi al kit. Nuovo filtro "Da frammenti" in Nascondi / Mostra solo
