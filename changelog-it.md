@@ -3,6 +3,7 @@
 ## Versione 2.018 (15/11/2026)
 ### Correzioni
 - Planner: al completamento non restano più fuori edifici senza strada grandi (per esempio un 4×4) quando lo spazio libero basta; se il solito riempimento non li fa entrare tutti, ne viene provato uno che piazza prima i più grandi
+- Planner: durante la rifinitura dopo COMPLETA, le decorazioni 1×1 e 1×N spostate a mano in pausa restano dove le hai messe (prima tornavano al posto di prima); la rifinitura è anche più veloce
 
 ---
 

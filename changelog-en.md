@@ -3,6 +3,7 @@
 ## Version 2.018 (15/11/2026)
 ### Bug Fixes
 - Planner: completing no longer leaves out large buildings without road (for example a 4×4) when there is enough free space; if the usual filling cannot fit them all, one that places the largest first is tried
+- Planner: during the refinement after COMPLETE, 1×1 and 1×N decorations moved by hand while paused stay where you put them (before they went back to their previous spot); the refinement is also faster
 
 ---
 
