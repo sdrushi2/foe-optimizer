@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.019 (16/11/2026)
+### Aggiornamenti
+- Città: sopra la tabella, al posto di "Edifici visualizzati", ci sono due conteggi: gli edifici contando tutte le copie (la somma dei ×N) e le righe della tabella, per esempio "Edifici: 42/94 (righe: 21/79)"
+
+---
+
 ## Versione 2.018 (15/11/2026)
 ### Correzioni
 - Planner: al completamento non restano più fuori edifici senza strada grandi (per esempio un 4×4) quando lo spazio libero basta; se il solito riempimento non li fa entrare tutti, ne viene provato uno che piazza prima i più grandi

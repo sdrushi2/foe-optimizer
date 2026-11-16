@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.019 (16/11/2026)
+### Update
+- City: above the table, instead of "Buildings shown", there are two counts: the buildings counting every copy (the sum of the ×N badges) and the table rows, for example "Buildings: 42/94 (rows: 21/79)"
+
+---
+
 ## Version 2.018 (15/11/2026)
 ### Bug Fixes
 - Planner: completing no longer leaves out large buildings without road (for example a 4×4) when there is enough free space; if the usual filling cannot fit them all, one that places the largest first is tried

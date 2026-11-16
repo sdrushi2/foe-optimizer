@@ -5149,6 +5149,26 @@ export default function App() {
     return filtered;
   }, [tipoEff, baseProdCitta, eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, statoPronti, soloInvecchiabiliInv, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
+  // (16/11/2026, utente) Scheda Città: l'intestazione conta anche le COPIE degli
+  // edifici, cioè la somma dei badge ×N delle righe (un GE vale 1; con i filtri Era
+  // ogni riga porta in kitCount le copie di quell'era; le righe di +Inventario
+  // valgono il loro ×N). Totale = tutte le copie piazzate (cityEntityIds, la stessa
+  // base del totale delle righe) più, con +Inventario, quelle delle sue righe.
+  const copieTabellaCitta = useMemo(() => {
+    if (activeTab !== "propria_citta") return null;
+    let visibili = 0;
+    for (const b of filteredBuildings) {
+      visibili += b._isMergedInventory || b._eraCopia !== undefined ? (b.kitCount ?? 1)
+        : b.isGreatBuilding ? 1 : Math.max(1, importedCityEntityLookup.get(b.cityEntityId) ?? 1);
+    }
+    let totali = 0;
+    cityEntityIds.forEach(n => { totali += n; });
+    if (showInventoryInCity) {
+      for (const b of (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings)) totali += b.kitCount ?? 1;
+    }
+    return { visibili, totali };
+  }, [activeTab, filteredBuildings, importedCityEntityLookup, cityEntityIds, showInventoryInCity, showOnlyReadyBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings]);
+
   // Direzione mappa -> tabella della stessa corrispondenza biunivoca di
   // handleCityRowClick. A differenza di quella, qui NON si esclude
   // GE/militari/inattivi: in mappa sono comunque cliccabili (decisione
@@ -7436,7 +7456,10 @@ export default function App() {
                           {/* 2.0: Export degli edifici selezionati → nastro, Opzioni. */}
                         </th>
                         <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
-                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : catalogo === "ge" ? processedGeCatalogo.length : processedBuildings.length}</span>
+                          {copieTabellaCitta
+                            ? <>{t("r2CountBuildings", uiLang)}: <span className="font-bold text-slate-300">{copieTabellaCitta.visibili}</span>/<span className="text-slate-400">{copieTabellaCitta.totali}</span> ({t("r2CountRows", uiLang)}: </>
+                            : <>{t("buildingsVisualizedCount", uiLang)}: </>}
+                          <span className="font-bold text-slate-300">{filteredBuildings.length}</span>/<span className="text-slate-400">{activeTab === "propria_citta" ? cityEntityIds.size + (showInventoryInCity ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : 0) : activeTab === "inventario" ? (showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings).length : catalogo === "ge" ? processedGeCatalogo.length : processedBuildings.length}</span>{copieTabellaCitta ? ")" : null}
                         </th>
                         <th className="py-2 px-0" colSpan={(senzaLimitati ? 4 : 5) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">

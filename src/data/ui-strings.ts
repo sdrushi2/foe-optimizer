@@ -1135,6 +1135,9 @@ const UI_STRINGS = {
     it: "Edifici visualizzati",
     en: "Buildings shown",
   },
+  // (16/11/2026) scheda Città: "Edifici: 42/94 (righe: 21/79)", copie e righe
+  r2CountBuildings: { it: "Edifici", en: "Buildings" },
+  r2CountRows: { it: "righe", en: "rows" },
   alliesVisualizedCount: {
     it: "Alleati visualizzati",
     en: "Allies shown",
