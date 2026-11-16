@@ -2,7 +2,7 @@
 
 ## Versione 2.019 (16/11/2026)
 ### Aggiornamenti
-- Città: sopra la tabella, al posto di "Edifici visualizzati", ci sono due conteggi: gli edifici contando tutte le copie (la somma dei ×N) e le righe della tabella, per esempio "Edifici: 42/94 (righe: 21/79)"
+- Città e Inventario: "Edifici visualizzati" sopra la tabella conta gli edifici veri, cioè tutte le copie (la somma dei ×N), non più le righe della tabella
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Version 2.019 (16/11/2026)
 ### Update
-- City: above the table, instead of "Buildings shown", there are two counts: the buildings counting every copy (the sum of the ×N badges) and the table rows, for example "Buildings: 42/94 (rows: 21/79)"
+- City and Inventory: "Buildings shown" above the table counts the actual buildings, that is every copy (the sum of the ×N badges), no longer the table rows
 
 ---
 
