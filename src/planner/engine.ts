@@ -59,7 +59,26 @@ export interface PlannerBuilding {
  *  una catena attaccata alla strada dalla parte dell'ultimo anello NON è
  *  collegata (segnalazione dell'utente sul treno di Filanush). */
 export function toccaStradaZona(b: PlannerBuilding, x: number, y: number, isRoad: (x: number, y: number) => boolean): boolean {
-  return perimetroZona(b, x, y).some(([cx, cy]) => isRoad(cx, cy));
+  // (17/11/2026) Le stesse celle di perimetroZona, nello stesso ordine, ma
+  // senza costruire l'elenco: è una delle funzioni più chiamate dalla ricerca.
+  const z = b.zonaStrada;
+  if (!z) {
+    for (let d = 0; d < b.w; d++) if (isRoad(x + d, y - 1) || isRoad(x + d, y + b.h)) return true;
+    for (let d = 0; d < b.h; d++) if (isRoad(x - 1, y + d) || isRoad(x + b.w, y + d)) return true;
+    return false;
+  }
+  const X = x + z.x, Y = y + z.y, x1 = x + b.w, y1 = y + b.h;
+  // righe sopra e sotto la zona (se cadono fuori dal blocco), poi colonne a sinistra e a destra
+  const su = Y - 1 < y, giu = Y + z.h >= y1, sx = X - 1 < x, dx = X + z.w >= x1;
+  for (let d = 0; d < z.w; d++) {
+    if (su && isRoad(X + d, Y - 1)) return true;
+    if (giu && isRoad(X + d, Y + z.h)) return true;
+  }
+  for (let d = 0; d < z.h; d++) {
+    if (sx && isRoad(X - 1, Y + d)) return true;
+    if (dx && isRoad(X + z.w, Y + d)) return true;
+  }
+  return false;
 }
 
 /** Contorno esterno di un blocco di catena FUORI dalla zona dell'inizio

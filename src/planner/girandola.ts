@@ -82,20 +82,10 @@ export function baseCentrale(problem: PlannerProblem): BaseGirandola | null {
   return baseGirandola(problem, cx, cy, false);
 }
 
-/** Sceglie la posizione del municipio: alcune posizioni attorno al centro
- *  (soprattutto verso sinistra), ognuna valutata con una breve ricerca
- *  (`valutazioni` disposizioni); vince quella con meno edifici con strada
- *  fuori, poi meno deficit di spazio, poi meno strade, poi più a sinistra;
- *  le 3 migliori sono rivalutate con una ricerca più lunga; restituisce le
- *  2 migliori (due mappe girandola). */
-export async function scegliGirandola(problem: PlannerProblem, opts: {
-  shouldStop: () => boolean; valutazioni?: number; onProgress?: (i: number, n: number) => void;
-  /** Pausa del Planner (vedi CompletionOptions.attendiInPausa). */
-  attendiInPausa?: () => boolean;
-  /** Disposizioni provvisorie durante le prove (per mostrare subito qualcosa):
-   *  la base appena scelta e i passi della sua breve ricerca. */
-  onFrame?: (f: PlannerFrame) => void;
-}): Promise<BaseGirandola[]> {
+/** Posizioni del municipio da provare per la Girandola 2, ognuna nei due
+ *  versi (orario e speculare). L'ordine conta: a parità di voto resta davanti
+ *  la prova che viene prima. */
+export function proveGirandola(problem: PlannerProblem): Array<[number, number, boolean]> {
   const th = problem.buildings.find(b => b.isTownhall);
   if (!th) return [];
   const cx = Math.round((problem.minX + problem.maxX + 1 - th.w) / 2), cy = Math.round((problem.minY + problem.maxY + 1 - th.h) / 2);
@@ -108,8 +98,30 @@ export async function scegliGirandola(problem: PlannerProblem, opts: {
   // anche la posizione attuale del municipio nella città importata
   if (!candidati.some(([x, y]) => x === th.origX && y === th.origY)) candidati.push([th.origX, th.origY]);
   // ogni posizione in tutti e due i versi (orario e speculare)
-  const prove: Array<[number, number, boolean]> = candidati.flatMap(([x, y]) => [[x, y, false], [x, y, true]] as Array<[number, number, boolean]>);
-  const valuta = async (base: BaseGirandola, n: number) => {
+  return candidati.flatMap(([x, y]) => [[x, y, false], [x, y, true]] as Array<[number, number, boolean]>);
+}
+
+/** Voto di una posizione: edifici con strada fuori, deficit di spazio, strade. */
+export interface VotoGirandola { fuori: number; deficit: number; strade: number }
+interface OpzioniProve {
+  shouldStop: () => boolean;
+  /** Pausa del Planner (vedi CompletionOptions.attendiInPausa). */
+  attendiInPausa?: () => boolean;
+  /** Disposizioni provvisorie durante le prove (per mostrare subito qualcosa):
+   *  la base appena scelta e i passi della sua breve ricerca. */
+  onFrame?: (f: PlannerFrame) => void;
+}
+
+/** Valuta un gruppo di posizioni, una dopo l'altra, ognuna con una breve
+ *  ricerca di `n` disposizioni esatte; null dove la base non esiste (municipio
+ *  fuori dall'area) o dopo uno stop. Ogni valutazione è indipendente e
+ *  deterministica: per questo le prove si possono dividere fra più worker
+ *  (parallelo.ts) ottenendo gli stessi voti. */
+export async function valutaGirandole(problem: PlannerProblem, prove: ReadonlyArray<readonly [number, number, boolean]>, n: number, opts: OpzioniProve): Promise<Array<VotoGirandola | null>> {
+  const out: Array<VotoGirandola | null> = [];
+  for (const [tx, ty, sp] of prove) {
+    const base = opts.shouldStop() ? null : baseGirandola(problem, tx, ty, sp);
+    if (!base) { out.push(null); continue; }
     opts.onFrame?.({ placements: base.placements, roads: base.roads, probe: null, lastPath: [], placed: base.placements.size, unplaced: [], iterations: 0, done: false });
     const fr = await runCompletion(problem, {
       delayMs: 0, shouldStop: opts.shouldStop,
@@ -120,35 +132,63 @@ export async function scegliGirandola(problem: PlannerProblem, opts: {
       initial: { placements: base.placements, roads: base.roads }, geometry: base.geometry, fissi: [],
       girandola: { bracci: base.bracci }, soloRicerca: true,
     });
-    return { fuori: fr.search?.esclusi ?? 99, deficit: fr.search?.deficit ?? 0, strade: fr.roads.size };
-  };
-  type Voto = { base: BaseGirandola; fuori: number; deficit: number; strade: number };
-  // A parità (con prove brevi capita quasi sempre) vince la più vicina al
-  // centro (bracci lunghi in tutte le direzioni: Sdrushi2 fa 69 col
-  // municipio al centro), poi la più a sinistra.
-  // (il deficit di spazio per gli edifici senza strada conta prima delle strade, come nella ricerca)
-  const dc = (v: Voto) => Math.abs(v.base.tx - cx) + Math.abs(v.base.ty - cy);
-  const meglio = (a: Voto, b: Voto) => a.fuori - b.fuori || a.deficit - b.deficit || a.strade - b.strade || dc(a) - dc(b) || a.base.tx - b.base.tx;
+    out.push({ fuori: fr.search?.esclusi ?? 99, deficit: fr.search?.deficit ?? 0, strade: fr.roads.size });
+  }
+  return out;
+}
+
+type VotoBase = VotoGirandola & { base: BaseGirandola };
+/** Posizioni con il loro voto (senza quelle non valutate), nell'ordine delle prove. */
+function unisciVoti(problem: PlannerProblem, prove: ReadonlyArray<readonly [number, number, boolean]>, voti: ReadonlyArray<VotoGirandola | null>): VotoBase[] {
+  const out: VotoBase[] = [];
+  prove.forEach(([tx, ty, sp], i) => {
+    const v = voti[i], base = v ? baseGirandola(problem, tx, ty, sp) : null;
+    if (v && base) out.push({ base, ...v });
+  });
+  return out;
+}
+/** Dalla migliore alla peggiore (ordina sul posto). A parità (con prove brevi
+ *  capita quasi sempre) vince la più vicina al centro (bracci lunghi in tutte
+ *  le direzioni: Sdrushi2 fa 69 col municipio al centro), poi la più a
+ *  sinistra. Il deficit di spazio per gli edifici senza strada conta prima
+ *  delle strade, come nella ricerca. */
+function ordinaVoti(problem: PlannerProblem, voti: VotoBase[]): VotoBase[] {
+  const th = problem.buildings.find(b => b.isTownhall);
+  if (!th) return voti;
+  const cx = Math.round((problem.minX + problem.maxX + 1 - th.w) / 2), cy = Math.round((problem.minY + problem.maxY + 1 - th.h) / 2);
+  const dc = (v: VotoBase) => Math.abs(v.base.tx - cx) + Math.abs(v.base.ty - cy);
+  return voti.sort((a, b) => a.fuori - b.fuori || a.deficit - b.deficit || a.strade - b.strade || dc(a) - dc(b) || a.base.tx - b.base.tx);
+}
+
+/** Sceglie la posizione del municipio: alcune posizioni attorno al centro
+ *  (soprattutto verso sinistra), ognuna valutata con una breve ricerca
+ *  (`valutazioni` disposizioni); vince quella con meno edifici con strada
+ *  fuori, poi meno deficit di spazio, poi meno strade, poi più a sinistra;
+ *  le 3 migliori sono rivalutate con una ricerca 6 volte più lunga;
+ *  restituisce le 2 migliori (due mappe girandola).
+ *  `valuta` fa le valutazioni: scegliGirandola le fa qui, una dopo l'altra
+ *  (valutaGirandole); parallelo.ts ne passa una che le divide fra più worker
+ *  (17/11/2026: la scelta durava circa 30 s su un core solo). Stesso
+ *  risultato in entrambi i casi. Questa funzione non tocca runCompletion:
+ *  la pagina la può usare senza portarsi la ricerca nel suo bundle.
+ *  (Niente prova del riempimento: conta solo la disposizione degli edifici con
+ *  strada; il riempimento finale si ottimizzerà a parte — utente.) */
+export async function scegliGirandolaCon(problem: PlannerProblem,
+  valuta: (prove: ReadonlyArray<readonly [number, number, boolean]>, n: number) => Promise<Array<VotoGirandola | null>>,
+  opts: { shouldStop: () => boolean; valutazioni?: number }): Promise<BaseGirandola[]> {
   const n = opts.valutazioni ?? 150;
-  const voti: Voto[] = [];
-  for (const [i, [tx, ty, sp]] of prove.entries()) {
-    if (opts.shouldStop()) break;
-    opts.onProgress?.(i, prove.length + 3);
-    const base = baseGirandola(problem, tx, ty, sp);
-    if (!base) continue;
-    voti.push({ base, ...(await valuta(base, n)) });
-  }
+  const prove = proveGirandola(problem);
+  if (!prove.length) return [];
+  const voti = ordinaVoti(problem, unisciVoti(problem, prove, await valuta(prove, n)));
   // le 3 migliori rivalutate con una ricerca 6 volte più lunga
-  const finali: Voto[] = [];
-  for (const [i, v] of voti.sort(meglio).slice(0, 3).entries()) {
-    if (opts.shouldStop()) break;
-    opts.onProgress?.(prove.length + i, prove.length + 3);
-    finali.push({ base: v.base, ...(await valuta(v.base, 6 * n)) });
-  }
-  // (niente prova del riempimento: conta solo la disposizione degli edifici
-  // con strada; il riempimento finale si ottimizzerà a parte — utente)
-  // Le due migliori (richiesta dell'utente: due girandole, ognuna con la
-  // sua ricerca lunga, perché le prove brevi distinguono poco).
-  const ord = finali.length ? finali.sort(meglio) : voti;
+  const primi: Array<[number, number, boolean]> = opts.shouldStop() ? [] : voti.slice(0, 3).map(v => [v.base.tx, v.base.ty, v.base.specchio]);
+  const finali = primi.length ? unisciVoti(problem, primi, await valuta(primi, 6 * n)) : [];
+  // Le due migliori (richiesta dell'utente: due girandole, ognuna con la sua ricerca lunga)
+  const ord = finali.length ? ordinaVoti(problem, finali) : voti;
   return ord.slice(0, 2).map(v => v.base);
+}
+
+/** scegliGirandolaCon con le valutazioni fatte qui, una dopo l'altra (banco di prova). */
+export function scegliGirandola(problem: PlannerProblem, opts: OpzioniProve & { valutazioni?: number }): Promise<BaseGirandola[]> {
+  return scegliGirandolaCon(problem, (prove, n) => valutaGirandole(problem, prove, n, opts), opts);
 }

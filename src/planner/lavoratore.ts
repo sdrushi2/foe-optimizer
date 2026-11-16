@@ -10,8 +10,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { runCompletion, type CompletionOptions, type StatoManuale } from "./completion";
-import { scegliGirandola } from "./girandola";
-import type { PlannerFrame } from "./engine";
+import { valutaGirandole } from "./girandola";
+import type { PlannerFrame, PlannerProblem } from "./engine";
 
 /** Ambito del worker (tipi minimi: il progetto usa le librerie DOM). */
 const ambito = self as unknown as { postMessage: (m: unknown) => void; onmessage: ((e: MessageEvent) => void) | null };
@@ -29,7 +29,7 @@ ambito.onmessage = (e: MessageEvent) => {
   if (m.tipo === "adotta") { adozione = m.stato as StatoManuale; return; }
   if (m.tipo === "riprendi") { const r = attesa; attesa = null; r?.((m.stato as StatoManuale | null) ?? null); return; }
   if (m.tipo === "completion") void eseguiCompletion(m as unknown as AvvioCompletion);
-  else if (m.tipo === "scegli") void eseguiScelta(m as unknown as AvvioScelta);
+  else if (m.tipo === "valuta") void eseguiValutazioni(m as unknown as AvvioValuta);
 };
 
 type Ha = { attendiInPausa?: boolean; adotta?: boolean; finish?: boolean; stopFill?: boolean; paused?: boolean; wait?: boolean; onPaused?: boolean; onSearchActive?: boolean; onFillActive?: boolean };
@@ -40,7 +40,8 @@ export type AvvioCompletion = {
   ha: Ha;
   flag: typeof flag;
 };
-export type AvvioScelta = { tipo: "scegli"; problem: Parameters<typeof scegliGirandola>[0]; valutazioni?: number; flag: typeof flag };
+/** Girandola 2: valuta un gruppo di posizioni del municipio (`frame`: manda anche i fotogrammi delle prove). */
+export type AvvioValuta = { tipo: "valuta"; problem: PlannerProblem; prove: Array<[number, number, boolean]>; n: number; frame: boolean; flag: typeof flag };
 
 async function eseguiCompletion(m: AvvioCompletion) {
   Object.assign(flag, m.flag);
@@ -66,15 +67,13 @@ async function eseguiCompletion(m: AvvioCompletion) {
   }
 }
 
-async function eseguiScelta(m: AvvioScelta) {
+async function eseguiValutazioni(m: AvvioValuta) {
   Object.assign(flag, m.flag);
   try {
-    const r = await scegliGirandola(m.problem, {
+    const r = await valutaGirandole(m.problem, m.prove, m.n, {
       shouldStop: () => flag.stop,
       attendiInPausa: () => flag.paused,
-      ...(m.valutazioni !== undefined ? { valutazioni: m.valutazioni } : {}),
-      onProgress: (i, n) => invia({ tipo: "progresso", i, n }),
-      onFrame: f => invia({ tipo: "frame", f }),
+      ...(m.frame ? { onFrame: (f: PlannerFrame) => invia({ tipo: "frame", f }) } : {}),
     });
     invia({ tipo: "fine", r });
   } catch (err) {

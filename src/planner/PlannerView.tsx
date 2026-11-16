@@ -2,11 +2,11 @@
 //  planner/PlannerView.tsx — Modulo Planner della tab Città (SPERIMENTALE)
 //
 //  Sempre incluso nel tool (il flag di build SHOW_PLANNER è stato tolto il 19 ottobre 2026).
-//  Tre mappe (raccordo est a 3 celle, a 4 celle, girandola), eliminabili col
-//  cestino, calcolate in parallelo
-//  (FoE City Builder fase 1+2, poi ricerca degli edifici con strada e
-//  riempimento). Avvia / Pausa-Riprendi / COMPLETA / Reset valgono per
-//  entrambe; l'utente sceglie la disposizione che preferisce.
+//  Fino a sei scenari (raccordo est a 3, 4 e 5 celle, Girandola, Girandola 2,
+//  Configurazione attuale), eliminabili col cestino, calcolati in parallelo
+//  nei Web Worker (FoE City Builder fase 1, poi ricerca degli edifici con
+//  strada e riempimento). Ottimizza / Pausa / Smussa / COMPLETA / Reset
+//  valgono per tutti; l'utente sceglie la disposizione che preferisce.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -505,7 +505,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           // partenza. Senza `due` la mappa ricadeva sul nucleo iniziale dello
           // scenario e, se il 2×2 era stato spostato, lo mostrava come 4 strade
           // a una corsia — segnalazione dell'utente)
-          const nf: PlannerFrame = { ...f, lastPath: f0.lastPath, done: false, ...(f0.due ? { due: f0.due } : {}) };
+          const nf: PlannerFrame = { ...f, lastPath: [], done: false, ...(f0.due ? { due: f0.due } : {}) };
           framesRef.current = { ...framesRef.current, [sc.id]: nf };
           setFrames(prev => ({ ...prev, [sc.id]: nf }));
           modRef.current[sc.id] = true;
@@ -533,7 +533,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const rd = new Set<string>();
     for (const k of f.roads) { const n = sp(k); if (!problem.cells.has(n)) return null; rd.add(n); }
     const due = f.due?.map(sp); // blocchi a due corsie traslati
-    return { ...f, placements: pl, roads: rd, lastPath: f.lastPath.map(sp), probe: null, ...(due ? { due } : {}) };
+    return { ...f, placements: pl, roads: rd, lastPath: [], probe: null, ...(due ? { due } : {}) };
   };
   /** Città specchiata (richiesta dell'utente, solo in pausa): ribaltata in
    *  orizzontale ("h") o in verticale ("v") attorno al rettangolo che
@@ -562,7 +562,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     for (const k of f.roads) { const n = sp(k); if (!problem.cells.has(n)) return null; rd.add(n); }
     // blocchi a due corsie: angolo in alto a sinistra del 2×2 specchiato
     const due = f.due?.map(k => { const i = k.indexOf(","); return `${mx(Number(k.slice(0, i)), 2)},${my(Number(k.slice(i + 1)), 2)}`; });
-    return { ...f, placements: pl, roads: rd, lastPath: f.lastPath.map(sp), probe: null, ...(due ? { due } : {}) };
+    return { ...f, placements: pl, roads: rd, lastPath: [], probe: null, ...(due ? { due } : {}) };
   };
   const applicaManuale = (v: VName, nf: PlannerFrame | null) => {
     if (!nf) return;
@@ -573,12 +573,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   const spostaTutto = (v: VName, dx: number, dy: number) => {
     const f = framesRef.current[v];
-    const nf = f && traslato(f, dx, dy, v);
-    if (!nf) return;
-    framesRef.current = { ...framesRef.current, [v]: nf };
-    setFrames(prev => ({ ...prev, [v]: nf }));
-    modRef.current[v] = true;
-    setManuali(m => (m[v] ? m : { ...m, [v]: true }));
+    applicaManuale(v, f ? traslato(f, dx, dy, v) : null);
   };
   /** "Annulla completamento" (richiesta dell'utente): disposizione e
    *  disposizioni valutate di ogni mappa quando si è premuto COMPLETA; con
@@ -792,7 +787,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (st.rag !== catene) scenRef.current = { ...scenRef.current, [id]: { gen, rag: st.rag } };
       const pa = st.rag.problem;
       dueRef.current = { ...dueRef.current, [id]: st.blocchi };
-      setF({ placements: new Map(st.placements), roads: new Set(st.roads), probe: null, lastPath: [], placed: st.placements.size, unplaced: [], iterations: 0, done: false, label: t("plannerScenarioCurrent", uiLang) });
+      setF({ placements: new Map(st.placements), roads: new Set(st.roads), probe: null, lastPath: [], placed: st.placements.size, unplaced: [], iterations: 0, done: false });
       const due = pa.buildings.filter(b => richiedeDueCorsie(b) && st.placements.has(b.id)).map(b => b.id);
       await corri({
         initial: { placements: st.placements, roads: st.roads },
@@ -809,21 +804,24 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     if (!v) {
       // Girandola: scelta della posizione del municipio (brevi ricerche), poi
       // ricerca e completamento come gli altri scenari.
-      const vuoto = (label: string): PlannerFrame => ({ placements: new Map(), roads: new Set(), probe: null, lastPath: [], placed: 0, unplaced: [], iterations: 0, done: false, label });
+      const vuoto = (): PlannerFrame => ({ placements: new Map(), roads: new Set(), probe: null, lastPath: [], placed: 0, unplaced: [], iterations: 0, done: false });
       // Prima girandola: municipio al centro, parte subito. Seconda: la
       // posizione migliore delle prove brevi (diversa dal centro).
       let base: BaseGirandola | null | undefined;
       if (sc.gir !== 1) base = baseCentrale(problem);
       else {
-        setF(vuoto("Girandola 2: scelta della posizione del municipio…"));
+        setF(vuoto());
         // Le prove si vedono subito (municipio, bracci e la loro breve ricerca),
         // senza le statistiche della ricerca (ripartono a ogni posizione).
-        let fase = "Girandola 2: scelta della posizione del municipio…";
         const centro = baseCentrale(problem);
         const scelte = await scegliGirandolaParallela(problem, {
           shouldStop: fermato, attendiInPausa: () => pausedRef.current,
-          onProgress: (i, n) => { fase = `Girandola 2: prova della posizione del municipio ${i + 1}/${n}`; },
-          onFrame: f => setF({ ...f, search: undefined, done: false, label: fase }),
+          // (17/11/2026, utente) Le prove sono divise fra più worker, anche oltre
+          // la potenza scelta: per quei pochi secondi lo scenario non ha ancora
+          // aiutanti al lavoro. Metà dei core, al massimo 8; con MAX almeno le
+          // ricerche che gli spettano. Stesse basi scelte, in meno tempo.
+          lavoratori: Math.max(semiRef.current, Math.min(8, Math.floor(coreDisponibili() / 2))),
+          onFrame: f => setF({ ...f, search: undefined, done: false }),
         });
         base = scelte.find(b => !centro || b.tx !== centro.tx || b.ty !== centro.ty || b.specchio !== centro.specchio);
       }
@@ -841,7 +839,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       });
       let nucleo: Nucleo | undefined;
       if (nuclei.length) {
-        setF({ placements: base.placements, roads: base.roads, probe: null, lastPath: [], placed: base.placements.size, unplaced: [], iterations: 0, done: false, label: "Scelta delle strade a due corsie…" });
+        setF({ placements: base.placements, roads: base.roads, probe: null, lastPath: [], placed: base.placements.size, unplaced: [], iterations: 0, done: false });
         nucleo = nuclei[await scegliPartenza(nuclei.map(n => opz(n)))];
         if (fermato()) return;
       }
@@ -866,8 +864,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     });
     let scelto = candidati[0]!;
     if (candidati.length > 1) {
-      setF({ ...fine(v), probe: null, lastPath: [], placed: fine(v).placements.size, unplaced: [], iterations: 0, done: false,
-        label: "Scelta della partenza (margine dal bordo, strade a due corsie)…" });
+      setF({ ...fine(v), probe: null, lastPath: [], placed: fine(v).placements.size, unplaced: [], iterations: 0, done: false });
       scelto = candidati[await scegliPartenza(candidati.map(opzB))]!;
       if (fermato()) return;
       v = scelto.b;
@@ -883,15 +880,15 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       setF({
         placements: s.placements, roads: s.roads,
         probe: nb && np ? { x: np.x, y: np.y, w: nb.w, h: nb.h } : null,
-        lastPath: [...s.roads].filter(r => !prev?.roads.has(r)),
-        placed: s.placements.size, unplaced: [], iterations: i, done: false, label: s.label,
+        lastPath: [],
+        placed: s.placements.size, unplaced: [], iterations: i, done: false,
       });
       prev = s;
       await sleep(0);
     }
     if ((!prev && !scelto.n?.geometry) || fermato()) return;
     if (scelto.n) {
-      setF({ placements: scelto.n.placements, roads: scelto.n.roads, probe: null, lastPath: celleBlocchi(scelto.n.blocchi), placed: scelto.n.placements.size, unplaced: [], iterations: v.stages.length, done: false, label: "Strade a due corsie" });
+      setF({ placements: scelto.n.placements, roads: scelto.n.roads, probe: null, lastPath: [], placed: scelto.n.placements.size, unplaced: [], iterations: v.stages.length, done: false });
       await sleep(0);
     }
     const o = opzB(scelto);
@@ -1003,6 +1000,36 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Riga di stato di una mappa: edifici CON STRADA piazzati (verde = tutti,
    *  rosso = ne mancano), strade attuali/della città di partenza (verde = meno della città di partenza, rosso = di più)
    *  e disposizioni provate dalla ricerca. */
+  /** Valori derivati di un fotogramma (revisione del 16/11/2026): calcolati una
+   *  volta per fotogramma e non a ogni render per tutti gli scenari. I
+   *  fotogrammi non vengono mai modificati sul posto (ogni aggiornamento ne crea
+   *  uno nuovo), quindi il fotogramma stesso fa da chiave; con oggetti stabili
+   *  MapCanvas ridisegna solo la mappa che è cambiata. `mosse` (frecce di
+   *  "Sposta tutto" e specchi possibili) si calcola solo quando serve, in pausa. */
+  type Derivati = {
+    pn: PlannerProblem; eff: ReturnType<typeof calcolaRoadEff>; vuote: ReturnType<typeof calcolaStradeVuote>;
+    evidenzia: ReadonlySet<string>; angoli: number;
+    mosse?: { sposta: Record<string, boolean>; specchio: { h: boolean; v: boolean } };
+  };
+  const derivatiRef = useRef(new WeakMap<PlannerFrame, Derivati>());
+  const derivati = (f: PlannerFrame, pn: PlannerProblem): Derivati => {
+    let d = derivatiRef.current.get(f);
+    if (!d || d.pn !== pn) {
+      const eff = calcolaRoadEff(pn.buildings, f.placements, f.roads);
+      d = { pn, eff, vuote: calcolaStradeVuote(pn.buildings, f.placements, f.roads, pn.cells),
+        evidenzia: new Set(eff.voci.map(v => v.id)), angoli: contaAngoli(pn, f.placements, f.roads) };
+      derivatiRef.current.set(f, d);
+    }
+    return d;
+  };
+  const mosseDi = (f: PlannerFrame, n: VName) => {
+    const d = derivati(f, problemDi(n));
+    d.mosse ??= {
+      sposta: Object.fromEntries(([[-1, 0], [0, -1], [0, 1], [1, 0]] as const).map(([dx, dy]) => [`${dx},${dy}`, !!traslato(f, dx, dy, n)])),
+      specchio: { h: !!specchiato(f, "h", n), v: !!specchiato(f, "v", n) },
+    };
+    return d.mosse;
+  };
   const conStradaP = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0), [problem]);
   const senzaStradaP = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0), [problem]);
   const stats = (f: PlannerFrame | null, valutate?: number, n?: VName) => {
@@ -1018,7 +1045,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       {t("plannerStatsPlaced", uiLang)} <b className={piazzati >= conStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzati}/{conStrada.length}</b>
       {" · "}{t("plannerStatsNoRoad", uiLang)} <b className={piazzatiSenza >= senzaStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzatiSenza}/{senzaStrada.length}</b>
       {" · "}{t("plannerStatsRoads", uiLang)} <b className={f.roads.size < problem.originalRoadCells ? "text-emerald-400" : f.roads.size > problem.originalRoadCells ? "text-red-400" : "text-slate-100"}>{f.roads.size}/{problem.originalRoadCells}</b>
-      {" · "}<span title={t("plannerStatsCornersTitle", uiLang)}>{t("plannerStatsCorners", uiLang)} <b className="text-slate-100">{contaAngoli(pn, f.placements, f.roads)}</b></span>
+      {" · "}<span title={t("plannerStatsCornersTitle", uiLang)}>{t("plannerStatsCorners", uiLang)} <b className="text-slate-100">{derivati(f, pn).angoli}</b></span>
       {valutate !== undefined && <>{" · "}{valutate.toLocaleString(uiLang === "en" ? "en-US" : "it-IT")} {t("plannerStatsLayouts", uiLang)}</>}
     </span>
     );
@@ -1071,7 +1098,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   const nomeFile = (n: VName, ext: string) => {
     const sc = outcome?.find(x => x.id === n);
-    return sc && !sc.raccordo ? `foe-planner-girandola${sc.gir ? "-2" : ""}-${localDateStamp()}.${ext}`
+    return sc?.attuale ? `foe-planner-attuale-${localDateStamp()}.${ext}`
+      : sc && !sc.raccordo ? `foe-planner-girandola${sc.gir ? "-2" : ""}-${localDateStamp()}.${ext}`
       : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.${ext}`;
   };
   /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
@@ -1177,7 +1205,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     if (err2.length) return err2;
     const { placements: pl, roads } = r;
     if (r.raggruppamento !== rag) scenRef.current = { ...scenRef.current, [e.n]: { gen: genRef.current, rag: r.raggruppamento } };
-    applicaManuale(e.n, { ...f, placements: pl, roads, due: r.blocchi, lastPath: [...roads].filter(k => !f.roads.has(k)), probe: null, placed: pl.size });
+    applicaManuale(e.n, { ...f, placements: pl, roads, due: r.blocchi, lastPath: [], probe: null, placed: pl.size });
     if (r.raggruppamento.problem !== rag.problem) {
       // Catene con un altro numero di anelli: problema nuovo per lo scenario.
       // Le disposizioni salvate (Annulla modifiche / completamento) hanno le
@@ -1380,8 +1408,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                 // Bordi tratteggiati (gialli = problematici, rossi = strade vuote):
                 // sempre visibili; l'elenco sotto la mappa solo con DEBUG_PLANNER.
                 const pn = problemDi(n), bn = byIdDi(n);
-                const eff = f ? calcolaRoadEff(pn.buildings, f.placements, f.roads) : null;
-                const vuote = f ? calcolaStradeVuote(pn.buildings, f.placements, f.roads, pn.cells) : null;
+                const der = f ? derivati(f, pn) : null;
+                const eff = der?.eff ?? null, vuote = der?.vuote ?? null;
                 return (
                   <div key={n} className="min-w-0 rounded border border-slate-800 p-2">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -1393,7 +1421,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                       {f && inPausa[n] && paused && !smussando && (
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title={t("plannerMoveAllTitle", uiLang)}>
                           {([["←", -1, 0], ["↑", 0, -1], ["↓", 0, 1], ["→", 1, 0]] as const).map(([fr, dx, dy]) => (
-                            <button key={fr} type="button" disabled={!traslato(f, dx, dy, n)} onClick={() => spostaTutto(n, dx, dy)}
+                            <button key={fr} type="button" disabled={!mosseDi(f, n).sposta[`${dx},${dy}`]} onClick={() => spostaTutto(n, dx, dy)}
                               className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
                           ))}
                         </span>
@@ -1402,7 +1430,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title={t("plannerMirrorTitle", uiLang)}>
                           {t("plannerMirror", uiLang)}
                           {([["⇋", "h", "plannerMirrorH"], ["⇵", "v", "plannerMirrorV"]] as const).map(([fr, asse, tit]) => (
-                            <button key={asse} type="button" title={specchioDi(n)[asse] ? t("plannerMirrorChain", uiLang) : t(tit, uiLang)}disabled={!specchiato(f, asse, n)} onClick={() => applicaManuale(n, specchiato(f, asse, n))}
+                            <button key={asse} type="button" title={specchioDi(n)[asse] ? t("plannerMirrorChain", uiLang) : t(tit, uiLang)}disabled={!mosseDi(f, n).specchio[asse]} onClick={() => applicaManuale(n, specchiato(f, asse, n))}
                               className="rounded border border-sky-600 px-1.5 font-bold text-sky-300 hover:bg-sky-950 disabled:opacity-30">{fr}</button>
                           ))}
                         </span>
@@ -1427,7 +1455,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                     </div>
                     <div className={`overflow-hidden rounded border ${inPausa[n] ? "border-sky-500" : "border-slate-800"}`}>
                       <MapCanvas frame={f} problem={pn} byId={bn} ge={grandiEdifici} pausa={inPausa[n] && paused} due={f?.due ?? dueRef.current[n]}
-                        evidenzia={eff ? new Set(eff.voci.map(v => v.id)) : undefined} stradeVuote={vuote ?? undefined} />
+                        evidenzia={der?.evidenzia} stradeVuote={vuote ?? undefined} />
                     </div>
                     {DEBUG_PLANNER && eff && (
                       // DEBUG_PLANNER (roadEff.ts): edifici con road_eff > 0 = celle di strada toccate − lato corto.

@@ -216,7 +216,7 @@ export interface Ricomposizione {
 export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { x: number; y: number }>, tollera = false): Ricomposizione {
   const { problem, blocchi, originali } = rag;
   const out: Ricomposizione = { rag, placements: new Map(), voci: new Set(), staccati: [], forme: [], tolti: [] };
-  type Voce = { id: string; sig: string; k: number; membri: Blocco["membri"] };
+  type Voce = { id: string; sig: string; membri: Blocco["membri"] };
   const firmaVoce = (w: number, h: number, membri: ReadonlyArray<{ dx: number; dy: number }>) =>
     `${w}x${h}|${membri.map(m => `${m.dx},${m.dy}`).join(";")}`;
   const perCatena = new Map<string, Voce[]>();
@@ -227,7 +227,7 @@ export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { 
     const catena = bl?.catena ?? (info?.ruolo === "inizio" ? info.catena : undefined);
     if (!catena) continue;
     const membri = bl?.membri ?? [{ id: b.id, dx: 0, dy: 0 }];
-    perCatena.set(catena, [...(perCatena.get(catena) ?? []), { id: b.id, sig: firmaVoce(b.w, b.h, membri), k: membri.length - 1, membri }]);
+    perCatena.set(catena, [...(perCatena.get(catena) ?? []), { id: b.id, sig: firmaVoce(b.w, b.h, membri), membri }]);
   }
   const riassegnati = new Map<string, Blocco>();
   const tolte = new Set<string>(), nuove: PlannerBuilding[] = [], nuoviBlocchi: Blocco[] = [];

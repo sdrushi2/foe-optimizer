@@ -67,24 +67,35 @@ function backtrackRiempimento(grid: Mask, buildings: PB[], targetCov: number, ra
     return true;
   };
   const canPlace = (r: number, c: number, w: number, l: number) => r + l <= R && c + w <= C && rectFree(r, c, w, l);
-  const cand: Array<Array<[number, number, Shape]>> = [];
+  // Rettangoli candidati di ogni cella (tutte le posizioni di ogni forma che la
+  // coprono), in vettori piatti: candDa[cella] .. candDa[cella + 1] sono gli
+  // indici dei suoi candidati (riga, colonna, forma). (17/11/2026: prima una
+  // lista di terne per cella, ricreata a ogni chiamata; l'ordine non conta,
+  // serve solo sapere se ALMENO un rettangolo è libero, quindi le forme più
+  // piccole vanno per prime: sono libere più spesso e si esce prima.)
+  const candDa = new Int32Array(R * C + 1);
+  let nCand = 0;
   for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
-    const list: Array<[number, number, Shape]> = [];
+    candDa[r * C + c] = nCand;
     for (const st of shapes) {
-      for (let dr = 0; dr < st.l; dr++) {
-        const sr = r - dr;
-        if (sr < 0 || sr + st.l > R) continue;
-        for (let dc = 0; dc < st.w; dc++) {
-          const sc = c - dc;
-          if (sc < 0 || sc + st.w > C) continue;
-          list.push([sr, sc, st]);
-        }
-      }
+      const nr = Math.min(r, R - st.l) - Math.max(0, r - st.l + 1) + 1, nc = Math.min(c, C - st.w) - Math.max(0, c - st.w + 1) + 1;
+      if (nr > 0 && nc > 0) nCand += nr * nc;
     }
-    cand.push(list);
+  }
+  candDa[R * C] = nCand;
+  const candR = new Int16Array(nCand), candC = new Int16Array(nCand), candS = new Int16Array(nCand);
+  for (let r = 0, q = 0; r < R; r++) for (let c = 0; c < C; c++) {
+    for (let si = shapes.length - 1; si >= 0; si--) {
+      const st = shapes[si]!;
+      const r1 = Math.min(r, R - st.l), c1 = Math.min(c, C - st.w);
+      for (let sr = Math.max(0, r - st.l + 1); sr <= r1; sr++) for (let sc = Math.max(0, c - st.w + 1); sc <= c1; sc++) { candR[q] = sr; candC[q] = sc; candS[q] = si; q++; }
+    }
   }
   const coverable = (idx: number) => {
-    for (const [sr, sc, st] of cand[idx]!) if (st.count > 0 && rectFree(sr, sc, st.w, st.l)) return true;
+    for (let q = candDa[idx]!, fine = candDa[idx + 1]!; q < fine; q++) {
+      const st = shapes[candS[q]!]!;
+      if (st.count > 0 && rectFree(candR[q]!, candC[q]!, st.w, st.l)) return true;
+    }
     return false;
   };
   const morte = new Uint8Array(R * C);
@@ -92,6 +103,8 @@ function backtrackRiempimento(grid: Mask, buildings: PB[], targetCov: number, ra
   for (let i = 0; i < R * C; i++) if (board[i] === 0 && !coverable(i)) { morte[i] = 1; nMorte++; }
   const target = targetCov ? Math.max(0, targetCov - nMorte) : targetCov;
   const maxW = shapes.reduce((m, s) => Math.max(m, s.w), 1), maxL = shapes.reduce((m, s) => Math.max(m, s.l), 1);
+  /** Somme prefisse locali di hasUncoverable (modalità veloce). */
+  const pre = new Int32Array((R + 1) * (C + 1));
   const hasUncoverable = (r: number, c: number, w: number, l: number) => {
     if (!fast) {
       for (let i = 0; i < R * C; i++) if (board[i] === 0 && !morte[i] && !coverable(i)) return true;
@@ -99,10 +112,31 @@ function backtrackRiempimento(grid: Mask, buildings: PB[], targetCov: number, ra
     }
     // Modalità veloce (solo completamento del Planner, maschere grandi): controlla
     // solo le celle i cui rettangoli candidati possono toccare il pezzo appena posato.
+    // (17/11/2026) Stesso esito, più veloce: somme prefisse delle celle non libere
+    // sulla zona che quei rettangoli possono raggiungere, così ogni rettangolo si
+    // controlla con 4 letture invece che cella per cella.
+    const ia = Math.max(0, r - 2 * maxL + 2), ib = Math.min(R, r + l + 2 * maxL - 2);
+    const ja = Math.max(0, c - 2 * maxW + 2), jb = Math.min(C, c + w + 2 * maxW - 2);
+    const WL = jb - ja + 1;
+    for (let k = 0; k < WL; k++) pre[k] = 0;
+    for (let i = ia; i < ib; i++) {
+      const riga = (i - ia + 1) * WL, sopra = riga - WL, bi = i * C;
+      let run = 0;
+      pre[riga] = 0;
+      for (let j = ja; j < jb; j++) { if (board[bi + j] !== 0) run++; pre[riga + j - ja + 1] = pre[sopra + j - ja + 1]! + run; }
+    }
     for (let i = Math.max(0, r - maxL + 1); i < Math.min(R, r + l + maxL - 1); i++)
       for (let j = Math.max(0, c - maxW + 1); j < Math.min(C, c + w + maxW - 1); j++) {
         const idx = i * C + j;
-        if (board[idx] === 0 && !morte[idx] && !coverable(idx)) return true;
+        if (board[idx] !== 0 || morte[idx]) continue;
+        let coperta = false;
+        for (let q = candDa[idx]!, fine = candDa[idx + 1]!; q < fine; q++) {
+          const s = shapes[candS[q]!]!;
+          if (s.count <= 0) continue;
+          const a = (candR[q]! - ia) * WL + candC[q]! - ja, b = a + s.l * WL;
+          if (pre[b + s.w]! - pre[a + s.w]! - pre[b]! + pre[a]! === 0) { coperta = true; break; }
+        }
+        if (!coperta) return true;
       }
     return false;
   };

@@ -48,7 +48,11 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   for (const k of roadKeys) { const c = k.indexOf(","), g = gi(Number(k.slice(0, c)), Number(k.slice(c + 1))); if (g >= 0) { road[g] = 1; occ[g] = 1; } }
   const byId = new Map(problem.buildings.map(b => [b.id, b]));
   const pos = new Map<string, { x: number; y: number }>();
-  const rect = (x: number, y: number, w: number, h: number, v: 0 | 1) => { for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) { const g = gi(x + dx, y + dy); if (g >= 0) occ[g] = v; } };
+  const rect = (x: number, y: number, w: number, h: number, v: 0 | 1) => {
+    // (solo la parte dentro la griglia, senza ricalcolare l'indice cella per cella)
+    const i0 = Math.max(0, x - problem.minX), i1 = Math.min(W, x - problem.minX + w), j0 = Math.max(0, y - problem.minY), j1 = Math.min(H, y - problem.minY + h);
+    for (let j = j0; j < j1; j++) { const r = j * W; for (let i = i0; i < i1; i++) occ[r + i] = v; }
+  };
   for (const [id, q] of start.placements) { const b = byId.get(id); if (!b) continue; pos.set(id, { x: q.x, y: q.y }); rect(q.x, q.y, b.w, b.h, 1); }
   // (mai gli edifici a due corsie: devono restare accanto ai blocchi 2×2 — Smussa
   // ne spostava uno su una strada semplice, segnalazione dell'utente)
@@ -73,7 +77,9 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     return false;
   };
   const libero = (x: number, y: number, w: number, h: number) => {
-    for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) { const g = gi(x + dx, y + dy); if (g < 0 || cell[g] !== 1 || occ[g] === 1) return false; }
+    const i0 = x - problem.minX, j0 = y - problem.minY;
+    if (i0 < 0 || j0 < 0 || i0 + w > W || j0 + h > H) return false;
+    for (let dy = 0; dy < h; dy++) { const r = (j0 + dy) * W + i0; for (let dx = 0; dx < w; dx++) if (cell[r + dx] !== 1 || occ[r + dx] === 1) return false; }
     return true;
   };
   const eff = (b: PlannerBuilding, x: number, y: number) => esclusoDaRoadEff(b, x, y, isR) ? 0 : Math.max(0, roadEffDi(x, y, b.w, b.h, isR).eff);
@@ -152,7 +158,9 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   };
   const liberaC = (i: number, j: number) => i >= 0 && j >= 0 && i < W && j < H && cell[j * W + i] === 1 && occ[j * W + i] !== 1;
   const finestra = (i0: number, j0: number, w: number, h: number) => {
-    for (let dj = 0; dj < h; dj++) for (let di = 0; di < w; di++) if (!liberaC(i0 + di, j0 + dj)) return false;
+    // (un solo controllo dei bordi per finestra, poi le celle lette direttamente)
+    if (i0 < 0 || j0 < 0 || i0 + w > W || j0 + h > H) return false;
+    for (let dj = 0; dj < h; dj++) { const g0 = (j0 + dj) * W + i0; for (let di = 0; di < w; di++) if (cell[g0 + di] !== 1 || occ[g0 + di] === 1) return false; }
     return true;
   };
   /** La cella (i, j) è un buco: libera ma nessuna forma minima la copre. */
@@ -165,38 +173,52 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
   const timbroP = new Int32Array((W + 1) * (H + 1)), timbroC = new Int32Array(W * H), timbroB = new Int32Array(W * H);
   let timbro = 0;
   /** Contributi locali [angoli, perimetro, buchi] attorno ai rettangoli (coordinate di gioco). */
-  const locale = (rett: Array<[number, number, number, number]>): [number, number, number] => {
-    timbro++;
-    let a = 0, p = 0, bu = 0;
-    for (const [x, y, w, h] of rett) {
-      const i0 = x - problem.minX, j0 = y - problem.minY;
-      for (let j = Math.max(0, j0); j <= Math.min(H, j0 + h); j++) for (let i = Math.max(0, i0); i <= Math.min(W, i0 + w); i++) {
-        const t = j * (W + 1) + i;
-        if (timbroP[t] === timbro) continue;
-        timbroP[t] = timbro; a += angoloPt(i, j);
-      }
-      for (let j = Math.max(0, j0 - 1); j <= Math.min(H - 1, j0 + h); j++) for (let i = Math.max(0, i0 - 1); i <= Math.min(W - 1, i0 + w); i++) {
-        const g = j * W + i;
-        if (timbroC[g] === timbro) continue;
-        timbroC[g] = timbro; p += perimCella(i, j);
-      }
-      if (minime.length) for (let j = Math.max(0, j0 - S + 1); j <= Math.min(H - 1, j0 + h - 1 + S - 1); j++) for (let i = Math.max(0, i0 - S + 1); i <= Math.min(W - 1, i0 + w - 1 + S - 1); i++) {
-        const g = j * W + i;
-        if (timbroB[g] === timbro) continue;
-        timbroB[g] = timbro; bu += bucoC(i, j);
-      }
+  // (17/11/2026) I contributi si accumulano in La / Lp / Lb: `locale1` (un solo
+  // rettangolo, il caso dei cicli più caldi) non crea nessun oggetto; `locale`
+  // resta per i gruppi di rettangoli. Stessi numeri di prima.
+  let La = 0, Lp = 0, Lb = 0;
+  const accumula = (x: number, y: number, w: number, h: number) => {
+    const i0 = x - problem.minX, j0 = y - problem.minY;
+    for (let j = Math.max(0, j0); j <= Math.min(H, j0 + h); j++) for (let i = Math.max(0, i0); i <= Math.min(W, i0 + w); i++) {
+      const t = j * (W + 1) + i;
+      if (timbroP[t] === timbro) continue;
+      timbroP[t] = timbro; La += angoloPt(i, j);
     }
-    return [a, p, bu];
+    for (let j = Math.max(0, j0 - 1); j <= Math.min(H - 1, j0 + h); j++) for (let i = Math.max(0, i0 - 1); i <= Math.min(W - 1, i0 + w); i++) {
+      const g = j * W + i;
+      if (timbroC[g] === timbro) continue;
+      timbroC[g] = timbro; Lp += perimCella(i, j);
+    }
+    if (minime.length) for (let j = Math.max(0, j0 - S + 1); j <= Math.min(H - 1, j0 + h - 1 + S - 1); j++) for (let i = Math.max(0, i0 - S + 1); i <= Math.min(W - 1, i0 + w - 1 + S - 1); i++) {
+      const g = j * W + i;
+      if (timbroB[g] === timbro) continue;
+      timbroB[g] = timbro; Lb += bucoC(i, j);
+    }
+  };
+  const locale = (rett: Array<[number, number, number, number]>): [number, number, number] => {
+    timbro++; La = 0; Lp = 0; Lb = 0;
+    for (const [x, y, w, h] of rett) accumula(x, y, w, h);
+    return [La, Lp, Lb];
+  };
+  /** Come `locale` per un solo rettangolo: il risultato resta in La, Lp, Lb. */
+  const locale1 = (x: number, y: number, w: number, h: number) => {
+    // (un rettangolo solo: nessuna cella può essere contata due volte, quindi niente timbri)
+    let a = 0, p = 0, bu = 0;
+    const i0 = x - problem.minX, j0 = y - problem.minY;
+    for (let j = Math.max(0, j0), j1 = Math.min(H, j0 + h); j <= j1; j++) for (let i = Math.max(0, i0), i1 = Math.min(W, i0 + w); i <= i1; i++) a += angoloPt(i, j);
+    for (let j = Math.max(0, j0 - 1), j1 = Math.min(H - 1, j0 + h); j <= j1; j++) for (let i = Math.max(0, i0 - 1), i1 = Math.min(W - 1, i0 + w); i <= i1; i++) p += perimCella(i, j);
+    if (minime.length) for (let j = Math.max(0, j0 - S + 1), j1 = Math.min(H - 1, j0 + h - 1 + S - 1); j <= j1; j++) for (let i = Math.max(0, i0 - S + 1), i1 = Math.min(W - 1, i0 + w - 1 + S - 1); i <= i1; i++) bu += bucoC(i, j);
+    La = a; Lp = p; Lb = bu;
   };
 
   /** Cambia un rettangolo (v = 1 occupa, 0 libera) aggiornando il punteggio
    *  `sc` = [angoli, perimetro, buchi] in modo incrementale. */
   const rettSc = (x: number, y: number, w: number, h: number, v: 0 | 1, sc: [number, number, number]) => {
-    const r: Array<[number, number, number, number]> = [[x, y, w, h]];
-    const p0 = locale(r);
+    locale1(x, y, w, h);
+    const a0 = La, p0 = Lp, b0 = Lb;
     rect(x, y, w, h, v);
-    const p1 = locale(r);
-    sc[0] += p1[0] - p0[0]; sc[1] += p1[1] - p0[1]; sc[2] += p1[2] - p0[2];
+    locale1(x, y, w, h);
+    sc[0] += La - a0; sc[1] += Lp - p0; sc[2] += Lb - b0;
   };
   const comePunti = (sc: [number, number, number]): Punti => [sc[0] + sc[2], sc[1], sc[0], sc[2]];
 
@@ -275,13 +297,14 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
             // blocchi di catena: la strada deve toccare l'INIZIO, non gli anelli
             // (Smussa attaccava le Statue del serpente dalla parte degli Anelli)
             if (!libero(x, y, c.w, c.h) || (c.zonaStrada && !toccaStradaZona(c, x, y, isR))) continue;
-            const r: Array<[number, number, number, number]> = [[x, y, c.w, c.h]];
-            const p0 = locale(r);
+            locale1(x, y, c.w, c.h);
+            const a0 = La, p0 = Lp, b0 = Lb;
             rect(x, y, c.w, c.h, 1);
-            const p1 = locale(r);
+            locale1(x, y, c.w, c.h);
             rect(x, y, c.w, c.h, 0);
-            const pt = comePunti([sc[0] + p1[0] - p0[0], sc[1] + p1[1] - p0[1], sc[2] + p1[2] - p0[2]]);
-            if (!scelto || cmp(pt, scelto.pt) < 0) scelto = { x, y, pt };
+            // (stesso confronto di cmp sui primi due valori, senza creare la terna per i candidati scartati)
+            const na = sc[0] + La - a0, np = sc[1] + Lp - p0, nb = sc[2] + Lb - b0, tot = na + nb;
+            if (!scelto || tot < scelto.pt[0] || (tot === scelto.pt[0] && np < scelto.pt[1])) scelto = { x, y, pt: [tot, np, na, nb] };
           }
         }
         if (!scelto) break;
@@ -425,11 +448,9 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
       const c = vicini[rnd(vicini.length)];
       if (c) {
         const p = pos.get(c.id)!;
-        const angoli = (o: { x: number; y: number }, ow: number, oh: number, w: number, h: number): Array<[number, number]> =>
-          [[o.x, o.y], [o.x + ow - w, o.y], [o.x, o.y + oh - h], [o.x + ow - w, o.y + oh - h]];
         let migl: Punti | null = null;
         const prove: Array<[number, number, number, number]> = [];
-        for (const [bx, by] of angoli(p, c.w, c.h, b.w, b.h)) for (const [cx, cy] of angoli(q, b.w, b.h, c.w, c.h)) prove.push([bx, by, cx, cy]);
+        for (const [bx, by] of angoliDi(p, c.w, c.h, b.w, b.h)) for (const [cx, cy] of angoliDi(q, b.w, b.h, c.w, c.h)) prove.push([bx, by, cx, cy]);
         for (const [bx, by, cx, cy] of prove.sort(() => Math.random() - 0.5).slice(0, 6)) {
           const r = prova([[b, bx, by], [c, cx, cy]], migl ?? soglia);
           if (r) { migl = r; break; }

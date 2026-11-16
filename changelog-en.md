@@ -1,8 +1,19 @@
 # FoE Optimizer Changelog
 
+## Version 2.020 (17/11/2026)
+### Update
+- Planner: completing and the refinement after COMPLETE are faster (in tests up to one third less time), with the same layouts as before
+- Planner: Smooth tries more moves in the same time
+- Planner, Pinwheel 2: choosing the town hall position uses several cores at once and finishes sooner, with the same position chosen
+
+---
+
 ## Version 2.019 (16/11/2026)
 ### Update
 - City and Inventory: "Buildings shown" above the table counts the actual buildings, that is every copy (the sum of the ×N badges), no longer the table rows
+- Planner: while searching, only the map of the scenario that changes is redrawn, no longer all of them
+### Bug Fixes
+- Planner: PNG and JSON of the Current layout are downloaded with their own name (before "girandola")
 
 ---
 

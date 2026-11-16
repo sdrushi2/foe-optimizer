@@ -1,8 +1,19 @@
 # Novità di FoE Optimizer
 
+## Versione 2.020 (17/11/2026)
+### Aggiornamenti
+- Planner: il completamento e la rifinitura dopo COMPLETA sono più veloci (nelle prove fino a un terzo di tempo in meno), con le stesse disposizioni di prima
+- Planner: Smussa prova più mosse nello stesso tempo
+- Planner, Girandola 2: la scelta della posizione del municipio usa più core insieme e finisce prima, con la stessa posizione scelta
+
+---
+
 ## Versione 2.019 (16/11/2026)
 ### Aggiornamenti
 - Città e Inventario: "Edifici visualizzati" sopra la tabella conta gli edifici veri, cioè tutte le copie (la somma dei ×N), non più le righe della tabella
+- Planner: durante la ricerca si ridisegna solo la mappa dello scenario che cambia, non più tutte
+### Correzioni
+- Planner: PNG e JSON della Configurazione attuale si scaricano con il loro nome (prima "girandola")
 
 ---
 

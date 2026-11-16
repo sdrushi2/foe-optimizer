@@ -215,17 +215,22 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
    *  fino a MAX_SPINTI; le strade non si spingono. Vero se la mossa è valida
    *  e applicata; altrimenti lo stato non cambia. */
   const MAX_SPINTI = 15;
+  /** Edificio che occupa ogni cella (indice di griglia → id). */
+  const proprietari = (): Map<number, string> => {
+    const o = new Map<number, string>();
+    for (const [id, p] of pl) {
+      const b = byId.get(id)!;
+      for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) { const g = gi(p.x + dx, p.y + dy); if (g >= 0) o.set(g, id); }
+    }
+    return o;
+  };
   const sposta = (gruppo: Fascia[], dx: number, dy: number, togli: number[] = []): boolean => {
     const celle = [...new Set(gruppo.flatMap(f => f.celle))];
     const ids = new Set(gruppo.flatMap(f => f.edifici));
     const salva = occ.slice();
     const vecchie = new Map([...pl].filter(([id]) => ids.has(id)));
     // proprietario di ogni cella occupata da un edificio (per le spinte)
-    const owner = new Map<number, string>();
-    for (const [id, p] of pl) {
-      const b = byId.get(id)!;
-      for (let ddx = 0; ddx < b.w; ddx++) for (let ddy = 0; ddy < b.h; ddy++) { const g = gi(p.x + ddx, p.y + ddy); if (g >= 0) owner.set(g, id); }
-    }
+    const owner = proprietari();
     for (const g of celle) occ[g] = 0;
     for (const g of togli) occ[g] = 0; // celle di strada da togliere (raddrizzamento)
     for (const id of ids) segnaB(byId.get(id)!, pl.get(id)!, 0);
@@ -404,14 +409,6 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
   // Si tiene solo se si tolgono strade e resta tutto collegato.
   let scorsi = 0;
   const VERSI: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  const proprietari = (): Map<number, string> => {
-    const o = new Map<number, string>();
-    for (const [id, p] of pl) {
-      const b = byId.get(id)!;
-      for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) { const g = gi(p.x + dx, p.y + dy); if (g >= 0) o.set(g, id); }
-    }
-    return o;
-  };
   const tentaRamo = (tx: number, ty: number): boolean => {
     const vers = VERSI.filter(([dx, dy]) => strada(tx + dx, ty + dy));
     if (vers.length !== 1) return false;
@@ -453,7 +450,6 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
     const R = px ? tx : ty; // coordinata perpendicolare della strada
     const salvaOcc = occ.slice(), salvaPl = new Map(pl);
     const ripristina = (o: Uint8Array, p: Map<string, Pos>) => { occ.set(o); pl.clear(); for (const [id, q] of p) pl.set(id, q); };
-    /** Impila i lati (`via`: edifici che passano all'altro lato) e toglie la punta; vero se riuscito (stato applicato). */
     /** Celle accanto al ramo (sui due lati): un edificio esiliato non deve occuparle. */
     const lateraliRamo = new Set<number>();
     for (const c of ramo) for (const sl of [1, -1]) lateraliRamo.add(gi(c.x + sl * px, c.y + sl * py));
@@ -474,7 +470,8 @@ function compattaUnaVolta(problem: PlannerProblem, placements0: ReadonlyMap<stri
       }
       return mig;
     };
-    /** `esilio`: edificio di lato portato in un buco altrove (Sdrushi3, Girandola 2:
+    /** Impila i lati (`via`: edifici che passano all'altro lato) e toglie la punta; vero se riuscito (stato applicato).
+     *  `esilio`: edificio di lato portato in un buco altrove (Sdrushi3, Girandola 2:
      *  una Statua 2×3 in fondo alla strada spostata in un buco 2×3 lontano). */
     const prova = (via: ReadonlySet<string>, esilio?: string): boolean => {
       const assegna = new Map<1 | -1, string[]>();

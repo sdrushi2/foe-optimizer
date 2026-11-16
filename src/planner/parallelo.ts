@@ -8,7 +8,7 @@
 //   - le funzioni di comando (shouldStop, shouldFinishSearch, isPaused,
 //     shouldStopFill) sono lette qui ogni FLAG_MS e mandate al worker solo
 //     quando cambiano ("flag"); la ricerca le legge dal worker;
-//   - onFrame / onPaused / onSearchActive / onFillActive / onProgress
+//   - onFrame / onPaused / onSearchActive / onFillActive
 //     arrivano come messaggi;
 //   - waitResume: il worker chiede ("attendi"), la pagina risponde
 //     ("riprendi") con la disposizione modificata a mano (o null).
@@ -19,8 +19,8 @@
 
 import type { CompletionOptions } from "./completion";
 import type { PlannerFrame, PlannerProblem } from "./engine";
-import type { BaseGirandola } from "./girandola";
-import type { AvvioCompletion, AvvioScelta } from "./lavoratore";
+import { scegliGirandolaCon, type BaseGirandola, type VotoGirandola } from "./girandola";
+import type { AvvioCompletion, AvvioValuta } from "./lavoratore";
 import Lavoratore from "./lavoratore?worker&inline";
 
 /** Ogni quanto si rileggono i comandi della pagina (pausa, stop, COMPLETA…). */
@@ -29,7 +29,7 @@ const FLAG_MS = 25;
 type Flag = { stop: boolean; finish: boolean; paused: boolean; stopFill: boolean; /** pausa in proporzione al lavoro (potenza CPU) */ riposo: number };
 
 function avvia<T>(
-  messaggio: AvvioCompletion | AvvioScelta,
+  messaggio: AvvioCompletion | AvvioValuta,
   leggiFlag: () => Flag,
   gestisci: (m: { tipo: string; [k: string]: unknown }, w: Worker) => void,
   adotta?: () => unknown,
@@ -95,16 +95,30 @@ export function runCompletionParallela(problem: PlannerProblem, opts: Completion
   }, opts.adotta);
 }
 
-/** scegliGirandola in un worker (stessa interfaccia). */
+/** scegliGirandola con le prove divise fra `lavoratori` worker (17/11/2026):
+ *  ogni prova è indipendente e deterministica, quindi le basi scelte sono le
+ *  stesse della versione su un worker solo, in meno tempo. Le prove vanno ai
+ *  worker a giro (la i-esima al worker i mod k); i fotogrammi arrivano solo dal
+ *  primo, così la mappa non salta da una prova all'altra. */
 export function scegliGirandolaParallela(problem: PlannerProblem, opts: {
-  shouldStop: () => boolean; valutazioni?: number; onProgress?: (i: number, n: number) => void; onFrame?: (f: PlannerFrame) => void;
+  shouldStop: () => boolean; valutazioni?: number; onFrame?: (f: PlannerFrame) => void;
   /** Pausa del Planner: le prove restano ferme finché è vera. */
   attendiInPausa?: () => boolean;
+  /** Worker da usare insieme (default 1). */
+  lavoratori?: number;
 }): Promise<BaseGirandola[]> {
   const leggiFlag = (): Flag => ({ stop: opts.shouldStop(), finish: false, paused: opts.attendiInPausa?.() ?? false, stopFill: false, riposo: 0 });
-  const messaggio: AvvioScelta = { tipo: "scegli", problem, ...(opts.valutazioni !== undefined ? { valutazioni: opts.valutazioni } : {}), flag: leggiFlag() };
-  return avvia<BaseGirandola[]>(messaggio, leggiFlag, m => {
-    if (m.tipo === "frame") opts.onFrame?.(m.f as PlannerFrame);
-    else if (m.tipo === "progresso") opts.onProgress?.(m.i as number, m.n as number);
-  });
+  const valuta = async (prove: ReadonlyArray<readonly [number, number, boolean]>, n: number): Promise<Array<VotoGirandola | null>> => {
+    const k = Math.max(1, Math.min(Math.floor(opts.lavoratori ?? 1), prove.length));
+    const gruppi: number[][] = Array.from({ length: k }, () => []);
+    prove.forEach((_, i) => gruppi[i % k]!.push(i));
+    const voti: Array<VotoGirandola | null> = prove.map(() => null);
+    await Promise.all(gruppi.map(async (indici, w) => {
+      const messaggio: AvvioValuta = { tipo: "valuta", problem, prove: indici.map(i => [...prove[i]!] as [number, number, boolean]), n, frame: w === 0, flag: leggiFlag() };
+      const r = await avvia<Array<VotoGirandola | null>>(messaggio, leggiFlag, m => { if (m.tipo === "frame") opts.onFrame?.(m.f as PlannerFrame); });
+      indici.forEach((i, j) => { voti[i] = r[j] ?? null; });
+    }));
+    return voti;
+  };
+  return scegliGirandolaCon(problem, valuta, opts);
 }
