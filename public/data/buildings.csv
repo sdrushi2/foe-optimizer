@@ -2071,7 +2071,7 @@ W_MultiAge_WIN23F1;Sfera Innevata magico inverno;Magical Winter Snow Globe;be217
 W_MultiAge_WIN24A1;Torre Yukitomo - Lv. 1;Yukitomo Tower - Lv. 1;a17137c23;;19;4x4;2;1;20950;;;56;;;;;;;;;;;;;;;;5440;;;38;;38;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN24A10;Torre Yukitomo - Lv. 10;Yukitomo Tower - Lv. 10;eb4a6f384;;19;4x4;2;1;40880;;;110;;10;;;;;;;;;;;;;;54320;;;83;;83;;;;;;;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3;
 W_MultiAge_WIN24A11;Piazza Yukitomo;Yukitomo Plaza;adfedce56;;19;4x4;2;1;40880;;;110;;14;;;;;;;;;;;;;;54320;;;83;;83;;;;;;;;;;;15;;;;;;;;;100;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3;
-W_MultiAge_WIN24A12;Impero Yukitomo;Yukitomo Empire;7e205fcdf;;19;4x4;2;1;40880;;;110;;18;;;;;;;;;;;;;;54320;;;83;;83;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3;
+W_MultiAge_WIN24A12;Impero Yukitomo;Yukitomo Empire;7e205fcdf;;19;4x4;2;1;40880;;;109;;18;;;;;;;;;;;;;;54320;;;83;;83;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3;
 W_MultiAge_WIN24A13;Yukitomo Imperiale;Yukitomo Imperial;99a0450f5;;19;4x4;;;40880;;;109;;22;;;;;;;;;;;;;;54320;;;82;;82;;;;;;;;;;15;15;;;;;;;;;200;;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3;
 W_MultiAge_WIN24A14;Residenza del Cielo Yukitomo Imperiale;Yukitomo Imperial Sky Residence;f1b773bd7;90;51;4x4;;;40880;;;218;;26;;;;;;;;;;;;;;54320;;;82;;82;;;;;;;;;;15;15;15;15;;;;;;;200;8000;M;;;;;;;;selection_kit_WIN18B:3|selection_kit_WIN24BC:3;
 W_MultiAge_WIN24A2;Torre Yukitomo - Lv. 2;Yukitomo Tower - Lv. 2;9f36472ae;;19;4x4;2;1;22480;;;62;;;;;;;;;;;;;;;;10860;;;43;;43;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
