@@ -3885,12 +3885,24 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
  * esposto: si tolgono i pezzi che la toccano e si ririempie con loro + i non
  * piazzati (fillMask di fase 2, veloce; può anche sostituire pezzi grandi con
  * altri); (b) "riloca": il pezzo più esposto viene tolto e rimesso nel posto
- * libero (ovunque) dove tocca più celle occupate. Il cammino accetta anche
- * risultati equivalenti; la migliore (mostrata e restituita) cambia solo se
+ * libero (ovunque) dove tocca più celle occupate; (c) scambio fra pezzi con
+ * la stessa impronta per riunire i gruppi; (d) "sposta i buchi": si ricompone
+ * la zona fra un buco piccolo e un'altra zona libera, anche con pezzi più
+ * piccoli, per unire i buchi (meglio un buco solo che tanti piccoli sparsi).
+ * Il cammino accetta anche risultati equivalenti e, dopo uno stallo, qualche
+ * mossa peggiore (scossa); la migliore (mostrata e restituita) cambia solo se
  * migliora. Continua finché non viene interrotta (Reset); si può mettere in
  * pausa e modificare a mano gli edifici senza strada.
  */
-async function rifinisciSenzaStrada(
+/** Probabilità della mossa (d) "sposta i buchi" quando ci sono più zone libere. */
+const P_SPOSTA_BUCHI = 0.75;
+/** Nella mossa (d), con il bersaglio lontano: probabilità delle due zone (buco e bersaglio) invece di una. */
+const P_DUE_ZONE = 0.6;
+/** Dopo lo stallo: mosse in cui il cammino accetta anche un peggioramento di
+ *  zone, perimetro ecc. (mai più pezzi fuori o staccati) per uscire dai
+ *  minimi locali. ReProVit, 15000 tentativi, 9 semi: 4,4 zone → 1,2. */
+const SCOSSA_MOSSE = 5;
+export async function rifinisciSenzaStrada(
   problem: PlannerProblem, start: PlannerFrame, opts: CompletionOptions,
   getValutate: () => number, setValutate: (n: number) => void,
 ): Promise<PlannerFrame | null> {
@@ -3996,7 +4008,8 @@ async function rifinisciSenzaStrada(
   };
   const xyG = (g: number): [number, number] => { const x = g % GW; return [x + problem.minX, (g - x) / GW + problem.minY]; };
   let staccatiIds: string[] = [];
-  type Punti = [number, number, number, number, number, number, number];
+  /** [fuori, staccati, zone libere, distanza dei buchi, perimetro libero, strade vuote, esposto, gruppi] */
+  type Punti = [number, number, number, number, number, number, number, number];
   /** Indici delle celle di strada (fisse in questa fase) per strade_vuote. */
   const stradeIdx: number[] = [];
   for (const r of roads) { const j = r.indexOf(","), g = gIdx(Number(r.slice(0, j)), Number(r.slice(j + 1))); if (g >= 0) stradeIdx.push(g); }
@@ -4053,6 +4066,38 @@ async function rifinisciSenzaStrada(
     return { zone, perimetro, esposto, minori, tutte: zoneCelle };
   };
   let buchiInterni: number[] = [];
+  /** (17/11/2026) Con più zone libere: somma, per ogni zona diversa dalla più
+   *  grande, della sua distanza (in celle, in linea d'aria a gradini) dalla più
+   *  grande. A parità di zone vince la disposizione con i buchi più vicini alla
+   *  zona libera principale: così le mosse li avvicinano finché si uniscono,
+   *  invece di lasciarli dove sono. 0 con una zona sola. */
+  const dist1 = new Int32Array(N);
+  const distanzaBuchi = (tutte: number[][]) => {
+    if (tutte.length < 2) return 0;
+    let maxZ = 0;
+    for (let i = 1; i < tutte.length; i++) if (tutte[i]!.length > tutte[maxZ]!.length) maxZ = i;
+    const INF = 1 << 20;
+    dist1.fill(INF);
+    for (const g of tutte[maxZ]!) dist1[g] = 0;
+    // trasformata della distanza a gradini (due passate)
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const g = y * GW + x;
+      let d = dist1[g]!;
+      if (x > 0 && dist1[g - 1]! + 1 < d) d = dist1[g - 1]! + 1;
+      if (y > 0 && dist1[g - GW]! + 1 < d) d = dist1[g - GW]! + 1;
+      dist1[g] = d;
+    }
+    for (let y = GH - 1; y >= 0; y--) for (let x = GW - 1; x >= 0; x--) {
+      const g = y * GW + x;
+      let d = dist1[g]!;
+      if (x < GW - 1 && dist1[g + 1]! + 1 < d) d = dist1[g + 1]! + 1;
+      if (y < GH - 1 && dist1[g + GW]! + 1 < d) d = dist1[g + GW]! + 1;
+      dist1[g] = d;
+    }
+    let tot = 0;
+    tutte.forEach((z, i) => { if (i === maxZ) return; let m = INF; for (const g of z) if (dist1[g]! < m) m = dist1[g]!; tot += m; });
+    return tot;
+  };
   /** Tappabuchi messi sulla disposizione dell'ultimo punteggio (per mostrarla senza ricalcolarli). */
   let ultimiTappi: Map<string, { x: number; y: number }> | null = null;
   const ogT = new Uint8Array(N);
@@ -4071,12 +4116,12 @@ async function rifinisciSenzaStrada(
     const L = analizzaLibere(ogT);
     // bersagli delle mosse: le zone libere da eliminare; con una zona sola, la zona stessa (per compattarla)
     buchiInterni = L.zone > 1 ? L.minori : (L.tutte[0] ?? []);
-    return [fuori, staccati, L.zone, L.perimetro, stradeVuote(ogT), L.esposto, gruppi()];
+    return [fuori, staccati, L.zone, distanzaBuchi(L.tutte), L.perimetro, stradeVuote(ogT), L.esposto, gruppi()];
   };
   /** Senza i gruppi: il cammino delle mosse di riempimento non ne tiene
    *  conto (altrimenti esplora meno e i buchi/il perimetro peggiorano). */
-  const confronta6 = (a: Punti, b: Punti) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3] || a[4] - b[4] || a[5] - b[5];
-  const confronta = (a: Punti, b: Punti) => confronta6(a, b) || a[6] - b[6];
+  const confronta6 = (a: Punti, b: Punti) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3] || a[4] - b[4] || a[5] - b[5] || a[6] - b[6];
+  const confronta = (a: Punti, b: Punti) => confronta6(a, b) || a[7] - b[7];
   /** Lati a contatto con celle occupate (og) o fuori dalle celle sbloccate (bordo). */
   const contattoMassa = (x: number, y: number, w: number, h: number) => {
     let c = 0;
@@ -4165,7 +4210,7 @@ async function rifinisciSenzaStrada(
       placements: new Map(mostrata), roads: new Set(roads), probe: null, lastPath: [],
       placed: mostrata.size, unplaced: fuori, iterations: valutate, done: false,
       search: { valutate, strade: null, spreco: 0, buchi: migliore.punti[2], latiLiberi: 0, trovataAl, esclusi: 0, attiva: stato === "" },
-      label: `Rifinitura edifici senza strada · ${valutate.toLocaleString()} tentativi · zone libere ${migliore.punti[2]} · perimetro libero ${migliore.punti[3]} · strade vuote ${migliore.punti[4]}`
+      label: `Rifinitura edifici senza strada · ${valutate.toLocaleString()} tentativi · zone libere ${migliore.punti[2]} · perimetro libero ${migliore.punti[4]} · strade vuote ${migliore.punti[5]}`
         + `${migliore.punti[1] ? ` · ${migliore.punti[1]} celle staccate` : ""}`
         + `${fuori.length ? ` · ${fuori.length} non piazzati` : ""}${stato}`,
     });
@@ -4177,7 +4222,7 @@ async function rifinisciSenzaStrada(
    *  tipo diverso, che tocca quel gruppo; B va al posto di A. La disposizione
    *  delle celle non cambia: cambiano solo i gruppi. */
   const scambioGruppi = (): [string, string] | null => {
-    if (!corrente[6]) return null;
+    if (!corrente[7]) return null;
     gruppi(); // componenti aggiornate in `padre`
     const dim = new Map<number, number>();
     for (const [id] of pl) { const i = idxDi.get(id); if (i !== undefined && ripetuto[i]) { const r = radice(i); dim.set(r, (dim.get(r) ?? 0) + 1); } }
@@ -4216,27 +4261,248 @@ async function rifinisciSenzaStrada(
     lista.sort((a, b) => b[1] - a[1]);
     return lista[Math.floor(rnd() * Math.min(5, lista.length))]![0];
   };
+
+  // ── Mossa (d): sposta un buco verso un altro buco (17/11/2026, richiesta
+  // dell'utente: "lascia buchi piccoli che non si riempiono, perché i pezzi
+  // piccoli sono pochi; meglio a volte un pezzo un po' più piccolo che
+  // incastri tutto"). Un rettangolo attorno a una cella di un buco minore,
+  // allungato verso il buco più vicino (o la zona libera più grande): si
+  // tolgono TUTTI i pezzi senza strada che lo toccano, tappabuchi 1×n
+  // compresi, e si ricompone la zona con una ricerca esatta (ogni pezzo
+  // rimesso, celle libere dove conviene): vince la ricomposizione con meno
+  // zone libere, poi con le celle libere più vicine al buco bersaglio (così il
+  // buco "cammina" verso l'altro anche quando non lo raggiunge subito), poi
+  // con il contorno libero più corto. Si applica solo se è migliore della
+  // disposizione di partenza della zona; il punteggio vero decide come per le
+  // altre mosse. I tappabuchi della zona restano dove li mette la mossa
+  // (tappiIniziali), quelli fuori dove sono.
+  const MAX_NODI_BUCHI = 60000;
+  let tappiCorr: Map<string, { x: number; y: number }> = ultimiTappi ?? tappabuchi(pl);
+  const spostaBuchi = (): { tolti: Map<string, { x: number; y: number }>; messi: string[]; tappiPrima: Map<string, { x: number; y: number }> } | null => {
+    // occupazione completa (strade, pezzi mobili, tappabuchi della disposizione corrente)
+    const oc = new Uint8Array(og);
+    for (const [id, q] of tappiCorr) if (tappo(id)) segnaG(oc, id, q, 1);
+    const L = analizzaLibere(oc);
+    if (L.zone < 2) return null;
+    const zonaDi = new Int32Array(N).fill(-1);
+    let maxZ = 0;
+    L.tutte.forEach((z, i) => { for (const g of z) zonaDi[g] = i; if (z.length > L.tutte[maxZ]!.length) maxZ = i; });
+    const minori = L.tutte.map((_, i) => i).filter(i => i !== maxZ);
+    const zi = minori[Math.floor(rnd() * minori.length)]!;
+    const zh = L.tutte[zi]!;
+    const h = zh[Math.floor(rnd() * zh.length)]!;
+    const hx = h % GW, hy = (h - hx) / GW;
+    // bersaglio: la cella libera più vicina di un'altra zona (a volte della più grande)
+    const versoMax = rnd() < 0.35;
+    let t = -1, dt = Infinity;
+    for (let zj = 0; zj < L.tutte.length; zj++) {
+      if (zj === zi || (versoMax && zj !== maxZ)) continue;
+      for (const g of L.tutte[zj]!) { const x = g % GW, y = (g - x) / GW, d = Math.abs(x - hx) + Math.abs(y - hy) + rnd() * 2; if (d < dt) { dt = d; t = g; } }
+    }
+    if (t < 0) return null;
+    const tx = t % GW, ty = (t - tx) / GW;
+    // Zone da ricomporre (rettangoli; `liberi` = lì possono restare celle libere):
+    //  - una sola, dal buco verso il bersaglio (il buco "cammina");
+    //  - oppure due (richiesta dell'utente: "a volte conviene un pezzo un po'
+    //    più piccolo per incastrare meglio"): una attorno al buco, da riempire
+    //    TUTTA, e una attorno al bersaglio, dove vanno le celle libere. I pezzi
+    //    delle due zone si scambiano (un 3×3 al posto di un 2×3 + 1×3…): così il
+    //    buco si sposta anche lontano, dove si unisce all'altro.
+    type Rett = { i0: number; i1: number; j0: number; j1: number; liberi: boolean };
+    const rett: Rett[] = [];
+    const lontano = Math.abs(tx - hx) + Math.abs(ty - hy) > 6;
+    if (lontano && rnd() < P_DUE_ZONE) {
+      const sa = 3 + Math.floor(rnd() * 4), sb = 3 + Math.floor(rnd() * 4), ta = 4 + Math.floor(rnd() * 4), tb = 4 + Math.floor(rnd() * 4);
+      rett.push({ i0: hx - Math.floor(sa / 2), i1: hx - Math.floor(sa / 2) + sa - 1, j0: hy - Math.floor(sb / 2), j1: hy - Math.floor(sb / 2) + sb - 1, liberi: false });
+      rett.push({ i0: tx - Math.floor(ta / 2), i1: tx - Math.floor(ta / 2) + ta - 1, j0: ty - Math.floor(tb / 2), j1: ty - Math.floor(tb / 2) + tb - 1, liberi: true });
+    } else {
+      const m = 1 + Math.floor(rnd() * 2), WMAX = 10 + Math.floor(rnd() * 6);
+      const asse = (a: number, b: number) => {
+        let a0 = Math.min(a, b) - m, a1 = Math.max(a, b) + m;
+        if (a1 - a0 + 1 > WMAX) { if (b > a) { a0 = a - m; a1 = a0 + WMAX - 1; } else { a1 = a + m; a0 = a1 - WMAX + 1; } }
+        return [a0, a1] as const;
+      };
+      const [i0, i1] = asse(hx, tx), [j0, j1] = asse(hy, ty);
+      rett.push({ i0, i1, j0, j1, liberi: true });
+    }
+    // pezzi senza strada (mobili e tappabuchi) che toccano le zone
+    type Pezzo = { id: string; b: PlannerBuilding; q: { x: number; y: number }; tappo: boolean; liberi: boolean };
+    const pezzi: Pezzo[] = [];
+    const toccaR = (q: { x: number; y: number }, b: PlannerBuilding): Rett | undefined => {
+      const a = q.x - problem.minX, c = q.y - problem.minY;
+      return rett.find(r => a <= r.i1 && a + b.w - 1 >= r.i0 && c <= r.j1 && c + b.h - 1 >= r.j0);
+    };
+    for (const [id, q] of pl) if (mobile(id)) { const b = byId.get(id)!, r = toccaR(q, b); if (r) pezzi.push({ id, b, q, tappo: false, liberi: r.liberi }); }
+    for (const [id, q] of tappiCorr) if (tappo(id)) { const b = byId.get(id)!, r = toccaR(q, b); if (r) pezzi.push({ id, b, q, tappo: true, liberi: r.liberi }); }
+    if (!pezzi.length) return null;
+    // zona da ricomporre: celle libere dei rettangoli + celle dei pezzi tolti
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const r of rett) { x0 = Math.min(x0, r.i0); y0 = Math.min(y0, r.j0); x1 = Math.max(x1, r.i1); y1 = Math.max(y1, r.j1); }
+    for (const p of pezzi) { const a = p.q.x - problem.minX, c = p.q.y - problem.minY; x0 = Math.min(x0, a); y0 = Math.min(y0, c); x1 = Math.max(x1, a + p.b.w - 1); y1 = Math.max(y1, c + p.b.h - 1); }
+    x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(GW - 1, x1); y1 = Math.min(GH - 1, y1);
+    const RW = x1 - x0 + 1, RH = y1 - y0 + 1, RN = RW * RH;
+    if (RN > 1600) return null;
+    /** 0 fuori dalla zona; 1 dentro, da coprire; 2 dentro, può restare libera. */
+    const inR = new Uint8Array(RN);
+    const gl = (r: number) => { const a = r % RW; return (y0 + (r - a) / RW) * GW + x0 + a; };
+    for (const r of rett) for (let j = Math.max(r.j0, y0); j <= Math.min(r.j1, y1); j++) for (let i = Math.max(r.i0, x0); i <= Math.min(r.i1, x1); i++) {
+      const g = j * GW + i, s = (j - y0) * RW + i - x0;
+      if (cellG[g] && !oc[g]) inR[s] = Math.max(inR[s]!, r.liberi ? 2 : 1);
+    }
+    let area = 0;
+    for (const p of pezzi) {
+      area += p.b.w * p.b.h;
+      for (let dx = 0; dx < p.b.w; dx++) for (let dy = 0; dy < p.b.h; dy++) { const s = (p.q.y - problem.minY + dy - y0) * RW + p.q.x - problem.minX + dx - x0; inR[s] = Math.max(inR[s]!, p.liberi ? 2 : 1); }
+    }
+    let nR = 0;
+    for (let r = 0; r < RN; r++) if (inR[r]) nR++;
+    const F = nR - area;
+    let ammesse = 0;
+    for (let r = 0; r < RN; r++) if (inR[r] === 2) ammesse++;
+    if (F <= 0 || ammesse < F) return null;
+    // forme dei pezzi tolti (stessa impronta = stesso pezzo per la ricerca)
+    type Forma = { w: number; h: number; n: number; ids: Pezzo[] };
+    const forme = new Map<string, Forma>();
+    for (const p of pezzi) { const k = `${p.b.w}x${p.b.h}`; const f = forme.get(k); if (f) { f.n++; f.ids.push(p); } else forme.set(k, { w: p.b.w, h: p.b.h, n: 1, ids: [p] }); }
+    const lista = [...forme.values()].sort((a, b) => b.w * b.h - a.w * a.h);
+    // celle libere fuori dalla zona, accanto ad essa: la loro zona (per contare le zone dopo)
+    const stato = new Uint8Array(RN); // 0 da decidere, 1 coperta, 2 libera
+    const padreL = new Int32Array(RN + L.tutte.length);
+    const rad = (a: number): number => { while (padreL[a] !== a) { padreL[a] = padreL[padreL[a]!]!; a = padreL[a]!; } return a; };
+    /** [zone, distanza dal bersaglio, contorno] delle celle libere della zona (stato = 2). */
+    const valutaZona = (): [number, number, number] => {
+      for (let a = 0; a < padreL.length; a++) padreL[a] = a;
+      let comp = 0, dist = 0, per = 0;
+      const toccate = new Set<number>();
+      for (let r = 0; r < RN; r++) {
+        if (stato[r] !== 2) continue;
+        comp++;
+        const a = r % RW, c = (r - a) / RW, gx = x0 + a, gy = y0 + c;
+        dist += Math.abs(gx - tx) + Math.abs(gy - ty);
+        for (let d = 0; d < 4; d++) {
+          const na = d === 0 ? a + 1 : d === 1 ? a - 1 : a, nc = d === 2 ? c + 1 : d === 3 ? c - 1 : c;
+          const nx = x0 + na, ny = y0 + nc;
+          if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) { per++; continue; }
+          const inside = na >= 0 && nc >= 0 && na < RW && nc < RH && inR[nc * RW + na];
+          if (inside) {
+            const s = nc * RW + na;
+            if (stato[s] === 2) { const u = rad(r), v = rad(s); if (u !== v) { padreL[u] = v; comp--; } }
+            else per++;
+            continue;
+          }
+          const g = ny * GW + nx;
+          if (!cellG[g] || oc[g]) { per++; continue; }
+          const z = zonaDi[g]!;
+          if (z < 0) continue;
+          if (!toccate.has(z)) { toccate.add(z); comp++; }
+          const u = rad(r), v = rad(RN + z);
+          if (u !== v) { padreL[u] = v; comp--; }
+        }
+      }
+      return [comp, dist, per];
+    };
+    const meglio = (a: [number, number, number], b: [number, number, number]) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+    // disposizione di partenza della zona
+    for (let r = 0; r < RN; r++) if (inR[r]) stato[r] = oc[gl(r)] ? 1 : 2;
+    for (const p of pezzi) for (let dx = 0; dx < p.b.w; dx++) for (let dy = 0; dy < p.b.h; dy++) stato[(p.q.y - problem.minY + dy - y0) * RW + p.q.x - problem.minX + dx - x0] = 1;
+    const partenza = valutaZona();
+    stato.fill(0);
+    // prima le celle da coprire per forza (la zona del buco: lì niente celle
+    // libere, quindi la ricerca scarta subito i tentativi sbagliati), poi le
+    // altre; ognuna riga per riga
+    const ord: number[] = [];
+    for (let r = 0; r < RN; r++) if (inR[r] === 1) ord.push(r);
+    for (let r = 0; r < RN; r++) if (inR[r] === 2) ord.push(r);
+    let nodi = 0;
+    /** Le migliori ricomposizioni secondo la stima locale (zone attorno alla
+     *  zona ricomposta, distanza dal bersaglio, perimetro). Si applica la
+     *  prima; il punteggio vero su tutta la mappa decide poi se tenerla.
+     *  (Provata anche la verifica esatta delle 6 candidate: esplora meno e
+     *  rende peggio, 6,9 zone contro 4,4 su ReProVit.) */
+    const CANDIDATI = 6;
+    const cand: Array<{ v: [number, number, number]; posti: Array<[Forma, number]> }> = [];
+    const posti: Array<[Forma, number]> = [];
+    const liberePrima = rnd() < 0.5;
+    const entra = (f: Forma, r: number) => {
+      const a = r % RW, c = (r - a) / RW;
+      if (a + f.w > RW || c + f.h > RH) return false;
+      for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) { const s = (c + dy) * RW + a + dx; if (!inR[s] || stato[s]) return false; }
+      return true;
+    };
+    const segna = (f: Forma, r: number, v: 0 | 1) => { const a = r % RW, c = (r - a) / RW; for (let dy = 0; dy < f.h; dy++) for (let dx = 0; dx < f.w; dx++) stato[(c + dy) * RW + a + dx] = v; };
+    const bt = (k: number, liberi: number): void => {
+      if (++nodi > MAX_NODI_BUCHI) return;
+      while (k < ord.length && stato[ord[k]!]) k++;
+      if (k === ord.length) {
+        const v = valutaZona();
+        if (cand.length < CANDIDATI || meglio(v, cand[cand.length - 1]!.v) < 0) {
+          cand.push({ v, posti: [...posti] });
+          cand.sort((a, b) => meglio(a.v, b.v));
+          if (cand.length > CANDIDATI) cand.pop();
+        }
+        return;
+      }
+      const r = ord[k]!;
+      const libera = () => { if (liberi < F && inR[r] === 2) { stato[r] = 2; bt(k + 1, liberi + 1); stato[r] = 0; } };
+      if (liberePrima) libera();
+      for (const f of lista) {
+        if (!f.n || !entra(f, r)) continue;
+        segna(f, r, 1); f.n--; posti.push([f, r]);
+        bt(k + 1, liberi);
+        posti.pop(); f.n++; segna(f, r, 0);
+        if (nodi > MAX_NODI_BUCHI) return;
+      }
+      if (!liberePrima) libera();
+    };
+    bt(0, 0);
+    const best = cand.length && meglio(cand[0]!.v, partenza) < 0 ? cand[0]! : null;
+    if (!best) return null;
+    // applica: ogni posto a un pezzo della sua forma (prima quelli che c'erano già)
+    const tappiPrima = new Map(tappiIniziali);
+    for (const [id, q] of tappiCorr) if (tappo(id)) tappiIniziali.set(id, q);
+    const tolti = new Map<string, { x: number; y: number }>();
+    for (const p of pezzi) if (!p.tappo) { tolti.set(p.id, p.q); togli(p.id); }
+    const messi: string[] = [];
+    const usati = new Set<string>();
+    const posizioni = best.posti.map(([f, r]) => { const a = r % RW, c = (r - a) / RW; return { f, x: x0 + a + problem.minX, y: y0 + c + problem.minY }; });
+    const assegna = (p: Pezzo, x: number, y: number) => {
+      usati.add(p.id);
+      if (p.tappo) tappiIniziali.set(p.id, { x, y });
+      else { metti(p.id, { x, y }); messi.push(p.id); }
+    };
+    const resto: typeof posizioni = [];
+    for (const s of posizioni) { const p = s.f.ids.find(q => !usati.has(q.id) && q.q.x === s.x && q.q.y === s.y); if (p) assegna(p, s.x, s.y); else resto.push(s); }
+    for (const s of resto) { const p = s.f.ids.find(q => !usati.has(q.id))!; assegna(p, s.x, s.y); }
+    return { tolti, messi, tappiPrima };
+  };
   opts.onFillActive?.(true);
   mostra("");
-  let lastYield = performance.now(), lastShow = 0;
+  let lastYield = performance.now(), lastShow = 0, scossa = 0;
   while (!opts.shouldStop() && !opts.shouldStopFill!()) {
-    // Stallo: il cammino riparte dalla migliore.
+    // Stallo: il cammino riparte dalla migliore con una scossa.
     if (++senzaMigliorare > 400) {
       for (const id of [...pl.keys()]) if (mobile(id)) togli(id);
       for (const [id, q] of migliore.pl) if (mobile(id)) metti(id, q);
-      corrente = punteggio();
-      senzaMigliorare = 0;
+      corrente = punteggio(); tappiCorr = ultimiTappi!;
+      senzaMigliorare = 0; scossa = SCOSSA_MOSSE;
     }
     const tolti = new Map<string, { x: number; y: number }>();
     const messi: string[] = [];
+    /** Mossa (d): tappabuchi di prima (da rimettere se la mossa è scartata). */
+    let tappiPrima: Map<string, { x: number; y: number }> | null = null;
     // stato derivato dell'ultimo punteggio (quello di `corrente`): se la mossa
     // viene scartata si ripristina invece di ricalcolare il punteggio
     const buchi0 = buchiInterni, staccati0 = staccatiIds;
     const u = rnd();
     // prima i buchi e i pezzi fuori: gli scambi per i gruppi solo di rado
     // finché ce ne sono
-    const sc = corrente[6] && rnd() < (corrente[0] || corrente[1] || corrente[2] > 1 ? 0.03 : 0.25) ? scambioGruppi() : null;
-    if (sc) {
+    const sc = corrente[7] && rnd() < (corrente[0] || corrente[1] || corrente[2] > 1 ? 0.03 : 0.25) ? scambioGruppi() : null;
+    const sb = !sc && !corrente[0] && corrente[2] > 1 && rnd() < P_SPOSTA_BUCHI ? spostaBuchi() : null;
+    if (sb) {
+      for (const [id, q] of sb.tolti) tolti.set(id, q);
+      messi.push(...sb.messi);
+      tappiPrima = sb.tappiPrima;
+    } else if (sc) {
       // (c) scambio fra pezzi con la stessa impronta per riunire i gruppi
       const [A, B] = sc, qA = pl.get(A)!, qB = pl.get(B)!;
       tolti.set(A, qA); tolti.set(B, qB);
@@ -4297,8 +4563,10 @@ async function rifinisciSenzaStrada(
     valutate++;
     let migliorata = false;
     const pt = punteggio();
-    if ((sc ? confronta(pt, corrente) : confronta6(pt, corrente)) <= 0) {
-      corrente = pt;
+    const forzata = scossa > 0 && pt[0] <= corrente[0] && pt[1] <= corrente[1];
+    if (scossa > 0) scossa--;
+    if (forzata || (sc ? confronta(pt, corrente) : confronta6(pt, corrente)) <= 0) {
+      corrente = pt; tappiCorr = ultimiTappi!;
       if (confronta(pt, migliore.punti) < 0) {
         migliore = { pl: new Map(pl), punti: pt }; mostrata = ultimiTappi ?? tappabuchi(migliore.pl);
         migliorata = true; trovataAl = valutate; senzaMigliorare = 0;
@@ -4306,6 +4574,7 @@ async function rifinisciSenzaStrada(
     } else {
       for (const id of messi) togli(id);
       for (const [id, q] of tolti) metti(id, q);
+      if (tappiPrima) { tappiIniziali.clear(); for (const [id, q] of tappiPrima) tappiIniziali.set(id, q); }
       // (ottimizzazione: prima si ricalcolava tutto il punteggio) stessa
       // disposizione di prima della mossa → stessi buchi e stessi staccati,
       // nell'ordine attuale di `pl` (cambiato da togli/metti)
@@ -4344,7 +4613,7 @@ async function rifinisciSenzaStrada(
           const q = man.placements.get(b.id);
           if (q) tappiIniziali.set(b.id, { x: q.x, y: q.y }); else tappiIniziali.delete(b.id);
         }
-        corrente = punteggio();
+        corrente = punteggio(); tappiCorr = ultimiTappi!;
         migliore = { pl: new Map(pl), punti: corrente }; mostrata = tappabuchi(migliore.pl);
         senzaMigliorare = 0; trovataAl = valutate;
         mostra("");

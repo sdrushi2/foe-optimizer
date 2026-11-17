@@ -5,6 +5,7 @@
 - Planner: il completamento e la rifinitura dopo COMPLETA sono più veloci (nelle prove fino a un terzo di tempo in meno), con le stesse disposizioni di prima
 - Planner: Smussa prova più mosse nello stesso tempo
 - Planner, Girandola 2: la scelta della posizione del municipio usa più core insieme e finisce prima, con la stessa posizione scelta
+- Planner: la rifinitura dopo COMPLETA lascia molti meno buchi piccoli sparsi tra gli edifici senza strada: sposta e unisce i buchi, anche usando pezzi un po' più piccoli per incastrare meglio, finché lo spazio libero resta in pochi punti (spesso uno solo)
 
 ---
 
