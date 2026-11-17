@@ -2389,9 +2389,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           punteP[(j + 1) * W1 + i + 1] = punta[g]! + punteP[j * W1 + i + 1]! + punteP[(j + 1) * W1 + i]! - punteP[j * W1 + i]!;
         }
         const somma = (P: Int32Array, i: number, j: number, w: number, h: number) => P[(j + h) * W1 + i + w]! - P[j * W1 + i + w]! - P[(j + h) * W1 + i]! + P[j * W1 + i]!;
-        const z = b.zonaStrada!;
+        const z = b.zonaStrada!, z2 = b.zonaStrada2;
         const distXY = (x: number, y: number) => { const g = gIdx(x, y); return g < 0 ? -1 : dist[g]!; };
-        let migl: { x: number; y: number; costo: number; bordo: number; via: number; v: number } | null = null;
+        let migl: { x: number; y: number; costo: number; bordo: number; via: number; via2: number; v: number } | null = null;
         for (let j = 0; j + b.h <= GH; j++) for (let i = 0; i + b.w <= GW; i++) {
           if (somma(blocc, i, j, b.w, b.h) !== 0) continue; // fitsS
           const x = i + problem.minX, y = j + problem.minY;
@@ -2407,8 +2407,20 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           for (let d = 0; d < z.w; d++) { provaVia(X + d, Y - 1); provaVia(X + d, Y + z.h); }
           for (let d = 0; d < z.h; d++) { provaVia(X - 1, Y + d); provaVia(X + z.w, Y + d); }
           if (via < 0) continue;
+          // catene a due teste (Ippodromo): la strada deve arrivare anche alla
+          // testa di chiusura; i due costi si sommano, si scavano due percorsi
+          let via2 = -1;
+          if (z2) {
+            const c1 = costo, v1 = via;
+            costo = Infinity; via = -1;
+            for (let d = 0; d < z2.w; d++) { provaVia(x + z2.x + d, y + z2.y - 1); provaVia(x + z2.x + d, y + z2.y + z2.h); }
+            for (let d = 0; d < z2.h; d++) { provaVia(x + z2.x - 1, y + z2.y + d); provaVia(x + z2.x + z2.w, y + z2.y + d); }
+            if (via < 0) continue;
+            via2 = via; costo += c1; via = v1;
+          }
           // contorno del blocco: strade accanto agli anelli (coda) e celle fuori mappa (bordo)
-          const inZona = (cx: number, cy: number) => (cx >= X && cx < X + z.w && (cy === Y - 1 || cy === Y + z.h)) || (cy >= Y && cy < Y + z.h && (cx === X - 1 || cx === X + z.w));
+          const inZ = (cx: number, cy: number, X: number, Y: number, z: { w: number; h: number }) => (cx >= X && cx < X + z.w && (cy === Y - 1 || cy === Y + z.h)) || (cy >= Y && cy < Y + z.h && (cx === X - 1 || cx === X + z.w));
+          const inZona = (cx: number, cy: number) => inZ(cx, cy, X, Y, z) || (!!z2 && inZ(cx, cy, x + z2.x, y + z2.y, z2));
           let codaN = 0, bordo = 0;
           const contorno = (cx: number, cy: number) => {
             if (!inCella(cx, cy)) bordo++;
@@ -2418,11 +2430,12 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           for (let d = 0; d < b.h; d++) { contorno(x - 1, y + d); contorno(x + b.w, y + d); }
           const puntaN = somma(punteP, i, j, b.w, b.h);
           const v = costo + PESO_CODA_BLOCCO * codaN + PESO_PUNTA_BLOCCO * puntaN - PESO_BORDO_BLOCCO * bordo;
-          if (!migl || v < migl.v) migl = { x, y, costo, bordo, via, v };
+          if (!migl || v < migl.v) migl = { x, y, costo, bordo, via, via2, v };
         }
         if (!migl) { riservati.add(b.id); continue; } // nessun posto: non lo prendono i lati delle strade
         const percorso: string[] = [];
         for (let g = migl.via; g >= 0 && dist[g] !== 0; g = padre[g]!) { const x = g % GW; percorso.push(key(x + problem.minX, (g - x) / GW + problem.minY)); }
+        for (let g = migl.via2; g >= 0 && dist[g] !== 0; g = padre[g]!) { const x = g % GW, k = key(x + problem.minX, (g - x) / GW + problem.minY); if (!percorso.includes(k)) percorso.push(k); }
         // il percorso non deve passare sotto il blocco
         if (percorso.some(k => { const [px, py] = kxy(k); return px >= migl!.x && px < migl!.x + b.w && py >= migl!.y && py < migl!.y + b.h; })) continue;
         place("blocco di catena", b, migl.x, migl.y, percorso);

@@ -6,6 +6,8 @@
 - Planner: Smussa prova più mosse nello stesso tempo
 - Planner, Girandola 2: la scelta della posizione del municipio usa più core insieme e finisce prima, con la stessa posizione scelta
 - Planner: la rifinitura dopo COMPLETA lascia molti meno buchi piccoli sparsi tra gli edifici senza strada: sposta e unisce i buchi, anche usando pezzi un po' più piccoli per incastrare meglio, finché lo spazio libero resta in pochi punti (spesso uno solo)
+### Correzioni
+- Planner, Ippodromo: Carceres e Sphendone vengono collegate alla strada ENTRAMBE (prima spesso solo una delle due); le piste in mezzo restano senza strada
 
 ---
 

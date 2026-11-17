@@ -22,7 +22,10 @@
 //  rettilinei + eventuale testa di chiusura.
 //  Il blocco eredita il fabbisogno di strada dell'inizio (gli anelli non ne
 //  hanno) e conta come collegato SOLO se la strada tocca l'inizio
-//  (`zonaStrada`, `toccaStradaZona` in engine.ts).
+//  (`zonaStrada`, `toccaStradaZona` in engine.ts). Con la testa di chiusura
+//  (17/11/2026, segnalazione dell'utente su oipopoi) la strada deve toccare
+//  ENTRAMBE le teste (`zonaStrada2`): Carceres e Sphendone vanno collegate,
+//  le piste no. Fra le catene del gioco solo l'Ippodromo ha due teste.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { datiGioco } from "../data/datiGioco";
@@ -109,6 +112,8 @@ function monta(inizio: PlannerBuilding, anelli: PlannerBuilding[], chiusura: Pla
  *  l'inizio per primo). */
 function blocco(catena: string, pezzi: Pezzo[]): { voce: PlannerBuilding; blocco: Blocco } {
   const testa = pezzi[0]!.b;
+  // testa di chiusura: un altro inizio della catena dopo il primo pezzo
+  const chiusa = pezzi.slice(1).find(p => EDIFICI[p.b.entityId]?.ruolo === "inizio");
   const w = Math.max(...pezzi.map(p => p.x + p.b.w)), h = Math.max(...pezzi.map(p => p.y + p.b.h));
   const id = PREFISSO_BLOCCO + testa.id;
   return {
@@ -118,6 +123,8 @@ function blocco(catena: string, pezzi: Pezzo[]): { voce: PlannerBuilding; blocco
       origX: testa.origX, origY: testa.origY,
       // solo l'inizio della catena conta per la strada
       zonaStrada: { x: pezzi[0]!.x, y: pezzi[0]!.y, w: testa.w, h: testa.h },
+      // … e la testa di chiusura, se ne richiede una (Ippodromo)
+      ...(chiusa && chiusa.b.roadLevel > 0 ? { zonaStrada2: { x: chiusa.x, y: chiusa.y, w: chiusa.b.w, h: chiusa.b.h } } : {}),
     },
     blocco: { id, catena, membri: pezzi.map(p => ({ id: p.b.id, dx: p.x, dy: p.y })) },
   };

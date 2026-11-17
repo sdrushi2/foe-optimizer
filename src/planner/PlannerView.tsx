@@ -135,10 +135,11 @@ const delayMs = 0;
 function specchioVietato(problem: PlannerProblem): { h: boolean; v: boolean } {
   const no = { h: false, v: false };
   for (const b of problem.buildings) {
-    const z = b.zonaStrada;
-    if (!z || b.roadLevel <= 0) continue;
-    if (z.x !== b.w - z.x - z.w) no.h = true;
-    if (z.y !== b.h - z.y - z.h) no.v = true;
+    if (!b.zonaStrada || b.roadLevel <= 0) continue;
+    for (const z of b.zonaStrada2 ? [b.zonaStrada, b.zonaStrada2] : [b.zonaStrada]) {
+      if (z.x !== b.w - z.x - z.w) no.h = true;
+      if (z.y !== b.h - z.y - z.h) no.v = true;
+    }
   }
   return no;
 }

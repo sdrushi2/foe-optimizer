@@ -6,6 +6,8 @@
 - Planner: Smooth tries more moves in the same time
 - Planner, Pinwheel 2: choosing the town hall position uses several cores at once and finishes sooner, with the same position chosen
 - Planner: the refinement after COMPLETE leaves far fewer small scattered holes among buildings without roads: it moves and merges the holes, also using slightly smaller pieces for a better fit, until the free space is left in few spots (often just one)
+### Fixes
+- Planner, Hippodrome: Carceres and Sphendone are BOTH connected to a road (before, often only one of them); the tracks in between still need no road
 
 ---
 
