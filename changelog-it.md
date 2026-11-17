@@ -8,6 +8,7 @@
 - Planner: la rifinitura dopo COMPLETA lascia molti meno buchi piccoli sparsi tra gli edifici senza strada: sposta e unisce i buchi, anche usando pezzi un po' più piccoli per incastrare meglio, finché lo spazio libero resta in pochi punti (spesso uno solo)
 ### Correzioni
 - Planner, Ippodromo: Carceres e Sphendone vengono collegate alla strada ENTRAMBE (prima spesso solo una delle due); le piste in mezzo restano senza strada
+- Planner: a fine rifinitura non restano più decorazioni 1×1 (e altri pezzi 1×n) sparse o isolate nei posti dove stavano all'inizio: un pezzo resta al suo posto iniziale solo se è ancora ben incastrato, altrimenti viene ripiazzato nei buchi o attaccato agli altri edifici. Lo stesso vale per quelli spostati a mano in pausa: se li lasci ben incastrati restano lì, se restano sparsi la rifinitura li sistema
 
 ---
 

@@ -4180,14 +4180,40 @@ export async function rifinisciSenzaStrada(
       for (let dy = 0; dy < h; dy++) { t(x - 1, y + dy); t(x + w, y + dy); }
       return c;
     };
-    // prima al loro posto iniziale, se è ancora libero
+    // prima al loro posto iniziale, se è ancora libero E ben incastrato:
+    // tutti i lati a contatto con edifici, strade o bordo tranne al più uno
+    // (17/11/2026, segnalazione dell'utente su oipopoi: i posti iniziali
+    // rimasti liberi dopo che la rifinitura aveva spostato i vicini
+    // lasciavano 1×1 sparsi, anche del tutto isolati). Si tolgono i pezzi
+    // mal incastrati finché non ne restano (un gruppo di tappabuchi si
+    // sostiene a vicenda). Vale anche per quelli spostati a mano in pausa
+    // (diventano il loro posto iniziale): un 1×1 lasciato sparso si ottimizza.
     const daCercare: PlannerBuilding[] = [];
+    const tenuti: Array<[PlannerBuilding, { x: number; y: number }]> = [];
     for (const b of piccoli) {
       const q = tappiIniziali.get(b.id);
       if (!q || !liberaG(q.x, q.y, b.w, b.h)) { daCercare.push(b); continue; }
-      out.set(b.id, q);
-      segnaG(ocG, b.id, q, 1); segnaTipo(b, q);
+      segnaG(ocG, b.id, q, 1);
+      tenuti.push([b, q]);
     }
+    const pieno = (cx: number, cy: number) => { const g = gIdx(cx, cy); return g < 0 || !cellG[g] || ocG[g] !== 0; };
+    for (let cambiato = true; cambiato;) {
+      cambiato = false;
+      for (let i = tenuti.length - 1; i >= 0; i--) {
+        const [b, q] = tenuti[i]!;
+        let c = 0;
+        for (let dx = 0; dx < b.w; dx++) { if (pieno(q.x + dx, q.y - 1)) c++; if (pieno(q.x + dx, q.y + b.h)) c++; }
+        for (let dy = 0; dy < b.h; dy++) { if (pieno(q.x - 1, q.y + dy)) c++; if (pieno(q.x + b.w, q.y + dy)) c++; }
+        if (c >= 2 * (b.w + b.h) - 1) continue;
+        segnaG(ocG, b.id, q, 0);
+        tenuti.splice(i, 1);
+        cambiato = true;
+      }
+    }
+    const tolti = new Set(piccoli.filter(b => !tenuti.some(([t]) => t === b)));
+    daCercare.length = 0;
+    for (const b of piccoli) if (tolti.has(b)) daCercare.push(b); // (stesso ordine di prima)
+    for (const [b, q] of tenuti) { out.set(b.id, q); segnaTipo(b, q); }
     if (daCercare.length !== piccoli.length) interni = minoriDi(ocG);
     for (const b of daCercare) {
       const tb = numeroTipo(b.entityId || b.name);
@@ -4204,7 +4230,12 @@ export async function rifinisciSenzaStrada(
         const v = inBuco * 10000 + c * 100 + contattoG(x, y, b.w, b.h, tipoG, tb);
         if (v > bv) { bv = v; bx = x; by = y; bc = inBuco; }
       }
-      if (bv < 0) continue;
+      if (bv < 0) {
+        // nessun altro posto: meglio il posto iniziale mal incastrato che fuori
+        const q0 = tolti.has(b) ? tappiIniziali.get(b.id) : undefined;
+        if (q0 && liberaG(q0.x, q0.y, b.w, b.h)) { out.set(b.id, q0); segnaG(ocG, b.id, q0, 1); segnaTipo(b, q0); }
+        continue;
+      }
       const q = { x: bx, y: by };
       out.set(b.id, q);
       segnaG(ocG, b.id, q, 1); segnaTipo(b, q);
@@ -4620,7 +4651,8 @@ export async function rifinisciSenzaStrada(
         }
         // Tappabuchi (1×n) spostati o tolti a mano: prima si ignoravano e
         // tornavano al posto di partenza. Ora il posto dell'utente diventa il
-        // loro posto "iniziale" (tappabuchi li rimette lì se è libero); quelli
+        // loro posto "iniziale" (tappabuchi li rimette lì se è libero e ben
+        // incastrato, altrimenti li ripiazza nel posto migliore); quelli
         // tolti si ripiazzano altrove.
         for (const b of piccoli) {
           const q = man.placements.get(b.id);
