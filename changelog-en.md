@@ -7,6 +7,7 @@
 - Planner, Pinwheel 2: choosing the town hall position uses several cores at once and finishes sooner, with the same position chosen
 - Planner: the refinement after COMPLETE leaves far fewer small scattered holes among buildings without roads: it moves and merges the holes, also using slightly smaller pieces for a better fit, until the free space is left in few spots (often just one)
 ### Fixes
+- Planner: when importing another player's city with the wand while on the Planner tab, the ribbon shows all its commands right away (before, only "Source" was left until you switched tab)
 - Planner, Hippodrome: Carceres and Sphendone are BOTH connected to a road (before, often only one of them); the tracks in between still need no road
 - Planner: at the end of the refinement no more 1×1 decorations (and other 1×n pieces) are left scattered or isolated where they started: a piece keeps its starting spot only if it still fits snugly, otherwise it is placed again in the holes or next to other buildings. The same goes for pieces moved by hand during pause: if they fit snugly they stay there, if they are left scattered the refinement fixes them
 

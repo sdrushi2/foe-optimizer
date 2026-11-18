@@ -1154,41 +1154,23 @@ W_MultiAge_Expedition16ePlatinum;Fattoria Terrazzata Platino;Platinum Terrace Fa
 W_MultiAge_Expedition22;Tempio dimenticato - Attivo;Forgotten Temple - Active;09faf6bd3;28;23;3x4;;;;;;;0.2;;;;;;;;;;;;;;;;;;40;40;50;50;155;155;155;155;;;;;50;50;50;50;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22Decoration;Tempio dimenticato - Non attivo;Forgotten Temple - Inactive;6315eeba0;;23;3x4;;;;250;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22Feathers;Piume del Serpente;Serpent Feathers;D_MultiAge_Expedition22Feathers-cd73e1334;;19;2x2;;;;4080;;;;;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-D_MultiAge_Expedition22Feathers;Piume del Serpente;Serpent Feathers;D_MultiAge_Expedition22Feathers-cd73e1334;;19;2x2;;;;4080;;;;;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 W_MultiAge_Expedition22FeathersGold;Piume del Serpente Oro;Gold Serpent Feathers;D_MultiAge_Expedition22FeathersGold-920d00c87;;19;2x2;;;;5240;;;;;;;70;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-D_MultiAge_Expedition22FeathersGold;Piume del Serpente Oro;Gold Serpent Feathers;D_MultiAge_Expedition22FeathersGold-920d00c87;;19;2x2;;;;5240;;;;;;;70;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 W_MultiAge_Expedition22FeathersPlatinum;Piume di Platino del Serpente;Platinum Serpent Feathers;D_MultiAge_Expedition22FeathersPlatinum-9830b6546;;19;2x2;;;;5830;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-D_MultiAge_Expedition22FeathersPlatinum;Piume di Platino del Serpente;Platinum Serpent Feathers;D_MultiAge_Expedition22FeathersPlatinum-9830b6546;;19;2x2;;;;5830;;;;;;;100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 W_MultiAge_Expedition22FeathersSilver;Piume del Serpente Argento;Silver Serpent Feathers;D_MultiAge_Expedition22FeathersSilver-59d9722d6;;19;2x2;;;;4660;;;;;;;50;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-D_MultiAge_Expedition22FeathersSilver;Piume del Serpente Argento;Silver Serpent Feathers;D_MultiAge_Expedition22FeathersSilver-59d9722d6;;19;2x2;;;;4660;;;;;;;50;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 W_MultiAge_Expedition22Scales;Pinne del Serpente;Serpent Fins;D_MultiAge_Expedition22Scales-453f9c3d2;;19;2x2;;;;4080;;;;;;;;;;;;;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22Scales;Pinne del Serpente;Serpent Fins;D_MultiAge_Expedition22Scales-453f9c3d2;;19;2x2;;;;4080;;;;;;;;;;;;;;;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22ScalesGold;Pinne del Serpente Oro;Gold Serpent Fins;D_MultiAge_Expedition22ScalesGold-543b7b610;;19;2x2;;;;5240;;;;;;;;;;;;;;;;;;;;;40;40;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22ScalesGold;Pinne del Serpente Oro;Gold Serpent Fins;D_MultiAge_Expedition22ScalesGold-543b7b610;;19;2x2;;;;5240;;;;;;;;;;;;;;;;;;;;;40;40;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22ScalesPlatinum;Pinne di Platino del Serpente;Platinum Serpent Fins;D_MultiAge_Expedition22ScalesPlatinum-567265135;;19;2x2;;;;5830;;;;;;;;;;;;;;;;;;;;;55;55;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22ScalesPlatinum;Pinne di Platino del Serpente;Platinum Serpent Fins;D_MultiAge_Expedition22ScalesPlatinum-567265135;;19;2x2;;;;5830;;;;;;;;;;;;;;;;;;;;;55;55;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22ScalesSilver;Pinne del Serpente Argento;Silver Serpent Fins;D_MultiAge_Expedition22ScalesSilver-5817a9128;;19;2x2;;;;4660;;;;;;;;;;;;;;;;;;;;;30;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22ScalesSilver;Pinne del Serpente Argento;Silver Serpent Fins;D_MultiAge_Expedition22ScalesSilver-5817a9128;;19;2x2;;;;4660;;;;;;;;;;;;;;;;;;;;;30;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22Spikes;Spuntoni del Serpente;Serpent Spikes;D_MultiAge_Expedition22Spikes-99c841f6f;;19;2x2;;;;4080;;;;;;;;;;;;;;;;;;;;;;;15;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22Spikes;Spuntoni del Serpente;Serpent Spikes;D_MultiAge_Expedition22Spikes-99c841f6f;;19;2x2;;;;4080;;;;;;;;;;;;;;;;;;;;;;;15;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22SpikesGold;Spuntoni del Serpente Oro;Gold Serpent Spikes;D_MultiAge_Expedition22SpikesGold-395c17a79;;19;2x2;;;;5240;;;;;;;;;;;;;;;;;;;;;;;40;40;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22SpikesGold;Spuntoni del Serpente Oro;Gold Serpent Spikes;D_MultiAge_Expedition22SpikesGold-395c17a79;;19;2x2;;;;5240;;;;;;;;;;;;;;;;;;;;;;;40;40;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22SpikesPlatinum;Spuntoni di Platino del Serpente;Platinum Serpent Spikes;D_MultiAge_Expedition22SpikesPlatinum-b9974d3c2;;19;2x2;;;;5830;;;;;;;;;;;;;;;;;;;;;;;55;55;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22SpikesPlatinum;Spuntoni di Platino del Serpente;Platinum Serpent Spikes;D_MultiAge_Expedition22SpikesPlatinum-b9974d3c2;;19;2x2;;;;5830;;;;;;;;;;;;;;;;;;;;;;;55;55;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22SpikesSilver;Spuntoni del Serpente Argento;Silver Serpent Spikes;D_MultiAge_Expedition22SpikesSilver-2d426052e;;19;2x2;;;;4660;;;;;;;;;;;;;;;;;;;;;;;30;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-D_MultiAge_Expedition22SpikesSilver;Spuntoni del Serpente Argento;Silver Serpent Spikes;D_MultiAge_Expedition22SpikesSilver-2d426052e;;19;2x2;;;;4660;;;;;;;;;;;;;;;;;;;;;;;30;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22a;Statua del Serpente piumato - Liv. 1;Feathered Serpent Statue - Lv. 1;R_MultiAge_Expedition22a-5e8809ba2;;19;3x2;1;1;5;;;3;;;;;;;;;;;;95600;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition22a;Statua del Serpente piumato - Liv. 1;Feathered Serpent Statue - Lv. 1;R_MultiAge_Expedition22a-5e8809ba2;;19;3x2;1;1;5;;;3;;;;;;;;;;;;95600;;;;;;;5;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22b;Statua del Serpente piumato - Liv. 2;Feathered Serpent Statue - Lv. 2;R_MultiAge_Expedition22b-feda0a31c;;19;3x2;1;1;5;;;6;;;;;;;;;;;;95600;;;;;;;10;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition22b;Statua del Serpente piumato - Liv. 2;Feathered Serpent Statue - Lv. 2;R_MultiAge_Expedition22b-feda0a31c;;19;3x2;1;1;5;;;6;;;;;;;;;;;;95600;;;;;;;10;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22c;Statua del Serpente piumato - Liv. 3;Feathered Serpent Statue - Lv. 3;R_MultiAge_Expedition22c-bf7f73012;;19;3x2;1;1;5;;;10;;;;;;;;;;;;95600;;;;;;;15;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition22c;Statua del Serpente piumato - Liv. 3;Feathered Serpent Statue - Lv. 3;R_MultiAge_Expedition22c-bf7f73012;;19;3x2;1;1;5;;;10;;;;;;;;;;;;95600;;;;;;;15;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22dSilver;Statua del Serpente Piumato Argento;Silver Feathered Serpent Statue;R_MultiAge_Expedition22dSilver-2a7cf5f8a;;19;3x2;1;1;5;;;35;;;;;;;;;;;;191210;;;;;;;80;80;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition22dSilver;Statua del Serpente Piumato Argento;Silver Feathered Serpent Statue;R_MultiAge_Expedition22dSilver-2a7cf5f8a;;19;3x2;1;1;5;;;35;;;;;;;;;;;;191210;;;;;;;80;80;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22eGold;Statua del Serpente piumato Oro;Gold Feathered Serpent Statue;R_MultiAge_Expedition22eGold-d9987d25b;;19;3x2;1;1;5;;;55;;;;;;;;;;;;382420;;;;;;;95;95;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition22eGold;Statua del Serpente piumato Oro;Gold Feathered Serpent Statue;R_MultiAge_Expedition22eGold-d9987d25b;;19;3x2;1;1;5;;;55;;;;;;;;;;;;382420;;;;;;;95;95;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_Expedition22fPlatinum;Statua del Serpente Piumato Platino;Platinum Feathered Serpent Statue;R_MultiAge_Expedition22fPlatinum-2c6d770af;;19;3x2;1;1;5;;;70;;;;;;;;;;;;570180;;;;;;;113;113;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition22fPlatinum;Statua del Serpente Piumato Platino;Platinum Feathered Serpent Statue;R_MultiAge_Expedition22fPlatinum-2c6d770af;;19;3x2;1;1;5;;;70;;;;;;;;;;;;570180;;;;;;;113;113;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A1;Fabbrica di succo;Cider Mill;P_MultiAge_FallBonus16-9e7dd1eea;;19;2x3;1;1;-93;;;;;;;;;;;;;;;;;33176;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A10;Fabbrica di Succo Regale;Regal Cider Mill;5e108b46a;;19;3x3;1.5;1;-2280;;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;77;77;77;77;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_FALL16A11;Fabbrica di Succo Suprema;Supreme Cider Mill;4bce3f726;;19;3x2;1;1;-2670;;;;;;;;;;;;;;;;;49392;;;;;35;;;;;;;;77;77;77;77;;;;;;;;;;;;4000;;;;;;;;;;

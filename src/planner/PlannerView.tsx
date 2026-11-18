@@ -265,6 +265,15 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
  *  città che mandano gli utenti. Non viene salvata da nessuna parte. */
 export interface CittaEsterna extends CittaJson { nome: string }
 
+/** Istanza del Planner che ha mandato per ultima i suoi gruppi al nastro
+ *  (18/11/2026, segnalazione dell'utente): importando con la bacchetta la
+ *  città di un altro giocatore dalla scheda Planner, il Planner vecchio si
+ *  smonta e quello nuovo si monta subito dopo; Preact 11 esegue la pulizia
+ *  del vecchio in ritardo, DOPO che il nuovo ha mandato i suoi gruppi, e il
+ *  nastro restava con la sola "Sorgente". Ora un Planner che si smonta
+ *  svuota il nastro solo se i gruppi mostrati sono ancora i suoi. */
+let proprietarioNastro: object | null = null;
+
 export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang, esterna: esternaProp, onNastro, militariCollegatiIniziali, scollegatiIniziali, mappa }: Props) {
   // 2.0: la città da JSON arriva dal nastro (App), non più da un pulsante qui.
   const esterna = esternaProp ?? null;
@@ -1273,6 +1282,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   mappaRef.current = mappa;
   const onNastroRef = useRef(onNastro);
   onNastroRef.current = onNastro;
+  const io = useRef({}).current;
   useEffect(() => {
     const a = () => azioniRef.current;
     const L = (k: Parameters<typeof t>[0]) => t(k, uiLang) as string;
@@ -1329,10 +1339,11 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         );
       } }]] },
     );
+    proprietarioNastro = io;
     onNastroRef.current?.(gruppi);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firmaNastro]);
-  useEffect(() => () => onNastroRef.current?.([]), []);
+  useEffect(() => () => { if (proprietarioNastro === io) { proprietarioNastro = null; onNastroRef.current?.([]); } }, [io]);
 
   return (
     // 2.0: niente più riquadro viola: comandi e statistiche sono nel nastro.
