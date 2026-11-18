@@ -14,7 +14,7 @@
 //  posto è un fine strada con una sola cella.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { perimetroCoda, type PlannerBuilding } from "./engine";
+import { latoSulBordo, perimetroCoda, type PlannerBuilding } from "./engine";
 
 /** Edificio "grande" (regola dell'utente): entrambi i lati >= 5. */
 export const LATO_GRANDE = 5;
@@ -89,7 +89,8 @@ export function calcolaRoadEff(
 
 /** strade_vuote (idea dell'utente): celle di strada con almeno un lato
  *  (nord/sud/est/ovest) su una cella sbloccata LIBERA, né edificio né strada.
- *  Sono strade sprecate: il riempimento le minimizza. */
+ *  Sono strade sprecate: il riempimento le minimizza. Anche le strade con un
+ *  lato fuori dall'area di gioco (latoSulBordo). */
 export function calcolaStradeVuote(
   buildings: readonly PlannerBuilding[],
   placements: ReadonlyMap<string, { x: number; y: number }>,
@@ -105,9 +106,11 @@ export function calcolaStradeVuote(
   const vuote: string[] = [];
   for (const r of roads) {
     const c = r.indexOf(","), x = Number(r.slice(0, c)), y = Number(r.slice(c + 1));
+    let vuota = false;
     for (const n of [`${x + 1},${y}`, `${x - 1},${y}`, `${x},${y + 1}`, `${x},${y - 1}`]) {
-      if (cells.has(n) && !occ.has(n)) { vuote.push(r); break; }
+      if (cells.has(n) && !occ.has(n)) { vuota = true; break; }
     }
+    if (vuota || latoSulBordo(x, y, (a, b) => roads.has(`${a},${b}`), (a, b) => cells.has(`${a},${b}`))) vuote.push(r);
   }
   // Strade accanto agli anelli di una catena (che non richiedono strada):
   // sprecate come quelle su una cella libera (segnalazione dell'utente).

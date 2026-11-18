@@ -33,7 +33,7 @@
 //     veloce; gli ultimi rimasti → primo posto libero.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { perimetroCoda, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
+import { latoSulBordo, perimetroCoda, runPlaceholderPlanner, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { fillMask } from "./builder/fase2";
 import { compattaCitta } from "./compatta";
 import { smussaBordi } from "./smussa";
@@ -229,6 +229,10 @@ interface Piano { azioni: Azione[]; altiInterni: number; liberati: string[]; str
   effQuad: number;
   /** strade_vuote: celle di strada con un lato su un buco (stradeVuoteSuBuchi). */
   stradeVuote: number;
+  /** Quadrati 2×2 di strade rimasti (sciogliQuadrati): non devono esistere. */
+  quadrati: number;
+  /** Strade con un lato fuori dall'area di gioco (latoSulBordo): nel costo. */
+  stradeBordo: number;
   /** Celle di strada accanto agli ANELLI dei blocchi di catena (lati sprecati). */
   stradeCoda: number;
   /** Fini strada medi mentre un grande sta lungo una strada (contaFiniStradaErrati). */
@@ -330,7 +334,17 @@ interface Params {
    *  meno strade (o pari strade e meglio negli spareggi). */
   altiEsterni?: boolean;
   combAnchor: number;
+  /** Pettine VERTICALE (18/11/2026, città di aquilot: 81 edifici con strada
+   *  orizzontali su 132): dalla riga della dorsale principale (il "tronco")
+   *  partono dorsali VERTICALI verso nord, sud o entrambi; ognuna ha una
+   *  fascia a ovest e una a est in cui gli edifici orizzontali (w > h) si
+   *  impilano attaccati col lato corto. verso: direzione; off: colonne
+   *  lasciate alla verticale del builder prima della prima fascia; fattore:
+   *  frazione dell'altezza libera usata da ogni dorsale (più corte = più
+   *  dorsali); quadrati: anche i quadrati larghi quanto la fascia. */
+  pettineV?: PettineV;
 }
+interface PettineV { verso: "n" | "s" | "ns"; off: number; fattore: number; quadrati: boolean; braccio?: "E" | "W" | "EW" }
 
 /** Varianti geometriche del fine strada orizzontale. L = edificio adiacente
  *  all'ultima cella di strada (a nord o a sud), C = edificio che tocca il lato
@@ -408,13 +422,23 @@ const PESO_PUNTA_BLOCCO = 40;
  *  139 → 146, Stralis 150 → 157); con 0,5 (un lato sprecato = mezza strada)
  *  i risultati restano quelli di prima. Scelta dell'utente: MENO STRADE (0,5). */
 const PESO_CODA_COSTO = 0.5;
-const costo = (p: Piano) => p.strade + Math.min(TETTO_EFF_QUAD, PESO_EFF_QUAD * p.effQuad) + PESO_CODA_COSTO * p.stradeCoda;
+/** Peso nel COSTO (in strade) di ogni strada con un lato fuori dall'area di
+ *  gioco (18/11/2026, richiesta dell'utente: altamente inefficienti, da
+ *  evitare il più possibile; ultima spiaggia se servono a piazzare più
+ *  edifici, perché gli esclusi vengono prima del costo). */
+const PESO_BORDO_COSTO = 1;
+/** Peso (in strade) di un quadrato 2×2 di strade nella ricerca locale. */
+const PESO_QUADRATO_LOCALE = 10;
+const costo = (p: Piano) => p.strade + Math.min(TETTO_EFF_QUAD, PESO_EFF_QUAD * p.effQuad) + PESO_CODA_COSTO * p.stradeCoda + PESO_BORDO_COSTO * p.stradeBordo;
 const effMeglio = (a: Piano, b: Piano): boolean | null =>
   EFF_ORDINE === "no" ? null : a.effNum !== b.effNum ? a.effNum < b.effNum : a.effSum !== b.effSum ? a.effSum < b.effSum : null;
 const meglio = (a: Piano, b: Piano) =>
   a.scollegate !== b.scollegate ? a.scollegate < b.scollegate
     : a.esclusi.length !== b.esclusi.length ? a.esclusi.length < b.esclusi.length
     : a.deficit !== b.deficit ? a.deficit < b.deficit
+    // (18/11/2026) un quadrato di strade perde contro qualunque disposizione
+    // senza, anche con più strade (regola dell'utente: non deve mai succedere)
+    : a.quadrati !== b.quadrati ? a.quadrati < b.quadrati
     : EFF_ORDINE === "prima" && effMeglio(a, b) !== null ? effMeglio(a, b)!
     : costo(a) !== costo(b) ? costo(a) < costo(b)
     : a.strade !== b.strade ? a.strade < b.strade
@@ -741,6 +765,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       const g = j * GW + i;
       return cellGrid[g] === 1 && occG[g] !== 1;
     };
+    /** Cella dentro l'area di gioco (sbloccata). */
+    const dentroArea = (x: number, y: number) => { const g = gIdx(x, y); return g >= 0 && cellGrid[g] === 1; };
     const fitsS = (x: number, y: number, w: number, h: number, extra?: Riserva) => {
       const i0 = x - problem.minX, j0 = y - problem.minY;
       if (i0 < 0 || j0 < 0 || i0 + w > GW || j0 + h > GH) return false;
@@ -1165,8 +1191,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           // Lati di strada che resterebbero inutilizzati: pesano come 2 strade
           // (una dorsale con un intero lato vuoto non deve mai vincere).
           let liberi = 0;
+          // (18/11/2026) anche i lati FUORI dall'area di gioco: una dorsale
+          // lungo il bordo spreca tutto un lato (segnalazione su Skyfrost)
           for (let xx = x0; xx <= piano.roadEnd; xx++) for (const yy of [sy - 1, sy + 1])
-            if (free(xx, yy) && !occIt.has(key(xx, yy))) liberi++;
+            if ((free(xx, yy) && !occIt.has(key(xx, yy))) || !dentroArea(xx, yy)) liberi++;
           const strade = piano.roadEnd - x0 + 1 + PESO_LATO_LIBERO * liberi;
           let score: number;
           if (p.secondary === "ratio") score = area / strade;
@@ -1250,6 +1278,211 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           return { row, pair: pairOf[i], forza, lista: [...fasce[2 * i]!, ...fasce[2 * i + 1]!] };
         }),
       };
+    };
+
+    /** Pettine VERTICALE (vedi Params.pettineV). Tronco sulla riga valida più
+     *  vicina a p.rows[0]: parte dalla verticale del builder (x0) e arriva
+     *  all'ultima dorsale verticale. Le fasce si riempiono dagli edifici più
+     *  larghi (stessa larghezza nella stessa fascia, quando possibile); la
+     *  dorsale si allunga quanto la fascia più alta delle due. Il lato del
+     *  tronco senza dorsali verticali prende gli edifici verticali e i
+     *  quadrati. Gli edifici del pettine non hanno `sy` (non sono fasce delle
+     *  dorsali orizzontali: ricompatta e i conteggi del lato lungo li
+     *  ignorano). */
+    const pettineVerticale = (pv: PettineV) => {
+      // Tronchi: raccordi = una riga nuova dalla verticale del builder verso
+      // est; girandola = i bracci orizzontali esistenti (E, W o entrambi), che
+      // si percorrono dal municipio verso il bordo (sx = verso).
+      type Tronco = { sy: number; xa: number; sx: 1 | -1; esiste: boolean };
+      const kxyS = (k: string): [number, number] => { const i = k.indexOf(","); return [Number(k.slice(0, i)), Number(k.slice(i + 1))]; };
+      const tronchi: Tronco[] = [];
+      if (opts.girandola) {
+        for (const k of pv.braccio === "W" ? [1] : pv.braccio === "EW" ? [2, 1] : [2]) {
+          const celle = opts.girandola.bracci[k] ?? [];
+          if (celle.length < 4 || !roads.has(celle[0]!) || !roads.has(celle[1]!)) continue;
+          const [ax, ay] = kxyS(celle[0]!), [bx] = kxyS(celle[1]!);
+          tronchi.push({ sy: ay, xa: ax, sx: bx > ax ? 1 : -1, esiste: true });
+        }
+      } else {
+        let sy = Number.NaN;
+        const r0 = p.rows[0] ?? sy0;
+        for (let d = 0; d <= 6 && Number.isNaN(sy); d++) for (const r of d ? [r0 + d, r0 - d] : [r0]) if (Number.isNaN(sy) && okRigaS(r)) sy = r;
+        if (!Number.isNaN(sy)) tronchi.push({ sy, xa: x0, sx: 1, esiste: false });
+      }
+      if (!tronchi.length) return;
+      const cand = pending().filter(b => !riservati.has(b.id) && (b.w > b.h || (pv.quadrati && b.w === b.h && b.w <= 4)))
+        .sort((a, c) => c.w - a.w || c.h - a.h || p.order(a, c));
+      if (cand.length < 4) return;
+      const extra = nuovaRiserva();
+      const piano: Item[] = [];
+      const strade: string[] = [];
+      const usati = new Set<string>();
+      const libera = (x: number, y: number) => free(x, y) && !extra.hasXY(x, y);
+      const versi = (pv.verso === "n" ? [-1] : pv.verso === "s" ? [1] : [-1, 1]) as Array<1 | -1>;
+      const nuovi: Array<{ t: Tronco; fine: number }> = [];
+      for (const t of tronchi) {
+        const { sy, xa, sx } = t;
+        /** Ultima colonna del tronco già usata (nuovo: celle riservate fin lì). */
+        let fine = xa - sx;
+        // cella del tronco utilizzabile fino alla colonna c?
+        const troncoFino = (c: number) => {
+          for (let x = fine + sx; sx > 0 ? x <= c : x >= c; x += sx) if (t.esiste ? !roads.hasXY(x, sy) : !libera(x, sy)) return false;
+          return true;
+        };
+        for (const v of versi) {
+          // cx = prima colonna (dal lato del tronco) della fascia "vicina"
+          let cx = xa + sx * pv.off;
+          for (let k = 0; k < 16; k++) {
+            const resto = cand.filter(b => !usati.has(b.id));
+            if (!resto.length) break;
+            const c = cx + sx * resto[0]!.w; // colonna della dorsale
+            if (!troncoFino(c) || !libera(c, sy + v)) break;
+            let hMax = 0;
+            while (hMax < 80 && libera(c, sy + v * (hMax + 1))) hMax++;
+            const cap = Math.max(2, Math.floor(hMax * pv.fattore));
+            // fascia vicina (verso il municipio) o lontana: edifici impilati
+            // dal tronco verso l'esterno, attaccati alla dorsale
+            const fascia = (vicina: boolean, W: number) => {
+              let alto = 0;
+              for (const pass of [0, 1]) for (const b of cand) {
+                if (usati.has(b.id) || (pass === 0 ? b.w !== W : b.w > W) || alto + b.h > cap) continue;
+                const x = (vicina === (sx > 0)) ? c - b.w : c + 1;
+                const y = v < 0 ? sy - alto - b.h : sy + 1 + alto;
+                if (!fitsS(x, y, b.w, b.h, extra) || toccaAltraDorsale(x, y, b.w, b.h)) continue;
+                let sp = true;
+                for (let dy = 0; dy < b.h && sp; dy++) if (!libera(c, y + dy)) sp = false;
+                if (!sp) continue;
+                for (let dx = 0; dx < b.w; dx++) for (let dy = 0; dy < b.h; dy++) extra.add(x + dx, y + dy);
+                piano.push({ b, x, y }); usati.add(b.id); alto += b.h;
+              }
+              return alto;
+            };
+            const altoV = fascia(true, resto[0]!.w);
+            const prossimo = cand.find(b => !usati.has(b.id));
+            const Wl = prossimo?.w ?? 0;
+            const altoL = prossimo ? fascia(false, Wl) : 0;
+            const lung = Math.max(altoV, altoL);
+            if (!lung) break;
+            for (let i = 1; i <= lung; i++) { extra.add(c, sy + v * i); strade.push(key(c, sy + v * i)); }
+            if (!t.esiste) for (let x = fine + sx; sx > 0 ? x <= c : x >= c; x += sx) extra.add(x, sy);
+            if (sx > 0 ? c > fine : c < fine) fine = c;
+            cx = c + sx * (1 + (altoL ? Wl : 0));
+          }
+        }
+        if (!t.esiste) nuovi.push({ t, fine });
+      }
+      if (piano.length < 4) return;
+      // strade: tronco (se nuovo) e dorsali col primo edificio (le metriche usano rd)
+      for (const { t, fine } of nuovi) for (let x = t.xa; t.sx > 0 ? x <= fine : x >= fine; x += t.sx) strade.unshift(key(x, t.sy));
+      piano.forEach((it, i) => place("pettine verticale", it.b, it.x, it.y, i ? [] : strade));
+      if (pv.verso === "ns" || opts.girandola) return; // (girandola: i lati dei bracci li riempie riempiLatiStrade)
+      // lato libero del tronco: prima i verticali, poi i quadrati, poi gli altri
+      for (const { t, fine } of nuovi) {
+        const sy = t.sy, v = pv.verso === "n" ? 1 : -1;
+        const lista = pending().filter(b => !riservati.has(b.id)).sort((a, c) => (c.h - c.w) - (a.h - a.w) || p.order(a, c));
+        const toccaAltre = (x: number, y: number, w: number, h: number) => {
+          for (let dx = 0; dx < w; dx++) for (const yy of [y - 1, y + h]) if (yy !== sy && rd.hasXY(x + dx, yy)) return true;
+          for (let dy = 0; dy < h; dy++) if (rd.hasXY(x - 1, y + dy) || rd.hasXY(x + w, y + dy)) return true;
+          return false;
+        };
+        for (let x = t.xa; x <= fine;) {
+          const b = lista.find(q => !fatti.has(q.id) && fitsS(x, v > 0 ? sy + 1 : sy - q.h, q.w, q.h) && !toccaAltre(x, v > 0 ? sy + 1 : sy - q.h, q.w, q.h));
+          if (!b) { x++; continue; }
+          place("pettine verticale · tronco", b, x, v > 0 ? sy + 1 : sy - b.h, []);
+          x += b.w;
+        }
+      }
+    };
+
+    /** Quadrati 2×2 di strade (18/11/2026, segnalazione dell'utente su
+     *  Skyfrost, raccordo a 3: dove la verticale del builder incontra una
+     *  dorsale restava un quadrato di 4 strade che nessuna fase toglieva; non
+     *  deve mai succedere). Per ogni quadrato si toglie una delle quattro
+     *  celle (prima le strade nuove, poi quelle con meno strade vicine) se la
+     *  rete resta collegata al municipio e ogni edificio con strada ne tocca
+     *  ancora una. Mai le strade a due corsie (fisse: lì i 2×2 sono voluti). */
+    const sciogliQuadrati = () => {
+      const isR = (x: number, y: number) => roads.hasXY(x, y) || rd.hasXY(x, y);
+      const quadrati = () => {
+        const out: Array<[number, number]> = [];
+        for (const S of [roads, rd]) for (const k of S) {
+          const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1));
+          if (isR(x + 1, y) && isR(x, y + 1) && isR(x + 1, y + 1)) out.push([x, y]);
+        }
+        return out;
+      };
+      let q = quadrati();
+      if (!q.length) return 0;
+      // edifici con strada della disposizione (partenza non mossa + azioni)
+      const mossi = new Set([...azioni.map(a => a.id), ...liberati, ...azioni.filter(a => a.libera).map(a => a.libera!)]);
+      const conStrada: Array<{ b: PlannerBuilding; x: number; y: number }> = [];
+      for (const [id, pq] of placements) { const b = byId.get(id); if (b && !mossi.has(id) && (b.isTownhall || b.roadLevel > 0)) conStrada.push({ b, x: pq.x, y: pq.y }); }
+      for (const a of azioni) { const b = byId.get(a.id)!; if (b.roadLevel > 0) conStrada.push({ b, x: a.x, y: a.y }); }
+      const th = conStrada.find(t => t.b.isTownhall);
+      const vicini = (x: number, y: number) => (isR(x + 1, y) ? 1 : 0) + (isR(x - 1, y) ? 1 : 0) + (isR(x, y + 1) ? 1 : 0) + (isR(x, y - 1) ? 1 : 0);
+      const togli = (x: number, y: number) => {
+        const k = key(x, y);
+        if (rd.has(k)) { rd.delete(k); occ.delete(k); return () => { rd.add(k); occ.add(k); }; }
+        roads.delete(k); occ.delete(k); stradeTolte.push(k);
+        return () => { roads.add(k); occ.add(k); stradeTolte.pop(); };
+      };
+      /** Celle di strada raggiungibili dalle strade attorno al municipio. */
+      const raggiunte = () => {
+        if (!th) return 0;
+        const visti = new Set<string>(), coda: Array<[number, number]> = [];
+        const parti = (cx: number, cy: number) => { const k = key(cx, cy); if (isR(cx, cy) && !visti.has(k)) { visti.add(k); coda.push([cx, cy]); } };
+        for (let d = 0; d < th.b.w; d++) { parti(th.x + d, th.y - 1); parti(th.x + d, th.y + th.b.h); }
+        for (let d = 0; d < th.b.h; d++) { parti(th.x - 1, th.y + d); parti(th.x + th.b.w, th.y + d); }
+        while (coda.length) { const [cx, cy] = coda.pop()!; parti(cx + 1, cy); parti(cx - 1, cy); parti(cx, cy + 1); parti(cx, cy - 1); }
+        return visti.size;
+      };
+      /** Edifici con strada che toccano (x, y) e che, senza quella cella, non toccherebbero più strade. */
+      const vicinoA = (t: { b: PlannerBuilding; x: number; y: number }, x: number, y: number) =>
+        !t.b.isTownhall && x >= t.x - 1 && x <= t.x + t.b.w && y >= t.y - 1 && y <= t.y + t.b.h;
+      /** Edifici messi da QUESTA simulazione e riattaccabili altrove (non
+       *  spostati dalla base, non scambi col builder, non fissi). */
+      const mobileQ = (id: string) => {
+        const a = azioni.find(t => t.id === id);
+        return !!a && !a.from && !a.libera && !fissi.has(id) && !fissiBuilder.has(id) && pool.some(b => b.id === id);
+      };
+      for (let giro = 0; giro < 20 && q.length; giro++) {
+        let tolta = false;
+        for (const [qx, qy] of q) {
+          const celle = ([[qx, qy], [qx + 1, qy], [qx, qy + 1], [qx + 1, qy + 1]] as Array<[number, number]>)
+            .filter(([x, y]) => isR(x, y) && !fisse.has(key(x, y)));
+          if (celle.length < 4) continue;
+          celle.sort((a, b) => (rd.hasXY(b[0], b[1]) ? 1 : 0) - (rd.hasXY(a[0], a[1]) ? 1 : 0) || vicini(a[0], a[1]) - vicini(b[0], b[1]));
+          const reach = raggiunte();
+          // 1° giro: celle che non lasciano nessuno senza strada; 2° giro:
+          // anche celle che lasciano senza strada solo edifici riattaccabili,
+          // che si tolgono e si riattaccano alle strade (attaccaAStrade)
+          for (const permetti of [false, true]) {
+            for (const [x, y] of celle) {
+              const vic = conStrada.filter(t => vicinoA(t, x, y));
+              const tocca = vic.map(t => toccaStradaZona(t.b, t.x, t.y, isR));
+              const annulla = togli(x, y);
+              if (raggiunte() !== reach - 1) { annulla(); continue; }
+              const persi = vic.filter((t, i) => tocca[i] && !toccaStradaZona(t.b, t.x, t.y, isR));
+              if (!persi.length) { tolta = true; break; }
+              if (!permetti || !persi.every(t => mobileQ(t.b.id))) { annulla(); continue; }
+              for (const t of persi) {
+                const i = azioni.findIndex(a => a.id === t.b.id);
+                const a = azioni[i]!;
+                rett(a.x, a.y, a.w, a.h, 0); fatti.delete(a.id); azioni.splice(i, 1);
+                const j = conStrada.indexOf(t); if (j >= 0) conStrada.splice(j, 1);
+              }
+              attaccaAStrade();
+              for (const a of azioni) if (!conStrada.some(t => t.b.id === a.id)) { const b = byId.get(a.id)!; if (b.roadLevel > 0) conStrada.push({ b, x: a.x, y: a.y }); }
+              tolta = true; break;
+            }
+            if (tolta) break;
+          }
+          if (tolta) break;
+        }
+        if (!tolta) break;
+        q = quadrati();
+      }
+      return q.length;
     };
 
     /** Ricompattazione delle dorsali (idea dell'utente: "scambia tutta la fila
@@ -2442,6 +2675,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       }
     };
     piazzaBlocchi();
+    // girandola: il pettine verticale parte dai bracci prima che i loro lati si riempiano
+    if (p.pettineV && opts.girandola) pettineVerticale(p.pettineV);
     if (p.latiEsatti !== undefined) riempiLatiStrade(p.latiEsatti);
 
     // Fine strada: gli edifici grandi rimasti (entrambi i lati >= 5). 1-2 →
@@ -2469,6 +2704,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     // Prima il lato est della verticale (strada gratis): solo gli edifici che
     // non ci stanno andranno sulle dorsali, che così risultano più corte.
     for (const c of coppie) for (const b of c) riservati.add(b.id);
+    if (p.pettineV && !opts.girandola) pettineVerticale(p.pettineV);
     const pianoPettine = p.comb !== 0 ? pettine(p.comb, coppie) : null;
     if (pianoPettine) {
       if (p.vertFirst) latoEstVerticale(pianoPettine.rows, p.orient);
@@ -2515,6 +2751,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     compattaDorsali();
     riparaScollegati();
     if (punte) rifinisciPunte();
+    const quadratiRimasti = sciogliQuadrati();
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const a of azioni) {
@@ -2567,7 +2804,15 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       const b = byId.get(a.id)!;
       if (b.zonaStrada) for (const [cx, cy] of perimetroCoda(b, a.x, a.y)) if (roads.hasXY(cx, cy) || rd.hasXY(cx, cy)) stradeCoda++;
     }
-    const stradeVuote = stradeVuoteSuBuchi(roads) + stradeVuoteSuBuchi(rd) + stradeCoda;
+    // + strade con un lato fuori dall'area di gioco (latoSulBordo, 18/11/2026)
+    let stradeBordo = 0;
+    {
+      const isR = (x: number, y: number) => roads.hasXY(x, y) || rd.hasXY(x, y);
+      const dentro = (x: number, y: number) => { const g = gIdx(x, y); return g >= 0 && cellGrid[g] === 1; };
+      for (const S of [roads, rd]) for (const k of S) { const i = k.indexOf(","); if (latoSulBordo(Number(k.slice(0, i)), Number(k.slice(i + 1)), isR, dentro)) stradeBordo++; }
+    }
+    latiLiberi += stradeBordo; // un lato fuori dall'area di gioco è un lato vuoto
+    const stradeVuote = stradeVuoteSuBuchi(roads) + stradeVuoteSuBuchi(rd) + stradeCoda + stradeBordo;
     const deficit = Math.max(0, Math.ceil((areaSenzaStrada + areaEsclusi * 1.3) * MARGINE_DEFICIT) - (libere - buchi));
     // Riallineamento: le strade applicate (azioni + stradeExtra) devono essere
     // ESATTAMENTE rd, su cui si calcolano le metriche. Alcuni passi successivi
@@ -2675,7 +2920,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         const finiErrati = contaFiniStradaErrati(voci.filter(t => t.x > vx && !fissi.has(t.b.id)), isRoad);
         return { effNum, effSum, effQuad, finiErrati };
       })(),
-      stradeVuote, stradeCoda, buchi, spreco, compattezza: azioni.length ? (maxX - minX) * (maxY - minY) : 0,
+      stradeVuote, stradeBordo, quadrati: quadratiRimasti, stradeCoda, buchi, spreco, compattezza: azioni.length ? (maxX - minX) * (maxY - minY) : 0,
     };
   };
 
@@ -2794,6 +3039,22 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     });
   };
   /** Parametri casuali (ripartenze): spareggi, lato e lunghezza massima della dorsale casuali. */
+  /** Pettine verticale nella ricerca solo nelle città con molti edifici con
+   *  strada orizzontali ancora da piazzare dopo il builder (almeno 15 e almeno
+   *  1,5 volte i verticali): nelle altre la ricerca non estrae nemmeno i suoi
+   *  numeri casuali, quindi i risultati restano identici. */
+  const attivoV = () => {
+    let o = 0, v = 0;
+    for (const b of daPiazzare) { if (b.w > b.h) o++; else if (b.h > b.w) v++; }
+    return o >= 15 && o >= 1.5 * v;
+  };
+  const pettineVCasuale = (): PettineV => ({
+    verso: (["n", "s", "ns"] as const)[Math.floor(rnd() * 3)]!,
+    off: rnd() < 0.5 ? 0 : Math.floor(rnd() * 8),
+    fattore: rnd() < 0.5 ? 1 : 0.4 + rnd() * 0.6,
+    quadrati: rnd() < 0.3,
+    ...(opts.girandola ? { braccio: (["E", "W", "EW"] as const)[Math.floor(rnd() * 3)]! } : {}),
+  });
   const casuale = (nDors: number, righeCasuali: () => number[]): Params => {
     const jitter = new Map(problem.buildings.map(b => [b.id, rnd()]));
     const base = ordini[Math.floor(rnd() * ordini.length)]!;
@@ -2812,6 +3073,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       pairSeed: rnd() < 0.3 ? null : Math.floor(rnd() * 1e9),
       ...(() => { const u = rnd(); const K = u < 0.4 ? 0 : u < 0.7 ? -1 : 2 + Math.floor(rnd() * 3); return { comb: K, combPiu: Math.floor(rnd() * 3), combAnchor: K < 0 ? Math.floor(rnd() * 5) - 1 : Math.floor(rnd() * Math.max(1, K)), orient: rnd() < 0.6, swapBuilder: rnd() < 0.5, gapN: rnd() < 0.2 ? 0 : rnd() < 0.5 ? 1 : 2 + Math.floor(rnd() * 2), gapS: rnd() < 0.2 ? 0 : rnd() < 0.5 ? 1 : 2 + Math.floor(rnd() * 2), estEsatto: rnd() < 0.4, latiEsatti: rnd() < 0.3 ? Math.floor(rnd() * 1e6) : undefined, extN: rnd() < 0.6 ? 0 : 1 + Math.floor(rnd() * 4), extS: rnd() < 0.6 ? 0 : 1 + Math.floor(rnd() * 4), liberaN: rnd() < 0.15, liberaS: rnd() < 0.15, riservaAlti: rnd() < 0.25, altiEsterni: rnd() < 0.4, liberaGrandi: rnd() < 0.35, accN: rnd() < 0.25 ? 1 + Math.floor(rnd() * 16) : 0, accS: rnd() < 0.25 ? 1 + Math.floor(rnd() * 16) : 0, liberaGialli: rnd() < 0.3 }; })(),
       ...(opts.girandola ? { tagli: tagliCasuali(), angoli: angoliCasuali() } : {}),
+      ...(attivoV() && rnd() < 0.5 ? { pettineV: pettineVCasuale() } : {}),
     };
   };
 
@@ -2832,6 +3094,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   } else opzioniRighe.push([sy0]);
   const nDors = opzioniRighe[0]!.length;
   const configs: Params[] = [];
+  // Pettine verticale (città con molti orizzontali): per primo, così la
+  // ricerca locale parte anche da lì.
+  if (attivoV()) for (const verso of ["n", "s", "ns"] as const) for (const off of [0, 3]) for (const fattore of [1, 0.7]) for (const vertFirst of [false, true])
+    configs.push({ order: ordini[0]!, side: "nearest", vertFirst, secondary: "snug", spineCap: 1, rows: [sy0], lenFactor: [1], capVariant: [0], pairSeed: null, comb: 0, combAnchor: 0, orient: vertFirst, pettineV: { verso, off, fattore, quadrati: false } });
   for (const lf of [1, 0]) for (const order of ordini) for (const side of lati) for (const vertFirst of [true, false]) for (const secondary of ["ratio", "minRoad", "snug"] as const)
     configs.push({ order, side, vertFirst, secondary, spineCap: 1, rows: opzioniRighe[0]!, lenFactor: uno(nDors).map(() => lf), capVariant: zero(nDors), pairSeed: null, comb: 0, combAnchor: 0, orient: vertFirst });
   // Dorsale principale spostata di ±1..±2 righe rispetto al raccordo.
@@ -2900,6 +3166,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     }
     // prima la griglia, poi i semi a bracci interi (quasi mai i migliori)
     const semi = configs.splice(0);
+    // Pettine verticale dai bracci orizzontali (città con molti orizzontali): per primo
+    if (attivoV()) for (const braccio of ["EW", "E", "W"] as const) for (const verso of ["ns", "n", "s"] as const) for (const off of [0, 2])
+      configs.push({ ...base, latiEsatti: 1, tagli: nb.map(() => 0), angoli: [1, 1, 1, 1], pettineV: { verso, off, fattore: 1, quadrati: false, braccio } });
     for (let i = 0; i < griglia.length; i++) configs.push(griglia[(i * 97) % griglia.length]!);
     configs.push(...semi);
     for (let i = 0; i < 80; i++) configs.push({ ...base, latiEsatti: 100 + i, tagli: tagliCasuali(), angoli: i % 4 ? angoliCasuali() : undefined });
@@ -2995,7 +3264,17 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         q.angoli = a;
         continue;
       }
-      switch (Math.floor(rnd() * 13)) {
+      switch (Math.floor(rnd() * (attivoV() ? 15 : 13))) {
+        case 13: q.pettineV = q.pettineV ? undefined : pettineVCasuale(); break;
+        case 14: {
+          const v = q.pettineV ?? pettineVCasuale(), u2 = rnd();
+          q.pettineV = u2 < 0.3 ? { ...v, verso: (["n", "s", "ns"] as const)[Math.floor(rnd() * 3)]! }
+            : u2 < 0.6 ? { ...v, off: Math.max(0, v.off + (rnd() < 0.5 ? -1 : 1)) }
+            : u2 < 0.85 ? { ...v, fattore: Math.min(1, Math.max(0.3, v.fattore * (0.8 + rnd() * 0.4))) }
+            : opts.girandola && u2 < 0.93 ? { ...v, braccio: (["E", "W", "EW"] as const)[Math.floor(rnd() * 3)]! }
+            : { ...v, quadrati: !v.quadrati };
+          break;
+        }
         case 0: { const i = Math.floor(rnd() * q.rows.length); const r = q.rows[i]! + (rnd() < 0.5 ? -1 : 1); if (okRiga(r)) q.rows[i] = r; break; }
         case 1: { const i = Math.floor(rnd() * q.lenFactor.length); q.lenFactor[i] = rnd() < 0.3 ? 0 : Math.max(0.3, (q.lenFactor[i] || 1) * (0.8 + rnd() * 0.4)); break; }
         case 2: { const i = Math.floor(rnd() * q.capVariant.length); q.capVariant[i] = Math.floor(rnd() * CAP_VARIANTS.length); break; }
@@ -3126,7 +3405,20 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     // strade accanto agli anelli dei blocchi di catena (come nel costo della ricerca)
     let coda = 0;
     for (const [id, q] of placements) { const b = byId.get(id)!; if (b.zonaStrada) for (const [cx, cy] of perimetroCoda(b, q.x, q.y)) if (roads.hasXY(cx, cy)) coda++; }
-    return [esc, Math.max(0, Math.ceil((areaNo + areaEsc * 1.3) * MARGINE_DEFICIT) - (libere - buchi)), roads.size + Math.min(TETTO_EFF_QUAD, PESO_EFF_QUAD * eff.quad) + PESO_CODA_COSTO * coda, roads.size, ne, se, buchi, fe];
+    // (18/11/2026) strade con un lato fuori dall'area di gioco e quadrati 2×2
+    // di strade, come nella ricerca parametrica (lì il quadrato è un criterio
+    // a sé; qui pesa PESO_QUADRATO_LOCALE strade)
+    let bordo = 0, quadr = 0;
+    const isR = (x: number, y: number) => roads.hasXY(x, y);
+    const dentro = (x: number, y: number) => problem.cells.has(key(x, y));
+    for (const k of roads) {
+      const i = k.indexOf(","), x = Number(k.slice(0, i)), y = Number(k.slice(i + 1));
+      if (latoSulBordo(x, y, isR, dentro)) bordo++;
+      if (isR(x + 1, y) && isR(x, y + 1) && isR(x + 1, y + 1) && !fisse.has(k)) quadr++;
+    }
+    return [esc, Math.max(0, Math.ceil((areaNo + areaEsc * 1.3) * MARGINE_DEFICIT) - (libere - buchi)),
+      roads.size + Math.min(TETTO_EFF_QUAD, PESO_EFF_QUAD * eff.quad) + PESO_CODA_COSTO * coda + PESO_BORDO_COSTO * bordo + PESO_QUADRATO_LOCALE * quadr,
+      roads.size, ne, se, buchi, fe];
   };
   // (stesso ordine della ricerca: fuori → deficit → costo → strade → road_eff → buchi → fini strada errati)
   const confronta = (a: Punti, b: Punti) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3] || a[4] - b[4] || a[5] - b[5] || a[6] - b[6] || a[7] - b[7];

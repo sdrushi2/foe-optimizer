@@ -90,6 +90,22 @@ function toccaZona(b: PlannerBuilding, z: { x: number; y: number; w: number; h: 
   return false;
 }
 
+/** Strada con un LATO fuori dall'area di gioco (18/11/2026, segnalazione
+ *  dell'utente su Skyfrost: una strada lungo il bordo perde tutto un lato).
+ *  Il vicino fuori in direzione d è un lato, non la punta, se la strada non
+ *  prosegue nella direzione opposta (-d): una verticale che arriva al bordo
+ *  ha la cella fuori oltre la punta e non spreca nulla. */
+export function latoSulBordo(x: number, y: number, isRoad: (x: number, y: number) => boolean, dentro: (x: number, y: number) => boolean): boolean {
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const)
+    if (!dentro(x + dx, y + dy) && !isRoad(x - dx, y - dy)) return true;
+  return false;
+}
+
+/** Peso (in strade) di ogni strada nuova con un lato sul bordo, nei percorsi
+ *  degli edifici rimasti (runPlaceholderPlanner): evitate il più possibile,
+ *  ultima spiaggia se non c'è altro posto (richiesta dell'utente). */
+const PESO_BORDO_PERCORSO = 1;
+
 /** Contorno esterno di un blocco di catena FUORI dalla zona dell'inizio
  *  (accanto agli anelli, che non richiedono strada): una strada qui è
  *  sprecata (segnalazione dell'utente). Vuoto per gli edifici normali. */
@@ -385,12 +401,23 @@ export async function runPlaceholderPlanner(problem: PlannerProblem, opts: RunOp
       }
     }
     cands.sort((a, b2) => a.cost - b2.cost);
-    let accepted = false;
-    for (const c of cands.slice(0, MAX_TRIES)) {
-      iterations++;
+    // Strade lungo il bordo (un lato fuori dall'area): ogni cella del percorso
+    // così pesa PESO_BORDO_PERCORSO strade in più (18/11/2026). Senza celle sul
+    // bordo l'ordine resta quello di prima (ordinamento stabile).
+    const dentro = (x: number, y: number) => problem.cells.has(key(x, y));
+    const provati = cands.slice(0, 2 * MAX_TRIES).map(c => {
       const path: string[] = [];
       for (let k: string | null = c.via; k !== null && !roads.has(k); k = parent.get(k) ?? null) path.push(k);
       if (c.via2) for (let k: string | null = c.via2; k !== null && !roads.has(k); k = parent.get(k) ?? null) if (!path.includes(k)) path.push(k);
+      const ps = new Set(path);
+      const isR = (x: number, y: number) => { const k = key(x, y); return roads.has(k) || ps.has(k); };
+      let bordo = 0;
+      for (const k of path) { const [px, py] = k.split(",").map(Number) as [number, number]; if (latoSulBordo(px, py, isR, dentro)) bordo++; }
+      return { c, path, v: c.cost + PESO_BORDO_PERCORSO * bordo };
+    }).sort((a, b2) => a.v - b2.v);
+    let accepted = false;
+    for (const { c, path } of provati.slice(0, MAX_TRIES)) {
+      iterations++;
       // Il percorso non deve passare sotto l'edificio stesso.
       if (path.some(k => { const [px, py] = k.split(",").map(Number) as [number, number]; return px >= c.x && px < c.x + b.w && py >= c.y && py < c.y + b.h; })) continue;
       // Prova: piazza, scava, misura lo spazio raggiungibile rimasto.

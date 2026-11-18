@@ -1266,7 +1266,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const statistiche = useMemo(() => {
     let aCatena = 0;
     for (const bl of catene.blocchi.values()) aCatena += bl.membri.length;
-    return { conStrada: conStradaP.length, senzaStrada: senzaStradaP.length, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
+    // forma degli edifici con strada (w = larghezza sulla mappa, h = altezza)
+    let quadrati = 0, orizzontali = 0, verticali = 0;
+    for (const b of conStradaP) { if (b.w === b.h) quadrati++; else if (b.w > b.h) orizzontali++; else verticali++; }
+    return { conStrada: conStradaP.length, quadrati, orizzontali, verticali, senzaStrada: senzaStradaP.length, strade: problem.originalRoadCells, aCatena, set: edificiSet.length };
   }, [conStradaP, senzaStradaP, catene, problem, edificiSet]);
   const nomiSet = [...new Set(edificiSet.map(b => b.name))].sort().join(", ");
   const titoloCpu = (() => {
@@ -1277,7 +1280,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   })();
   const firmaNastro = [running, paused, completando, anySearching, anyFilling, smussando, puoAnnullaCompl, puoAnnullaMan,
     !!esterna, nModifiche, pannelloModifica, videoAperto, potenza, titoloCpu, uiLang,
-    mappa?.attiva ?? "-", statistiche.conStrada, statistiche.senzaStrada, statistiche.strade, statistiche.aCatena, statistiche.set, nomiSet].join("|");
+    mappa?.attiva ?? "-", statistiche.conStrada, statistiche.quadrati, statistiche.orizzontali, statistiche.verticali, statistiche.senzaStrada, statistiche.strade, statistiche.aCatena, statistiche.set, nomiSet].join("|");
   const mappaRef = useRef(mappa);
   mappaRef.current = mappa;
   const onNastroRef = useRef(onNastro);
@@ -1322,8 +1325,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       ) }]] },
       { id: "pl-aiuto", label: L("r2GrpHelp"), icon: Clapperboard, rows: [[b("video", Clapperboard, L("r2PlVideo"), () => setVideoAperto(v => !v), { title: L("plannerVideoTitle"), active: videoAperto })]] },
       { id: "pl-statistiche", label: L("r2GrpCurrentStats"), icon: ChartColumn, rows: [[{ kind: "custom", id: "statistiche", render: () => {
-        const voce = (etichetta: string, valore: number, avviso?: string) => (
-          <span className={`flex items-center justify-between gap-2 whitespace-nowrap ${avviso ? "rounded border border-amber-500/70 bg-amber-950/60 px-1 text-amber-200" : ""}`} title={avviso}>
+        const voce = (etichetta: string, valore: number, avviso?: string, dettaglio?: string) => (
+          <span className={`flex items-center justify-between gap-2 whitespace-nowrap ${avviso ? "rounded border border-amber-500/70 bg-amber-950/60 px-1 text-amber-200" : ""} ${dettaglio !== undefined ? "border-l border-sky-700/70 pl-2" : ""}`} title={avviso ?? dettaglio}>
             <span className={avviso ? "" : "text-slate-400"}>{etichetta}</span>
             <span className={`font-mono font-semibold ${avviso ? "" : "text-slate-100"}`}>{valore.toLocaleString(uiLang === "it" ? "it-IT" : "en-US")}</span>
           </span>
@@ -1333,6 +1336,10 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
             {voce(L("r2StWithRoad"), statistiche.conStrada)}
             {voce(L("r2StNoRoad"), statistiche.senzaStrada)}
             {voce(L("r2StRoads"), statistiche.strade)}
+            {/* dettaglio di "Con strada": forma degli edifici */}
+            {voce(L("r2StSquare"), statistiche.quadrati, undefined, L("r2StShapeTitle"))}
+            {voce(L("r2StHoriz"), statistiche.orizzontali, undefined, L("r2StShapeTitle"))}
+            {voce(L("r2StVert"), statistiche.verticali, undefined, L("r2StShapeTitle"))}
             {voce(L("r2StChains"), statistiche.aCatena)}
             {voce(L("r2StSets"), statistiche.set, statistiche.set > 0 ? `${L("plannerSetsTitle")} ${t("plannerSetsBody", uiLang, statistiche.set)} ${L("plannerSetsList")} ${nomiSet}.` : undefined)}
           </div>

@@ -594,6 +594,15 @@ const UI_STRINGS = {
   r2StNoRoad: { it: "Senza strada", en: "Without road" },
   r2StRoads: { it: "Strade (caselle)", en: "Roads (tiles)" },
   r2StChains: { it: "A catena", en: "Chain" },
+  // Forma degli edifici con strada (18/11/2026): gli scenari del Planner sono
+  // pensati per città con più edifici verticali (molte strade orizzontali)
+  r2StSquare: { it: "quadrati", en: "square" },
+  r2StHoriz: { it: "orizzontali", en: "horizontal" },
+  r2StVert: { it: "verticali", en: "vertical" },
+  r2StShapeTitle: {
+    it: "Edifici con strada per forma, come sulla mappa: orizzontali = più larghi che alti, verticali = più alti che larghi. Le catene contano come un blocco unico con la loro forma intera.",
+    en: "Buildings with road by shape, as on the map: horizontal = wider than tall, vertical = taller than wide. Chains count as one block with their whole shape.",
+  },
   r2StSets: { it: "Set", en: "Sets" },
   r2PlMilitaryRoad: { it: "Edifici militari da collegare a strada:", en: "Military buildings to connect to a road:" },
   r2PlDisconnected: { it: "Edifici scollegati in città da collegare a strada:", en: "Buildings disconnected in the city to connect to a road:" },
