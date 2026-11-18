@@ -2,6 +2,7 @@
 
 ## Versione 2.021 (18/11/2026)
 ### Aggiornamenti
+- Tabelle edifici: le tre colonne dei beni personali (era attuale, precedente e successiva) sono ora vicine, seguite dalla colonna dei beni boost. Nuovo pulsante "Somma beni" (Opzioni) che le unisce in un'unica colonna, con l'icona dei beni dorata, col totale dei beni prodotti; anche questa colonna si può ordinare
 - Planner, Raccordi a 3/4/5: nelle città con molti edifici con strada orizzontali (più larghi che alti) la ricerca prova anche un "pettine verticale": da una strada orizzontale partono più strade verticali, con gli edifici orizzontali impilati ai due lati e attaccati dal lato corto; gli edifici verticali restano sulle strade orizzontali. Su una città di prova con 81 edifici orizzontali: circa 19 caselle di strada in meno e quasi nessun bordo giallo (da circa 50 a 2-4). Le città con pochi edifici orizzontali non cambiano
 - Planner, Girandola e Girandola 2: nelle stesse città il pettine verticale parte dai bracci orizzontali della girandola. Sulla città di prova ora entrano tutti gli edifici con strada (prima ne restavano fuori più di 30)
 - Planner: nelle Statistiche attuali gli edifici con strada sono divisi per forma (quadrati, orizzontali, verticali), per capire subito se la città ha soprattutto edifici orizzontali

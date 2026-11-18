@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni } from "../assets/icons";
+import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni, iconBeniOro } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -50,7 +50,7 @@ export interface ContestoNastri {
   /** Filtri delle tabelle edifici (Database). */
   filtri: StatoFiltri;
   /** Interruttori di Visualizza: attivo = mostrato. */
-  vista: Record<"dettaglioProd" | "somme" | "iqProd" | "pop" | "fel" | "sped", Interruttore>;
+  vista: Record<"dettaglioProd" | "somme" | "sommaBeni" | "iqProd" | "pop" | "fel" | "sped", Interruttore>;
   /** Opzioni › Pesi statistiche: le spedizioni contano nell'efficienza (altrimenti ⚠️ su Visualizza › Spedizioni). */
   spedNeiPesi: boolean;
   /** "Nascondi / Mostra solo": 0 tutti, 1 nascosti (rosso), 2 solo questi (verde). */
@@ -189,16 +189,18 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const opzioniTabella: RibbonGroup = { id: "opzioni-tabella", label: L("r2GrpTableOptions"), icon: SlidersHorizontal, rows: [[
     interruttore("somme", Sigma, "r2Sums", "r2SumsTitle"),
   ]] };
+  // "Somma beni" (18/11/2026): solo nelle tabelle edifici (le Alleati non hanno BeniS).
   const opzioniEdifici: RibbonGroup = { ...opzioniTabella, rows: [[...opzioniTabella.rows[0]!,
+    interruttore("sommaBeni", Sigma, "r2SumGoods", "r2SumGoodsTitle", iconBeniOro),
     { kind: "button", id: "esporta", icon: Download, label: c.esporta.n ? `${L("r2Export")} (${c.esporta.n})` : L("r2Export"),
       title: c.esporta.titolo, onClick: c.esporta.onClick, disabled: c.esporta.n === 0 },
   ]] };
   // Città / Inventario: anche "Bonus GE" (moltiplicativi dei GE nei valori e nell'efficienza)
-  const opzioniCitta: RibbonGroup = { ...opzioniEdifici, rows: [[opzioniEdifici.rows[0]![0]!,
+  const opzioniCitta: RibbonGroup = { ...opzioniEdifici, rows: [[opzioniEdifici.rows[0]![0]!, opzioniEdifici.rows[0]![1]!,
     { kind: "button", id: "bonus-ge", icon: Landmark, img: iconGE, label: L("r2GbBonus"),
       title: L(c.bonusGe.disponibile ? "r2GbBonusTitle" : "r2GbBonusNone"), active: c.bonusGe.attivo && c.bonusGe.disponibile,
       onClick: c.bonusGe.cambia, disabled: !c.bonusGe.disponibile } as RibbonItem,
-    ...opzioniEdifici.rows[0]!.slice(1),
+    ...opzioniEdifici.rows[0]!.slice(2),
   ]] };
   // "Nascondi / Mostra solo" (2.0): ogni voce gira su tre stati con un clic:
   // tutti → nascosti (rosso) → solo questi (verde) → tutti.

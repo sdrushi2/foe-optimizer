@@ -49,6 +49,7 @@ export { default as iconBeniP } from "./icons/BeniP.png";
 export { default as iconBeniS } from "./icons/BeniS.png";
 export { default as iconBeniB } from "./icons/BeniB.png";
 export { default as iconBeniG } from "./icons/BeniG.png";
+export { default as iconBeniOro } from "./icons/Beni_gold.png";
 export { default as iconBP } from "./icons/BP.png";
 export { default as iconBPOro } from "./icons/BP_gold.png";
 export { default as iconOneUp } from "./icons/OneUp.png";

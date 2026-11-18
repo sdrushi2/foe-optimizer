@@ -23,7 +23,7 @@ import type { CityStore } from "./data/cityStore";
 import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizeCastleLevel, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, TIPO_EFF_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, SOMMA_BENI_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, TIPO_EFF_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -75,7 +75,7 @@ import { isGreatBuildingId, isInactiveBuildingId, isMilitaryBuildingId, isMilita
   isFragmentBuildingToken, isFragmentKitToken, fragmentBuildingId,
   BUILDING_ROW_COLORS, ROW_DISCONNECTED_OVERLAY, RARITY_FROM_GAME } from "./data/buildingClassification";
 import {
-  iconSize, iconRoad, iconPop, iconFel, iconFP, iconFPB, iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniG,
+  iconSize, iconRoad, iconPop, iconFel, iconFP, iconFPB, iconBeni, iconBeniP, iconBeniS, iconBeniB, iconBeniOro, iconBeniG,
   iconMon, iconMonB, iconMat, iconMatB, iconMedB, iconLimitati, allies_military, allies_science, iconReliquie, iconCritico, iconCriticoOro, iconRespingi, iconManiAmiche, iconManiAmicheOro, iconContributo, iconContributoOro, iconProgettiAiuti, iconSaccheggio, iconNucleoIA, iconRegaliDiplomatici, iconMissili, iconMissiliOro, iconSchegge, iconSaccheggiaBeni, iconBeniAiuti, iconColpo, iconColpoOro, iconMissioni, iconMissioniOro, iconBottino, iconBottinoOro, iconRaccoltaDoppia, iconRaccoltaDoppiaOro, iconSword, iconCampi, iconIQ, iconProduzioni, iconSpedizioni,
   iconGenAtk_A as iconGenAtkA, iconGenDef_A as iconGenDefA,
   iconGenAtk_D as iconGenAtkD, iconGenDef_D as iconGenDefD,
@@ -1150,6 +1150,8 @@ interface BuildingRowProps {
   gameLang: Lang;
   currentEraId: number;
   showSigmaColumns: boolean;
+  /** "Somma beni": Beni + BeniP + BeniS in un'unica colonna (icona dorata). */
+  sommaBeni: boolean;
   spedizioniEnabled: boolean;
   showPopColumn: boolean;
   showFelColumn: boolean;
@@ -1212,7 +1214,7 @@ interface BuildingRowProps {
  *  altre righe. Nessuna modifica alla logica originale: solo trasloco di
  *  codice + lookup nelle Map fatti dal genitore invece che qui dentro. */
 const BuildingRow = memo(function BuildingRow({
-  b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, spedizioniEnabled,
+  b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, sommaBeni, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
   specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
   greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, onReport, senzaIq, isDeclassable, avvisoLimitato, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
@@ -1224,6 +1226,8 @@ const BuildingRow = memo(function BuildingRow({
   const dimIcona = senzaLimitati ? "h-6 w-6" : "h-4 w-4";
   // GE (Prestige): colonne di produzione con valore solo dal tier Oro in oro
   const classeProd = (col: string) => { const base = COLONNE_BOOST_PROD.has(col) ? " cell-prod-b" : " cell-prod"; return b._beniEvid === col ? `${base} cell-beni-evid` : b.gbColonneOro?.includes(col) ? " cell-prod-gold" : base; };
+  // Colonna "Somma beni": evidenziata se lo è una delle tre colonne che riassume.
+  const classeBeniTot = () => b._beniEvid ? " cell-prod cell-beni-evid" : (["beni", "benip", "benis"] as const).some(c => b.gbColonneOro?.includes(c)) ? " cell-prod-gold" : " cell-prod";
   return (
     <tr
       key={b.id}
@@ -2115,17 +2119,25 @@ const BuildingRow = memo(function BuildingRow({
           <StaleFieldCell value={b.medb} className={`cell-num${b.medb > 0 ? classeProd("medb") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.medb)}
           </StaleFieldCell>
-          <StaleFieldCell value={b.beni} className={`cell-num${b.beni > 0 ? classeProd("beni") : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.beni)}
-          </StaleFieldCell>
+          {/* Beni personali vicini (attuale, precedente, successiva), poi Beni boost.
+              "Somma beni" (18/11/2026): le tre colonne diventano una sola col totale. */}
+          {sommaBeni ? (
+            <StaleFieldCell value={b.beni + b.benip + b.benis} className={`cell-num${b.beni + b.benip + b.benis > 0 ? classeBeniTot() : ""}`} uiLang={uiLang}>
+              {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.beni + b.benip + b.benis)}
+            </StaleFieldCell>
+          ) : (<>
+            <StaleFieldCell value={b.beni} className={`cell-num${b.beni > 0 ? classeProd("beni") : ""}`} uiLang={uiLang}>
+              {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.beni)}
+            </StaleFieldCell>
+            <StaleFieldCell value={b.benip} className={`cell-num${b.benip > 0 ? classeProd("benip") : ""}`} uiLang={uiLang}>
+              {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benip)}
+            </StaleFieldCell>
+            <StaleFieldCell value={b.benis} className={`cell-num${b.benis > 0 ? classeProd("benis") : ""}`} uiLang={uiLang}>
+              {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benis)}
+            </StaleFieldCell>
+          </>)}
           <StaleFieldCell value={b.benib} className={`cell-num${b.benib > 0 ? classeProd("benib") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdPercent(b.benib)}
-          </StaleFieldCell>
-          <StaleFieldCell value={b.benip} className={`cell-num${b.benip > 0 ? classeProd("benip") : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benip)}
-          </StaleFieldCell>
-          <StaleFieldCell value={b.benis} className={`cell-num${b.benis > 0 ? classeProd("benis") : ""}`} uiLang={uiLang}>
-            {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benis)}
           </StaleFieldCell>
           <StaleFieldCell value={b.benisp} className={`cell-num${b.benisp > 0 ? classeProd("benisp") : ""}`} uiLang={uiLang}>
             {b.isFallback ? <span className="font-bold text-slate-400">?</span> : formatProdNum(b.benisp)}
@@ -2218,7 +2230,7 @@ type SortKey =
   | "sig_gen_campi_atk_a" | "sig_gen_campi_def_a" | "sig_gen_campi_atk_d" | "sig_gen_campi_def_d"
   | "sig_gen_sped_atk_a" | "sig_gen_sped_def_a" | "sig_gen_sped_atk_d" | "sig_gen_sped_def_d"
   | "iq_mon_b" | "iq_mat_b" | "iq_mon" | "iq_mat" | "iq_atk_a" | "iq_def_a" | "iq_atk_d" | "iq_def_d" | "iq_beni" | "iq_truppe" | "iq_azioni" | "iq_cap"
-  | "mon" | "monb" | "mat" | "matb" | "fp" | "fpb" | "med" | "medb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
+  | "mon" | "monb" | "mat" | "matb" | "fp" | "fpb" | "med" | "medb" | "fur" | "tr" | "trne" | "beni" | "benip" | "benis" | "benitot" | "benisp" | "benispb" | "benib" | "benig" | "bp" | "fsp" | "tpm" | "tpb" | "adm" | "mod" | "rin" | "imm";
 type SortCriterion = { key: SortKey; order: "asc" | "desc" };
 // Ambito di ordinamento indipendente: le 3 viste della tabella edifici
 // (Database/Città/Inventario, distinte da TabType) più le 2 tabelle Alleati
@@ -3456,6 +3468,7 @@ export default function App() {
   });
   // Pulsante Σ: somma General+Campi (e General+Spedizioni se abilitate)
   const [showSigmaColumns, setShowSigmaColumns] = useState<boolean>(() => localStorage.getItem(SIGMA_KEY) === "true");
+  const [sommaBeni, setSommaBeni] = useState<boolean>(() => localStorage.getItem(SOMMA_BENI_KEY) === "true");
   // Opzioni › Bonus GE (Città/Inventario): valori militari ed efficienza con i moltiplicativi dei GE
   const [bonusGeTabella, setBonusGeTabella] = useState<boolean>(() => localStorage.getItem(BONUS_GE_KEY) === "true");
   // Colonne Pop/Fel/IQ-Mon-Mat: globali (non per-tab) come Sigma, di default
@@ -4035,6 +4048,7 @@ export default function App() {
       case "beni": return b.beni;
       case "benip": return b.benip;
       case "benis": return b.benis;
+      case "benitot": return b.beni + b.benip + b.benis;
       case "benisp": return b.benisp;
       case "benispb": return b.benispb;
       case "benib": return b.benib;
@@ -4056,6 +4070,7 @@ export default function App() {
     localStorage.setItem(SPED_ENABLED_KEY, spedizioniEnabled.toString());
     localStorage.setItem(SPED_ATTACK_KEY, spedizioniAttack.toString());
     localStorage.setItem(SIGMA_KEY, showSigmaColumns.toString());
+    localStorage.setItem(SOMMA_BENI_KEY, sommaBeni.toString());
     localStorage.setItem(BONUS_GE_KEY, bonusGeTabella.toString());
     localStorage.setItem(POP_COLUMN_KEY, showPopColumn.toString());
     localStorage.setItem(TIPO_EFF_KEY, tipoEff);
@@ -4063,7 +4078,7 @@ export default function App() {
     localStorage.setItem(IQ_PROD_COLUMNS_KEY, showIqProdColumns.toString());
     localStorage.setItem(PROD_COLUMNS_KEY, showProdColumnsPref.toString());
     localStorage.setItem(SPED_COLUMNS_KEY, showSpedColumnsPref.toString());
-  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, bonusGeTabella, showPopColumn, tipoEff, showFelColumn, showIqProdColumns, showProdColumnsPref, showSpedColumnsPref]);
+  }, [generalDefense, spedizioniEnabled, spedizioniAttack, showSigmaColumns, sommaBeni, bonusGeTabella, showPopColumn, tipoEff, showFelColumn, showIqProdColumns, showProdColumnsPref, showSpedColumnsPref]);
 
   // Pulizia chiavi orfane al mount (una volta sola)
   useEffect(() => {
@@ -6886,9 +6901,9 @@ export default function App() {
     { key: "med", icon: <img src={iconMed} alt={t("prodMedals", uiLang)} className="icon-16" />, title: t("prodMedals", uiLang) },
     { key: "medb", icon: <img src={iconMedB} alt={t("prodMedalsBoost", uiLang)} className="icon-16" />, title: t("prodMedalsBoost", uiLang) },
     { key: "beni", icon: <img src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} className="icon-16" />, title: t("prodGoodsCurrent", uiLang) },
-    { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
     { key: "benip", icon: <img src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} className="icon-16" />, title: t("prodGoodsPrevious", uiLang) },
     { key: "benis", icon: <img src={iconBeniS} alt={t("prodGoodsNext", uiLang)} className="icon-16" />, title: t("prodGoodsNext", uiLang) },
+    { key: "benib", icon: <img src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} className="icon-16" />, title: t("prodGoodsBoost", uiLang) },
     { key: "benisp", icon: <img src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} className="icon-16" />, title: t("prodGoodsSpecial", uiLang) },
     { key: "benispb", icon: <img src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} className="icon-16" />, title: t("prodGoodsSpecialBoost", uiLang) },
     { key: "benig", icon: <img src={iconBeniG} alt={t("prodGuildGoods", uiLang)} className="icon-16" />, title: t("prodGuildGoods", uiLang) },
@@ -7036,6 +7051,7 @@ export default function App() {
     vista: {
       dettaglioProd: { attivo: showProdColumnsPref, cambia: () => setShowProdColumns(v => !v) },
       somme: { attivo: showSigmaColumns, cambia: () => setShowSigmaColumns(v => !v) },
+      sommaBeni: { attivo: sommaBeni, cambia: () => setSommaBeni(v => !v) },
       iqProd: { attivo: showIqProdColumns, cambia: () => setShowIqProdColumns(v => !v) },
       pop: { attivo: showPopColumn, cambia: () => setShowPopColumn(v => !v) },
       fel: { attivo: showFelColumn, cambia: () => setShowFelColumn(v => !v) },
@@ -7479,7 +7495,7 @@ export default function App() {
                         {renderMilitaryGroupHeaders()}
                         <th className="py-2 px-2 text-center group-header-blue text-blue-400/80" colSpan={senzaIq ? 4 : showIqProdColumns ? 12 : 8}><TitoloGruppo icona={iconIQ} testo={t("groupIq", uiLang)} /></th>
                         {showProdColumns && (
-                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={senzaIq ? 18 : 26}>
+                          <th className="relative text-center group-header-orange text-orange-400/80" colSpan={(senzaIq ? 18 : 26) - (sommaBeni ? 2 : 0)}>
                             {/* 2.0: Nascondi 🚫/^ sono nel nastro (Visualizza: Non accelerabili, Auto aggiornabili). */}
                             <TitoloGruppo icona={iconProduzioni} testo={t("groupProductions", uiLang)} />
                             {/* Database: nessun override, è l'UNICA tab dove eraAdjustedSource
@@ -7604,10 +7620,14 @@ export default function App() {
                             <SortableHeader noGap label={<TableHeaderIcon src={iconFPB} alt={t("prodForgePointsBoost", uiLang)} />} sortKey="fpb" onClick={() => handleSort("fpb")} active={sortBy === "fpb"} order={sortOrder} className="th-col" title={t("prodForgePointsBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMed} alt={t("prodMedals", uiLang)} />} sortKey="med" onClick={() => handleSort("med")} active={sortBy === "med"} order={sortOrder} className="th-col" title={t("prodMedals", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconMedB} alt={t("prodMedalsBoost", uiLang)} />} sortKey="medb" onClick={() => handleSort("medb")} active={sortBy === "medb"} order={sortOrder} className="th-col" title={t("prodMedalsBoost", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => handleSort("beni")} active={sortBy === "beni"} order={sortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
+                            {sommaBeni ? (
+                              <SortableHeader noGap label={<TableHeaderIcon src={iconBeniOro} alt={t("prodGoodsSum", uiLang)} />} sortKey="benitot" onClick={() => handleSort("benitot")} active={sortBy === "benitot"} order={sortOrder} className="th-col" title={t("prodGoodsSum", uiLang)} />
+                            ) : (<>
+                              <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => handleSort("beni")} active={sortBy === "beni"} order={sortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
+                              <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
+                              <SortableHeader noGap label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
+                            </>)}
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniB} alt={t("prodGoodsBoost", uiLang)} />} sortKey="benib" onClick={() => handleSort("benib")} active={sortBy === "benib"} order={sortOrder} className="th-col" title={t("prodGoodsBoost", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => handleSort("benip")} active={sortBy === "benip"} order={sortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
-                            <SortableHeader noGap label={<TableHeaderIcon src={iconBeniS} alt={t("prodGoodsNext", uiLang)} />} sortKey="benis" onClick={() => handleSort("benis")} active={sortBy === "benis"} order={sortOrder} className="th-col" title={t("prodGoodsNext", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSp} alt={t("prodGoodsSpecial", uiLang)} />} sortKey="benisp" onClick={() => handleSort("benisp")} active={sortBy === "benisp"} order={sortOrder} className="th-col" title={t("prodGoodsSpecial", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniSpB} alt={t("prodGoodsSpecialBoost", uiLang)} />} sortKey="benispb" onClick={() => handleSort("benispb")} active={sortBy === "benispb"} order={sortOrder} className="th-col" title={t("prodGoodsSpecialBoost", uiLang)} />
                             <SortableHeader noGap label={<TableHeaderIcon src={iconBeniG} alt={t("prodGuildGoods", uiLang)} />} sortKey="benig" onClick={() => handleSort("benig")} active={sortBy === "benig"} order={sortOrder} className="th-col" title={t("prodGuildGoods", uiLang)} />
@@ -7647,6 +7667,7 @@ export default function App() {
                           showFelColumn={showFelColumn}
                           showIqProdColumns={showIqProdColumns}
                           showProdColumns={showProdColumns}
+                          sommaBeni={sommaBeni}
                           specialKits={specialKits}
                           DIFF_FIELDS={DIFF_FIELDS}
                           isSelected={selectedIds.has(b.id)}
@@ -7719,7 +7740,7 @@ export default function App() {
                           : t("noBuildingsFound", uiLang);
                         return (
                           <tr>
-                            <td colSpan={28 - (senzaLimitati ? 1 : 0) - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) - (senzaIq ? (showIqProdColumns ? 8 : 4) : 0) - (senzaLimitati ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? (senzaIq ? 18 : 26) : 0)} className="text-center py-12 text-slate-400 font-semibold">
+                            <td colSpan={28 - (senzaLimitati ? 1 : 0) - (showSigmaColumns ? 4 : 0) - (showIqProdColumns ? 0 : 4) - (senzaIq ? (showIqProdColumns ? 8 : 4) : 0) - (senzaLimitati ? 1 : 0) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0) + (showSpedColumns ? 4 : 0) + (showProdColumns ? (senzaIq ? 18 : 26) - (sommaBeni ? 2 : 0) : 0)} className="text-center py-12 text-slate-400 font-semibold">
                               <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
                                 <span>{emptyMessagePrefix}</span>
                                 {/* SOLO riferimento visivo al pulsante reale della toolbar

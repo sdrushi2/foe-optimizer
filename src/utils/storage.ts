@@ -27,6 +27,8 @@ export const DEFENSE_KEY = `foe_global_defense_${V}`;
 export const SPED_ENABLED_KEY = `foe_global_spedizioni_enabled_${V}`;
 export const SPED_ATTACK_KEY = `foe_global_spedizioni_attack_${V}`;
 export const SIGMA_KEY = `foe_global_sigma_enabled_${V}`;
+/** (18/11/2026) "Somma beni": Beni + BeniP + BeniS in un'unica colonna. */
+export const SOMMA_BENI_KEY = `foe_global_somma_beni_${V}`;
 export const POP_COLUMN_KEY = `foe_global_show_pop_column_${V}`;
 /** (10/11/2026) Tipo di efficienza della colonna EFF: mil | beni | pf | benig. */
 export const TIPO_EFF_KEY = `foe_global_tipo_eff_${V}`;

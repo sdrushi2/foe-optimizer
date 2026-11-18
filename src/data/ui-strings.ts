@@ -505,6 +505,12 @@ const UI_STRINGS = {
   r2ProdDetail: { it: "Produzioni", en: "Productions" },
   r2ProdDetailTitle: { it: "Mostra le colonne delle produzioni", en: "Show the production columns" },
   r2Sums: { it: "Somma %", en: "Sum %" },
+  r2SumGoods: { it: "Somma beni", en: "Sum goods" },
+  r2SumGoodsTitle: {
+    it: "Unisce le colonne dei beni personali (era attuale, precedente e successiva) in un'unica colonna col totale",
+    en: "Merges the personal goods columns (current, previous and next era) into a single column with the total",
+  },
+  prodGoodsSum: { it: "Beni totali (era attuale + precedente + successiva)", en: "Total goods (current + previous + next era)" },
   r2Patrons: { it: "Calcolatore", en: "Calculator" },
   r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
   gbCalcOpen: { it: (l: number) => `Calcolatore GE per il livello ${l}`, en: (l: number) => `GB Calculator for level ${l}` },

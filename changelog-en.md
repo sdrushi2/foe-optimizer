@@ -2,6 +2,7 @@
 
 ## Version 2.021 (18/11/2026)
 ### Update
+- Building tables: the three personal goods columns (current, previous and next era) are now side by side, followed by the goods boost column. New "Sum goods" button (Options) that merges them into a single column, with the golden goods icon, showing the total goods produced; this column can be sorted too
 - Planner, 3/4/5 Junctions: in cities with many horizontal buildings with road (wider than tall) the search also tries a "vertical comb": several vertical roads branch off a horizontal road, with the horizontal buildings stacked on both sides and attached by their short side; vertical buildings stay on the horizontal roads. On a test city with 81 horizontal buildings: about 19 fewer road tiles and almost no yellow borders (from about 50 to 2-4). Cities with few horizontal buildings do not change
 - Planner, Pinwheel and Pinwheel 2: in the same cities the vertical comb branches off the pinwheel's horizontal arms. On the test city all buildings with road now fit (before, more than 30 were left out)
 - Planner: in Current stats the buildings with road are split by shape (square, horizontal, vertical), to see at a glance whether the city has mostly horizontal buildings
