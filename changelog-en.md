@@ -6,6 +6,8 @@
 - Planner, 3/4/5 Junctions: in cities with many horizontal buildings with road (wider than tall) the search also tries a "vertical comb": several vertical roads branch off a horizontal road, with the horizontal buildings stacked on both sides and attached by their short side; vertical buildings stay on the horizontal roads. On a test city with 81 horizontal buildings: about 19 fewer road tiles and almost no yellow borders (from about 50 to 2-4). Cities with few horizontal buildings do not change
 - Planner, Pinwheel and Pinwheel 2: in the same cities the vertical comb branches off the pinwheel's horizontal arms. On the test city all buildings with road now fit (before, more than 30 were left out)
 - Planner: in Current stats the buildings with road are split by shape (square, horizontal, vertical), to see at a glance whether the city has mostly horizontal buildings
+- City, Inventory and Database: the "Export" button (CSV of the selected buildings) moves from the Options group to the Tools group
+- City: the "Map" button moves from the Tools group to the City statistics group
 ### Fixes
 - Planner: roads with one side outside the play area (for example a road along the edge of the map) are marked with the red border as wasted roads and the search avoids them as much as possible (each counts as one extra road); they are only kept as a last resort, when they let more buildings fit
 - Planner: no more squares of 4 roads (2×2) that no step removed: if one of the four tiles is not needed it is removed, if it only serves a building that can attach elsewhere the building is moved, and the search discards layouts where a square remains anyway

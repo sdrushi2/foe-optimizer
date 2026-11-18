@@ -6,6 +6,8 @@
 - Planner, Raccordi a 3/4/5: nelle città con molti edifici con strada orizzontali (più larghi che alti) la ricerca prova anche un "pettine verticale": da una strada orizzontale partono più strade verticali, con gli edifici orizzontali impilati ai due lati e attaccati dal lato corto; gli edifici verticali restano sulle strade orizzontali. Su una città di prova con 81 edifici orizzontali: circa 19 caselle di strada in meno e quasi nessun bordo giallo (da circa 50 a 2-4). Le città con pochi edifici orizzontali non cambiano
 - Planner, Girandola e Girandola 2: nelle stesse città il pettine verticale parte dai bracci orizzontali della girandola. Sulla città di prova ora entrano tutti gli edifici con strada (prima ne restavano fuori più di 30)
 - Planner: nelle Statistiche attuali gli edifici con strada sono divisi per forma (quadrati, orizzontali, verticali), per capire subito se la città ha soprattutto edifici orizzontali
+- Città, Inventario e Database: il pulsante "Export" (CSV degli edifici selezionati) passa dal gruppo Opzioni al gruppo Strumenti
+- Città: il pulsante "Mappa" passa dal gruppo Strumenti al gruppo Statistiche città
 ### Correzioni
 - Planner: le strade con un lato fuori dall'area di gioco (per esempio una strada lungo il bordo della mappa) sono segnate col bordo rosso come strade sprecate e la ricerca le evita il più possibile (ognuna conta come una strada in più); restano solo come ultima risorsa, quando servono a far entrare più edifici
 - Planner: non restano più quadrati di 4 strade (2×2), che nessuna fase toglieva: se una delle quattro celle non serve si toglie, se serve solo a un edificio che si può attaccare altrove l'edificio viene spostato, e la ricerca scarta le disposizioni in cui un quadrato resta comunque

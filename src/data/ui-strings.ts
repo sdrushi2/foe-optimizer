@@ -456,7 +456,7 @@ const UI_STRINGS = {
   r2CatSettlements: { it: "Premi insediamenti", en: "Settlement prizes" },
   r2CatGbg: { it: "Premi dei campi", en: "GBG prizes" },
   r2CatQi: { it: "Premi delle IQ", en: "QI prizes" },
-  r2CatFragments: { it: "Producono frammenti", en: "Produce fragments" },
+  r2CatFragments: { it: "Prod. frammenti", en: "Prod. fragments" },
   r2NeedsRoad: { it: "Richiede strada", en: "Needs road" },
   r2AllEvents: { it: "Tutti gli eventi", en: "All events" },
   effTypeMil: { it: "Efficienza militare", en: "Military efficiency" },

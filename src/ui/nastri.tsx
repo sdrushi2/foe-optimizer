@@ -181,7 +181,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
     { kind: "custom", id: "rarita", render: () => <BloccoRarita rarita={a.rarita} /> },
   ]] };
   // Opzioni della tabella (2.0): Somma statistiche; nelle tabelle edifici
-  // anche l'Export CSV degli edifici selezionati (grigio senza selezione).
+  // anche Somma beni (l'Export CSV è in Strumenti).
   // Pesi statistiche (Opzioni)
   const pesi: RibbonGroup = { id: "pesi", label: L("r2GrpWeights"), icon: Scale, priority: 2, rows: [[
     { kind: "custom", id: "pesi", render: () => <BloccoPesi s={c.pesi} /> },
@@ -192,15 +192,15 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   // "Somma beni" (18/11/2026): solo nelle tabelle edifici (le Alleati non hanno BeniS).
   const opzioniEdifici: RibbonGroup = { ...opzioniTabella, rows: [[...opzioniTabella.rows[0]!,
     interruttore("sommaBeni", Sigma, "r2SumGoods", "r2SumGoodsTitle", iconBeniOro),
-    { kind: "button", id: "esporta", icon: Download, label: c.esporta.n ? `${L("r2Export")} (${c.esporta.n})` : L("r2Export"),
-      title: c.esporta.titolo, onClick: c.esporta.onClick, disabled: c.esporta.n === 0 },
   ]] };
+  // Export CSV degli edifici selezionati (grigio senza selezione): in Strumenti (18/11/2026, prima in Opzioni).
+  const esportaSel: RibbonItem = { kind: "button", id: "esporta", icon: Download, label: c.esporta.n ? `${L("r2Export")} (${c.esporta.n})` : L("r2Export"),
+    title: c.esporta.titolo, onClick: c.esporta.onClick, disabled: c.esporta.n === 0 };
   // Città / Inventario: anche "Bonus GE" (moltiplicativi dei GE nei valori e nell'efficienza)
   const opzioniCitta: RibbonGroup = { ...opzioniEdifici, rows: [[opzioniEdifici.rows[0]![0]!, opzioniEdifici.rows[0]![1]!,
     { kind: "button", id: "bonus-ge", icon: Landmark, img: iconGE, label: L("r2GbBonus"),
       title: L(c.bonusGe.disponibile ? "r2GbBonusTitle" : "r2GbBonusNone"), active: c.bonusGe.attivo && c.bonusGe.disponibile,
       onClick: c.bonusGe.cambia, disabled: !c.bonusGe.disponibile } as RibbonItem,
-    ...opzioniEdifici.rows[0]!.slice(2),
   ]] };
   // "Nascondi / Mostra solo" (2.0): ogni voce gira su tre stati con un clic:
   // tutti → nascosti (rosso) → solo questi (verde) → tutti.
@@ -273,7 +273,8 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
               onClick: () => window.open(c.uiLang === "it" ? "/ge/?da=app" : "/gb/?da=app", "_blank", "noopener") },
           ]] }];
       }
-      return [catalogo, ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici];
+      return [catalogo, ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici,
+        { id: "strumenti", label: L("r2GrpTools"), icon: Download, rows: [[esportaSel]] }];
     }
     case "citta": {
       const k = c.citta;
@@ -285,6 +286,8 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         ]),
         opzioniCitta,
         { id: "statistiche", label: L("r2GrpStats"), icon: ChartColumn, priority: 1, rows: [[
+          // Mappa (18/11/2026): prima in Strumenti
+          { kind: "button", id: "mappa", icon: MapIcon, label: L("r2Map"), active: c.mappa, onClick: c.onMappa, disabled: !c.haCitta },
           tasto("strade", k.statistiche.strade, Route, "r2StatRoads", "roadEfficiencyTitle"),
           tasto("produzione", k.statistiche.produzione, Factory, "r2StatProd"),
           tasto("militari", k.statistiche.militari, Swords, "r2StatMil"),
@@ -296,9 +299,9 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
           tri3("immagazzina", Archive, "r2HideStore", iconImm),
           tri3("ge", Landmark, "r2GreatBuildings", iconGE),
         ]),
-        { id: "strumenti", label: L("r2GrpTools"), icon: MapIcon, rows: [[
-          { kind: "button", id: "mappa", icon: MapIcon, label: L("r2Map"), active: c.mappa, onClick: c.onMappa, disabled: !c.haCitta },
+        { id: "strumenti", label: L("r2GrpTools"), icon: Download, rows: [[
           { kind: "button", id: "esporta-json", icon: FileJson, label: L("r2ExportCityJson"), title: L("r2ExportCityJsonTitle"), onClick: k.onEsportaJson, disabled: !c.haCitta },
+          esportaSel,
           tasto("debug", c.debug, Bug, "r2Debug"),
         ]] },
       ];
@@ -306,6 +309,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
     case "inventario":
       // ("Pronti": edifici già in inventario; prima la casella "Solo pronti" dei Filtri)
       return [ricerca, filtri, vista(), nascondiMostra([tri3("pronti", Package, "r2Ready", iconInventario, "onlyReadyBuildingsTitle")]), opzioniCitta, { id: "strumenti", label: L("r2GrpTools"), icon: Bug, rows: [[
+        esportaSel,
         tasto("debug", c.debug, Bug, "r2Debug"),
       ]] }];
     case "alleati":
