@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.021 (18/11/2026)
+### Correzioni
+- Planner: importando con la bacchetta la città di un altro giocatore mentre sei nella scheda Planner, il nastro mostra subito tutti i comandi (prima restava solo "Sorgente" finché non si cambiava scheda)
+
+---
+
 ## Versione 2.020 (17/11/2026)
 ### Aggiornamenti
 - Planner: il completamento e la rifinitura dopo COMPLETA sono più veloci (nelle prove fino a un terzo di tempo in meno), con le stesse disposizioni di prima
@@ -7,7 +13,6 @@
 - Planner, Girandola 2: la scelta della posizione del municipio usa più core insieme e finisce prima, con la stessa posizione scelta
 - Planner: la rifinitura dopo COMPLETA lascia molti meno buchi piccoli sparsi tra gli edifici senza strada: sposta e unisce i buchi, anche usando pezzi un po' più piccoli per incastrare meglio, finché lo spazio libero resta in pochi punti (spesso uno solo)
 ### Correzioni
-- Planner: importando con la bacchetta la città di un altro giocatore mentre sei nella scheda Planner, il nastro mostra subito tutti i comandi (prima restava solo "Sorgente" finché non si cambiava scheda)
 - Planner, Ippodromo: Carceres e Sphendone vengono collegate alla strada ENTRAMBE (prima spesso solo una delle due); le piste in mezzo restano senza strada
 - Planner: a fine rifinitura non restano più decorazioni 1×1 (e altri pezzi 1×n) sparse o isolate nei posti dove stavano all'inizio: un pezzo resta al suo posto iniziale solo se è ancora ben incastrato, altrimenti viene ripiazzato nei buchi o attaccato agli altri edifici. Lo stesso vale per quelli spostati a mano in pausa: se li lasci ben incastrati restano lì, se restano sparsi la rifinitura li sistema
 
