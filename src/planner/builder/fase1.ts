@@ -716,7 +716,11 @@ function passo9(ctx: Ctx, eastEdgeX: number, sx: number, eastMidY: number, okUp:
   const lim = 3 + raccordoEsteso; // raccordo a 3/4/5 celle: pezzi fino a 3/4/5
   const usatiRect = new Set(ctx.placed.map(p => p.id));
   const poolR = ctx.b1.filter(b => !usatiRect.has(b.id) && b.width <= lim && b.length <= lim);
-  const MAX_NODI = 1_000_000;
+  // (19/11/2026: da 1 milione a 200 mila. Nelle 20 città di prova il massimo
+  //  usato è 133 mila (Belladonna); su Colidea la migliore si trova entro 50
+  //  mila nodi e il resto della ricerca non la migliora, ma costava secondi a
+  //  Planner bloccato. Uscite identiche su tutte le città di prova.)
+  const MAX_NODI = 200_000;
 
   interface Zona { y0: number; y1: number }
   const riempi = (zone0: Zona[], pool: B[]): boolean => {
@@ -798,7 +802,16 @@ function passo9(ctx: Ctx, eastEdgeX: number, sx: number, eastMidY: number, okUp:
       return extra;
     };
     const piaz: Array<[number, number, B]> = [];
-    const usati = new Set<string>();
+    // Pezzi raggruppati per forma (19/11/2026, città di Colidea: 124 pezzi
+    // quasi tutti 2×3/3×3, 1 milione di nodi in ~3 s per chiamata, il Planner
+    // restava bloccato ~35 s all'avvio). A ogni nodo si prova la PRIMA copia
+    // libera di ogni forma, nell'ordine di `entra`: le copie di una forma si
+    // usano sempre dalla prima e si liberano all'indietro, quindi quelle usate
+    // sono le prime `k`. Stesso giro (e stesso risultato) del ciclo su tutto
+    // `entra` con l'insieme delle forme già provate, senza scorrere ogni volta
+    // tutti i pezzi.
+    type Forma = { w: number; h: number; inst: B[]; pos: number[]; k: number };
+    let forme: Forma[] = [];
     const bt = (coperte: number, libere: number, cursore: number): void => {
       nodi++;
       if (nodi > MAX_NODI) return;
@@ -812,19 +825,17 @@ function passo9(ctx: Ctx, eastEdgeX: number, sx: number, eastMidY: number, okUp:
       const cella = primaLibera(cursore);
       if (!cella) return;
       const [lx, ly, nc] = cella;
-      const provati = new Set<string>();
-      for (const b of entra) {
-        if (usati.has(b.id)) continue;
-        const d = key(b.width, b.length);
-        if (provati.has(d)) continue;
-        provati.add(d);
-        if (entraLibera(lx, ly, b.width, b.length)) {
-          const a = b.width * b.length;
-          segna(lx, ly, b.width, b.length, false);
-          piaz.push([lx, ly, b]); usati.add(b.id);
+      const ord: Forma[] = [];
+      for (const f of forme) if (f.k < f.inst.length) ord.push(f);
+      ord.sort((f, g) => f.pos[f.k]! - g.pos[g.k]!);
+      for (const f of ord) {
+        if (entraLibera(lx, ly, f.w, f.h)) {
+          const b = f.inst[f.k]!, a = f.w * f.h;
+          segna(lx, ly, f.w, f.h, false);
+          piaz.push([lx, ly, b]); f.k++;
           bt(coperte + a, libere - a, nc);
-          usati.delete(b.id); piaz.pop();
-          segna(lx, ly, b.width, b.length, true);
+          f.k--; piaz.pop();
+          segna(lx, ly, f.w, f.h, true);
         }
       }
       gr[ly]![lx] = false;
@@ -832,6 +843,16 @@ function passo9(ctx: Ctx, eastEdgeX: number, sx: number, eastMidY: number, okUp:
       gr[ly]![lx] = true;
     };
     entra.sort((a, b) => a.width * a.length - b.width * b.length);
+    {
+      const perForma = new Map<string, Forma>();
+      entra.forEach((b, i) => {
+        const k = key(b.width, b.length);
+        let f = perForma.get(k);
+        if (!f) { f = { w: b.width, h: b.length, inst: [], pos: [], k: 0 }; perForma.set(k, f); }
+        f.inst.push(b); f.pos.push(i);
+      });
+      forme = [...perForma.values()];
+    }
     bt(0, areaTot, 0);
     const areaZona = zone.map(() => 0);
     for (const [lx, ly, b] of migliore.piaz) {

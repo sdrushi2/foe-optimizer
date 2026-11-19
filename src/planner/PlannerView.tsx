@@ -1042,6 +1042,33 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   const conStradaP = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0), [problem]);
   const senzaStradaP = useMemo(() => problem.buildings.filter(b => !b.isTownhall && b.roadLevel === 0), [problem]);
+  /** Pannello degli edifici non ancora piazzati (19/11/2026, utente): al passaggio
+   *  del mouse sul conteggio rosso "Con strada" / "Senza strada". Fotografia al
+   *  momento del passaggio; posizione fissa per non essere tagliato dalle schede. */
+  const [mancanti, setMancanti] = useState<{ x: number; y: number; sopra: number; titolo: string; voci: Array<{ name: string; w: number; h: number; n: number }> } | null>(null);
+  const conteggio = (piazzati: number, tutti: readonly PlannerBuilding[], f: PlannerFrame, titolo: string) => {
+    const ok = piazzati >= tutti.length;
+    // (anche il verde chiude il pannello: se durante la ricerca il numero diventa
+    //  verde sotto il mouse, l'elemento resta lo stesso e il pannello non resta appeso)
+    if (ok) return <b className="text-emerald-400" onMouseLeave={() => setMancanti(null)}>{piazzati}/{tutti.length}</b>;
+    const apri = (e: { currentTarget: EventTarget }) => {
+      const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      // raggruppati per nome e dimensioni (lato lungo prima), poi per area decrescente
+      const m = new Map<string, { name: string; w: number; h: number; n: number }>();
+      for (const b of tutti) {
+        if (f.placements.has(b.id)) continue;
+        const w = Math.max(b.w, b.h), h = Math.min(b.w, b.h), k = `${b.name}|${w}|${h}`;
+        const v = m.get(k);
+        if (v) v.n++; else m.set(k, { name: b.name, w, h, n: 1 });
+      }
+      const voci = [...m.values()].sort((a, b) => b.w * b.h - a.w * a.h || a.name.localeCompare(b.name));
+      setMancanti({ x: r.left, y: r.bottom, sopra: r.top, titolo, voci });
+    };
+    return (
+      <b className="cursor-help text-red-400 underline decoration-dotted underline-offset-2"
+        onMouseEnter={apri} onMouseLeave={() => setMancanti(null)}>{piazzati}/{tutti.length}</b>
+    );
+  };
   const stats = (f: PlannerFrame | null, valutate?: number, n?: VName) => {
     if (!f) return null;
     // (scenario con le catene rimontate: le sue voci)
@@ -1052,8 +1079,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const piazzatiSenza = senzaStrada.filter(b => f.placements.has(b.id)).length;
     return (
     <span className="text-slate-400">
-      {t("plannerStatsPlaced", uiLang)} <b className={piazzati >= conStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzati}/{conStrada.length}</b>
-      {" · "}{t("plannerStatsNoRoad", uiLang)} <b className={piazzatiSenza >= senzaStrada.length ? "text-emerald-400" : "text-red-400"}>{piazzatiSenza}/{senzaStrada.length}</b>
+      {t("plannerStatsPlaced", uiLang)} {conteggio(piazzati, conStrada, f, t("plannerMissingWithRoad", uiLang))}
+      {" · "}{t("plannerStatsNoRoad", uiLang)} {conteggio(piazzatiSenza, senzaStrada, f, t("plannerMissingNoRoad", uiLang))}
       {" · "}{t("plannerStatsRoads", uiLang)} <b className={f.roads.size < problem.originalRoadCells ? "text-emerald-400" : f.roads.size > problem.originalRoadCells ? "text-red-400" : "text-slate-100"}>{f.roads.size}/{problem.originalRoadCells}</b>
       {" · "}<span title={t("plannerStatsCornersTitle", uiLang)}>{t("plannerStatsCorners", uiLang)} <b className="text-slate-100">{derivati(f, pn).angoli}</b></span>
       {valutate !== undefined && <>{" · "}{valutate.toLocaleString(uiLang === "en" ? "en-US" : "it-IT")} {t("plannerStatsLayouts", uiLang)}</>}
@@ -1409,6 +1436,29 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
               </label>
             );
           })}
+        </div>
+      )}
+      {mancanti && (
+        <div className="fixed-tooltip max-w-sm border border-red-700/60"
+          style={(() => {
+            // sotto il numero; sopra se in basso non c'è spazio (altezza stimata)
+            const alto = 40 + 18 * mancanti.voci.length;
+            const sotto = mancanti.y + 6 + alto <= window.innerHeight || mancanti.sopra < alto + 6;
+            return { left: Math.max(4, Math.min(mancanti.x, window.innerWidth - 390)),
+              top: sotto ? mancanti.y + 6 : mancanti.sopra - 6 - alto };
+          })()}>
+          <div className="mb-1 font-semibold text-red-300">{mancanti.titolo}</div>
+          <table className="text-[12px]">
+            <tbody>
+              {mancanti.voci.map(v => (
+                <tr key={`${v.name}|${v.w}|${v.h}`}>
+                  <td className="pr-3 text-slate-200">{v.name}</td>
+                  <td className="pr-2 text-right tabular-nums text-slate-300">{v.w}×{v.h}</td>
+                  <td className="text-right tabular-nums text-slate-400">{v.n > 1 ? `×${v.n}` : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
       <div className="p-3">

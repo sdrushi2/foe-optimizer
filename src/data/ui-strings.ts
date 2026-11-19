@@ -2815,6 +2815,8 @@ const UI_STRINGS = {
   plannerScenarioPinwheel2: { it: "Girandola 2", en: "Pinwheel 2" },
   plannerStatsPlaced: { it: "Con strada", en: "With road" },
   plannerStatsNoRoad: { it: "Senza strada", en: "Without road" },
+  plannerMissingWithRoad: { it: "Edifici con strada non piazzati", en: "Buildings with road not placed" },
+  plannerMissingNoRoad: { it: "Edifici senza strada non piazzati", en: "Buildings without road not placed" },
   plannerStatsRoads: { it: "Strade", en: "Roads" },
   plannerStatsCorners: { it: "Angoli", en: "Corners" },
   plannerStatsCornersTitle: {

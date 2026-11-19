@@ -1,5 +1,14 @@
 # FoE Optimizer Changelog
 
+## Version 2.022 (19/11/2026)
+### Update
+- Planner: hovering the red "With road" or "Without road" count (now underlined) shows the list of buildings not placed yet, with their size and how many copies are missing
+
+### Fixes
+- Planner: in cities with a great many identical small buildings with road (for example dozens of Wishing Wells) the Planner froze for more than half a minute before starting, with the page stuck; it now starts in about a second, with the same layouts
+
+---
+
 ## Version 2.021 (18/11/2026)
 ### Update
 - Building tables: the three personal goods columns (current, previous and next era) are now side by side, followed by the goods boost column. New "Sum goods" button (Options) that merges them into a single column, with the golden goods icon, showing the total goods produced; this column can be sorted too

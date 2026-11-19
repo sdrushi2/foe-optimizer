@@ -1,5 +1,14 @@
 # Novità di FoE Optimizer
 
+## Versione 2.022 (19/11/2026)
+### Aggiornamenti
+- Planner: passando col mouse sul numero rosso di "Con strada" o "Senza strada" (ora sottolineato) si apre l'elenco degli edifici non ancora piazzati, con le dimensioni e quante copie mancano
+
+### Correzioni
+- Planner: nelle città con moltissimi edifici piccoli con strada tutti uguali (per esempio decine di Pozzi dei desideri) il Planner restava bloccato più di mezzo minuto prima di partire, con la pagina ferma; ora parte in un secondo o poco più, con le stesse disposizioni
+
+---
+
 ## Versione 2.021 (18/11/2026)
 ### Aggiornamenti
 - Tabelle edifici: le tre colonne dei beni personali (era attuale, precedente e successiva) sono ora vicine, seguite dalla colonna dei beni boost. Nuovo pulsante "Somma beni" (Opzioni) che le unisce in un'unica colonna, con l'icona dei beni dorata, col totale dei beni prodotti; anche questa colonna si può ordinare
