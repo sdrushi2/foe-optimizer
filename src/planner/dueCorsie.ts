@@ -217,7 +217,11 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
   if (raccordo) for (const by of [raccordo.eastMidY - 1, raccordo.eastMidY]) {
     const blocchi: Pos[] = [];
     let mig: Ris | null = null;
-    for (let k = 1; k <= KMAX + 4; k++) { // (sul raccordo anche più lunga: lungo la verticale gli edifici sono già fitti)
+    // (sul raccordo anche più lunga: lungo la verticale gli edifici sono già
+    //  fitti. 19/11/2026, rebelmartin con 10 edifici a due corsie: col limite di
+    //  10 blocchi ne restava sempre fuori uno e partiva la rete a pettine; ora
+    //  la fila arriva fino al bordo della mappa, dove provaCatena si ferma)
+    for (let k = 1; k <= 64; k++) {
       blocchi.push({ x: pth.x + th.w + (k - 1) * 2, y: by });
       const r = provaCatena(blocchi);
       if (!r) break;

@@ -757,15 +757,21 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
      *  ricerca su ognuna, in parallelo nei worker, e si tiene la migliore:
      *  meno edifici con strada fuori, poi meno deficit di spazio, poi meno
      *  strade (a parità la prima). */
+    /** Edifici a due corsie che una partenza lascia fuori (non piazzati). */
+    const dueFuori = (pl: ReadonlyMap<string, unknown>) => problem.buildings.filter(b => richiedeDueCorsie(b) && !pl.has(b.id)).length;
     const scegliPartenza = async (cand: Array<Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse">>): Promise<number> => {
       if (cand.length < 2) return 0;
       const ris = await Promise.all(cand.map(c => runCompletionParallela(problem, {
         ...c, delayMs: 0, onFrame: () => {}, shouldStop: fermato, limiteValutate: VALUTATE_SCELTA_MARGINE, soloRicerca: true, riposo: () => riposoRef.current,
         attendiInPausa: () => pausedRef.current,
       })));
-      const voto = (f: PlannerFrame) => [f.search?.esclusi ?? 99, f.search?.deficit ?? 0, f.roads.size];
+      // (19/11/2026, rebelmartin) Prima gli edifici a due corsie che la partenza
+      // lascia fuori: la ricerca breve non lo vede (li prova come edifici normali,
+      // attaccati a strade a una corsia) e premiava la rete a pettine, che in 800
+      // prove esclude meno edifici ma ha il doppio delle strade.
+      const voto = (f: PlannerFrame, i: number) => [dueFuori(cand[i]!.initial!.placements), f.search?.esclusi ?? 99, f.search?.deficit ?? 0, f.roads.size];
       let mig = 0;
-      ris.forEach((f, i) => { const [a, b] = [voto(f), voto(ris[mig]!)]; if ((a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]!) < 0) mig = i; });
+      ris.forEach((f, i) => { const [a, b] = [voto(f, i), voto(ris[mig]!, mig)]; if ((a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]! || a[3]! - b[3]!) < 0) mig = i; });
       return mig;
     };
     /** Rete a pettine (dueCorsie.ts) quando i nuclei non bastano: qualche

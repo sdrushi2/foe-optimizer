@@ -6,6 +6,7 @@
 
 ### Correzioni
 - Planner: nelle città con moltissimi edifici piccoli con strada tutti uguali (per esempio decine di Pozzi dei desideri) il Planner restava bloccato più di mezzo minuto prima di partire, con la pagina ferma; ora parte in un secondo o poco più, con le stesse disposizioni
+- Planner, città con molti edifici a due corsie: i raccordi partono di nuovo dalla strada a due corsie sul raccordo, che ora può allungarsi fino al bordo della mappa (prima si fermava a 10 blocchi e un edificio restava fuori). Prima veniva scelta la rete a pettine, con quasi il doppio delle strade, oppure una partenza che lasciava fuori edifici a due corsie, che poi finivano attaccati a una strada normale. Su una città di prova con 10 edifici a due corsie: da 378 a 189-212 strade, tutti collegati a due corsie
 
 ---
 
