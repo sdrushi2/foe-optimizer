@@ -4,6 +4,7 @@
 ### Update
 - Planner: hovering the red "With road" or "Without road" count (now underlined) shows the list of buildings not placed yet, with their size and how many copies are missing
 - The version number at the top right opens What's new (the same panel as Help › What's new). Pressed again, it closes them and takes you back where you were
+- At the bottom of the city list, a bar shows the browser storage used by the tool: one segment per city (yours in yellow, visited ones in blue), hover a segment for the city's name and size, plus an estimate of how many more cities can be saved
 
 ### Fixes
 - Planner: in cities with a great many identical small buildings with road (for example dozens of Wishing Wells) the Planner froze for more than half a minute before starting, with the page stuck. It now starts in about a second, with the same layouts

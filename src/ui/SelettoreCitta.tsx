@@ -11,10 +11,11 @@
 //  la città (Invio o clic fuori = salva, Esc = annulla).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Building2, ChevronDown, Eye, FileJson, Trash2 } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
 import type { TipoCitta } from "../data/citta";
+import { LIMITE_STORAGE, occupazioneStorage } from "../utils/storage";
 
 export interface VoceCitta { id: string; nome: string; tipo: TipoCitta; avatar?: string | null;
   /** 2.0: città "ridotta" importata da un file JSON (sezione a parte nel menu). */
@@ -25,6 +26,58 @@ function Miniatura({ c, size = 16 }: { c: VoceCitta | undefined; size?: number }
   if (c?.avatar) return <img src={c.avatar} alt="" style={{ width: size, height: size }} className="shrink-0 rounded-sm object-cover" />;
   const I = c?.tipo === "visitata" ? Eye : Building2;
   return <I size={14} strokeWidth={1.75} className="shrink-0 text-sky-300" aria-hidden="true" />;
+}
+
+/** Barra dello spazio occupato (19/11/2026, richiesta dell'utente): in fondo al
+ *  menu, un tratto per città (gialle le tue, azzurre le visitate, grigie quelle
+ *  da JSON), al passaggio del mouse nome e spazio della città; sotto la legenda
+ *  e la stima di quante città ci stanno ancora (dimensione media delle salvate). */
+function BarraSpazio({ citta, uiLang }: { citta: VoceCitta[]; uiLang: UiLang }) {
+  const { totale, perCitta } = useMemo(() => occupazioneStorage(), []);
+  const [sopra, setSopra] = useState<{ c: VoceCitta; n: number; x: number } | null>(null);
+  const loc = uiLang === "en" ? "en-US" : "it-IT";
+  const mil = (n: number) => (n / 1e6).toLocaleString(loc, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  const pct = (n: number, d = 0) => (n / LIMITE_STORAGE * 100).toLocaleString(loc, { maximumFractionDigits: d });
+  const gruppi: Array<[VoceCitta[], string]> = [
+    [citta.filter(c => c.tipo === "mia" && !c.daJson), "bg-amber-400"],
+    [citta.filter(c => c.tipo === "visitata" && !c.daJson), "bg-sky-400"],
+    [citta.filter(c => c.daJson), "bg-slate-400"],
+  ];
+  const pesi = citta.map(c => perCitta.get(c.id) ?? 0).filter(n => n > 0);
+  const media = pesi.length ? pesi.reduce((a, b) => a + b, 0) / pesi.length : 0;
+  const libere = media ? Math.max(0, Math.floor((LIMITE_STORAGE - totale) / media)) : null;
+  return (
+    <div className="mt-1 border-t border-slate-800 px-2 pt-1.5 pb-1">
+      <div className="flex justify-between text-[11px] text-slate-500">
+        <span title={t("r2StorageTitle", uiLang)}>{t("r2StorageUsed", uiLang)}</span>
+        <span className="text-slate-300">{mil(totale)} / {mil(LIMITE_STORAGE)} M · {pct(totale)}%</span>
+      </div>
+      <div className="relative mt-1">
+        <div className="flex h-2.5 gap-px overflow-hidden rounded-sm bg-slate-800">
+          {gruppi.flatMap(([lista, colore]) => lista.map(c => {
+            const n = perCitta.get(c.id) ?? 0;
+            if (!n) return null;
+            return <div key={c.id} className={`${colore} shrink-0 hover:brightness-125`} style={{ width: `${n / LIMITE_STORAGE * 100}%` }}
+              onMouseEnter={(e) => { const r = e.currentTarget.getBoundingClientRect(), p = e.currentTarget.parentElement!.getBoundingClientRect(); setSopra({ c, n, x: r.left + r.width / 2 - p.left }); }}
+              onMouseLeave={() => setSopra(null)} />;
+          }))}
+        </div>
+        {sopra && (
+          <div className="pointer-events-none absolute bottom-full mb-1.5 -translate-x-1/2 whitespace-nowrap rounded border border-slate-600 bg-slate-950 px-1.5 py-0.5 text-[11px] text-slate-200 shadow-lg"
+            style={{ left: Math.min(Math.max(sopra.x, 70), 196) }}>
+            {sopra.c.nome} · {Math.round(sopra.n / 1024).toLocaleString(loc)} KB · {pct(sopra.n, 1)}%
+          </div>
+        )}
+      </div>
+      <div className="mt-1 flex flex-wrap justify-between gap-x-2 text-[11px] text-slate-500">
+        {gruppi.map(([lista, colore], i) => lista.length > 0 && (
+          <span key={i} className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded-sm ${colore}`} />
+            {t(i === 0 ? "r2StorageMine" : i === 1 ? "r2StorageVisited" : "r2StorageJson", uiLang, lista.length)}</span>
+        ))}
+      </div>
+      {libere !== null && <div className="text-right text-[11px] text-slate-500">{t("r2StorageFree", uiLang, libere)}</div>}
+    </div>
+  );
 }
 
 interface Props {
@@ -158,6 +211,7 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
                   {t("r2ImportCityJson", uiLang)}
                 </button>
               )}
+              {citta.length > 0 && <BarraSpazio citta={citta} uiLang={uiLang} />}
             </>
           )}
         </div>

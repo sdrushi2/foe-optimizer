@@ -54,6 +54,28 @@ export function profileStorageKey(profileId: string, slot: ProfileSlot): string 
   return `foe_p_${profileId}_${slot}_${V}`;
 }
 
+/** Limite del localStorage per sito in Chrome, in caratteri (chiavi + valori):
+ *  5 MiB = 5.242.880, misurato dall'utente il 19/11/2026 (1,54 M usati + 3,7 M liberi). */
+export const LIMITE_STORAGE = 5_242_880;
+
+/** Spazio occupato nel localStorage (caratteri di chiavi e valori): totale e per
+ *  città (somma dei suoi slot). Per la barra in fondo al selettore delle città. */
+export function occupazioneStorage(): { totale: number; perCitta: Map<string, number> } {
+  const perCitta = new Map<string, number>();
+  let totale = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k === null) continue;
+      const n = k.length + (localStorage.getItem(k)?.length ?? 0);
+      totale += n;
+      const m = /^foe_p_(.+)_(city|inventory|allies|resources)_/.exec(k);
+      if (m) perCitta.set(m[1]!, (perCitta.get(m[1]!) ?? 0) + n);
+    }
+  } catch { /* storage non disponibile */ }
+  return { totale, perCitta };
+}
+
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = "";
   const len = bytes.byteLength;

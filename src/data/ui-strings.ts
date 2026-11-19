@@ -628,6 +628,15 @@ const UI_STRINGS = {
   r2PlReset: { it: "Reset", en: "Reset" },
   r2PlEditCity: { it: "Modifica", en: "Edit" },
   r2PlVideo: { it: "Video tutorial", en: "Video tutorial" },
+  r2StorageUsed: { it: "Spazio utilizzato", en: "Storage used" },
+  r2StorageTitle: {
+    it: "Spazio del browser per FoE Optimizer (circa 5 milioni di caratteri, condiviso da tutte le città). Passa sopra una città nella barra per vedere quanto occupa.",
+    en: "Browser storage for FoE Optimizer (about 5 million characters, shared by all cities). Hover a city in the bar to see how much it takes.",
+  },
+  r2StorageMine: { it: (n: number) => `le tue città (${n})`, en: (n: number) => `your cities (${n})` },
+  r2StorageVisited: { it: (n: number) => `visitate (${n})`, en: (n: number) => `visited (${n})` },
+  r2StorageJson: { it: (n: number) => `da JSON (${n})`, en: (n: number) => `from JSON (${n})` },
+  r2StorageFree: { it: (n: number) => `spazio per altre ~${n} città`, en: (n: number) => `room for ~${n} more cities` },
   r2ImportCityJson: { it: "Importa da JSON", en: "Import from JSON" },
   r2ImportCityJsonTitle: {
     it: "Aggiunge una città da un file JSON (Esporta JSON città, Planner, Forge Hammer). Città ridotta: mappa e Grandi Edifici completi, statistiche degli edifici dal catalogo, niente inventario né alleati",

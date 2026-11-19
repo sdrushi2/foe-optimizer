@@ -4,6 +4,7 @@
 ### Aggiornamenti
 - Planner: passando col mouse sul numero rosso di "Con strada" o "Senza strada" (ora sottolineato) si apre l'elenco degli edifici non ancora piazzati, con le dimensioni e quante copie mancano
 - Il numero di versione in alto a destra apre le Novità (lo stesso pannello di Guida › Novità). Ripremuto le chiude e torna dov'eri
+- In fondo all'elenco delle città, una barra mostra lo spazio del browser occupato dal tool: un tratto per città (gialle le tue, azzurre le visitate), passandoci sopra col mouse nome e spazio della città, e una stima di quante città si possono ancora salvare
 
 ### Correzioni
 - Planner: nelle città con moltissimi edifici piccoli con strada tutti uguali (per esempio decine di Pozzi dei desideri) il Planner restava bloccato più di mezzo minuto prima di partire, con la pagina ferma. Ora parte in un secondo o poco più, con le stesse disposizioni
