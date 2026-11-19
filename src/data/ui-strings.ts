@@ -2116,6 +2116,10 @@ const UI_STRINGS = {
     it: (fields: string) => `Dati non validi: mancano i campi ${fields}.`,
     en: (fields: string) => `Invalid data: missing fields ${fields}.`,
   },
+  bookmarkletNoBuildings: {
+    it: (helper: string) => `${helper} non ha ancora i dati della città: negli appunti non c'è nessun edificio (manca anche il municipio). La città non è stata creata né aggiornata.\n\nRicarica il gioco, apri di nuovo la città (o visita di nuovo il giocatore) e riprova con la bacchetta.`,
+    en: (helper: string) => `${helper} doesn't have the city data yet: the clipboard contains no buildings (not even the town hall). The city was not created or updated.\n\nReload the game, open the city again (or visit the player again) and try the wand again.`,
+  },
   importErrorAlert: {
     it: (detail: string) => `Errore durante l'importazione dei dati. Il profilo non è stato creato.\n\nDettaglio: ${detail}`,
     en: (detail: string) => `Error while importing data. The profile was not created.\n\nDetail: ${detail}`,

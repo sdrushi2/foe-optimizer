@@ -3363,7 +3363,11 @@ export default function App() {
       setIsDebugOpen(false);
       bumpStorage();
     } catch (err) {
+      // (19/11/2026) Rilanciato: prima l'errore finiva solo in console e la città
+      // restava salvata a metà (nome e avatar, niente mappa); ora importaPayload
+      // ripristina la città com'era e lo segnala (importErrorAlert).
       console.error("Error importing city map:", err);
+      throw err;
     }
   };
 
@@ -4173,6 +4177,18 @@ export default function App() {
   /** Crea o aggiorna una città dal payload (bacchetta o, 2.0, file JSON:
    *  `daJson` = città "ridotta", vedi data/cittaDaJson.ts). */
   const importaPayload = async (data: BookmarkletData, daJson = false) => {
+    // (19/11/2026, utente) Ogni tanto, importando la città di un vicino, FoE Helper
+    // ha già nome e avatar ma la mappa piena di voci senza edifici: niente id,
+    // niente mappa, e la città (anche una già salvata) veniva sovrascritta così.
+    // Senza almeno il municipio non si crea né si aggiorna nulla.
+    if (!daJson) {
+      const voci = Object.values(data.CityMapData ?? {}) as Array<{ cityentity_id?: unknown; type?: unknown } | null>;
+      const municipio = voci.some(e => !!e && typeof e === "object" && (e.type === "main_building" || (typeof e.cityentity_id === "string" && e.cityentity_id.startsWith("H_"))));
+      if (!municipio) {
+        alert(t("bookmarkletNoBuildings", uiLang, readPayloadDiagnostics(data).helperName || "FoE Helper"));
+        return;
+      }
+    }
     // 2) Dati validi (2.0): crea o AGGIORNA la città (data/citta.ts). Stessa
     // città = stesso player_id (o, per quelle salvate prima della 2.0, stesso
     // nome): si aggiorna invece di crearne una nuova. Città visitata = solo la

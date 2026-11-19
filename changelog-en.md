@@ -7,6 +7,7 @@
 ### Fixes
 - Planner: in cities with a great many identical small buildings with road (for example dozens of Wishing Wells) the Planner froze for more than half a minute before starting, with the page stuck; it now starts in about a second, with the same layouts
 - Planner, cities with many two-lane buildings: the junction layouts start again from the two-lane road on the junction, which can now extend up to the map edge (before it stopped at 10 blocks and one building was left out). Before, the comb network was chosen, with almost twice the roads, or a start that left two-lane buildings out, which then ended up attached to a normal road. On a test city with 10 two-lane buildings: from 378 to 189-212 roads, all connected to two lanes
+- Wand: if FoE Helper doesn't have the city data yet (it happens when importing a neighbour's city: name and avatar but no buildings), the city is no longer created empty or overwritten, and a message says to reload the game and try again. If importing the map fails, the city goes back to how it was and the error is shown
 
 ---
 
