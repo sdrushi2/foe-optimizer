@@ -670,7 +670,7 @@ const UI_STRINGS = {
   },
   r2NoCity: { it: "Nessuna città", en: "No city" },
   r2NeedCity: { it: "Importa prima una città", en: "Import a city first" },
-  r2VersionTitle: { it: "Versione di FoE Optimizer", en: "FoE Optimizer version" },
+  r2VersionTitle: { it: "Versione di FoE Optimizer: clic per le novità", en: "FoE Optimizer version: click for what's new" },
   tabCity: {
     it: "Città",
     en: "City",

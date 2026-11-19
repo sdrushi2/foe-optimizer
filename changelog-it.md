@@ -3,9 +3,10 @@
 ## Versione 2.022 (19/11/2026)
 ### Aggiornamenti
 - Planner: passando col mouse sul numero rosso di "Con strada" o "Senza strada" (ora sottolineato) si apre l'elenco degli edifici non ancora piazzati, con le dimensioni e quante copie mancano
+- Il numero di versione in alto a destra apre le Novità (lo stesso pannello di Guida › Novità). Ripremuto le chiude e torna dov'eri
 
 ### Correzioni
-- Planner: nelle città con moltissimi edifici piccoli con strada tutti uguali (per esempio decine di Pozzi dei desideri) il Planner restava bloccato più di mezzo minuto prima di partire, con la pagina ferma; ora parte in un secondo o poco più, con le stesse disposizioni
+- Planner: nelle città con moltissimi edifici piccoli con strada tutti uguali (per esempio decine di Pozzi dei desideri) il Planner restava bloccato più di mezzo minuto prima di partire, con la pagina ferma. Ora parte in un secondo o poco più, con le stesse disposizioni
 - Planner, città con molti edifici a due corsie: i raccordi partono di nuovo dalla strada a due corsie sul raccordo, che ora può allungarsi fino al bordo della mappa (prima si fermava a 10 blocchi e un edificio restava fuori). Prima veniva scelta la rete a pettine, con quasi il doppio delle strade, oppure una partenza che lasciava fuori edifici a due corsie, che poi finivano attaccati a una strada normale. Su una città di prova con 10 edifici a due corsie: da 378 a 189-212 strade, tutti collegati a due corsie
 - Bacchetta: se FoE Helper non ha ancora i dati della città (capita importando la città di un vicino: nome e avatar ma nessun edificio), la città non viene più creata vuota né sovrascritta, e un messaggio spiega di ricaricare il gioco e riprovare. Se l'import della mappa va in errore, la città torna com'era e l'errore viene mostrato
 
@@ -13,14 +14,14 @@
 
 ## Versione 2.021 (18/11/2026)
 ### Aggiornamenti
-- Tabelle edifici: le tre colonne dei beni personali (era attuale, precedente e successiva) sono ora vicine, seguite dalla colonna dei beni boost. Nuovo pulsante "Somma beni" (Opzioni) che le unisce in un'unica colonna, con l'icona dei beni dorata, col totale dei beni prodotti; anche questa colonna si può ordinare
-- Planner, Raccordi a 3/4/5: nelle città con molti edifici con strada orizzontali (più larghi che alti) la ricerca prova anche un "pettine verticale": da una strada orizzontale partono più strade verticali, con gli edifici orizzontali impilati ai due lati e attaccati dal lato corto; gli edifici verticali restano sulle strade orizzontali. Su una città di prova con 81 edifici orizzontali: circa 19 caselle di strada in meno e quasi nessun bordo giallo (da circa 50 a 2-4). Le città con pochi edifici orizzontali non cambiano
+- Tabelle edifici: le tre colonne dei beni personali (era attuale, precedente e successiva) sono ora vicine, seguite dalla colonna dei beni boost. Nuovo pulsante "Somma beni" (Opzioni) che le unisce in un'unica colonna, con l'icona dei beni dorata, col totale dei beni prodotti. Anche questa colonna si può ordinare
+- Planner, Raccordi a 3/4/5: nelle città con molti edifici con strada orizzontali (più larghi che alti) la ricerca prova anche un "pettine verticale": da una strada orizzontale partono più strade verticali, con gli edifici orizzontali impilati ai due lati e attaccati dal lato corto. Gli edifici verticali restano sulle strade orizzontali. Su una città di prova con 81 edifici orizzontali: circa 19 caselle di strada in meno e quasi nessun bordo giallo (da circa 50 a 2-4). Le città con pochi edifici orizzontali non cambiano
 - Planner, Girandola e Girandola 2: nelle stesse città il pettine verticale parte dai bracci orizzontali della girandola. Sulla città di prova ora entrano tutti gli edifici con strada (prima ne restavano fuori più di 30)
 - Planner: nelle Statistiche attuali gli edifici con strada sono divisi per forma (quadrati, orizzontali, verticali), per capire subito se la città ha soprattutto edifici orizzontali
 - Città, Inventario e Database: il pulsante "Export" (CSV degli edifici selezionati) passa dal gruppo Opzioni al gruppo Strumenti
 - Città: il pulsante "Mappa" passa dal gruppo Strumenti al gruppo Statistiche città
 ### Correzioni
-- Planner: le strade con un lato fuori dall'area di gioco (per esempio una strada lungo il bordo della mappa) sono segnate col bordo rosso come strade sprecate e la ricerca le evita il più possibile (ognuna conta come una strada in più); restano solo come ultima risorsa, quando servono a far entrare più edifici
+- Planner: le strade con un lato fuori dall'area di gioco (per esempio una strada lungo il bordo della mappa) sono segnate col bordo rosso come strade sprecate e la ricerca le evita il più possibile (ognuna conta come una strada in più). Restano solo come ultima risorsa, quando servono a far entrare più edifici
 - Planner: non restano più quadrati di 4 strade (2×2), che nessuna fase toglieva: se una delle quattro celle non serve si toglie, se serve solo a un edificio che si può attaccare altrove l'edificio viene spostato, e la ricerca scarta le disposizioni in cui un quadrato resta comunque
 - Planner: importando con la bacchetta la città di un altro giocatore mentre sei nella scheda Planner, il nastro mostra subito tutti i comandi (prima restava solo "Sorgente" finché non si cambiava scheda)
 

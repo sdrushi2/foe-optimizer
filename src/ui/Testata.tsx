@@ -48,6 +48,8 @@ interface Props {
   avviso: string | null;
   onChiudiAvviso: () => void;
   versione: string;
+  /** Clic sul numero di versione: Guida › Novità (19/11/2026). */
+  onVersione?: () => void;
   /** Avatar del giocatore della città attiva (selettore della città). */
   avatar?: string | null;
   gruppi: RibbonGroup[];
@@ -55,7 +57,7 @@ interface Props {
   onLingua: (l: UiLang) => void;
 }
 
-export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, onSelezionaCitta, onEliminaCitta, onRinominaCitta, onImportaCittaJson, onImporta, avviso, onChiudiAvviso, versione, gruppi, uiLang, onLingua, avatar }: Props) {
+export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, onSelezionaCitta, onEliminaCitta, onRinominaCitta, onImportaCittaJson, onImporta, avviso, onChiudiAvviso, versione, onVersione, gruppi, uiLang, onLingua, avatar }: Props) {
   const nomeCitta = citta.find(c => c.id === cittaAttiva)?.nome ?? null;
   useEffect(() => {
     if (!avviso) return;
@@ -145,7 +147,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
         })}
         {/* Versione: sempre visibile, in grigio, accanto alla lingua. */}
         <span className="ml-auto flex shrink-0 items-center gap-2 self-center pl-2">
-          <span className="font-mono text-[12px] text-slate-500" title={t("r2VersionTitle", uiLang)}>{versione}</span>
+          <button type="button" onClick={onVersione} className="font-mono text-[12px] text-slate-500 hover:text-sky-300 hover:underline" title={t("r2VersionTitle", uiLang)}>{versione}</button>
           {/* lingua con le bandiere, come nella 1.x */}
           <SelettoreLingua uiLang={uiLang} onLingua={onLingua} />
         </span>

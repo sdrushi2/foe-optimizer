@@ -6766,6 +6766,21 @@ export default function App() {
   // Guida hanno solo il nastro (il contenuto sotto resta quello dell'ultima
   // scheda di lavoro). Le vecchie barre restano sotto finché ogni scheda non
   // avrà il suo nastro completo.
+  /** Numero di versione (Testata): apre le Novità; ripremuto le chiude e torna
+   *  dov'eri (scheda e pannello della Guida di prima). 19/11/2026, utente. */
+  const primaDelleNovita = useRef<{ extra: typeof schedaExtra; pannello: typeof pannelloGuida } | null>(null);
+  const cliccaVersione = () => {
+    if (schedaExtra === "guida" && pannelloGuida === "novita") {
+      const p = primaDelleNovita.current;
+      primaDelleNovita.current = null;
+      setPannelloGuida(p ? p.pannello : null);
+      setSchedaExtra(p ? p.extra : null);
+      return;
+    }
+    primaDelleNovita.current = { extra: schedaExtra, pannello: pannelloGuida };
+    setSchedaExtra("guida");
+    setPannelloGuida("novita");
+  };
   const schedaCorrente: Scheda = schedaExtra ?? (activeTab === "database" ? "database"
     : activeTab === "propria_citta" ? (showPlanner ? "planner" : "citta")
     : activeTab === "inventario" ? "inventario" : activeTab === "alleati" ? (alleatiDaDb ? "database" : "alleati") : "insediamenti");
@@ -7109,7 +7124,7 @@ export default function App() {
         citta={vociCitta} cittaAttiva={activeProfileId} onSelezionaCitta={switchProfile}
         onEliminaCitta={(id) => deleteProfile(id, false)} onRinominaCitta={rinominaCitta} onImportaCittaJson={() => cittaJsonRef.current?.click()} onImporta={importaDaNastro}
         avviso={avvisoCitta} onChiudiAvviso={chiudiAvviso}
-        versione={__BUILD_VERSION__} gruppi={gruppiNastro}
+        versione={__BUILD_VERSION__} onVersione={cliccaVersione} gruppi={gruppiNastro}
         uiLang={uiLang} onLingua={handleUiLangChange} avatar={portraitUrl || null} />
       <input ref={plannerFileRef} type="file" accept=".json,application/json" className="hidden"
         onChange={e => { const f = e.currentTarget.files?.[0]; if (f) void importaJsonPlanner(f); e.currentTarget.value = ""; }} />
