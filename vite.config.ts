@@ -1,3 +1,4 @@
+import { execFileSync } from "child_process";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -27,7 +28,6 @@ const BUILD_VERSION = `v2.${String(giorni).padStart(3, "0")}`;
 // stesso nome cache e il SW non invaliderebbe la cache vecchia (gli utenti
 // resterebbero su una versione obsoleta). Aggiungiamo il timestamp di build.
 const SW_CACHE_VERSION = `${BUILD_VERSION}-${now.getTime()}`;
-const BUILD_DATE = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
 // Plugin: anteprima social (og:image / twitter:image) sempre aggiornata.
 // Discord, Facebook & co. tengono in cache l'anteprima per URL dell'immagine:
@@ -47,8 +47,33 @@ function ogImagePlugin(): Plugin {
   };
 }
 
-// Plugin: aggiorna <lastmod> in dist/sitemap.xml con la data di build.
-function sitemapPlugin(date: string): Plugin {
+// Plugin: <lastmod> di dist/sitemap.xml = data dell'ultimo commit che ha toccato la pagina.
+// (20/11/2026, audit SEO) Prima ogni build scriveva la data di build su TUTTE le pagine:
+// a ogni pubblicazione la sitemap diceva a Google che tutte e 7 erano cambiate, e Google
+// ignora i lastmod che non sono affidabili. Ora ogni <loc> prende la data (git log) del suo
+// file in public/ (o index.html per la home), più i file da cui dipende il contenuto
+// (DIPENDENZE_SITEMAP). Serve la cronologia git completa: in un clone "shallow" (il checkout
+// predefinito di GitHub Actions, vedi fetch-depth in deploy.yml) git darebbe a tutti i file
+// la data dell'unico commit presente, quindi lì si lasciano le date scritte in
+// public/sitemap.xml, con un avviso. Stessa cosa se git non c'è.
+const DIPENDENZE_SITEMAP: Record<string, string[]> = {
+  "/": ["src"],                                                     // la home è l'app
+  "/ge/": ["public/calcolatore", "public/data/mecenati-dati.js"],   // calcolatore e costi dei GE
+  "/gb/": ["public/calcolatore", "public/data/mecenati-dati.js"],
+};
+function fileDellaPagina(loc: string): string[] {
+  const p = new URL(loc).pathname;
+  const pagina = p === "/" ? "index.html" : p.endsWith("/") ? `public${p}index.html` : `public${p}`;
+  return [pagina, ...(DIPENDENZE_SITEMAP[p] ?? [])];
+}
+function git(args: string[]): string | null {
+  try {
+    return execFileSync("git", args, { cwd: __dirname, encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return null;
+  }
+}
+function sitemapPlugin(): Plugin {
   return {
     name: "foe-sitemap",
     apply: "build",
@@ -58,8 +83,26 @@ function sitemapPlugin(date: string): Plugin {
         this.warn("dist/sitemap.xml non trovato: lastmod non aggiornato.");
         return;
       }
+      const shallow = git(["rev-parse", "--is-shallow-repository"]);
+      if (shallow !== "false") {
+        this.warn(shallow === "true"
+          ? "sitemap: clone git senza cronologia (shallow), lastmod lasciati come in public/sitemap.xml."
+          : "sitemap: git non disponibile, lastmod lasciati come in public/sitemap.xml.");
+        return;
+      }
       const content = fs.readFileSync(outPath, "utf-8");
-      const updated = content.replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${date}<\/lastmod>`);
+      const updated = content.replace(/<url>[\s\S]*?<\/url>/g, blocco => {
+        const loc = /<loc>([^<]*)<\/loc>/.exec(blocco)?.[1];
+        if (!loc) return blocco;
+        const file = fileDellaPagina(loc).filter(f => fs.existsSync(path.resolve(__dirname, f)));
+        // %cs = data del commit, AAAA-MM-GG
+        const data = file.length ? git(["log", "-1", "--format=%cs", "--", ...file]) : null;
+        if (!data || !/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+          this.warn(`sitemap: nessun commit per ${loc}, lastmod invariato.`);
+          return blocco;
+        }
+        return blocco.replace(/<lastmod>[^<]*<\/lastmod>/, `<lastmod>${data}</lastmod>`);
+      });
       fs.writeFileSync(outPath, updated, "utf-8");
     },
   };
@@ -244,7 +287,7 @@ export default defineConfig({
     tailwindcss(),
     datiPlugin(),
     serviceWorkerPlugin(SW_CACHE_VERSION),
-    sitemapPlugin(BUILD_DATE),
+    sitemapPlugin(),
     ogImagePlugin(),
     editorCondivisoPlugin(),
     calcolatoreGePlugin(),

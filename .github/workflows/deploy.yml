@@ -29,6 +29,12 @@ jobs:
     steps:
       - name: Checkout del codice
         uses: actions/checkout@v7
+        # Cronologia git completa: il <lastmod> della sitemap è la data dell'ultimo
+        # commit di ogni pagina (sitemapPlugin in vite.config.ts). blob:none scarica
+        # commit e cartelle ma non il contenuto dei file vecchi: resta veloce.
+        with:
+          fetch-depth: 0
+          filter: blob:none
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
