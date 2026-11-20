@@ -339,10 +339,10 @@ P_ModernEra_Workshop3;Fabbrica di elettrodomestici;Appliance Factory;562c657bd;;
 P_ModernEra_Workshop4;Studio cinematografico;Film Studio;69c967a3c;;;7x5;2.5;2;-650;;;;;;;;;;;;;;;;;34130;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_Aviary;Voliera;Aviary;cc1724734;;;3x4;1.5;1;-1340;3276;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_CarnivalBonus17;Ballo in maschera;Masquerade Ball;1b5c5353f;;;4x5;2;1;-2240;3386;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_MultiAge_CarnivalBonus18;Mercato del pontile della gondola;Gondola Dock Market;691d75edd;;;4x5;2;1;-1200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_MultiAge_CarnivalBonus18;Mercato del pontile della gondola;Gondola Dock Market;691d75edd;;;4x5;2;1;-1200;;;;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 P_MultiAge_ChristmasBonus1;Fabbrica di Dolciumi;Confectionary;e037f6476;;;4x2;1;1;-595;;;;;;;;;;;;;;;;;29988;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_ChristmasBonus15;Fabbrica di dolciumi leggendaria;Legendary Confectionary;7bc984a8d;;;5x3;1.5;1;-1513;3690;;;;;;;;;;;;;;;;65599;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_MultiAge_ChristmasBonus16;Bottega di Babbo Natale;Santa's Workshop;1aaf0a94e;;;5x4;2;1;-1790;5461;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_MultiAge_ChristmasBonus16;Bottega di Babbo Natale;Santa's Workshop;1aaf0a94e;;;5x4;2;1;-1790;5461;;;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 P_MultiAge_ChristmasBonus2;Grande Fabbrica di Dolciumi;Large Confectionary;395f43a2c;;;4x3;1.5;1;-1018;;;;;;;;;;;;;;;;;47124;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_ChristmasBonus3;Recinto delle Renne;Reindeer Paddock;d5582068a;;;4x4;2;1;-418;;;;;;;;;;;;;;;;;48552;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_ChristmasBonus4;Enorme fabbrica di dolciumi;Huge Confectionary;c4f48570e;;;5x3;1.5;1;-1401;3280;;;;;;;;;;;;;;;;62921;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -350,15 +350,15 @@ P_MultiAge_CupBonus1;Negozio del tifoso;Fan Shop;6cfb4ac84;;;2x3;1;1;-359;754;;;
 P_MultiAge_CupBonus16;Campo di calcio;Soccer Field;656d32d54;;;5x4;2;1;-2390;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_CurieBonus18;L'automobile dei raggi X;X-Ray Caravan;bc67fecff;;;3x3;1.5;1;-1010;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_EasterBonus16;Negozio Foebergé;Foeberge Shop;f28861d17;;;3x4;1.5;1;-493;1638;;;;;;;;;;;;;;;;35343;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_MultiAge_MonroeBonus17;Roseto;Rosarium;27b334fa2;;;3x4;1.5;1;-1080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_MultiAge_MonroeBonus17;Roseto;Rosarium;27b334fa2;;;3x4;1.5;1;-1080;;;;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 P_MultiAge_SportBonus17;Arena dei Vincitori;Arena of Victors;f6639c144;;;4x5;2;1;-1940;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_SummerBonus1;Bar sulla spiaggia;Beach Bar;f0fc0247f;;;3x2;1;1;-291;;;;;;;;;;;;;;;;;13066;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_SummerBonus15;Bazar;Bazaar;3d8cf0399;;;5x4;2;1;-2240;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_MultiAge_SummerBonus16;Luau;Luau;ad29e8d9b;;;4x5;2;1;-2240;3386;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_MultiAge_SummerBonus16;Luau;Luau;ad29e8d9b;;;4x5;2;1;-2240;3386;;;;;;;10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 P_MultiAge_SummerBonus18;Tesoro sommerso;Sunken Treasure;7d177613a;;;2x3;1;1;-580;;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_SummerBonus2;Stregone;Witch Doctor;beb4747b5;;;3x2;1;1;-1;1638;;;;;;;;;;;;;;;;15994;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_MultiAge_VanGoghBonus18;Capolavoro;Magnum Opus;16c542f06;;;3x2;1;1;-310;;;;;;;;;;;;;;;;;;;549;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_MultiAge_WildBonus22;Hotel insetto;Insect Hotel;41ef8c452;;;2x3;1;1;-360;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_MultiAge_WildBonus22;Hotel insetto;Insect Hotel;41ef8c452;;;2x3;1;1;-360;;;;;;;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 P_OceanicFuture_Workshop1;Allevatore dei fondali;Deep Sea Breeder;f228ac47b;;;6x5;2.5;2;-1170;410;;;;;;;;;;;;;;;;64600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_OceanicFuture_Workshop2;Allevamento di molluschi;Shellfish Farm;62cd5e0fe;;;5x6;2.5;1;-1390;-100;;;;;;;;;;;;;;;;40500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_OceanicFuture_Workshop3;Centrale elettrica geotermica;Geothermal Power Plant;d79a63144;;;4x4;2;2;-680;270;;;;;;;;;;;;;;;;34560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -386,7 +386,7 @@ P_SpaceAgeTitan_Workshop1;Officina motori;Engine Service;17b0808c5;;;4x4;2;2;-23
 P_SpaceAgeTitan_Workshop2;Bar degli Imperi;Bar of Empires;b1296ee69;;;3x3;1.5;1;-650;;;;;;;;;;;;;;;;;60660;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_SpaceAgeVenus_Workshop1;Giardino galleggiante;Floating Garden;2461b8cbc;;;4x4;2;2;-2130;;;;;;;;;;;;;;;;;69140;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_SpaceAgeVenus_Workshop2;Officina dei droni;Drone Hub;2d7849f0a;;;3x3;1.5;1;-600;;;;;;;;;;;;;;;;;53640;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-P_StellarAgeDiscovery_Workshop1;Relè di risorse;Resource Relay;5600dfdd8;;;2x4;1;2;-1240;;;;;;;;;;;;;;;;;473580000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+P_StellarAgeDiscovery_Workshop1;Relè di risorse;Resource Relay;5600dfdd8;;;2x4;1;2;-1240;;;;;;;;;;;;;;;;;43850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_StoneAge_Hunter;Capanno del cacciatore;Hunter's Cabin;a2cce0b13;;;3x3;1.5;1;-28;;;;;;;;;;;;;;;;;169;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_TomorrowEra_Workshop1;Fabbrica di droni;Drone Factory;0c17810e3;;;6x3;1.5;2;-250;-200;;;;;;;;;;;;;;;;15000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 P_TomorrowEra_Workshop2;Società di sicurezza privata;Private Security Company;b4ae14ad0;;;4x3;1.5;1;-550;-400;;;;;;;;;;;;;;;;9000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -437,293 +437,293 @@ R_ModernEra_Residential1;Palazzina di periferia;Suburban House;ed6ca3c59;;;4x3;1
 R_ModernEra_Residential2;Casa prefabbricata;Prefab House;ddaa5454b;;;4x3;1.5;2;1380;;;;;;;;;;;;;;;17820;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_ModernEra_Residential3;Villetta di lusso;Luxury Dwelling;3afea9fdf;;;4x3;1.5;2;1540;;;;;;;;;;;;;;;21000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_ModernEra_Residential4;Motel;Motel;91f9408b5;;;4x3;1.5;2;900;;;;;;;;;;;;;;;35040;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_AntiquesDealerBonus19a;Mostra d'arte - Liv. 1;Art Exhibition - Lv. 1;354f5b726;;;4x4;2;1;8712;12930;;2;;;;;5;;;;;;;1332720000;;13980;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19b;Mostra d'arte - Liv. 2;Art Exhibition - Lv. 2;a7325ecb3;;;4x4;2;1;9288;13540;;4;;;;;5;;;;;;;1507680000;;16600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19c;Mostra d'arte - Liv. 3;Art Exhibition - Lv. 3;5da07a6a0;;;4x4;2;1;9936;14240;;4;;;;;10;;;;;;;1607040000;;18350;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19d;Mostra d'arte - Liv. 4;Art Exhibition - Lv. 4;4efc03b54;;;4x4;2;1;10584;16080;;6;;;;;10;;;;;;;1706400000;;20530;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19e;Mostra d'arte - Liv. 5;Art Exhibition - Lv. 5;0624fb2a7;;;4x4;2;1;11520;17470;;6;;;;;15;;;;;;;1888920000;;22280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19f;Mostra d'arte - Liv. 6;Art Exhibition - Lv. 6;4eaf49823;;;4x4;2;1;12168;19310;;8;;;;;15;;;;;;;2010960000;;24030;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19g;Mostra d'arte - Liv. 7;Art Exhibition - Lv. 7;c449f3063;;;4x4;2;1;12600;21140;;8;;;;;20;;;;;;;2170800000;;26210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_AntiquesDealerBonus19h;Mostra d'arte - Liv. 8;Art Exhibition - Lv. 8;66956e5c5;;;4x4;2;1;13536;22720;;10;;;;;25;;;;;;;2360880000;;29710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_Anw15;Angolo degli Oratori;Speaker's Corner;35c304510;;;3x3;1.5;1;3645;;;;;;;;;;;;;;;514080000;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus21a;Ruota Panoramica - Liv. 1;Ferris Wheel - Lv. 1;1fc31e69b;;;6x4;2;1;11880;18350;;;;;;;;;;;;;;1827360000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus21b;Ruota Panoramica - Liv. 2;Ferris Wheel - Lv. 2;95eba33e8;;;6x4;2;1;11988;19000;;;;;;;;;;;;;;2056320000;;26210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus21c;Ruota Panoramica - Liv. 3;Ferris Wheel - Lv. 3;25b564a3c;;;6x4;2;1;12204;19660;;2;;;;;;;;;;;;2285280000;;28830;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus21d;Ruota Panoramica - Liv. 4;Ferris Wheel - Lv. 4;cea35c99d;;;6x4;2;1;12528;20970;;3;;;;;5;;;;;;;2513160000;;31450;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus21e;Ruota Panoramica - Liv. 5;Ferris Wheel - Lv. 5;ce37de5d5;;;6x4;2;1;12960;22280;;4;;;;;5;;;;;;;2742120000;;34080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus21f;Ruota Panoramica - Liv. 6;Ferris Wheel - Lv. 6;fb6c0d30d;;;6x4;2;1;13608;23590;;5;;;;;10;;;;;;;2970000000;;36700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus21g;Ruota Panoramica - Liv. 7;Ferris Wheel - Lv. 7;031787c61;;;6x4;2;1;14472;24900;;6;;;;;10;;;;;;;3198960000;;39320;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus21h;Ruota Panoramica - Liv. 8;Ferris Wheel - Lv. 8;a9867471d;;;6x4;2;1;15552;26210;;7;;;;;15;;;;;;;3426840000;;41940;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus21i;Ruota Panoramica - Liv. 9;Ferris Wheel - Lv. 9;d367c45f5;;;6x4;2;1;16848;28830;;8;;;;;15;;;;;;;3655800000;;44560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus21jGreat;Ruota Maestosa;Great Wheel;f2a4dc741;;;6x4;2;1;18360;31450;;10;;;;;30;;;;;;;3883680000;;46660;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus21jWonder;Ruota delle Meraviglie;Wonder Wheel;894083616;;;6x4;2;1;18360;31450;;12;;;;;20;;;;;;;3883680000;;46660;;;;;;34;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus22a;Casa della farfalla - Liv. 1;Butterfly House - Lv. 1;762328d94;;;3x4;1.5;1;5670;8520;;;;;;;;;;;;;;913680000;;35340;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ArcheologyBonus22b;Casa della farfalla - Liv. 2;Butterfly House - Lv. 2;49d429626;;;3x4;1.5;1;5940;10480;;;;;;;2;;;;;;;1056240000;;38560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus22c;Casa della farfalla - Liv. 3;Butterfly House - Lv. 3;e492ebfff;;;3x4;1.5;1;6480;12450;;;;;;;4;;;;;;;1257120000;;42840;;888;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus22d;Casa della farfalla - Liv. 4;Butterfly House - Lv. 4;f4b811f25;;;3x4;1.5;1;7020;14420;;1;;;;;6;;;;;;;1427760000;;48200;;1124;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ArcheologyBonus22e;Casa della farfalla - Liv. 5;Butterfly House - Lv. 5;c19931a1c;;;3x4;1.5;1;7560;16380;;14;;;;;40;;;;;;;1599480000;;51410;;1302;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_BirthdayBonus1;Il Re;The King;3775d0537;;;2x2;1;1;1;;;;;;;;;;;;;;;713988000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_BirthdayBonus2;La Regina;The Queen;654cdde28;;;2x2;1;1;1;;;;;;;;;;;;;;;713988000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_BirthdayBonus22a;Grande re - Liv. 1;Grand King - Lv. 1;2ca017bea;;;3x3;1.5;1;4455;;;2;;;;;;;;;;;;814320000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_BirthdayBonus22b;Grande re - Liv. 2;Grand King - Lv. 2;e83bd7ac3;;;3x3;1.5;1;5670;;;5;;;;;;;;;;;;984960000;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_BirthdayBonus22c;Grande regina - Liv. 1;Grand Queen - Lv. 1;03f94a2ea;;;3x3;1.5;1;4658;;;1;;;;;5;;;;;;;856440000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_BirthdayBonus22d;Grande regina - Liv. 2;Grand Queen - Lv. 2;d8212f791;;;3x3;1.5;1;6480;;;3;;;;;10;;;;;;;1071360000;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CarnivalBonus17;Villa rinascimentale;Renaissance Villa;7d613e466;;;3x3;1.5;1;3240;3240;;;;;;;;;;;;;;1627776000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18;Magione rinascimentale;Renaissance Mansion;de8d55918;;;4x3;1.5;1;6480;6480;;;;;;;;;;;;;;967572000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18a;Gran Ponte - Lv. 1;Grand Bridge - Lv. 1;eb39453c7;;;4x3;1.5;1;;12450;;;;;;;;;;;;;;1199880000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18b;Gran Ponte - Lv. 2;Grand Bridge - Lv. 2;8752c2d96;;;4x3;1.5;1;;13110;;;;;;;;;;;;;;1257120000;;47100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18c;Gran Ponte - Lv. 3;Grand Bridge - Lv. 3;351fb6d63;;;4x3;1.5;1;;13760;;1;;;;;;;;;;;;1313280000;;49300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18d;Gran Ponte - Lv. 4;Grand Bridge - Lv. 4;5b1579ba2;;;4x3;1.5;1;;14420;;1;;;;;;;;;;;;1370520000;;51400;;330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18e;Gran Ponte - Lv. 5;Grand Bridge - Lv. 5;9fe6c7088;;;4x3;1.5;1;;15070;;2;;;;;;;;;;;;1427760000;;53600;;439;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus18f;Gran Ponte - Lv. 6;Grand Bridge - Lv. 6;3cbb6c092;;;4x3;1.5;1;;15730;;2;;;;;5;;;;;;;1485000000;;55700;;549;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19a;Mostra d'arte - Liv. 1;Art Exhibition - Lv. 1;354f5b726;;;4x4;2;1;8712;12930;;2;;;;;5;;;;;;;123400;;13980;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19b;Mostra d'arte - Liv. 2;Art Exhibition - Lv. 2;a7325ecb3;;;4x4;2;1;9288;13540;;4;;;;;5;;;;;;;139600;;16600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19c;Mostra d'arte - Liv. 3;Art Exhibition - Lv. 3;5da07a6a0;;;4x4;2;1;9936;14240;;4;;;;;10;;;;;;;148800;;18350;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19d;Mostra d'arte - Liv. 4;Art Exhibition - Lv. 4;4efc03b54;;;4x4;2;1;10584;16080;;6;;;;;10;;;;;;;158000;;20530;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19e;Mostra d'arte - Liv. 5;Art Exhibition - Lv. 5;0624fb2a7;;;4x4;2;1;11520;17470;;6;;;;;15;;;;;;;174900;;22280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19f;Mostra d'arte - Liv. 6;Art Exhibition - Lv. 6;4eaf49823;;;4x4;2;1;12168;19310;;8;;;;;15;;;;;;;186200;;24030;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19g;Mostra d'arte - Liv. 7;Art Exhibition - Lv. 7;c449f3063;;;4x4;2;1;12600;21140;;8;;;;;20;;;;;;;201000;;26210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_AntiquesDealerBonus19h;Mostra d'arte - Liv. 8;Art Exhibition - Lv. 8;66956e5c5;;;4x4;2;1;13536;22720;;10;;;;;25;;;;;;;218600;;29710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_Anw15;Angolo degli Oratori;Speaker's Corner;35c304510;;;3x3;1.5;1;3645;;;;;;;;;;;;;;;47600;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus21a;Ruota Panoramica - Liv. 1;Ferris Wheel - Lv. 1;1fc31e69b;;;6x4;2;1;11880;18350;;;;;;;;;;;;;;169200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus21b;Ruota Panoramica - Liv. 2;Ferris Wheel - Lv. 2;95eba33e8;;;6x4;2;1;11988;19000;;;;;;;;;;;;;;190400;;26210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus21c;Ruota Panoramica - Liv. 3;Ferris Wheel - Lv. 3;25b564a3c;;;6x4;2;1;12204;19660;;2;;;;;;;;;;;;211600;;28830;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus21d;Ruota Panoramica - Liv. 4;Ferris Wheel - Lv. 4;cea35c99d;;;6x4;2;1;12528;20970;;3;;;;;5;;;;;;;232700;;31450;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus21e;Ruota Panoramica - Liv. 5;Ferris Wheel - Lv. 5;ce37de5d5;;;6x4;2;1;12960;22280;;4;;;;;5;;;;;;;253900;;34080;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus21f;Ruota Panoramica - Liv. 6;Ferris Wheel - Lv. 6;fb6c0d30d;;;6x4;2;1;13608;23590;;5;;;;;10;;;;;;;275000;;36700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus21g;Ruota Panoramica - Liv. 7;Ferris Wheel - Lv. 7;031787c61;;;6x4;2;1;14472;24900;;6;;;;;10;;;;;;;296200;;39320;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus21h;Ruota Panoramica - Liv. 8;Ferris Wheel - Lv. 8;a9867471d;;;6x4;2;1;15552;26210;;7;;;;;15;;;;;;;317300;;41940;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus21i;Ruota Panoramica - Liv. 9;Ferris Wheel - Lv. 9;d367c45f5;;;6x4;2;1;16848;28830;;8;;;;;15;;;;;;;338500;;44560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus21jGreat;Ruota Maestosa;Great Wheel;f2a4dc741;;;6x4;2;1;18360;31450;;10;;;;;30;;;;;;;359600;;46660;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus21jWonder;Ruota delle Meraviglie;Wonder Wheel;894083616;;;6x4;2;1;18360;31450;;12;;;;;20;;;;;;;359600;;46660;;;;;;34;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus22a;Casa della farfalla - Liv. 1;Butterfly House - Lv. 1;762328d94;;;3x4;1.5;1;5670;8520;;;;;;;;;;;;;;84600;;35340;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ArcheologyBonus22b;Casa della farfalla - Liv. 2;Butterfly House - Lv. 2;49d429626;;;3x4;1.5;1;5940;10480;;;;;;;2;;;;;;;97800;;38560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus22c;Casa della farfalla - Liv. 3;Butterfly House - Lv. 3;e492ebfff;;;3x4;1.5;1;6480;12450;;;;;;;4;;;;;;;116400;;42840;;888;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus22d;Casa della farfalla - Liv. 4;Butterfly House - Lv. 4;f4b811f25;;;3x4;1.5;1;7020;14420;;1;;;;;6;;;;;;;132200;;48200;;1124;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ArcheologyBonus22e;Casa della farfalla - Liv. 5;Butterfly House - Lv. 5;c19931a1c;;;3x4;1.5;1;7560;16380;;14;;;;;40;;;;;;;148100;;51410;;1302;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_BirthdayBonus1;Il Re;The King;3775d0537;;;2x2;1;1;1;;;;;;;;;;;;;;;66110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_BirthdayBonus2;La Regina;The Queen;654cdde28;;;2x2;1;1;1;;;;;;;;;;;;;;;66110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_BirthdayBonus22a;Grande re - Liv. 1;Grand King - Lv. 1;2ca017bea;;;3x3;1.5;1;4455;;;2;;;;;;;;;;;;75400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_BirthdayBonus22b;Grande re - Liv. 2;Grand King - Lv. 2;e83bd7ac3;;;3x3;1.5;1;5670;;;5;;;;;;;;;;;;91200;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_BirthdayBonus22c;Grande regina - Liv. 1;Grand Queen - Lv. 1;03f94a2ea;;;3x3;1.5;1;4658;;;1;;;;;5;;;;;;;79300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_BirthdayBonus22d;Grande regina - Liv. 2;Grand Queen - Lv. 2;d8212f791;;;3x3;1.5;1;6480;;;3;;;;;10;;;;;;;99200;;;;;;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CarnivalBonus17;Villa rinascimentale;Renaissance Villa;7d613e466;;;3x3;1.5;1;3240;3240;;;;;;;;;;;;;;113040;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18;Magione rinascimentale;Renaissance Mansion;de8d55918;;;4x3;1.5;1;6480;6480;;;;;;;;;;;;;;89590;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18a;Gran Ponte - Lv. 1;Grand Bridge - Lv. 1;eb39453c7;;;4x3;1.5;1;;12450;;;;;;;;;;;;;;111100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18b;Gran Ponte - Lv. 2;Grand Bridge - Lv. 2;8752c2d96;;;4x3;1.5;1;;13110;;;;;;;;;;;;;;116400;;47100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18c;Gran Ponte - Lv. 3;Grand Bridge - Lv. 3;351fb6d63;;;4x3;1.5;1;;13760;;1;;;;;;;;;;;;121600;;49300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18d;Gran Ponte - Lv. 4;Grand Bridge - Lv. 4;5b1579ba2;;;4x3;1.5;1;;14420;;1;;;;;;;;;;;;126900;;51400;;330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18e;Gran Ponte - Lv. 5;Grand Bridge - Lv. 5;9fe6c7088;;;4x3;1.5;1;;15070;;2;;;;;;;;;;;;132200;;53600;;439;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus18f;Gran Ponte - Lv. 6;Grand Bridge - Lv. 6;3cbb6c092;;;4x3;1.5;1;;15730;;2;;;;;5;;;;;;;137500;;55700;;549;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_CarnivalBonus18g;Gran Ponte - Lv. 7;Grand Bridge - Lv. 7;3d1c974a8;;;4x3;1.5;1;;16380;;3;;;;;5;;;;;;;142800;;57800;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CarnivalBonus19a;Liv. 1 - Case della Piazza;Lv. 1 - Piazza Homes;70442b898;;;2x3;1;1;5400;;;1;;;;;4;;;;;;;314280000;;19770;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CarnivalBonus19b;Liv. 2 - Case della Piazza;Lv. 2 - Piazza Homes;e61681fcb;;;2x3;1;1;6750;;;2;;;;;8;;;;;;;428760000;;22490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CarnivalBonus19c;Liv. 1 - Caffè della Piazza;Lv. 1 - Piazza Café;9ef209966;;;3x2;1;1;2970;;;1;;;;;;;;;;;;571320000;;19280;;237;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CarnivalBonus19d;Liv. 2 - Caffè della Piazza;Lv. 2 - Piazza Café;55799b0f8;;;3x2;1;1;4050;;;2;;;;;;;;;;;;713880000;;23560;;592;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ChristmasBonus1;Capanna di legno;Log Cabin;ea7f44179;;;3x3;1.5;1;1620;;;3;;;;;;;;;;;;728244000;;;0.1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ChristmasBonus2;Sfera Innevata;Snow Globe;f43e90a65;;;2x3;1;1;540;;;;;;;;;;;;;;;343008000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ChristmasBonus3;Casetta di pan di zenzero;Gingerbread House;8f302d6c5;;;3x2;1;1;3;4910;;;;;;;;;;;;;;1427760000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CleopatraBonus18;Giardino dell’obelisco;Obelisk Garden;7dd673330;;;2x2;1;1;90;;;1;;;;;;;;;;;;322488000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CulturalBuilding10a;Minareto - Liv. 1;Minaret - Lv. 1;47f6f65ce;;;2x2;1;1;;;;1;;;;;1;;;;;;;199800000;;20000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding10b;Minareto - Liv. 2;Minaret - Lv. 2;695e2e472;;;2x2;1;1;;;;2;;;;;2;;;;;;;209520000;;20700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding10c;Minareto - Liv. 3;Minaret - Lv. 3;b953c5165;;;2x2;1;1;;;;3;;;;;3;;;;;;;219240000;;21400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding10d;Minareto - Liv. 4;Minaret - Lv. 4;fd6e5ad65;;;2x2;1;1;;;;3;;;;;5;;;;;;;228960000;;22100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding2a;Pietra runica maggiore - Liv. 1;Greater Runestone - Lv. 1;78bdcfcf7;;;2x2;1;1;;;;1;;;;;;;;;;;;209520000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CulturalBuilding2b;Pietra runica maggiore - Liv. 2;Greater Runestone - Lv. 2;9318720ef;;;2x2;1;1;;;;1;;;;;1;;;;;;;228960000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding2c;Pietra runica maggiore - Liv. 3;Greater Runestone - Lv. 3;5bea616c9;;;2x2;1;1;;;;1;;;;;1;;;;;;;247320000;;;;110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding2d;Pietra runica maggiore - Liv. 4;Greater Runestone - Lv. 4;361f7b66c;;;2x2;1;1;;;;1;;;;;1;;;;;;;266760000;;;;110;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding2e;Pietra runica maggiore - Liv. 5;Greater Runestone - Lv. 5;9578af1eb;;;2x2;1;1;;;;2;;;;;1;;;;;;;285120000;;;;110;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding4a;Dojo eterno - Liv. 1;Timeless Dojo - Lv. 1;d6a312993;;;3x3;1.5;1;;;;1;;;;;;;;;;;;428760000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus19a;Liv. 1 - Case della Piazza;Lv. 1 - Piazza Homes;70442b898;;;2x3;1;1;5400;;;1;;;;;4;;;;;;;29100;;19770;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CarnivalBonus19b;Liv. 2 - Case della Piazza;Lv. 2 - Piazza Homes;e61681fcb;;;2x3;1;1;6750;;;2;;;;;8;;;;;;;39700;;22490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CarnivalBonus19c;Liv. 1 - Caffè della Piazza;Lv. 1 - Piazza Café;9ef209966;;;3x2;1;1;2970;;;1;;;;;;;;;;;;52900;;19280;;237;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CarnivalBonus19d;Liv. 2 - Caffè della Piazza;Lv. 2 - Piazza Café;55799b0f8;;;3x2;1;1;4050;;;2;;;;;;;;;;;;66100;;23560;;592;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ChristmasBonus1;Capanna di legno;Log Cabin;ea7f44179;;;3x3;1.5;1;1620;;;3;;;;;;;;;;;;67430;;;0.1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ChristmasBonus2;Sfera Innevata;Snow Globe;f43e90a65;;;2x3;1;1;540;;;;;;;;;;;;;;;381120;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ChristmasBonus3;Casetta di pan di zenzero;Gingerbread House;8f302d6c5;;;3x2;1;1;3;4910;;;;;;;;;;;;;;99150;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CleopatraBonus18;Giardino dell’obelisco;Obelisk Garden;7dd673330;;;2x2;1;1;90;;;1;;;;;;;;;;;;29860;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CulturalBuilding10a;Minareto - Liv. 1;Minaret - Lv. 1;47f6f65ce;;;2x2;1;1;;;;1;;;;;1;;;;;;;18500;;20000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding10b;Minareto - Liv. 2;Minaret - Lv. 2;695e2e472;;;2x2;1;1;;;;2;;;;;2;;;;;;;19400;;20700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding10c;Minareto - Liv. 3;Minaret - Lv. 3;b953c5165;;;2x2;1;1;;;;3;;;;;3;;;;;;;20300;;21400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding10d;Minareto - Liv. 4;Minaret - Lv. 4;fd6e5ad65;;;2x2;1;1;;;;3;;;;;5;;;;;;;21200;;22100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding2a;Pietra runica maggiore - Liv. 1;Greater Runestone - Lv. 1;78bdcfcf7;;;2x2;1;1;;;;1;;;;;;;;;;;;19400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CulturalBuilding2b;Pietra runica maggiore - Liv. 2;Greater Runestone - Lv. 2;9318720ef;;;2x2;1;1;;;;1;;;;;1;;;;;;;21200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding2c;Pietra runica maggiore - Liv. 3;Greater Runestone - Lv. 3;5bea616c9;;;2x2;1;1;;;;1;;;;;1;;;;;;;22900;;;;110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding2d;Pietra runica maggiore - Liv. 4;Greater Runestone - Lv. 4;361f7b66c;;;2x2;1;1;;;;1;;;;;1;;;;;;;24700;;;;110;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding2e;Pietra runica maggiore - Liv. 5;Greater Runestone - Lv. 5;9578af1eb;;;2x2;1;1;;;;2;;;;;1;;;;;;;26400;;;;110;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding4a;Dojo eterno - Liv. 1;Timeless Dojo - Lv. 1;d6a312993;;;3x3;1.5;1;;;;1;;;;;;;;;;;;39700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_CulturalBuilding4b;Dojo eterno - Liv. 2;Timeless Dojo - Lv. 2;d437a67c8;;;3x3;1.5;1;;;;1;;;;;2;;;;;;;47600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding4c;Dojo eterno - Liv. 3;Timeless Dojo - Lv. 3;83c4c8e4b;;;3x3;1.5;1;;;;2;;;;;2;;;;;;;599400000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding4d;Dojo eterno - Liv. 4;Timeless Dojo - Lv. 4;953238cad;;;3x3;1.5;1;;;;2;;;;;5;;;;;;;685800000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding4e;Dojo eterno - Liv. 5;Timeless Dojo - Lv. 5;dff6a6cbd;;;3x3;1.5;1;;;;4;;;1;;5;;;;;;;771120000;;;;247;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding5a;Obelisco antico - Liv. 1;Ancient Obelisk - Lv. 1;c8e5a97b9;;;2x2;1;1;;;;1;;;;;;;;;;;;209520000;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CulturalBuilding5b;Obelisco antico - Liv. 2;Ancient Obelisk - Lv. 2;867737335;;;2x2;1;1;;;;2;;;;;;;;;;;;257040000;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_CulturalBuilding5c;Obelisco antico - Liv. 3;Ancient Obelisk - Lv. 3;878ce0935;;;2x2;1;1;;;;2;;;;;;;;;;;;304560000;;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CulturalBuilding4c;Dojo eterno - Liv. 3;Timeless Dojo - Lv. 3;83c4c8e4b;;;3x3;1.5;1;;;;2;;;;;2;;;;;;;55500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding4d;Dojo eterno - Liv. 4;Timeless Dojo - Lv. 4;953238cad;;;3x3;1.5;1;;;;2;;;;;5;;;;;;;63500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding4e;Dojo eterno - Liv. 5;Timeless Dojo - Lv. 5;dff6a6cbd;;;3x3;1.5;1;;;;4;;;1;;5;;;;;;;71400;;;;247;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding5a;Obelisco antico - Liv. 1;Ancient Obelisk - Lv. 1;c8e5a97b9;;;2x2;1;1;;;;1;;;;;;;;;;;;19400;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CulturalBuilding5b;Obelisco antico - Liv. 2;Ancient Obelisk - Lv. 2;867737335;;;2x2;1;1;;;;2;;;;;;;;;;;;23800;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CulturalBuilding5c;Obelisco antico - Liv. 3;Ancient Obelisk - Lv. 3;878ce0935;;;2x2;1;1;;;;2;;;;;;;;;;;;28200;;;;;;;;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_CulturalBuilding5d;Obelisco antico - Liv. 4;Ancient Obelisk - Lv. 4;08cf6b9bf;;;2x2;1;1;;;;2;;;;;4;;;;;;;32600;;;;;;;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding8a;Statua di giada - Liv. 1;Jade Statue - Lv. 1;4665caee1;;;2x2;1;1;;;;1;;;;;1;;;;;;;266760000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding8b;Statua di giada - Liv. 2;Jade Statue - Lv. 2;eee97aa3f;;;2x2;1;1;;;;2;;;;;2;;;;;;;304560000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding8c;Statua di giada - Liv. 3;Jade Statue - Lv. 3;86e871710;;;2x2;1;1;;;;2;;;;;3;;;;;;5;342360000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding8d;Statua di giada - Liv. 4;Jade Statue - Lv. 4;438e2b13c;;;2x2;1;1;;;;3;;;;;4;;;;;;5;381240000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_CulturalBuilding8e;Statua di giada - Liv. 5;Jade Statue - Lv. 5;29f457a3f;;;2x2;1;1;;;;3;;;;;5;;;;;;10;419040000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_DoyleBonus17;La Tenuta del Lord;The Lord's Manor;c3ea525e7;;;4x4;2;1;8549;;;2;;;;;;;;;;;;1522044000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_CulturalBuilding8a;Statua di giada - Liv. 1;Jade Statue - Lv. 1;4665caee1;;;2x2;1;1;;;;1;;;;;1;;;;;;;24700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding8b;Statua di giada - Liv. 2;Jade Statue - Lv. 2;eee97aa3f;;;2x2;1;1;;;;2;;;;;2;;;;;;;28200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding8c;Statua di giada - Liv. 3;Jade Statue - Lv. 3;86e871710;;;2x2;1;1;;;;2;;;;;3;;;;;;5;31700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding8d;Statua di giada - Liv. 4;Jade Statue - Lv. 4;438e2b13c;;;2x2;1;1;;;;3;;;;;4;;;;;;5;35300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_CulturalBuilding8e;Statua di giada - Liv. 5;Jade Statue - Lv. 5;29f457a3f;;;2x2;1;1;;;;3;;;;;5;;;;;;10;38800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_DoyleBonus17;La Tenuta del Lord;The Lord's Manor;c3ea525e7;;;4x4;2;1;8549;;;2;;;;;;;;;;;;140930;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_EinsteinBonus17;Piazza degli scacchi;Checkmate Square;6dc6cf596;;;3x3;1.5;1;3645;;;;;;;;;;;;;;;47600;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_Expedition16a;Piazza tribale;Tribal Square;86100450d;;;4x3;1.5;1;1890;;;;;;;;5;;;;;;;60820;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_Expedition16b;Guardia del cielo sacra;Sacred Sky Watch;0791ad983;;;3x2;1;1;135;;;1;;;;;;;;;;;;713988000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition16c;Piazza tribale - Liv. 2;Tribal Square - Lv. 2;9977c608d;;;4x3;1.5;1;2214;;;;;;;;10;;;;;;;674028000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_Expedition16d;Guardia del cielo sacra - Liv. 2;Sacred Sky Watch - Lv. 2;ff9dd3a87;;;3x2;1;1;189;;;2;;;;;;;;;;;;951048000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_Expedition16e;Guardia del cielo divina;Divine Sky Watch;fddcaccef;;;3x2;1;1;189;;;5;;;;;;;;;;;;951048000;;;;;;;4;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus18;Foresta d'autunno;Forest of Fall;7545a464d;;;2x2;1;1;900;;;;;;;;;;;;;;;361800000;;;;213;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus18a;Mulino d'autunno - Liv. 1;Mill of Fall - Lv. 1;9928612c7;;;3x3;1.5;1;405;;;;;;;;;;;;;;;685800000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus18b;Mulino d'autunno - Liv. 2;Mill of Fall - Lv. 2;724b1803a;;;3x3;1.5;1;608;;;;;;;;;;;;;;;727920000;;7860;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus18c;Mulino d'autunno - Liv. 3;Mill of Fall - Lv. 3;5ab32534b;;;3x3;1.5;1;1013;;;;;;;;;;;;;;;771120000;;8360;;330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus18d;Mulino d'autunno - Liv. 4;Mill of Fall - Lv. 4;8c875d0a7;;;3x3;1.5;1;1620;;;;;;;;3;;;;;;;814320000;;8850;;412;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus18e;Mulino d'autunno - Liv. 5;Mill of Fall - Lv. 5;8b3ed3b0d;;;3x3;1.5;1;2025;;;1;;;;;3;;;;;;;856440000;;9340;;478;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_Expedition16b;Guardia del cielo sacra;Sacred Sky Watch;0791ad983;;;3x2;1;1;135;;;1;;;;;;;;;;;;66110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_Expedition16c;Piazza tribale - Liv. 2;Tribal Square - Lv. 2;9977c608d;;;4x3;1.5;1;2214;;;;;;;;10;;;;;;;62410;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_Expedition16d;Guardia del cielo sacra - Liv. 2;Sacred Sky Watch - Lv. 2;ff9dd3a87;;;3x2;1;1;189;;;2;;;;;;;;;;;;88060;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_Expedition16e;Guardia del cielo divina;Divine Sky Watch;fddcaccef;;;3x2;1;1;189;;;5;;;;;;;;;;;;88060;;;;;;;4;4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus18;Foresta d'autunno;Forest of Fall;7545a464d;;;2x2;1;1;900;;;;;;;;;;;;;;;33500;;;;213;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus18a;Mulino d'autunno - Liv. 1;Mill of Fall - Lv. 1;9928612c7;;;3x3;1.5;1;405;;;;;;;;;;;;;;;63500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus18b;Mulino d'autunno - Liv. 2;Mill of Fall - Lv. 2;724b1803a;;;3x3;1.5;1;608;;;;;;;;;;;;;;;67400;;7860;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus18c;Mulino d'autunno - Liv. 3;Mill of Fall - Lv. 3;5ab32534b;;;3x3;1.5;1;1013;;;;;;;;;;;;;;;71400;;8360;;330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus18d;Mulino d'autunno - Liv. 4;Mill of Fall - Lv. 4;8c875d0a7;;;3x3;1.5;1;1620;;;;;;;;3;;;;;;;75400;;8850;;412;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus18e;Mulino d'autunno - Liv. 5;Mill of Fall - Lv. 5;8b3ed3b0d;;;3x3;1.5;1;2025;;;1;;;;;3;;;;;;;79300;;9340;;478;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_FallBonus18f;Mulino d'autunno - Liv. 6;Mill of Fall - Lv. 6;59a764169;;;3x3;1.5;1;2430;;;1;;;;;5;;;;;;;83300;;9830;;535;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus18gaqueous;Mulino d'autunno acquoso;Aqueous Mill of Fall;10adca4d7;;;3x3;1.5;1;2835;;;1;;;;;10;;;;;;;942840000;;14740;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus18gcolorful;Mulino d'autunno variopinto;Colorful Mill of Fall;d662f1d01;;;3x3;1.5;1;2835;;;3;;;;;5;;;;;;;1199880000;;10810;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus18gsunflower;Mulino d'autunno con girasoli;Sunflower Mill of Fall;295abaccc;;;3x3;1.5;1;2835;;;2;;;;;7;;;;;;;942840000;;10810;;1811;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus19a;Cottage di Settembre - Liv. 1;September Cottage - Lv. 1;c3d4861fa;;;3x4;1.5;1;10260;;;;;;;;;;;;;;;1257120000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19b;Cottage di Settembre - Liv. 2;September Cottage - Lv. 2;42541c8c4;;;3x4;1.5;1;10800;;;1;;;;;;;;;;;;1313280000;;13110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19c;Cottage di Settembre - Liv. 3;September Cottage - Lv. 3;2c7f30559;;;3x4;1.5;1;11340;;;1;;;;;;;;;;;;1370520000;;13760;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19d;Cottage di Settembre - Liv. 4;September Cottage - Lv. 4;10025a61d;;;3x4;1.5;1;11880;;;2;;;;;;;;;;;;1427760000;;14420;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19e;Cottage di Settembre - Liv. 5;September Cottage - Lv. 5;5d02b6c07;;;3x4;1.5;1;12420;;;2;;;;;;;;;;;;1485000000;;15070;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19f;Cottage di Settembre - Liv. 6;September Cottage - Lv. 6;5f92dea60;;;3x4;1.5;1;12960;;;3;;;;;;;;;;;;1542240000;;15730;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19gApple;Il Cottage Appleton;The Appleton Cottage;308bb1683;;;3x4;1.5;1;13500;;;4;;;;;;;;;;;;1599480000;;16380;;;;;14;;;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19gFlower;Il Cottage Flowerly;The Flowerly Cottage;5c669343b;;;3x4;1.5;1;13500;;;6;;;;;;;;;;;;1599480000;;16380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus19gPond;Il Cottage Pond;The Ponds Cottage;d538c0eae;;;3x4;1.5;1;13500;;;4;;;;;15;;;;;;;1599480000;;16380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus20a;Granaio - Liv. 1;Harvest Barn - Lv. 1;4a22a94c9;;;4x3;1.5;1;5670;8520;;1;;;;;;;;;;;;913680000;;35340;;533;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_FallBonus20b;Granaio - Liv. 2;Harvest Barn - Lv. 2;2a4d39e50;;;4x3;1.5;1;5940;10480;;2;;;;;5;;;;;;;1056240000;;38560;;710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus20c;Granaio - Liv. 3;Harvest Barn - Lv. 3;b775f0a90;;;4x3;1.5;1;6480;12450;;3;;;;;25;;;;;;;1257120000;;42840;;888;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus20d;Granaio - Liv. 4;Harvest Barn - Lv. 4;9500a5381;;;4x3;1.5;1;7020;14420;;12;;;;;35;;;;;;;1427760000;;48200;;1124;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_FallBonus20e;Piantagione di girasoli;Sunflower Patch;3b44d3c6f;;;3x2;1;1;3375;6550;;3;;;;;;;;;;;;542160000;;19810;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_GalileoBonus17;Torre della Meridiana;Sundial Spire;21ed21149;;;2x3;1;1;135;;;1;;;;;;;;;;;;571212000;;;;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus18gaqueous;Mulino d'autunno acquoso;Aqueous Mill of Fall;10adca4d7;;;3x3;1.5;1;2835;;;1;;;;;10;;;;;;;87300;;14740;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus18gcolorful;Mulino d'autunno variopinto;Colorful Mill of Fall;d662f1d01;;;3x3;1.5;1;2835;;;3;;;;;5;;;;;;;111100;;10810;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus18gsunflower;Mulino d'autunno con girasoli;Sunflower Mill of Fall;295abaccc;;;3x3;1.5;1;2835;;;2;;;;;7;;;;;;;87300;;10810;;1811;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus19a;Cottage di Settembre - Liv. 1;September Cottage - Lv. 1;c3d4861fa;;;3x4;1.5;1;10260;;;;;;;;;;;;;;;116400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19b;Cottage di Settembre - Liv. 2;September Cottage - Lv. 2;42541c8c4;;;3x4;1.5;1;10800;;;1;;;;;;;;;;;;121600;;13110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19c;Cottage di Settembre - Liv. 3;September Cottage - Lv. 3;2c7f30559;;;3x4;1.5;1;11340;;;1;;;;;;;;;;;;126900;;13760;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19d;Cottage di Settembre - Liv. 4;September Cottage - Lv. 4;10025a61d;;;3x4;1.5;1;11880;;;2;;;;;;;;;;;;132200;;14420;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19e;Cottage di Settembre - Liv. 5;September Cottage - Lv. 5;5d02b6c07;;;3x4;1.5;1;12420;;;2;;;;;;;;;;;;137500;;15070;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19f;Cottage di Settembre - Liv. 6;September Cottage - Lv. 6;5f92dea60;;;3x4;1.5;1;12960;;;3;;;;;;;;;;;;142800;;15730;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19gApple;Il Cottage Appleton;The Appleton Cottage;308bb1683;;;3x4;1.5;1;13500;;;4;;;;;;;;;;;;148100;;16380;;;;;14;;;19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19gFlower;Il Cottage Flowerly;The Flowerly Cottage;5c669343b;;;3x4;1.5;1;13500;;;6;;;;;;;;;;;;148100;;16380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus19gPond;Il Cottage Pond;The Ponds Cottage;d538c0eae;;;3x4;1.5;1;13500;;;4;;;;;15;;;;;;;148100;;16380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus20a;Granaio - Liv. 1;Harvest Barn - Lv. 1;4a22a94c9;;;4x3;1.5;1;5670;8520;;1;;;;;;;;;;;;84600;;35340;;533;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_FallBonus20b;Granaio - Liv. 2;Harvest Barn - Lv. 2;2a4d39e50;;;4x3;1.5;1;5940;10480;;2;;;;;5;;;;;;;97800;;38560;;710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus20c;Granaio - Liv. 3;Harvest Barn - Lv. 3;b775f0a90;;;4x3;1.5;1;6480;12450;;3;;;;;25;;;;;;;116400;;42840;;888;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus20d;Granaio - Liv. 4;Harvest Barn - Lv. 4;9500a5381;;;4x3;1.5;1;7020;14420;;12;;;;;35;;;;;;;132200;;48200;;1124;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_FallBonus20e;Piantagione di girasoli;Sunflower Patch;3b44d3c6f;;;3x2;1;1;3375;6550;;3;;;;;;;;;;;;50200;;19810;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_GalileoBonus17;Torre della Meridiana;Sundial Spire;21ed21149;;;2x3;1;1;135;;;1;;;;;;;;;;;;52890;;;;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_HalloweenBonus18;Soglia oscura;Dark Doorway;13b4df9f4;;;3x3;1.5;1;2957;;;3;;;;;;;;;;;;67190;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus20a;Casa degli orrori - Liv. 1;House of Horrors - Lv. 1;842ecd50d;;;3x4;1.5;1;5454;-1310;;;;;;;;;;;;;;1028160000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus20b;Casa degli orrori - Liv. 2;House of Horrors - Lv. 2;8ff2789be;;;3x4;1.5;1;5562;-1310;;;;;;;;;;;;;;1142640000;;13760;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus20c;Casa degli orrori - Liv. 3;House of Horrors - Lv. 3;da8d2987b;;;3x4;1.5;1;5670;-1310;;;;;;;1;;;;;;;1257120000;;15070;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HalloweenBonus20d;Casa degli orrori - Liv. 4;House of Horrors - Lv. 4;e697f1a65;;;3x4;1.5;1;5832;-1310;;1;;;;;2;;;;;;;1370520000;;16380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HalloweenBonus20e;Casa degli orrori - Liv. 5;House of Horrors - Lv. 5;dde153c66;;;3x4;1.5;1;6048;-1310;;2;;;;;3;;;;;;;1485000000;;17690;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HalloweenBonus20f;Casa degli orrori - Liv. 6;House of Horrors - Lv. 6;9e89e5ee5;;;3x4;1.5;1;6264;-1310;;3;;;;;4;;;;;;;1599480000;;19000;;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus20gClown;Casa del clown;House of the Clown;ddccc0fb1;;;3x4;1.5;1;6480;-1310;;4;;;;;15;;;;;;;1713960000;;22280;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus20gDemon;Casa del demone;House of the Demon;a17019f7f;;;3x4;1.5;1;6480;-1310;;6;;;;;5;;;;;;;1713960000;;20970;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus20gWolf;Casa del lupo;House of the Wolf;9429b79bc;;;3x4;1.5;1;6480;-1310;;4;;;;;5;;;;;;;1713960000;;20310;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonus4;Casa Stregata;Haunted House;903b2df2f;;;2x2;1;1;;-2180;;;;;;;;;;;;;;1047168000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_HalloweenBonusSet21a;Scivolo a spirale - Liv. 1;Helter Skelter - Lv. 1;6d524deb0;;;3x3;1.5;1;;-980;;3;;;;;5;;;;;;;642600000;;;;267;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HalloweenBonusSet21b;Scivolo a spirale - Liv. 2;Helter Skelter - Lv. 2;d7b963667;;;3x3;1.5;1;;-980;;6;;;;;10;;;;;;;771120000;;;;488;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HalloweenBonusSet21c;Città dei clown - Liv. 1;Clown Town - Lv. 1;93ff784b8;;;5x2;1;1;;-2180;;1;;;;;5;;;;;;;808920000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HalloweenBonusSet21d;Città dei clown - Liv. 2;Clown Town - Lv. 2;9df7a165f;;;5x2;1;1;;-2180;;2;;;;;15;;;;;;;903960000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_HeroBonus22pass;Fanciulle dei fiori;Flower Maidens;1aa573e7a;;;2x2;1;1;6300;4370;;3;;;;;;;;;;;;285120000;;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_NapoleonBonus18;Portale reale di marmo;Royal Marble Gateway;b629aeb10;;;3x2;1;1;2970;2970;;;;;;;;;;;;;;967680000;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_ParksBonus17;Cascata Reale;Royal Cascade;4f519bd8b;;;3x4;1.5;1;2700;2700;;;;;;;7;;;;;;;970920000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_PatrickBonusSet20a;Porta della luna - Liv. 1;Moon Gate - Lv. 1;ed59af839;;;4x3;1.5;1;10800;;;3;;;;;5;;;;;;;628560000;;;;355;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_PatrickBonusSet20b;Porta della luna - Liv. 2;Moon Gate - Lv. 2;702d248e2;;;4x3;1.5;1;13500;;;8;;;;;10;;;;;;;856440000;;;;651;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_PatrickBonusSet20c;Anelli fatati - Liv. 1;Faery Rings - Lv. 1;bcb62bba4;;;3x3;1.5;1;4455;;;2;;;;;5;;;;;;;856440000;;30520;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_PatrickBonusSet20d;Anelli fatati - Liv. 2;Faery Rings - Lv. 2;bda661f20;;;3x3;1.5;1;6075;;;4;;;;;10;;;;;;;1071360000;;38560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_RoyalBonusSet17a;Statua del Re;King Statue;810d82f0e;;;2x2;1;1;;;;1;;;;;;;;;;;;418824000;;;;140;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_RoyalBonusSet17b;Statua della Regina;Queen Statue;cfe049bdd;;;2x2;1;1;;;;1;;;;;5;;;;;;;418824000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SacajaweaBonus18;Serraglio;Menagerie;29b292ddc;;;4x5;2;1;9900;;;;;;;;25;;;;;;;1612224000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_ShakespeareBonus18;Teatro all’aperto;Open Air Theater;;;;4x4;2;1;7200;;;;;;;;;;;;;;;1142316000;;;;439;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19a;Giardino dell’altare - Lv. 1;Altar Garden - Lv. 1;e7f3dd0b5;;;3x2;1;1;2970;4370;;;;;;;;;;;;;;399600000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19b;Giardino dell’altare - Lv. 2;Altar Garden - Lv. 2;ee614578e;;;3x2;1;1;3240;4810;;;;;;;;;;;;;;428760000;;5240;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19c;Giardino dell’altare - Lv. 3;Altar Garden - Lv. 3;5f0ffd378;;;3x2;1;1;3510;5240;;;;;;;;;;;;;;456840000;;5570;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19d;Giardino dell’altare - Lv. 4;Altar Garden - Lv. 4;08d6c8d17;;;3x2;1;1;3780;5680;;1;;;;;;;;;;;;486000000;;6060;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19eAphrodite;Altare di Afrodite;Altar of Aphrodite;8321bc627;;;3x2;1;1;4050;6120;;1;;;;;;;;;;;;514080000;;6550;;1344;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19eArtemis;Altare di Artemide;Altar of Artemis;9c6b53a5c;;;3x2;1;1;4050;6120;;1;;;;;;;;;;;;514080000;;6550;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19eAthena;Altare di Atena;Altar of Athena;506c9a9b2;;;3x2;1;1;4050;6120;;3;;;;;;;;;;;;514080000;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19eDemeter;Altare di Demetra;Altar of Demeter;a8c387ef4;;;3x2;1;1;4050;6120;;1;;;;;;;;;;;;1142640000;0.1;13110;0.1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus19eHera;Altare di Era;Altar of Hera;e32527e81;;;3x2;1;1;4050;6120;;1;;;;;12;;;;;;;514080000;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SoccerBonus19eHestia;Altare di Estia;Altar of Hestia;e1c7a4bf6;;;3x2;1;1;4050;6120;1;1;;;;;;;;;;;;514080000;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21a;Abbazia di Athlon - Liv. 1;Athlon Abbey - Lv. 1;655496c80;;;5x4;2;1;9900;14200;;;;;;;;;;;;;;1427760000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21b;Abbazia di Athlon - Liv. 2;Athlon Abbey - Lv. 2;b3dece57c;;;5x4;2;1;10350;15180;;;;;;;;;;;;;;1666440000;;15290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21c;Abbazia di Athlon - Liv. 3;Athlon Abbey - Lv. 3;abfd9100b;;;5x4;2;1;10800;15840;;;;;;;;;;;;;;1856520000;;21840;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21d;Abbazia di Athlon - Liv. 4;Athlon Abbey - Lv. 4;8131764fa;;;5x4;2;1;11250;16820;;2;;;;;;;;;;;;1999080000;;24030;;1280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21e;Abbazia di Athlon - Liv. 5;Athlon Abbey - Lv. 5;58f7a63b6;;;5x4;2;1;11700;18240;;3;;;;;;;;;;;;2236680000;;26210;;1463;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21f;Abbazia di Athlon - Liv. 6;Athlon Abbey - Lv. 6;37afc5d10;;;5x4;2;1;12150;18790;;4;;;;;5;;;;;;;2427840000;;28400;;1646;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SoccerBonus21g;Abbazia di Athlon - Liv. 7;Athlon Abbey - Lv. 7;a9c2dc6a1;;;5x4;2;1;13050;20310;;5;;;;;10;;;;;;;2570400000;;30580;;1829;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SoccerBonus21h;Abbazia di Athlon - Liv. 8;Athlon Abbey - Lv. 8;1d562c212;;;5x4;2;1;14220;21840;;6;;;;;15;;;;;;;2760480000;;32760;;2012;;;;;;18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21i;Abbazia di Athlon - Liv. 9;Athlon Abbey - Lv. 9;7b7c7f0b1;;;5x4;2;1;14940;23150;;8;;;;;20;;;;;;;2951640000;;34950;;2286;;;;;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21j;Abbazia di Athlon - Liv. 10;Athlon Abbey - Lv. 10;2b376f539;;;5x4;2;1;16200;24030;;11;;;;;25;;;;;;;3236760000;;39320;;2743;;;;;30;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SoccerBonus21k;Athlon Abbey azzurra;Azure Athlon Abbey;379166f5a;;;5x4;2;1;17460;24900;;22;;;;;50;;;;;;;3521880000;;43690;;3200;;;29;;40;42;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus17;Alloggi degli Atleti;Athlete Living Quarters;8894198c7;;;3x4;1.5;1;2160;;;;;;;;5;;;;;;;1028160000;;;;;;;;;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus17a;Pilastro degli Eroi - Lv. 1;Pillar of Heroes - Lv. 1;1bb6e7941;;;3x3;1.5;1;;;;;;;;;;;;;;;;814320000;;30500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus17b;Pilastro degli Eroi - Lv. 2;Pillar of Heroes - Lv. 2;068e2f882;;;3x3;1.5;1;;;;1;;;;;;;;;;;;856440000;;32100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus17c;Pilastro degli Eroi - Lv. 3;Pillar of Heroes - Lv. 3;7be230e48;;;3x3;1.5;1;;;;1;;;;;;;;;;;;899640000;;33700;;165;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus17d;Pilastro degli Eroi - Lv. 4;Pillar of Heroes - Lv. 4;90803581b;;;3x3;1.5;1;;;;1;;;;;3;;;;;;;942840000;;35300;;206;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus17e;Pilastro degli Eroi - Lv. 5;Pillar of Heroes - Lv. 5;c52a8edc6;;;3x3;1.5;1;;;;2;;;;;3;;;;;;;984960000;;37000;;247;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus17f;Pilastro degli Eroi - Lv. 6;Pillar of Heroes - Lv. 6;aa1e6a08a;;;3x3;1.5;1;;;;2;;;;;6;;;;;;;1028160000;;38600;;288;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus17g;Pilastro degli Eroi - Lv. 7;Pillar of Heroes - Lv. 7;ccebe6701;;;3x3;1.5;1;;;;3;;;;;6;;;;;;;1071360000;;40200;;330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus18;Tenuta degli sfidanti;Contestants' Estate;95e9485f9;;;3x2;1;1;1080;;;;;;;;;;;;;;;514080000;;;;165;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus18a;Tholos degli Idoli - Liv. 1;Tholos of Idols - Lv. 1;1d2e397a8;;;4x4;2;1;;13980;;;;;;;;;;;;;;1370520000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus18b;Tholos degli Idoli - Liv. 2;Tholos of Idols - Lv. 2;10971afb1;;;4x4;2;1;;14850;;;;;;;;;;;;;;1447200000;;48600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus18c;Tholos degli Idoli - Liv. 3;Tholos of Idols - Lv. 3;cb9119c3c;;;4x4;2;1;;15730;;;;;;;;;;;;;;1522800000;;51400;;147;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus18d;Tholos degli Idoli - Liv. 4;Tholos of Idols - Lv. 4;1011a01c8;;;4x4;2;1;;16600;;1;;;;;;;;;;;;1599480000;;54300;;293;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus18e;Tholos degli Idoli - Liv. 5;Tholos of Idols - Lv. 5;4620687ec;;;4x4;2;1;;17470;;1;;;;;5;;;;;;;1675080000;;57100;;439;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus18f;Tholos degli Idoli - Liv. 6;Tholos of Idols - Lv. 6;498d98bed;;;4x4;2;1;;18350;;2;;;;;5;;;;;;;1751760000;;60000;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus18g;Tholos degli Idoli - Liv. 7;Tholos of Idols - Lv. 7;50c84994e;;;4x4;2;1;;19220;;2;;;;;10;;;;;;;1827360000;;62800;;732;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus18h;Tholos degli Idoli - Liv. 8;Tholos of Idols - Lv. 8;42e2fd903;;;4x4;2;1;;20100;;3;;;;;10;;;;;;;1904040000;;65700;;878;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus18i;Tholos degli Idoli - Liv. 9;Tholos of Idols - Lv. 9;a6d3edfd9;;;4x4;2;1;;20970;;3;;;;;15;;;;;;;1979640000;;68500;;1024;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus18j;Tholos degli Idoli - Liv. 10;Tholos of Idols - Lv. 10;f4df12919;;;4x4;2;1;;21840;;4;;;;;15;;;;;;;2056320000;;71400;;1171;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus19a;Colosso - Lv. 1;Colossus - Lv. 1;509002696;;;4x4;2;1;1440;;;;;;;;;;;;;;;1180440000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19b;Colosso - Lv. 2;Colossus - Lv. 2;7f42d44ec;;;4x4;2;1;2160;;;;;;;;;;;;;;;1218240000;;;;789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19c;Colosso - Lv. 3;Colossus - Lv. 3;1e0312afb;;;4x4;2;1;2880;;;1;;;;;;;;;;;;1257120000;;;;789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19d;Colosso - Lv. 4;Colossus - Lv. 4;582715532;;;4x4;2;1;3600;;;1;;;;;;;;;;;;1294920000;;;;789;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19e;Colosso - Lv. 5;Colossus - Lv. 5;f5d0479ac;;;4x4;2;1;4320;;;2;;;;;;;;;;;;1332720000;;;;789;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19f;Colosso - Lv. 6;Colossus - Lv. 6;9f0f1313a;;;4x4;2;1;5040;;;2;;;;;;;;;;;;1370520000;;;;1578;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19g;Colosso - Lv. 7;Colossus - Lv. 7;7cf6071e4;;;4x4;2;1;5760;;;3;;;;;;;;;;;;1409400000;;;;1578;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19h;Colosso - Lv. 8;Colossus - Lv. 8;4aca4b1a2;;;4x4;2;1;6480;;;4;;;;;;;;;;;;1447200000;;;;1578;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19i;Colosso - Lv. 9;Colossus - Lv. 9;b0fda1253;;;4x4;2;1;7200;;;4;;;;;;;;;;;;1485000000;;;;1578;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus19j;Colosso - Lv. 10;Colossus - Lv. 10;7df68d45c;;;4x4;2;1;7920;;;6;;;;;;;;;;;;1522800000;;;;1578;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus20a;Tesoreria olimpica - Liv. 1;Olympic Treasury - Lv. 1;7ae1efb7a;;;4x5;2;1;9000;13320;;;;;;;;;;;;;;1190160000;;13110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SportBonus20b;Tesoreria olimpica - Liv. 2;Olympic Treasury - Lv. 2;11eed28e0;;;4x5;2;1;9900;14200;;;;;;;5;;;;;;;1427760000;;15290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20c;Tesoreria olimpica - Liv. 3;Olympic Treasury - Lv. 3;e6766fbeb;;;4x5;2;1;10350;15180;;1;;;;;5;;;;;;;1666440000;;17470;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20d;Tesoreria olimpica - Liv. 4;Olympic Treasury - Lv. 4;39008214b;;;4x5;2;1;10800;15840;;2;;;;;10;;;;;;;1856520000;;19660;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20e;Tesoreria olimpica - Liv. 5;Olympic Treasury - Lv. 5;5e15ceebb;;;4x5;2;1;11250;16820;;3;;;;;10;;;;;;;1999080000;;21840;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20f;Tesoreria olimpica - Liv. 6;Olympic Treasury - Lv. 6;fef1b1c32;;;4x5;2;1;11700;18240;;4;;;;;15;;;;;;;2236680000;;24030;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20g;Tesoreria olimpica - Liv. 7;Olympic Treasury - Lv. 7;a5d7b0a1d;;;4x5;2;1;12150;18790;;5;;;;;15;;;;;;;2427840000;;26210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20h;Tesoreria olimpica - Liv. 8;Olympic Treasury - Lv. 8;324f3d2b8;;;4x5;2;1;13050;20310;;6;;;;;20;;;;;;;2570400000;;28400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20i;Tesoreria olimpica - Liv. 9;Olympic Treasury - Lv. 9;43b1f1e44;;;4x5;2;1;13950;21840;;7;;;;;20;;;;;;;2760480000;;30580;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SportBonus20j;Tesoreria olimpica - Liv. 10;Olympic Treasury - Lv. 10;1571772cf;;;4x5;2;1;14850;23370;;8;;;;;25;;;;;;;2999160000;;32760;;;;;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus20a;Casa degli orrori - Liv. 1;House of Horrors - Lv. 1;842ecd50d;;;3x4;1.5;1;5454;-1310;;;;;;;;;;;;;;95200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus20b;Casa degli orrori - Liv. 2;House of Horrors - Lv. 2;8ff2789be;;;3x4;1.5;1;5562;-1310;;;;;;;;;;;;;;105800;;13760;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus20c;Casa degli orrori - Liv. 3;House of Horrors - Lv. 3;da8d2987b;;;3x4;1.5;1;5670;-1310;;;;;;;1;;;;;;;116400;;15070;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HalloweenBonus20d;Casa degli orrori - Liv. 4;House of Horrors - Lv. 4;e697f1a65;;;3x4;1.5;1;5832;-1310;;1;;;;;2;;;;;;;126900;;16380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HalloweenBonus20e;Casa degli orrori - Liv. 5;House of Horrors - Lv. 5;dde153c66;;;3x4;1.5;1;6048;-1310;;2;;;;;3;;;;;;;137500;;17690;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HalloweenBonus20f;Casa degli orrori - Liv. 6;House of Horrors - Lv. 6;9e89e5ee5;;;3x4;1.5;1;6264;-1310;;3;;;;;4;;;;;;;148100;;19000;;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus20gClown;Casa del clown;House of the Clown;ddccc0fb1;;;3x4;1.5;1;6480;-1310;;4;;;;;15;;;;;;;158700;;22280;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus20gDemon;Casa del demone;House of the Demon;a17019f7f;;;3x4;1.5;1;6480;-1310;;6;;;;;5;;;;;;;158700;;20970;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus20gWolf;Casa del lupo;House of the Wolf;9429b79bc;;;3x4;1.5;1;6480;-1310;;4;;;;;5;;;;;;;158700;;20310;;;;;16;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonus4;Casa Stregata;Haunted House;903b2df2f;;;2x2;1;1;;-2180;;;;;;;;;;;;;;96960;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_HalloweenBonusSet21a;Scivolo a spirale - Liv. 1;Helter Skelter - Lv. 1;6d524deb0;;;3x3;1.5;1;;-980;;3;;;;;5;;;;;;;59500;;;;267;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HalloweenBonusSet21b;Scivolo a spirale - Liv. 2;Helter Skelter - Lv. 2;d7b963667;;;3x3;1.5;1;;-980;;6;;;;;10;;;;;;;71400;;;;488;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HalloweenBonusSet21c;Città dei clown - Liv. 1;Clown Town - Lv. 1;93ff784b8;;;5x2;1;1;;-2180;;1;;;;;5;;;;;;;74900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HalloweenBonusSet21d;Città dei clown - Liv. 2;Clown Town - Lv. 2;9df7a165f;;;5x2;1;1;;-2180;;2;;;;;15;;;;;;;83700;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_HeroBonus22pass;Fanciulle dei fiori;Flower Maidens;1aa573e7a;;;2x2;1;1;6300;4370;;3;;;;;;;;;;;;26400;;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_NapoleonBonus18;Portale reale di marmo;Royal Marble Gateway;b629aeb10;;;3x2;1;1;2970;2970;;;;;;;;;;;;;;67200;;;;;;;9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_ParksBonus17;Cascata Reale;Royal Cascade;4f519bd8b;;;3x4;1.5;1;2700;2700;;;;;;;7;;;;;;;89900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_PatrickBonusSet20a;Porta della luna - Liv. 1;Moon Gate - Lv. 1;ed59af839;;;4x3;1.5;1;10800;;;3;;;;;5;;;;;;;58200;;;;355;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_PatrickBonusSet20b;Porta della luna - Liv. 2;Moon Gate - Lv. 2;702d248e2;;;4x3;1.5;1;13500;;;8;;;;;10;;;;;;;79300;;;;651;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_PatrickBonusSet20c;Anelli fatati - Liv. 1;Faery Rings - Lv. 1;bcb62bba4;;;3x3;1.5;1;4455;;;2;;;;;5;;;;;;;79300;;30520;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_PatrickBonusSet20d;Anelli fatati - Liv. 2;Faery Rings - Lv. 2;bda661f20;;;3x3;1.5;1;6075;;;4;;;;;10;;;;;;;99200;;38560;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_RoyalBonusSet17a;Statua del Re;King Statue;810d82f0e;;;2x2;1;1;;;;1;;;;;;;;;;;;38780;;;;140;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_RoyalBonusSet17b;Statua della Regina;Queen Statue;cfe049bdd;;;2x2;1;1;;;;1;;;;;5;;;;;;;38780;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SacajaweaBonus18;Serraglio;Menagerie;29b292ddc;;;4x5;2;1;9900;;;;;;;;25;;;;;;;149280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_ShakespeareBonus18;Teatro all’aperto;Open Air Theater;;;;4x4;2;1;7200;;;;;;;;;;;;;;;105770;;;;439;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19a;Giardino dell’altare - Lv. 1;Altar Garden - Lv. 1;e7f3dd0b5;;;3x2;1;1;2970;4370;;;;;;;;;;;;;;37000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19b;Giardino dell’altare - Lv. 2;Altar Garden - Lv. 2;ee614578e;;;3x2;1;1;3240;4810;;;;;;;;;;;;;;39700;;5240;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19c;Giardino dell’altare - Lv. 3;Altar Garden - Lv. 3;5f0ffd378;;;3x2;1;1;3510;5240;;;;;;;;;;;;;;42300;;5570;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19d;Giardino dell’altare - Lv. 4;Altar Garden - Lv. 4;08d6c8d17;;;3x2;1;1;3780;5680;;1;;;;;;;;;;;;45000;;6060;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19eAphrodite;Altare di Afrodite;Altar of Aphrodite;8321bc627;;;3x2;1;1;4050;6120;;1;;;;;;;;;;;;47600;;6550;;1344;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19eArtemis;Altare di Artemide;Altar of Artemis;9c6b53a5c;;;3x2;1;1;4050;6120;;1;;;;;;;;;;;;47600;;6550;;;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19eAthena;Altare di Atena;Altar of Athena;506c9a9b2;;;3x2;1;1;4050;6120;;3;;;;;;;;;;;;47600;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19eDemeter;Altare di Demetra;Altar of Demeter;a8c387ef4;;;3x2;1;1;4050;6120;;1;;;;;;;;;;;;105800;0.1;13110;0.1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus19eHera;Altare di Era;Altar of Hera;e32527e81;;;3x2;1;1;4050;6120;;1;;;;;12;;;;;;;47600;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SoccerBonus19eHestia;Altare di Estia;Altar of Hestia;e1c7a4bf6;;;3x2;1;1;4050;6120;1;1;;;;;;;;;;;;47600;;6550;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21a;Abbazia di Athlon - Liv. 1;Athlon Abbey - Lv. 1;655496c80;;;5x4;2;1;9900;14200;;;;;;;;;;;;;;132200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21b;Abbazia di Athlon - Liv. 2;Athlon Abbey - Lv. 2;b3dece57c;;;5x4;2;1;10350;15180;;;;;;;;;;;;;;154300;;15290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21c;Abbazia di Athlon - Liv. 3;Athlon Abbey - Lv. 3;abfd9100b;;;5x4;2;1;10800;15840;;;;;;;;;;;;;;171900;;21840;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21d;Abbazia di Athlon - Liv. 4;Athlon Abbey - Lv. 4;8131764fa;;;5x4;2;1;11250;16820;;2;;;;;;;;;;;;185100;;24030;;1280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21e;Abbazia di Athlon - Liv. 5;Athlon Abbey - Lv. 5;58f7a63b6;;;5x4;2;1;11700;18240;;3;;;;;;;;;;;;207100;;26210;;1463;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21f;Abbazia di Athlon - Liv. 6;Athlon Abbey - Lv. 6;37afc5d10;;;5x4;2;1;12150;18790;;4;;;;;5;;;;;;;224800;;28400;;1646;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SoccerBonus21g;Abbazia di Athlon - Liv. 7;Athlon Abbey - Lv. 7;a9c2dc6a1;;;5x4;2;1;13050;20310;;5;;;;;10;;;;;;;238000;;30580;;1829;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SoccerBonus21h;Abbazia di Athlon - Liv. 8;Athlon Abbey - Lv. 8;1d562c212;;;5x4;2;1;14220;21840;;6;;;;;15;;;;;;;255600;;32760;;2012;;;;;;18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21i;Abbazia di Athlon - Liv. 9;Athlon Abbey - Lv. 9;7b7c7f0b1;;;5x4;2;1;14940;23150;;8;;;;;20;;;;;;;273300;;34950;;2286;;;;;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21j;Abbazia di Athlon - Liv. 10;Athlon Abbey - Lv. 10;2b376f539;;;5x4;2;1;16200;24030;;11;;;;;25;;;;;;;299700;;39320;;2743;;;;;30;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SoccerBonus21k;Athlon Abbey azzurra;Azure Athlon Abbey;379166f5a;;;5x4;2;1;17460;24900;;22;;;;;50;;;;;;;326100;;43690;;3200;;;29;;40;42;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus17;Alloggi degli Atleti;Athlete Living Quarters;8894198c7;;;3x4;1.5;1;2160;;;;;;;;5;;;;;;;95200;;;;;;;;;;7;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus17a;Pilastro degli Eroi - Lv. 1;Pillar of Heroes - Lv. 1;1bb6e7941;;;3x3;1.5;1;;;;;;;;;;;;;;;;75400;;30500;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus17b;Pilastro degli Eroi - Lv. 2;Pillar of Heroes - Lv. 2;068e2f882;;;3x3;1.5;1;;;;1;;;;;;;;;;;;79300;;32100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus17c;Pilastro degli Eroi - Lv. 3;Pillar of Heroes - Lv. 3;7be230e48;;;3x3;1.5;1;;;;1;;;;;;;;;;;;83300;;33700;;165;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus17d;Pilastro degli Eroi - Lv. 4;Pillar of Heroes - Lv. 4;90803581b;;;3x3;1.5;1;;;;1;;;;;3;;;;;;;87300;;35300;;206;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus17e;Pilastro degli Eroi - Lv. 5;Pillar of Heroes - Lv. 5;c52a8edc6;;;3x3;1.5;1;;;;2;;;;;3;;;;;;;91200;;37000;;247;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus17f;Pilastro degli Eroi - Lv. 6;Pillar of Heroes - Lv. 6;aa1e6a08a;;;3x3;1.5;1;;;;2;;;;;6;;;;;;;95200;;38600;;288;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus17g;Pilastro degli Eroi - Lv. 7;Pillar of Heroes - Lv. 7;ccebe6701;;;3x3;1.5;1;;;;3;;;;;6;;;;;;;99200;;40200;;330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus18;Tenuta degli sfidanti;Contestants' Estate;95e9485f9;;;3x2;1;1;1080;;;;;;;;;;;;;;;47600;;;;165;;;3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus18a;Tholos degli Idoli - Liv. 1;Tholos of Idols - Lv. 1;1d2e397a8;;;4x4;2;1;;13980;;;;;;;;;;;;;;126900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus18b;Tholos degli Idoli - Liv. 2;Tholos of Idols - Lv. 2;10971afb1;;;4x4;2;1;;14850;;;;;;;;;;;;;;134000;;48600;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus18c;Tholos degli Idoli - Liv. 3;Tholos of Idols - Lv. 3;cb9119c3c;;;4x4;2;1;;15730;;;;;;;;;;;;;;141000;;51400;;147;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus18d;Tholos degli Idoli - Liv. 4;Tholos of Idols - Lv. 4;1011a01c8;;;4x4;2;1;;16600;;1;;;;;;;;;;;;148100;;54300;;293;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus18e;Tholos degli Idoli - Liv. 5;Tholos of Idols - Lv. 5;4620687ec;;;4x4;2;1;;17470;;1;;;;;5;;;;;;;155100;;57100;;439;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus18f;Tholos degli Idoli - Liv. 6;Tholos of Idols - Lv. 6;498d98bed;;;4x4;2;1;;18350;;2;;;;;5;;;;;;;162200;;60000;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus18g;Tholos degli Idoli - Liv. 7;Tholos of Idols - Lv. 7;50c84994e;;;4x4;2;1;;19220;;2;;;;;10;;;;;;;169200;;62800;;732;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus18h;Tholos degli Idoli - Liv. 8;Tholos of Idols - Lv. 8;42e2fd903;;;4x4;2;1;;20100;;3;;;;;10;;;;;;;176300;;65700;;878;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus18i;Tholos degli Idoli - Liv. 9;Tholos of Idols - Lv. 9;a6d3edfd9;;;4x4;2;1;;20970;;3;;;;;15;;;;;;;183300;;68500;;1024;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus18j;Tholos degli Idoli - Liv. 10;Tholos of Idols - Lv. 10;f4df12919;;;4x4;2;1;;21840;;4;;;;;15;;;;;;;190400;;71400;;1171;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus19a;Colosso - Lv. 1;Colossus - Lv. 1;509002696;;;4x4;2;1;1440;;;;;;;;;;;;;;;109300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19b;Colosso - Lv. 2;Colossus - Lv. 2;7f42d44ec;;;4x4;2;1;2160;;;;;;;;;;;;;;;112800;;;;789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19c;Colosso - Lv. 3;Colossus - Lv. 3;1e0312afb;;;4x4;2;1;2880;;;1;;;;;;;;;;;;116400;;;;789;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19d;Colosso - Lv. 4;Colossus - Lv. 4;582715532;;;4x4;2;1;3600;;;1;;;;;;;;;;;;119900;;;;789;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19e;Colosso - Lv. 5;Colossus - Lv. 5;f5d0479ac;;;4x4;2;1;4320;;;2;;;;;;;;;;;;123400;;;;789;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19f;Colosso - Lv. 6;Colossus - Lv. 6;9f0f1313a;;;4x4;2;1;5040;;;2;;;;;;;;;;;;126900;;;;1578;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19g;Colosso - Lv. 7;Colossus - Lv. 7;7cf6071e4;;;4x4;2;1;5760;;;3;;;;;;;;;;;;130500;;;;1578;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19h;Colosso - Lv. 8;Colossus - Lv. 8;4aca4b1a2;;;4x4;2;1;6480;;;4;;;;;;;;;;;;134000;;;;1578;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19i;Colosso - Lv. 9;Colossus - Lv. 9;b0fda1253;;;4x4;2;1;7200;;;4;;;;;;;;;;;;137500;;;;1578;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus19j;Colosso - Lv. 10;Colossus - Lv. 10;7df68d45c;;;4x4;2;1;7920;;;6;;;;;;;;;;;;141000;;;;1578;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus20a;Tesoreria olimpica - Liv. 1;Olympic Treasury - Lv. 1;7ae1efb7a;;;4x5;2;1;9000;13320;;;;;;;;;;;;;;110200;;13110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SportBonus20b;Tesoreria olimpica - Liv. 2;Olympic Treasury - Lv. 2;11eed28e0;;;4x5;2;1;9900;14200;;;;;;;5;;;;;;;132200;;15290;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20c;Tesoreria olimpica - Liv. 3;Olympic Treasury - Lv. 3;e6766fbeb;;;4x5;2;1;10350;15180;;1;;;;;5;;;;;;;154300;;17470;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20d;Tesoreria olimpica - Liv. 4;Olympic Treasury - Lv. 4;39008214b;;;4x5;2;1;10800;15840;;2;;;;;10;;;;;;;171900;;19660;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20e;Tesoreria olimpica - Liv. 5;Olympic Treasury - Lv. 5;5e15ceebb;;;4x5;2;1;11250;16820;;3;;;;;10;;;;;;;185100;;21840;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20f;Tesoreria olimpica - Liv. 6;Olympic Treasury - Lv. 6;fef1b1c32;;;4x5;2;1;11700;18240;;4;;;;;15;;;;;;;207100;;24030;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20g;Tesoreria olimpica - Liv. 7;Olympic Treasury - Lv. 7;a5d7b0a1d;;;4x5;2;1;12150;18790;;5;;;;;15;;;;;;;224800;;26210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20h;Tesoreria olimpica - Liv. 8;Olympic Treasury - Lv. 8;324f3d2b8;;;4x5;2;1;13050;20310;;6;;;;;20;;;;;;;238000;;28400;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20i;Tesoreria olimpica - Liv. 9;Olympic Treasury - Lv. 9;43b1f1e44;;;4x5;2;1;13950;21840;;7;;;;;20;;;;;;;255600;;30580;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SportBonus20j;Tesoreria olimpica - Liv. 10;Olympic Treasury - Lv. 10;1571772cf;;;4x5;2;1;14850;23370;;8;;;;;25;;;;;;;277700;;32760;;;;;;30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_SportBonusSet18;Patio Giardino classico;Classical Garden Patio;c11cbe950;;;2x2;1;1;;;;;;;;;3;;;;;;;35260;;15710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus17a;Pagoda - Liv. 1;Pagoda - Lv. 1;2fddb8eb8;;;4x4;2;1;3973;3973;;;;;;;;;;;;;;1193184000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus17b;Pagoda - Liv. 2;Pagoda - Lv. 2;688810bf8;;;4x4;2;1;5040;5040;;;;;;;;;;;;;;1294704000;;13110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus17c;Pagoda - Liv. 3;Pagoda - Lv. 3;4a7659166;;;4x4;2;1;5760;5760;;;;;;;;;;;;;;1370844000;;13980;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus17d;Pagoda - Liv. 4;Pagoda - Lv. 4;ca7ab3412;;;4x4;2;1;6480;6480;;;;;;;5;;;;;;;1446984000;;14850;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus17a;Pagoda - Liv. 1;Pagoda - Lv. 1;2fddb8eb8;;;4x4;2;1;3973;3973;;;;;;;;;;;;;;110480;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus17b;Pagoda - Liv. 2;Pagoda - Lv. 2;688810bf8;;;4x4;2;1;5040;5040;;;;;;;;;;;;;;119880;;13110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus17c;Pagoda - Liv. 3;Pagoda - Lv. 3;4a7659166;;;4x4;2;1;5760;5760;;;;;;;;;;;;;;126930;;13980;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus17d;Pagoda - Liv. 4;Pagoda - Lv. 4;ca7ab3412;;;4x4;2;1;6480;6480;;;;;;;5;;;;;;;133980;;14850;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_SpringBonus17e;Pagoda - Liv. 5;Pagoda - Lv. 5;a4b09736c;;;4x4;2;1;7200;7200;;1;;;;;5;;;;;;;141030;;15730;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus17f;Pagoda - Liv. 6;Pagoda - Lv. 6;8d17d14ad;;;4x4;2;1;7920;7920;;2;;;;;10;;;;;;;1599264000;;16600;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus17gBlue;Pagoda d'acqua;Water Pagoda;d270f284d;;;4x4;2;1;8640;8640;;3;;;;;20;;;;;;;1675512000;;17470;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus17gGreen;Pagoda di terra;Earth Pagoda;0d679f5b7;;;4x4;2;1;8640;8640;;5;;;;;10;;;;;;;1675512000;;17470;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus17gRed;Pagoda di fuoco;Fire Pagoda;dacd283a0;;;4x4;2;1;8640;8640;;3;;;;;10;;;;;;;1675512000;;17470;;586;;;14;;;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus20a;Ponte Hanami - Liv. 1;Hanami Bridge - Lv. 1;0b0fff895;;;4x6;2;1;10800;14150;;;;;;;;;;;;;;1941840000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus20b;Ponte Hanami - Liv. 2;Hanami Bridge - Lv. 2;a70ec6ddb;;;4x6;2;1;15660;17040;;;;;;;;;;;;;;2170800000;;;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus20c;Ponte Hanami - Liv. 3;Hanami Bridge - Lv. 3;656027a8f;;;4x6;2;1;16524;19660;;2;;;;;;;;;;;;2455920000;;;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus20d;Ponte Hanami - Liv. 4;Hanami Bridge - Lv. 4;98d6b7ead;;;4x6;2;1;17334;22020;;2;;;;;5;;;;;;;2712960000;;;;1317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus20e;Ponte Hanami - Liv. 5;Hanami Bridge - Lv. 5;d2b1bb960;;;4x6;2;1;18252;24250;;4;;;;;5;;;;;;;2970000000;;;;1536;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus20f;Ponte Hanami - Liv. 6;Hanami Bridge - Lv. 6;884718385;;;4x6;2;1;18900;26740;;4;;;;;10;;;;;;;3256200000;;;;1756;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus20g;Ponte Hanami - Liv. 7;Hanami Bridge - Lv. 7;59fe263b4;;;4x6;2;1;19872;28830;;6;;;;;10;;;;;;;3426840000;;;;1975;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus20hMikawa;Ponte Mikawa;Mikawa Bridge;97df4051b;;;4x6;2;1;20520;31450;;10;;;;;25;;;;;;;3998160000;;;;2195;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus20hMikoto;Ponte Mikoto;Mikoto Bridge;bc55aef25;;;4x6;2;1;20520;31450;;7;;;;;15;;;;;;;3770280000;;;;2634;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus21a;Mulino Suishun - Liv. 1;Suishun Mill - Lv. 1;07b5adec0;;;4x5;2;1;9900;14200;;;;;;;;;;;;;;1427760000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus21b;Mulino Suishun - Liv. 2;Suishun Mill - Lv. 2;20b42fde9;;;4x5;2;1;10350;15180;;;;;;;;;;;;;;1666440000;;19660;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonus21c;Mulino Suishun - Liv. 3;Suishun Mill - Lv. 3;0e3102ec1;;;4x5;2;1;10800;15840;;;;;;;5;;;;;;;1856520000;;21840;;1280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus17f;Pagoda - Liv. 6;Pagoda - Lv. 6;8d17d14ad;;;4x4;2;1;7920;7920;;2;;;;;10;;;;;;;148080;;16600;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus17gBlue;Pagoda d'acqua;Water Pagoda;d270f284d;;;4x4;2;1;8640;8640;;3;;;;;20;;;;;;;155140;;17470;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus17gGreen;Pagoda di terra;Earth Pagoda;0d679f5b7;;;4x4;2;1;8640;8640;;5;;;;;10;;;;;;;155140;;17470;;586;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus17gRed;Pagoda di fuoco;Fire Pagoda;dacd283a0;;;4x4;2;1;8640;8640;;3;;;;;10;;;;;;;155140;;17470;;586;;;14;;;14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus20a;Ponte Hanami - Liv. 1;Hanami Bridge - Lv. 1;0b0fff895;;;4x6;2;1;10800;14150;;;;;;;;;;;;;;179800;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus20b;Ponte Hanami - Liv. 2;Hanami Bridge - Lv. 2;a70ec6ddb;;;4x6;2;1;15660;17040;;;;;;;;;;;;;;201000;;;;659;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus20c;Ponte Hanami - Liv. 3;Hanami Bridge - Lv. 3;656027a8f;;;4x6;2;1;16524;19660;;2;;;;;;;;;;;;227400;;;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus20d;Ponte Hanami - Liv. 4;Hanami Bridge - Lv. 4;98d6b7ead;;;4x6;2;1;17334;22020;;2;;;;;5;;;;;;;251200;;;;1317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus20e;Ponte Hanami - Liv. 5;Hanami Bridge - Lv. 5;d2b1bb960;;;4x6;2;1;18252;24250;;4;;;;;5;;;;;;;275000;;;;1536;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus20f;Ponte Hanami - Liv. 6;Hanami Bridge - Lv. 6;884718385;;;4x6;2;1;18900;26740;;4;;;;;10;;;;;;;301500;;;;1756;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus20g;Ponte Hanami - Liv. 7;Hanami Bridge - Lv. 7;59fe263b4;;;4x6;2;1;19872;28830;;6;;;;;10;;;;;;;317300;;;;1975;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus20hMikawa;Ponte Mikawa;Mikawa Bridge;97df4051b;;;4x6;2;1;20520;31450;;10;;;;;25;;;;;;;370200;;;;2195;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus20hMikoto;Ponte Mikoto;Mikoto Bridge;bc55aef25;;;4x6;2;1;20520;31450;;7;;;;;15;;;;;;;349100;;;;2634;;;;;28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus21a;Mulino Suishun - Liv. 1;Suishun Mill - Lv. 1;07b5adec0;;;4x5;2;1;9900;14200;;;;;;;;;;;;;;132200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus21b;Mulino Suishun - Liv. 2;Suishun Mill - Lv. 2;20b42fde9;;;4x5;2;1;10350;15180;;;;;;;;;;;;;;154300;;19660;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonus21c;Mulino Suishun - Liv. 3;Suishun Mill - Lv. 3;0e3102ec1;;;4x5;2;1;10800;15840;;;;;;;5;;;;;;;171900;;21840;;1280;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_SpringBonus21d;Mulino Suishun - Liv. 4;Suishun Mill - Lv. 4;116ad4d47;;;4x5;2;1;11250;16820;;1;;;;;5;;;;;;;185100;;24030;;1463;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus21e;Mulino Suishun - Liv. 5;Suishun Mill - Lv. 5;7e8c921f0;;;4x5;2;1;11700;18240;;3;;;;;10;;;;;;;2236680000;;26210;0.21;1646;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus21f;Mulino Suishun - Liv. 6;Suishun Mill - Lv. 6;ff5de7ca7;;;4x5;2;1;12150;18790;;5;;;;;10;;;;;;;2427840000;;28400;0.24;1829;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus21g;Mulino Suishun - Liv. 7;Suishun Mill - Lv. 7;56219aa8f;;;4x5;2;1;13050;20310;;7;;;;;15;;;;;;;2570400000;;30580;0.27;2012;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus21h;Mulino Suishun - Liv. 8;Suishun Mill - Lv. 8;624d6c41a;;;4x5;2;1;13950;21840;;9;;;;;20;;;;;;;2760480000;;32760;0.3;2195;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonus21i;Mulino Suishun - Liv. 9;Suishun Mill - Lv. 9;cb411ca34;;;4x5;2;1;14850;23370;;11;;;;;25;;;;;;;2999160000;;34950;0.33;2378;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonusSet17a;Lv. 1 - Zona zen;Lv. 1 - Zen Zone;0ae974e94;;;3x2;1;1;;;;1;;;;;5;;;;;;;499824000;;24120;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SpringBonusSet17b;Lv. 1 - Ingresso dell’imperatore;Lv. 1 - Emperor's Entrance;15208a07f;;;3x2;1;1;;;;1;;;;;;;;;;;;570888000;;19770;;200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SpringBonusSet18a;Lv. 2 - Zona zen;Lv. 2 - Zen Zone;29f1e5658;;;3x2;1;1;;;;1;;;;;10;;;;;;;713988000;;37490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus21e;Mulino Suishun - Liv. 5;Suishun Mill - Lv. 5;7e8c921f0;;;4x5;2;1;11700;18240;;3;;;;;10;;;;;;;207100;;26210;0.21;1646;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus21f;Mulino Suishun - Liv. 6;Suishun Mill - Lv. 6;ff5de7ca7;;;4x5;2;1;12150;18790;;5;;;;;10;;;;;;;224800;;28400;0.24;1829;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus21g;Mulino Suishun - Liv. 7;Suishun Mill - Lv. 7;56219aa8f;;;4x5;2;1;13050;20310;;7;;;;;15;;;;;;;238000;;30580;0.27;2012;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus21h;Mulino Suishun - Liv. 8;Suishun Mill - Lv. 8;624d6c41a;;;4x5;2;1;13950;21840;;9;;;;;20;;;;;;;255600;;32760;0.3;2195;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonus21i;Mulino Suishun - Liv. 9;Suishun Mill - Lv. 9;cb411ca34;;;4x5;2;1;14850;23370;;11;;;;;25;;;;;;;277700;;34950;0.33;2378;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonusSet17a;Lv. 1 - Zona zen;Lv. 1 - Zen Zone;0ae974e94;;;3x2;1;1;;;;1;;;;;5;;;;;;;46280;;24120;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SpringBonusSet17b;Lv. 1 - Ingresso dell’imperatore;Lv. 1 - Emperor's Entrance;15208a07f;;;3x2;1;1;;;;1;;;;;;;;;;;;52860;;19770;;200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SpringBonusSet18a;Lv. 2 - Zona zen;Lv. 2 - Zen Zone;29f1e5658;;;3x2;1;1;;;;1;;;;;10;;;;;;;66110;;37490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_SpringBonusSet18b;Lv. 2 - Ingresso dell’imperatore;Lv. 2 - Emperor's Entrance;d9d7805cd;;;3x2;1;1;;;;2;;;;;;;;;;;;79330;;;;260;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus1;Capanna di paglia;Straw Hut;805420d3d;;;2x2;1;1;900;;;;;;;;;;;;;;;863136000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus15;Ziggurat;Ziggurat;44fc01acb;;;3x3;1.5;1;4860;4860;;;;;;;;;;;;;;1233792000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus15b;Caravanserraglio;Caravansary;7c05ab4ea;;;4x5;2;1;900;;;;;;;;5;;;;;;;475956000;;;;915;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus16;Casa sul palo;Pole House;38868b858;;;4x3;1.5;1;7;9170;;;;;;;;;;;;;;656856000;;;;549;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus16b;Capanno da pesca;Fishing Hut;69036cea4;;;4x4;2;1;2160;;;;;;;;5;;;;;;;571212000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus18;Barca arenata;Stranded Boat;a86b7ada2;;;4x2;1;1;1440;;;;;;;;;;;;;;;685800000;;;;366;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus18a;La nave - Liv. 1;The Ship - Lv. 1;fe3e545a4;;;7x3;1.5;1;945;;;;;;;;;;;;;;;1599480000;;18350;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus18b;La nave - Liv. 2;The Ship - Lv. 2;4c1150968;;;7x3;1.5;1;1890;;;;;;;;;;;;;;;1698840000;;19500;;768;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus18c;La nave - Liv. 3;The Ship - Lv. 3;b7779ea67;;;7x3;1.5;1;2835;;;1;;;;;;;;;;;;1799280000;;20640;;960;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonus18d;La nave - Liv. 4;The Ship - Lv. 4;6d1ff9704;;;7x3;1.5;1;3780;;;1;;;;;5;;;;;;;1899720000;;21790;;1152;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus18e;La nave - Liv. 5;The Ship - Lv. 5;55c7782e2;;;7x3;1.5;1;4725;;;2;;;;;5;;;;;;;1999080000;;22940;;1344;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus18f;La nave - Liv. 6;The Ship - Lv. 6;5f32607a7;;;7x3;1.5;1;5670;;;2;;;;;10;;;;;;;2099520000;;24080;;1536;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus1;Capanna di paglia;Straw Hut;805420d3d;;;2x2;1;1;900;;;;;;;;;;;;;;;59940;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus15;Ziggurat;Ziggurat;44fc01acb;;;3x3;1.5;1;4860;4860;;;;;;;;;;;;;;342720;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus15b;Caravanserraglio;Caravansary;7c05ab4ea;;;4x5;2;1;900;;;;;;;;5;;;;;;;44070;;;;915;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus16;Casa sul palo;Pole House;38868b858;;;4x3;1.5;1;7;9170;;;;;;;;;;;;;;60820;;;;549;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus16b;Capanno da pesca;Fishing Hut;69036cea4;;;4x4;2;1;2160;;;;;;;;5;;;;;;;52890;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus18;Barca arenata;Stranded Boat;a86b7ada2;;;4x2;1;1;1440;;;;;;;;;;;;;;;63500;;;;366;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus18a;La nave - Liv. 1;The Ship - Lv. 1;fe3e545a4;;;7x3;1.5;1;945;;;;;;;;;;;;;;;148100;;18350;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus18b;La nave - Liv. 2;The Ship - Lv. 2;4c1150968;;;7x3;1.5;1;1890;;;;;;;;;;;;;;;157300;;19500;;768;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus18c;La nave - Liv. 3;The Ship - Lv. 3;b7779ea67;;;7x3;1.5;1;2835;;;1;;;;;;;;;;;;166600;;20640;;960;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonus18d;La nave - Liv. 4;The Ship - Lv. 4;6d1ff9704;;;7x3;1.5;1;3780;;;1;;;;;5;;;;;;;175900;;21790;;1152;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus18e;La nave - Liv. 5;The Ship - Lv. 5;55c7782e2;;;7x3;1.5;1;4725;;;2;;;;;5;;;;;;;185100;;22940;;1344;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus18f;La nave - Liv. 6;The Ship - Lv. 6;5f32607a7;;;7x3;1.5;1;5670;;;2;;;;;10;;;;;;;194400;;24080;;1536;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_SummerBonus18gPirate;La nave pirata;The Pirate Ship;9ab8b04ff;;;7x3;1.5;1;6615;;;4;;;;;15;;;;;;;203600;;25230;;1728;;;8;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus18gRoyal;La nave regale;The Royal Ship;af759724f;;;7x3;1.5;1;6615;;;6;;;;;10;;;;;;;2198880000;0.1;25230;;1728;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus18gTrader;La nave mercantile;The Trader Ship;d43370697;;;7x3;1.5;1;6615;;;3;;;;;20;;;;;;;2198880000;;25230;0.1;1728;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19a;Il Nido del Corvo - Liv. 1;The Crow's Nest - Lv. 1;7a9959609;;;5x5;2.5;1;13500;;;0.2;;;;;1;;;;;;;1904040000;;;;710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19b;Il Nido del Corvo - Liv. 2;The Crow's Nest - Lv. 2;0b82033f8;;;5x5;2.5;1;14630;;;1.4;;;;;2;;;;;;;2022840000;;;;1166;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19c;Il Nido del Corvo - Liv. 3;The Crow's Nest - Lv. 3;fadc137b7;;;5x5;2.5;1;15750;;;2.75;;;;;3.75;;;;;;;2141640000;;;;2275;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19d;Il Nido del Corvo - Liv. 4;The Crow's Nest - Lv. 4;425d30dd4;;;5x5;2.5;1;16880;;;4;;;;;5;;;;;;;2260440000;;;;3295;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19e;Il Nido del Corvo - Liv. 5;The Crow's Nest - Lv. 5;8fd0e8347;;;5x5;2.5;1;18000;;;6.1;;;;;7.5;;;;;;;2380320000;;;;3630;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19f;Il Nido del Corvo - Liv. 6;The Crow's Nest - Lv. 6;4cb1dd7f5;;;5x5;2.5;1;19130;;;7.8;;;;;10.5;;;;;;;2499120000;;;;3982.5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19g;Il Nido del Corvo - Liv. 7;The Crow's Nest - Lv. 7;e4367ed77;;;5x5;2.5;1;20250;;;10;;;;;16;;;;;;;2617920000;;;;3915;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus19h;Il Nido del Corvo - Liv. 8;The Crow's Nest - Lv. 8;a13ada255;;;5x5;2.5;1;21380;;;12.8;;;;;20;;;;;;;2736720000;;;;4290;;1.25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonus2;Oasi;Oasis;169591dac;;;3x4;1.5;1;1890;;;;;;;;5;;;;;;;656856000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonusSetA17a;Palazzo del Maharaja;Maharaja's Palace;2ef5cd7f8;;;4x4;2;1;;;;5;;;;;5;;;;;;;1675512000;;64320;;976;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_SummerBonusSetA17b;Torre occidentale del palazzo;Western Palace Tower;d5b22a2a6;;;2x2;1;1;;;;;;;;;5;;;;;;;342722780;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus18gRoyal;La nave regale;The Royal Ship;af759724f;;;7x3;1.5;1;6615;;;6;;;;;10;;;;;;;203600;0.1;25230;;1728;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus18gTrader;La nave mercantile;The Trader Ship;d43370697;;;7x3;1.5;1;6615;;;3;;;;;20;;;;;;;203600;;25230;0.1;1728;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19a;Il Nido del Corvo - Liv. 1;The Crow's Nest - Lv. 1;7a9959609;;;5x5;2.5;1;13500;;;0.2;;;;;1;;;;;;;176300;;;;710;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19b;Il Nido del Corvo - Liv. 2;The Crow's Nest - Lv. 2;0b82033f8;;;5x5;2.5;1;14630;;;1.4;;;;;2;;;;;;;187300;;;;1166;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19c;Il Nido del Corvo - Liv. 3;The Crow's Nest - Lv. 3;fadc137b7;;;5x5;2.5;1;15750;;;2.75;;;;;3.75;;;;;;;198300;;;;2275;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19d;Il Nido del Corvo - Liv. 4;The Crow's Nest - Lv. 4;425d30dd4;;;5x5;2.5;1;16880;;;4;;;;;5;;;;;;;209300;;;;3295;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19e;Il Nido del Corvo - Liv. 5;The Crow's Nest - Lv. 5;8fd0e8347;;;5x5;2.5;1;18000;;;6.1;;;;;7.5;;;;;;;220400;;;;3630;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19f;Il Nido del Corvo - Liv. 6;The Crow's Nest - Lv. 6;4cb1dd7f5;;;5x5;2.5;1;19130;;;7.8;;;;;10.5;;;;;;;231400;;;;3982.5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19g;Il Nido del Corvo - Liv. 7;The Crow's Nest - Lv. 7;e4367ed77;;;5x5;2.5;1;20250;;;10;;;;;16;;;;;;;242400;;;;3915;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus19h;Il Nido del Corvo - Liv. 8;The Crow's Nest - Lv. 8;a13ada255;;;5x5;2.5;1;21380;;;12.8;;;;;20;;;;;;;253400;;;;4290;;1.25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonus2;Oasi;Oasis;169591dac;;;3x4;1.5;1;1890;;;;;;;;5;;;;;;;60820;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonusSetA17a;Palazzo del Maharaja;Maharaja's Palace;2ef5cd7f8;;;4x4;2;1;;;;5;;;;;5;;;;;;;155140;;64320;;976;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_SummerBonusSetA17b;Torre occidentale del palazzo;Western Palace Tower;d5b22a2a6;;;2x2;1;1;;;;;;;;;5;;;;;;;70510;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_MultiAge_SummerBonusSetA17c;Torre orientale del palazzo;Eastern Palace Tower;e89944288;;;2x2;1;1;;;;1;;;;;;;;;;;;70510;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonusSetB17a;Chhatri commemorativo;Memorial Chhatri;5a97b692a;;;1x1;0.5;1;;;;;;;;;;;;;;;;95157260;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_SummerBonusSetB17b;Ingresso della fontana dell'elefante;Elephant Fountain Gate;cd76b8a1f;;;1x3;0.5;1;;;;1;;;;;;;;;;;;285579770;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_TourBonus17;Chiosco;Kiosk;359eff431;;;3x2;1;1;1;;;;;;;;5;;;;;;;428436000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus18;Casetta incantevole;Charming Cottage;5025ead5f;;;4x3;1.5;1;6480;;;;;;;;6;;;;;;;856764000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus18a;Guglia d'inverno - Lv. 1;Winter Spire - Lv. 1;005a4eb28;;;4x4;2;1;1440;;;;;;;;;;;;;;;1180440000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18b;Guglia d'inverno - Lv. 2;Winter Spire - Lv. 2;05809a106;;;4x4;2;1;2160;;;;;;;;;;;;;;;1218240000;;13980;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18c;Guglia d'inverno - Lv. 3;Winter Spire - Lv. 3;f26deabf8;;;4x4;2;1;2880;;;;;;;;5;;;;;;;1257120000;;14420;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus18d;Guglia d'inverno - Lv. 4;Winter Spire - Lv. 4;b0b9b7613;;;4x4;2;1;3600;;;1;;;;;5;;;;;;;1294920000;;14850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus18e;Guglia d'inverno - Lv. 5;Winter Spire - Lv. 5;9531e8a45;;;4x4;2;1;4320;;;1;;;;;5;;;;;;;1332720000;;15290;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18f;Guglia d'inverno - Lv. 6;Winter Spire - Lv. 6;710f0bd8a;;;4x4;2;1;5040;;;2;;;;;5;;;;;;;1370520000;;15730;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonusSetB17a;Chhatri commemorativo;Memorial Chhatri;5a97b692a;;;1x1;0.5;1;;;;;;;;;;;;;;;;18070;;;;90;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_SummerBonusSetB17b;Ingresso della fontana dell'elefante;Elephant Fountain Gate;cd76b8a1f;;;1x3;0.5;1;;;;1;;;;;;;;;;;;54210;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_TourBonus17;Chiosco;Kiosk;359eff431;;;3x2;1;1;1;;;;;;;;5;;;;;;;39670;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus18;Casetta incantevole;Charming Cottage;5025ead5f;;;4x3;1.5;1;6480;;;;;;;;6;;;;;;;79330;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus18a;Guglia d'inverno - Lv. 1;Winter Spire - Lv. 1;005a4eb28;;;4x4;2;1;1440;;;;;;;;;;;;;;;109300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18b;Guglia d'inverno - Lv. 2;Winter Spire - Lv. 2;05809a106;;;4x4;2;1;2160;;;;;;;;;;;;;;;112800;;13980;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18c;Guglia d'inverno - Lv. 3;Winter Spire - Lv. 3;f26deabf8;;;4x4;2;1;2880;;;;;;;;5;;;;;;;116400;;14420;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus18d;Guglia d'inverno - Lv. 4;Winter Spire - Lv. 4;b0b9b7613;;;4x4;2;1;3600;;;1;;;;;5;;;;;;;119900;;14850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus18e;Guglia d'inverno - Lv. 5;Winter Spire - Lv. 5;9531e8a45;;;4x4;2;1;4320;;;1;;;;;5;;;;;;;123400;;15290;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18f;Guglia d'inverno - Lv. 6;Winter Spire - Lv. 6;710f0bd8a;;;4x4;2;1;5040;;;2;;;;;5;;;;;;;126900;;15730;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_WinterBonus18g;Guglia d'inverno - Lv. 7;Winter Spire - Lv. 7;c7fed50d7;;;4x4;2;1;5760;;;2;;;;;10;;;;;;;130500;;16160;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18h;Guglia d'inverno - Lv. 8;Winter Spire - Lv. 8;bb1d69123;;;4x4;2;1;6480;;;3;;;;;10;;;;;;;1447200000;;16600;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18i;Guglia d'inverno - Lv. 9;Winter Spire - Lv. 9;5cc83a51f;;;4x4;2;1;7200;;;3;;;;;10;;;;;;;1485000000;;17040;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18j;Guglia d'inverno - Lv. 10;Winter Spire - Lv. 10;6322b2b8a;;;4x4;2;1;7920;;;4;;;;;10;;;;;;;1522800000;;17470;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18k;Guglia d'inverno - Lv. 11;Winter Spire - Lv. 11;8aa391a57;;;4x4;2;1;8640;;;4;;;;;15;;;;;;;1561680000;;17910;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus18l;Guglia d'inverno - Lv. 12;Winter Spire - Lv. 12;6a70e3ab7;;;4x4;2;1;9360;;;6;;;;;15;;;;;;;1599480000;;18350;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus20a;Forno invernale - Lv. 1;Winter Bakery - Lv. 1;6279bc265;;;3x5;1.5;1;11700;17800;;;;;;;;;;;;;;2008800000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus20b;Forno invernale - Lv. 2;Winter Bakery - Lv. 2;de8253277;;;3x5;1.5;1;11880;20100;;;;;;;;;;;;;;2131920000;;25670;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus20c;Forno invernale - Lv. 3;Winter Bakery - Lv. 3;f29f2be6d;;;3x5;1.5;1;12240;21840;;1;;;;;;;;;;;;2360880000;;27850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18h;Guglia d'inverno - Lv. 8;Winter Spire - Lv. 8;bb1d69123;;;4x4;2;1;6480;;;3;;;;;10;;;;;;;134000;;16600;;;;;;;;12;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18i;Guglia d'inverno - Lv. 9;Winter Spire - Lv. 9;5cc83a51f;;;4x4;2;1;7200;;;3;;;;;10;;;;;;;137500;;17040;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18j;Guglia d'inverno - Lv. 10;Winter Spire - Lv. 10;6322b2b8a;;;4x4;2;1;7920;;;4;;;;;10;;;;;;;141000;;17470;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18k;Guglia d'inverno - Lv. 11;Winter Spire - Lv. 11;8aa391a57;;;4x4;2;1;8640;;;4;;;;;15;;;;;;;144600;;17910;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus18l;Guglia d'inverno - Lv. 12;Winter Spire - Lv. 12;6a70e3ab7;;;4x4;2;1;9360;;;6;;;;;15;;;;;;;148100;;18350;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus20a;Forno invernale - Lv. 1;Winter Bakery - Lv. 1;6279bc265;;;3x5;1.5;1;11700;17800;;;;;;;;;;;;;;186000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus20b;Forno invernale - Lv. 2;Winter Bakery - Lv. 2;de8253277;;;3x5;1.5;1;11880;20100;;;;;;;;;;;;;;197400;;25670;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus20c;Forno invernale - Lv. 3;Winter Bakery - Lv. 3;f29f2be6d;;;3x5;1.5;1;12240;21840;;1;;;;;;;;;;;;218600;;27850;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_MultiAge_WinterBonus20d;Forno invernale - Lv. 4;Winter Bakery - Lv. 4;a2e052aa2;;;3x5;1.5;1;12780;24140;;2;;;;;5;;;;;;;232700;;30030;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus20e;Forno invernale - Lv. 5;Winter Bakery - Lv. 5;e5fe82b2c;;;3x5;1.5;1;13500;26430;;4;;;;;5;;;;;;;2712960000;;32760;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus20fGingerbread;Forno di Pan di zenzero;Gingerbread Bakery;3652452ba;;;3x5;1.5;1;14400;28400;;5;;;;;5;;;;;;;2951640000;;37130;;;;;15;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus20fLussebullar;Forno dei Lussebullar;Lussebullar Bakery;a14a495c8;;;3x5;1.5;1;14400;28400;;5;;;;;20;;;;;;;2951640000;;37130;0.25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus20fMarzipan;Forno di Marzapane;Marzipan Bakery;751c4fe40;;;3x5;1.5;1;16920;28400;;8;;;;;5;;;;;;;2951640000;0.2;37130;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonus20fPatisserie;Forno di Macaron;Macaron Bakery;14a5fbbc0;;;3x5;1.5;1;14400;28400;;5;;;;;5;;;;;;;2951640000;;37130;;;;;;18;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21a;Canale invernale - Liv. 1;Winter Canal - Lv. 1;88fba91da;;;6x4;2;1;11880;18350;;;;;;;;;;;;;;1370520000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21b;Canale invernale - Liv. 2;Winter Canal - Lv. 2;d86e74790;;;6x4;2;1;11988;19000;;;;;;;;;;;;;;1599480000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21c;Canale invernale - Liv. 3;Winter Canal - Lv. 3;3632a5311;;;6x4;2;1;12204;19660;;;;;;;;;;;;;;1827360000;;18350;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21d;Canale invernale - Liv. 4;Winter Canal - Lv. 4;ed9604b20;;;6x4;2;1;12528;20970;;;;;;;;;;;;;;2056320000;;24900;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21e;Canale invernale - Liv. 5;Winter Canal - Lv. 5;c0e81f9d7;;;6x4;2;1;12960;22280;;1;;;;;;;;;;;;2285280000;;26210;;1317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21f;Canale invernale - Liv. 6;Winter Canal - Lv. 6;229edc555;;;6x4;2;1;13608;23590;;2;;;;;;;;;;;;2513160000;;27520;;1536;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21g;Canale invernale - Liv. 7;Winter Canal - Lv. 7;f3643c07c;;;6x4;2;1;14472;24900;;3;;;;;;;;;;;;2742120000;;28830;;1756;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21h;Canale invernale - Liv. 8;Winter Canal - Lv. 8;74e6b94ef;;;6x4;2;1;15552;26210;;5;;;;;;;;;;;;2970000000;;30140;;1975;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21i;Canale invernale - Liv. 9;Winter Canal - Lv. 9;991a71662;;;6x4;2;1;16848;28830;;7;;;;;;;;;;;;3198960000;;31450;;2195;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21jFestive;Canale festivo;Festive Canal;fccda6117;;;6x4;2;1;18360;31450;;12;;;;;;;;;;;;3541320000;;39320;;2634;;;;32;;29;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonus21jJolie;Canale ridente;Jolie Canal;c715bbb0b;;;6x4;2;1;18360;31450;;9;;;;;;;;;;;;3998160000;;34080;;3511;;;26;;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonusSet17a;Chiosco dello zuccherificio;Sugar Baker's Booth;52497920c;;;2x2;1;1;;;;1;;;;;;;;;;;;380846780;;14990;;366;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_MultiAge_WinterBonusSet17b;Prato di Moose;Moose Meadow;b4575a2cc;;;2x3;1;1;;;;1;;;;;5;;;;;;;571270180;;22490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
-R_MultiAge_WinterBonusSet17c;Chiosco del fabbricante di giocattoli;Toymaker's Booth;6c9adf905;;;3x2;1;1;;;;1;;;;;5;;;;;;;571270180;;22490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus20e;Forno invernale - Lv. 5;Winter Bakery - Lv. 5;e5fe82b2c;;;3x5;1.5;1;13500;26430;;4;;;;;5;;;;;;;251200;;32760;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus20fGingerbread;Forno di Pan di zenzero;Gingerbread Bakery;3652452ba;;;3x5;1.5;1;14400;28400;;5;;;;;5;;;;;;;273300;;37130;;;;;15;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus20fLussebullar;Forno dei Lussebullar;Lussebullar Bakery;a14a495c8;;;3x5;1.5;1;14400;28400;;5;;;;;20;;;;;;;273300;;37130;0.25;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus20fMarzipan;Forno di Marzapane;Marzipan Bakery;751c4fe40;;;3x5;1.5;1;16920;28400;;8;;;;;5;;;;;;;273300;0.2;37130;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonus20fPatisserie;Forno di Macaron;Macaron Bakery;14a5fbbc0;;;3x5;1.5;1;14400;28400;;5;;;;;5;;;;;;;273300;;37130;;;;;;18;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21a;Canale invernale - Liv. 1;Winter Canal - Lv. 1;88fba91da;;;6x4;2;1;11880;18350;;;;;;;;;;;;;;126900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21b;Canale invernale - Liv. 2;Winter Canal - Lv. 2;d86e74790;;;6x4;2;1;11988;19000;;;;;;;;;;;;;;148100;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21c;Canale invernale - Liv. 3;Winter Canal - Lv. 3;3632a5311;;;6x4;2;1;12204;19660;;;;;;;;;;;;;;169200;;18350;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21d;Canale invernale - Liv. 4;Winter Canal - Lv. 4;ed9604b20;;;6x4;2;1;12528;20970;;;;;;;;;;;;;;190400;;24900;;1098;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21e;Canale invernale - Liv. 5;Winter Canal - Lv. 5;c0e81f9d7;;;6x4;2;1;12960;22280;;1;;;;;;;;;;;;211600;;26210;;1317;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21f;Canale invernale - Liv. 6;Winter Canal - Lv. 6;229edc555;;;6x4;2;1;13608;23590;;2;;;;;;;;;;;;232700;;27520;;1536;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21g;Canale invernale - Liv. 7;Winter Canal - Lv. 7;f3643c07c;;;6x4;2;1;14472;24900;;3;;;;;;;;;;;;253900;;28830;;1756;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21h;Canale invernale - Liv. 8;Winter Canal - Lv. 8;74e6b94ef;;;6x4;2;1;15552;26210;;5;;;;;;;;;;;;275000;;30140;;1975;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21i;Canale invernale - Liv. 9;Winter Canal - Lv. 9;991a71662;;;6x4;2;1;16848;28830;;7;;;;;;;;;;;;296200;;31450;;2195;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21jFestive;Canale festivo;Festive Canal;fccda6117;;;6x4;2;1;18360;31450;;12;;;;;;;;;;;;327900;;39320;;2634;;;;32;;29;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonus21jJolie;Canale ridente;Jolie Canal;c715bbb0b;;;6x4;2;1;18360;31450;;9;;;;;;;;;;;;370200;;34080;;3511;;;26;;32;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonusSet17a;Chiosco dello zuccherificio;Sugar Baker's Booth;52497920c;;;2x2;1;1;;;;1;;;;;;;;;;;;74040;;14990;;366;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_MultiAge_WinterBonusSet17b;Prato di Moose;Moose Meadow;b4575a2cc;;;2x3;1;1;;;;1;;;;;5;;;;;;;111070;;22490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
+R_MultiAge_WinterBonusSet17c;Chiosco del fabbricante di giocattoli;Toymaker's Booth;6c9adf905;;;3x2;1;1;;;;1;;;;;5;;;;;;;111070;;22490;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 R_OceanicFuture_Residential1;Isola urbana;Urban Island;67f320585;;;5x5;2.5;2;6500;;;;;;;;;;;;;;;54000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_OceanicFuture_Residential2;Torre di avvistamento in mare;Seaview Tower;8bf5e19bd;;;3x4;1.5;1;3800;;;;;;;;;;;;;;;68340;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_OceanicFuture_Residential3;Casa galleggiante;Floating House;236c7aa4b;;;5x4;2;1;5430;;;;;;;;;;;;;;;39300;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -750,7 +750,7 @@ R_SpaceAgeTitan_Residential1;Abitazione di ghiaccio;Ice Dwelling;efc7ff91e;;;4x3
 R_SpaceAgeTitan_Residential2;Villetta ghiacciata;Frost Dwelling;923950ed5;;;3x2;1;1;7570;;;;;;;;;;;;;;;91050;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_SpaceAgeVenus_Residential1;Dimora gonfiabile;Inflatable Dwelling;c5049b70b;;;3x4;1.5;2;7650;;;;;;;;;;;;;;;129480;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_SpaceAgeVenus_Residential2;Residenza Antigravità;Antigravity Residency;ebf0fe440;;;2x3;1;1;6560;;;;;;;;;;;;;;;75870;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-R_StellarAgeDiscovery_Residential1;Capsula orbitale;Orbital Pod;a918b0203;;;2x2;1;2;3360;;;;;;;;;;;;;;;965088000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+R_StellarAgeDiscovery_Residential1;Capsula orbitale;Orbital Pod;a918b0203;;;2x2;1;2;3360;;;;;;;;;;;;;;;67020;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_StoneAge_Residential;Capanna;Hut;20c396aab;;;2x2;1;1;14;;;;;;;;;;;;;;;1728;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_TomorrowEra_Residential1;Hotel a capsule;Capsule Hotel;f4988d742;;;4x3;1.5;2;2400;;;;;;;;;;;;;;;18200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 R_TomorrowEra_Residential2;Dépendance;Annex;9d00aae84;;;3x4;1.5;2;2000;;;;;;;;;;;;;;;30000;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
