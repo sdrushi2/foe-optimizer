@@ -25,7 +25,7 @@
       pfPropT: "PF che restano a carico del proprietario per completare il livello",
       pfContrT: "PF versati in tutto dai mecenati dei posti (con la percentuale della chat)",
       pos: "Pos.", ricompensa: "Premio", versare: "Da versare", coprire: "Per coprire", totale: "Tot. x coprire",
-      ricompensaT: "Premio del posto in PF (come la colonna Premio del gioco), senza bonus dell'Arca",
+      ricompensaT: "Premio del posto in PF (come la colonna Premio del gioco), senza bonus dell'Arc",
       versareT: "PF che il mecenate versa per riavere esattamente la ricompensa con la sua percentuale",
       coprireT: "PF del proprietario in più per assicurare questo posto, oltre ai precedenti",
       totaleT: "PF del proprietario in totale per assicurare questo posto (e tutti quelli sopra)",
@@ -103,7 +103,10 @@
 
   // ── pagina ──
   const chat = (id, classe, breve, lungo) => `<button type="button" class="${classe}" data-chat="${id}" title="${esc(lungo)}">${esc(breve)}</button>`;
-  document.body.innerHTML = `
+  // (20/11/2026) il calcolatore va IN TESTA al body, senza sostituirlo: sotto c'è la sezione
+  // #info scritta nell'HTML (titolo, spiegazione, domande frequenti) che Google deve vedere
+  // anche dopo aver eseguito lo script; viene spostata dentro <main>, prima del piè di pagina
+  document.body.insertAdjacentHTML("afterbegin", `
     <header id="bar">
       <a class="brand" href="/" title="FoE Optimizer">
         <div class="logo">
@@ -113,7 +116,7 @@
             <path d="m16 16 4 4"/><path d="m19 21 2-2"/><path d="m5 14 4 4"/><path d="m5 21-2-2"/><path d="M7.5 16.5 4 20"/>
           </svg>
         </div>
-        <h1>${esc(T.titolo)}</h1>
+        <span class="titolo">${esc(T.titolo)}</span>
       </a>
       <nav class="lingue" aria-label="Lingua / Language">
         <a href="${pagina("ge")}" hreflang="it" lang="it" class="${LINGUA === "it" ? "attiva" : ""}">IT</a><span>/</span>
@@ -190,7 +193,8 @@
         <button type="button" id="copia">${esc(T.copia)}</button>
       </div>
       <footer><p id="fonte" hidden></p><p>${esc(T.disclaimer)}</p></footer>
-    </main>`;
+    </main>`);
+  { const info = $("info"); if (info) document.querySelector("main.wrap > footer").before(info); }
 
   const dati = window.MECENATI && window.MECENATI.edifici;
   if (!dati) { $("errore").hidden = false; $("errore").textContent = T.errore; return; }

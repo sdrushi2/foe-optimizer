@@ -24,6 +24,32 @@
     <link rel="stylesheet" href="../calcolatore/calcolatore.css?v=19">
   </head>
   <body>
+    <!-- (20/11/2026) Text for search engines and readers: calcolatore.js puts the calculator
+         above and moves this section into the page, before the footer -->
+    <section id="info" class="info" aria-labelledby="info-titolo">
+      <h1 id="info-titolo">Forge of Empires GB Calculator</h1>
+      <p>The Great Building calculator tells you how many FP to pay into each patron spot and how many the owner must put in to secure them. Choose the Great Building, the level being built and your chat's percentage: rewards, payments and a ready-to-paste chat message are calculated instantly. All Great Buildings are included, with every level's cost taken from the official Forge of Empires wiki.</p>
+      <h2>How it works</h2>
+      <ul>
+        <li><b>Level FP</b>: the cost of the selected level. Part of it goes to patrons as rewards: the share changes with the level and drops to 5% above level 400.</li>
+        <li><b>Reward</b>: the reward pool is split among 5 spots (7 for Gold GBs from level 101). Spot 1 gets about 58%, spot 2 29% and spot 3 10%.</li>
+        <li><b>To pay</b>: the reward increased by the chat percentage. With 90%, the patron pays 1.9 times the reward and gets exactly that back with the Arc bonus.</li>
+        <li><b>To secure</b>: the FP the owner must put in first so nobody can overtake the patron. When nothing is needed, the spot is "safe".</li>
+        <li><b>Already paid and External</b>: if the level has already started, enter your own FP and other players' contributions. The calculator shows taken spots, spots at risk of being sniped and the missing FP.</li>
+      </ul>
+      <h2>FAQ</h2>
+      <h3>Which level should I enter?</h3>
+      <p>The new level, the one on the right of the Great Building's progress bar, not the current one.</p>
+      <h3>What's the difference between Copper 90%, 95% and 100%?</h3>
+      <p>It's how much more than the reward your chat expects patrons to pay. Gold chats (20% and 25%) apply to Gold levels, from 102 on. With CUSTOM you can type any percentage.</p>
+      <h3>What does "danger" mean?</h3>
+      <p>The reward is worth more than half of the FP still missing, so another player can snipe the spot paying less than its price. The patron should pay right away, or the owner should secure it first.</p>
+      <h3>Do I need an account?</h3>
+      <p>No. The calculator is free and runs in your browser. Your settings are saved only on your device.</p>
+      <nav class="info-link" aria-label="Other pages">
+        <a href="/">FoE Optimizer</a> · <a href="/guide.html">Guide</a> · <a href="/planner.html">City Planner</a> · <a href="/ge/" hreflang="it" lang="it">Versione italiana</a>
+      </nav>
+    </section>
     <noscript><p style="padding:16px">The calculator needs JavaScript.</p></noscript>
     <!-- costi, nomi e tier dei GE (RECUPERO DATI/gecosti.py): script e non JSON, così
          la pagina funziona anche aperta dal disco (file://), dove fetch() non va -->

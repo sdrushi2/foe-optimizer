@@ -44,8 +44,8 @@ body {
   background: rgba(2, 6, 23, .8); color: #fbbf24;
   box-shadow: 0 0 12px rgba(245, 158, 11, .15);
 }
-.brand h1 {
-  margin: 0; font-size: 20px; line-height: 1; font-weight: 900;
+.brand .titolo {
+  display: block; margin: 0; font-size: 20px; line-height: 1; font-weight: 900;
   text-transform: uppercase; letter-spacing: .025em; white-space: nowrap;
   background: linear-gradient(to right, #fcd34d, #fbbf24, #f59e0b);
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -162,6 +162,17 @@ td.chiude { color: var(--amber); }
   .stat .k { font-size: .5rem; letter-spacing: .02em; }
   .stat .v { font-size: .8rem; }
 }
+/* (20/11/2026) sezione statica di /ge e /gb: titolo, spiegazione e domande frequenti (SEO) */
+.info { margin-top: 16px; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; font-size: .85rem; color: var(--text-dim); }
+.info h1 { margin: 0 0 6px; font-size: 1.15rem; line-height: 1.25; color: var(--amber); }
+.info h2 { margin: 16px 0 6px; font-size: .95rem; color: var(--text); }
+.info h3 { margin: 12px 0 2px; font-size: .85rem; color: var(--text); }
+.info p { margin: 0 0 6px; }
+.info ul { margin: 0; padding-left: 18px; }
+.info li { margin-bottom: 4px; }
+.info b { color: var(--text); }
+.info a { color: var(--amber); }
+.info-link { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
 footer { color: var(--text-faint); font-size: .7rem; margin-top: 12px; text-align: center; }
 footer p { margin: 0; }
 footer p + p { margin-top: 4px; }

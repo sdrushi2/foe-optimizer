@@ -24,6 +24,32 @@
     <link rel="stylesheet" href="../calcolatore/calcolatore.css?v=19">
   </head>
   <body>
+    <!-- (20/11/2026) Testo per i motori di ricerca e per chi legge: calcolatore.js mette il
+         calcolatore sopra e sposta questa sezione dentro la pagina, prima del piè di pagina -->
+    <section id="info" class="info" aria-labelledby="info-titolo">
+      <h1 id="info-titolo">Calcolatore GE per Forge of Empires</h1>
+      <p>Il calcolatore dei Grandi Edifici ti dice quanti PF versare in ogni posto mecenate e quanti ne deve mettere il proprietario per proteggerli. Scegli il Grande Edificio, il livello in costruzione e la percentuale della tua chat: premi, versamenti e testo da incollare in chat vengono calcolati subito. Ci sono tutti i Grandi Edifici, con i costi di ogni livello presi dalla wiki ufficiale di Forge of Empires.</p>
+      <h2>Come funziona</h2>
+      <ul>
+        <li><b>PF del livello</b>: il costo del livello scelto. Una parte va in premi ai mecenati: la quota cambia con il livello e scende fino al 5% sopra il livello 400.</li>
+        <li><b>Premio</b>: il montepremi si divide fra 5 posti (7 per i GE Oro dal livello 101). Il primo posto prende circa il 58%, il secondo il 29%, il terzo il 10%.</li>
+        <li><b>Da versare</b>: il premio aumentato della percentuale della chat. Con il 90% il mecenate versa 1,9 volte il premio, e con il bonus dell'Arc riceve esattamente quanto ha messo.</li>
+        <li><b>Per coprire</b>: i PF che il proprietario deve versare prima, perché nessuno possa superare il mecenate. Quando non serve niente, il posto è "sicuro".</li>
+        <li><b>PF già versati ed Esterni</b>: se il livello è già iniziato, inserisci i PF messi da te e quelli degli altri giocatori. Il calcolatore indica i posti già presi, quelli in pericolo e i PF che mancano.</li>
+      </ul>
+      <h2>Domande frequenti</h2>
+      <h3>Quale livello devo inserire?</h3>
+      <p>Il livello nuovo, quello a destra nella barra del Grande Edificio, non quello attuale.</p>
+      <h3>Che differenza c'è tra Rame 90%, 95% e 100%?</h3>
+      <p>È la percentuale che la chat chiede in più rispetto al premio. Le chat Oro (20% e 25%) valgono per i livelli Oro, dal 102 in poi. Con CUSTOM puoi scrivere qualsiasi percentuale.</p>
+      <h3>Cosa vuol dire "pericolo"?</h3>
+      <p>Il premio vale più della metà dei PF che mancano al livello, quindi un altro giocatore può prendersi il posto versando meno del prezzo. Il mecenate dovrebbe versare subito, oppure il proprietario deve coprire prima.</p>
+      <h3>Devo registrarmi?</h3>
+      <p>No. Il calcolatore è gratuito e funziona nel browser. Le tue scelte restano salvate solo sul tuo dispositivo.</p>
+      <nav class="info-link" aria-label="Altre pagine">
+        <a href="/">FoE Optimizer</a> · <a href="/guida.html">Guida</a> · <a href="/planner-it.html">Planner della città</a> · <a href="/gb/" hreflang="en" lang="en">English version</a>
+      </nav>
+    </section>
     <noscript><p style="padding:16px">Il calcolatore ha bisogno di JavaScript.</p></noscript>
     <!-- costi, nomi e tier dei GE (RECUPERO DATI/gecosti.py): script e non JSON, così
          la pagina funziona anche aperta dal disco (file://), dove fetch() non va -->
