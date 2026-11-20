@@ -705,6 +705,16 @@
       ],
       "requiredFragments": 150
     },
+    "golden_upgrade_kit_WILD27A": {
+      "names": {
+        "en": "Majestic Lion Kingdom Golden Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD27A9",
+        "W_MultiAge_WILD27A10"
+      ],
+      "requiredFragments": 150
+    },
     "golden_upgrade_kit_WIN19Aa": {
       "names": {
         "en": "The Charcoal Limited Express Golden Upgrade Kit",
@@ -1084,6 +1094,15 @@
       "steps": [
         "W_MultiAge_WILD22A10",
         "W_MultiAge_WILD22A11"
+      ]
+    },
+    "platinum_upgrade_kit_WILD23A": {
+      "names": {
+        "en": "Zhulin Panda Shrine Platinum Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD23A10",
+        "W_MultiAge_WILD23A11"
       ]
     },
     "platinum_upgrade_kit_WILD24A": {
@@ -1622,6 +1641,16 @@
       "steps": [
         "W_MultiAge_WILD26A9",
         "W_MultiAge_WILD26A10"
+      ],
+      "requiredFragments": 150
+    },
+    "silver_upgrade_kit_WILD27A": {
+      "names": {
+        "en": "Noble Lion Territory Silver Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD27A8",
+        "W_MultiAge_WILD27A9"
       ],
       "requiredFragments": 150
     },
@@ -3223,6 +3252,33 @@
         "W_MultiAge_WILD23A9"
       ]
     },
+    "upgrade_kit_WILD23B": {
+      "names": {
+        "en": "Bamboo Crossing Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD23B1",
+        "W_MultiAge_WILD23B2"
+      ]
+    },
+    "upgrade_kit_WILD23C": {
+      "names": {
+        "en": "Purple Bamboo Garden Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD23C1",
+        "W_MultiAge_WILD23C2"
+      ]
+    },
+    "upgrade_kit_WILD23D": {
+      "names": {
+        "en": "Lotus Flower Lagoon Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD23D1",
+        "W_MultiAge_WILD23D2"
+      ]
+    },
     "upgrade_kit_WILD23E": {
       "names": {
         "en": "Himalayan Firs Upgrade Kit",
@@ -3316,6 +3372,30 @@
         "W_MultiAge_WILD26A7",
         "W_MultiAge_WILD26A8",
         "W_MultiAge_WILD26A9"
+      ]
+    },
+    "upgrade_kit_WILD27A": {
+      "names": {
+        "en": "Lion Grounds Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD27A1",
+        "W_MultiAge_WILD27A2",
+        "W_MultiAge_WILD27A3",
+        "W_MultiAge_WILD27A4",
+        "W_MultiAge_WILD27A5",
+        "W_MultiAge_WILD27A6",
+        "W_MultiAge_WILD27A7",
+        "W_MultiAge_WILD27A8"
+      ]
+    },
+    "upgrade_kit_WILD27E": {
+      "names": {
+        "en": "Aardvark Mound Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD27E1",
+        "W_MultiAge_WILD27E2"
       ]
     },
     "upgrade_kit_WIN18B": {
@@ -4183,6 +4263,16 @@
       ],
       "requiredFragments": 1000
     },
+    "upgrade_kit_ascended_WILD23A": {
+      "names": {
+        "en": "Ascended Zhulin Panda Shrine Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD23A11",
+        "W_MultiAge_WILD23A12"
+      ],
+      "requiredFragments": 1000
+    },
     "upgrade_kit_ascended_WILD24A": {
       "names": {
         "en": "Radiant Flamingo Paradise Upgrade Kit",
@@ -4232,6 +4322,24 @@
       "steps": [
         "W_MultiAge_WILD26C1",
         "W_MultiAge_WILD26C2"
+      ]
+    },
+    "upgrade_kit_ascended_WILD27B": {
+      "names": {
+        "en": "Ascended Acacia Canopy Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD27B1",
+        "W_MultiAge_WILD27B2"
+      ]
+    },
+    "upgrade_kit_ascended_WILD27C": {
+      "names": {
+        "en": "Ascended Meerkat Watch Upgrade Kit"
+      },
+      "steps": [
+        "W_MultiAge_WILD27C1",
+        "W_MultiAge_WILD27C2"
       ]
     },
     "upgrade_kit_ascended_WIN24A": {
@@ -11736,6 +11844,114 @@
       "options": [
         "W_MultiAge_GBG27B1",
         "upgrade_kit_GBG27B"
+      ]
+    },
+    "selection_kit_WILD27A": {
+      "names": {
+        "en": "Lion Grounds Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD27A1",
+        "upgrade_kit_WILD27A"
+      ]
+    },
+    "silver_selection_kit_WILD27A": {
+      "names": {
+        "en": "Noble Lion Territory Silver Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD27A1",
+        "upgrade_kit_WILD27A",
+        "silver_upgrade_kit_WILD27A"
+      ]
+    },
+    "golden_selection_kit_WILD27A": {
+      "names": {
+        "en": "Majestic Lion Kingdom Golden Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD27A1",
+        "upgrade_kit_WILD27A",
+        "silver_upgrade_kit_WILD27A",
+        "golden_upgrade_kit_WILD27A"
+      ],
+      "requiredFragments": 150
+    },
+    "selection_kit_WILD27BC": {
+      "names": {
+        "en": "Savannah Lookout Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD27B1",
+        "W_MultiAge_WILD27C1"
+      ],
+      "requiredFragments": 100
+    },
+    "selection_kit_WILD27E": {
+      "names": {
+        "en": "Aardvark Mound Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD27E1",
+        "upgrade_kit_WILD27E"
+      ]
+    },
+    "platinum_selection_kit_WILD23A": {
+      "names": {
+        "en": "Zhulin Panda Shrine Platinum Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD23A1",
+        "upgrade_kit_WILD23A",
+        "golden_upgrade_kit_WILD23A",
+        "platinum_upgrade_kit_WILD23A"
+      ]
+    },
+    "selection_kit_WILD23BCD2": {
+      "names": {
+        "en": "Panda Pathway Upgrade Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD23B1",
+        "W_MultiAge_WILD23C1",
+        "W_MultiAge_WILD23D1",
+        "upgrade_kit_WILD23B",
+        "upgrade_kit_WILD23C",
+        "upgrade_kit_WILD23D"
+      ]
+    },
+    "selection_kit_epic_WILD27": {
+      "names": {
+        "en": "Epic Wildlife 2027 Selection Kit"
+      },
+      "options": [
+        "W_MultiAge_WILD26A1",
+        "upgrade_kit_WILD26A",
+        "W_MultiAge_WILD25A1",
+        "upgrade_kit_WILD25A",
+        "W_MultiAge_WILD24A1",
+        "upgrade_kit_WILD24A",
+        "W_MultiAge_WILD24C1",
+        "upgrade_kit_WILD24C",
+        "W_MultiAge_WILD24D1",
+        "upgrade_kit_WILD24D",
+        "W_MultiAge_WILD24E1",
+        "W_MultiAge_WILD24F1",
+        "W_MultiAge_WILD24G1",
+        "W_MultiAge_WILD23A1",
+        "upgrade_kit_WILD23A",
+        "W_MultiAge_WILD23B1",
+        "W_MultiAge_WILD23C1",
+        "W_MultiAge_WILD23D1",
+        "W_MultiAge_WILD23E1",
+        "upgrade_kit_WILD23E",
+        "W_MultiAge_WILD23F1",
+        "upgrade_kit_WILD23F",
+        "W_MultiAge_WILD22A1",
+        "upgrade_kit_animal_crossing",
+        "P_MultiAge_WildBonus22",
+        "W_MultiAge_WILD21A1",
+        "upgrade_kit_mountain_reserve"
       ]
     }
   },

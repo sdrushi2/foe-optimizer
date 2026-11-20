@@ -103,6 +103,8 @@
    "inizi": [
     "W_MultiAge_WILD23A1",
     "W_MultiAge_WILD23A10",
+    "W_MultiAge_WILD23A11",
+    "W_MultiAge_WILD23A12",
     "W_MultiAge_WILD23A2",
     "W_MultiAge_WILD23A3",
     "W_MultiAge_WILD23A4",
@@ -114,8 +116,11 @@
    ],
    "anelli": [
     "W_MultiAge_WILD23B1",
+    "W_MultiAge_WILD23B2",
     "W_MultiAge_WILD23C1",
-    "W_MultiAge_WILD23D1"
+    "W_MultiAge_WILD23C2",
+    "W_MultiAge_WILD23D1",
+    "W_MultiAge_WILD23D2"
    ]
   },
   "pirates_hideout": {
@@ -1570,6 +1575,30 @@
     ]
    ]
   },
+  "W_MultiAge_WILD23A11": {
+   "catena": "panda_reserve",
+   "ruolo": "inizio",
+   "aggancio": [
+    [
+     5,
+     0,
+     6,
+     3
+    ]
+   ]
+  },
+  "W_MultiAge_WILD23A12": {
+   "catena": "panda_reserve",
+   "ruolo": "inizio",
+   "aggancio": [
+    [
+     5,
+     0,
+     6,
+     3
+    ]
+   ]
+  },
   "W_MultiAge_WILD23A2": {
    "catena": "panda_reserve",
    "ruolo": "inizio",
@@ -1678,6 +1707,18 @@
     ]
    ]
   },
+  "W_MultiAge_WILD23B2": {
+   "catena": "panda_reserve",
+   "ruolo": "anello",
+   "aggancio": [
+    [
+     2,
+     0,
+     3,
+     3
+    ]
+   ]
+  },
   "W_MultiAge_WILD23C1": {
    "catena": "panda_reserve",
    "ruolo": "anello",
@@ -1690,7 +1731,31 @@
     ]
    ]
   },
+  "W_MultiAge_WILD23C2": {
+   "catena": "panda_reserve",
+   "ruolo": "anello",
+   "aggancio": [
+    [
+     2,
+     0,
+     3,
+     3
+    ]
+   ]
+  },
   "W_MultiAge_WILD23D1": {
+   "catena": "panda_reserve",
+   "ruolo": "anello",
+   "aggancio": [
+    [
+     2,
+     0,
+     3,
+     3
+    ]
+   ]
+  },
+  "W_MultiAge_WILD23D2": {
    "catena": "panda_reserve",
    "ruolo": "anello",
    "aggancio": [

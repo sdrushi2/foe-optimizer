@@ -1922,6 +1922,8 @@ W_MultiAge_WILD22A8;Attraversamento degli animali - Liv. 8;Animal Crossing - Lv.
 W_MultiAge_WILD22A9;Attraversamento degli animali - Liv. 9;Animal Crossing - Lv. 9;R_MultiAge_WildBonus22i-8f42aabe0;;19;6x3;1.5;1;14665;25130;;10;;;;;;;;;;;;291800;;;;2341;;;23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23A1;Riserva di panda - Liv. 1;Panda Reserve - Lv. 1;R_MultiAge_WILD23A1-569490519;;19;4x5;2;1;1150;2300;;;;;;;;;;;;;;4025;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23A10;Santuario del panda;Panda Shrine;R_MultiAge_WILD23A10-683d94f8c;;19;4x5;2;1;11500;23000;;19;;;3;;75;;;;;;;40250;;;;2342;;;36;;33;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD23A11;;Zhulin Panda Shrine;9dbc8e240;;19;4x5;;;64000;64000;;345;;;10;;354;204;154;;;;;434280;;;;21880;;;92;;92;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD23A12;;Ascended Zhulin Panda Shrine;c69401f14;90;51;4x5;;;64000;96010;;518;;;20;;554;304;254;;;0.03;;868570;;;;87500;;;122;;122;;;;;;;;;;;25;;;;;;;;;200;8000;;;;;;;;;;
 W_MultiAge_WILD23A2;Riserva di panda - Liv. 2;Panda Reserve - Lv. 2;R_MultiAge_WILD23A2-3f7741e6f;;19;4x5;2;1;1436;2875;;;;;;;;;;;;;;5029;;;;802;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23A3;Riserva di panda - Liv. 3;Panda Reserve - Lv. 3;R_MultiAge_WILD23A3-1662e8b42;;19;4x5;2;1;1725;3450;;;;;;;;;;;;;;6036;;;;900;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23A4;Riserva di panda - Liv. 4;Panda Reserve - Lv. 4;R_MultiAge_WILD23A4-f10102685;;19;4x5;2;1;2300;4600;;;;;;;5;;;;;;;8050;;;;1082;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
@@ -1931,8 +1933,11 @@ W_MultiAge_WILD23A7;Riserva di panda - Liv. 7;Panda Reserve - Lv. 7;R_MultiAge_W
 W_MultiAge_WILD23A8;Riserva di panda - Liv. 8;Panda Reserve - Lv. 8;R_MultiAge_WILD23A8-cc7407d3d;;19;4x5;2;1;5175;10350;;11;;;;;30;;;;;;;18111;;;;1803;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23A9;Riserva di panda - Liv. 9;Panda Reserve - Lv. 9;R_MultiAge_WILD23A9-3d58df412;;19;4x5;2;1;6900;13800;;15;;;1;;35;;;;;;;24150;;;;1978;;;29;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23B1;Ponte di bambù;Bamboo Bridge;D_MultiAge_WILD23B-1a3008782;;19;4x2;;;;8150;;;;;;;;;;;;;;;;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD23B2;;Bamboo Crossing;5f273e24f;;19;4x2;;;;8530;;;;;;;65;;;;;;;;;;;;;;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;
 W_MultiAge_WILD23C1;Parco di bambù viola;Purple Bamboo Park;D_MultiAge_WILD23C-126daea8b;;19;4x2;;;;8150;;;;;;;;;;;;;;;;;;;;;;;;16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD23C2;;Purple Bamboo Garden;884b8cb49;;19;4x2;;;;8530;;;;;;;;46;;;;;;;;;;;;;;;;24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23D1;Lago dei fiori di loto;Lotus Flower Lake;D_MultiAge_WILD23D-56ea68f1f;;19;4x2;;;;8150;;6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD23D2;;Lotus Flower Lagoon;b5ffdd715;;19;4x2;;;;8530;;40;;;;;;;;;;;;;;;;;;;20;;;;;;;;;;;;;;;;;;;;;;;;;;;2;;;;;;
 W_MultiAge_WILD23E1;Abeti himalayani - Liv. 1;Himalayan Firs - Lv. 1;a3895d0a0;;19;2x2;1;1;;;;;;;;;5;;;;;;;;;;;;;;5;;5;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WILD23E2;Abeti himalayani - Liv. 2;Himalayan Firs - Lv. 2;18425f4cc;;19;2x2;1;1;;;;;;;;;20;;;;;;;;;;;;;;9;;9;;;;;;;;;;;;;;;;;;;;;;;;;1;;;;;;
 W_MultiAge_WILD23F1;Campo di rododendri - Liv. 1;Rhododendron Field - Lv. 1;ea4d396ce;;19;2x2;1;1;;;;4;;;;;;;;;;;;;;;;;;;;13;;13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1994,6 +1999,23 @@ W_MultiAge_WILD26B2;Accampamento della Savana Asceso;Ascended Savannah Camp;b3c6
 W_MultiAge_WILD26C1;Laguna Ippopotamo;Hippo Lagoon;e4eb72c0e;;19;2x2;;;-21270;;;45;;;;;;;;;;;;;;;;5470;;;;;;;;54;54;;;;;;;;;;;;;;;;;;;;;;;;;;upgrade_kit_ascended_WILD24A:2;
 W_MultiAge_WILD26C2;Laguna Ippopotamo Ascesa;Ascended Hippo Lagoon;f7a3afe34;30;51;2x2;;;-21270;;;60;;;;;;;;;;;;;;;;5470;;;;;;;;60;60;;;;;;;25;;;;0.02;;20000;5;;;;;;;;;;;;upgrade_kit_ascended_WILD24A:30;
 W_MultiAge_WILD26D1;Sorgenti Tartaruga Sacra;Sacred Tortoise Springs;082cfbb2d;;19;4x4;;;;;;200;;;;;;;;;;;;;;;;;;;150;150;150;150;;;;;100;100;100;100;20;20;20;20;;;;;;;;;;;;;;;;;golden_selection_kit_WILD26A:5|selection_kit_WILD26BC:5;
+W_MultiAge_WILD27A1;;Lion Grounds - Lv. 1;0fcf6a2c1;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A10;;Majestic Lion Kingdom;a81c50d05;;19;5x5;2.5;1;52270;85340;;426;;;;;325;;;;;;;;;;;87500;;;462;462;;;;;;;462;;;;;;;;;;;;;;;;M;;;;;;;;selection_kit_WILD27BC:3;
+W_MultiAge_WILD27A2;;Lion Grounds - Lv. 2;W_MultiAge_WILD27A1-0fcf6a2c1;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A3;;Lion Grounds - Lv. 3;W_MultiAge_WILD27A1-0fcf6a2c1;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A4;;Lion Grounds - Lv. 4;W_MultiAge_WILD27A1-0fcf6a2c1;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A5;;Lion Grounds - Lv. 5;fc6f884a4;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A6;;Lion Grounds - Lv. 6;W_MultiAge_WILD27A5-fc6f884a4;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A7;;Lion Grounds - Lv. 7;W_MultiAge_WILD27A5-fc6f884a4;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27A8;;Lion Grounds - Lv. 8;effd1da33;;19;5x5;2.5;1;26130;53340;;230;;;;;195;;;;;;;;;;;32810;;;282;282;;;;;;;302;;;;;;;;;;;;;;;;;;;;;;;;selection_kit_WILD27BC:1|silver_upgrade_kit_WILD27A:5;
+W_MultiAge_WILD27A9;;Noble Lion Territory;e0d1904ea;;19;5x5;2.5;1;38930;69340;;311;;;;;255;;;;;;;;;;;54690;;;352;352;;;;;;;372;;;;;;;;;;;;;;;;;;;;;;;;golden_upgrade_kit_WILD27A:5|selection_kit_WILD27BC:2;
+W_MultiAge_WILD27B1;;Acacia Canopy;525f92c46;;19;3x2;;;-48000;;;69;;;;;;;61;;;;;;;116470;;;;;;;62;62;;;;;112;112;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27B2;;Ascended Acacia Canopy;0ec255782;30;51;3x2;;;-48000;;;184;;;;;;;121;;;;;;;232940;;;;;;;152;152;;;;;182;182;;;;;25;25;;0.04;;;;5;;;;;;;;;;;;
+W_MultiAge_WILD27C1;;Meerkat Watch;99ec0a713;;19;3x2;;;-57600;;;;;;;;;61;;;;;;91200;;;;;;;92;92;;;102;102;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_WILD27C2;;Ascended Meerkat Watch;1621c2b28;30;51;3x2;;;-57600;;;;;;;;;191;;;;;;182400;;;;;;;212;212;;;182;182;;;;;;;30;30;;;0.04;;;;10;;;;;;;;;;;;;
+W_MultiAge_WILD27D1;;Grand Giraffe Oasis;fc45fcc23;;19;5x4;2;1;;;;320;0.02;;;;;;;;;;;;;;;;;;400;400;400;400;250;250;250;250;;;;;25;25;25;25;;;;;;;;;;;;;;;;3;golden_selection_kit_WILD27A:20;
+W_MultiAge_WILD27E1;;Aardvark Mound - Lv. 1;0e6555afe;;19;4x4;2;1;-64000;;;150;;;;;;;;;;;;;;;;;;;152;152;;;;152;;;;;;;;;;;;;;;;;;;;2;;;;1;1;;;
+W_MultiAge_WILD27E2;;Aardvark Mound - Lv. 2;04004236b;;19;4x4;2;1;-64000;;;311;;;;;;;;;;;;;;;;;;;262;262;;;;242;;;;;;;;;;;;;;;;;;;;6;;;;3;2;;upgrade_kit_ascended_WILD23A:5;
 W_MultiAge_WIN18B1;Costruttore di slitte;Sleigh Builder;P_MultiAge_WinterBonus18-0497e0c6d;;19;2x3;1;1;-370;;;;;;;;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1
 W_MultiAge_WIN18B2;Costruttore di Slitte Deluxe;Sleigh Builder Deluxe;298a2f960;;19;2x3;;;-20440;;;;;;;;50;;;;;;;;;;;;;;15;15;;;15;15;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_WIN19A1;Treno d'inverno - Lv. 1;Winter Train - Lv. 1;R_MultiAge_WinterBonus19a-89a86574d;;19;7x3;1.5;1;11473;10590;;;;;;;;;;;;;;124200;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
