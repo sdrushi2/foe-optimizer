@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, Fragment, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, Fragment, createContext, useContext, type ReactNode } from "react";
 import {
   X as XIcon,
   RotateCcw,
@@ -1163,7 +1163,6 @@ interface BuildingRowProps {
   showProdColumns: boolean;
   specialKits: SpecialKits;
   DIFF_FIELDS: DiffField[];
-  isSelected: boolean;
   isHighlighted: boolean;
   disconnectedCount: number;
   needlessCount: number;
@@ -1172,13 +1171,6 @@ interface BuildingRowProps {
   gameDisplayName: string | undefined;
   upgradeBadge: { targets: string[]; kits: Array<{ name: string; count: number }> } | undefined;
   isOutdated: boolean;
-  /** Zebra striping: true per la seconda/quarta/sesta... riga VISIBILE
-   *  (indice dispari nell'array già filtrato/ordinato) — aggiunge .row-even
-   *  alla classe di categoria già presente. Calcolato dal chiamante
-   *  dall'indice in filteredBuildings.map, quindi segue automaticamente
-   *  qualunque filtro/ordinamento attivo senza bisogno di ricalcolo
-   *  dedicato: l'indice nell'array già filtrato è sempre quello giusto. */
-  isEven: boolean;
   /** Catalogo › Grandi Edifici: niente cella dei limitati. */
   senzaLimitati?: boolean;
   /** Apre il report del GE (pulsante 📊 accanto al nome, al posto del vecchio badge "GE"). */
@@ -1197,7 +1189,6 @@ interface BuildingRowProps {
   instanceEraStats: Array<[string, number, EraStats]>;
   fragmentsProduced: FragmentProduced[];
   handleCityRowClick: (building: ProcessedBuilding) => void;
-  toggleSelect: (id: string) => void;
   getPropDisplay: (b: Building, lang: UiLang) => string;
   setImagePopup: (v: ImagePopupState | null) => void;
   scheduleImagePopupClose: () => void;
@@ -1207,6 +1198,82 @@ interface BuildingRowProps {
   setFabTooltip: (v: { x: number; y: number; kitsUsed: string[]; sourceId?: string; sourceLv?: number; choices?: string[] } | null) => void;
   /** (13/11/2026) Riquadro "Si ottiene con i frammenti di" (DA_FRAMMENTI). */
   setDaFrammentiTooltip: (v: { x: number; y: number; id: string } | null) => void;
+}
+
+/** DISEGNO A RATE della tabella degli edifici (20/11/2026, v2.023; rivisto la sera
+ *  stessa per l'INP). La tabella disegna subito le prime PRIMA_RATA righe e aggiunge
+ *  le altre a blocchi di ALTRA_RATA solo quando servono, cioè quando scorrendo ci si
+ *  avvicina alla fine di quelle già disegnate (una riga "sentinella" in fondo,
+ *  osservata con IntersectionObserver). A ogni nuovo elenco (filtro, ordinamento,
+ *  scheda, città) si riparte dalla prima rata. Solo il disegno: tutto il resto
+ *  (selezione, Export, conteggi) usa l'elenco intero.
+ *  Prima le rate si aggiungevano da sole nei momenti liberi (100, 200, 400, 800…) e
+ *  la tabella arrivava sempre a tutte le righe: ogni rata reimpaginava la tabella
+ *  intera, l'ultima teneva occupato il browser 1 s su computer e 2-3 s su cellulare,
+ *  e ogni clic (ordinare, filtrare, selezionare) lavorava su 1.600 righe. Misure
+ *  dell'INP in docs/V2.md. */
+const PRIMA_RATA = 50;
+const ALTRA_RATA = 100;
+function RigheARate({ lista, riga }: { lista: ProcessedBuilding[]; riga: (b: ProcessedBuilding) => ReactNode }) {
+  const [stato, setStato] = useState<{ lista: ProcessedBuilding[]; n: number }>(() => ({ lista, n: PRIMA_RATA }));
+  const sentinella = useRef<HTMLTableRowElement>(null);
+  const n = stato.lista === lista ? stato.n : PRIMA_RATA;
+  useEffect(() => {
+    if (stato.lista !== lista) setStato({ lista, n: PRIMA_RATA });
+  }, [stato.lista, lista]);
+  useEffect(() => {
+    const el = sentinella.current;
+    if (!el || n >= lista.length || typeof IntersectionObserver === "undefined") return;
+    // (la sentinella entra nei 2.000 px sotto lo schermo: si aggiunge la rata prima di arrivarci)
+    const io = new IntersectionObserver(voci => {
+      if (voci.some(v => v.isIntersecting)) setStato(s => (s.lista === lista ? { lista, n: s.n + ALTRA_RATA } : s));
+    }, { rootMargin: "0px 0px 2000px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [n, lista]);
+  // (senza IntersectionObserver, browser molto vecchi: tutte le righe subito)
+  const tutte = n >= lista.length || typeof IntersectionObserver === "undefined";
+  return (
+    <>
+      {(tutte ? lista : lista.slice(0, n)).map(riga)}
+      {!tutte && <tr ref={sentinella} aria-hidden="true"><td className="h-px p-0" /></tr>}
+    </>
+  );
+}
+
+/** (20/11/2026, INP) La selezione delle righe arriva alla casella da questo contesto e non
+ *  come prop della riga: selezionare o deselezionare (anche "tutti") ridisegna solo le
+ *  caselle, non le righe intere (con 1.600 righe nel Database, 1-3 s in meno per clic). */
+const SelezioneCtx = createContext<{ sel: ReadonlySet<string>; toggle: (id: string) => void }>({ sel: new Set(), toggle: () => {} });
+function CasellaSelezione({ id, label }: { id: string; label: string }) {
+  const { sel, toggle } = useContext(SelezioneCtx);
+  const on = sel.has(id);
+  return (
+    <label className="inline-flex cursor-pointer" onClick={(e) => e.stopPropagation()}>
+      <input
+        type="checkbox"
+        checked={on}
+        onChange={() => toggle(id)}
+        aria-label={label}
+        className="peer sr-only"
+      />
+      <span
+        className={`relative top-px block box-border h-3 w-3 shrink-0 rounded-[4px] border ${
+          on
+            ? "bg-amber-500 border-amber-500"
+            : "bg-transparent border-slate-600 peer-hover:border-slate-400"
+        }`}
+      >
+        {on && (
+          <Check
+            size={9}
+            strokeWidth={3}
+            className="text-slate-950 pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          />
+        )}
+      </span>
+    </label>
+  );
 }
 
 /** Riga della tabella principale edifici: estratta come componente
@@ -1220,10 +1287,10 @@ interface BuildingRowProps {
 const BuildingRow = memo(function BuildingRow({
   b, activeTab, uiLang, gameLang, currentEraId, showSigmaColumns, sommaBeni, spedizioniEnabled,
   showPopColumn, showFelColumn, showIqProdColumns, showProdColumns,
-  specialKits, DIFF_FIELDS, isSelected, isHighlighted, disconnectedCount, needlessCount, importedCount,
-  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, isEven, senzaLimitati, onReport, senzaIq, isDeclassable, avvisoLimitato, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
+  specialKits, DIFF_FIELDS, isHighlighted, disconnectedCount, needlessCount, importedCount,
+  greatBuildingInfo, gameDisplayName, upgradeBadge, isOutdated, senzaLimitati, onReport, senzaIq, isDeclassable, avvisoLimitato, allySlots, declassablePopData, setDeclassableTooltip, minLevel, allLevelsForEntity,
   instanceEraStats, fragmentsProduced,
-  handleCityRowClick, toggleSelect, getPropDisplay,
+  handleCityRowClick, getPropDisplay,
   setImagePopup, scheduleImagePopupClose, setUpgradeTooltip, setOutdatedTooltip, setFragmentTooltip, setFabTooltip, setDaFrammentiTooltip,
 }: BuildingRowProps) {
   // icone della colonna ❔ (BONUS nel catalogo dei GE): 24 px nel catalogo dei GE, 16 px nelle altre tabelle (utente)
@@ -1267,7 +1334,6 @@ const BuildingRow = memo(function BuildingRow({
               return BUILDING_ROW_COLORS[cat]
                 // GE nel tier Rame: tinta rame invece dell'oro (Prestige) — disattivato con lo sfondo dei GE
                 // + (cat === "great" && b.gbTier === "rame" ? " row-copper" : "")
-                + (isEven ? " row-even" : "")
                 + (disconnected ? " " + ROW_DISCONNECTED_OVERLAY : "")
                 // shadow inset invece di border-left: un vero border
                 // partecipa al box model e su table con
@@ -1281,30 +1347,7 @@ const BuildingRow = memo(function BuildingRow({
       } transition-colors ${activeTab === "propria_citta" && !b.isFallback ? "cursor-pointer" : ""}`}
     >
       {!senzaLimitati && <td className="cell-checkbox">
-        <label className="inline-flex cursor-pointer" onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => toggleSelect(b.id)}
-            aria-label={t("selectBuildingLabel", uiLang, b.name)}
-            className="peer sr-only"
-          />
-          <span
-            className={`relative top-px block box-border h-3 w-3 shrink-0 rounded-[4px] border ${
-              isSelected
-                ? "bg-amber-500 border-amber-500"
-                : "bg-transparent border-slate-600 peer-hover:border-slate-400"
-            }`}
-          >
-            {isSelected && (
-              <Check
-                size={9}
-                strokeWidth={3}
-                className="text-slate-950 pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              />
-            )}
-          </span>
-        </label>
+        <CasellaSelezione id={b.id} label={t("selectBuildingLabel", uiLang, b.name)} />
       </td>}
       <td className="cell-eye">
         {(() => {
@@ -5212,31 +5255,8 @@ export default function App() {
     return filtered;
   }, [tipoEff, baseProdCitta, eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, statoPronti, soloInvecchiabiliInv, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
-  // ── DISEGNO A RATE (20/11/2026, v2.023: provato dall'utente e tenuto) ──
-  // La tabella disegna subito le prime RIGHE_PRIMA_RATA righe e aggiunge le altre
-  // a blocchi (ognuno grande quanto tutto il già disegnato) nei momenti liberi del browser; a ogni nuovo elenco (filtro,
-  // ordinamento, scheda, città) riparte dalla prima rata. Solo il disegno: tutto
-  // il resto (selezione, Export, conteggi) usa filteredBuildings intero.
-  // Misure (build di produzione, Chrome headless): prime righe all'apertura da
-  // 3,4-4,4 s a 0,55-0,75 s; tabella completa in 5,5-6,8 s, a pezzi (le rate da
-  // 800 righe bloccano fino a 1-1,5 s). Alternativa più radicale, se servisse:
-  // virtualizzazione delle righe (vedi docs/V2.md).
-  // (rate che raddoppiano: 100, 200, 400… ogni rata reimpagina tutta la tabella,
-  //  quindi meglio poche rate grandi che tante piccole)
-  const RIGHE_PRIMA_RATA = 100;
-  const [rata, setRata] = useState<{ lista: ProcessedBuilding[]; n: number }>(() => ({ lista: filteredBuildings, n: RIGHE_PRIMA_RATA }));
-  const righeDisegnate = rata.lista === filteredBuildings ? rata.n : RIGHE_PRIMA_RATA;
-  useEffect(() => {
-    if (rata.lista !== filteredBuildings) { setRata({ lista: filteredBuildings, n: RIGHE_PRIMA_RATA }); return; }
-    if (rata.n >= filteredBuildings.length) return;
-    const avanti = () => setRata(r => (r.lista === filteredBuildings ? { lista: r.lista, n: r.n * 2 } : r));
-    const ric = (window as { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-    if (ric) { const id = ric(avanti, { timeout: 200 }); return () => (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id); }
-    const id = window.setTimeout(avanti, 16);
-    return () => window.clearTimeout(id);
-  }, [rata, filteredBuildings]);
-  const righeTabella = righeDisegnate >= filteredBuildings.length ? filteredBuildings : filteredBuildings.slice(0, righeDisegnate);
-  // ── fine DISEGNO A RATE ──
+  // Disegno a rate della tabella: vedi RigheARate (fuori da App).
+  const selezioneCtx = useMemo(() => ({ sel: selectedIds, toggle: toggleSelect }), [selectedIds, toggleSelect]);
 
   // (16/11/2026, utente) Città e Inventario: "Edifici visualizzati" conta le COPIE
   // degli edifici, non le righe: è la somma dei badge ×N. Città: un GE vale 1; con
@@ -7748,11 +7768,11 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
-                      {righeTabella.map((b, rowIndex) => (
+                      <SelezioneCtx.Provider value={selezioneCtx}>
+                      <RigheARate lista={filteredBuildings} riga={(b) => (
                         <BuildingRow
                           key={b.id}
                           b={b}
-                          isEven={rowIndex % 2 === 1}
                           senzaLimitati={senzaLimitati}
                           onReport={setReportGe}
                           senzaIq={senzaIq}
@@ -7769,7 +7789,6 @@ export default function App() {
                           sommaBeni={sommaBeni}
                           specialKits={specialKits}
                           DIFF_FIELDS={DIFF_FIELDS}
-                          isSelected={selectedIds.has(b.id)}
                           // Righe merged da Inventario (b._isMergedInventory): valori neutri
                           // per le props Città-specifiche, così anche un'eventuale guardia
                           // dimenticata in BuildingRow non mostra dati fuorvianti presi da
@@ -7795,7 +7814,6 @@ export default function App() {
                           instanceEraStats={entityInstanceEraStats.get(b.cityEntityId) ?? EMPTY_ERA_GROUPS}
                           fragmentsProduced={FRAGMENTS_PRODUCED.get(b.cityEntityId) ?? EMPTY_FRAGMENTS}
                           handleCityRowClick={handleCityRowClick}
-                          toggleSelect={toggleSelect}
                           getPropDisplay={getPropDisplay}
                           setImagePopup={setImagePopup}
                           scheduleImagePopupClose={scheduleImagePopupClose}
@@ -7805,7 +7823,8 @@ export default function App() {
                           setDaFrammentiTooltip={setDaFrammentiTooltip}
                           setFabTooltip={setFabTooltip}
                         />
-                      ))}
+                      )} />
+                      </SelezioneCtx.Provider>
  
                       {filteredBuildings.length === 0 && (() => {
                         // Messaggio dedicato quando la tab è vuota per MANCANZA DI IMPORT

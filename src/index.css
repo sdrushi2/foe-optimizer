@@ -152,8 +152,8 @@ html, body { overflow-x: clip; }
     --bt-header-row1-solid: color-mix(in srgb, var(--color-slate-900) 80%, var(--bt-ambient-solid));
     --bt-header-row2-solid: color-mix(in srgb, var(--color-slate-900) 60%, var(--bt-ambient-solid));
     /* Zebra striping: UNICO parametro di taratura per lo schiarimento delle
-       righe pari (.row-even, applicata insieme alla classe di categoria in
-       App.tsx). Percentuale di bianco mescolato SOPRA il colore già
+       righe pari (:nth-child(even) insieme alla classe di categoria, vedi
+       sotto). Percentuale di bianco mescolato SOPRA il colore già
        calcolato di ciascuna categoria (color-mix resta opaco per
        costruzione — nessuna riapertura del bug ghosting sulle colonne
        sticky, vedi commento .row-goods/.row-inactive sotto). Cambiare SOLO
@@ -260,12 +260,14 @@ html, body { overflow-x: clip; }
     filter: brightness(1.25);
   }
 
-  /* Zebra striping (righe pari più chiare, richiesto settembre 2026):
-     .row-even si applica INSIEME alla classe di categoria già presente
-     (App.tsx aggiunge/rimuove solo questa classe in base all'indice
-     nell'array GIÀ filtrato — nessun problema di "ricalcolo dopo il
-     filtro": l'indice segue automaticamente la lista visibile ad ogni
-     render). Ogni regola mescola, SOPRA il colore già risolto della
+  /* Zebra striping (righe pari più chiare, richiesto settembre 2026).
+     (20/11/2026, INP) Le righe pari le sceglie il CSS con :nth-child(even),
+     insieme alla classe di categoria: prima App.tsx aggiungeva la classe
+     .row-even in base all'indice, e ogni ordinamento cambiava la classe a
+     metà delle righe costringendo a ridisegnarle. Stessa specificità di
+     prima (classe + pseudo-classe = due classi), quindi stesse regole
+     di precedenza con l'hover. Nei commenti qui sotto ".row-even" vuol
+     dire "riga pari". Ogni regola mescola, SOPRA il colore già risolto della
      categoria, un tono più chiaro DELLA STESSA FAMIGLIA cromatica (es.
      sky.700 per la categoria goods/sky, non un bianco/grigio neutro
      uguale per tutte): il bianco desatura la tinta di base facendola
@@ -281,7 +283,7 @@ html, body { overflow-x: clip; }
      base (altrimenti categorie diverse diventerebbero indistinguibili
      una volta schiarite). Ogni riga even ridichiara anche l'hover della
      propria classe base (vedi commento sotto sul perché è necessario). */
-  .row-goods.row-even {
+  .row-goods:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-sky-700) var(--row-even-lighten), color-mix(in srgb, var(--color-sky-950) 40%, var(--bt-ambient-solid)));
   }
   /* ⚠️ .row-even ha la STESSA specificità di .row-*:hover (due classi vs
@@ -290,44 +292,44 @@ html, body { overflow-x: clip; }
      sulle righe pari (bug segnalato subito dopo l'introduzione dello zebra
      striping, settembre 2026). Ogni riga even ridichiara esplicitamente lo
      STESSO colore hover della classe base, così l'ordine non conta più. */
-  .row-goods.row-even:hover {
+  .row-goods:nth-child(even):hover {
     background-color: color-mix(in srgb, var(--color-sky-950) 60%, var(--bt-ambient-solid));
   }
-  .row-inactive.row-even {
+  .row-inactive:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-violet-700) var(--row-even-lighten), color-mix(in srgb, var(--color-violet-950) 30%, var(--bt-ambient-solid)));
   }
-  .row-inactive.row-even:hover {
+  .row-inactive:nth-child(even):hover {
     background-color: color-mix(in srgb, var(--color-violet-950) 50%, var(--bt-ambient-solid));
   }
-  .row-fallback.row-even {
+  .row-fallback:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-slate-500) var(--row-even-lighten), color-mix(in srgb, var(--color-slate-800) 60%, var(--bt-ambient-solid)));
   }
-  .row-fallback.row-even:hover {
+  .row-fallback:nth-child(even):hover {
     background-color: color-mix(in srgb, var(--color-slate-800) 80%, var(--bt-ambient-solid));
   }
-  .row-normal.row-even {
+  .row-normal:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-slate-500) var(--row-even-lighten), var(--color-slate-950));
   }
-  .row-normal.row-even:hover {
+  .row-normal:nth-child(even):hover {
     background-color: color-mix(in srgb, var(--color-slate-900) 40%, var(--bt-ambient-solid));
   }
-  .row-merged-inventory.row-even {
+  .row-merged-inventory:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-emerald-700) var(--row-even-lighten), color-mix(in srgb, var(--color-emerald-950) 55%, var(--bt-ambient-solid)));
   }
-  .row-merged-inventory.row-even:hover {
+  .row-merged-inventory:nth-child(even):hover {
     background-color: color-mix(in srgb, var(--color-emerald-950) 75%, var(--bt-ambient-solid));
   }
-  .row-great.row-even {
+  .row-great:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-amber-700) var(--row-even-lighten), var(--row-great-bg));
   }
-  .row-great.row-even:hover {
+  .row-great:nth-child(even):hover {
     filter: brightness(1.25);
   }
   /* GE nel tier Rame: stessa logica di .row-great con la tinta rame */
   .row-great.row-copper {
     background-color: var(--row-copper-bg);
   }
-  .row-great.row-copper.row-even {
+  .row-great.row-copper:nth-child(even) {
     background-color: color-mix(in srgb, #b87333 var(--row-even-lighten), var(--row-copper-bg));
   }
   .gb-badge-copper {
@@ -338,10 +340,10 @@ html, body { overflow-x: clip; }
   :root[data-theme="light"] .gb-badge-copper {
     color: #9a4a1f;
   }
-  .row-military.row-even {
+  .row-military:nth-child(even) {
     background-color: color-mix(in srgb, var(--color-red-700) var(--row-even-lighten), var(--row-military-bg));
   }
-  .row-military.row-even:hover {
+  .row-military:nth-child(even):hover {
     filter: brightness(1.25);
   }
 

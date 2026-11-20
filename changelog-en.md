@@ -2,7 +2,7 @@
 
 ## Version 2.023 (20/11/2026)
 ### Update
-- Building tables: the page opens much faster (in tests the first rows appear in under a second instead of 3-4): the table shows the first rows right away and adds the others a little at a time. The same after a filter or a sort
+- Building tables: the page opens much faster (in tests the first rows appear in under a second instead of 3-4) and responds much sooner to sorting, filters, search and selection (in tests on a computer from 0.5-2.6 seconds to 0.05-0.2 seconds). The table shows the first rows right away and adds the others as you scroll. To find a building use the Search box: the browser's Ctrl+F only finds the rows already shown
 - Database: new Era selector (next to Catalog) to see the buildings with the values of any era, from Bronze Age to Stellar Age: productions, goods, military values, population and efficiency. The latest era stays the default. For example the Ascended Zhulin Panda Shrine gives 554/304/254 goods at Stellar Age but 486/236/186 at Colonial Age
 
 ---
