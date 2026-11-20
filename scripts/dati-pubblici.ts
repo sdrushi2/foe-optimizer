@@ -35,6 +35,16 @@ function fileGeLivelli(dir: string): string[] {
   return fs.existsSync(d) ? fs.readdirSync(d).filter(f => f.endsWith(".json")).sort().map(f => `${DIR_GE_LIVELLI}/${f}`) : [];
 }
 
+/** Database per era (20/11/2026): buildings.csv di ogni era più vecchia
+ *  (RECUPERO DATI/buildings.py, ERE_DIR), ere/buildings_<id>.csv. Scaricati solo
+ *  scegliendo l'era nel Database (datiGioco.caricaBuildingsEra): nel manifest
+ *  con il loro hash, NON nel precache del service worker. */
+export const DIR_ERE = "ere";
+function fileEre(dir: string): string[] {
+  const d = path.join(dir, DIR_ERE);
+  return fs.existsSync(d) ? fs.readdirSync(d).filter(f => /^buildings_\d+\.csv$/.test(f)).sort().map(f => `${DIR_ERE}/${f}`) : [];
+}
+
 /** Costi di sblocco dei livelli dei GE (RECUPERO DATI/sblocchi_ge.py): solo le
  *  tabelle diverse + id del GE -> indice della tabella (datiGioco.caricaSblocchiGe). */
 export const FILE_SBLOCCHI_GE = `${DIR_GE_LIVELLI}/_sblocchi.json`;
@@ -60,7 +70,7 @@ function controllaSblocchi(dir: string, errori: string[]): void {
 export function manifestDati(dir: string): ManifestDati {
   const file: Record<string, string> = {};
   const tutto = createHash("sha256");
-  for (const f of [...FILE, ...fileGeLivelli(dir)]) {
+  for (const f of [...FILE, ...fileGeLivelli(dir), ...fileEre(dir)]) {
     const p = path.join(dir, f);
     if (!fs.existsSync(p)) continue;
     const buf = fs.readFileSync(p);
@@ -135,6 +145,17 @@ export function verificaDati(dir: string): string[] {
     colonne: ["CityEntityId", "NomeIta", "NomeEng", "Hash", "Size", "Road", "Flags"], minRighe: 1000,
     chiave: (r, c) => campo(r, c("CityEntityId")),
   });
+  // buildings.csv delle ere più vecchie: stesse colonne e stesse righe (stessi id) di buildings.csv
+  if (b !== null) {
+    const intest = righeCsv(b)[0] ?? [], ids = righeCsv(b).slice(1).map(r => (r[0] ?? "").trim()).join("\n");
+    for (const f of fileEre(dir)) {
+      const e = fs.readFileSync(path.join(dir, f), "utf-8");
+      controllaCsv(f, e, errori, { colonne: ["CityEntityId", "NomeIta", "NomeEng", "Hash", "Size", "Road", "Flags"], minRighe: 1000, chiave: (r, c) => campo(r, c("CityEntityId")) });
+      const re = righeCsv(e);
+      if ((re[0] ?? []).join(";") !== intest.join(";")) errori.push(`${f}: colonne diverse da buildings.csv`);
+      else if (re.slice(1).map(r => (r[0] ?? "").trim()).join("\n") !== ids) errori.push(`${f}: edifici diversi da buildings.csv`);
+    }
+  }
   const bx = leggi("buildings_extra.csv");
   if (bx !== null) controllaCsv("buildings_extra.csv", bx, errori, {
     colonne: ["CityEntityId", "NomeIta", "NomeEng", "Size", "Road"], minRighe: 100,

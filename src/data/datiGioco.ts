@@ -58,6 +58,23 @@ export function caricaBuildingsExtra(): Promise<string> {
   return extra;
 }
 
+const ere = new Map<number, Promise<string>>();
+/** Database per era (20/11/2026): buildings.csv dell'era `id` (Età del Bronzo = 1
+ *  … era prima della più recente; la più recente è buildings.csv), da
+ *  ere/buildings_<id>.csv. Scaricato SOLO quando si sceglie l'era nel Database,
+ *  una volta sola; stringa vuota se manca o non si scarica. */
+export function caricaBuildingsEra(id: number): Promise<string> {
+  let p = ere.get(id);
+  if (!p) {
+    const f = `ere/buildings_${id}.csv`, h = manifestAvvio.file?.[f];
+    p = scarica(h ? `/data/${f}?v=${h}` : `/data/${f}`)
+      .then(r => r.text())
+      .catch(() => { ere.delete(id); return ""; });
+    ere.set(id, p);
+  }
+  return p;
+}
+
 let ge: Promise<unknown> | null = null;
 /** ge.json (Prestige, novembre 2026): Grandi Edifici con tier e bonus
  *  (RECUPERO DATI/ge.py). Scaricato SOLO quando si apre Catalogo › Grandi

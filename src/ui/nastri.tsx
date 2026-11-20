@@ -88,6 +88,9 @@ export interface ContestoNastri {
   /** Catalogo del Database. */
   catalogo: "edifici" | "alleati" | "ge";
   setCatalogo: (c: "edifici" | "alleati" | "ge") => void;
+  /** Catalogo › Edifici: era dei valori del Database (20/11/2026; di base la più
+   *  recente, le altre si scaricano scegliendole). `carica` = file in arrivo. */
+  eraDb: { valore: number; ere: Array<{ id: number; nome: string }>; imposta: (id: number) => void; carica: boolean };
   /** Catalogo › Grandi Edifici: livello mostrato (1, 101, 201, 301, 401, 500). */
   livelloGe: { valore: number; imposta: (n: number) => void };
   /** Catalogo › Grandi Edifici: filtro per tier massimo. */
@@ -273,7 +276,24 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
               onClick: () => window.open(c.uiLang === "it" ? "/ge/?da=app" : "/gb/?da=app", "_blank", "noopener") },
           ]] }];
       }
-      return [catalogo, ricerca, filtri, vista(), nascondiMostra(), opzioniEdifici,
+      // Era dei valori del Database (20/11/2026) e ricerca nello stesso gruppo,
+      // uno sopra l'altro (richiesta dell'utente: nastro più stretto)
+      const eraDb: RibbonGroup = { id: "era-ricerca", label: L("r2GrpDbEraSearch"), icon: Search, priority: 2,
+        help: `${L("r2DbEraHelp")} ${L("r2SearchHelp")}`, rows: [[
+        { kind: "custom", id: "era", render: (modo) => modo === "S"
+          ? <span className="rounded-md border border-slate-700 p-1 text-slate-300" title={L("r2GrpDbEra")}><Clock4 size={14} /></span>
+          : (
+          <span className="relative inline-flex items-center">
+            <select value={c.eraDb.valore} onChange={e => c.eraDb.imposta(Number((e.target as HTMLSelectElement).value))}
+              title={L("r2DbEraHelp")} aria-label={L("r2GrpDbEra")} data-era-db=""
+              className={`h-[22px] w-[8.6rem] rounded-md border px-1 text-[12px] focus:outline-none ${c.eraDb.valore === c.eraDb.ere[c.eraDb.ere.length - 1]?.id ? "border-slate-700 bg-slate-900 text-slate-200" : "border-amber-600 bg-amber-950/40 text-amber-200"}`}>
+              {[...c.eraDb.ere].reverse().map(e => <option key={e.id} value={e.id} className="bg-slate-900 text-slate-100">{e.nome}</option>)}
+            </select>
+            {c.eraDb.carica && <span className="absolute -right-3 text-[11px] text-slate-400">…</span>}
+          </span>
+        ) },
+      ], [campoRicerca]] };
+      return [catalogo, eraDb, filtri, vista(), nascondiMostra(), opzioniEdifici,
         { id: "strumenti", label: L("r2GrpTools"), icon: Download, rows: [[esportaSel]] }];
     }
     case "citta": {

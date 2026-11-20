@@ -3,6 +3,7 @@
 ## Versione 2.023 (20/11/2026)
 ### Aggiornamenti
 - Tabelle edifici: la pagina si apre molto più in fretta (nelle prove le prime righe compaiono in meno di un secondo invece di 3-4): la tabella mostra subito le prime righe e aggiunge le altre poco alla volta. Lo stesso dopo un filtro o un ordinamento
+- Database: nuovo selettore Era (accanto al Catalogo) per vedere gli edifici con i valori di qualsiasi era, dall'Età del Bronzo all'Era Stellare: produzioni, beni, valori militari, popolazione ed efficienza. Di base resta l'era più recente. Per esempio l'Ascended Zhulin Panda Shrine dà 554/304/254 beni all'Era Stellare ma 486/236/186 all'Età Coloniale
 
 ---
 

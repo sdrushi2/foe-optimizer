@@ -115,7 +115,8 @@ function filePrecache(): string[] {
   const assets = fs.existsSync(dirAssets) ? fs.readdirSync(dirAssets).map(f => `/assets/${f}`) : [];
   const { file } = manifestDati(DIR_DATI);
   // (i valori livello per livello dei GE no: si scaricano solo aprendo il dettaglio di un GE)
-  const dati = Object.entries(file).filter(([f]) => !f.startsWith("ge-livelli/")).map(([f, h]) => `/data/${f}?v=${h}`);
+  // (né i buildings.csv delle ere più vecchie: si scaricano solo scegliendo l'era nel Database)
+  const dati = Object.entries(file).filter(([f]) => !f.startsWith("ge-livelli/") && !f.startsWith("ere/")).map(([f, h]) => `/data/${f}?v=${h}`);
   return [...assets, "/data/manifest.json", ...dati];
 }
 

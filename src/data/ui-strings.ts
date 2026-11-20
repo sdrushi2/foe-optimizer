@@ -115,6 +115,13 @@ const UI_STRINGS = {
   r2AlliesCat: { it: "Alleati", en: "Allies" },
   r2GreatBuildingsCat: { it: "Grandi Edifici", en: "Great Buildings" },
   r2GrpGeLevel: { it: "Livello", en: "Level" },
+  r2GrpDbEra: { it: "Era", en: "Era" },
+  r2GrpDbEraSearch: { it: "Era e ricerca", en: "Era and search" },
+  r2DbEraHelp: {
+    it: "Valori del Database a quell'era: produzioni, valori militari, popolazione ed efficienza. Di base l'era più recente; le altre si scaricano quando le scegli.",
+    en: "Database values at that era: productions, military values, population and efficiency. By default the latest era; the others are downloaded when you pick them.",
+  },
+  r2DbEraFailed: { it: "Non è stato possibile scaricare i valori di quell'era: restano quelli dell'era più recente.", en: "Couldn't download the values for that era: the latest era values stay." },
   r2GrpGeTier: { it: "Tier", en: "Tier" },
   r2GeTierAll: { it: "Tutti", en: "All" },
   r2GeTierCopper: { it: "Solo Rame", en: "Copper only" },
@@ -2403,6 +2410,10 @@ const UI_STRINGS = {
   // Chiarisce che i valori delle righe si riferiscono all'era corrente del
   // giocatore (anche per le copie di ere precedenti — comportamento voluto,
   // il dettaglio per-era sta nel tooltip del triangolo "obsoleto").
+  prodDbEraHint: {
+    it: "Per vedere produzioni e valori di un'altra era, sceglila nel selettore Era del nastro (gruppo Era e ricerca). Clic qui per aprirlo.",
+    en: "To see the productions and values of another era, pick it in the Era selector of the ribbon (Era and search group). Click here to open it.",
+  },
   prodValuesOfEra: {
     it: (era: string) => `valori di ${era}`,
     en: (era: string) => `${era} values`,

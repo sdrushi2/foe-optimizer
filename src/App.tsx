@@ -30,7 +30,7 @@ import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_A
   isStorageOutdated, PROFILE_SLOTS
 } from "./utils/storage";
 
-import { caricaBuildingsExtra, caricaGe, datiGioco, caricaCastello, type LivelloCastello } from "./data/datiGioco";
+import { caricaBuildingsExtra, caricaBuildingsEra, caricaGe, datiGioco, caricaCastello, type LivelloCastello } from "./data/datiGioco";
 import { leggiGe, statisticheGe, type DatiGe } from "./data/geBonus";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
@@ -197,6 +197,10 @@ const CSV_ENTITY_IDS_SET = new Set(CSV_ENTITY_IDS);
 // Lookup id -> Building, per risolvere l'hash immagine dato un
 // entityId della mappa città (che non porta con sé il campo hash).
 const BUILDING_BY_ID = new Map(BUILDINGS_FROM_CSV.map(b => [b.cityEntityId, b]));
+/** Database per era (20/11/2026): id dell'era più recente (= buildings.csv) e
+ *  ere sceglibili, dall'Età del Bronzo (id 1) a quella. */
+const ERA_DB_MAX = Math.max(...AGES_BY_ID.keys());
+const ERE_DB = [...AGES_BY_ID.values()].filter(a => a.id >= 1).sort((a, b) => a.id - b.id);
 
 function allyName(id: string, lang: Lang = "it"): string {
   return translateName(id, lang);
@@ -4472,6 +4476,34 @@ export default function App() {
     }));
   }, [weights, buildingSearchNames]);
 
+  // ── Database per era (20/11/2026, idea dell'utente) ──────────────────────
+  // buildings.csv ha i valori dell'era più recente; scegliendo un'altra era nel
+  // nastro (Catalogo › Edifici) si scarica ere/buildings_<id>.csv (una volta sola,
+  // poi resta in memoria) e la tabella del Database usa quello. Solo il Database:
+  // Città, Inventario, ottimizzatore e Planner restano su buildings.csv.
+  const [eraDb, setEraDb] = useState<number>(ERA_DB_MAX);
+  const [csvEre, setCsvEre] = useState<ReadonlyMap<number, Building[]>>(() => new Map());
+  const [caricaEraDb, setCaricaEraDb] = useState<number | null>(null);
+  const scegliEraDb = useCallback((id: number) => {
+    setEraDb(id);
+    if (id === ERA_DB_MAX || csvEre.has(id)) return;
+    setCaricaEraDb(id);
+    void caricaBuildingsEra(id).then(testo => {
+      const lista = testo ? parseBuildingsCsv(testo) : [];
+      if (lista.length) setCsvEre(m => new Map(m).set(id, lista));
+      else { setEraDb(e => (e === id ? ERA_DB_MAX : e)); alert(t("r2DbEraFailed", uiLang)); }
+    }).finally(() => setCaricaEraDb(c => (c === id ? null : c)));
+  }, [csvEre, uiLang]);
+  const csvEraDb = eraDb === ERA_DB_MAX ? null : csvEre.get(eraDb) ?? null;
+  const processedBuildingsDb = useMemo<ProcessedBuilding[]>(() => {
+    if (!csvEraDb) return processedBuildings;
+    return csvEraDb.filter(b => !b.isGreatBuilding).map(b => ({
+      ...b,
+      currentEff: calculateEfficiency(b, weights),
+      searchName: buildingSearchNames.get(b.cityEntityId) ?? "",
+    }));
+  }, [csvEraDb, processedBuildings, weights, buildingSearchNames]);
+
   // Catalogo › Grandi Edifici: una riga per GE (forma, strada, immagine e nomi
   // da buildings.csv) con le statistiche al livello scelto (geBonus.statisticheGe).
   const processedGeCatalogo = useMemo<ProcessedBuilding[]>(() => {
@@ -4865,8 +4897,8 @@ export default function App() {
       return showOnlyReadyBuildings ? processedInventoryRawBuildings : processedInventoryKitBuildings;
     }
     if (activeTab === "database" && catalogo === "ge") return processedGeCatalogo;
-    return processedBuildings;
-  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, showOnlyReadyBuildings, showInventoryInCity, catalogo, processedGeCatalogo, eraInventario, beniEraInventario]);
+    return activeTab === "database" ? processedBuildingsDb : processedBuildings;
+  }, [activeTab, allProcessedBuildings, processedInventoryRawBuildings, processedInventoryKitBuildings, processedBuildings, processedBuildingsDb, showOnlyReadyBuildings, showInventoryInCity, catalogo, processedGeCatalogo, eraInventario, beniEraInventario]);
 
   // Applica UNA VOLTA l'override era corrente (stats + nome + efficienza) per le
   // tab Città/Inventario, indipendentemente dalla ricerca. Prima questo lavoro
@@ -7030,6 +7062,7 @@ export default function App() {
     },
     catalogo, setCatalogo,
     livelloGe: { valore: livelloGe, imposta: setLivelloGe },
+    eraDb: { valore: eraDb, ere: ERE_DB.map(a => ({ id: a.id, nome: ageName(a.age, uiLang) })), imposta: scegliEraDb, carica: caricaEraDb !== null },
     tierGe: { valore: tierGe, imposta: setTierGe },
     alleati: {
       rarita: Allies.RARITY_LEVELS.map(rarity => {
@@ -7531,7 +7564,7 @@ export default function App() {
                           {/* 2.0: Export degli edifici selezionati → nastro, Opzioni. */}
                         </th>
                         <th className="th-name-summary py-2 px-2 text-center font-normal text-xs text-slate-400 italic truncate">
-                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{copieTabella ? copieTabella.visibili : filteredBuildings.length}</span>/<span className="text-slate-400">{copieTabella ? copieTabella.totali : catalogo === "ge" ? processedGeCatalogo.length : processedBuildings.length}</span>
+                          {t("buildingsVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{copieTabella ? copieTabella.visibili : filteredBuildings.length}</span>/<span className="text-slate-400">{copieTabella ? copieTabella.totali : catalogo === "ge" ? processedGeCatalogo.length : activeTab === "database" ? processedBuildingsDb.length : processedBuildings.length}</span>
                         </th>
                         <th className="py-2 px-0" colSpan={(senzaLimitati ? 4 : 5) + (showPopColumn ? 1 : 0) + (showFelColumn ? 1 : 0)}>
                           <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
@@ -7578,10 +7611,19 @@ export default function App() {
                                 norma: non usare più "Inventario ha valori misti" come premessa
                                 di design altrove nel codice. */}
                             {/* (catalogo dei GE: le produzioni dei GE non dipendono dall'era) */}
+                            {/* Database per era (20/11/2026): l'era scelta nel nastro; un clic apre il
+                                selettore (Era e ricerca), il titolo spiega dove si cambia */}
                             {activeTab === "database" && catalogo !== "ge" && (
-                              <span className="ml-1.5 font-normal normal-case text-orange-300/70">
-                                ({t("prodValuesOfEra", uiLang, ageName(FALLBACK_ERA, uiLang))})
-                              </span>
+                              <button type="button" title={t("prodDbEraHint", uiLang)}
+                                onClick={() => {
+                                  const sel = document.querySelector<HTMLSelectElement>("select[data-era-db]");
+                                  if (!sel) return;
+                                  sel.focus();
+                                  try { (sel as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* showPicker non permesso: resta il fuoco */ }
+                                }}
+                                className={`ml-1.5 cursor-pointer font-normal normal-case underline decoration-dotted underline-offset-2 hover:text-orange-200 ${eraDb === ERA_DB_MAX ? "text-orange-300/70" : "text-amber-300"}`}>
+                                ({t("prodValuesOfEra", uiLang, ageName(AGES_BY_ID.get(eraDb)?.age ?? FALLBACK_ERA, uiLang))} ▾)
+                              </button>
                             )}
                             {(activeTab === "propria_citta" || activeTab === "inventario") && currentEra && (
                               <span className="ml-1.5 font-normal normal-case text-orange-300/70">
