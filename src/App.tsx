@@ -5180,6 +5180,32 @@ export default function App() {
     return filtered;
   }, [tipoEff, baseProdCitta, eraAdjustedSource, deferredSearch, sortCriteria, currentFilters, currentEventFilter, activeTab, importedCityEntityLookup, manualSortTabs, showOnlyDeclassable, declassableBuildings, soloInvecchiabiliDb, statoPronti, soloInvecchiabiliInv, allySlotsPerBuilding, catalogo, tierGe, datiGe]);
 
+  // ── DISEGNO A RATE (20/11/2026, v2.023: provato dall'utente e tenuto) ──
+  // La tabella disegna subito le prime RIGHE_PRIMA_RATA righe e aggiunge le altre
+  // a blocchi (ognuno grande quanto tutto il già disegnato) nei momenti liberi del browser; a ogni nuovo elenco (filtro,
+  // ordinamento, scheda, città) riparte dalla prima rata. Solo il disegno: tutto
+  // il resto (selezione, Export, conteggi) usa filteredBuildings intero.
+  // Misure (build di produzione, Chrome headless): prime righe all'apertura da
+  // 3,4-4,4 s a 0,55-0,75 s; tabella completa in 5,5-6,8 s, a pezzi (le rate da
+  // 800 righe bloccano fino a 1-1,5 s). Alternativa più radicale, se servisse:
+  // virtualizzazione delle righe (vedi docs/V2.md).
+  // (rate che raddoppiano: 100, 200, 400… ogni rata reimpagina tutta la tabella,
+  //  quindi meglio poche rate grandi che tante piccole)
+  const RIGHE_PRIMA_RATA = 100;
+  const [rata, setRata] = useState<{ lista: ProcessedBuilding[]; n: number }>(() => ({ lista: filteredBuildings, n: RIGHE_PRIMA_RATA }));
+  const righeDisegnate = rata.lista === filteredBuildings ? rata.n : RIGHE_PRIMA_RATA;
+  useEffect(() => {
+    if (rata.lista !== filteredBuildings) { setRata({ lista: filteredBuildings, n: RIGHE_PRIMA_RATA }); return; }
+    if (rata.n >= filteredBuildings.length) return;
+    const avanti = () => setRata(r => (r.lista === filteredBuildings ? { lista: r.lista, n: r.n * 2 } : r));
+    const ric = (window as { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    if (ric) { const id = ric(avanti, { timeout: 200 }); return () => (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id); }
+    const id = window.setTimeout(avanti, 16);
+    return () => window.clearTimeout(id);
+  }, [rata, filteredBuildings]);
+  const righeTabella = righeDisegnate >= filteredBuildings.length ? filteredBuildings : filteredBuildings.slice(0, righeDisegnate);
+  // ── fine DISEGNO A RATE ──
+
   // (16/11/2026, utente) Città e Inventario: "Edifici visualizzati" conta le COPIE
   // degli edifici, non le righe: è la somma dei badge ×N. Città: un GE vale 1; con
   // i filtri Era ogni riga porta in kitCount le copie di quell'era; le righe di
@@ -7680,7 +7706,7 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
-                      {filteredBuildings.map((b, rowIndex) => (
+                      {righeTabella.map((b, rowIndex) => (
                         <BuildingRow
                           key={b.id}
                           b={b}

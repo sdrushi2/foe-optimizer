@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.023 (20/11/2026)
+### Aggiornamenti
+- Tabelle edifici: la pagina si apre molto più in fretta (nelle prove le prime righe compaiono in meno di un secondo invece di 3-4): la tabella mostra subito le prime righe e aggiunge le altre poco alla volta. Lo stesso dopo un filtro o un ordinamento
+
+---
+
 ## Versione 2.022 (19/11/2026)
 ### Aggiornamenti
 - Planner: passando col mouse sul numero rosso di "Con strada" o "Senza strada" (ora sottolineato) si apre l'elenco degli edifici non ancora piazzati, con le dimensioni e quante copie mancano

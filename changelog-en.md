@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.023 (20/11/2026)
+### Update
+- Building tables: the page opens much faster (in tests the first rows appear in under a second instead of 3-4): the table shows the first rows right away and adds the others a little at a time. The same after a filter or a sort
+
+---
+
 ## Version 2.022 (19/11/2026)
 ### Update
 - Planner: hovering the red "With road" or "Without road" count (now underlined) shows the list of buildings not placed yet, with their size and how many copies are missing
