@@ -75,7 +75,12 @@ self.addEventListener("install", (event) => {
           try {
             // (la root: solo un index.html di questa build, vedi scaricaIndex)
             if (url === "/") { const r = await scaricaIndex(); if (r) await cache.put("/", r); return; }
-            await cache.add(new Request(url, { cache: "reload" }));
+            // (21/11/2026) i file con l'hash nel nome (/assets/) o nell'indirizzo (?v=hash)
+            // hanno sempre lo stesso contenuto: la cache del browser va bene, cosi' la prima
+            // visita non li riscarica (WebPageTest: 574 KB scaricati due volte). "reload" solo
+            // per manifest e icone, che cambiano senza cambiare nome.
+            const conHash = url.startsWith("/assets/") || url.includes("?v=");
+            await cache.add(conHash ? url : new Request(url, { cache: "reload" }));
           } catch (err) {
             // Asset non disponibile: lo ignoriamo, verra' eventualmente cachato a runtime.
           }
