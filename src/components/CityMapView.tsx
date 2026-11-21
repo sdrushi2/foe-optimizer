@@ -5,7 +5,7 @@ import { t, type UiLang } from "../data/ui-strings";
 import { parseNumberPair } from "../data/piratiBuildings";
 import { localDateStamp, prefissoFile } from "../utils/format";
 import { esportaCittaJson, scaricaJson } from "../data/cityMapJson";
-import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_GREAT_BUILDING, MAP_COLOR_TOWN_HALL, MAP_COLOR_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_STREET, MAP_COLOR_MILITARY, MAP_COLOR_INACTIVE, PNG_COLOR_FREE } from "./cityMapPng";
+import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_GREAT_BUILDING, MAP_COLOR_TOWN_HALL, MAP_COLOR_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_STREET, MAP_COLOR_MILITARY, MAP_COLOR_MILITARY2, MAP_COLOR_INACTIVE, PNG_COLOR_FREE } from "./cityMapPng";
 
 
 /** Ascoltatore del canale con l'editor aperto dal pannello MAPPA (uno solo alla volta). */
@@ -48,14 +48,15 @@ function apriEditorMappa(buildings: readonly CityMapBuilding[], aree: readonly U
  *  Edifici, militari (a righe se collegati senza bisogno), collegati senza
  *  bisogno, infine strada richiesta sì/no — roadLevel diverso da 0, incluso
  *  undefined, conta come "richiede strada", esattamente come il colore verde. */
-type MapCategory = "street" | "townhall" | "inactive" | "great" | "military" | "needless" | "noRoad" | "road" | "road2";
+type MapCategory = "street" | "townhall" | "inactive" | "great" | "military" | "military2" | "needless" | "noRoad" | "road" | "road2";
 
 function mapCategory(b: CityMapBuilding): MapCategory {
   if (b.type === "street") return "street";
   if (b.type === "main_building") return "townhall";
   if (b.isInactive) return "inactive";
   if (b.isGreatBuilding) return "great";
-  if (b.isMilitary) return "military";
+  // (20/11/2026) militari a 2 corsie: marrone più scuro, come il verde degli edifici a 2 corsie
+  if (b.isMilitary) return (b.roadLevel ?? 1) >= 2 ? "military2" : "military";
   if (b.isNeedlessRoad) return "needless";
   if (b.roadLevel === 0) return "noRoad";
   return (b.roadLevel ?? 1) >= 2 ? "road2" : "road";
@@ -138,6 +139,7 @@ export default function CityMapView({
       case "inactive": return MAP_COLOR_INACTIVE;
       case "great": return MAP_COLOR_GREAT_BUILDING;
       case "military": return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : MAP_COLOR_MILITARY;
+      case "military2": return b.isNeedlessRoad ? "url(#needlessMilitaryPattern)" : MAP_COLOR_MILITARY2;
       case "needless": return "url(#needlessPattern)";
       case "noRoad": return MAP_COLOR_NO_ROAD_REQUIRED;
       case "road": return MAP_COLOR_ROAD_REQUIRED;
@@ -146,7 +148,7 @@ export default function CityMapView({
   };
 
   // Conteggi della legenda per categoria di disegno (vedi mapCategory).
-  const categoryCounts: Record<MapCategory, number> = { street: 0, townhall: 0, inactive: 0, great: 0, military: 0, needless: 0, noRoad: 0, road: 0, road2: 0 };
+  const categoryCounts: Record<MapCategory, number> = { street: 0, townhall: 0, inactive: 0, great: 0, military: 0, military2: 0, needless: 0, noRoad: 0, road: 0, road2: 0 };
   cityMapBuildings.forEach((b) => { categoryCounts[mapCategory(b)]++; });
 
   // Celle libere (sbloccate ma non occupate)
@@ -367,7 +369,10 @@ export default function CityMapView({
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_TOWN_HALL, borderColor: MAP_COLOR_TOWN_HALL, borderWidth: 1, borderStyle: "solid" }} /> {t("legendTownHall", uiLang)}</div>
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_GREAT_BUILDING, borderColor: MAP_COLOR_GREAT_BUILDING, borderWidth: 1, borderStyle: "solid" }} /> {t("legendGreatBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded">{categoryCounts.great}</span></div>
               {categoryCounts.military > 0 && (
-                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#78350F]" style={{ background: "#92400E" }} /> {t("legendMilitaryBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{categoryCounts.military}</span></div>
+                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#78350F]" style={{ background: MAP_COLOR_MILITARY }} /> {t("legendMilitaryBuildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{categoryCounts.military}</span></div>
+              )}
+              {categoryCounts.military2 > 0 && (
+                <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#3B1805]" style={{ background: MAP_COLOR_MILITARY2 }} /> {t("legendMilitary2Buildings", uiLang)} <span className="ml-1 text-xs font-bold text-amber-600 bg-amber-950/40 px-1.5 py-0.5 rounded">{categoryCounts.military2}</span></div>
               )}
               <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: MAP_COLOR_ROAD_REQUIRED, borderColor: MAP_COLOR_ROAD_REQUIRED, borderWidth: 1, borderStyle: "solid" }} /> {t("legendRoadRequired", uiLang)} <span className="ml-1 text-xs font-bold text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded">{categoryCounts.road}</span></div>
               {categoryCounts.road2 > 0 && (
@@ -394,7 +399,7 @@ export default function CityMapView({
                 <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B21A8]" style={{ background: "rgba(88,28,135,0.45)" }} /> {t("legendInactive", uiLang)} <span className="ml-1 text-xs font-bold text-violet-400 bg-violet-950/40 px-1.5 py-0.5 rounded">{categoryCounts.inactive}</span></div>
               )}
 
-              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#6B5B45]" style={{ background: "#8B7355" }} /> {t("legendStreets", uiLang)} <span className="ml-1 text-xs font-bold text-stone-400 bg-stone-950/40 px-1.5 py-0.5 rounded">{categoryCounts.street}</span></div>
+              <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm border border-[#5C5C5C]" style={{ background: MAP_COLOR_STREET }} /> {t("legendStreets", uiLang)} <span className="ml-1 text-xs font-bold text-stone-400 bg-stone-950/40 px-1.5 py-0.5 rounded">{categoryCounts.street}</span></div>
 
               {freeCells.length > 0 && (
                 <div className="flex items-center gap-3 font-medium"><span className="w-4 h-4 rounded shadow-sm" style={{ background: PNG_COLOR_FREE, borderColor: "#a89b3f", borderWidth: 1, borderStyle: "solid" }} /> {t("legendFreeSpace", uiLang)} <span className="ml-1 text-xs font-bold text-amber-200 bg-amber-950/40 px-1.5 py-0.5 rounded">{freeCells.length}</span></div>

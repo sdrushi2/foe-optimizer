@@ -1,9 +1,20 @@
 # Novità di FoE Optimizer
 
+## Versione 2.024 (21/11/2026)
+### Aggiornamenti
+- Planner, Raccordi a 3/4/5 con edifici a due corsie: dopo i blocchi a due corsie la strada ora può proseguire a una corsia sulla stessa riga, con gli edifici normali ai due lati, invece di fermarsi sempre contro un edificio a due corsie messo come fine strada. Il Planner prova entrambe le partenze e tiene la migliore
+- Planner, catene: se nella tua città un anello è staccato dalla sua catena (per esempio le Serpent Spikes lontane dalla Feathered Serpent Statue) compare un avviso con un interruttore per ogni tipo di anello. Acceso il Planner lo attacca alla catena, che va poi ricollocata e può costare qualche strada in più, anche nella Configurazione attuale. Spento resta staccato come in città e la Configurazione attuale parte davvero dalla tua città (su una città di prova 84 strade invece di 90)
+
+---
+
 ## Versione 2.023 (20/11/2026)
 ### Aggiornamenti
 - Tabelle edifici: la pagina si apre molto più in fretta (nelle prove le prime righe compaiono in meno di un secondo invece di 3-4) e risponde molto prima a ordinamenti, filtri, ricerca e selezione (nelle prove su computer da 0,5-2,6 secondi a 0,05-0,2 secondi). La tabella mostra subito le prime righe e aggiunge le altre man mano che scorri. Per trovare un edificio usa la casella Cerca: il Ctrl+F del browser trova solo le righe già mostrate
 - Database: nuovo selettore Era (accanto al Catalogo) per vedere gli edifici con i valori di qualsiasi era, dall'Età del Bronzo all'Era Stellare: produzioni, beni, valori militari, popolazione ed efficienza. Di base resta l'era più recente. Per esempio l'Ascended Zhulin Panda Shrine dà 554/304/254 beni all'Era Stellare ma 486/236/186 all'Età Coloniale
+- Mappa, PNG, Planner ed editor: gli edifici militari a 2 corsie hanno un marrone più scuro, con la loro voce nella legenda, come il verde scuro degli edifici a 2 corsie. Le strade sono grigie invece che marroni, così non si confondono con i militari. Nel PNG i nomi sugli edifici scuri sono scritti in chiaro
+
+### Correzioni
+- Mappa: passando col mouse sugli edifici militari (e sugli altri edifici che non sono nel Database, come le fabbriche di beni) ora compare l'immagine dell'edificio
 
 ---
 

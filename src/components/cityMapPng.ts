@@ -42,8 +42,15 @@ export const MAP_COLOR_ROAD_REQUIRED = "#5dd15d";
 /** Edifici che richiedono una strada a 2 corsie: verde più scuro (ottobre 2026). */
 export const MAP_COLOR_ROAD2_REQUIRED = "#237a34";
 export const MAP_COLOR_NO_ROAD_REQUIRED = "#7abaff";
-export const MAP_COLOR_STREET = "#8B7355";
+/** Strade: grigio (20/11/2026, utente; prima marrone #8B7355, stessa luminosità),
+ *  così non si confondono con i militari. */
+export const MAP_COLOR_STREET = "#777777";
 export const MAP_COLOR_MILITARY = "#92400E";
+/** Militari che richiedono una strada a 2 corsie: marrone più scuro (20/11/2026),
+ *  come il verde scuro degli edifici a 2 corsie. */
+export const MAP_COLOR_MILITARY2 = "#5A2508";
+/** Strade a 2 corsie nel Planner (blocco 2×2): grigio più scuro (prima #4b3a28). */
+export const MAP_COLOR_STREET2 = "#3d3d3d";
 export const MAP_COLOR_INACTIVE = "rgba(88,28,135,0.45)";
 export const PNG_COLOR_FREE = "#fffead";
 const PNG_COLOR_UNAVAILABLE = "#000000";
@@ -60,9 +67,17 @@ export function coloreEdificioMappa(b: { isTownhall?: boolean; isInactive?: bool
   if (b.isStreet) return MAP_COLOR_STREET;
   if (b.isTownhall) return MAP_COLOR_TOWN_HALL;
   if (b.isGreatBuilding) return MAP_COLOR_GREAT_BUILDING;
-  if (b.isMilitary) return MAP_COLOR_MILITARY;
+  if (b.isMilitary) return (b.roadLevel ?? 1) >= 2 ? MAP_COLOR_MILITARY2 : MAP_COLOR_MILITARY;
   if (b.roadLevel === 0) return MAP_COLOR_NO_ROAD_REQUIRED;
   return (b.roadLevel ?? 1) >= 2 ? MAP_COLOR_ROAD2_REQUIRED : MAP_COLOR_ROAD_REQUIRED;
+}
+/** Sfondo scuro (luminanza percepita sotto 120 su 255, stessa regola di `chiaro` in
+ *  public/editor.html): ci va il testo chiaro. I colori rgba (inattivi) contano come scuri. */
+function sfondoScuro(c: string): boolean {
+  if (c.startsWith("rgba")) return true;
+  if (!/^#[0-9a-f]{6}$/i.test(c)) return false;
+  const n = parseInt(c.slice(1), 16);
+  return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) < 120;
 }
 const PNG_CELL = 24;
 
@@ -215,7 +230,8 @@ export function renderCityMapPng(
 
     const label = b.type === "main_building" ? nomeMunicipio : b.name;
     const fontSize = (b.w >= 3 ? 11 : b.w === 2 ? 9 : 7) * scale;
-    ctx.fillStyle = "#000000";
+    // (20/11/2026) testo chiaro sugli sfondi scuri (militari, 2 corsie), come nell'editor
+    ctx.fillStyle = sfondoScuro(color) ? "#f1f5f9" : "#000000";
     ctx.font = `bold ${fontSize}px sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";

@@ -2811,6 +2811,20 @@ export default function App() {
     return () => { vivo = false; };
   }, [isDebugOpen, idsExtra]);
 
+  // (20/11/2026) Hash delle immagini degli edifici fuori dal Database (buildings_extra.csv:
+  // militari, fabbriche di beni, municipi…) per l'anteprima passando sulla mappa: prima i
+  // militari non avevano l'immagine. Scaricati la prima volta che si apre la mappa.
+  const mappaAperta = activeTab === "propria_citta" && showCityMap;
+  const [hashExtra, setHashExtra] = useState<ReadonlyMap<string, string> | null>(null);
+  useEffect(() => {
+    if (!mappaAperta || hashExtra) return;
+    let vivo = true;
+    void caricaBuildingsExtra().then(testo => {
+      if (vivo && testo) setHashExtra(new Map(parseBuildingsCsv(testo).map(b => [b.cityEntityId, b.hash])));
+    });
+    return () => { vivo = false; };
+  }, [mappaAperta, hashExtra]);
+
   const unmatchedAll = useMemo(() => {
     return Array.from(cityEntityIds.keys()).filter((id) =>
       !CSV_ENTITY_IDS_SET.has(id) &&
@@ -7487,7 +7501,9 @@ export default function App() {
                     return { ...prev, x: clientX + 16, y: clientY, anchorLeft: clientX - 16 };
                   }
                   const b = BUILDING_BY_ID.get(entityId);
-                  const url = b ? getImageUrl(b.cityEntityId, b.hash) : null;
+                  // (fuori dal Database, es. i militari: hash da buildings_extra.csv)
+                  const hashE = b ? undefined : hashExtra?.get(entityId);
+                  const url = b ? getImageUrl(b.cityEntityId, b.hash) : hashE ? getImageUrl(entityId, hashE) : null;
                   if (!url) return null;
                   return { x: clientX + 16, y: clientY, url, name, id: entityId, anchorLeft: clientX - 16 };
                 });

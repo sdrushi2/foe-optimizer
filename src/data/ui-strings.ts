@@ -619,6 +619,13 @@ const UI_STRINGS = {
   r2StSets: { it: "Set", en: "Sets" },
   r2PlMilitaryRoad: { it: "Edifici militari da collegare a strada:", en: "Military buildings to connect to a road:" },
   r2PlDisconnected: { it: "Edifici scollegati in città da collegare a strada:", en: "Buildings disconnected in the city to connect to a road:" },
+  r2PlDetachedLinks: { it: "Anelli di catena staccati in città da attaccare:", en: "Chain links detached in the city to attach:" },
+  r2PlDetachedLinksTitle: {
+    it: "Anelli di una catena che nella tua città non sono attaccati a nessun inizio della loro catena. Acceso: il Planner li attacca agli inizi, così la catena diventa più lunga e va ricollocata, anche nella Configurazione attuale (può servire qualche strada in più); spento: restano staccati come ora in città, come edifici senza strada, e gli inizi restano dove sono",
+    en: "Chain links that in your city are not attached to any start of their chain. On: the Planner attaches them to the starts, so the chain gets longer and has to be placed again, also in the Current layout (it may need a few more roads); off: they stay detached as they are now in the city, as buildings without a road, and the starts stay where they are",
+  },
+  plannerLinkAttach: { it: "Attaccato alla sua catena", en: "Attached to its chain" },
+  plannerLinkDetached: { it: "Staccato, come in città", en: "Detached, as in the city" },
   r2PlDisconnectedTitle: {
     it: "Edifici che richiedono la strada ma nella tua città sono scollegati (es. case tenute per la popolazione, fabbriche per la Royal Albert Hall). Spento: restano senza strada anche nella nuova disposizione; acceso: la nuova disposizione li collega",
     en: "Buildings that need a road but are disconnected in your city (e.g. houses kept for population, factories for the Royal Albert Hall). Off: they stay without a road in the new layout too; on: the new layout connects them",
@@ -1590,6 +1597,10 @@ const UI_STRINGS = {
   legendMilitaryBuildings: {
     it: "Edifici militari",
     en: "Military buildings",
+  },
+  legendMilitary2Buildings: {
+    it: "Edifici militari a 2 corsie",
+    en: "2-lane military buildings",
   },
   legendRoadRequired: {
     it: "Richiede strada",

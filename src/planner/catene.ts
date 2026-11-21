@@ -73,6 +73,49 @@ export interface Raggruppamento {
   blocchi: Map<string, Blocco>;
   /** Edifici del problema prima del raggruppamento (forme dei pezzi assorbiti). */
   originali: ReadonlyMap<string, PlannerBuilding>;
+  /** Anelli lasciati staccati (scelta dell'utente, vedi anelliStaccati): edifici
+   *  sciolti, mai attaccati a una catena (né qui né in ricomponiCatene). */
+  liberi?: ReadonlySet<string>;
+}
+
+/** Anelli di catena che nella città NON sono attaccati a nessun inizio della
+ *  loro catena (segnalazione dell'utente, 21/11/2026: Serpent Spikes lontane
+ *  dalla Feathered Serpent Statue). Da ogni inizio si seguono i rettangoli di
+ *  aggancio, come in ricomponiCatene; restano gli anelli presenti e non
+ *  raggiunti. Solo catene con almeno un inizio in città (gli anelli senza
+ *  inizio sono già edifici normali, vedi anelliSenzaInizio). `pos` = posizioni
+ *  nella città (id del problema non ancora raggruppato). */
+export function anelliStaccati(problem: PlannerProblem, pos: ReadonlyMap<string, { x: number; y: number }>): PlannerBuilding[] {
+  const perCatena = new Map<string, { inizi: PlannerBuilding[]; anelli: PlannerBuilding[] }>();
+  for (const b of problem.buildings) {
+    const info = b.isTownhall ? undefined : EDIFICI[b.entityId];
+    if (!info || !pos.has(b.id)) continue;
+    const c = perCatena.get(info.catena) ?? { inizi: [], anelli: [] };
+    (info.ruolo === "inizio" ? c.inizi : c.anelli).push(b);
+    perCatena.set(info.catena, c);
+  }
+  const out: PlannerBuilding[] = [];
+  for (const { inizi, anelli } of perCatena.values()) {
+    if (!inizi.length || !anelli.length) continue;
+    const anelloIn = new Map<string, PlannerBuilding>();
+    for (const a of anelli) { const p = pos.get(a.id)!; anelloIn.set(`${p.x},${p.y}`, a); }
+    const usati = new Set<string>();
+    for (const testa of inizi) {
+      let cur: Pezzo = { b: testa, ...pos.get(testa.id)! };
+      for (;;) {
+        let dopo: Pezzo | undefined;
+        for (const [x1, y1, x2, y2] of EDIFICI[cur.b.entityId]?.aggancio ?? []) {
+          const a = anelloIn.get(`${cur.x + x1!},${cur.y + y1!}`);
+          if (a && !usati.has(a.id) && a.w === x2! - x1! + 1 && a.h === y2! - y1! + 1) { dopo = { b: a, x: cur.x + x1!, y: cur.y + y1! }; break; }
+        }
+        if (!dopo) break;
+        usati.add(dopo.b.id);
+        cur = dopo;
+      }
+    }
+    for (const a of anelli) if (!usati.has(a.id)) out.push(a);
+  }
+  return out;
 }
 
 type Pezzo = { b: PlannerBuilding; x: number; y: number };
@@ -142,10 +185,11 @@ const firma = (b: PlannerBuilding) => `${b.w}x${b.h}:${JSON.stringify(EDIFICI[b.
 export function raggruppaCatene(
   problem: PlannerProblem,
   distribuzione: (catena: string, nInizi: number, nAnelli: number) => number[] = parti,
+  liberi?: ReadonlySet<string>,
 ): Raggruppamento {
   const perCatena = new Map<string, { inizi: PlannerBuilding[]; anelli: PlannerBuilding[] }>();
   for (const b of problem.buildings) {
-    const info = b.isTownhall ? undefined : EDIFICI[b.entityId];
+    const info = b.isTownhall || liberi?.has(b.id) ? undefined : EDIFICI[b.entityId];
     if (!info) continue;
     const c = perCatena.get(info.catena) ?? { inizi: [], anelli: [] };
     (info.ruolo === "inizio" ? c.inizi : c.anelli).push(b);
@@ -176,8 +220,9 @@ export function raggruppaCatene(
     }
   }
   const originali = new Map(problem.buildings.map(b => [b.id, b]));
-  if (!blocchi.size) return { problem, blocchi, originali };
-  return { problem: { ...problem, buildings: [...problem.buildings.filter(b => !assorbiti.has(b.id)), ...nuovi] }, blocchi, originali };
+  const lib = liberi?.size ? { liberi } : {};
+  if (!blocchi.size) return { problem, blocchi, originali, ...lib };
+  return { problem: { ...problem, buildings: [...problem.buildings.filter(b => !assorbiti.has(b.id)), ...nuovi] }, blocchi, originali, ...lib };
 }
 
 /** Anelli in parti uguali fra gli inizi (i primi ne prendono uno in più). */
@@ -221,7 +266,7 @@ export interface Ricomposizione {
  * loro pezzi si trattano come tolti.
  */
 export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { x: number; y: number }>, tollera = false): Ricomposizione {
-  const { problem, blocchi, originali } = rag;
+  const { problem, blocchi, originali, liberi } = rag;
   const out: Ricomposizione = { rag, placements: new Map(), voci: new Set(), staccati: [], forme: [], tolti: [] };
   type Voce = { id: string; sig: string; membri: Blocco["membri"] };
   const firmaVoce = (w: number, h: number, membri: ReadonlyArray<{ dx: number; dy: number }>) =>
@@ -230,7 +275,7 @@ export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { 
   for (const b of problem.buildings) {
     if (b.isTownhall) continue;
     const bl = blocchi.get(b.id);
-    const info = EDIFICI[b.entityId];
+    const info = liberi?.has(b.id) ? undefined : EDIFICI[b.entityId];
     const catena = bl?.catena ?? (info?.ruolo === "inizio" ? info.catena : undefined);
     if (!catena) continue;
     const membri = bl?.membri ?? [{ id: b.id, dx: 0, dy: 0 }];
@@ -241,7 +286,8 @@ export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { 
   for (const [catena, voci] of perCatena) {
     const teste = voci.map(v => originali.get(v.membri[0]!.id));
     // (anelli sciolti della catena: tolti a una catena in un ritorno precedente)
-    const sciolti = problem.buildings.filter(b => !blocchi.has(b.id) && EDIFICI[b.entityId]?.catena === catena && EDIFICI[b.entityId]?.ruolo === "anello");
+    // (non gli anelli lasciati staccati dall'utente: restano edifici sciolti)
+    const sciolti = problem.buildings.filter(b => !blocchi.has(b.id) && !liberi?.has(b.id) && EDIFICI[b.entityId]?.catena === catena && EDIFICI[b.entityId]?.ruolo === "anello");
     const anelli = [...voci.flatMap(v => v.membri.slice(1).map(m => originali.get(m.id))), ...sciolti];
     if (!anelli.length) continue; // nessun anello: inizi normali
     if (teste.some(b => !b || EDIFICI[b.entityId]?.ruolo !== "inizio") || anelli.some(b => !b || EDIFICI[b.entityId]?.ruolo !== "anello")) continue;
@@ -357,7 +403,7 @@ export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { 
   for (const bl of nuoviBlocchi) nb.set(bl.id, bl);
   out.rag = {
     problem: tolte.size ? { ...problem, buildings: [...problem.buildings.filter(b => !tolte.has(b.id)), ...nuove] } : problem,
-    blocchi: nb, originali,
+    blocchi: nb, originali, ...(liberi?.size ? { liberi } : {}),
   };
   return out;
 }

@@ -89,7 +89,10 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
 
   type Ris = Nucleo & { costo: [number, number, number]; k: number; chiave: string };
   const risultati: Ris[] = [];
-  const provaCatena = (blocchi: Pos[]): Ris | null => {
+  /** `conCapo`: il più grande degli edifici a due corsie va oltre la punta
+   *  (fine strada); senza, la punta resta aperta e la strada può proseguire a
+   *  una corsia (dorsale dalla punta, vedi inizioRiga in completion.ts). */
+  const provaCatena = (blocchi: Pos[], conCapo = true): Ris | null => {
     const strada = new Set<string>();
     for (const b of blocchi) for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
       const x = b.x + dx, y = b.y + dy;
@@ -118,7 +121,7 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
     }
     for (const b of lista) {
       let mig: { p: Pos; costo: number; contatto: number; sfr: string[]; capo: boolean } | null = null;
-      const primo = b === lista[0];
+      const primo = conCapo && b === lista[0];
       // (il fine strada sta OLTRE la punta: tra i candidati anche i rettangoli che coprono quelle celle)
       const candCapo: Pos[] = [];
       if (primo) for (const k of oltre) { const [ox, oy] = k.split(",").map(Number) as [number, number]; for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) candCapo.push({ x: ox - i, y: oy - j }); }
@@ -214,7 +217,9 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
   }
   // nuclei sul raccordo est (fuori, poi strade nuove + sfratti: gli edifici fissi del builder si spostano)
   const sulRaccordo: Ris[] = [];
-  if (raccordo) for (const by of [raccordo.eastMidY - 1, raccordo.eastMidY]) {
+  // (20/11/2026, richiesta dell'utente) anche con la punta aperta: la strada
+  // prosegue a una corsia sulla riga del raccordo (dorsale dalla punta)
+  if (raccordo) for (const conCapo of [true, false]) for (const by of [raccordo.eastMidY - 1, raccordo.eastMidY]) {
     const blocchi: Pos[] = [];
     let mig: Ris | null = null;
     // (sul raccordo anche più lunga: lungo la verticale gli edifici sono già
@@ -223,12 +228,12 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
     //  la fila arriva fino al bordo della mappa, dove provaCatena si ferma)
     for (let k = 1; k <= 64; k++) {
       blocchi.push({ x: pth.x + th.w + (k - 1) * 2, y: by });
-      const r = provaCatena(blocchi);
+      const r = provaCatena(blocchi, conCapo);
       if (!r) break;
       if (!mig || r.costo[0] < mig.costo[0] || (r.costo[0] === mig.costo[0] && r.costo[2] < mig.costo[2])) mig = r;
       if (r.fuori === 0) break;
     }
-    if (mig) sulRaccordo.push({ ...mig, nome: `raccordo: ${mig.nome}` });
+    if (mig) sulRaccordo.push({ ...mig, nome: `raccordo: ${mig.nome}${conCapo ? "" : ", punta aperta"}`, chiave: `${mig.chiave}${conCapo ? "" : "|aperta"}` });
   }
   const cmp = (a: Ris, b: Ris) => a.costo[0] - b.costo[0] || a.costo[1] - b.costo[1] || a.costo[2] - b.costo[2];
   risultati.sort(cmp);
@@ -236,7 +241,9 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
   const minFuori = risultati.length ? risultati[0]!.fuori : 0;
   for (let i = risultati.length - 1; i >= 0; i--) if (risultati[i]!.fuori > minFuori) risultati.splice(i, 1);
   const scelti: Ris[] = [];
-  const aggiungi = (r: Ris | undefined) => { if (r && scelti.length < max && !scelti.some(s => s.chiave === r.chiave)) scelti.push(r); };
+  // (le varianti con la punta aperta si aggiungono, non tolgono posto alle altre)
+  const tetto = max + sulRaccordo.filter(r => r.chiave.endsWith("|aperta")).length;
+  const aggiungi = (r: Ris | undefined) => { if (r && scelti.length < tetto && !scelti.some(s => s.chiave === r.chiave)) scelti.push(r); };
   // prima i nuclei sul raccordo (se non lasciano fuori più edifici degli altri)
   sulRaccordo.sort(cmp);
   for (const r of sulRaccordo) if (r.fuori <= minFuori && !scelti.some(s => s.chiave === r.chiave)) scelti.push(r);

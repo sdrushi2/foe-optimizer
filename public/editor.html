@@ -169,7 +169,8 @@
   .main_building { background:#ffb300; }
   .greatbuilding { background:#e6542f; }
   .military      { background:#92400E; color:#f1f5f9; }
-  .street        { background:#8B7355; }
+  .military2     { background:#5A2508; color:#f1f5f9; }  /* militare a 2 corsie */
+  .street        { background:#777777; }
   .road          { background:#5dd15d; }  /* richiede strada */
   .road2         { background:#237a34; color:#f1f5f9; }  /* richiede strada a 2 corsie */
   .noroad        { background:#7abaff; }  /* non richiede strada */
@@ -339,7 +340,7 @@ function livelloStrada(e) {
 const FIXED = new Set(['hub_main', 'hub_part', 'off_grid', 'outpost_ship', 'friends_tavern']);
 // Tipi con un colore proprio; tutti gli altri sono verdi (richiedono strada) o azzurri (no)
 const SPECIAL = new Set(['main_building', 'greatbuilding', 'military', 'street']);
-const colorClass = (type, lv) => SPECIAL.has(type) ? type : (lv < 1 ? 'noroad' : lv >= 2 ? 'road2' : 'road');
+const colorClass = (type, lv) => type === 'military' && lv >= 2 ? 'military2' : SPECIAL.has(type) ? type : (lv < 1 ? 'noroad' : lv >= 2 ? 'road2' : 'road');
 
 // Trasforma il JSON in { areas, items }. Il tool (MAPPA e Planner) manda
 // sempre il formato del suo export JSON: CityMapData / CityEntities /

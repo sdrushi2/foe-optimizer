@@ -18,8 +18,8 @@ import { runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
 import { baseCentrale, type BaseGirandola } from "./girandola";
-import { espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI_EDIFICI, type Raggruppamento } from "./catene";
-import { coloreEdificioMappa, renderCityMapPng, type RiepilogoPng } from "../components/cityMapPng";
+import { anelliStaccati, espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI_EDIFICI, type Raggruppamento } from "./catene";
+import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_STREET2, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
 import { esportaCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
@@ -197,7 +197,7 @@ function MapCanvas({ frame, problem, byId, ge, pausa, evidenzia, stradeVuote, du
     }
     // strade a due corsie: un blocco 2×2 unico, più scuro
     if (due?.length) {
-      ctx.fillStyle = "#4b3a28";
+      ctx.fillStyle = MAP_COLOR_STREET2;
       for (const k of due) {
         const [x, y] = k.split(",").map(Number) as [number, number];
         if (!frame.roads.has(k)) continue;
@@ -312,11 +312,31 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const senzaStrada = useMemo(() => new Set(esterna ? [] : cityMapBuildings
     .filter(b => scollegatiIniziali?.has(b.mapEntityId) && !(haRifornimento && eMilitare(b)) && !scollegatiDaCollegare.has(b.entityId))
     .map(b => b.mapEntityId)), [esterna, cityMapBuildings, scollegatiIniziali, haRifornimento, scollegatiDaCollegare]);
-  const catene = useMemo(() => {
-    if (!esterna) return raggruppaCatene(buildPlannerProblem(cityMapBuildings, celle, militariCollegati, senzaStrada));
+  /** Problema prima del raggruppamento delle catene. */
+  const problemaBase = useMemo(() => {
+    if (!esterna) return buildPlannerProblem(cityMapBuildings, celle, militariCollegati, senzaStrada);
     // L'export JSON non ha le posizioni delle strade, solo il loro numero.
-    return raggruppaCatene({ ...buildPlannerProblem(cityMapBuildings, celle, militariCollegati), originalRoadCells: esterna.strade });
+    return { ...buildPlannerProblem(cityMapBuildings, celle, militariCollegati), originalRoadCells: esterna.strade };
   }, [esterna, cityMapBuildings, celle, militariCollegati, senzaStrada]);
+  /** Anelli di catena staccati in città (21/11/2026, richiesta dell'utente):
+   *  avviso con un interruttore per tipo di anello; acceso (default, regola
+   *  "tutti gli anelli collegati") = il Planner li attacca, spento = restano
+   *  edifici sciolti, come in città (`liberi` di raggruppaCatene). */
+  const staccati = useMemo(() => {
+    const pos = new Map<string, { x: number; y: number }>();
+    for (const b of cityMapBuildings) if (b.type !== "street" && !eNuovo(b.mapEntityId)) pos.set(b.mapEntityId, { x: b.x, y: b.y });
+    return anelliStaccati(problemaBase, pos);
+  }, [problemaBase, cityMapBuildings]);
+  const [staccatiLasciati, setStaccatiLasciati] = useState<ReadonlySet<string>>(() => new Set());
+  const staccatiTipi = useMemo(() => {
+    const m = new Map<string, { entityId: string; name: string; n: number }>();
+    for (const b of staccati) { const x = m.get(b.entityId); if (x) x.n++; else m.set(b.entityId, { entityId: b.entityId, name: b.name, n: 1 }); }
+    return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [staccati]);
+  const catene = useMemo(() => {
+    const liberi = new Set(staccati.filter(b => staccatiLasciati.has(b.entityId)).map(b => b.id));
+    return raggruppaCatene(problemaBase, undefined, liberi.size ? liberi : undefined);
+  }, [problemaBase, staccati, staccatiLasciati]);
   const militariTipi = useMemo(() => tipiMilitari(cityMapBuildings), [cityMapBuildings]);
   const problem = catene.problem;
   /** Scenario "Configurazione attuale" (richiesta dell'utente): strade ed
@@ -1439,6 +1459,27 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                   <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-3.5" : "left-0.5"}`} />
                 </button>
                 <span>{m.name}{m.n > 1 ? ` ×${m.n}` : ""}{m.roadLevel >= 2 ? t("plannerTwoLaneTag", uiLang) : ""}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {staccatiTipi.length > 0 && (
+        // Anelli di catena staccati in città: acceso (default) = il Planner li
+        // attacca alla loro catena, spento = restano staccati come in città.
+        <div className="mx-3 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded border border-amber-700/60 bg-slate-950 px-3 py-1.5 text-[12px]">
+          <span className="font-semibold text-amber-300" title={t("r2PlDetachedLinksTitle", uiLang)}>{t("r2PlDetachedLinks", uiLang)}</span>
+          {staccatiTipi.map(m => {
+            const on = !staccatiLasciati.has(m.entityId);
+            return (
+              <label key={m.entityId} className={`flex items-center gap-1.5 ${running && !paused ? "opacity-50" : "cursor-pointer"}`}
+                title={t(running && !paused ? "plannerSwitchLocked" : on ? "plannerLinkAttach" : "plannerLinkDetached", uiLang)}>
+                <button type="button" role="switch" aria-checked={on} disabled={running && !paused}
+                  onClick={() => setStaccatiLasciati(prev => { const n = new Set(prev); if (n.has(m.entityId)) n.delete(m.entityId); else n.add(m.entityId); return n; })}
+                  className={`relative h-4 w-7 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-slate-600"}`}>
+                  <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-3.5" : "left-0.5"}`} />
+                </button>
+                <span>{m.name}{m.n > 1 ? ` ×${m.n}` : ""}</span>
               </label>
             );
           })}

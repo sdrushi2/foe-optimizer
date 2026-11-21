@@ -1,9 +1,20 @@
 # FoE Optimizer Changelog
 
+## Version 2.024 (21/11/2026)
+### Update
+- Planner, Connector 3/4/5 with two-lane buildings: after the two-lane blocks the road can now continue as a one-lane road on the same row, with normal buildings on both sides, instead of always stopping against a two-lane building used as road end. The Planner tries both starts and keeps the best one
+- Planner, chains: if in your city a link is detached from its chain (for example the Serpent Spikes far from the Feathered Serpent Statue) a notice appears with a switch for each kind of link. On, the Planner attaches it to the chain, which then has to be placed again and may cost a few more roads, also in the Current layout. Off, it stays detached as in the city and the Current layout really starts from your city (on a test city 84 roads instead of 90)
+
+---
+
 ## Version 2.023 (20/11/2026)
 ### Update
 - Building tables: the page opens much faster (in tests the first rows appear in under a second instead of 3-4) and responds much sooner to sorting, filters, search and selection (in tests on a computer from 0.5-2.6 seconds to 0.05-0.2 seconds). The table shows the first rows right away and adds the others as you scroll. To find a building use the Search box: the browser's Ctrl+F only finds the rows already shown
 - Database: new Era selector (next to Catalog) to see the buildings with the values of any era, from Bronze Age to Stellar Age: productions, goods, military values, population and efficiency. The latest era stays the default. For example the Ascended Zhulin Panda Shrine gives 554/304/254 goods at Stellar Age but 486/236/186 at Colonial Age
+- Map, PNG, Planner and editor: 2-lane military buildings have a darker brown, with their own legend entry, like the dark green of 2-lane buildings. Roads are gray instead of brown, so they don't get mixed up with military buildings. In the PNG, names on dark buildings are written in a light color
+
+### Fixes
+- Map: hovering military buildings (and other buildings that aren't in the Database, like goods buildings) now shows the building's image
 
 ---
 

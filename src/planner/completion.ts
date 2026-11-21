@@ -546,6 +546,16 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const vx = opts.geometry.stradaVX;
   const sy0 = opts.geometry.eastMidY;
   const x0 = vx + 1;
+  /** Prima colonna di una dorsale sulla riga sy: x0, oppure, se su quella riga
+   *  la strada a due corsie attraversa la verticale (nucleo sul raccordo), la
+   *  prima cella dopo la sua punta. Richiesta dell'utente (20/11/2026): dopo i
+   *  blocchi a due corsie la strada prosegue a una corsia, senza altri blocchi.
+   *  Senza strade fisse vale sempre x0 (le altre città restano identiche). */
+  const inizioRiga = (sy: number) => {
+    let x = x0;
+    if (fisse.size) while (fisse.has(key(x, sy))) x++;
+    return x;
+  };
   // (gli edifici a due corsie li piazza solo il nucleo: dueCorsie.ts)
   const daPiazzare = problem.buildings.filter(b => !b.isTownhall && b.roadLevel > 0 && !richiedeDueCorsie(b) && !placements.has(b.id));
   /** Area degli edifici senza strada ancora da piazzare (per il deficit di spazio). */
@@ -620,7 +630,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   const righeValide: number[] = [];
   const calcolaRighe = () => {
     righeValide.length = 0;
-    for (const r of roads) { const [rx, ry] = r.split(",").map(Number) as [number, number]; if (rx === vx && isFree(x0, ry)) righeValide.push(ry); }
+    for (const r of roads) { const [rx, ry] = r.split(",").map(Number) as [number, number]; if (rx === vx && isFree(inizioRiga(ry), ry)) righeValide.push(ry); }
     righeValide.sort((a, b) => a - b);
   };
   calcolaRighe();
@@ -814,7 +824,15 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
 
     /** Righe in cui una dorsale può diramarsi dalla verticale in questa simulazione. */
     const haVerticale = (r: number) => roads.hasXY(vx, r) || rd.hasXY(vx, r);
-    const okRigaS = (r: number) => haVerticale(r) && free(x0, r);
+    /** inizioRiga di questa simulazione (le strade fisse non cambiano durante una simulazione). */
+    const inizi = new Map<number, number>();
+    const xi = (sy: number) => {
+      if (!fisse.size) return x0;
+      let v = inizi.get(sy);
+      if (v === undefined) { v = inizioRiga(sy); inizi.set(sy, v); }
+      return v;
+    };
+    const okRigaS = (r: number) => haVerticale(r) && free(xi(r), r);
     const liberati: string[] = [];
     /** Celle di strada nuove non legate a un edificio (allungamento della verticale senza fini strada). */
     const stradeExtra: string[] = [];
@@ -1009,9 +1027,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
      *  `lista`, da x0 verso est, senza superare la colonna xMax (ultima cella
      *  di strada utilizzabile). `extra` = celle già riservate nel piano. */
     const latiDorsale = (sy: number, xMax: number, lista: PlannerBuilding[], extra: Riserva, items: Item[], forza?: Map<string, "n" | "s">) => {
-      const cursor = { n: x0, s: x0 };
+      const xs = xi(sy);
+      const cursor = { n: xs, s: xs };
       let alterna: "n" | "s" = "n";
-      let roadEnd = x0 - 1;
+      let roadEnd = xs - 1;
       for (const b of lista) {
         const firstX = (side: "n" | "s"): number | null => {
           const by = side === "n" ? sy - b.h : sy + 1;
@@ -1046,7 +1065,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       // (gli edifici del lato est della verticale negli angoli dell'incrocio,
       // gap 0, non la bloccano: toccano la verticale e la dorsale)
       const bloccata = (x: number, y: number) => { const g = gIdx(x, y); return (edif.hasXY(x, y) && !(g >= 0 && celleVerticale[g] === 1)) || rd.hasXY(x, y); };
-      while (free(x0 + n, sy) && !bloccata(x0 + n, sy - 1) && !bloccata(x0 + n, sy + 1)) n++;
+      const xs = xi(sy);
+      while (free(xs + n, sy) && !bloccata(xs + n, sy - 1) && !bloccata(xs + n, sy + 1)) n++;
       return n;
     };
 
@@ -1055,10 +1075,11 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       let maxLen = lunghezzaLibera(sy);
       maxLen = Math.max(1, Math.min(maxLen, Math.ceil(maxLen * cap)));
       const items: Item[] = [];
-      if (!free(x0, sy)) return { items, roadEnd: x0 - 1 };
+      const xs = xi(sy);
+      if (!free(xs, sy)) return { items, roadEnd: xs - 1 };
       const extra = nuovaRiserva();
-      for (let i = 0; i < maxLen; i++) extra.add(x0 + i, sy);
-      const roadEnd = latiDorsale(sy, x0 + maxLen - 1, lista ?? pending(), extra, items, forza);
+      for (let i = 0; i < maxLen; i++) extra.add(xs + i, sy);
+      const roadEnd = latiDorsale(sy, xs + maxLen - 1, lista ?? pending(), extra, items, forza);
       return { items, roadEnd };
     };
 
@@ -1067,7 +1088,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
      *  null se i due edifici del fine strada non entrano. */
     const provaDorsaleCap = (sy: number, len: number, pair: [PlannerBuilding, PlannerBuilding], vi: number,
       lista?: PlannerBuilding[], forza?: Map<string, "n" | "s">): PianoD | null => {
-      const xe = x0 + len - 1;
+      const xs = xi(sy);
+      const xe = xs + len - 1;
       const v = CAP_VARIANTS[vi]!;
       const L = pair[v.l], C = pair[1 - v.l]!;
       const lx = v.align === "flush" ? xe - L.w + 1 : xe;
@@ -1078,12 +1100,12 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       // Controlli numerici PRIMA di costruire l'insieme `extra` (ottimizzazione:
       // la maggior parte delle combinazioni lunghezza/variante fallisce qui).
       // Equivalenti a fitsS(..., extra) con extra = strada + L.
-      const suStrada = (x: number, y: number, w: number, h: number) => sy >= y && sy < y + h && x <= xe && x + w - 1 >= x0;
+      const suStrada = (x: number, y: number, w: number, h: number) => sy >= y && sy < y + h && x <= xe && x + w - 1 >= xs;
       if (suStrada(lx, ly, L.w, L.h) || !fitsS(lx, ly, L.w, L.h) || toccaAltraDorsale(lx, ly, L.w, L.h)) return null;
       const suL = cx < lx + L.w && cx + C.w > lx && cy < ly + L.h && cy + C.h > ly;
       if (suStrada(cx, cy, C.w, C.h) || suL || !fitsS(cx, cy, C.w, C.h) || toccaAltraDorsale(cx, cy, C.w, C.h)) return null;
       const extra = nuovaRiserva();
-      for (let x = x0; x <= xe; x++) extra.add(x, sy);
+      for (let x = xs; x <= xe; x++) extra.add(x, sy);
       for (let dx = 0; dx < L.w; dx++) for (let dy = 0; dy < L.h; dy++) extra.add(lx + dx, ly + dy);
       for (let dx = 0; dx < C.w; dx++) for (let dy = 0; dy < C.h; dy++) extra.add(cx + dx, cy + dy);
       const items: Item[] = [];
@@ -1093,7 +1115,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     };
     const pianoDorsaleCap = (sy: number, pair: [PlannerBuilding, PlannerBuilding], fattore: number, v0: number, nDorsali: number,
       lista?: PlannerBuilding[], forza?: Map<string, "n" | "s">, lenStart?: number): PianoD | null => {
-      if (!free(x0, sy)) return null;
+      if (!free(xi(sy), sy)) return null;
       const maxLen = lunghezzaLibera(sy);
       const larghezzaAltri = pending().filter(b => !riservati.has(b.id)).reduce((t, b) => t + b.w, 0);
       const stima = lenStart ?? Math.round(larghezzaAltri / (2 * nDorsali) * fattore) + Math.max(pair[0].w, pair[1].w);
@@ -1112,7 +1134,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
       return null;
     };
     const applicaDorsale = (sy: number, piano: PianoD, label: string) => {
-      let built = x0 - 1;
+      let built = xi(sy) - 1;
       for (const it of piano.items) {
         const road: string[] = [];
         const fino = it.cap ? piano.roadEnd : it.x;
@@ -1178,7 +1200,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         for (const S of [roads, rd]) for (const r of S) { const i = r.indexOf(","); if (Number(r.slice(0, i)) === vx) righe.push(Number(r.slice(i + 1))); }
         let best: { sy: number; piano: PianoD; score: number } | null = null;
         for (const sy of righe) {
-          if (!free(x0, sy)) continue;
+          const xs = xi(sy);
+          if (!free(xs, sy)) continue;
           const piano = pianoDorsale(sy, 1);
           if (!piano.items.length) continue;
           const area = piano.items.reduce((s, it) => s + it.b.w * it.b.h, 0);
@@ -1193,9 +1216,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           let liberi = 0;
           // (18/11/2026) anche i lati FUORI dall'area di gioco: una dorsale
           // lungo il bordo spreca tutto un lato (segnalazione su Skyfrost)
-          for (let xx = x0; xx <= piano.roadEnd; xx++) for (const yy of [sy - 1, sy + 1])
+          for (let xx = xs; xx <= piano.roadEnd; xx++) for (const yy of [sy - 1, sy + 1])
             if ((free(xx, yy) && !occIt.has(key(xx, yy))) || !dentroArea(xx, yy)) liberi++;
-          const strade = piano.roadEnd - x0 + 1 + PESO_LATO_LIBERO * liberi;
+          const strade = piano.roadEnd - xs + 1 + PESO_LATO_LIBERO * liberi;
           let score: number;
           if (p.secondary === "ratio") score = area / strade;
           else if (p.secondary === "minRoad") score = -strade / piano.items.length;
@@ -1203,7 +1226,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             // "snug": come ratio, ma conta anche le celle che resterebbero vuote
             // fra le fasce di questa dorsale e ciò che c'è già (righe sprecate).
             let vuote = 0;
-            for (let yy = yA - 2; yy < yB + 2; yy++) for (let xx = x0; xx <= piano.roadEnd; xx++)
+            for (let yy = yA - 2; yy < yB + 2; yy++) for (let xx = xs; xx <= piano.roadEnd; xx++)
               if (yy !== sy && free(xx, yy) && !occIt.has(key(xx, yy))) vuote++;
             score = area / (strade + PESO_SPRECO * vuote);
           }
@@ -1307,7 +1330,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         let sy = Number.NaN;
         const r0 = p.rows[0] ?? sy0;
         for (let d = 0; d <= 6 && Number.isNaN(sy); d++) for (const r of d ? [r0 + d, r0 - d] : [r0]) if (Number.isNaN(sy) && okRigaS(r)) sy = r;
-        if (!Number.isNaN(sy)) tronchi.push({ sy, xa: x0, sx: 1, esiste: false });
+        if (!Number.isNaN(sy)) tronchi.push({ sy, xa: xi(sy), sx: 1, esiste: false });
       }
       if (!tronchi.length) return;
       const cand = pending().filter(b => !riservati.has(b.id) && (b.w > b.h || (pv.quadrati && b.w === b.h && b.w <= 4)))
@@ -1551,6 +1574,8 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         if (visti.has(chiave)) return null;
         visti.add(chiave);
         if (!rows.every(haVerticale)) return null;
+        // (una dorsale che parte dalla punta della strada a due corsie non si sposta: resterebbe staccata)
+        if (fisse.size && rows.some((r, i) => r !== sp[i]!.row && xi(sp[i]!.row) !== x0)) return null;
         const yA = rows[0]! - hN[0]!, yB = rows[K - 1]! + hS[K - 1]!;
         let dentro = 0;
         const sx: number[] = [], sy: number[] = [];
@@ -1754,13 +1779,14 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
           return false;
         };
         const ok = (x: number, y: number, w: number, h: number) => fitsS(x, y, w, h) && !altraStrada(x, y, w, h);
-        let maxStart = x0 - 1, riuscito = true;
+        const xs = xi(row);
+        let maxStart = xs - 1, riuscito = true;
         // Vincolo degli alti esterni: per metterli fuori la strada può anche
         // allungarsi (fino a 8 celle, se libere).
         const lim = oldEnd; // la strada non si allunga mai per gli alti (era +8: peggiorava il totale)
         const stradaLibera = (t: number) => { for (let x = oldEnd + 1; x <= t; x++) if (!free(x, row)) return false; return true; };
         for (const lato of ["n", "s"] as const) {
-          let cur = x0;
+          let cur = xs;
           const lista = regs.filter(a => (lato === "n") === nord.has(a)).sort((a, b) => b.h - a.h);
           for (const a of lista) {
             const ny = lato === "n" ? row - a.h : row + 1;
@@ -1779,7 +1805,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             // Nuova estremità t (dalla più corta): tutte le varianti del fine
             // strada (ruoli L/C, lato, a filo/sporgente, verso di C).
             const pair = caps as [Azione, Azione];
-            for (let t = Math.max(maxStart, x0); (t < oldEnd || (migliora && t <= lim)) && xe < 0; t++) {
+            for (let t = Math.max(maxStart, xs); (t < oldEnd || (migliora && t <= lim)) && xe < 0; t++) {
               if (t > oldEnd && !stradaLibera(t)) break;
               // le celle di strada oltre t verranno tolte: contano come libere
               const ok = (x: number, y: number, w: number, h: number) => {
@@ -1803,7 +1829,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
               }
             }
           } else if (!caps.length && (maxStart < oldEnd || migliora)) {
-            const t = Math.max(maxStart, x0);
+            const t = Math.max(maxStart, xs);
             if (t <= oldEnd || stradaLibera(t)) xe = t;
           }
         }
@@ -1831,10 +1857,11 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         const regs = items.filter(a => !a.cap).sort((a, b) => a.x - b.x);
         const caps = items.filter(a => a.cap);
         for (const a of items) rett(a.x, a.y, a.w, a.h, 0);
-        let maxStart = x0 - 1;
+        const xs = xi(row);
+        let maxStart = xs - 1;
         for (const a of regs) {
           let nx = a.x;
-          for (let x = x0; x < a.x; x++) if (libero(x, a.y, a.w, a.h) && !toccaAltre(x, a.y, a.w, a.h, row)) { nx = x; break; }
+          for (let x = xs; x < a.x; x++) if (libero(x, a.y, a.w, a.h) && !toccaAltre(x, a.y, a.w, a.h, row)) { nx = x; break; }
           a.x = nx;
           rett(a.x, a.y, a.w, a.h, 1);
           maxStart = Math.max(maxStart, a.x);
@@ -1842,7 +1869,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
         let xe = oldEnd;
         if (caps.length) {
           const rel = caps.map(c => c.x - oldEnd);
-          for (let t = Math.max(maxStart, x0); t < oldEnd; t++) {
+          for (let t = Math.max(maxStart, xs); t < oldEnd; t++) {
             const pos = caps.map((c, i) => ({ c, x: t + rel[i]! }));
             // (versione numerica) le celle di strada della riga oltre t
             // verranno tolte: contano come libere; i fini strada non si sovrappongono
@@ -1857,7 +1884,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
             });
             if (ok) { xe = t; for (const { c, x } of pos) c.x = x; break; }
           }
-        } else xe = Math.max(maxStart, x0);
+        } else xe = Math.max(maxStart, xs);
         // Accorcia la strada oltre xe, poi marca i fini strada.
         for (let x = xe + 1; x <= oldEnd; x++) { occ.setRect(x, row, 1, 1, 0); rd.delete(key(x, row)); }
         for (const c of caps) rett(c.x, c.y, c.w, c.h, 1);

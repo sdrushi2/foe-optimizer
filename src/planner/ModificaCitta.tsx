@@ -15,7 +15,7 @@ import { t, type UiKey, type UiLang } from "../data/ui-strings";
 import { FALLBACK_ERA, ageName } from "../data/ages";
 import { formatDecimal, formatInt } from "../utils/format";
 import * as I from "../assets/icons";
-import { MAP_COLOR_GREAT_BUILDING, MAP_COLOR_MILITARY, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_ROAD_REQUIRED } from "../components/cityMapPng";
+import { MAP_COLOR_GREAT_BUILDING, MAP_COLOR_MILITARY, MAP_COLOR_MILITARY2, MAP_COLOR_NO_ROAD_REQUIRED, MAP_COLOR_ROAD2_REQUIRED, MAP_COLOR_ROAD_REQUIRED } from "../components/cityMapPng";
 import { anelliSenzaInizio } from "./catene";
 import { CAMPI_PERCENTUALI, contaModifiche, deltaModifiche, NESSUNA_MODIFICA, riepilogoCelle, type Aggiunto, type CampoDelta, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner, type Modifiche } from "./modificheCitta";
 
@@ -38,7 +38,7 @@ interface Props {
 
 /** Quadratino col colore della mappa (strada / due corsie / senza strada / GE / militare). */
 function Colore({ c }: { c: Pick<CandidatoPlanner, "roadLevel" | "isGreatBuilding" | "isMilitary"> }) {
-  const col = c.isGreatBuilding ? MAP_COLOR_GREAT_BUILDING : c.isMilitary ? MAP_COLOR_MILITARY
+  const col = c.isGreatBuilding ? MAP_COLOR_GREAT_BUILDING : c.isMilitary ? (c.roadLevel >= 2 ? MAP_COLOR_MILITARY2 : MAP_COLOR_MILITARY)
     : c.roadLevel >= 2 ? MAP_COLOR_ROAD2_REQUIRED : c.roadLevel > 0 ? MAP_COLOR_ROAD_REQUIRED : MAP_COLOR_NO_ROAD_REQUIRED;
   return <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: col }} />;
 }
