@@ -25,7 +25,7 @@
 //  SCHERMO BASSO (21/11/2026, telefono in orizzontale, altezza ≤ 500 px): il
 //  nastro alto 98 px con i gruppi chiusi alti 60 px e la riga vuota dei nomi
 //  prendeva un terzo dello schermo. Lì i gruppi sono sempre chiusi, in una riga
-//  sola alta 40 px: pulsanti con icona e nome affiancati (C) o, se non stanno,
+//  sola alta 40 px: pulsanti alti 28 px con icona e nome affiancati (C) o, se non stanno,
 //  solo icona (I).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -170,8 +170,10 @@ function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; m
 }
 
 /** `aCapo`: nel pannello di un gruppo chiuso i pulsanti vanno a capo invece
- *  di uscire dallo schermo (telefono in verticale). */
-function ContenutoGruppo({ g, modo, aCapo = false }: { g: RibbonGroup; modo: ModoGruppo; aCapo?: boolean }) {
+ *  di uscire dallo schermo (telefono in verticale). `colonne`: righe di soli
+ *  pulsanti più lunghe vanno in una griglia con quelle colonne, righe pari
+ *  (8 pulsanti → 4 + 4 invece di 3 + 4 + 1). */
+function ContenutoGruppo({ g, modo, aCapo = false, colonne }: { g: RibbonGroup; modo: ModoGruppo; aCapo?: boolean; colonne?: number }) {
   return (
     <>
       {g.rows.map((riga, i) => {
@@ -180,6 +182,13 @@ function ContenutoGruppo({ g, modo, aCapo = false }: { g: RibbonGroup; modo: Mod
         if (soloPulsanti && modo !== "L") {
           return (
             <div key={i} className="grid grid-flow-col grid-rows-3 gap-x-1 gap-y-[3px]">
+              {riga.map((it) => it.kind === "button" && <Pulsante key={it.id} it={it} modo={modo} />)}
+            </div>
+          );
+        }
+        if (aCapo && soloPulsanti && colonne && riga.length > colonne) {
+          return (
+            <div key={i} className="grid justify-center gap-1" style={{ gridTemplateColumns: `repeat(${colonne}, auto)` }}>
               {riga.map((it) => it.kind === "button" && <Pulsante key={it.id} it={it} modo={modo} />)}
             </div>
           );
@@ -197,6 +206,8 @@ function ContenutoGruppo({ g, modo, aCapo = false }: { g: RibbonGroup; modo: Mod
 export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   const rifNastro = useRef<HTMLDivElement>(null);
   const [aperto, setAperto] = useState<{ indice: number; left: number; top: number } | null>(null);
+  /** Colonne della griglia nel pannello del gruppo aperto (vedi ContenutoGruppo). */
+  const [colonne, setColonne] = useState(4);
   const rifPannello = useRef<HTMLDivElement>(null);
   const [larghezza, setLarghezza] = useState(0);
   const firma = groups.map((g) => g.id).join("|");
@@ -295,15 +306,23 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
 
   // il pannello non deve uscire dallo schermo (telefono): se sborda a destra
   // si sposta a sinistra quanto serve; più largo dello schermo → scorre dentro
+  // (21/11/2026) la larghezza si misura con il pannello a sinistra: aperto più a
+  // destra si stringeva al posto che restava fino al bordo e i pulsanti andavano
+  // su tre righe; se le colonne della griglia non stanno se ne toglie una
   useLayoutEffect(() => {
     const p = rifPannello.current, contenitore = p?.parentElement;
     if (!p || !aperto || !contenitore) return;
     const W = contenitore.clientWidth, margine = 4;
+    p.style.left = "0px";
+    if (p.scrollWidth > p.clientWidth + 1 && colonne > 1) { setColonne(colonne - 1); return; }
     p.style.left = `${Math.max(margine, Math.min(aperto.left, W - p.offsetWidth - margine))}px`;
-  }, [aperto]);
+  }, [aperto, colonne]);
 
   const apri = (i: number, e: MouseEvent) => {
     const btn = e.currentTarget as HTMLElement, base = rifNastro.current!.getBoundingClientRect(), r = btn.getBoundingClientRect();
+    // righe pari: 8 pulsanti → 4 colonne, 6 → 3, 5 → 3 (poi meno se non stanno)
+    const n = Math.max(0, ...groups[i]!.rows.map(rg => rg.length));
+    setColonne(n <= 4 ? 4 : Math.ceil(n / Math.ceil(n / 4)));
     setAperto(aperto?.indice === i ? null : { indice: i, left: r.left - base.left, top: r.bottom - base.top + 4 });
   };
 
@@ -319,7 +338,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
             <div key={g.id} className="flex flex-none items-center">
               <button type="button" data-apre-gruppo="" aria-expanded={aperto?.indice === i} onClick={(e) => apri(i, e as unknown as MouseEvent)}
                 title={modo === "I" ? g.label : undefined} aria-label={g.label}
-                className={`flex h-[30px] items-center gap-1.5 rounded-md border border-slate-700 leading-none whitespace-nowrap text-[12px] text-slate-300 hover:bg-slate-800 hover:text-slate-100 ${modo === "I" ? "px-1.5" : "px-2"}`}>
+                className={`flex h-[28px] items-center gap-1.5 rounded-md border border-slate-700 leading-none whitespace-nowrap text-[12px] text-slate-300 hover:bg-slate-800 hover:text-slate-100 ${modo === "I" ? "px-[5px]" : "px-[7px]"}`}>
                 <Icon size={16} strokeWidth={1.75} className="text-sky-300" aria-hidden="true" />
                 {modo !== "I" && g.label}
                 <ChevronDown size={11} aria-hidden="true" />
@@ -356,7 +375,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
           className="absolute z-50 flex max-w-[calc(100%-8px)] flex-col items-stretch gap-1 overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl">
           {/* (items-stretch, non items-center: un contenuto centrato più largo del
               pannello usciva anche a SINISTRA, dove lo scorrimento non arriva) */}
-          <ContenutoGruppo g={groups[aperto.indice]!} modo="L" aCapo />
+          <ContenutoGruppo g={groups[aperto.indice]!} modo="L" aCapo colonne={colonne} />
           <div className="text-center text-[11px] text-slate-500">{groups[aperto.indice]!.label}<Aiuto testo={groups[aperto.indice]!.help} /></div>
         </div>
       )}

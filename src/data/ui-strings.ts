@@ -106,7 +106,7 @@ const UI_STRINGS = {
   r2GrpCatalog: { it: "Catalogo", en: "Catalog" },
   r2GrpSearch: { it: "Ricerca", en: "Search" },
   r2GrpCity: { it: "Città", en: "City" },
-  r2GrpTools: { it: "Strumenti", en: "Tools" },
+  r2GrpTools: { it: "Tools", en: "Tools" },
   r2GrpSource: { it: "Sorgente", en: "Source" },
   r2GrpTheme: { it: "Tema", en: "Theme" },
   r2GrpLearn: { it: "Impara", en: "Learn" },
@@ -551,7 +551,7 @@ const UI_STRINGS = {
   // Nastro Città (2.0)
   r2GrpStats: { it: "Statistiche città", en: "City statistics" },
   r2GrpHide: { it: "Nascondi", en: "Hide" },
-  r2GrpHideShow: { it: "Nascondi / Mostra solo", en: "Hide / Show only" },
+  r2GrpHideShow: { it: "Nascondi / Mostra", en: "Hide / Show" },
   r2TriAll: { it: "tutti (clic: nascondi)", en: "all (click: hide)" },
   r2TriHidden: { it: "nascosti (clic: mostra solo questi)", en: "hidden (click: show only these)" },
   r2TriOnly: { it: "solo questi (clic: tutti)", en: "only these (click: all)" },
