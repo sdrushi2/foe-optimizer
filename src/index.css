@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "./theme-light.css";
 
+/* (21/11/2026, PageSpeed › Accessibilità › Contrasto) Testi secondari più
+   leggibili: slate-500 (etichette dei gruppi del nastro, versione, note) sul
+   fondo scuro arrivava a 3,7:1 su slate-900 e 4,2:1 su slate-950, sotto il minimo
+   di 4,5:1. Schiarito da 55,4% a 62% di luminosità (4,9:1 e 5,5:1), resta più
+   scuro di slate-400 (70,4%). Solo nel tema scuro: il tema chiaro ridefinisce
+   slate-500 in theme-light.css (e lì il contrasto era già sufficiente). */
+@theme {
+  --color-slate-500: oklch(62% 0.046 257.417);
+}
+
 /* ============================================================
    MAPPA CITTÀ – hover sui bordi dell'edificio sotto il cursore.
    Puro CSS (nessun React state/re-render): leggero anche con
