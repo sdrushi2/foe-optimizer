@@ -123,6 +123,8 @@ function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; m
       disabled={it.disabled}
       onClick={it.onClick}
       title={it.title ?? (it.badge ? `${it.label} (${it.badge})` : it.label)}
+      // (solo icona, modo S: il nome per i lettori di schermo, PageSpeed 21/11/2026)
+      aria-label={modo === "S" ? (it.badge ? `${it.label} (${it.badge})` : it.label) : undefined}
       aria-pressed={it.active}
       className={`flex items-center rounded-md border whitespace-nowrap text-[11px] leading-none disabled:cursor-not-allowed disabled:opacity-35 ${stato} ${
         grande ? "h-[60px] min-w-[60px] flex-col justify-center gap-1.5 px-2" : "h-[22px] gap-1.5 px-1.5"

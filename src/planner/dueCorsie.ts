@@ -68,7 +68,13 @@ const KMAX = 6;
  *  verso est, anche oltre la verticale), come concordato con l'utente: sul
  *  raccordo il builder mette edifici fissi, che altrimenti lo escluderebbero
  *  (su Avito r3 il Planner sceglieva una fila verticale a ovest). */
-export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: ReadonlyMap<string, Pos>; roads: ReadonlySet<string> }, fissi: readonly string[], max = 3, raccordo?: { eastMidY: number }): Nucleo[] {
+/** `bracci` (girandola, 21/11/2026, idea dell'utente su rebelmartin): celle dei
+ *  quattro bracci dal municipio verso l'esterno. Si propongono anche i
+ *  "braccioni": 1, 2, 3 o 4 bracci che partono a due corsie (blocchi 2×2 sul
+ *  braccio e sulla fila accanto) e proseguono a una corsia; ogni braccione si
+ *  allunga di un blocco per volta (quello che lascia fuori meno edifici a due
+ *  corsie e costa meno) finché gli edifici a due corsie entrano. */
+export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: ReadonlyMap<string, Pos>; roads: ReadonlySet<string> }, fissi: readonly string[], max = 3, raccordo?: { eastMidY: number }, bracci?: ReadonlyArray<readonly string[]>): Nucleo[] {
   const lista = problem.buildings.filter(richiedeDueCorsie).sort((a, b) => b.w * b.h - a.w * a.h);
   const th = problem.buildings.find(b => b.isTownhall);
   const pth = th ? base.placements.get(th.id) : undefined;
@@ -78,6 +84,7 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
   const fissiS = new Set(fissi);
   // occupazione della base senza gli edifici a due corsie
   const owner = new Map<string, string>();
+  const occIdx = new Map<string, number>();
   for (const [id, p] of base.placements) {
     if (due.has(id)) continue;
     const b = byId.get(id); if (!b) continue;
@@ -89,97 +96,135 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
 
   type Ris = Nucleo & { costo: [number, number, number]; k: number; chiave: string };
   const risultati: Ris[] = [];
+  // Griglie numeriche (21/11/2026, ottimizzazione: prima chiavi "x,y" in Set e
+  // Map, ~0,3-0,6 s per scenario nella pagina). Stesse visite nello stesso
+  // ordine, stessi risultati; fuori dalla griglia nessuna cella è sbloccata.
+  const GX0 = problem.minX - 1, GY0 = problem.minY - 1, GW = problem.maxX - problem.minX + 3, GH = problem.maxY - problem.minY + 3;
+  const gi = (x: number, y: number) => (x < GX0 || y < GY0 || x >= GX0 + GW || y >= GY0 + GH ? -1 : (y - GY0) * GW + (x - GX0));
+  /** 1 = cella sbloccata fuori dal municipio. */
+  const okG = new Uint8Array(GW * GH);
+  for (const k of problem.cells) { const c = k.indexOf(","), x = Number(k.slice(0, c)), y = Number(k.slice(c + 1)); const i = gi(x, y); if (i >= 0 && !inTh(x, y)) okG[i] = 1; }
+  /** 1 = strada della base. */
+  const stradaBaseG = new Uint8Array(GW * GH);
+  for (const k of base.roads) { const c = k.indexOf(","); const i = gi(Number(k.slice(0, c)), Number(k.slice(c + 1))); if (i >= 0) stradaBaseG[i] = 1; }
+  /** Edificio della base (senza quelli a due corsie) che occupa la cella: indice in `occId` + 1, 0 = nessuno. */
+  const occId: string[] = [];
+  const ownerG = new Int32Array(GW * GH);
+  for (const [k, id] of owner) {
+    const c = k.indexOf(","); const i = gi(Number(k.slice(0, c)), Number(k.slice(c + 1)));
+    if (i < 0) continue;
+    let n = occIdx.get(id);
+    if (n === undefined) { n = occId.length + 1; occIdx.set(id, n); occId.push(id); }
+    ownerG[i] = n;
+  }
+  const areaO = occId.map(id => area(id)), fissoO = occId.map(id => fissiS.has(id));
+  // timbri (niente da azzerare fra una prova e l'altra)
+  const stradaT = new Int32Array(GW * GH), occ2T = new Int32Array(GW * GH), visteT = new Int32Array(GW * GH), oltreT = new Int32Array(GW * GH);
+  const sfrT = new Int32Array(occId.length + 1);
+  let tStrada = 0, tVista = 0;
   /** `conCapo`: il più grande degli edifici a due corsie va oltre la punta
    *  (fine strada); senza, la punta resta aperta e la strada può proseguire a
    *  una corsia (dorsale dalla punta, vedi inizioRiga in completion.ts). */
   const provaCatena = (blocchi: Pos[], conCapo = true): Ris | null => {
-    const strada = new Set<string>();
+    const ts = ++tStrada; // timbro di questa prova: strada, edifici a due corsie messi, sfrattati, oltre la punta
+    const celleS: number[] = []; // celle di strada (indice), nell'ordine dei blocchi
+    const xyS: Array<[number, number]> = [];
     for (const b of blocchi) for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
-      const x = b.x + dx, y = b.y + dy;
-      if (!problem.cells.has(key(x, y)) || inTh(x, y)) return null;
-      strada.add(key(x, y));
+      const x = b.x + dx, y = b.y + dy, i = gi(x, y);
+      if (i < 0 || !okG[i]) return null;
+      if (stradaT[i] !== ts) { stradaT[i] = ts; celleS.push(i); xyS.push([x, y]); }
     }
-    const sfrattati = new Set<string>();
-    for (const c of strada) { const o = owner.get(c); if (o && o !== th.id) sfrattati.add(o); }
+    const sfrattati: number[] = []; // indici in occId (ordine di inserimento)
+    const sfratta = (o: number) => { if (sfrT[o] !== ts) { sfrT[o] = ts; sfrattati.push(o); } };
+    for (const i of celleS) { const o = ownerG[i]!; if (o && occId[o - 1] !== th.id) sfratta(o); }
     const messi = new Map<string, Pos>();
-    const occ2 = new Set<string>(); // celle degli edifici a due corsie messi
-    const occupata = (k: string) => base.roads.has(k) || strada.has(k) || occ2.has(k);
+    const occupata = (i: number) => stradaBaseG[i] === 1 || stradaT[i] === ts || occ2T[i] === ts;
     let fuori = 0;
-    const celleStrada = [...strada].map(k => k.split(",").map(Number) as [number, number]);
     // Fine strada (idea dell'utente: "è quasi sempre la soluzione migliore
     // mettere gli edifici più grandi come fine strada"): le due celle oltre la
     // punta della fila; il più grande degli edifici a due corsie ci va per
     // primo, se non sfratta edifici fissi.
-    const oltre = new Set<string>();
+    const oltre: Array<[number, number]> = [];
+    const aggOltre = (x: number, y: number) => { const i = gi(x, y); if (i >= 0 && oltreT[i] === ts) return; if (i >= 0) oltreT[i] = ts; if (!oltre.some(([a, c]) => a === x && c === y)) oltre.push([x, y]); };
     if (blocchi.length >= 2) {
       const u = blocchi[blocchi.length - 1]!, v = blocchi[blocchi.length - 2]!;
       const dx = Math.sign(u.x - v.x), dy = Math.sign(u.y - v.y);
-      if (dx > 0) oltre.add(key(u.x + 2, u.y)).add(key(u.x + 2, u.y + 1));
-      if (dx < 0) oltre.add(key(u.x - 1, u.y)).add(key(u.x - 1, u.y + 1));
-      if (dy > 0) oltre.add(key(u.x, u.y + 2)).add(key(u.x + 1, u.y + 2));
-      if (dy < 0) oltre.add(key(u.x, u.y - 1)).add(key(u.x + 1, u.y - 1));
+      if (dx > 0) { aggOltre(u.x + 2, u.y); aggOltre(u.x + 2, u.y + 1); }
+      if (dx < 0) { aggOltre(u.x - 1, u.y); aggOltre(u.x - 1, u.y + 1); }
+      if (dy > 0) { aggOltre(u.x, u.y + 2); aggOltre(u.x + 1, u.y + 2); }
+      if (dy < 0) { aggOltre(u.x, u.y - 1); aggOltre(u.x + 1, u.y - 1); }
     }
+    const inOltre = (x: number, y: number) => { const i = gi(x, y); return i >= 0 ? oltreT[i] === ts : oltre.some(([a, c]) => a === x && c === y); };
     for (const b of lista) {
-      let mig: { p: Pos; costo: number; contatto: number; sfr: string[]; capo: boolean } | null = null;
+      let mig: { p: Pos; costo: number; contatto: number; sfr: number[]; capo: boolean } | null = null;
       const primo = conCapo && b === lista[0];
       // (il fine strada sta OLTRE la punta: tra i candidati anche i rettangoli che coprono quelle celle)
       const candCapo: Pos[] = [];
-      if (primo) for (const k of oltre) { const [ox, oy] = k.split(",").map(Number) as [number, number]; for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) candCapo.push({ x: ox - i, y: oy - j }); }
-      const viste = new Set<string>();
-      for (const [cx, cy] of [...celleStrada, ...(candCapo.length ? [[NaN, NaN] as [number, number]] : [])]) {
+      if (primo) for (const [ox, oy] of oltre) for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) candCapo.push({ x: ox - i, y: oy - j });
+      const tv = ++tVista;
+      const viste = new Set<string>(); // (solo per le posizioni fuori dalla griglia)
+      const visto = (x: number, y: number) => {
+        const i = gi(x, y);
+        if (i >= 0) { if (visteT[i] === tv) return true; visteT[i] = tv; return false; }
+        const k = key(x, y); if (viste.has(k)) return true; viste.add(k); return false;
+      };
+      const giri = candCapo.length ? xyS.length + 1 : xyS.length;
+      for (let t = 0; t < giri; t++) {
+        const capoGiro = t === xyS.length;
         const cand: Pos[] = [];
-        if (Number.isNaN(cx)) cand.push(...candCapo);
+        if (capoGiro) cand.push(...candCapo);
         else {
+          const [cx, cy] = xyS[t]!;
           for (let j = 0; j < b.h; j++) { cand.push({ x: cx - b.w, y: cy - j }, { x: cx + 1, y: cy - j }); }
           for (let i = 0; i < b.w; i++) { cand.push({ x: cx - i, y: cy - b.h }, { x: cx - i, y: cy + 1 }); }
         }
         for (const p of cand) {
-          const kp = key(p.x, p.y);
-          if (viste.has(kp)) continue;
-          viste.add(kp);
+          if (visto(p.x, p.y)) continue;
           let ok = true, costo = 0;
-          const sfr: string[] = [];
+          const sfr: number[] = [];
           for (let i = 0; i < b.w && ok; i++) for (let j = 0; j < b.h && ok; j++) {
-            const x = p.x + i, y = p.y + j, k = key(x, y);
-            if (!problem.cells.has(k) || inTh(x, y) || occupata(k)) { ok = false; break; }
-            const o = owner.get(k);
-            if (o && !sfrattati.has(o) && !sfr.includes(o)) { sfr.push(o); costo += (fissiS.has(o) ? 1000 : 1) * area(o); }
+            const c = gi(p.x + i, p.y + j);
+            if (c < 0 || !okG[c] || occupata(c)) { ok = false; break; }
+            const o = ownerG[c]!;
+            if (o && sfrT[o] !== ts && !sfr.includes(o)) { sfr.push(o); costo += (fissoO[o - 1] ? 1000 : 1) * areaO[o - 1]!; }
           }
           if (!ok) continue;
           let contatto = 0;
-          const pieno = (x: number, y: number) => { const k = key(x, y); return !problem.cells.has(k) || occupata(k) || inTh(x, y) || (owner.has(k) && !sfrattati.has(owner.get(k)!) && !sfr.includes(owner.get(k)!)); };
+          const pieno = (x: number, y: number) => { const c = gi(x, y); if (c < 0 || !okG[c] || occupata(c)) return true; const o = ownerG[c]!; return o !== 0 && sfrT[o] !== ts && !sfr.includes(o); };
           for (let i = 0; i < b.w; i++) { if (pieno(p.x + i, p.y - 1)) contatto++; if (pieno(p.x + i, p.y + b.h)) contatto++; }
           for (let j = 0; j < b.h; j++) { if (pieno(p.x - 1, p.y + j)) contatto++; if (pieno(p.x + b.w, p.y + j)) contatto++; }
           let capo = false;
-          if (primo && oltre.size && costo < 1000) for (let i = 0; i < b.w && !capo; i++) for (let j = 0; j < b.h && !capo; j++) if (oltre.has(key(p.x + i, p.y + j))) capo = true;
-          if (!capo && Number.isNaN(cx)) continue; // (i candidati oltre la punta che non la toccano non servono)
+          if (primo && oltre.length && costo < 1000) for (let i = 0; i < b.w && !capo; i++) for (let j = 0; j < b.h && !capo; j++) if (inOltre(p.x + i, p.y + j)) capo = true;
+          if (!capo && capoGiro) continue; // (i candidati oltre la punta che non la toccano non servono)
           if (!mig || (capo && !mig.capo) || (capo === mig.capo && (costo < mig.costo || (costo === mig.costo && contatto > mig.contatto)))) mig = { p, costo, contatto, sfr, capo };
         }
       }
       if (!mig) { fuori++; continue; }
       messi.set(b.id, mig.p);
-      for (const o of mig.sfr) sfrattati.add(o);
-      for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) occ2.add(key(mig.p.x + i, mig.p.y + j));
+      for (const o of mig.sfr) sfratta(o);
+      for (let i = 0; i < b.w; i++) for (let j = 0; j < b.h; j++) { const c = gi(mig.p.x + i, mig.p.y + j); if (c >= 0) occ2T[c] = ts; }
     }
     let areaFissi = 0, areaSfr = 0;
-    for (const o of sfrattati) { areaSfr += area(o); if (fissiS.has(o)) areaFissi += area(o); }
-    const nuove = [...strada].filter(k => !base.roads.has(k)).length;
+    for (const o of sfrattati) { areaSfr += areaO[o - 1]!; if (fissoO[o - 1]) areaFissi += areaO[o - 1]!; }
+    let nuove = 0;
+    for (const i of celleS) if (!stradaBaseG[i]) nuove++;
     // Celle libere intrappolate attorno al nucleo: strisce larghe 1 fra il
     // nucleo e ciò che ha accanto (segnalazione dell'utente sul raccordo a 5:
     // la fila spostata di 1 per attaccare un 1×4 lasciava inutilizzato il lato
     // della verticale). Contano nel costo come strade.
     const pieno = (x: number, y: number) => {
-      const k = key(x, y);
-      if (!problem.cells.has(k) || inTh(x, y) || occupata(k)) return true;
-      const o = owner.get(k);
-      return !!o && !sfrattati.has(o);
+      const c = gi(x, y);
+      if (c < 0 || !okG[c] || occupata(c)) return true;
+      const o = ownerG[c]!;
+      return o !== 0 && sfrT[o] !== ts;
     };
     let intrappolate = 0;
-    const viste = new Set<string>();
+    const tv = ++tVista;
     const guarda = (x: number, y: number) => {
-      const k = key(x, y);
-      if (viste.has(k) || pieno(x, y)) return;
-      viste.add(k);
+      if (pieno(x, y)) return; // (le celle piene non entrano fra le viste: stesso conteggio)
+      const c = gi(x, y);
+      if (visteT[c] === tv) return;
+      visteT[c] = tv;
       if ((pieno(x - 1, y) && pieno(x + 1, y)) || (pieno(x, y - 1) && pieno(x, y + 1))) intrappolate++;
     };
     const contorno = (x0: number, y0: number, w: number, h: number) => {
@@ -188,14 +233,16 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
     };
     for (const b of blocchi) contorno(b.x, b.y, 2, 2);
     for (const [id, p] of messi) { const b = byId.get(id)!; contorno(p.x, p.y, b.w, b.h); }
+    const sfrId = new Set(sfrattati.map(o => occId[o - 1]!));
     const placements = new Map<string, Pos>();
-    for (const [id, p] of base.placements) if (!due.has(id) && !sfrattati.has(id)) placements.set(id, p);
+    for (const [id, p] of base.placements) if (!due.has(id) && !sfrId.has(id)) placements.set(id, p);
     for (const [id, p] of messi) placements.set(id, p);
     const blocchiK = blocchi.map(b => key(b.x, b.y));
+    const strada = xyS.map(([x, y]) => key(x, y));
     return {
-      nome: `${blocchi.length} ${blocchi.length === 1 ? "blocco" : "blocchi"} da ${blocchiK[0]}${sfrattati.size ? `, ${sfrattati.size} spostati` : ""}`,
+      nome: `${blocchi.length} ${blocchi.length === 1 ? "blocco" : "blocchi"} da ${blocchiK[0]}${sfrId.size ? `, ${sfrId.size} spostati` : ""}`,
       placements, roads: new Set([...base.roads, ...strada]), blocchi: blocchiK,
-      fissi: [...fissi.filter(id => !sfrattati.has(id) && !due.has(id)), ...messi.keys()],
+      fissi: [...fissi.filter(id => !sfrId.has(id) && !due.has(id)), ...messi.keys()],
       fuori, costo: [fuori, areaFissi, nuove + areaSfr / 4 + intrappolate], k: blocchi.length, chiave: [...blocchiK].sort().join(";"),
     };
   };
@@ -236,9 +283,63 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
     if (mig) sulRaccordo.push({ ...mig, nome: `raccordo: ${mig.nome}${conCapo ? "" : ", punta aperta"}`, chiave: `${mig.chiave}${conCapo ? "" : "|aperta"}` });
   }
   const cmp = (a: Ris, b: Ris) => a.costo[0] - b.costo[0] || a.costo[1] - b.costo[1] || a.costo[2] - b.costo[2];
+  // Braccioni della girandola (vedi sopra): il migliore per numero di bracci.
+  const braccioni: Ris[] = [];
+  if (bracci && bracci.length) {
+    const kxy = (k: string): [number, number] => { const i = k.indexOf(","); return [Number(k.slice(0, i)), Number(k.slice(i + 1))]; };
+    /** Lato dei blocchi di ogni braccio (+1 / -1: a destra o a sinistra della direzione). */
+    const lato: Array<1 | -1> = bracci.map(() => 1);
+    /** Primi n blocchi del braccio k (null se il braccio è troppo corto). */
+    const blocchiBraccio = (k: number, n: number): Pos[] | null => {
+      const celle = bracci[k]!;
+      if (celle.length < 2 * n || celle.length < 2) return null;
+      const [x0, y0] = kxy(celle[0]!), [x1, y1] = kxy(celle[1]!);
+      const sx = -(y1 - y0) * lato[k]!, sy = (x1 - x0) * lato[k]!;
+      const out: Pos[] = [];
+      for (let i = 0; i < n; i++) {
+        const [ax, ay] = kxy(celle[2 * i]!), [bx, by] = kxy(celle[2 * i + 1]!);
+        out.push({ x: Math.min(ax, bx, ax + sx, bx + sx), y: Math.min(ay, by, ay + sy, by + sy) });
+      }
+      return out;
+    };
+    const prova = (bracciK: readonly number[], lun: readonly number[]): Ris | null => {
+      const bl: Pos[] = [];
+      for (let i = 0; i < bracciK.length; i++) { const b = blocchiBraccio(bracciK[i]!, lun[i]!); if (!b) return null; bl.push(...b); }
+      return provaCatena(bl, false);
+    };
+    /** Un blocco per braccio, poi si allunga il braccio che conviene finché gli edifici a due corsie entrano. */
+    const cresci = (bracciK: readonly number[]): Ris | null => {
+      let lun = bracciK.map(() => 1);
+      let r = prova(bracciK, lun);
+      for (let giro = 0; r && r.fuori > 0 && giro < 64; giro++) {
+        let mig: Ris | null = null, migL: number[] | null = null;
+        for (let i = 0; i < bracciK.length; i++) {
+          const l2 = lun.slice(); l2[i]!++;
+          const r2 = prova(bracciK, l2);
+          if (r2 && (!mig || cmp(r2, mig) < 0)) { mig = r2; migL = l2; }
+        }
+        if (!mig || !migL) break;
+        r = mig; lun = migL;
+      }
+      return r;
+    };
+    // lato migliore di ogni braccio, da solo
+    bracci.forEach((_, k) => {
+      let mig: Ris | null = null, migLato: 1 | -1 = 1;
+      for (const l of [1, -1] as const) { lato[k] = l; const r = cresci([k]); if (r && (!mig || cmp(r, mig) < 0)) { mig = r; migLato = l; } }
+      lato[k] = migLato;
+    });
+    const nomi = ["N", "W", "E", "S"];
+    for (let m = 1; m < 1 << bracci.length; m++) {
+      const bracciK = bracci.map((_, k) => k).filter(k => m & (1 << k));
+      const r = cresci(bracciK);
+      if (r) braccioni.push({ ...r, nome: `braccioni ${bracciK.map(k => nomi[k] ?? k).join("+")}: ${r.nome}`, chiave: `${r.chiave}|braccioni`, k: bracciK.length });
+    }
+  }
   risultati.sort(cmp);
+  braccioni.sort(cmp);
   // edifici a due corsie fuori: solo i nuclei che ne lasciano fuori il meno possibile
-  const minFuori = risultati.length ? risultati[0]!.fuori : 0;
+  const minFuori = Math.min(risultati.length ? risultati[0]!.fuori : Infinity, braccioni.length ? braccioni[0]!.fuori : Infinity, risultati.length || braccioni.length ? Infinity : 0);
   for (let i = risultati.length - 1; i >= 0; i--) if (risultati[i]!.fuori > minFuori) risultati.splice(i, 1);
   const scelti: Ris[] = [];
   // (le varianti con la punta aperta si aggiungono, non tolgono posto alle altre)
@@ -251,6 +352,11 @@ export function nucleiDueCorsie(problem: PlannerProblem, base: { placements: Rea
   aggiungi(risultati.find(r => r.k === 1));
   aggiungi(risultati.find(r => r.k > 1));
   for (const r of risultati) aggiungi(r);
+  // (i braccioni si aggiungono: il migliore per 1, 2, 3 e 4 bracci a due corsie)
+  for (let nb = 1; nb <= 4; nb++) {
+    const r = braccioni.find(b => b.k === nb && b.fuori <= minFuori);
+    if (r && !scelti.some(s => s.chiave === r.chiave)) scelti.push(r);
+  }
   return scelti.map(({ nome, placements, roads, blocchi, fissi: f, fuori }) => ({ nome, placements, roads, blocchi, fissi: f, fuori }));
 }
 
@@ -369,7 +475,10 @@ export function retePettine(problem: PlannerProblem, base: { placements: Readonl
     const bloccoDi = new Map<number, number>(); // cella → indice del suo blocco
     const messi = new Map<string, Pos>();
     const rettLibero = (r: Pos, b: PlannerBuilding) => {
-      for (let j = 0; j < b.h; j++) { const i0 = idx(r.x, r.y + j); if (i0 < 0 || idx(r.x + b.w - 1, r.y + j) < 0) return false; for (let i = 0; i < b.w; i++) if (G[i0 + i] !== LIBERA) return false; }
+      // (ottimizzazione: stessi limiti di idx sui due estremi di ogni riga)
+      if (r.x < X0 || r.x + b.w - 1 >= X0 + W || r.y < Y0 || r.y + b.h - 1 >= Y0 + H) return false;
+      let i0 = (r.y - Y0) * W + (r.x - X0);
+      for (let j = 0; j < b.h; j++, i0 += W) for (let i = 0; i < b.w; i++) if (G[i0 + i] !== LIBERA) return false;
       return true;
     };
     const piazza = (b: PlannerBuilding, r: Pos) => { messi.set(b.id, r); for (let j = 0; j < b.h; j++) { const i0 = idx(r.x, r.y + j); for (let i = 0; i < b.w; i++) G[i0 + i] = EDIFICIO; } };
@@ -426,13 +535,18 @@ export function retePettine(problem: PlannerProblem, base: { placements: Readonl
           let cur = s > 0 ? inizio : -1;
           while (pool.length && (s > 0 ? cur <= ext.vMax : cur >= ext.vMin)) {
             let fatto = false;
+            // (ottimizzazione) forme già provate in questo punto senza posto: il
+            // posto dipende solo da profondità e lunghezza, non dall'edificio
+            const noForma = new Set<number>();
             for (const solo of esatta ? [true] : [true, false]) {
               for (const b of pool) {
                 if (b.roadLevel >= 2 && ext.larg < 2) continue;
                 const dp = prof(b), ln = lung(b);
                 if (dp > d || (solo && dp !== d)) continue;
+                const fk = dp * 4096 + ln;
+                if (noForma.has(fk)) continue;
                 const r = rett(est ? U + ext.larg : U - dp, s > 0 ? cur : cur - ln + 1, dp, ln);
-                if (!rettLibero(r, b)) continue;
+                if (!rettLibero(r, b)) { noForma.add(fk); continue; }
                 piazza(b, r); togli(b); cur += s * ln; fatto = true; break;
               }
               if (fatto) break;
@@ -481,31 +595,63 @@ export function retePettine(problem: PlannerProblem, base: { placements: Readonl
       if (!a1 && !a2) break;
     }
     // avanzi: a una corsia, dove serve meno strada nuova (scavata dalla rete più vicina)
+    // (ottimizzazione, stesso risultato: distanze, somme prefisse e forme senza
+    // posto valgono finché la griglia non cambia, cioè fino al prossimo edificio
+    // piazzato; rettangoli liberi con le somme prefisse delle celle occupate)
     let fuori = 0;
+    const N = W * H, W1 = W + 1;
+    const dist = new Int32Array(N), padre = new Int32Array(N), pre = new Int32Array(W1 * (H + 1));
+    let coda: number[] = [];
+    let griglia = false; // dist/padre/coda/pre aggiornati?
+    const senzaPosto = new Set<number>(); // forme w×h senza posto con la griglia attuale
     for (const b of [...pool]) {
       if (b.roadLevel >= 2) { fuori++; continue; }
-      const dist = new Int32Array(W * H).fill(-1), padre = new Int32Array(W * H).fill(-1);
-      const coda: number[] = [];
-      for (let i = 0; i < W * H; i++) if (G[i] === STRADA2 || G[i] === STRADA1) { dist[i] = 0; coda.push(i); }
-      for (let q = 0; q < coda.length; q++) {
-        const i = coda[q]!;
-        for (const n of [i + 1, i - 1, i + W, i - W]) {
-          if (n < 0 || n >= W * H || dist[n] >= 0 || G[n] !== LIBERA) continue;
-          dist[n] = dist[i]! + 1; padre[n] = i; coda.push(n);
+      const forma = b.w * 4096 + b.h;
+      if (senzaPosto.has(forma)) { fuori++; continue; }
+      if (!griglia) {
+        griglia = true;
+        dist.fill(-1); padre.fill(-1);
+        coda = [];
+        for (let i = 0; i < N; i++) if (G[i] === STRADA2 || G[i] === STRADA1) { dist[i] = 0; coda.push(i); }
+        for (let q = 0; q < coda.length; q++) {
+          const i = coda[q]!;
+          // (stesso ordine dei vicini di prima: +1, -1, +W, -W)
+          for (let t = 0; t < 4; t++) {
+            const n = t === 0 ? i + 1 : t === 1 ? i - 1 : t === 2 ? i + W : i - W;
+            if (n < 0 || n >= N || dist[n]! >= 0 || G[n] !== LIBERA) continue;
+            dist[n] = dist[i]! + 1; padre[n] = i; coda.push(n);
+          }
         }
+        for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) pre[(j + 1) * W1 + i + 1] = (G[j * W + i] !== LIBERA ? 1 : 0) + pre[j * W1 + i + 1]! + pre[(j + 1) * W1 + i]! - pre[j * W1 + i]!;
       }
+      const libRett = (i: number, j: number) => i >= 0 && j >= 0 && i + b.w <= W && j + b.h <= H
+        && pre[(j + b.h) * W1 + i + b.w]! - pre[j * W1 + i + b.w]! - pre[(j + b.h) * W1 + i]! + pre[j * W1 + i]! === 0;
+      // Costo minimo D: la prima cella della coda (distanze crescenti) che sta sul
+      // contorno di un rettangolo libero; la scansione si ferma alla prima
+      // posizione che lo raggiunge (le successive non possono batterla).
+      let D = -1;
+      for (const c of coda) {
+        const cx = c % W, cy = (c - cx) / W;
+        let ok = false;
+        for (let k = 0; k < b.w && !ok; k++) if (libRett(cx - k, cy + 1) || libRett(cx - k, cy - b.h)) ok = true;
+        for (let k = 0; k < b.h && !ok; k++) if (libRett(cx + 1, cy - k) || libRett(cx - b.w, cy - k)) ok = true;
+        if (ok) { D = dist[c]!; break; }
+      }
+      if (D < 0) { senzaPosto.add(forma); fuori++; continue; }
       let mig: { p: Pos; costo: number; attacco: number } | null = null;
-      for (let y = Y0; y < Y0 + H; y++) for (let x = X0; x < X0 + W; x++) {
-        const p = { x, y };
-        if (!rettLibero(p, b)) continue;
-        const prova1 = (cx: number, cy: number) => { const i = idx(cx, cy); if (i < 0) return; const d = dist[i]!; if (d >= 0 && (!mig || d < mig.costo)) mig = { p, costo: d, attacco: i }; };
-        for (let i = 0; i < b.w; i++) { prova1(x + i, y - 1); prova1(x + i, y + b.h); }
-        for (let j = 0; j < b.h; j++) { prova1(x - 1, y + j); prova1(x + b.w, y + j); }
+      scan: for (let j = 0; j + b.h <= H; j++) for (let i = 0; i + b.w <= W; i++) {
+        if (!libRett(i, j)) continue;
+        const x = X0 + i, y = Y0 + j;
+        const prova1 = (cx: number, cy: number) => { const c = idx(cx, cy); if (c < 0) return; const d = dist[c]!; if (d >= 0 && (!mig || d < mig.costo)) mig = { p: { x, y }, costo: d, attacco: c }; };
+        for (let k = 0; k < b.w; k++) { prova1(x + k, y - 1); prova1(x + k, y + b.h); }
+        for (let k = 0; k < b.h; k++) { prova1(x - 1, y + k); prova1(x + b.w, y + k); }
+        if (mig && (mig as { costo: number }).costo === D) break scan;
       }
       const m = mig as { p: Pos; costo: number; attacco: number } | null;
       if (!m) { fuori++; continue; }
       piazza(b, m.p); togli(b);
       for (let c = m.attacco; c >= 0 && G[c] === LIBERA; c = padre[c]!) G[c] = STRADA1;
+      griglia = false; senzaPosto.clear();
     }
     // potatura: via i pezzi di strada in punta che nessun edificio usa come unico
     // appoggio. Un blocco a due corsie in punta usato da qualche edificio si toglie

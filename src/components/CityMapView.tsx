@@ -275,6 +275,7 @@ export default function CityMapView({
                   onClick={() => setCityMapCellSize((prev) => Math.max(4, prev - 1))}
                   className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:text-white active:scale-95 transition-all font-bold text-sm cursor-pointer select-none"
                   title={t("zoomOutTitle", uiLang)}
+                  aria-label={t("zoomOutTitle", uiLang)}
                 >
                   -
                 </button>
@@ -291,6 +292,7 @@ export default function CityMapView({
                   onClick={() => setCityMapCellSize((prev) => Math.min(32, prev + 1))}
                   className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:text-white active:scale-95 transition-all font-bold text-sm cursor-pointer select-none"
                   title={t("zoomInTitle", uiLang)}
+                  aria-label={t("zoomInTitle", uiLang)}
                 >
                   +
                 </button>
@@ -298,6 +300,7 @@ export default function CityMapView({
                   onClick={() => setCityMapCellSize(9)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:text-slate-300 active:scale-95 transition-all cursor-pointer select-none"
                   title={t("zoomResetTitle")}
+                  aria-label={t("zoomResetTitle")}
                 >
                   <RotateCcw size={13} />
                 </button>

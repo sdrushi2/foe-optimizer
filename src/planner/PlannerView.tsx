@@ -14,11 +14,11 @@ import type { CityMapBuilding } from "../data/cityMap";
 import { buildPlannerProblem, eMilitare, GE_RIFORNIMENTO_MILITARE, runPlaceholderPlanner, tipiMilitari, toccaStradaZona, type PlannerBuilding, type PlannerFrame, type PlannerProblem } from "./engine";
 import { runBuilder, type BuilderVariant } from "./builder";
 import type { CompletionOptions, StatoManuale } from "./completion";
-import { runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
+import { nucleiParallela, runCompletionParallela, scegliGirandolaParallela } from "./parallelo";
 import { calcolaRoadEff, calcolaStradeVuote, contaAngoli, DEBUG_PLANNER } from "./roadEff";
 import { smussaBordi } from "./smussa";
 import { baseCentrale, type BaseGirandola } from "./girandola";
-import { anelliStaccati, espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI_EDIFICI, type Raggruppamento } from "./catene";
+import { anelliStaccati, espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI_EDIFICI, strumentiCatene, type Raggruppamento } from "./catene";
 import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_STREET2, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
@@ -29,7 +29,7 @@ import { cittaDaEditor } from "./editorPonte";
 import VideoTutorial from "./VideoTutorial";
 import ModificaCitta from "./ModificaCitta";
 import { applicaModifiche, contaModifiche, eNuovo, NESSUNA_MODIFICA, type CandidatiPlanner, type Modifiche } from "./modificheCitta";
-import { celleBlocchi, nucleiDueCorsie, retePettine, richiedeDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
+import { celleBlocchi, richiedeDueCorsie, verificaDueCorsie, type Nucleo } from "./dueCorsie";
 
 interface Props {
   cityMapBuildings: readonly CityMapBuilding[];
@@ -387,6 +387,18 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   const rinforziRef = useRef<Partial<Record<VName, () => void>>>({});
   const finishRef = useRef(false); // "COMPLETA": chiude la ricerca degli edifici con strada (entrambe le mappe)
   const [searching, setSearching] = useState<Record<VName, boolean>>(tutte(false));
+  /** Fase preparatoria di ogni scenario (21/11/2026, richiesta dell'utente):
+   *  messaggio sotto il nome finché non arriva il primo fotogramma della
+   *  ricerca, così si capisce che lo scenario lavora e non è bloccato. */
+  type Fase = { k: "plannerPhaseTwoLane" | "plannerPhaseTownhall" } | { k: "plannerPhaseStart"; n: number };
+  const [fasi, setFasi] = useState<Record<VName, Fase | null>>(tutte(null));
+  const fasiRef = useRef<Record<VName, Fase | null>>(tutte(null));
+  const impostaFase = (id: VName, f: Fase | null) => {
+    if (!f && !fasiRef.current[id]) return;
+    fasiRef.current = { ...fasiRef.current, [id]: f };
+    setFasi(fasiRef.current);
+  };
+  const azzeraFasi = () => { fasiRef.current = tutte(null); setFasi(fasiRef.current); };
   /** Fase C (dopo COMPLETA): rifinitura continua degli edifici senza strada, fino a FERMA. */
   const stopFillRef = useRef(false);
   const [filling, setFilling] = useState<Record<VName, boolean>>(tutte(false));
@@ -444,7 +456,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   /** Scenario da far ripartire col suo problema dalla disposizione modificata (applicaDaEditor). */
   const rifaiRef = useRef<Partial<Record<VName, StatoManuale>>>({});
   /** Reti a pettine già calcolate (per posizione del municipio) del problema attuale. */
-  const pettineRef = useRef<{ problem: unknown; mappa: Map<string, Nucleo[]> }>({ problem: null, mappa: new Map() });
+  const pettineRef = useRef<{ problem: unknown; mappa: Map<string, Promise<Nucleo[]>> }>({ problem: null, mappa: new Map() });
   // Città cambiata (re-import nello stesso profilo): si ferma la corsa in atto
   // e si riparte da zero, così non restano mappe o ricerche della città vecchia.
   const primoProblem = useRef(true);
@@ -462,7 +474,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     setFilling(tutte(false));
     setInPausa(tutte(false));
     framesRef.current = tutte(null);
-    setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null));
+    setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null)); azzeraFasi();
     autoRef.current = tutte(null); setManuali(tutte(false));
     primaRef.current = tutte(null); annullaRef.current = tutte(false);
   }, [problem]);
@@ -526,8 +538,19 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     for (let t = 0; t < 60 && inRicerca.some(sc => !inPausaRef.current[sc.id]); t++) await sleep(50);
     await Promise.all(visibili.filter(sc => inPausaRef.current[sc.id] && framesRef.current[sc.id]).map(async sc => {
       const f0 = framesRef.current[sc.id]!;
-      await smussaBordi(problemDi(sc.id), f0, {
+      // (21/11/2026) anelli spostabili fra catene dello stesso tipo: se la
+      // migliore cambia le catene, lo scenario passa al nuovo raggruppamento
+      // (come al ritorno dall'editor) e alla fine la sua ricerca riparte col
+      // problema nuovo
+      const rag0 = ragDi(sc.id);
+      let fUltimo: PlannerFrame | null = null;
+      await smussaBordi(rag0.problem, f0, {
         fissi: new Set(sc.v?.fissi ?? []),
+        catene: strumentiCatene(rag0),
+        onCatene: r => {
+          if (gen !== genRef.current) return;
+          scenRef.current = { ...scenRef.current, [sc.id]: { gen: genRef.current, rag: (r as Raggruppamento | null) ?? rag0 } };
+        },
         shouldStop: () => stopSmussaRef.current || stopRef.current || gen !== genRef.current || eliminatiRef.current.has(sc.id),
         onFrame: f => {
           if (gen !== genRef.current) return;
@@ -541,8 +564,21 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           modRef.current[sc.id] = true;
           autoRef.current[sc.id] = { f: nf, smussato: true };
           setManuali(m => (m[sc.id] ? { ...m, [sc.id]: false } : m));
+          fUltimo = nf;
         },
       });
+      const f1 = fUltimo as PlannerFrame | null;
+      if (gen !== genRef.current || !f1 || ragDi(sc.id).problem === rag0.problem) return;
+      // catene cambiate: problema nuovo per lo scenario, come al ritorno dall'editor
+      autoRef.current[sc.id] = null;
+      primaRef.current[sc.id] = null;
+      const res = resumeRef.current[sc.id];
+      if (res) {
+        delete resumeRef.current[sc.id];
+        dueRef.current = { ...dueRef.current, [sc.id]: [...(f1.due ?? [])] };
+        rifaiRef.current[sc.id] = { placements: f1.placements, roads: f1.roads, ...(f1.due ? { blocchi: f1.due } : {}) };
+        res(null);
+      }
     }));
     setSmussando(false);
   };
@@ -644,6 +680,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       autoRef.current[id] = { f, smussato: false };
       setManuali(m => (m[id] ? { ...m, [id]: false } : m));
       if (f.search) setRicerca(prev => ({ ...prev, [id]: f.search! }));
+      if (f.search && fasiRef.current[id]) impostaFase(id, null); // la ricerca è partita
     };
     const opzioni = {
       delayMs, onFrame: setF, shouldStop: () => fermato() || annullaRef.current[id] || !!rifaiRef.current[id],
@@ -665,7 +702,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     };
     /** Ricerca + completamento; se il completamento viene annullato si
      *  riparte (ricerca in pausa) dalla disposizione di prima di COMPLETA. */
-    const corri = async (args: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse" | "rami" | "posizioniSenzaStrada">, partenza?: StatoManuale) => {
+    const corri = async (args0: Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse" | "rami" | "posizioniSenzaStrada">, partenza?: StatoManuale) => {
+      let args = args0;
       let riprendiDa: { stato: StatoManuale; valutate: number } | undefined = partenza ? { stato: partenza, valutate: 0 } : undefined;
       for (;;) {
         // problema dello scenario (catene rimontate nell'editor: può cambiare fra un giro e l'altro)
@@ -760,6 +798,13 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
           delete rifaiRef.current[id];
           if (fermato() || gen !== genRef.current) break;
           riprendiDa = { stato: rifai, valutate: (principale as PlannerFrame | null)?.search?.valutate ?? 0 };
+          // (21/11/2026, bug su Dorotea: tutte le code su un serpente solo) la
+          // partenza dello scenario aveva le voci di catena del problema vecchio:
+          // la ricerca parametrica, tornando alla partenza, cercava edifici che
+          // non esistono più e il worker si fermava con un errore (scenario
+          // bloccato, Smussa senza effetto). Ora la partenza è la disposizione
+          // dell'editor, col problema nuovo.
+          args = { ...args, initial: { placements: rifai.placements, roads: rifai.roads } };
           continue;
         }
         const prima = primaRef.current[id];
@@ -781,6 +826,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const dueFuori = (pl: ReadonlyMap<string, unknown>) => problem.buildings.filter(b => richiedeDueCorsie(b) && !pl.has(b.id)).length;
     const scegliPartenza = async (cand: Array<Pick<CompletionOptions, "initial" | "geometry" | "fissi" | "girandola" | "stradeFisse">>): Promise<number> => {
       if (cand.length < 2) return 0;
+      impostaFase(id, { k: "plannerPhaseStart", n: cand.length });
       const ris = await Promise.all(cand.map(c => runCompletionParallela(problem, {
         ...c, delayMs: 0, onFrame: () => {}, shouldStop: fermato, limiteValutate: VALUTATE_SCELTA_MARGINE, soloRicerca: true, riposo: () => riposoRef.current,
         attendiInPausa: () => pausedRef.current,
@@ -797,7 +843,13 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     /** Rete a pettine (dueCorsie.ts) quando i nuclei non bastano: qualche
      *  edificio a due corsie resterebbe fuori. Dipende solo dalla posizione del
      *  municipio: calcolata una volta per posizione (r3/r4/r5 la condividono). */
-    const pettineSeServe = (nuclei: Nucleo[], base: { placements: ReadonlyMap<string, { x: number; y: number }> }): Nucleo[] => {
+    /** Nuclei a due corsie (dueCorsie.ts) calcolati in un worker (21/11/2026: nella
+     *  pagina la bloccavano per secondi); nessun worker senza edifici a due corsie. */
+    const nucleiDi = async (base: { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string> }, fissi: readonly string[], raccordo?: { eastMidY: number }, bracci?: ReadonlyArray<readonly string[]>): Promise<Nucleo[]> =>
+      problem.buildings.some(richiedeDueCorsie)
+        ? (impostaFase(id, { k: "plannerPhaseTwoLane" }), nucleiParallela(problem, base, { fissi, max: 3, ...(raccordo ? { raccordo } : {}), ...(bracci ? { bracci } : {}) }))
+        : [];
+    const pettineSeServe = async (nuclei: Nucleo[], base: { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string> }): Promise<Nucleo[]> => {
       if (!problem.buildings.some(richiedeDueCorsie)) return [];
       if (nuclei.length && Math.min(...nuclei.map(n => n.fuori)) === 0) return [];
       const th = problem.buildings.find(b => b.isTownhall);
@@ -806,7 +858,13 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (pettineRef.current.problem !== problem) pettineRef.current = { problem, mappa: new Map() };
       const k = `${p.x},${p.y}`;
       let r = pettineRef.current.mappa.get(k);
-      if (!r) { r = retePettine(problem, base, 2); pettineRef.current.mappa.set(k, r); }
+      // (la promessa in cache: gli scenari che partono insieme la condividono)
+      if (!r) {
+        const mappa = pettineRef.current.mappa;
+        r = nucleiParallela(problem, base, { max: 2, pettine: true });
+        mappa.set(k, r);
+        r.catch(() => mappa.delete(k)); // (un errore non resta in cache)
+      }
       return r;
     };
     const conNucleo = (n: Nucleo | undefined) => {
@@ -849,6 +907,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
         setF(vuoto());
         // Le prove si vedono subito (municipio, bracci e la loro breve ricerca),
         // senza le statistiche della ricerca (ripartono a ogni posizione).
+        impostaFase(id, { k: "plannerPhaseTownhall" });
         const centro = baseCentrale(problem);
         const scelte = await scegliGirandolaParallela(problem, {
           shouldStop: fermato, attendiInPausa: () => pausedRef.current,
@@ -864,14 +923,22 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       if (!base || fermato()) return;
       // Strade a due corsie: nuclei candidati attorno al municipio (dueCorsie.ts),
       // più la rete a pettine se i nuclei lasciano fuori edifici a due corsie
-      const nuclei0 = nucleiDueCorsie(problem, base, []);
-      const nuclei = [...nuclei0, ...pettineSeServe(nuclei0, base)];
+      // (con i bracci: anche 1-4 bracci a due corsie, vedi nucleiDueCorsie)
+      const nuclei0 = await nucleiDi(base, [], undefined, base.bracci);
+      const nuclei = [...nuclei0, ...await pettineSeServe(nuclei0, base)];
+      if (fermato()) return;
       const opz = (n?: Nucleo) => ({
         initial: n ? { placements: n.placements, roads: n.roads } : { placements: base.placements, roads: base.roads },
         geometry: n?.geometry ?? base.geometry, fissi: n ? n.fissi : [],
         // (la rete a pettine non usa i bracci della girandola)
         ...(n?.geometry ? {} : { girandola: { bracci: base.bracci } }),
         ...(n ? { stradeFisse: celleBlocchi(n.blocchi) } : {}),
+        // (21/11/2026) finché un edificio con strada resta fuori la ricerca può
+        // aprire rami nuovi (vicinato "prolungamento", come nella Configurazione
+        // attuale): nelle città grandi la girandola non riusciva a farli entrare
+        // (rebelmartin: 43 fuori dopo 20000 disposizioni, ora 0). Le città dove
+        // entrano tutti restano identiche.
+        rami: true,
       });
       let nucleo: Nucleo | undefined;
       if (nuclei.length) {
@@ -889,8 +956,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const fine = (b: BuilderVariant) => b.stages[b.stages.length - 1]!;
     const candidati: Array<{ b: BuilderVariant; n?: Nucleo }> = [];
     for (const b of sc.alt ? [v, sc.alt] : [v]) {
-      const nuclei0 = nucleiDueCorsie(problem, fine(b), b.fissi, 3, b.geometry);
-      const nuclei = [...nuclei0, ...(b === v ? pettineSeServe(nuclei0, fine(b)) : [])];
+      const nuclei0 = await nucleiDi(fine(b), b.fissi, b.geometry);
+      const nuclei = [...nuclei0, ...(b === v ? await pettineSeServe(nuclei0, fine(b)) : [])];
+      if (fermato()) return;
       if (nuclei.length) for (const n of nuclei) candidati.push({ b, n }); else candidati.push({ b });
     }
     const opzB = (c: { b: BuilderVariant; n?: Nucleo }) => ({
@@ -940,7 +1008,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     stopFillRef.current = false;
     pausedRef.current = false;
     setPaused(false);
-    setRicerca(tutte(null));
+    setRicerca(tutte(null)); azzeraFasi();
     autoRef.current = tutte(null); setManuali(tutte(false));
     primaRef.current = tutte(null); annullaRef.current = tutte(false);
     setRunning(true);
@@ -972,7 +1040,9 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
       const c = carico(out.length, potenzaRef.current);
       semiRef.current = c.semi; riposoRef.current = c.riposo;
       // Tutti gli scenari procedono in parallelo (si alternano a ogni pausa).
-      await Promise.all(out.map(sc => eseguiVariante(sc)));
+      const genCorsa = genRef.current;
+      // (a fine corsa nessun messaggio di fase resta acceso)
+      await Promise.all(out.map(sc => eseguiVariante(sc).finally(() => { if (genCorsa === genRef.current) impostaFase(sc.id, null); })));
     } else if (!stopRef.current) {
       await runPlaceholderPlanner(problem, { delayMs, onFrame: setSoloFrame, shouldStop: () => stopRef.current });
     }
@@ -989,7 +1059,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     setFilling(tutte(false));
     setInPausa(tutte(false));
     framesRef.current = tutte(null);
-    setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null));
+    setFrames(tutte(null)); setSoloFrame(null); setRicerca(tutte(null)); azzeraFasi();
     autoRef.current = tutte(null); setManuali(tutte(false));
     primaRef.current = tutte(null); annullaRef.current = tutte(false);
     // come alla prima apertura: niente riquadri degli scenari (si ricalcolano a
@@ -1534,6 +1604,13 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
                     </div>
                     {/* Riga dei pulsanti (sotto il titolo e le statistiche) */}
                     <div className="mb-1 flex flex-wrap items-center gap-2">
+                      {fasi[n] && (
+                        // fase preparatoria: lampeggia morbidamente (fermo in pausa)
+                        <span className={`flex items-center gap-1.5 text-[12px] text-amber-300 ${paused ? "" : "planner-fase"}`} title={t("plannerPhaseTitle", uiLang)}>
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          {fasi[n]!.k === "plannerPhaseStart" ? t("plannerPhaseStart", uiLang, fasi[n]!.n) : t(fasi[n]!.k, uiLang)}
+                        </span>
+                      )}
                       {f && inPausa[n] && paused && !smussando && (
                         <span className="flex items-center gap-0.5 text-[12px] text-slate-400" title={t("plannerMoveAllTitle", uiLang)}>
                           {([["←", -1, 0], ["↑", 0, -1], ["↓", 0, 1], ["→", 1, 0]] as const).map(([fr, dx, dy]) => (

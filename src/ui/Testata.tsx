@@ -126,7 +126,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
         <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} avatar={avatar}
           uiLang={uiLang} maxW={livello >= 4 ? 44 : livello >= 2 ? 110 : 190} />
         {livello >= 5 ? (
-          <select value={scheda} onChange={(e) => onScheda(e.currentTarget.value as Scheda)}
+          <select value={scheda} onChange={(e) => onScheda(e.currentTarget.value as Scheda)} aria-label={t("r2TabSelectLabel", uiLang)}
             className="h-7 self-center rounded-md border border-slate-700 bg-slate-950 px-1 text-slate-50">
             {SCHEDE.map(({ id, chiave }) => <option key={id} value={id} disabled={!!spente[id]}>{t(chiave, uiLang)}</option>)}
           </select>

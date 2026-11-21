@@ -274,7 +274,7 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
             <b className="text-slate-200">{t("plannerEditInCity", uiLang)}</b>
             <input type="search" value={cercaCitta} onInput={e => setCercaCitta(e.currentTarget.value)} placeholder={t("plannerEditSearch", uiLang)}
               className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-slate-100" />
-            <select value={ordine} onChange={e => setOrdine(e.currentTarget.value as "nome" | "eff")}
+            <select value={ordine} onChange={e => setOrdine(e.currentTarget.value as "nome" | "eff")} aria-label={t("plannerEditSortLabel", uiLang)}
               className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-slate-200">
               <option value="nome">{t("plannerEditSortName", uiLang)}</option>
               <option value="eff">{t("plannerEditSortEff", uiLang)}</option>
@@ -316,7 +316,7 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
             </span>
             <input type="search" value={cercaAgg} onInput={e => setCercaAgg(e.currentTarget.value)} placeholder={t("plannerEditSearch", uiLang)}
               className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-slate-100" />
-            <select value={ordineAgg} onChange={e => setOrdineAgg(e.currentTarget.value as "nome" | "eff")}
+            <select value={ordineAgg} onChange={e => setOrdineAgg(e.currentTarget.value as "nome" | "eff")} aria-label={t("plannerEditSortLabel", uiLang)}
               className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-slate-200">
               <option value="nome">{t("plannerEditSortName", uiLang)}</option>
               <option value="eff">{t("plannerEditSortEffBest", uiLang)}</option>
@@ -356,7 +356,7 @@ export default function ModificaCitta({ citta, cittaModificata, modifiche, setMo
                       {badgeAggiunti(k)}
                       {ordineAgg === "eff" && candidati.efficienza.has(c.entityId) && <span className="text-[11px] text-amber-400">{candidati.efficienza.get(c.entityId)!.toFixed(1)}</span>}
                       {f.livelli.length > 1 && (
-                        <select value={i} onChange={e => setLivelloScelto(new Map(livelloScelto).set(f.key, Number(e.currentTarget.value)))}
+                        <select value={i} onChange={e => setLivelloScelto(new Map(livelloScelto).set(f.key, Number(e.currentTarget.value)))} aria-label={`${t("plannerEditLevelLabel", uiLang)} · ${f.name}`}
                           className="max-w-[9rem] rounded border border-slate-700 bg-slate-900 px-1 text-[12px] text-slate-200">
                           {f.livelli.map((l, j) => <option key={l.entityId} value={j}>{l.level ? etichettaLivello(l) : l.name}{f.livelli.filter(x => x.level === l.level).length > 1 ? ` · ${l.name}` : ""}</option>)}
                         </select>

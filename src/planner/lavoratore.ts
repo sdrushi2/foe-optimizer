@@ -11,6 +11,7 @@
 
 import { runCompletion, type CompletionOptions, type StatoManuale } from "./completion";
 import { valutaGirandole } from "./girandola";
+import { nucleiDueCorsie, retePettine } from "./dueCorsie";
 import type { PlannerFrame, PlannerProblem } from "./engine";
 
 /** Ambito del worker (tipi minimi: il progetto usa le librerie DOM). */
@@ -30,6 +31,7 @@ ambito.onmessage = (e: MessageEvent) => {
   if (m.tipo === "riprendi") { const r = attesa; attesa = null; r?.((m.stato as StatoManuale | null) ?? null); return; }
   if (m.tipo === "completion") void eseguiCompletion(m as unknown as AvvioCompletion);
   else if (m.tipo === "valuta") void eseguiValutazioni(m as unknown as AvvioValuta);
+  else if (m.tipo === "nuclei") eseguiNuclei(m as unknown as AvvioNuclei);
 };
 
 type Ha = { attendiInPausa?: boolean; adotta?: boolean; finish?: boolean; stopFill?: boolean; paused?: boolean; wait?: boolean; onPaused?: boolean; onSearchActive?: boolean; onFillActive?: boolean };
@@ -62,6 +64,23 @@ async function eseguiCompletion(m: AvvioCompletion) {
       ...(m.ha.onFillActive ? { onFillActive: (a: boolean) => invia({ tipo: "riempimento", a }) } : {}),
     });
     invia({ tipo: "fine", r: fr });
+  } catch (err) {
+    invia({ tipo: "errore", msg: err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err) });
+  }
+}
+
+/** Strade a due corsie: nuclei candidati o rete a pettine (dueCorsie.ts), fuori
+ *  dalla pagina (21/11/2026: nelle città con edifici a due corsie la pagina
+ *  restava bloccata per secondi prima che partissero gli scenari). */
+export type AvvioNuclei = {
+  tipo: "nuclei"; problem: PlannerProblem; pettine: boolean;
+  base: { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string> };
+  fissi: readonly string[]; max: number; raccordo?: { eastMidY: number }; bracci?: ReadonlyArray<readonly string[]>; flag: typeof flag;
+};
+function eseguiNuclei(m: AvvioNuclei) {
+  try {
+    const r = m.pettine ? retePettine(m.problem, m.base, m.max) : nucleiDueCorsie(m.problem, m.base, m.fissi, m.max, m.raccordo, m.bracci);
+    invia({ tipo: "fine", r });
   } catch (err) {
     invia({ tipo: "errore", msg: err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err) });
   }

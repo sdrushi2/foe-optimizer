@@ -726,6 +726,7 @@ const UI_STRINGS = {
   },
 
   // ── Selettore lingua GUI ──────────────────────────────────────────────
+  r2TabSelectLabel: { it: "Scheda", en: "Tab" },
   languageSwitchTitle: {
     it: "Cambia lingua dell'interfaccia",
     en: "Change interface language",
@@ -2772,6 +2773,8 @@ const UI_STRINGS = {
   plannerEditSortName: { it: "per nome", en: "by name" },
   plannerEditSortEff: { it: "meno efficienti prima", en: "least efficient first" },
   plannerEditSortEffBest: { it: "più efficienti prima", en: "most efficient first" },
+  plannerEditSortLabel: { it: "Ordina", en: "Sort" },
+  plannerEditLevelLabel: { it: "Livello", en: "Level" },
   plannerEditRemove: { it: "Togli un edificio", en: "Remove one building" },
   plannerEditAdd: { it: "Aggiungi", en: "Add" },
   plannerEditFromInventory: { it: "Inventario", en: "Inventory" },
@@ -2848,6 +2851,10 @@ const UI_STRINGS = {
   plannerScenarioCurrent: { it: "Configurazione attuale", en: "Current layout" },
   plannerScenarioPinwheel: { it: "Girandola", en: "Pinwheel" },
   plannerScenarioPinwheel2: { it: "Girandola 2", en: "Pinwheel 2" },
+  plannerPhaseTwoLane: { it: "Preparazione delle strade a due corsie…", en: "Preparing the two-lane roads…" },
+  plannerPhaseStart: { it: (n: number) => `Scelta della partenza migliore (${n} prove)…`, en: (n: number) => `Choosing the best start (${n} trials)…` },
+  plannerPhaseTownhall: { it: "Scelta della posizione del municipio…", en: "Choosing the town hall position…" },
+  plannerPhaseTitle: { it: "Lo scenario sta preparando la ricerca: non è bloccato, sta lavorando", en: "The scenario is preparing the search: it isn't stuck, it's working" },
   plannerStatsPlaced: { it: "Con strada", en: "With road" },
   plannerStatsNoRoad: { it: "Senza strada", en: "Without road" },
   plannerMissingWithRoad: { it: "Edifici con strada non piazzati", en: "Buildings with road not placed" },

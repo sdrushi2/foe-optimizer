@@ -4,6 +4,13 @@
 ### Update
 - Planner, Connector 3/4/5 with two-lane buildings: after the two-lane blocks the road can now continue as a one-lane road on the same row, with normal buildings on both sides, instead of always stopping against a two-lane building used as road end. The Planner tries both starts and keeps the best one
 - Planner, chains: if in your city a link is detached from its chain (for example the Serpent Spikes far from the Feathered Serpent Statue) a notice appears with a switch for each kind of link. On, the Planner attaches it to the chain, which then has to be placed again and may cost a few more roads, also in the Current layout. Off, it stays detached as in the city and the Current layout really starts from your city (on a test city 84 roads instead of 90)
+- Planner, cities with two-lane buildings: at start the page no longer freezes for a few seconds before the scenarios begin. The two-lane road preparation is faster (on a test city from about 4 seconds to 1) and runs alongside the scenarios, with the same results as before
+- Planner, Pinwheel with two-lane buildings: the pinwheel stays a pinwheel. The Planner also tries starts with 1, 2, 3 or all 4 arms as two-lane roads, as long as the two-lane buildings need and then continued as one-lane roads for the others, and keeps the best one. Before, when the two-lane buildings didn't fit in a single row, it started from the comb network, which was no longer a pinwheel. In big cities the Pinwheel search can now open new roads while some buildings that need a road are still out: on a test city with 125 buildings with road, after the same search, from 43 buildings out to 0 (with the comb network 14 out and 286 roads, now 202 roads). Cities where the Pinwheel already fitted everything don't change
+- Planner: while a scenario is getting ready (two-lane roads, choosing the town hall position, trials to choose the best start) a softly blinking message appears under its name, so you can see it's working and not stuck. It disappears when the search starts
+- Planner, Smooth: it can now also move the links between chains of the same kind (for example the tails of the Feathered Serpents from one serpent to another), keeping the starts in place, when this lowers the corners. A chain can get longer and another one can end up with no links: its start then moves like a normal building. When resumed, the search starts from the new chains
+
+### Bug Fixes
+- Planner: after changing the number of links of chains in the editor (for example all the tails of the Feathered Serpents on a single serpent) the scenario no longer resumed the search and Smooth did nothing either. Now it restarts from the editor's layout
 
 ---
 

@@ -32,11 +32,27 @@ import { contaAngoliGriglia, esclusoDaRoadEff, roadEffDi } from "./roadEff";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+/** Anelli spostabili fra catene dello stesso tipo (21/11/2026): stessa forma
+ *  di StrumentiCatene in catene.ts, che qui non si importa (legge i dati di
+ *  gioco, assenti nei worker dove Smussa gira come "scossa"). */
+export interface CateneSmussa {
+  gruppi: ReadonlyArray<{ catena: string; teste: ReadonlyArray<{ voce: string; testa: string; anelli: readonly string[] }> }>;
+  forma: (testa: string, anelli: readonly string[]) => { w: number; h: number; pezzi: Array<{ id: string; x: number; y: number }> } | null;
+  ricomponi: (pos: ReadonlyMap<string, { x: number; y: number }>) => { rag: unknown; placements: Map<string, { x: number; y: number }>; voci: ReadonlySet<string> } | null;
+}
+
 export interface SmussaOptions {
   /** Edifici da non spostare (fissi di fase 1). Il municipio è sempre fermo. */
   fissi: ReadonlySet<string>;
   onFrame: (f: PlannerFrame) => void;
   shouldStop: () => boolean;
+  /** Con le catene: anche la mossa "anello" (l'ultimo anello di una catena, o
+   *  gli ultimi 2-3, passa in punta a un'altra catena dello stesso tipo; gli
+   *  inizi restano fermi). Quando la migliore ha catene diverse da quelle di
+   *  partenza, i fotogrammi hanno gli id del nuovo raggruppamento, comunicato
+   *  prima con `onCatene`. */
+  catene?: CateneSmussa;
+  onCatene?: (rag: unknown) => void;
 }
 
 export async function smussaBordi(problem: PlannerProblem, start: { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string> }, opts: SmussaOptions): Promise<PlannerFrame> {
@@ -54,6 +70,42 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     for (let j = j0; j < j1; j++) { const r = j * W; for (let i = i0; i < i1; i++) occ[r + i] = v; }
   };
   for (const [id, q] of start.placements) { const b = byId.get(id); if (!b) continue; pos.set(id, { x: q.x, y: q.y }); rect(q.x, q.y, b.w, b.h, 1); }
+  // Catene con anelli spostabili (opts.catene): solo i gruppi con tutti gli
+  // inizi piazzati e spostabili. Le voci delle catene sono copie (dimensioni e
+  // zona di strada cambiano con gli anelli); gli id restano quelli di partenza
+  // fino al fotogramma, dove si ricompongono (catene.ricomponi).
+  type Testa = { voce: string; testa: string; anelli: string[]; pezzi: Array<{ id: string; x: number; y: number }> };
+  const teste = new Map<string, Testa>();
+  const gruppiT: Testa[][] = [];
+  if (opts.catene) for (const g of opts.catene.gruppi) {
+    if (!g.teste.every(t => pos.has(t.voce) && !opts.fissi.has(t.voce) && byId.get(t.voce)?.roadLevel === 1)) continue;
+    const lista: Testa[] = [];
+    for (const t of g.teste) {
+      const f = opts.catene.forma(t.testa, t.anelli), b = byId.get(t.voce)!;
+      if (!f || f.w !== b.w || f.h !== b.h) { lista.length = 0; break; }
+      lista.push({ voce: t.voce, testa: t.testa, anelli: [...t.anelli], pezzi: f.pezzi });
+    }
+    if (lista.length < 2) continue;
+    for (const t of lista) {
+      const solo = opts.catene.forma(t.testa, [])!;
+      const p0 = t.pezzi[0]!;
+      byId.set(t.voce, { ...byId.get(t.voce)!, zonaStrada: { x: p0.x, y: p0.y, w: solo.w, h: solo.h } });
+      teste.set(t.voce, t);
+    }
+    gruppiT.push(lista);
+  }
+  /** Composizione (voce → anelli) per la migliore e per il ripristino. */
+  const composizione = () => new Map([...teste.values()].map(t => [t.voce, [...t.anelli]] as const));
+  const composizione0 = composizione();
+  const firmaComp = (c: ReadonlyMap<string, readonly string[]>) => [...c].map(([v, a]) => `${v}:${a.join(",")}`).join(";");
+  const firma0 = firmaComp(composizione0);
+  /** Imposta gli anelli di una testa (dimensioni della voce e zona di strada). */
+  const componi = (t: Testa, anelli: string[]) => {
+    const f = opts.catene!.forma(t.testa, anelli)!;
+    const b = byId.get(t.voce)!, p0 = f.pezzi[0]!;
+    b.w = f.w; b.h = f.h; b.zonaStrada = { ...b.zonaStrada!, x: p0.x, y: p0.y };
+    t.anelli = anelli; t.pezzi = f.pezzi;
+  };
   // (mai gli edifici a due corsie: devono restare accanto ai blocchi 2×2 — Smussa
   // ne spostava uno su una strada semplice, segnalazione dell'utente)
   const mobili = [...pos.keys()].map(id => byId.get(id)!).filter(b => !b.isTownhall && b.roadLevel > 0 && b.roadLevel < 2 && !opts.fissi.has(b.id));
@@ -328,18 +380,95 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     return null;
   };
 
+  /** Mossa "anello": gli ultimi k anelli di una catena passano in punta a
+   *  un'altra dello stesso tipo (inizi fermi, strade invariate). */
+  const mossaAnello = (soglia: Punti): Punti | null => {
+    const g = gruppiT[rnd(gruppiT.length)]!;
+    const conAnelli = g.filter(t => t.anelli.length);
+    const A = conAnelli[rnd(conAnelli.length)];
+    if (!A) return null;
+    const k = 1 + rnd(Math.min(3, A.anelli.length));
+    const via = A.anelli.slice(A.anelli.length - k), restoA = A.anelli.slice(0, A.anelli.length - k);
+    const altre = g.filter(t => t !== A).sort(() => Math.random() - 0.5);
+    for (const B of altre) {
+      const nuoviB = [...B.anelli, ...via];
+      const fa = opts.catene!.forma(A.testa, restoA), fb = opts.catene!.forma(B.testa, nuoviB);
+      if (!fa || !fb) continue;
+      tentativi++;
+      // posizioni: l'inizio resta dov'è
+      const ba = byId.get(A.voce)!, bb = byId.get(B.voce)!, qa = pos.get(A.voce)!, qb = pos.get(B.voce)!;
+      const ta = { x: qa.x + A.pezzi[0]!.x, y: qa.y + A.pezzi[0]!.y }, tb = { x: qb.x + B.pezzi[0]!.x, y: qb.y + B.pezzi[0]!.y };
+      const na = { x: ta.x - fa.pezzi[0]!.x, y: ta.y - fa.pezzi[0]!.y }, nb = { x: tb.x - fb.pezzi[0]!.x, y: tb.y - fb.pezzi[0]!.y };
+      const effPrima = eff(ba, qa.x, qa.y) + eff(bb, qb.x, qb.y), nPrima = (eff(ba, qa.x, qa.y) > 0 ? 1 : 0) + (eff(bb, qb.x, qb.y) > 0 ? 1 : 0);
+      const rett: Array<[number, number, number, number]> = [[qa.x, qa.y, ba.w, ba.h], [qb.x, qb.y, bb.w, bb.h], [na.x, na.y, fa.w, fa.h], [nb.x, nb.y, fb.w, fb.h]];
+      const prima = locale(rett);
+      rect(qa.x, qa.y, ba.w, ba.h, 0); rect(qb.x, qb.y, bb.w, bb.h, 0);
+      const vecchiA = A.anelli, vecchiB = B.anelli;
+      componi(A, restoA); componi(B, nuoviB);
+      let messaA = false, messaB = false;
+      if (libero(na.x, na.y, ba.w, ba.h)) { rect(na.x, na.y, ba.w, ba.h, 1); messaA = true; }
+      if (messaA && libero(nb.x, nb.y, bb.w, bb.h)) { rect(nb.x, nb.y, bb.w, bb.h, 1); messaB = true; }
+      let pt: Punti | null = null;
+      if (messaA && messaB && toccaStradaZona(ba, na.x, na.y, isR) && toccaStradaZona(bb, nb.x, nb.y, isR)) {
+        const ea = eff(ba, na.x, na.y), eb = eff(bb, nb.x, nb.y);
+        if ((ea > 0 ? 1 : 0) + (eb > 0 ? 1 : 0) <= nPrima && ea + eb <= effPrima) {
+          valide++;
+          const dopo = locale(rett);
+          const a = corrente[2] + dopo[0] - prima[0], bu = corrente[3] + dopo[2] - prima[2];
+          pt = [a + bu, corrente[1] + dopo[1] - prima[1], a, bu];
+          if (cmp(pt, soglia) > 0) pt = null;
+        }
+      }
+      if (pt) { pos.set(A.voce, na); pos.set(B.voce, nb); return pt; }
+      if (messaA) rect(na.x, na.y, ba.w, ba.h, 0);
+      if (messaB) rect(nb.x, nb.y, bb.w, bb.h, 0);
+      componi(A, vecchiA); componi(B, vecchiB);
+      rect(qa.x, qa.y, ba.w, ba.h, 1); rect(qb.x, qb.y, bb.w, bb.h, 1);
+    }
+    return null;
+  };
+
   let corrente = punti();
-  let migliore = { pt: corrente, pos: new Map(pos) };
+  let migliore = { pt: corrente, pos: new Map(pos), comp: composizione0 };
   const iniziale = corrente;
   let tentativi = 0, senzaMigliorare = 0;
+  /** Ultima ricomposizione mostrata (per non rifarla a ogni fotogramma). */
+  let ultimaComp = firma0;
+  let ultimaRic: { placements: Map<string, { x: number; y: number }>; voci: ReadonlySet<string> } | null = null;
+  /** Posizioni della migliore con gli id giusti: con catene diverse da quelle di
+   *  partenza le voci si ricompongono dai pezzi (nuovo raggruppamento). */
+  const posMigliore = (): Map<string, { x: number; y: number }> => {
+    const f = firmaComp(migliore.comp);
+    if (f === firma0) {
+      if (ultimaComp !== firma0) { ultimaComp = firma0; ultimaRic = null; opts.onCatene?.(null); }
+      return new Map(migliore.pos);
+    }
+    if (f !== ultimaComp || !ultimaRic) {
+      const pezzi = new Map<string, { x: number; y: number }>();
+      for (const [voce, anelli] of migliore.comp) {
+        const t = teste.get(voce)!, q = migliore.pos.get(voce)!;
+        const fo = opts.catene!.forma(t.testa, anelli)!;
+        for (const p of fo.pezzi) pezzi.set(p.id, { x: q.x + p.x, y: q.y + p.y });
+      }
+      const r = opts.catene!.ricomponi(pezzi);
+      if (!r) return new Map(migliore.pos); // (non dovrebbe succedere: catene montate da `forma`)
+      ultimaComp = f; ultimaRic = r;
+      opts.onCatene?.(r.rag);
+    }
+    const out = new Map<string, { x: number; y: number }>();
+    for (const [id, q] of migliore.pos) if (!teste.has(id)) out.set(id, q);
+    for (const [id, q] of ultimaRic!.placements) out.set(id, q);
+    return out;
+  };
   const frame = (stato: string): PlannerFrame => ({
-    placements: new Map(migliore.pos), roads: new Set(start.roads), probe: null, lastPath: [],
+    placements: posMigliore(), roads: new Set(start.roads), probe: null, lastPath: [],
     placed: migliore.pos.size, unplaced: [], iterations: tentativi, done: false,
     label: `Smussa i bordi · angoli ${migliore.pt[2]} (all'inizio ${iniziale[2]}) · buchi ${migliore.pt[3]} (all'inizio ${iniziale[3]}) · perimetro ${migliore.pt[1]} · ${valide.toLocaleString()} mosse valide su ${tentativi.toLocaleString()} tentativi${stato}`,
   });
-  const ripristina = (m: Map<string, { x: number; y: number }>) => {
+  const ripristina = (m: Map<string, { x: number; y: number }>, comp?: ReadonlyMap<string, readonly string[]>) => {
     for (const [id, q] of pos) { const b = byId.get(id)!; rect(q.x, q.y, b.w, b.h, 0); }
     for (const k of roadKeys) { const c = k.indexOf(","), g = gi(Number(k.slice(0, c)), Number(k.slice(c + 1))); if (g >= 0) occ[g] = 1; }
+    if (comp) for (const [v, a] of comp) componi(teste.get(v)!, [...a]);
     pos.clear();
     for (const [id, q] of m) { const b = byId.get(id)!; pos.set(id, { x: q.x, y: q.y }); rect(q.x, q.y, b.w, b.h, 1); }
   };
@@ -353,7 +482,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
       // Bloccato: prima una discesa ESAUSTIVA dalla migliore (tutti gli
       // scambi di coppie, anche lontane, nei 16 allineamenti agli angoli, e
       // tutti gli scorrimenti di 1-3 celle); poi si riparte dalla migliore.
-      ripristina(migliore.pos); corrente = migliore.pt; senzaMigliorare = 0;
+      ripristina(migliore.pos, migliore.comp); corrente = migliore.pt; senzaMigliorare = 0;
       for (let migliorato = true; migliorato && !opts.shouldStop();) {
         migliorato = false;
         let top: { pt: Punti; mosse: Array<[PlannerBuilding, number, number]> } | null = null;
@@ -374,7 +503,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
         const t = top as { pt: Punti; mosse: Array<[PlannerBuilding, number, number]> } | null;
         if (t && prova(t.mosse, t.pt)) {
           corrente = t.pt; migliorato = true;
-          if (cmp(corrente, migliore.pt) < 0) { migliore = { pt: corrente, pos: new Map(pos) }; opts.onFrame(frame("")); lastShow = performance.now(); }
+          if (cmp(corrente, migliore.pt) < 0) { migliore = { pt: corrente, pos: new Map(pos), comp: composizione() }; opts.onFrame(frame("")); lastShow = performance.now(); }
         }
       }
       // Poi ricomposizioni "lontane" per ~2 s (idea dell'utente su Beta r3:
@@ -405,7 +534,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
         const r = ricomponi(gruppo, [[pb.x + b1.w / 2, pb.y + b1.h / 2], [pc.x + c1.w / 2, pc.y + c1.h / 2]], permutazioni(gruppo.length), corrente);
         if (r) {
           corrente = r;
-          if (cmp(corrente, migliore.pt) < 0) { migliore = { pt: corrente, pos: new Map(pos) }; opts.onFrame(frame("")); lastShow = performance.now(); }
+          if (cmp(corrente, migliore.pt) < 0) { migliore = { pt: corrente, pos: new Map(pos), comp: composizione() }; opts.onFrame(frame("")); lastShow = performance.now(); }
         }
         if (performance.now() - lastYield > 40) { await sleep(0); lastYield = performance.now(); }
       }
@@ -417,7 +546,10 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     // Di solito non peggiore della corrente; ogni tanto fino a +1/+2 angoli.
     const a = Math.random();
     const soglia: Punti = a < 0.003 ? [corrente[0] + 2, Infinity, 0, 0] : a < 0.02 ? [corrente[0] + 1, Infinity, 0, 0] : corrente;
-    if (u < 0.4) {
+    // (solo con catene spostabili: senza, nessuna estrazione in più e Smussa resta identico)
+    if (gruppiT.length && Math.random() < 0.08) {
+      pt = mossaAnello(soglia);
+    } else if (u < 0.4) {
       // Scorrimento di 1-3 celle in una direzione.
       const d = 1 + rnd(3), dir = rnd(4);
       const [dx, dy] = dir === 0 ? [d, 0] : dir === 1 ? [-d, 0] : dir === 2 ? [0, d] : [0, -d];
@@ -500,7 +632,7 @@ export async function smussaBordi(problem: PlannerProblem, start: { placements: 
     }
     if (pt) {
       corrente = pt;
-      if (cmp(pt, migliore.pt) < 0) { migliore = { pt, pos: new Map(pos) }; senzaMigliorare = 0; if (performance.now() - lastShow > 150) { opts.onFrame(frame("")); lastShow = performance.now(); } }
+      if (cmp(pt, migliore.pt) < 0) { migliore = { pt, pos: new Map(pos), comp: composizione() }; senzaMigliorare = 0; if (performance.now() - lastShow > 150) { opts.onFrame(frame("")); lastShow = performance.now(); } }
     }
     const now = performance.now();
     if (now - lastShow > 500) { opts.onFrame(frame("")); lastShow = now; }

@@ -20,7 +20,8 @@
 import type { CompletionOptions } from "./completion";
 import type { PlannerFrame, PlannerProblem } from "./engine";
 import { scegliGirandolaCon, type BaseGirandola, type VotoGirandola } from "./girandola";
-import type { AvvioCompletion, AvvioValuta } from "./lavoratore";
+import type { AvvioCompletion, AvvioNuclei, AvvioValuta } from "./lavoratore";
+import type { Nucleo } from "./dueCorsie";
 import Lavoratore from "./lavoratore?worker&inline";
 
 /** Ogni quanto si rileggono i comandi della pagina (pausa, stop, COMPLETA…). */
@@ -29,7 +30,7 @@ const FLAG_MS = 25;
 type Flag = { stop: boolean; finish: boolean; paused: boolean; stopFill: boolean; /** pausa in proporzione al lavoro (potenza CPU) */ riposo: number };
 
 function avvia<T>(
-  messaggio: AvvioCompletion | AvvioValuta,
+  messaggio: AvvioCompletion | AvvioValuta | AvvioNuclei,
   leggiFlag: () => Flag,
   gestisci: (m: { tipo: string; [k: string]: unknown }, w: Worker) => void,
   adotta?: () => unknown,
@@ -93,6 +94,19 @@ export function runCompletionParallela(problem: PlannerProblem, opts: Completion
       void p.then(stato => w.postMessage({ tipo: "riprendi", stato }));
     }
   }, opts.adotta);
+}
+
+/** nucleiDueCorsie (o, con `pettine`, retePettine) in un worker: stessi
+ *  risultati, ma la pagina non resta bloccata (21/11/2026). */
+export function nucleiParallela(problem: PlannerProblem, base: { placements: ReadonlyMap<string, { x: number; y: number }>; roads: ReadonlySet<string> },
+  opz: { fissi?: readonly string[]; max: number; raccordo?: { eastMidY: number }; bracci?: ReadonlyArray<readonly string[]>; pettine?: boolean }): Promise<Nucleo[]> {
+  const leggiFlag = (): Flag => ({ stop: false, finish: false, paused: false, stopFill: false, riposo: 0 });
+  const messaggio: AvvioNuclei = {
+    tipo: "nuclei", problem, pettine: !!opz.pettine, base: { placements: base.placements, roads: base.roads },
+    fissi: opz.fissi ?? [], max: opz.max, ...(opz.raccordo ? { raccordo: { eastMidY: opz.raccordo.eastMidY } } : {}),
+    ...(opz.bracci ? { bracci: opz.bracci } : {}), flag: leggiFlag(),
+  };
+  return avvia<Nucleo[]>(messaggio, leggiFlag, () => {});
 }
 
 /** scegliGirandola con le prove divise fra `lavoratori` worker (17/11/2026):

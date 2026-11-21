@@ -483,7 +483,9 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const onFrame0 = opts.onFrame;
     opts = { ...opts, onFrame: f => onFrame0(f.due || !blocchiCorr.length ? f : { ...f, due: [...blocchiCorr] }) };
   }
-  const placements = new Map(opts.initial.placements);
+  // (solo gli edifici del problema: rete di sicurezza per una partenza con voci
+  // di un problema diverso, vedi PlannerView › corri; di norma ci sono tutti)
+  const placements = new Map([...opts.initial.placements].filter(([id]) => byId.has(id)));
   const GW = problem.maxX - problem.minX + 1, GH = problem.maxY - problem.minY + 1;
   /** Strade (insieme di chiavi "x,y" + griglia per hasXY: ottimizzazione). */
   const roads = new RoadSet(opts.initial.roads).init(problem.minX, problem.minY, GW, GH);
@@ -3481,6 +3483,7 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
   /** Mossa sul nucleo a due corsie (vedi vicinato "nucleo"): modifica `pl`
    *  (sposta gli edifici a due corsie, toglie quelli sui nuovi posti) e
    *  imposta i nuovi blocchi; restituisce le strade nuove, o null (niente fatto). */
+  const celleBracci = new Set(opts.girandola?.bracci.flat() ?? []);
   const mossaNucleo = (S: StatoS, pl: Map<string, { x: number; y: number }>, togli: (id: string) => void): Set<string> | null => {
     const bl = S.bl;
     if (!bl.length) return null;
@@ -3530,7 +3533,10 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     const celleN = celleBlocchi(nuoviK);
     const th = problem.buildings.find(b => b.isTownhall);
     const rd = new Set(S.rd);
-    for (const c of celleBlocchi(bl)) rd.delete(c);
+    // (girandola con bracci a due corsie: le celle del braccio sotto un blocco
+    // tolto o spostato restano strada a una corsia, altrimenti il braccio oltre
+    // il blocco resterebbe staccato)
+    for (const c of celleBlocchi(bl)) if (!celleBracci.has(c)) rd.delete(c);
     for (const c of celleN) { if (!problem.cells.has(c)) return null; rd.add(c); }
     // celle occupate dai nuovi posti (blocchi + edifici a due corsie spostati)
     const prese = new Set<string>(celleN);

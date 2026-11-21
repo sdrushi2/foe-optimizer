@@ -408,6 +408,62 @@ export function ricomponiCatene(rag: Raggruppamento, pos: ReadonlyMap<string, { 
   return out;
 }
 
+/** Strumenti per spostare anelli fra catene dello stesso tipo (Smussa e
+ *  ricerca, 21/11/2026, idea dell'utente: "a volte potrebbe essere meglio
+ *  tenere solo una catena molto lunga"). Il modulo che li usa non importa
+ *  catene.ts (che legge i dati di gioco: nei worker non ci sono). */
+export interface StrumentiCatene {
+  /** Catene con almeno due inizi della stessa forma e anelli tutti uguali
+   *  (non l'Ippodromo con le teste di chiusura). `voce` = id nel problema,
+   *  `testa` = id dell'inizio, `anelli` = id degli anelli dall'inizio alla punta. */
+  gruppi: Array<{ catena: string; teste: Array<{ voce: string; testa: string; anelli: string[] }> }>;
+  /** Blocco montato: dimensioni e scostamento di ogni pezzo (l'inizio per primo); null se non si monta. */
+  forma: (testa: string, anelli: readonly string[]) => { w: number; h: number; pezzi: Array<{ id: string; x: number; y: number }> } | null;
+  /** Catene riconosciute dalle posizioni dei pezzi (id originali): nuovo
+   *  raggruppamento e angolo delle voci; null se qualche catena non torna. */
+  ricomponi: (pos: ReadonlyMap<string, { x: number; y: number }>) => { rag: Raggruppamento; placements: Map<string, { x: number; y: number }>; voci: ReadonlySet<string> } | null;
+}
+
+export function strumentiCatene(rag: Raggruppamento): StrumentiCatene {
+  const { problem, blocchi, originali, liberi } = rag;
+  const perCatena = new Map<string, Array<{ voce: string; testa: string; anelli: string[] }>>();
+  const scartate = new Set<string>();
+  for (const b of problem.buildings) {
+    if (b.isTownhall || liberi?.has(b.id)) continue;
+    const bl = blocchi.get(b.id);
+    const info = bl ? EDIFICI[originali.get(bl.membri[0]!.id)?.entityId ?? ""] : EDIFICI[b.entityId];
+    if (!info) continue;
+    const catena = bl?.catena ?? info.catena;
+    if (!bl && info.ruolo === "anello") { scartate.add(catena); continue; } // anelli sciolti: come ricomponiCatene, niente
+    const membri = bl?.membri ?? [{ id: b.id, dx: 0, dy: 0 }];
+    perCatena.set(catena, [...(perCatena.get(catena) ?? []), { voce: b.id, testa: membri[0]!.id, anelli: membri.slice(1).map(m => m.id) }]);
+  }
+  const gruppi: StrumentiCatene["gruppi"] = [];
+  for (const [catena, teste] of perCatena) {
+    if (scartate.has(catena) || teste.length < 2) continue;
+    const tb = teste.map(t => originali.get(t.testa));
+    const an = teste.flatMap(t => t.anelli.map(a => originali.get(a)));
+    if (!an.length || tb.some(b => !b || EDIFICI[b.entityId]?.ruolo !== "inizio") || an.some(b => !b || EDIFICI[b.entityId]?.ruolo !== "anello")) continue;
+    if (tb.some(b => firma(b!) !== firma(tb[0]!)) || an.some(b => b!.w !== an[0]!.w || b!.h !== an[0]!.h)) continue;
+    gruppi.push({ catena, teste: teste.map(t => ({ ...t, anelli: [...t.anelli] })) });
+  }
+  const forma: StrumentiCatene["forma"] = (testa, anelli) => {
+    const t = originali.get(testa);
+    if (!t) return null;
+    const a = anelli.map(id => originali.get(id));
+    if (a.some(x => !x)) return null;
+    const pezzi = monta(t, a as PlannerBuilding[], null);
+    if (!pezzi) return null;
+    return { w: Math.max(...pezzi.map(p => p.x + p.b.w)), h: Math.max(...pezzi.map(p => p.y + p.b.h)), pezzi: pezzi.map(p => ({ id: p.b.id, x: p.x, y: p.y })) };
+  };
+  const ricomponi: StrumentiCatene["ricomponi"] = pos => {
+    const rc = ricomponiCatene(rag, pos);
+    if (rc.staccati.length || rc.forme.length || rc.tolti.length) return null;
+    return { rag: rc.rag, placements: rc.placements, voci: rc.voci };
+  };
+  return { gruppi, forma, ricomponi };
+}
+
 /** Posizioni degli edifici originali: i blocchi tornano nei loro membri. */
 export function espandiCatene(placements: ReadonlyMap<string, { x: number; y: number }>, blocchi: ReadonlyMap<string, Blocco>) {
   if (!blocchi.size) return placements;

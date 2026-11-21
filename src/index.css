@@ -788,3 +788,16 @@ html, body { overflow-x: clip; }
 .building-floating-scrollbar::-webkit-scrollbar {
   height: 10px;
 }
+
+/* Planner: fase preparatoria di uno scenario (messaggio sotto il nome che
+   lampeggia morbidamente, 21/11/2026). Fermo con "riduci animazioni". */
+@keyframes planner-fase {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.planner-fase {
+  animation: planner-fase 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .planner-fase { animation: none; }
+}
