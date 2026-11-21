@@ -22,6 +22,11 @@
 //  un passo alla volta: fino a 50 misure all'avvio, ognuna con la pagina da
 //  reimpaginare. (Una bisezione sulla sequenza non va: chiudere un gruppo in C
 //  può allargarlo rispetto a S, quindi la larghezza non scende sempre.)
+//  SCHERMO BASSO (21/11/2026, telefono in orizzontale, altezza ≤ 500 px): il
+//  nastro alto 98 px con i gruppi chiusi alti 60 px e la riga vuota dei nomi
+//  prendeva un terzo dello schermo. Lì i gruppi sono sempre chiusi, in una riga
+//  sola alta 40 px: pulsanti con icona e nome affiancati (C) o, se non stanno,
+//  solo icona (I).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -112,6 +117,10 @@ function Aiuto({ testo }: { testo?: string }) {
 }
 
 const ORDINE: ModoGruppo[] = ["L", "M", "S", "C", "I"];
+/** Solo gruppi chiusi (schermo basso). */
+const CHIUSI: ModoGruppo[] = ["C", "I"];
+/** Schermo basso: telefono in orizzontale. */
+const SCHERMO_BASSO = "(max-height: 500px)";
 
 function Pulsante({ it, modo }: { it: Extract<RibbonItem, { kind: "button" }>; modo: ModoGruppo }) {
   const Icon = it.icon;
@@ -192,6 +201,16 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   const [larghezza, setLarghezza] = useState(0);
   const firma = groups.map((g) => g.id).join("|");
   const firmaPriorita = groups.map((g) => g.priority ?? 0).join("|");
+  /** Schermo basso (telefono in orizzontale): nastro in una riga sola, gruppi sempre chiusi. */
+  const [basso, setBasso] = useState(() => typeof matchMedia !== "undefined" && matchMedia(SCHERMO_BASSO).matches);
+  useEffect(() => {
+    if (typeof matchMedia === "undefined") return;
+    const mq = matchMedia(SCHERMO_BASSO), cambia = () => setBasso(mq.matches);
+    mq.addEventListener("change", cambia);
+    return () => mq.removeEventListener("change", cambia);
+  }, []);
+  /** Modi da misurare (e possibili): sullo schermo basso solo i gruppi chiusi. */
+  const misurabili: readonly ModoGruppo[] = basso ? CHIUSI : ORDINE;
   /** Disposizioni in ordine di compattazione: tutti L, poi un gruppo alla volta
    *  (priorità bassa prima, a parità da destra) a M, a S, a C; infine tutti I
    *  (solo icone: tutti insieme, così il nastro resta uniforme, niente "Filtri"
@@ -199,19 +218,20 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   const sequenza = useMemo(() => {
     const n = firma ? firma.split("|").length : 0, pr = firmaPriorita.split("|").map(Number);
     const indici = Array.from({ length: n }, (_, i) => i).sort((a, b) => (pr[a] ?? 0) - (pr[b] ?? 0) || b - a);
+    if (basso) return n ? [Array.from({ length: n }, (): ModoGruppo => "C"), Array.from({ length: n }, (): ModoGruppo => "I")] : [[]];
     let cur: ModoGruppo[] = Array.from({ length: n }, () => "L");
     const out: ModoGruppo[][] = [cur];
     for (const livello of ORDINE.slice(1, -1)) for (const i of indici) { cur = [...cur]; cur[i] = livello; out.push(cur); }
     if (n) out.push(cur.map(() => "I"));
     return out;
-  }, [firma, firmaPriorita]);
+  }, [firma, firmaPriorita, basso]);
   /** Misura in corso (tutti i gruppi nello stesso modo) oppure disposizione scelta (indice in `sequenza`). */
-  const [vista, setVista] = useState<{ tutti: ModoGruppo } | { passo: number }>({ tutti: "L" });
+  const [vista, setVista] = useState<{ tutti: ModoGruppo } | { passo: number }>(() => ({ tutti: misurabili[0]! }));
   const modi: ModoGruppo[] = "tutti" in vista ? groups.map(() => vista.tutti) : (sequenza[Math.min(vista.passo, sequenza.length - 1)] ?? []);
   /** Larghezze misurate dei gruppi per modo. */
   const misure = useRef<Partial<Record<ModoGruppo, number[]>>>({});
   /** Larghezza e gruppi su cui è stata scelta la disposizione attuale. */
-  const scelta = useRef<{ w: number; firma: string } | null>(null);
+  const scelta = useRef<{ w: number; firma: string; basso: boolean } | null>(null);
   /** Tutti i gruppi chiusi con la sola icona (telefono in verticale): nastro più basso, senza la riga dei nomi. */
   const tuttiIcona = modi.length > 0 && modi.every((m) => m === "I");
 
@@ -219,12 +239,13 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   // del ResizeObserver: la larghezza è quella su cui si è appena scelto)
   useLayoutEffect(() => {
     const c = scelta.current;
-    if (c && c.firma === firma && (larghezza === 0 || larghezza === c.w)) return;
+    if (c && c.firma === firma && c.basso === basso && (larghezza === 0 || larghezza === c.w)) return;
     scelta.current = null;
     misure.current = {};
-    setVista({ tutti: "L" });
+    setVista({ tutti: misurabili[0]! });
     setAperto(null);
-  }, [larghezza, firma]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [larghezza, firma, basso]);
 
   // misura i gruppi in ogni modo, poi sceglie la prima disposizione che sta
   useLayoutEffect(() => {
@@ -232,14 +253,14 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
     if (!el || modi.length !== groups.length || !groups.length) return;
     if ("tutti" in vista) {
       misure.current[vista.tutti] = [...el.children].map(c => c.getBoundingClientRect().width);
-      const dopo = ORDINE[ORDINE.indexOf(vista.tutti) + 1];
+      const dopo = misurabili[misurabili.indexOf(vista.tutti) + 1];
       if (dopo) { setVista({ tutti: dopo }); return; }
       const st = getComputedStyle(el);
       const spazio = el.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight) + 1;
       const m = misure.current;
       let passo = sequenza.findIndex(d => d.reduce((t, modo, k) => t + (m[modo]?.[k] ?? Infinity), 0) <= spazio);
       if (passo < 0) passo = sequenza.length - 1;
-      scelta.current = { w: el.clientWidth, firma };
+      scelta.current = { w: el.clientWidth, firma, basso };
       setVista({ passo });
       return;
     }
@@ -247,7 +268,7 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
     // si compatta ancora, un passo alla volta
     if (el.scrollWidth <= el.clientWidth + 1 || vista.passo >= sequenza.length - 1) return;
     setVista({ passo: vista.passo + 1 });
-  }, [vista, groups, sequenza, modi.length, firma]);
+  }, [vista, groups, sequenza, modi.length, firma, basso, misurabili]);
 
   useEffect(() => {
     const el = rifNastro.current;
@@ -289,10 +310,22 @@ export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   return (
     <div className="relative">
       {/* overflow-x-auto: quando anche tutti i gruppi chiusi non stanno (telefono) il nastro scorre in orizzontale invece di tagliarsi */}
-      <div ref={rifNastro} className={`flex ${tuttiIcona ? "h-[56px] justify-around" : "h-[98px]"} items-stretch overflow-x-auto overflow-y-hidden [scrollbar-width:thin] border-b border-slate-700 bg-slate-950 px-1 pt-1.5 pb-1 text-[11px]`}>
+      <div ref={rifNastro} className={`flex ${basso ? "h-[40px] items-center gap-1.5 py-1" : tuttiIcona ? "h-[56px] items-stretch justify-around pt-1.5 pb-1" : "h-[98px] items-stretch pt-1.5 pb-1"} overflow-x-auto overflow-y-hidden [scrollbar-width:thin] border-b border-slate-700 bg-slate-950 px-1 text-[11px]`}>
         {groups.map((g, i) => {
           const modo = modi[i] ?? "L";
           const Icon = g.icon;
+          if (basso) return (
+            // schermo basso: solo il pulsante del gruppo chiuso, icona e nome affiancati
+            <div key={g.id} className="flex flex-none items-center">
+              <button type="button" data-apre-gruppo="" aria-expanded={aperto?.indice === i} onClick={(e) => apri(i, e as unknown as MouseEvent)}
+                title={modo === "I" ? g.label : undefined} aria-label={g.label}
+                className={`flex h-[30px] items-center gap-1.5 rounded-md border border-slate-700 leading-none whitespace-nowrap text-[12px] text-slate-300 hover:bg-slate-800 hover:text-slate-100 ${modo === "I" ? "px-1.5" : "px-2"}`}>
+                <Icon size={16} strokeWidth={1.75} className="text-sky-300" aria-hidden="true" />
+                {modo !== "I" && g.label}
+                <ChevronDown size={11} aria-hidden="true" />
+              </button>
+            </div>
+          );
           return (
             // Gruppo: area comandi ad altezza fissa (contenuto centrato in
             // verticale) + etichetta in basso, così tutte le etichette stanno
