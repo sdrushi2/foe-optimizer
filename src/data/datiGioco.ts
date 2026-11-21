@@ -164,6 +164,8 @@ export async function caricaDatiGioco(): Promise<void> {
   if (dati) return;
   // Il manifest va sempre chiesto alla rete (no-cache = rivalida): è lui a
   // dire quale versione di ogni file usare. Offline ci pensa il service worker.
+  // (I file sono già in arrivo: index.html li precarica con lo stesso ?v=, vedi
+  // datiPlugin in vite.config.ts.)
   let manifest: Manifest = { versione: "", file: {} };
   try {
     manifest = await (await scarica("/data/manifest.json", { cache: "no-cache" })).json() as Manifest;

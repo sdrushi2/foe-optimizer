@@ -5,8 +5,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { build, defineConfig, minify, type Plugin } from "vite";
-import { manifestDati, verificaDati } from "./scripts/dati-pubblici.ts";
+import { build, defineConfig, minify, type HtmlTagDescriptor, type Plugin } from "vite";
+import { FILE_AVVIO, manifestDati, verificaDati } from "./scripts/dati-pubblici.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,11 +132,23 @@ function datiPlugin(): Plugin {
     },
     // Il codice dell'app (avvio.tsx) si esegue solo dopo i dati, ma si può
     // SCARICARE subito, in parallelo: modulepreload in index.html.
+    // (21/11/2026, PageSpeed "albero delle dipendenze di rete") Anche i dati
+    // dell'avvio: prima partivano solo dopo index.js e manifest.json (tre giri
+    // di rete in fila); ora un preload per ognuno, con lo stesso ?v= che
+    // datiGioco.ts ricava dal manifest, così il browser li scarica subito e la
+    // fetch li trova pronti. Il manifest resta chiesto alla rete come prima: con
+    // un index.html vecchio (cache) un preload al massimo va sprecato.
     transformIndexHtml: {
       order: "post",
       handler(_html, ctx) {
+        const tag: HtmlTagDescriptor[] = [];
         const chunk = Object.values(ctx.bundle ?? {}).find(c => c.type === "chunk" && c.facadeModuleId?.endsWith("/src/avvio.tsx"));
-        return chunk ? [{ tag: "link", attrs: { rel: "modulepreload", crossorigin: true, href: `/${chunk.fileName}` }, injectTo: "head" }] : [];
+        if (chunk) tag.push({ tag: "link", attrs: { rel: "modulepreload", crossorigin: true, href: `/${chunk.fileName}` }, injectTo: "head" });
+        if (ctx.bundle && !process.env.FOE_EDITOR_BUILD) {
+          const { file } = manifestDati(DIR_DATI);
+          for (const f of FILE_AVVIO) if (file[f]) tag.push({ tag: "link", attrs: { rel: "preload", as: "fetch", crossorigin: true, href: `/data/${f}?v=${file[f]}` }, injectTo: "head" });
+        }
+        return tag;
       },
     },
     closeBundle() {

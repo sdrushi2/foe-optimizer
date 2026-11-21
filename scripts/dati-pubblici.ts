@@ -16,8 +16,10 @@ import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
 
-/** Stessa lista di FILE_DATI in src/data/datiGioco.ts. */
-const FILE = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json", "pergamene.csv",
+/** Stessa lista di FILE_DATI in src/data/datiGioco.ts: i file scaricati all'avvio
+ *  (anche precaricati da index.html, vedi datiPlugin in vite.config.ts). */
+export const FILE_AVVIO = ["ages.csv", "buildings.csv", "allies.csv", "events.csv", "unique.csv", "kit.json", "catene.json", "pergamene.csv"] as const;
+const FILE = [...FILE_AVVIO,
   // 2.0: scaricati solo quando servono (es. datiGioco.caricaBuildingsExtra), ma con hash come gli altri
   "buildings_extra.csv", "ge.json",
   // livelli del Castello (RECUPERO DATI/castello.py), scaricati solo con un livello importato
