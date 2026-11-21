@@ -14,9 +14,17 @@
 //    C  gruppo chiuso: un pulsante con icona e nome che apre il gruppo
 //       completo in un pannello.
 //  Ricalcolo a ogni cambio di larghezza (ResizeObserver) o di contenuto.
+//  (21/11/2026, PageSpeed) Come si trova la disposizione: le disposizioni
+//  possibili sono una SEQUENZA (da tutti L a tutti I, un gruppo alla volta
+//  nell'ordine sopra). Si disegnano tutti i gruppi in L, poi in M, S, C e I e
+//  ogni volta si misura la larghezza di ciascuno (5 misure); poi si sceglie a
+//  conti fatti la prima disposizione della sequenza che sta. Prima si provava
+//  un passo alla volta: fino a 50 misure all'avvio, ognuna con la pagina da
+//  reimpaginare. (Una bisezione sulla sequenza non va: chiudere un gruppo in C
+//  può allargarlo rispetto a S, quindi la larghezza non scende sempre.)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ChevronDown, X } from "lucide-react";
@@ -179,41 +187,67 @@ function ContenutoGruppo({ g, modo, aCapo = false }: { g: RibbonGroup; modo: Mod
 
 export default function Ribbon({ groups }: { groups: RibbonGroup[] }) {
   const rifNastro = useRef<HTMLDivElement>(null);
-  const [modi, setModi] = useState<ModoGruppo[]>(() => groups.map(() => "L"));
   const [aperto, setAperto] = useState<{ indice: number; left: number; top: number } | null>(null);
   const rifPannello = useRef<HTMLDivElement>(null);
   const [larghezza, setLarghezza] = useState(0);
   const firma = groups.map((g) => g.id).join("|");
+  const firmaPriorita = groups.map((g) => g.priority ?? 0).join("|");
+  /** Disposizioni in ordine di compattazione: tutti L, poi un gruppo alla volta
+   *  (priorità bassa prima, a parità da destra) a M, a S, a C; infine tutti I
+   *  (solo icone: tutti insieme, così il nastro resta uniforme, niente "Filtri"
+   *  con il nome in mezzo alle sole icone). */
+  const sequenza = useMemo(() => {
+    const n = firma ? firma.split("|").length : 0, pr = firmaPriorita.split("|").map(Number);
+    const indici = Array.from({ length: n }, (_, i) => i).sort((a, b) => (pr[a] ?? 0) - (pr[b] ?? 0) || b - a);
+    let cur: ModoGruppo[] = Array.from({ length: n }, () => "L");
+    const out: ModoGruppo[][] = [cur];
+    for (const livello of ORDINE.slice(1, -1)) for (const i of indici) { cur = [...cur]; cur[i] = livello; out.push(cur); }
+    if (n) out.push(cur.map(() => "I"));
+    return out;
+  }, [firma, firmaPriorita]);
+  /** Misura in corso (tutti i gruppi nello stesso modo) oppure disposizione scelta (indice in `sequenza`). */
+  const [vista, setVista] = useState<{ tutti: ModoGruppo } | { passo: number }>({ tutti: "L" });
+  const modi: ModoGruppo[] = "tutti" in vista ? groups.map(() => vista.tutti) : (sequenza[Math.min(vista.passo, sequenza.length - 1)] ?? []);
+  /** Larghezze misurate dei gruppi per modo. */
+  const misure = useRef<Partial<Record<ModoGruppo, number[]>>>({});
+  /** Larghezza e gruppi su cui è stata scelta la disposizione attuale. */
+  const scelta = useRef<{ w: number; firma: string } | null>(null);
   /** Tutti i gruppi chiusi con la sola icona (telefono in verticale): nastro più basso, senza la riga dei nomi. */
   const tuttiIcona = modi.length > 0 && modi.every((m) => m === "I");
 
-  // ricomincia da tutti grandi quando cambiano larghezza o gruppi
+  // si rimisura quando cambiano larghezza o gruppi (non alla prima notifica
+  // del ResizeObserver: la larghezza è quella su cui si è appena scelto)
   useLayoutEffect(() => {
-    setModi(groups.map(() => "L"));
+    const c = scelta.current;
+    if (c && c.firma === firma && (larghezza === 0 || larghezza === c.w)) return;
+    scelta.current = null;
+    misure.current = {};
+    setVista({ tutti: "L" });
     setAperto(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [larghezza, firma]);
 
-  // compatta un passo alla volta finché il nastro non sta nella larghezza
+  // misura i gruppi in ogni modo, poi sceglie la prima disposizione che sta
   useLayoutEffect(() => {
     const el = rifNastro.current;
-    if (!el || modi.length !== groups.length || el.scrollWidth <= el.clientWidth + 1) return;
-    // ordine di compattazione: priorità bassa prima, a parità da destra
-    const indici = groups.map((_, i) => i).sort((a, b) => (groups[a]!.priority ?? 0) - (groups[b]!.priority ?? 0) || b - a);
-    for (const livello of ORDINE.slice(1)) {
-      for (const i of indici) {
-        const corrente = modi[i]!;
-        if (ORDINE.indexOf(corrente) >= ORDINE.indexOf(livello)) continue;
-        // ultimo livello (solo icone): tutti i gruppi insieme, così il nastro
-        // resta uniforme (niente "Filtri" con il nome in mezzo alle sole icone)
-        if (livello === "I") { setModi(modi.map(() => "I")); return; }
-        const nuovi = [...modi];
-        nuovi[i] = livello;
-        setModi(nuovi);
-        return;
-      }
+    if (!el || modi.length !== groups.length || !groups.length) return;
+    if ("tutti" in vista) {
+      misure.current[vista.tutti] = [...el.children].map(c => c.getBoundingClientRect().width);
+      const dopo = ORDINE[ORDINE.indexOf(vista.tutti) + 1];
+      if (dopo) { setVista({ tutti: dopo }); return; }
+      const st = getComputedStyle(el);
+      const spazio = el.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight) + 1;
+      const m = misure.current;
+      let passo = sequenza.findIndex(d => d.reduce((t, modo, k) => t + (m[modo]?.[k] ?? Infinity), 0) <= spazio);
+      if (passo < 0) passo = sequenza.length - 1;
+      scelta.current = { w: el.clientWidth, firma };
+      setVista({ passo });
+      return;
     }
-  }, [modi, groups]);
+    // non sta (contenuto cresciuto, o un calcolo appena sbagliato di un pixel):
+    // si compatta ancora, un passo alla volta
+    if (el.scrollWidth <= el.clientWidth + 1 || vista.passo >= sequenza.length - 1) return;
+    setVista({ passo: vista.passo + 1 });
+  }, [vista, groups, sequenza, modi.length, firma]);
 
   useEffect(() => {
     const el = rifNastro.current;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, Fragment, createContext, useContext, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, Fragment, createContext, useContext, forwardRef, type ReactNode } from "react";
 import {
   X as XIcon,
   RotateCcw,
@@ -34,13 +34,8 @@ import { caricaBuildingsExtra, caricaBuildingsEra, caricaGe, datiGioco, caricaCa
 import { leggiGe, statisticheGe, type DatiGe } from "./data/geBonus";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
-import CityMapView, { type CityMapDragState } from "./components/CityMapView";
+import type { CityMapDragState } from "./components/CityMapView";
 import { esportaCittaJson, scaricaJson } from "./data/cityMapJson";
-import PannelloEfficienza from "./ui/PannelloEfficienza";
-import PannelloImporta from "./ui/PannelloImporta";
-import PannelloNovita from "./ui/PannelloNovita";
-import VideoTutorial from "./planner/VideoTutorial";
-import PannelloInformazioni from "./ui/PannelloInformazioni";
 import { PERGAMENE_RESOURCE, VALOR_RESOURCE } from "./data/allyAdvisor";
 import { setEdificio } from "./data/setEdifici";
 import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
@@ -62,10 +57,9 @@ const NESSUN_EDIFICIO: CityMapBuilding[] = [];
 const NESSUNA_CELLA = new Set<string>();
 import type { Categoria, OpzioneProduzione } from "./ui/FiltriEdifici";
 import { useModalDismiss } from "./utils/useModalDismiss";
-import AllyAdvisorPanel from "./components/AllyAdvisorPanel";
-import PannelloPergamene from "./components/PannelloPergamene";
 import { dimensioniDaSize, senzaLivello, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner } from "./planner/modificheCitta";
-import PiratiTool, { type PiratiToolHandle } from "./components/PiratiTool";
+import type { PiratiToolHandle } from "./components/PiratiTool";
+import type PiratiToolModulo from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
 import { t, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
@@ -100,6 +94,26 @@ import {
 const PlannerView = lazy(() => import("./planner/PlannerView"));
 // Report di un GE (Catalogo › Grandi Edifici, pulsante 📊): a parte, scaricato solo aprendolo
 const PannelloReportGe = lazy(() => import("./components/PannelloReportGe"));
+// (21/11/2026, PageSpeed: circa 90 KB di JavaScript scaricati all'avvio e non usati)
+// Anche questi a parte, scaricati la prima volta che servono: mappa della città,
+// pannelli della Guida (Novità porta con sé i due changelog) e delle Opzioni,
+// pannelli Potenziale e Pergamene degli alleati, Insediamento dei Pirati.
+const CityMapView = lazy(() => import("./components/CityMapView"));
+const PannelloEfficienza = lazy(() => import("./ui/PannelloEfficienza"));
+const PannelloImporta = lazy(() => import("./ui/PannelloImporta"));
+const PannelloNovita = lazy(() => import("./ui/PannelloNovita"));
+const VideoTutorial = lazy(() => import("./planner/VideoTutorial"));
+const PannelloInformazioni = lazy(() => import("./ui/PannelloInformazioni"));
+const AllyAdvisorPanel = lazy(() => import("./components/AllyAdvisorPanel"));
+const PannelloPergamene = lazy(() => import("./components/PannelloPergamene"));
+/** Insediamento dei Pirati: il modulo si scarica al primo montaggio (cioè alla prima
+ *  apertura della scheda, vedi `piratiAperto`). Non con `lazy`: quello di Preact non
+ *  passa il `ref`, che serve alla bacchetta (importFromClipboardText). */
+const PiratiTool = forwardRef<PiratiToolHandle, { uiLang: UiLang; onNastro: (g: RibbonGroup[]) => void }>(function PiratiToolPigro(props, ref) {
+  const [C, setC] = useState<typeof PiratiToolModulo | null>(null);
+  useEffect(() => { void import("./components/PiratiTool").then(m => setC(() => m.default)); }, []);
+  return C ? <C ref={ref} {...props} /> : null;
+});
 
 const { buildings: buildingsCsv, allies: alliesCsv, events: eventsCsv, kit: kitData } = datiGioco();
 const BUILDINGS_FROM_CSV: Building[] = parseBuildingsCsv(buildingsCsv);
@@ -809,7 +823,7 @@ function CellaMolt({ value, molt, color, first, uiLang, segno, ge, contributo }:
 function TitoloGruppo({ icona, testo }: { icona: string; testo: string }) {
   return (
     <span className="inline-flex items-center gap-1 align-middle">
-      <img src={icona} alt="" aria-hidden="true" className="inline-block h-4 w-4 object-contain" />
+      <img src={icona} alt="" aria-hidden="true" width={16} height={16} className="inline-block h-4 w-4 object-contain" />
       {testo}
     </span>
   );
@@ -821,7 +835,7 @@ const TableHeaderIcon = memo(function TableHeaderIcon({ src, alt, className = ""
   if (!src) {
     return <span title={alt || undefined} className="text-[11px] font-bold uppercase">{alt}</span>;
   }
-  return <img src={src} alt={alt} title={alt || undefined} className={`inline-block h-[24px] w-auto ${spostata ? "relative top-[1px] " : ""}${className}`} />;
+  return <img src={src} alt={alt} title={alt || undefined} width={24} height={24} className={`inline-block h-[24px] w-auto ${spostata ? "relative top-[1px] " : ""}${className}`} />;
 });
 
 
@@ -1201,7 +1215,7 @@ interface BuildingRowProps {
 }
 
 /** DISEGNO A RATE della tabella degli edifici (20/11/2026, v2.023; rivisto la sera
- *  stessa per l'INP). La tabella disegna subito le prime PRIMA_RATA righe e aggiunge
+ *  stessa per l'INP). La tabella disegna subito la prima rata (primaRata) e aggiunge
  *  le altre a blocchi di ALTRA_RATA solo quando servono, cioè quando scorrendo ci si
  *  avvicina alla fine di quelle già disegnate (una riga "sentinella" in fondo,
  *  osservata con IntersectionObserver). A ogni nuovo elenco (filtro, ordinamento,
@@ -1212,24 +1226,42 @@ interface BuildingRowProps {
  *  intera, l'ultima teneva occupato il browser 1 s su computer e 2-3 s su cellulare,
  *  e ogni clic (ordinare, filtrare, selezionare) lavorava su 1.600 righe. Misure
  *  dell'INP in docs/V2.md. */
-const PRIMA_RATA = 50;
+/** (21/11/2026, PageSpeed) Prima rata: le righe che riempiono lo schermo (alte circa
+ *  29 px; la tabella parte almeno 150 px sotto il bordo) più 6 di scorta, almeno 20:
+ *  circa 30 su telefono e computer invece di 50. Ogni riga costa all'avvio circa 10 ms
+ *  di lavoro con la CPU 4× più lenta (disegno e impaginazione). */
+const primaRata = () => Math.max(20, Math.ceil(Math.max(0, (typeof window === "undefined" ? 900 : window.innerHeight) - 150) / 29) + 6);
 const ALTRA_RATA = 100;
 function RigheARate({ lista, riga }: { lista: ProcessedBuilding[]; riga: (b: ProcessedBuilding) => ReactNode }) {
-  const [stato, setStato] = useState<{ lista: ProcessedBuilding[]; n: number }>(() => ({ lista, n: PRIMA_RATA }));
+  const [stato, setStato] = useState<{ lista: ProcessedBuilding[]; n: number }>(() => ({ lista, n: primaRata() }));
   const sentinella = useRef<HTMLTableRowElement>(null);
-  const n = stato.lista === lista ? stato.n : PRIMA_RATA;
+  const n = stato.lista === lista ? stato.n : primaRata();
   useEffect(() => {
-    if (stato.lista !== lista) setStato({ lista, n: PRIMA_RATA });
+    if (stato.lista !== lista) setStato({ lista, n: primaRata() });
   }, [stato.lista, lista]);
   useEffect(() => {
     const el = sentinella.current;
     if (!el || n >= lista.length || typeof IntersectionObserver === "undefined") return;
-    // (la sentinella entra nei 2.000 px sotto lo schermo: si aggiunge la rata prima di arrivarci)
+    // (la sentinella entra nei 400 px sotto lo schermo: si aggiunge la rata prima di arrivarci.
+    // 21/11/2026, PageSpeed: con 2.000 px le prime 50 righe non bastavano a tenerla
+    // lontana e appena aperta la pagina, o dopo ogni ordinamento o filtro, la tabella
+    // passava subito a 150 righe in due giri, ognuno con la tabella da reimpaginare.
+    // Con la prima rata che basta appena a riempire lo schermo la sentinella è già
+    // vicina: la rata si aggiunge solo se la pagina non è in cima o dopo uno
+    // scorrimento, cioè quando le righe servono davvero)
+    let vicina = false, mosso = window.scrollY > 0;
+    const aggiungi = () => {
+      vicina = false; // (una rata per volta: il prossimo controllo dopo il nuovo disegno)
+      setStato(s => (s.lista === lista ? { lista, n: s.n + ALTRA_RATA } : s));
+    };
     const io = new IntersectionObserver(voci => {
-      if (voci.some(v => v.isIntersecting)) setStato(s => (s.lista === lista ? { lista, n: s.n + ALTRA_RATA } : s));
-    }, { rootMargin: "0px 0px 2000px 0px" });
+      vicina = voci.some(v => v.isIntersecting);
+      if (vicina && mosso) aggiungi();
+    }, { rootMargin: "0px 0px 400px 0px" });
+    const scorri = () => { mosso = true; if (vicina) aggiungi(); };
     io.observe(el);
-    return () => io.disconnect();
+    document.addEventListener("scroll", scorri, { capture: true, passive: true });
+    return () => { io.disconnect(); document.removeEventListener("scroll", scorri, { capture: true }); };
   }, [n, lista]);
   // (senza IntersectionObserver, browser molto vecchi: tutte le righe subito)
   const tutte = n >= lista.length || typeof IntersectionObserver === "undefined";
@@ -1295,6 +1327,8 @@ const BuildingRow = memo(function BuildingRow({
 }: BuildingRowProps) {
   // icone della colonna ❔ (BONUS nel catalogo dei GE): 24 px nel catalogo dei GE, 16 px nelle altre tabelle (utente)
   const dimIcona = senzaLimitati ? "h-6 w-6" : "h-4 w-4";
+  // (21/11/2026, PageSpeed: immagini senza width/height) stesse misure in pixel
+  const latoIcona = senzaLimitati ? 24 : 16;
   // GE (Prestige): colonne di produzione con valore solo dal tier Oro in oro
   const classeProd = (col: string) => { const base = COLONNE_BOOST_PROD.has(col) ? " cell-prod-b" : " cell-prod"; return b._beniEvid === col ? `${base} cell-beni-evid` : b.gbColonneOro?.includes(col) ? " cell-prod-gold" : base; };
   // Colonna "Somma beni": evidenziata se lo è una delle tre colonne che riassume.
@@ -1799,7 +1833,7 @@ const BuildingRow = memo(function BuildingRow({
                   sull'img sposta esattamente come atteso (verificato: 7.5px
                   sopra / 1.5px sotto, contro il 4.5/4.5 simmetrico senza
                   offset — coerente col +3px voluto). */}
-              <img src={iconFragment} alt="" className="absolute inset-0 top-[3px] h-4 w-4 object-contain" />
+              <img src={iconFragment} alt="" width={16} height={16} className="absolute inset-0 top-[3px] h-4 w-4 object-contain" />
             </span>
           );
         })()}
@@ -1811,7 +1845,7 @@ const BuildingRow = memo(function BuildingRow({
             onMouseEnter={(e) => { const r = e.currentTarget.getBoundingClientRect(); setDaFrammentiTooltip({ x: r.left, y: r.bottom, id: b.cityEntityId! }); }}
             onMouseLeave={() => setDaFrammentiTooltip(null)}
           >
-            <img src={iconFragmentFrom} alt="" className="absolute inset-0 top-[3px] h-4 w-4 object-contain" />
+            <img src={iconFragmentFrom} alt="" width={16} height={16} className="absolute inset-0 top-[3px] h-4 w-4 object-contain" />
           </span>
         )}
         {(activeTab === "inventario" || b._isMergedInventory) && (() => {
@@ -1897,17 +1931,17 @@ const BuildingRow = memo(function BuildingRow({
           {[...b.allyType].map((kind, i) =>
             // (novembre 2026: icone del gioco al posto di ⭐/🔬)
             kind === "M" ? (
-              <img key={`ally-${i}`} src={allies_military} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("historicalAllySlotTitleMilitary", uiLang)} />
+              <img key={`ally-${i}`} src={allies_military} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("historicalAllySlotTitleMilitary", uiLang)} />
             ) : kind === "S" ? (
-              <img key={`ally-${i}`} src={allies_science} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("historicalAllySlotTitleScience", uiLang)} />
+              <img key={`ally-${i}`} src={allies_science} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("historicalAllySlotTitleScience", uiLang)} />
             ) : null
           )}
           {/* (icone dei gruppi Campi / Incursioni dell'intestazione al posto di 🔰/✊🏾) */}
           {isBattlegroundsPrizeId(b.cityEntityId) && (
-            <img src={iconCampi} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("wonInGbgTitle", uiLang)} />
+            <img src={iconCampi} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("wonInGbgTitle", uiLang)} />
           )}
           {isQuantumIncursionsPrizeId(b.cityEntityId) && (
-            <img src={iconIQ} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("wonInQiTitle", uiLang)} />
+            <img src={iconIQ} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("wonInQiTitle", uiLang)} />
           )}
           {(() => {
             const info = getSettlementInfo(b.cityEntityId);
@@ -1925,11 +1959,11 @@ const BuildingRow = memo(function BuildingRow({
               <>
                 {alleati.map(m => (
                   <img key={m.tipo} src={m.tipo === "military_ally_boost" ? allies_military : allies_science} alt=""
-                    className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore).replace(/^• /, "")} />
+                    width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore).replace(/^• /, "")} />
                 ))}
                 {altri.length > 0 && (altri.every(m => m.modalita === "guild_expedition")
                   // (solo bonus delle Spedizioni, con quelle colonne spente: icona delle Spedizioni)
-                  ? <img src={iconSpedizioni} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`}
+                  ? <img src={iconSpedizioni} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`}
                       title={[t("gbMultTitle", uiLang), ...altri.map(m => t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore))].join("\n")} />
                   : <span className="cursor-help font-black text-amber-300"
                       title={[t("gbMultTitle", uiLang), ...altri.map(m => t("gbMultLine", uiLang, m.tipo, m.modalita, m.valore))].join("\n")}>×</span>
@@ -1939,87 +1973,87 @@ const BuildingRow = memo(function BuildingRow({
           })()}
           {b.gbReliquie && (
             // Tempio delle Reliquie: probabilità di reliquie nelle Spedizioni
-            <img src={iconReliquie} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`}
+            <img src={iconReliquie} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`}
               title={t("gbRelicsTitle", uiLang, b.gbReliquie.probabilita, b.gbReliquie.rara)} />
           )}
           {b.gbCritico?.rame ? (
-            <img src={iconCritico} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCritCopperTitle", uiLang, b.gbCritico.rame)} />
+            <img src={iconCritico} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCritCopperTitle", uiLang, b.gbCritico.rame)} />
           ) : null}
           {b.gbCritico?.oro ? (
-            <img src={iconCriticoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCritGoldTitle", uiLang, b.gbCritico.oro)} />
+            <img src={iconCriticoOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCritGoldTitle", uiLang, b.gbCritico.oro)} />
           ) : null}
           {b.gbSaccheggio && (
-            <img src={iconSaccheggio} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbPillageTitle", uiLang, b.gbSaccheggio.probabilita)} />
+            <img src={iconSaccheggio} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbPillageTitle", uiLang, b.gbSaccheggio.probabilita)} />
           )}
           {b.gbRaccoltaDoppia?.rame && (
-            <img src={iconRaccoltaDoppia} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDoubleCollectTitle", uiLang, b.gbRaccoltaDoppia.rame.probabilita, b.gbRaccoltaDoppia.rame.edifici)} />
+            <img src={iconRaccoltaDoppia} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDoubleCollectTitle", uiLang, b.gbRaccoltaDoppia.rame.probabilita, b.gbRaccoltaDoppia.rame.edifici)} />
           )}
           {b.gbRaccoltaDoppia?.oro && (
-            <img src={iconRaccoltaDoppiaOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDoubleCollectGoldTitle", uiLang, b.gbRaccoltaDoppia.oro.probabilita, b.gbRaccoltaDoppia.oro.edifici)} />
+            <img src={iconRaccoltaDoppiaOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDoubleCollectGoldTitle", uiLang, b.gbRaccoltaDoppia.oro.probabilita, b.gbRaccoltaDoppia.oro.edifici)} />
           )}
           {b.gbBottino?.rame && (
-            <img src={iconBottino} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSpoilsTitle", uiLang, b.gbBottino.rame.probabilita, b.gbBottino.rame.battaglie)} />
+            <img src={iconBottino} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSpoilsTitle", uiLang, b.gbBottino.rame.probabilita, b.gbBottino.rame.battaglie)} />
           )}
           {b.gbBottino?.oro && (
-            <img src={iconBottinoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSpoilsGoldTitle", uiLang, b.gbBottino.oro.probabilita, b.gbBottino.oro.battaglie)} />
+            <img src={iconBottinoOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSpoilsGoldTitle", uiLang, b.gbBottino.oro.probabilita, b.gbBottino.oro.battaglie)} />
           )}
           {b.gbColpo?.rame && (
-            <img src={iconColpo} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbStrikeTitle", uiLang, b.gbColpo.rame.probabilita, b.gbColpo.rame.battaglie)} />
+            <img src={iconColpo} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbStrikeTitle", uiLang, b.gbColpo.rame.probabilita, b.gbColpo.rame.battaglie)} />
           )}
           {b.gbColpo?.oro && (
-            <img src={iconColpoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbStrikeGoldTitle", uiLang, b.gbColpo.oro.probabilita, b.gbColpo.oro.battaglie)} />
+            <img src={iconColpoOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbStrikeGoldTitle", uiLang, b.gbColpo.oro.probabilita, b.gbColpo.oro.battaglie)} />
           )}
           {b.gbMissili?.rame && (
-            <img src={iconMissili} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMissileTitle", uiLang, b.gbMissili.rame.probabilita, b.gbMissili.rame.battaglie)} />
+            <img src={iconMissili} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMissileTitle", uiLang, b.gbMissili.rame.probabilita, b.gbMissili.rame.battaglie)} />
           )}
           {b.gbMissili?.oro && (
-            <img src={iconMissiliOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMissileGoldTitle", uiLang, b.gbMissili.oro.probabilita, b.gbMissili.oro.battaglie)} />
+            <img src={iconMissiliOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbMissileGoldTitle", uiLang, b.gbMissili.oro.probabilita, b.gbMissili.oro.battaglie)} />
           )}
           {b.gbSchegge && (
-            <img src={iconSchegge} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbShardsTitle", uiLang, b.gbSchegge.probabilita, b.gbSchegge.rara)} />
+            <img src={iconSchegge} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbShardsTitle", uiLang, b.gbSchegge.probabilita, b.gbSchegge.rara)} />
           )}
           {b.gbRegaliDiplomatici && (
-            <img src={iconRegaliDiplomatici} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDiploGiftsTitle", uiLang, b.gbRegaliDiplomatici.probabilita, b.gbRegaliDiplomatici.negoziazioni)} />
+            <img src={iconRegaliDiplomatici} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbDiploGiftsTitle", uiLang, b.gbRegaliDiplomatici.probabilita, b.gbRegaliDiplomatici.negoziazioni)} />
           )}
           {b.gbSaccheggiaBeni && (
-            <img src={iconSaccheggiaBeni} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbPlunderGoodsTitle", uiLang, b.gbSaccheggiaBeni.beni, b.gbSaccheggiaBeni.volte)} />
+            <img src={iconSaccheggiaBeni} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbPlunderGoodsTitle", uiLang, b.gbSaccheggiaBeni.beni, b.gbSaccheggiaBeni.volte)} />
           )}
           {b.gbBeniAiuti && (
-            <img src={iconBeniAiuti} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAidGoodsTitle", uiLang, b.gbBeniAiuti.beni, b.gbBeniAiuti.volte)} />
+            <img src={iconBeniAiuti} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAidGoodsTitle", uiLang, b.gbBeniAiuti.beni, b.gbBeniAiuti.volte)} />
           )}
           {b.gbMissioni?.rame ? (
-            <img src={iconMissioni} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbQuestTitle", uiLang, b.gbMissioni.rame)} />
+            <img src={iconMissioni} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbQuestTitle", uiLang, b.gbMissioni.rame)} />
           ) : null}
           {b.gbMissioni?.oro ? (
-            <img src={iconMissioniOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbQuestGoldTitle", uiLang, b.gbMissioni.oro)} />
+            <img src={iconMissioniOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbQuestGoldTitle", uiLang, b.gbMissioni.oro)} />
           ) : null}
           {b.gbBoostRaccolte?.monete && (
-            <img src={iconMon} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCoinBoostTitle", uiLang, b.gbBoostRaccolte.monete.percentuale, b.gbBoostRaccolte.monete.raccolte)} />
+            <img src={iconMon} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbCoinBoostTitle", uiLang, b.gbBoostRaccolte.monete.percentuale, b.gbBoostRaccolte.monete.raccolte)} />
           )}
           {b.gbBoostRaccolte?.materiali && (
-            <img src={iconMat} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSupplyBoostTitle", uiLang, b.gbBoostRaccolte.materiali.percentuale, b.gbBoostRaccolte.materiali.raccolte)} />
+            <img src={iconMat} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbSupplyBoostTitle", uiLang, b.gbBoostRaccolte.materiali.percentuale, b.gbBoostRaccolte.materiali.raccolte)} />
           )}
           {b.gbNucleoIA && (
-            <img src={iconNucleoIA} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAiCoreTitle", uiLang, b.gbNucleoIA.percentuale, b.gbNucleoIA.raccolte)} />
+            <img src={iconNucleoIA} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAiCoreTitle", uiLang, b.gbNucleoIA.percentuale, b.gbNucleoIA.raccolte)} />
           )}
           {b.gbProgettiAiuti ? (
-            <img src={iconProgettiAiuti} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAidBlueprintsTitle", uiLang, b.gbProgettiAiuti)} />
+            <img src={iconProgettiAiuti} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbAidBlueprintsTitle", uiLang, b.gbProgettiAiuti)} />
           ) : null}
           {b.gbContributo?.rame ? (
-            <img src={iconContributo} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbContribCopperTitle", uiLang, b.gbContributo.rame)} />
+            <img src={iconContributo} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbContribCopperTitle", uiLang, b.gbContributo.rame)} />
           ) : null}
           {b.gbContributo?.oro ? (
-            <img src={iconContributoOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbContribGoldTitle", uiLang, b.gbContributo.oro)} />
+            <img src={iconContributoOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbContribGoldTitle", uiLang, b.gbContributo.oro)} />
           ) : null}
           {b.gbManiAmiche?.rame ? (
-            <img src={iconManiAmiche} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbHelpCopperTitle", uiLang, b.gbManiAmiche.rame)} />
+            <img src={iconManiAmiche} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbHelpCopperTitle", uiLang, b.gbManiAmiche.rame)} />
           ) : null}
           {b.gbManiAmiche?.oro ? (
-            <img src={iconManiAmicheOro} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbHelpGoldTitle", uiLang, b.gbManiAmiche.oro)} />
+            <img src={iconManiAmicheOro} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} title={t("gbHelpGoldTitle", uiLang, b.gbManiAmiche.oro)} />
           ) : null}
           {b.gbRespingi && (
             // Torre di Galata: respingi saccheggi
-            <img src={iconRespingi} alt="" className={`inline-block ${dimIcona} cursor-help object-contain`}
+            <img src={iconRespingi} alt="" width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`}
               title={t("gbRepelTitle", uiLang, b.gbRespingi.probabilita, b.gbRespingi.tentativi)} />
           )}
           {b.gbAltri && b.gbAltri.length > 0 && (
@@ -2033,7 +2067,7 @@ const BuildingRow = memo(function BuildingRow({
             if (!set) return null;
             const titolo = t("setBuildingTitle", uiLang, set.nome);
             return set.icona
-              ? <img src={set.icona} alt={set.nome} title={titolo} className={`inline-block ${dimIcona} cursor-help object-contain`} />
+              ? <img src={set.icona} alt={set.nome} title={titolo} width={latoIcona} height={latoIcona} className={`inline-block ${dimIcona} cursor-help object-contain`} />
               : <span className="cursor-help" title={titolo}>🧩</span>;
           })()}
         </div>
@@ -4159,6 +4193,9 @@ export default function App() {
   // invece di creare un profilo città/inventario — un solo pulsante bacchetta
   // in tutta l'app, nessuna icona duplicata dentro PiratiTool.
   const piratiToolRef = useRef<PiratiToolHandle | null>(null);
+  /** La scheda dei Pirati è stata aperta almeno una volta (da lì PiratiTool resta montato). */
+  const [piratiAperto, setPiratiAperto] = useState(false);
+  useEffect(() => { if (activeTab === "pirati") setPiratiAperto(true); }, [activeTab]);
 
   const handleWandClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -7244,15 +7281,19 @@ export default function App() {
           {/* 2.0: Opzioni › Pesi statistiche › "?": come si calcola l'efficienza (prima era un popup) */}
           {schedaCorrente === "opzioni" && isEfficiencyHelpOpen && (
             <div className="px-3 py-2">
-              <PannelloEfficienza uiLang={uiLang} difesa={generalDefense} spedizioni={spedizioniEnabled} spedAttacco={spedizioniAttack} onChiudi={() => setIsEfficiencyHelpOpen(false)} />
+              <Suspense fallback={null}>
+                <PannelloEfficienza uiLang={uiLang} difesa={generalDefense} spedizioni={spedizioniEnabled} spedAttacco={spedizioniAttack} onChiudi={() => setIsEfficiencyHelpOpen(false)} />
+              </Suspense>
             </div>
           )}
           {schedaCorrente === "guida" && pannelloGuida !== null && (
             <div className="px-3 py-2">
-              {pannelloGuida === "info" ? <PannelloInformazioni uiLang={uiLang} versione={__BUILD_VERSION__} />
-                : pannelloGuida === "importa" ? <PannelloImporta uiLang={uiLang} />
-                : pannelloGuida === "novita" ? <PannelloNovita uiLang={uiLang} />
-                : <VideoTutorial uiLang={uiLang} />}
+              <Suspense fallback={null}>
+                {pannelloGuida === "info" ? <PannelloInformazioni uiLang={uiLang} versione={__BUILD_VERSION__} />
+                  : pannelloGuida === "importa" ? <PannelloImporta uiLang={uiLang} />
+                  : pannelloGuida === "novita" ? <PannelloNovita uiLang={uiLang} />
+                  : <VideoTutorial uiLang={uiLang} />}
+              </Suspense>
             </div>
           )}
           
@@ -7470,6 +7511,7 @@ export default function App() {
           const mj = showPlanner && plannerSorgente === "json" ? mappaJson : null;
           if (!(activeTab === "propria_citta" && showCityMap && (mj || !showPlanner || (plannerSorgente === "citta" && haCittaPlanner)))) return null;
           return (
+            <Suspense fallback={null}>
             <CityMapView
               cityMapBuildings={mj ? mj.buildings : cityMapBuildings}
               cityMapBounds={mj ? mj.bounds : cityMapBounds}
@@ -7513,6 +7555,7 @@ export default function App() {
               uiLang={uiLang}
               nomeGiocatore={mj ? mj.nome : profiles.find(x => x.id === activeProfileId)?.name}
             />
+            </Suspense>
           );
           })()}
 
@@ -7925,6 +7968,7 @@ export default function App() {
             {/* Potenziale alleati + Gettoni Valore (pannello unico): SOLO per profili importati con la
                 bacchetta v6 (magazzino risorse presente). Con bacchette più
                 vecchie l'utente vede il solito modale "bacchetta obsoleta". */}
+            <Suspense fallback={null}>
             {!alleatiDaDb && mostraConsigliere && playerResources && importedAllies.some(a => !a.isFragment) && (
               <AllyAdvisorPanel
                 owned={importedAllies}
@@ -7951,6 +7995,7 @@ export default function App() {
                   <MilitaryBoostCells general={g} gbg={c} sped={sp} showSigmaColumns={showSigmaColumns} spedizioniEnabled uiLang={uiLang} segno />
                 )} />
             )}
+            </Suspense>
             {/* Tabella alleati importati (solo scheda Alleati, non nel catalogo del Database) */}
             {!alleatiDaDb && processedImportedAllies.length > 0 && (
               <div className="bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
@@ -8158,7 +8203,8 @@ export default function App() {
               questa tab, vedi sopra) fino a PiratiTool, che ne ha bisogno per il
               ridimensionamento del planner (gridWrapperSize). */}
           <div className={activeTab === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
-            <PiratiTool ref={piratiToolRef} uiLang={uiLang} onNastro={setGruppiPirati} />
+            {/* (21/11/2026) montato alla prima apertura della scheda, poi resta montato come sopra */}
+            {piratiAperto && <PiratiTool ref={piratiToolRef} uiLang={uiLang} onNastro={setGruppiPirati} />}
           </div>
 
         </section>
