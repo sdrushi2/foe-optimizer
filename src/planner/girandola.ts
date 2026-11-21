@@ -85,7 +85,7 @@ export function baseCentrale(problem: PlannerProblem): BaseGirandola | null {
 /** Posizioni del municipio da provare per la Girandola 2, ognuna nei due
  *  versi (orario e speculare). L'ordine conta: a parità di voto resta davanti
  *  la prova che viene prima. */
-export function proveGirandola(problem: PlannerProblem): Array<[number, number, boolean]> {
+function proveGirandola(problem: PlannerProblem): Array<[number, number, boolean]> {
   const th = problem.buildings.find(b => b.isTownhall);
   if (!th) return [];
   const cx = Math.round((problem.minX + problem.maxX + 1 - th.w) / 2), cy = Math.round((problem.minY + problem.maxY + 1 - th.h) / 2);
@@ -188,7 +188,9 @@ export async function scegliGirandolaCon(problem: PlannerProblem,
   return ord.slice(0, 2).map(v => v.base);
 }
 
-/** scegliGirandolaCon con le valutazioni fatte qui, una dopo l'altra (banco di prova). */
+/** scegliGirandolaCon con le valutazioni fatte qui, una dopo l'altra (banco di prova).
+ *  Non usata dall'app (che usa scegliGirandolaParallela): @public la tiene fuori dagli avvisi di knip.
+ *  @public */
 export function scegliGirandola(problem: PlannerProblem, opts: OpzioniProve & { valutazioni?: number }): Promise<BaseGirandola[]> {
   return scegliGirandolaCon(problem, (prove, n) => valutaGirandole(problem, prove, n, opts), opts);
 }

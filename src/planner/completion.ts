@@ -4240,7 +4240,7 @@ const P_DUE_ZONE = 0.6;
  *  zone, perimetro ecc. (mai più pezzi fuori o staccati) per uscire dai
  *  minimi locali. ReProVit, 15000 tentativi, 9 semi: 4,4 zone → 1,2. */
 const SCOSSA_MOSSE = 5;
-export async function rifinisciSenzaStrada(
+async function rifinisciSenzaStrada(
   problem: PlannerProblem, start: PlannerFrame, opts: CompletionOptions,
   getValutate: () => number, setValutate: (n: number) => void,
 ): Promise<PlannerFrame | null> {

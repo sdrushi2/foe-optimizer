@@ -35,7 +35,7 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 /** Anelli spostabili fra catene dello stesso tipo (21/11/2026): stessa forma
  *  di StrumentiCatene in catene.ts, che qui non si importa (legge i dati di
  *  gioco, assenti nei worker dove Smussa gira come "scossa"). */
-export interface CateneSmussa {
+interface CateneSmussa {
   gruppi: ReadonlyArray<{ catena: string; teste: ReadonlyArray<{ voce: string; testa: string; anelli: readonly string[] }> }>;
   forma: (testa: string, anelli: readonly string[]) => { w: number; h: number; pezzi: Array<{ id: string; x: number; y: number }> } | null;
   ricomponi: (pos: ReadonlyMap<string, { x: number; y: number }>) => { rag: unknown; placements: Map<string, { x: number; y: number }>; voci: ReadonlySet<string> } | null;
