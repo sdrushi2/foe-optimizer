@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.025 (22/11/2026)
+### Update
+- Database, City and Inventory: the Tools group has a GB Calc. button that opens the GB Calculator in a new tab. The JSON button is gone from City: to download the city as JSON use the Map's JSON button
+
+---
+
 ## Version 2.024 (21/11/2026)
 ### Update
 - Planner, Connector 3/4/5 with two-lane buildings: after the two-lane blocks the road can now continue as a one-lane road on the same row, with normal buildings on both sides, instead of always stopping against a two-lane building used as road end. The Planner tries both starts and keeps the best one

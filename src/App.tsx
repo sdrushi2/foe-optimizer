@@ -14,7 +14,7 @@ import type { Building } from "./data/buildings";
 import { getImageUrl, noRush, isEraMutable } from "./data/buildings";
 import type { Weights, TipoEff } from "./utils/calculator";
 import { calculateEfficiency, calculateProductionEfficiency } from "./utils/calculator";
-import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, formatMilK, isStaleField, localDateStamp, prefissoFile } from "./utils/format";
+import { formatInt, formatEff, formatDecimal, formatProdNum, formatProdPercent, formatProdK, formatMilK, isStaleField, localDateStamp } from "./utils/format";
 import * as Allies from "./data/allies";
 import { parseInventory, kitTier, type InventoryEntry, type SelectionKitEntry, type UpgradeKitEntry, type SpecialKits, type InventoryStore } from "./data/inventory";
 import { parseBuildingsCsv } from "./data/buildings";
@@ -35,7 +35,6 @@ import { leggiGe, statisticheGe, type DatiGe } from "./data/geBonus";
 import { FALLBACK_ERA, ageName, AGES_BY_ID, AGE_BY_CODE } from "./data/ages";
 import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats } from "./models/BuildingModel";
 import type { CityMapDragState } from "./components/CityMapView";
-import { esportaCittaJson, scaricaJson } from "./data/cityMapJson";
 import { PERGAMENE_RESOURCE, VALOR_RESOURCE } from "./data/allyAdvisor";
 import { setEdificio } from "./data/setEdifici";
 import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
@@ -7199,8 +7198,6 @@ export default function App() {
       : { attivo: isDebugOpen, cambia: () => setIsDebugOpen(v => !v) },
     citta: {
       inventario: { attivo: showInventoryInCity, cambia: () => setShowInventoryInCity(v => !v) },
-      // stesso export JSON del pulsante JSON del pannello MAPPA (CityMapView)
-      onEsportaJson: () => scaricaJson(esportaCittaJson(cityMapBuildings, cityMapUnlockedAreas), `${prefissoFile(profiles.find(x => x.id === activeProfileId)?.name)}-map-${localDateStamp()}.json`),
       statistiche: {
         aggiornabili: { attivo: isCityUpgradeableOpen, cambia: () => setIsCityUpgradeableOpen(v => !v) },
         strade: { attivo: isRoadSummaryOpen, cambia: () => setIsRoadSummaryOpen(v => !v) },

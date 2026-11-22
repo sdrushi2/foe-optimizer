@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.025 (22/11/2026)
+### Aggiornamenti
+- Database, Città e Inventario: nel gruppo Tools c'è il pulsante Calc. GE, che apre il Calcolatore GE in una nuova scheda. Nella Città il pulsante JSON non c'è più: per scaricare la città in JSON usa il pulsante JSON della Mappa
+
+---
+
 ## Versione 2.024 (21/11/2026)
 ### Aggiornamenti
 - Planner, Raccordi a 3/4/5 con edifici a due corsie: dopo i blocchi a due corsie la strada ora può proseguire a una corsia sulla stessa riga, con gli edifici normali ai due lati, invece di fermarsi sempre contro un edificio a due corsie messo come fine strada. Il Planner prova entrambe le partenze e tiene la migliore
