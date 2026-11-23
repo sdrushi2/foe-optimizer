@@ -1,5 +1,14 @@
 # FoE Optimizer Changelog
 
+## Version 2.026 (23/11/2026)
+### Update
+- GB Calculator: in the text to copy into the chat the Great Building has a short name (for example "Galaxy" instead of "The Blue Galaxy", "Galassia" in the Italian version), in a field next to your name. You can change it: it stays saved for each Great Building, and clearing the field brings back the default one
+- GB Calculator: each spot has a box on its left to choose which spots go in the text to copy. If you tick none, the text has all of them as before. The boxes are cleared when you change Great Building or level
+- GB Calculator: the name fields and Copy are now above the text to copy, all on one row on phones too. You can edit the text before copying it (for example to add something); it goes back to the calculated one when you change spots, names, Great Building or level
+- GB Calculator: new GOLD 50% chat, next to GOLD 20% and GOLD 25%, with the same rules (it applies to Gold levels, from 102 on)
+
+---
+
 ## Version 2.025 (22/11/2026)
 ### Update
 - Database, City and Inventory: the Tools group has a GB Calc. button that opens the GB Calculator in a new tab. The JSON button is gone from City: to download the city as JSON use the Map's JSON button

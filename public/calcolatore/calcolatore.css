@@ -96,13 +96,15 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .bg-evid::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; box-shadow: 0 0 10px rgba(255, 0, 0, .9); animation: bg-pulsa 1.6s ease-in-out infinite; }
 @keyframes bg-pulsa { 50% { opacity: 0; } }
 .nota-liv { font-size: 11px; color: var(--text-dim); text-align: center; }
-/* riga 2: chat (3 Rame / 2 Oro + Custom) */
-.chat { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 6px; }
-/* tutti larghi 1/3: 3 Rame, poi 2 Oro + Custom */
-.chat button { grid-column: span 4; font-size: .72rem; padding: 6px 2px; white-space: nowrap; }
+/* riga 2: chat (3 Rame / 3 Oro + Custom) */
+.chat { display: grid; grid-template-columns: repeat(36, 1fr); gap: 4px; margin-top: 6px; }
+/* Rame e Custom larghi 1/3 (12 colonne su 36); i 3 Oro (23/11/2026: anche il 50%)
+   si dividono i 2/3 che lascia Custom, 8 colonne ciascuno */
+.chat button { grid-column: span 12; font-size: .72rem; padding: 6px 2px; white-space: nowrap; }
+.chat button.oro { grid-column: span 8; }
 /* CUSTOM: pulsante e percentuale in un'unica "pillola", così si capisce che il
    numero è la % della chat personalizzata; casella tratteggiata = da scrivere */
-.chat .custom { grid-column: span 4; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 2px 4px 2px 2px;
+.chat .custom { grid-column: span 12; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 2px 4px 2px 2px;
   border: 1px solid var(--border); border-radius: 7px; background: var(--panel); }
 /* (azzurro, utente 11/11: il giallo si confondeva con l'Oro) */
 .chat .custom button { flex: 1; min-width: 0; border: 0; padding: 5px 2px; overflow: hidden; text-overflow: clip; color: var(--sky); }
@@ -131,12 +133,25 @@ tr:last-child td { border-bottom: 0; }
 td.pos { font-weight: 800; font-size: 1.05rem; color: var(--amber); }
 tr.vuoto td { color: var(--text-faint); }
 tr.vuoto td.pos { color: var(--text-faint); }
+/* (23/11/2026) casella a sinistra del posto: quali posti mettere nel testo da copiare */
+td.pos label { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+/* "POS." sopra il numero: rientro = padding della cella + casella (15) + spazio (10) */
+thead th:first-child { padding-left: calc(4px + 15px + 10px); }
+td.pos input.scelta { width: 15px; height: 15px; margin: 0; accent-color: var(--amber); cursor: pointer; }
+td.pos input.scelta:disabled { cursor: default; opacity: .35; }
 /* testo da copiare in chat: nome del giocatore + GE + posti */
 /* riga 1: il testo intero (va a capo, niente troncature); riga 2: nome + Copia */
 .copia { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .copia #testo { flex-basis: 100%; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; line-height: 1.4;
-  background: var(--bg-deep); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; overflow-wrap: anywhere; user-select: all; }
+  background: var(--bg-deep); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; overflow-wrap: anywhere; white-space: pre-wrap; cursor: text; }
+/* (23/11/2026) testo modificabile prima di copiarlo */
+.copia #testo:focus { outline: none; border-color: var(--amber-dim); }
 .copia #giocatore { flex: 1; min-width: 0; }
+/* (23/11/2026) nome breve del GE accanto al nome del giocatore, sempre sulla stessa riga
+   di Copia, anche da cellulare (utente): i due campi a metà dello spazio rimasto */
+.copia #giocatore { flex: 1 1 0; }
+.copia #nomege { flex: 1 1 0; min-width: 0; }
+.copia #copia { flex: none; }
 .sicuro { color: var(--green); font-weight: 700; }
 .pieno { color: var(--red); }
 /* (09/11/2026) PF del proprietario (riga sua, con il reset) e PF degli altri giocatori per posto */
@@ -196,6 +211,9 @@ footer a { color: var(--amber); }
   th { font-size: .5rem; padding: 4px 2px; letter-spacing: .02em; }
   td { padding: 4px 2px; }
   td.pos { font-size: .9rem; }
+  td.pos label { gap: 7px; }
+  td.pos input.scelta { width: 14px; height: 14px; }
+  thead th:first-child { padding-left: calc(2px + 14px + 7px); }
   td.x { width: 54px; }
   td.x input { width: 52px; padding: 2px 3px; font-size: .72rem; }
   .brand h1 { font-size: 16px; }

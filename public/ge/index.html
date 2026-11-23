@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calcolatore GE – Grandi Edifici di Forge of Empires – FoE Optimizer</title>
-    <meta name="description" content="Calcolatore dei posti mecenate dei Grandi Edifici di Forge of Empires: PF del livello, quanto versare in ogni posto con la chat (Rame 90%, 95%, 100%, Oro 20%, 25%) e quanti PF servono al proprietario per coprirli.">
+    <meta name="description" content="Calcolatore dei posti mecenate dei Grandi Edifici di Forge of Empires: PF del livello, quanto versare in ogni posto con la chat (Rame 90%, 95%, 100%, Oro 20%, 25%, 50%) e quanti PF servono al proprietario per coprirli.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
@@ -14,7 +14,7 @@
     <link rel="alternate" hreflang="en" href="https://foe-optimizer.com/gb/">
     <link rel="alternate" hreflang="x-default" href="https://foe-optimizer.com/gb/">
     <meta property="og:title" content="Calcolatore GE – Grandi Edifici di Forge of Empires – FoE Optimizer">
-    <meta property="og:description" content="Calcolatore dei posti mecenate dei Grandi Edifici di Forge of Empires: PF del livello, quanto versare in ogni posto con la chat (Rame 90%, 95%, 100%, Oro 20%, 25%) e quanti PF servono al proprietario per coprirli.">
+    <meta property="og:description" content="Calcolatore dei posti mecenate dei Grandi Edifici di Forge of Empires: PF del livello, quanto versare in ogni posto con la chat (Rame 90%, 95%, 100%, Oro 20%, 25%, 50%) e quanti PF servono al proprietario per coprirli.">
     <meta property="og:url" content="https://foe-optimizer.com/ge/">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://foe-optimizer.com/og-image.png">
@@ -36,12 +36,13 @@
         <li><b>Da versare</b>: il premio aumentato della percentuale della chat. Con il 90% il mecenate versa 1,9 volte il premio, e con il bonus dell'Arc riceve esattamente quanto ha messo.</li>
         <li><b>Per coprire</b>: i PF che il proprietario deve versare prima, perché nessuno possa superare il mecenate. Quando non serve niente, il posto è "sicuro".</li>
         <li><b>PF già versati ed Esterni</b>: se il livello è già iniziato, inserisci i PF messi da te e quelli degli altri giocatori. Il calcolatore indica i posti già presi, quelli in pericolo e i PF che mancano.</li>
+        <li><b>Testo per la chat</b>: il tuo nome, il nome breve del Grande Edificio (per esempio "Galassia") e i posti con quanto versare. Il nome breve si può cambiare e resta salvato per ogni Grande Edificio; svuotando il campo torna quello di partenza. Con le caselle a sinistra dei posti scegli quali mettere nel testo; se non ne spunti nessuno ci sono tutti.</li>
       </ul>
       <h2>Domande frequenti</h2>
       <h3>Quale livello devo inserire?</h3>
       <p>Il livello nuovo, quello a destra nella barra del Grande Edificio, non quello attuale.</p>
       <h3>Che differenza c'è tra Rame 90%, 95% e 100%?</h3>
-      <p>È la percentuale che la chat chiede in più rispetto al premio. Le chat Oro (20% e 25%) valgono per i livelli Oro, dal 102 in poi. Con CUSTOM puoi scrivere qualsiasi percentuale.</p>
+      <p>È la percentuale che la chat chiede in più rispetto al premio. Le chat Oro (20%, 25% e 50%) valgono per i livelli Oro, dal 102 in poi. Con CUSTOM puoi scrivere qualsiasi percentuale.</p>
       <h3>Cosa vuol dire "pericolo"?</h3>
       <p>Il premio vale più della metà dei PF che mancano al livello, quindi un altro giocatore può prendersi il posto versando meno del prezzo. Il mecenate dovrebbe versare subito, oppure il proprietario deve coprire prima.</p>
       <h3>Devo registrarmi?</h3>
@@ -54,6 +55,9 @@
     <!-- costi, nomi e tier dei GE (RECUPERO DATI/gecosti.py): script e non JSON, così
          la pagina funziona anche aperta dal disco (file://), dove fetch() non va -->
     <script src="../data/mecenati-dati.js?v=9"></script>
+    <!-- (23/11/2026) nomi brevi dei GE per il testo da copiare (data/ge_abbreviazioni.csv, a mano):
+         calcolatore.js lo legge da questo link; aperta dal disco (file://) restano i nomi interi -->
+    <link rel="preload" id="ge-brevi" href="../data/ge_abbreviazioni.csv?v=1" as="fetch" crossorigin="anonymous">
     <script src="../calcolatore/calcolatore.js?v=20"></script>
   </body>
 </html>

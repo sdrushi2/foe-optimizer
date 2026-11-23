@@ -278,11 +278,12 @@ function calcolatoreGePlugin(): Plugin {
       };
       const versioni: Record<string, string | null> = {
         "calcolatore.js": hash("calcolatore/calcolatore.js"), "calcolatore.css": hash("calcolatore/calcolatore.css"), "mecenati-dati.js": hash("data/mecenati-dati.js"),
+        "ge_abbreviazioni.csv": hash("data/ge_abbreviazioni.csv"),   // (23/11/2026) nomi brevi dei GE
       };
       for (const pagina of ["ge/index.html", "gb/index.html"]) {
         const f = path.join(dist, pagina);
         if (!fs.existsSync(f)) continue;
-        const html = fs.readFileSync(f, "utf-8").replace(/(calcolatore\.js|calcolatore\.css|mecenati-dati\.js)\?v=[\w-]+/g,
+        const html = fs.readFileSync(f, "utf-8").replace(/(calcolatore\.js|calcolatore\.css|mecenati-dati\.js|ge_abbreviazioni\.csv)\?v=[\w-]+/g,
           (m, nome: string) => (versioni[nome] ? `${nome}?v=${versioni[nome]}` : m));
         fs.writeFileSync(f, html, "utf-8");
       }

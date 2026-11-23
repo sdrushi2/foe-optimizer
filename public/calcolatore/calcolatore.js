@@ -34,12 +34,15 @@
       azzeraT: "Cancella i PF del proprietario e degli esterni",
       esterni: "Esterni", esterniT: "PF già messi da altri giocatori, uno per casella in qualunque ordine: come nella classifica del gioco, il più alto è il primo",
       esterniAl: n => "PF già versati da un altro giocatore (" + n + ")",
+      sceltaAl: n => "Metti il posto " + n + " nel testo da copiare",
+      sceltaT: "Spunta i posti da mettere nel testo da copiare. Nessuno spuntato: tutti",
       mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF versati dal proprietario e dagli altri)",
       esternoT: "Posto già di chi ha versato questi PF: tra parentesi la differenza con quanto si paga il posto",
       chiudeT: "Questo versamento chiude il livello: basta il resto",
       pericolo: v => "pericolo (" + v + ")", pericoloT: "Il premio vale più della metà dei PF che mancano: un altro giocatore può prendersi il posto versando meno del prezzo (tra parentesi quanti PF in meno). Conviene che il mecenate versi subito",
       fuori: v => "Spinti fuori dai posti: " + v, finale: v => "PF finali del proprietario per chiudere il livello: " + v,
-      testoAl: "Testo da copiare in chat", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
+      testoAl: "Testo da copiare in chat (si può modificare prima di copiarlo)", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
+      nomeGeAl: "Nome del Grande Edificio nel testo da copiare (si può cambiare)",
       copia: "Copia", copiato: "Copiato",
       errore: "Non riesco a caricare i dati dei Grandi Edifici (data/mecenati-dati.js). Ricarica la pagina.",
       fonte: ["Valori della ", "wiki ufficiale", " di Forge of Empires (aggiornati al ", ")."],
@@ -64,12 +67,15 @@
       azzeraT: "Clear the owner's and external FP",
       esterni: "External", esterniT: "FP already put by other players, one per box in any order: as in the game ranking, the highest is first",
       esterniAl: n => "FP already put by another player (" + n + ")",
+      sceltaAl: n => "Put spot " + n + " in the text to copy",
+      sceltaT: "Tick the spots to put in the text to copy. None ticked: all of them",
       mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP paid by the owner and by others)",
       esternoT: "Spot already held by whoever put these FP: in brackets the difference with the spot price",
       chiudeT: "This payment closes the level: the rest is enough",
       pericolo: v => "danger (" + v + ")", pericoloT: "The reward is worth more than half of the missing FP: another player can take the spot paying less than the price (in brackets how many FP less). The patron should pay right away",
       fuori: v => "Pushed out of the spots: " + v, finale: v => "Owner's final FP to close the level: " + v,
-      testoAl: "Text to copy into chat", nome: "Your name (optional)", nomeAl: "Your in-game name",
+      testoAl: "Text to copy into chat (you can edit it before copying)", nome: "Your name (optional)", nomeAl: "Your in-game name",
+      nomeGeAl: "Great Building name in the text to copy (you can change it)",
       copia: "Copy", copiato: "Copied",
       errore: "Couldn't load the Great Building data (data/mecenati-dati.js). Reload the page.",
       fonte: ["Values from the ", "official Forge of Empires wiki", " (updated ", ")."],
@@ -87,7 +93,7 @@
   // 30 × 2,05 fa 61,4999… in JavaScript, il gioco dà 62
   const arrotonda = v => Math.round(v + (v >= 0 ? 1e-6 : -1e-6));
   const CHIAVE = "foe-optimizer-calcolatore-ge";   // (stesso stato per /ge e /gb)
-  const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20, o25: 25 };
+  const CHAT = { r90: 90, r95: 95, r100: 100, o20: 20, o25: 25, o50: 50 };   // (o50: 23/11/2026)
   // pericolo segnalato solo oltre questi PF (stessa soglia di FoE Helper)
   const PERICOLO_MIN = 5;
   // barra del gioco: larghezza della barra in % dell'immagine (come .bg-fill / .bg-testo in calcolatore.css)
@@ -157,6 +163,7 @@
           ${chat("r100", "rame", T.rame + " 100%", T.chatRame + " 100%")}
           ${chat("o20", "oro", T.oro + " 20%", T.chatOro + " 20%")}
           ${chat("o25", "oro", T.oro + " 25%", T.chatOro + " 25%")}
+          ${chat("o50", "oro", T.oro + " 50%", T.chatOro + " 50%")}
           <span class="custom" id="customBox" title="${esc(T.customT)}">
             <button type="button" data-chat="custom">${esc(T.custom)}</button>
             <input id="custom" inputmode="decimal" aria-label="${esc(T.customAl)}" placeholder="${esc(T.customEs)}"><span>%</span>
@@ -176,7 +183,7 @@
       <div class="card tabella">
         <table>
           <thead><tr>
-            <th>${esc(T.pos)}</th>
+            <th title="${esc(T.sceltaT)}">${esc(T.pos)}</th>
             <th title="${esc(T.ricompensaT)}">${esc(T.ricompensa)}</th>
             <th title="${esc(T.versareT)}">${esc(T.versare)}</th>
             <th title="${esc(T.coprireT)}">${esc(T.coprire)}</th>
@@ -188,9 +195,11 @@
         <p id="note" hidden></p>
       </div>
       <div class="card copia">
-        <div id="testo" aria-label="${esc(T.testoAl)}"></div>
         <input id="giocatore" aria-label="${esc(T.nomeAl)}" placeholder="${esc(T.nome)}">
+        <input id="nomege" aria-label="${esc(T.nomeGeAl)}" title="${esc(T.nomeGeAl)}">
         <button type="button" id="copia">${esc(T.copia)}</button>
+        <!-- (23/11/2026, utente) il testo sotto i campi e Copia -->
+        <div id="testo" role="textbox" aria-multiline="true" aria-label="${esc(T.testoAl)}" title="${esc(T.testoAl)}" spellcheck="false"></div>
       </div>
       <footer><p id="fonte" hidden></p><p>${esc(T.disclaimer)}</p></footer>
     </main>`);
@@ -205,6 +214,12 @@
   // (nome: {it, en}; una stringa = file dei dati di prima, solo italiano)
   const nome = id => { const n = dati[id].nome; return (typeof n === "string" ? n : n && (n[LINGUA] || n.it || n.en)) || id; };
   const oro = id => !!dati[id].oro;
+  // (23/11/2026) nome breve del GE nel testo da copiare: quello scritto dall'utente
+  // (S.brevi[lingua][id]), altrimenti data/ge_abbreviazioni.csv (file statico, aggiornato
+  // a mano), altrimenti il nome intero
+  const breviFile = {};
+  const breveBase = id => (breviFile[id] && breviFile[id][LINGUA]) || nome(id);
+  const breve = id => ((S.brevi && S.brevi[LINGUA]) || {})[id] || breveBase(id);
   // chat scelta per tier (livelli Rame 5 posti, livelli Oro 7), validata in calcola()
   // versati: PF del proprietario; esterni: PF di altri giocatori per posto (azzerati cambiando GE o livello)
   const S = { ge: "X_FutureEra_Landmark1", livello: 1, custom: "", giocatore: "", chat: { rame: "r90", oro: "o20" }, versati: "", esterni: [] };
@@ -212,13 +227,16 @@
   if (!costi[S.ge]) S.ge = ids[0];
   if (!S.chat || typeof S.chat !== "object") S.chat = {}; // (salvataggio vecchio o rovinato)
   if (!Array.isArray(S.esterni)) S.esterni = [];
+  if (!S.brevi || typeof S.brevi !== "object") S.brevi = {};
+  // (23/11/2026) posti spuntati per il testo da copiare (nessuno = tutti); di questo GE e livello
+  if (!Array.isArray(S.scelti)) S.scelti = [];
   // (09/11/2026) aperto dalla scheda Città dell'app: ?ge=<id>&livello=<livello da costruire>
   // sceglie quel GE e quel livello (PF del proprietario ed esterni ripartono da zero), con la
   // chat Rame 100% / Oro 20% (le stesse della quota "a carico tuo" del report del GE)
   try {
     const q = new URLSearchParams(location.search), qGe = q.get("ge"), qLiv = parseInt(q.get("livello") || "");
     if (qGe && costi[qGe]) {
-      if (qGe !== S.ge || (qLiv && qLiv !== S.livello)) { S.versati = ""; S.esterni = []; }
+      if (qGe !== S.ge || (qLiv && qLiv !== S.livello)) { S.versati = ""; S.esterni = []; S.scelti = []; }
       S.ge = qGe;
       if (qLiv) S.livello = qLiv;
       S.chat = { rame: "r100", oro: "o20" };
@@ -238,7 +256,7 @@
     // il GE è al 100, ancora Rame; utente 09/11, come il calcolatore di Linnun)
     const n = oro(S.ge) && lvl >= 101 ? 7 : 5, tier = n === 7 && lvl > 101 ? "oro" : "rame";
     // % della chat scelta per questo tier (la stessa per tutti i posti; fattore = 1 + % / 100)
-    const valida = tier === "oro" ? ["o20", "o25", "custom"] : ["r90", "r95", "r100", "custom"];
+    const valida = tier === "oro" ? ["o20", "o25", "o50", "custom"] : ["r90", "r95", "r100", "custom"];
     if (!valida.includes(S.chat[tier])) S.chat[tier] = tier === "oro" ? "o20" : "r90";
     const perc = S.chat[tier] === "custom" ? numero(S.custom, 0) : CHAT[S.chat[tier]];
     // (montepremi NON arrotondato prima della divisione: così fa il gioco, come
@@ -303,14 +321,24 @@
   const corpo = $("righe");
   for (let i = 0; i < 7; i++) {
     const tr = document.createElement("tr");
-    tr.innerHTML = '<td class="pos">' + (i + 1) + '</td><td class="b"></td><td class="c"></td><td class="a"></td><td class="t"></td>'
+    tr.innerHTML = '<td class="pos"><label title="' + esc(T.sceltaT) + '"><input type="checkbox" class="scelta" aria-label="' + esc(T.sceltaAl(i + 1)) + '">' + (i + 1) + '</label></td><td class="b"></td><td class="c"></td><td class="a"></td><td class="t"></td>'
       + '<td class="x"><input type="text" inputmode="numeric" autocomplete="off" aria-label="' + esc(T.esterniAl(i + 1)) + '"></td>';
-    const x = tr.querySelector("input");
+    const x = tr.querySelector("td.x input"), sc = tr.querySelector("input.scelta");
+    sc.checked = !!S.scelti[i];
+    sc.addEventListener("change", () => { S.scelti[i] = sc.checked; mostra(); });
     x.value = S.esterni[i] || "";
     x.addEventListener("input", () => { S.esterni[i] = x.value.replace(/\D/g, ""); if (x.value !== S.esterni[i]) x.value = S.esterni[i]; mostra(); });
     corpo.append(tr);
   }
 
+  let testoGenerato = null;
+  {
+    // testo da copiare modificabile: solo testo semplice (dove il browser non conosce
+    // "plaintext-only", modificabile normale)
+    const el = $("testo");
+    try { el.contentEditable = "plaintext-only"; } catch { el.contentEditable = "true"; }
+    if (el.contentEditable !== "plaintext-only") el.contentEditable = "true";
+  }
   function mostra() {
     const r = calcola();
     // chat Rame solo per i livelli Rame, chat Oro solo per quelli Oro (CUSTOM sempre)
@@ -367,10 +395,23 @@
     // testo per la chat, dall'ultimo posto al primo: "Nome GE: P7(3) P6(6) … P1(4275)"
     const parti = [];
     // (solo i posti che vanno ai mecenati, con quanto versare; quelli già presi no)
-    for (let i = r.n - 1; i >= 0; i--) if (r.righe[i].stato === "libero" && r.righe[i].base > 0 && r.righe[i].paga > 0) parti.push("P" + (i + 1) + "(" + r.righe[i].paga + ")");
+    // (23/11/2026) con dei posti spuntati solo quelli; nessuno spuntato = tutti. Si
+    // spuntano solo i posti che vanno nel testo (liberi, con qualcosa da versare)
+    const nelTesto = i => r.righe[i].stato === "libero" && r.righe[i].base > 0 && r.righe[i].paga > 0;
+    [...corpo.children].forEach((tr, i) => { if (i < r.n) tr.querySelector("input.scelta").disabled = !nelTesto(i); });
+    const spuntati = r.righe.some((_, i) => nelTesto(i) && S.scelti[i]);
+    for (let i = r.n - 1; i >= 0; i--) if (nelTesto(i) && (!spuntati || S.scelti[i])) parti.push("P" + (i + 1) + "(" + r.righe[i].paga + ")");
     const chi = String(S.giocatore || "").trim();
     // (senza ":" dopo il nome del GE, utente 11/11)
-    $("testo").textContent = (chi ? chi + " " : "") + nome(S.ge) + (parti.length ? " " + parti.join(" ") : "");
+    // (23/11/2026) il testo si può modificare (non salvato): resta com'è finché il testo
+    // calcolato non cambia (altro posto, GE, livello, nome…), poi riparte da quello nuovo
+    const generato = (chi ? chi + " " : "") + breve(S.ge) + (parti.length ? " " + parti.join(" ") : "");
+    if (generato !== testoGenerato) { testoGenerato = generato; $("testo").textContent = generato; }
+    // (il campo mostra il nome in uso; mentre lo si modifica resta com'è scritto, ma
+    // cambiando GE si aggiorna sempre)
+    const campoGe = $("nomege");
+    if (document.activeElement !== campoGe || campoGe.dataset.ge !== S.ge) { campoGe.value = breve(S.ge); campoGe.dataset.ge = S.ge; }
+    $("nomege").placeholder = breveBase(S.ge);
     // fonte in calce, solo se i costi di questo GE vengono dalla wiki: link alla sua pagina
     const agg = window.MECENATI.aggiornato, fonte = $("fonte");
     fonte.hidden = !(dati[S.ge].wiki && agg);
@@ -385,7 +426,7 @@
 
   const sincronizza = () => { S.livello = livOk(S.livello); $("livello").value = S.livello; };
   // (altro GE o altro livello: PF già versati e PF degli altri si azzerano, sono di quel livello)
-  const azzera = () => { S.versati = ""; S.esterni = []; $("versati").value = ""; corpo.querySelectorAll("input").forEach(x => { x.value = ""; }); };
+  const azzera = () => { S.versati = ""; S.esterni = []; S.scelti = []; $("versati").value = ""; corpo.querySelectorAll("td.x input").forEach(x => { x.value = ""; }); corpo.querySelectorAll("input.scelta").forEach(x => { x.checked = false; }); };
   // (11/11/2026, utente) pulsante di reset accanto ai PF del proprietario
   $("azzera").addEventListener("click", e => { e.preventDefault(); azzera(); mostra(); });
   const cambiaLivello = v => { const prima = livOk(S.livello); S.livello = v; if (livOk(v) !== prima) azzera(); };
@@ -416,9 +457,27 @@
   // (toccare la casella della % sceglie già la chat personalizzata)
   $("custom").addEventListener("focus", () => applicaChat("custom"));
   $("giocatore").addEventListener("input", e => { S.giocatore = e.target.value; mostra(); });
+  // nome breve del GE: salvato per GE e per lingua; vuoto o uguale a quello del file = quello del file
+  $("nomege").addEventListener("input", e => {
+    const v = e.target.value.trim(), b = (S.brevi[LINGUA] = S.brevi[LINGUA] || {});
+    if (v && v !== breveBase(S.ge)) b[S.ge] = v; else delete b[S.ge];
+    mostra();
+  });
+  $("nomege").addEventListener("blur", () => mostra());
+  // nomi brevi dal file (link "ge-brevi" della pagina, ?v=hash nella build); senza file restano i nomi interi
+  {
+    const link = document.getElementById("ge-brevi");
+    if (link) fetch(link.href).then(r => (r.ok ? r.text() : "")).then(testo => {
+      testo.replace(/^\uFEFF/, "").split(/\r?\n/).slice(1).forEach(riga => {
+        const [id, it, en] = riga.split(";").map(x => (x || "").trim());
+        if (id && costi[id]) breviFile[id] = { it: it || en, en: en || it };
+      });
+      mostra();
+    }).catch(() => { /* file:// o rete assente: nomi interi */ });
+  }
   $("copia").addEventListener("click", async () => {
     const el = $("testo");
-    try { await navigator.clipboard.writeText(el.textContent); }
+    try { await navigator.clipboard.writeText(el.innerText.trim()); }
     catch { // (senza https o permessi: selezione + copia classica)
       const sel = getSelection(), rng = document.createRange();
       rng.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(rng); document.execCommand("copy");

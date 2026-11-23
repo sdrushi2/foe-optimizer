@@ -1,5 +1,14 @@
 # Novità di FoE Optimizer
 
+## Versione 2.026 (23/11/2026)
+### Aggiornamenti
+- Calcolatore GE: nel testo da copiare in chat il Grande Edificio ha un nome breve (per esempio "Galassia" invece di "La Galassia blu", "Galaxy" nella versione inglese), in un campo accanto al tuo nome. Puoi cambiarlo: resta salvato per ogni Grande Edificio, e svuotando il campo torna quello di partenza
+- Calcolatore GE: a sinistra di ogni posto c'è una casella per scegliere quali posti mettere nel testo da copiare. Se non ne spunti nessuno, il testo li contiene tutti come prima. Le caselle si azzerano cambiando Grande Edificio o livello
+- Calcolatore GE: i campi del nome e Copia ora stanno sopra il testo da copiare, tutti su una riga anche da cellulare. Il testo si può modificare prima di copiarlo (per esempio per aggiungere qualcosa); torna quello calcolato quando cambi posti, nomi, Grande Edificio o livello
+- Calcolatore GE: nuova chat ORO 50%, accanto a ORO 20% e ORO 25%, con le stesse regole (vale per i livelli Oro, dal 102 in poi)
+
+---
+
 ## Versione 2.025 (22/11/2026)
 ### Aggiornamenti
 - Database, Città e Inventario: nel gruppo Tools c'è il pulsante Calc. GE, che apre il Calcolatore GE in una nuova scheda. Nella Città il pulsante JSON non c'è più: per scaricare la città in JSON usa il pulsante JSON della Mappa

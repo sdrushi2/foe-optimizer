@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GB Calculator – Forge of Empires Great Buildings – FoE Optimizer</title>
-    <meta name="description" content="Forge of Empires Great Building patron calculator: level FP, how much to pay for each spot with the chat (Copper 90%, 95%, 100%, Gold 20%, 25%) and how many FP the owner needs to secure them.">
+    <meta name="description" content="Forge of Empires Great Building patron calculator: level FP, how much to pay for each spot with the chat (Copper 90%, 95%, 100%, Gold 20%, 25%, 50%) and how many FP the owner needs to secure them.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
@@ -14,7 +14,7 @@
     <link rel="alternate" hreflang="en" href="https://foe-optimizer.com/gb/">
     <link rel="alternate" hreflang="x-default" href="https://foe-optimizer.com/gb/">
     <meta property="og:title" content="GB Calculator – Forge of Empires Great Buildings – FoE Optimizer">
-    <meta property="og:description" content="Forge of Empires Great Building patron calculator: level FP, how much to pay for each spot with the chat (Copper 90%, 95%, 100%, Gold 20%, 25%) and how many FP the owner needs to secure them.">
+    <meta property="og:description" content="Forge of Empires Great Building patron calculator: level FP, how much to pay for each spot with the chat (Copper 90%, 95%, 100%, Gold 20%, 25%, 50%) and how many FP the owner needs to secure them.">
     <meta property="og:url" content="https://foe-optimizer.com/gb/">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://foe-optimizer.com/og-image.png">
@@ -36,12 +36,13 @@
         <li><b>To pay</b>: the reward increased by the chat percentage. With 90%, the patron pays 1.9 times the reward and gets exactly that back with the Arc bonus.</li>
         <li><b>To secure</b>: the FP the owner must put in first so nobody can overtake the patron. When nothing is needed, the spot is "safe".</li>
         <li><b>Already paid and External</b>: if the level has already started, enter your own FP and other players' contributions. The calculator shows taken spots, spots at risk of being sniped and the missing FP.</li>
+        <li><b>Text for the chat</b>: your name, the Great Building's short name (for example "Galaxy") and the spots with how much to pay. You can change the short name and it stays saved for each Great Building; clearing the field brings back the default one. With the boxes on the left of the spots you choose which ones go in the text; if you tick none, all of them are there.</li>
       </ul>
       <h2>FAQ</h2>
       <h3>Which level should I enter?</h3>
       <p>The new level, the one on the right of the Great Building's progress bar, not the current one.</p>
       <h3>What's the difference between Copper 90%, 95% and 100%?</h3>
-      <p>It's how much more than the reward your chat expects patrons to pay. Gold chats (20% and 25%) apply to Gold levels, from 102 on. With CUSTOM you can type any percentage.</p>
+      <p>It's how much more than the reward your chat expects patrons to pay. Gold chats (20%, 25% and 50%) apply to Gold levels, from 102 on. With CUSTOM you can type any percentage.</p>
       <h3>What does "danger" mean?</h3>
       <p>The reward is worth more than half of the FP still missing, so another player can snipe the spot paying less than its price. The patron should pay right away, or the owner should secure it first.</p>
       <h3>Do I need an account?</h3>
@@ -54,6 +55,9 @@
     <!-- costi, nomi e tier dei GE (RECUPERO DATI/gecosti.py): script e non JSON, così
          la pagina funziona anche aperta dal disco (file://), dove fetch() non va -->
     <script src="../data/mecenati-dati.js?v=9"></script>
+    <!-- (23/11/2026) nomi brevi dei GE per il testo da copiare (data/ge_abbreviazioni.csv, a mano):
+         calcolatore.js lo legge da questo link; aperta dal disco (file://) restano i nomi interi -->
+    <link rel="preload" id="ge-brevi" href="../data/ge_abbreviazioni.csv?v=1" as="fetch" crossorigin="anonymous">
     <script src="../calcolatore/calcolatore.js?v=20"></script>
   </body>
 </html>

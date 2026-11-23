@@ -23,7 +23,9 @@ const FILE = [...FILE_AVVIO,
   // 2.0: scaricati solo quando servono (es. datiGioco.caricaBuildingsExtra), ma con hash come gli altri
   "buildings_extra.csv", "ge.json",
   // livelli del Castello (RECUPERO DATI/castello.py), scaricati solo con un livello importato
-  "castello.json"] as const;
+  "castello.json",
+  // (23/11/2026) nomi brevi dei GE per il testo del Calcolatore GE: file statico, aggiornato a mano
+  "ge_abbreviazioni.csv"] as const;
 
 export interface ManifestDati { versione: string; file: Record<string, string> }
 
@@ -174,6 +176,18 @@ export function verificaDati(dir: string): string[] {
     controllaCsv("pergamene.csv", pg, errori, { colonne: ["livello", "pergamene"], minRighe: 100, chiave: (r, c) => campo(r, c("livello")) });
     const r = righeCsv(pg).slice(1).map(x => x.map(v => Number(v.trim())));
     if (r.some(([l, p], i) => l !== i + 1 || !Number.isInteger(p) || p! < 0)) errori.push("pergamene.csv: livelli 1, 2, 3… in ordine e pergamene intere ≥ 0");
+  }
+  // (23/11/2026) nomi brevi dei GE (Calcolatore GE): id;nome_ita;nome_eng, id dei GE di ge.json, nomi non vuoti
+  const abbr = leggi("ge_abbreviazioni.csv");
+  if (abbr !== null) {
+    controllaCsv("ge_abbreviazioni.csv", abbr, errori, { colonne: ["id", "nome_ita", "nome_eng"], minRighe: 1, chiave: (r, c) => campo(r, c("id")) });
+    let idGe: Set<string> | null = null;
+    try { idGe = new Set(Object.keys((JSON.parse(fs.readFileSync(path.join(dir, "ge.json"), "utf-8")) as { edifici: object }).edifici)); } catch { /* ge.json lo controlla json() */ }
+    righeCsv(abbr).slice(1).forEach((r, i) => {
+      const [id, it, en] = [campo(r, 0), campo(r, 1), campo(r, 2)];
+      if (idGe && !idGe.has(id)) errori.push(`ge_abbreviazioni.csv riga ${i + 2}: "${id}" non è un GE di ge.json`);
+      if (!it || !en) errori.push(`ge_abbreviazioni.csv riga ${i + 2}: nome_ita e nome_eng non possono essere vuoti`);
+    });
   }
   const ev = leggi("events.csv");
   if (ev !== null) controllaCsv("events.csv", ev, errori, { colonne: ["NomeIt", "NomeEng", "ID_LIST"], minRighe: 1 });
