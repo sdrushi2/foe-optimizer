@@ -11,6 +11,7 @@
 - GB Calculator: when you open it from FoE Optimizer (GB Calc. button) your cities imported with the wand become worlds named after the city, with all their Great Buildings at the level to build, updated every time; the world of the selected city is the chosen one. Visited cities and cities from JSON don't count. If you have no imported cities your favourites stay as they are
 - GB Calculator: below the spots a P switch chooses whether to write the letter P before the spots in the text to copy (P7(2) or 7(2)). The choice stays saved
 - GB Calculator: the four summaries are now in the first box, right below the chats
+- Planner: the video tutorial is now in English too (Planner › Help › Video tutorial and Help › How to use the planner)
 
 ### Bug Fixes
 - Planner, Connector 3/4/5: with small cities in a large area the first build could already place all the buildings that need a road; then the search didn't start and the vertical road stayed as long as the whole area. Now the search starts in this case too and shortens the road (on a test city from 60 roads to 8)

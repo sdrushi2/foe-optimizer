@@ -260,7 +260,7 @@ const UI_STRINGS = {
   r2PlannerHow: { it: "Come usare il planner", en: "How to use the planner" },
   r2PlannerHowIntro: {
     it: "Il video tutorial mostra passo passo come usare il Planner.",
-    en: "The video tutorial shows step by step how to use the Planner (video in Italian).",
+    en: "The video tutorial shows step by step how to use the Planner.",
   },
   r2ImpIntro: {
     it: "La bacchetta magica porta qui la tua città dal gioco con due clic: un segnalibro copia i dati mentre giochi, la bacchetta li legge e li importa. Si prepara una volta sola.",
@@ -2807,7 +2807,7 @@ const UI_STRINGS = {
   },
   plannerLevel: { it: (n: number) => `Liv. ${n}`, en: (n: number) => `Lv. ${n}` },
   plannerVideo: { it: "🎬 VIDEO TUTORIAL", en: "🎬 VIDEO TUTORIAL" },
-  plannerVideoTitle: { it: "Video tutorial del Planner", en: "Planner video tutorial (in Italian)" },
+  plannerVideoTitle: { it: "Video tutorial del Planner", en: "Planner video tutorial" },
   plannerImportJson: { it: "📂 Importa JSON", en: "📂 Import JSON" },
   plannerImportJsonTitle: {
     it: "Carica l'export JSON della mappa di un'altra città (pulsante JSON del pannello MAPPA) per provarci il Planner. Non viene salvato.",

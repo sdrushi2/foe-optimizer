@@ -11,6 +11,7 @@
 - Calcolatore GE: aprendolo da FoE Optimizer (pulsante Calc. GE) le tue città importate con la bacchetta diventano mondi con il nome della città e tutti i loro Grandi Edifici al livello da costruire, aggiornati ogni volta; il mondo della città selezionata è quello scelto. Le città visitate e quelle da JSON non contano. Se non hai città importate restano i preferiti che hai già
 - Calcolatore GE: sotto i posti un interruttore P sceglie se scrivere la lettera P davanti ai posti nel testo da copiare (P7(2) oppure 7(2)). La scelta resta salvata
 - Calcolatore GE: i quattro riepiloghi ora stanno nel primo riquadro, subito sotto le chat
+- Planner: il video tutorial ora c'è anche in inglese (Planner › Aiuto › Video tutorial e Guida › Come usare il planner, con il sito in inglese)
 
 ### Correzioni
 - Planner, Raccordi a 3/4/5: con città piccole in un'area grande capitava che la prima costruzione mettesse già tutti gli edifici con strada; allora la ricerca non partiva e restava la strada verticale lunga quanto tutta l'area. Ora la ricerca parte anche in questo caso e accorcia la strada (su una città di prova da 60 strade a 8)
