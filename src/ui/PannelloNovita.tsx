@@ -13,6 +13,12 @@
 //    ---                                 ← separatore (facoltativo, ignorato)
 //
 //  Le righe che non seguono il formato (titolo "#", righe vuote) sono ignorate.
+//
+//  (23/11/2026) Se l'app è più nuova della prima versione del changelog (deploy
+//  senza voce: dati aggiornati, piccole modifiche) in cima compare una voce
+//  generata qui, "Modifiche minori e correzioni", con la versione e la data della
+//  build. Una sola, anche dopo più giorni senza note; sparisce da sola quando il
+//  changelog ha la voce di quella versione. I file .md non cambiano.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import changelogIt from "../../changelog-it.md?raw";
@@ -43,7 +49,29 @@ function leggiChangelog(testo: string): Versione[] {
   return versioni;
 }
 
-const CHANGELOG: Record<UiLang, Versione[]> = { it: leggiChangelog(changelogIt), en: leggiChangelog(changelogEn) };
+/** "2.025" / "v2.025" → numero confrontabile (-1 se non è una versione). */
+function numeroVersione(v: string): number {
+  const m = /^v?(\d+)\.(\d+)$/.exec(v.trim());
+  return m ? Number(m[1]) * 100_000 + Number(m[2]) : -1;
+}
+
+/** Versione della build (vite.config.ts, giorni dal 28/10/2026) e la sua data gg/mm/aaaa. */
+const VERSIONE_APP = typeof __BUILD_VERSION__ === "string" ? __BUILD_VERSION__.replace(/^v/, "") : "";
+function dataVersione(v: string): string | null {
+  const m = /^2\.(\d+)$/.exec(v);
+  if (!m) return null;
+  const d = new Date(Date.UTC(2026, 9, 28) + Number(m[1]) * 86_400_000);
+  return `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()}`;
+}
+
+/** Il changelog con in cima, se serve, la voce generata per la versione dell'app. */
+function conVersioneApp(versioni: Versione[], lang: UiLang): Versione[] {
+  const prima = versioni[0];
+  if (!VERSIONE_APP || (prima && numeroVersione(VERSIONE_APP) <= numeroVersione(prima.versione))) return versioni;
+  return [{ versione: VERSIONE_APP, data: dataVersione(VERSIONE_APP), gruppi: [{ titolo: "", righe: [t("r2WhatsNewMinor", lang) as string] }] }, ...versioni];
+}
+
+const CHANGELOG: Record<UiLang, Versione[]> = { it: conVersioneApp(leggiChangelog(changelogIt), "it"), en: conVersioneApp(leggiChangelog(changelogEn), "en") };
 
 /** Colore del titoletto: novità verde, aggiornamenti azzurro, correzioni ambra. */
 function coloreGruppo(titolo: string): string {

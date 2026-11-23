@@ -404,6 +404,7 @@ const UI_STRINGS = {
     en: "What's new in FoE Optimizer, latest first.",
   },
   r2WhatsNewLatest: { it: "ultima", en: "latest" },
+  r2WhatsNewMinor: { it: "Modifiche minori e correzioni", en: "Minor changes and fixes" },
   r2InfoProject: { it: "Il progetto", en: "The project" },
   r2CleanTitle: { it: "Pulito, per scelta", en: "Clean, by choice" },
   r2CleanSubtitle: { it: "Niente pubblicità, niente cookie, niente tracciamento. Solo lo strumento.", en: "No ads, no cookies, no tracking. Just the tool." },
