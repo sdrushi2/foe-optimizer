@@ -204,7 +204,21 @@ tr.preso td.x input { color: var(--text); border-color: var(--amber-dim); }
 td small.meno { color: var(--green); } td small.piu { color: var(--text-faint); }
 .pericolo { color: var(--red); font-weight: 700; }
 td.chiude { color: var(--amber); }
-#note { margin: 4px 2px 2px; font-size: .75rem; color: var(--text-dim); }
+/* (23/11/2026) note e interruttore della lettera P sulla stessa riga */
+/* (utente) la nota centrata sulla riga intera: tre colonne, interruttore nella prima */
+.sotto-tab { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin: 4px 2px 2px; }
+.sotto-tab .interruttore { justify-self: start; }
+/* sul telefono la colonna vuota a destra farebbe andare a capo la nota: centrata nello spazio che resta */
+@media (max-width: 520px) { .sotto-tab { grid-template-columns: auto 1fr; } }
+.interruttore { flex: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: .75rem; font-weight: 700; color: var(--text-dim); user-select: none; }
+.interruttore input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.interruttore .binario { position: relative; width: 28px; height: 16px; border-radius: 8px; background: var(--border); transition: background .15s; }
+.interruttore .binario::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-dim); transition: transform .15s, background .15s; }
+.interruttore input:checked + .binario { background: var(--amber-dim); }
+.interruttore input:checked + .binario::after { transform: translateX(12px); background: #fff; }
+.interruttore input:checked ~ .et { color: var(--amber); }
+.interruttore input:focus-visible + .binario { outline: 2px solid var(--sky); outline-offset: 2px; }
+#note { margin: 0; text-align: center; font-size: .75rem; color: var(--text-dim); }
 #note .num { color: #fff; font-weight: 700; }
 /* (11/11/2026, utente) da cellulare i 4 riquadri restano su una riga: più piccoli */
 @media (max-width: 520px) {

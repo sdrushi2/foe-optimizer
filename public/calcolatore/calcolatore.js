@@ -36,6 +36,7 @@
       esterniAl: n => "PF già versati da un altro giocatore (" + n + ")",
       sceltaAl: n => "Metti il posto " + n + " nel testo da copiare",
       sceltaT: "Spunta i posti da mettere nel testo da copiare. Nessuno spuntato: tutti",
+      letteraP: "P", letteraPT: "Lettera P davanti ai posti nel testo da copiare: P7(2) oppure 7(2)",
       mancanti: "PF mancanti", mancantiT: "PF che mancano per completare il livello (costo − PF versati dal proprietario e dagli altri)",
       esternoT: "Posto già di chi ha versato questi PF: tra parentesi la differenza con quanto si paga il posto",
       chiudeT: "Questo versamento chiude il livello: basta il resto",
@@ -78,6 +79,7 @@
       esterniAl: n => "FP already put by another player (" + n + ")",
       sceltaAl: n => "Put spot " + n + " in the text to copy",
       sceltaT: "Tick the spots to put in the text to copy. None ticked: all of them",
+      letteraP: "P", letteraPT: "Letter P before the spots in the text to copy: P7(2) or 7(2)",
       mancanti: "Missing FP", mancantiT: "FP still missing to complete the level (cost − FP paid by the owner and by others)",
       esternoT: "Spot already held by whoever put these FP: in brackets the difference with the spot price",
       chiudeT: "This payment closes the level: the rest is enough",
@@ -225,7 +227,8 @@
           </tr></thead>
           <tbody id="righe"></tbody>
         </table>
-        <p id="note" hidden></p>
+        <!-- (23/11/2026, utente) a sinistra, sotto le posizioni, l'interruttore della lettera P nel testo; poi le note -->
+        <div class="sotto-tab"><label class="interruttore" title="${esc(T.letteraPT)}"><input type="checkbox" role="switch" id="conP" aria-label="${esc(T.letteraPT)}"><span class="binario" aria-hidden="true"></span><span class="et">${esc(T.letteraP)}</span></label><p id="note" hidden></p></div>
       </div>
       <div class="card copia">
         <input id="giocatore" aria-label="${esc(T.nomeAl)}" placeholder="${esc(T.nome)}">
@@ -263,6 +266,8 @@
   if (!S.brevi || typeof S.brevi !== "object") S.brevi = {};
   // (23/11/2026) posti spuntati per il testo da copiare (nessuno = tutti); di questo GE e livello
   if (!Array.isArray(S.scelti)) S.scelti = [];
+  // (23/11/2026) lettera P davanti ai posti nel testo da copiare (salvata; di base sì)
+  if (typeof S.conP !== "boolean") S.conP = true;
   // (09/11/2026) aperto dalla scheda Città dell'app: ?ge=<id>&livello=<livello da costruire>
   // sceglie quel GE e quel livello (PF del proprietario ed esterni ripartono da zero), con la
   // chat Rame 100% / Oro 20% (le stesse della quota "a carico tuo" del report del GE)
@@ -433,7 +438,7 @@
     const nelTesto = i => r.righe[i].stato === "libero" && r.righe[i].base > 0 && r.righe[i].paga > 0;
     [...corpo.children].forEach((tr, i) => { if (i < r.n) tr.querySelector("input.scelta").disabled = !nelTesto(i); });
     const spuntati = r.righe.some((_, i) => nelTesto(i) && S.scelti[i]);
-    for (let i = r.n - 1; i >= 0; i--) if (nelTesto(i) && (!spuntati || S.scelti[i])) parti.push("P" + (i + 1) + "(" + r.righe[i].paga + ")");
+    for (let i = r.n - 1; i >= 0; i--) if (nelTesto(i) && (!spuntati || S.scelti[i])) parti.push((S.conP ? "P" : "") + (i + 1) + "(" + r.righe[i].paga + ")");
     const chi = String(S.giocatore || "").trim();
     // (senza ":" dopo il nome del GE, utente 11/11)
     // (23/11/2026) il testo si può modificare (non salvato): resta com'è finché il testo
@@ -469,6 +474,8 @@
   // (oltre il livello massimo del GE: subito il massimo, come mostrano barra e tabella)
   $("livello").addEventListener("input", e => { let v = e.target.value.replace(/\D/g, "").slice(0, 3); if (+v > maxLiv()) v = String(maxLiv()); if (v !== e.target.value) e.target.value = v; if (v) cambiaLivello(v); mostra(); });
   $("livello").addEventListener("change", () => { sincronizza(); mostra(); });
+  $("conP").checked = S.conP;
+  $("conP").addEventListener("change", e => { S.conP = e.target.checked; mostra(); });
   document.querySelectorAll(".liv .fr").forEach(b => b.addEventListener("click", () => {
     cambiaLivello(livOk(livOk(S.livello) + Number(b.dataset.passo))); sincronizza(); mostra();
   }));
