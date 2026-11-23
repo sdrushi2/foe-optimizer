@@ -6,6 +6,14 @@
 - Calcolatore GE: a sinistra di ogni posto c'è una casella per scegliere quali posti mettere nel testo da copiare. Se non ne spunti nessuno, il testo li contiene tutti come prima. Le caselle si azzerano cambiando Grande Edificio o livello
 - Calcolatore GE: i campi del nome e Copia ora stanno sopra il testo da copiare, tutti su una riga anche da cellulare. Il testo si può modificare prima di copiarlo (per esempio per aggiungere qualcosa); torna quello calcolato quando cambi posti, nomi, Grande Edificio o livello
 - Calcolatore GE: nuova chat ORO 50%, accanto a ORO 20% e ORO 25%, con le stesse regole (vale per i livelli Oro, dal 102 in poi)
+- Calcolatore GE: i tuoi Grandi Edifici preferiti, divisi per mondo. In cima al calcolatore una riga mostra il mondo scelto e quanti GE ha salvati: toccala per aprire l'elenco, con una scheda per ogni mondo (+ per aggiungerne uno, poi Rinomina ed Elimina) e un pulsante per ogni GE salvato, che lo apre al suo livello
+- Calcolatore GE: per salvare un Grande Edificio fra i preferiti del mondo scelto tocca la stella accanto al livello. La stella è dorata se il GE è salvato a quel livello, vuota se non è salvato o è salvato a un altro livello (toccandola si aggiorna); toccando quella dorata lo togli. Non si salva niente da solo: puoi guardare il GE di un altro giocatore senza cambiare i tuoi
+- Calcolatore GE: aprendolo da FoE Optimizer (pulsante Calc. GE) le tue città importate con la bacchetta diventano mondi con il nome della città e tutti i loro Grandi Edifici al livello da costruire, aggiornati ogni volta; il mondo della città selezionata è quello scelto. Le città visitate e quelle da JSON non contano. Se non hai città importate restano i preferiti che hai già
+- Calcolatore GE: sotto i posti un interruttore P sceglie se scrivere la lettera P davanti ai posti nel testo da copiare (P7(2) oppure 7(2)). La scelta resta salvata
+- Calcolatore GE: i quattro riepiloghi ora stanno nel primo riquadro, subito sotto le chat
+
+### Correzioni
+- Planner, Raccordi a 3/4/5: con città piccole in un'area grande capitava che la prima costruzione mettesse già tutti gli edifici con strada; allora la ricerca non partiva e restava la strada verticale lunga quanto tutta l'area. Ora la ricerca parte anche in questo caso e accorcia la strada (su una città di prova da 60 strade a 8)
 
 ---
 

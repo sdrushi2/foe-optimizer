@@ -3852,6 +3852,20 @@ export async function runCompletion(problem: PlannerProblem, opts: CompletionOpt
     trovataAl = valutate;
     fotografa(true);
   }
+  // (23/11/2026) Raccordi: se fase 1 ha già piazzato TUTTI gli edifici con strada
+  // (città piccola in un'area grande), la ricerca parametrica non ha niente da
+  // piazzare e non partiva: restava la verticale lunga quanto l'area (città di
+  // prova dell'utente: 60 strade invece di 8). Si parte allora con la ricerca
+  // locale dalla disposizione di fase 1, come dopo una modifica a mano: può
+  // accorciare la verticale e riattaccare gli edifici in punta. Solo raccordi:
+  // la girandola ha i suoi tagli, Configurazione attuale e rete a pettine (rami)
+  // partono già dalla loro disposizione.
+  if (!opts.riprendiDa && !opts.girandola && !opts.rami && !daPiazzare.length) {
+    fissi.clear();
+    for (const id of fissiBuilder) fissi.add(id);
+    trovataAl = valutate;
+    fotografa(true);
+  }
   // Ciclo esterno: si ripete solo quando l'utente riprende da una disposizione
   // modificata a mano durante la pausa (nuovo stato di partenza).
   /** La ripresa viene dalla squadra di ricerca (opts.adotta), non dall'utente. */

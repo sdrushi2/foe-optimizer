@@ -6,6 +6,14 @@
 - GB Calculator: each spot has a box on its left to choose which spots go in the text to copy. If you tick none, the text has all of them as before. The boxes are cleared when you change Great Building or level
 - GB Calculator: the name fields and Copy are now above the text to copy, all on one row on phones too. You can edit the text before copying it (for example to add something); it goes back to the calculated one when you change spots, names, Great Building or level
 - GB Calculator: new GOLD 50% chat, next to GOLD 20% and GOLD 25%, with the same rules (it applies to Gold levels, from 102 on)
+- GB Calculator: your favourite Great Buildings, split by world. At the top of the calculator a row shows the chosen world and how many GBs it has saved: tap it to open the list, with a tab for each world (+ to add one, then Rename and Delete) and a button for each saved GB, which opens it at its level
+- GB Calculator: to save a Great Building in the chosen world's favourites tap the star next to the level. The star is gold if the GB is saved at that level, empty if it isn't saved or is saved at another level (tapping it updates it); tapping the gold one removes it. Nothing is saved on its own: you can look at another player's GB without changing yours
+- GB Calculator: when you open it from FoE Optimizer (GB Calc. button) your cities imported with the wand become worlds named after the city, with all their Great Buildings at the level to build, updated every time; the world of the selected city is the chosen one. Visited cities and cities from JSON don't count. If you have no imported cities your favourites stay as they are
+- GB Calculator: below the spots a P switch chooses whether to write the letter P before the spots in the text to copy (P7(2) or 7(2)). The choice stays saved
+- GB Calculator: the four summaries are now in the first box, right below the chats
+
+### Bug Fixes
+- Planner, Connector 3/4/5: with small cities in a large area the first build could already place all the buildings that need a road; then the search didn't start and the vertical road stayed as long as the whole area. Now the search starts in this case too and shortens the road (on a test city from 60 roads to 8)
 
 ---
 
