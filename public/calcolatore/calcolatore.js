@@ -41,6 +41,15 @@
       chiudeT: "Questo versamento chiude il livello: basta il resto",
       pericolo: v => "pericolo (" + v + ")", pericoloT: "Il premio vale più della metà dei PF che mancano: un altro giocatore può prendersi il posto versando meno del prezzo (tra parentesi quanti PF in meno). Conviene che il mecenate versi subito",
       fuori: v => "Spinti fuori dai posti: " + v, finale: v => "PF finali del proprietario per chiudere il livello: " + v,
+      // (23/11/2026) mondi e GE preferiti
+      prefT: "I tuoi mondi e i loro Grandi Edifici: tocca per scegliere", mondo1: "Mondo 1", nGe: n => n + " GE",
+      prefNuovo: "Nuovo mondo",
+      stellaAgg: (g, l, m) => "Salva " + g + " al livello " + l + " fra i GE di " + m,
+      stellaAggiorna: (g, l, v) => "Salva " + g + " al livello " + l + " (salvato: " + v + ")",
+      stellaTogli: (g, m) => g + " è salvato fra i GE di " + m + ": tocca per toglierlo",
+      prefNome: "Nome del mondo (per esempio la lettera del server o il nome della gilda)",
+      prefRinomina: "Rinomina mondo", prefElimina: "Elimina mondo", prefElConf: n => "Eliminare il mondo \"" + n + "\" e la sua lista di GE?",
+      prefVuoto: "Nessun GE in questo mondo: scegli GE e livello qui sotto e tocca la stella ☆ accanto al livello.",
       testoAl: "Testo da copiare in chat (si può modificare prima di copiarlo)", nome: "Il tuo nome (facoltativo)", nomeAl: "Il tuo nome nel gioco",
       nomeGeAl: "Nome del Grande Edificio nel testo da copiare (si può cambiare)",
       copia: "Copia", copiato: "Copiato",
@@ -74,6 +83,15 @@
       chiudeT: "This payment closes the level: the rest is enough",
       pericolo: v => "danger (" + v + ")", pericoloT: "The reward is worth more than half of the missing FP: another player can take the spot paying less than the price (in brackets how many FP less). The patron should pay right away",
       fuori: v => "Pushed out of the spots: " + v, finale: v => "Owner's final FP to close the level: " + v,
+      // (23/11/2026) worlds and favourite GBs
+      prefT: "Your worlds and their Great Buildings: tap to choose", mondo1: "World 1", nGe: n => n + " GB",
+      prefNuovo: "New world",
+      stellaAgg: (g, l, m) => "Save " + g + " at level " + l + " in the GBs of " + m,
+      stellaAggiorna: (g, l, v) => "Save " + g + " at level " + l + " (saved: " + v + ")",
+      stellaTogli: (g, m) => g + " is saved in the GBs of " + m + ": tap to remove it",
+      prefNome: "World name (for example the server letter or your guild's name)",
+      prefRinomina: "Rename world", prefElimina: "Delete world", prefElConf: n => "Delete the world \"" + n + "\" and its GB list?",
+      prefVuoto: "No GB in this world yet: pick GB and level below and tap the star ☆ next to the level.",
       testoAl: "Text to copy into chat (you can edit it before copying)", nome: "Your name (optional)", nomeAl: "Your in-game name",
       nomeGeAl: "Great Building name in the text to copy (you can change it)",
       copia: "Copy", copiato: "Copied",
@@ -133,10 +151,24 @@
     <main class="wrap">
       <p id="errore" hidden></p>
       <div class="card">
+        <!-- (23/11/2026) mondi e GE preferiti: una riga chiusa, il pannello si apre al tocco -->
+        <div class="pref" id="pref">
+          <button type="button" id="prefApri" class="pref-sommario" aria-expanded="false" aria-controls="prefPannello" title="${esc(T.prefT)}"></button>
+          <div id="prefPannello" class="pref-pannello" hidden>
+            <div class="pref-mondi" id="prefMondi"></div>
+            <div class="pref-griglia" id="prefGriglia"></div>
+            <div class="pref-azioni">
+              <button type="button" id="prefRinomina">${esc(T.prefRinomina)}</button>
+              <button type="button" id="prefElimina">${esc(T.prefElimina)}</button>
+            </div>
+          </div>
+        </div>
         <div class="riga">
           <select id="ge" aria-label="${esc(T.ge)}"></select>
           <!-- (frecce del gioco: ±1 e ±10 livelli) -->
           <div class="liv" title="${esc(T.livello)}">
+            <!-- (23/11/2026, utente) stella: salva GE e livello fra i GE del mondo attivo -->
+            <button type="button" id="prefStella" class="stella-liv" aria-pressed="false"></button>
             <button type="button" class="fr doppia" data-passo="-10" title="${esc(T.livMeno10)}" aria-label="${esc(T.livMeno10)}"></button>
             <button type="button" class="fr singola" data-passo="-1" title="${esc(T.livMeno)}" aria-label="${esc(T.livMeno)}"></button>
             <input id="livello" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="${esc(T.livello)}">
@@ -169,12 +201,13 @@
             <input id="custom" inputmode="decimal" aria-label="${esc(T.customAl)}" placeholder="${esc(T.customEs)}"><span>%</span>
           </span>
         </div>
-      </div>
-      <div class="stats">
-        <div class="stat"><div class="k">${esc(T.pfLivello)}</div><div class="v" id="totale"></div></div>
-        <div class="stat" title="${esc(T.pfPropT)}"><div class="k">${esc(T.pfProp)}</div><div class="v" id="proprietario"></div></div>
-        <div class="stat" title="${esc(T.pfContrT)}"><div class="k">${esc(T.pfContr)}</div><div class="v" id="contribuzioni"></div></div>
-        <div class="stat" title="${esc(T.mancantiT)}"><div class="k">${esc(T.mancanti)}</div><div class="v" id="mancanti"></div></div>
+        <!-- (23/11/2026, utente) i 4 riepiloghi dentro il riquadro, subito sotto le chat -->
+        <div class="stats">
+          <div class="stat"><div class="k">${esc(T.pfLivello)}</div><div class="v" id="totale"></div></div>
+          <div class="stat" title="${esc(T.pfPropT)}"><div class="k">${esc(T.pfProp)}</div><div class="v" id="proprietario"></div></div>
+          <div class="stat" title="${esc(T.pfContrT)}"><div class="k">${esc(T.pfContr)}</div><div class="v" id="contribuzioni"></div></div>
+          <div class="stat" title="${esc(T.mancantiT)}"><div class="k">${esc(T.mancanti)}</div><div class="v" id="mancanti"></div></div>
+        </div>
       </div>
       <!-- (11/11/2026, utente) PF del proprietario: riga sua, fra i riquadri e la classifica -->
       <label class="versati" title="${esc(T.versatiT)}"><span>${esc(T.versati)}</span>
@@ -421,6 +454,7 @@
       const data = LINGUA === "en" ? agg : agg.split("-").reverse().join("-");
       fonte.innerHTML = esc(T.fonte[0]) + '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(T.fonte[1]) + "</a>" + esc(T.fonte[2] + data + T.fonte[3]);
     }
+    aggiornaPref();
     salva();
   }
 
@@ -500,6 +534,120 @@
     e.preventDefault();
     window.close();
     setTimeout(() => { location.href = "/"; }, 150);
+  });
+
+  // ── (23/11/2026) Mondi e GE preferiti ─────────────────────────────────────
+  // S.mondi = [{ nome, ge: [{ id, liv }] }], S.mondo = indice del mondo attivo. Il livello
+  // di un GE del mondo attivo segue il livello scelto (mostra → aggiornaPref); toccando
+  // un GE del pannello il calcolatore passa a quel GE al suo livello.
+  const mondi = () => {
+    if (!Array.isArray(S.mondi) || !S.mondi.length) S.mondi = [{ nome: T.mondo1, ge: [] }];
+    S.mondi.forEach(m => { m.nome = String(m.nome || T.mondo1).slice(0, 30); m.ge = (Array.isArray(m.ge) ? m.ge : []).filter(g => g && costi[g.id]); });
+    if (!(S.mondo >= 0 && S.mondo < S.mondi.length)) S.mondo = 0;
+    return S.mondi;
+  };
+  const mondo = () => mondi()[S.mondo];
+  const apriPref = v => { $("prefPannello").hidden = !v; $("prefApri").setAttribute("aria-expanded", String(v)); };
+  function aggiornaPref() {
+    const m = mondo(), cur = m.ge.find(g => g.id === S.ge), lvl = livOk(S.livello);
+    // (23/11/2026, utente) il livello NON si salva da solo (guardando il GE di un altro giocatore
+    // al 170 si sovrascriveva il proprio al 140): lo salva la stella, piena = salvato a questo livello
+    const salvato = !!cur && cur.liv === lvl, stella = $("prefStella");
+    stella.textContent = salvato ? "★" : "☆";
+    stella.classList.toggle("piena", salvato);
+    stella.setAttribute("aria-pressed", String(salvato));
+    stella.title = salvato ? T.stellaTogli(breve(S.ge), m.nome) : cur ? T.stellaAggiorna(breve(S.ge), lvl, cur.liv) : T.stellaAgg(breve(S.ge), lvl, m.nome);
+    stella.setAttribute("aria-label", stella.title);
+    // (utente) "★ F (2 GE) · Fronte 132": il numero di GE è quello del mondo, poi il GE scelto
+    $("prefApri").innerHTML = '<span class="stella">★</span><span class="mondo">' + esc(m.nome) + "</span>"
+      + '<span class="conta">(' + esc(T.nGe(m.ge.length)) + ")</span>"
+      + (cur ? '<span class="dettaglio">· ' + esc(breve(cur.id)) + " " + cur.liv + "</span>" : "")
+      + '<span class="freccia">▾</span>';
+    $("prefMondi").innerHTML = mondi().map((x, i) => '<button type="button" data-mondo="' + i + '" class="' + (i === S.mondo ? "attivo" : "") + '">' + esc(x.nome) + "</button>").join("")
+      + '<button type="button" data-mondo="nuovo" title="' + esc(T.prefNuovo) + '" aria-label="' + esc(T.prefNuovo) + '">+</button>';
+    $("prefGriglia").innerHTML = (m.ge.length ? "" : '<p class="pref-vuoto">' + esc(T.prefVuoto) + "</p>")
+      + m.ge.map(g => '<button type="button" data-ge="' + esc(g.id) + '" class="' + (g.id === S.ge ? "attivo" : "") + '" title="' + esc(nome(g.id)) + '"><span>' + esc(breve(g.id)) + "</span><b>" + g.liv + "</b></button>").join("");
+  }
+  $("prefApri").addEventListener("click", () => apriPref($("prefPannello").hidden));
+  // (composedPath: il pulsante toccato può essere già stato ridisegnato, quindi fuori dal pannello)
+  document.addEventListener("click", e => { if (!e.composedPath().includes($("pref"))) apriPref(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") apriPref(false); });
+  $("prefMondi").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.mondo === "nuovo") {
+      const n = (prompt(T.prefNome) || "").trim().slice(0, 30);
+      if (!n) return;
+      mondi().push({ nome: n, ge: [] }); S.mondo = S.mondi.length - 1;
+    } else S.mondo = Number(b.dataset.mondo);
+    mostra();
+  });
+  $("prefGriglia").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const m = mondo();
+    const g = m.ge.find(x => x.id === b.dataset.ge); if (!g) return;
+    if (g.id !== S.ge || g.liv !== livOk(S.livello)) { S.ge = g.id; $("ge").value = g.id; azzera(); S.livello = g.liv; sincronizza(); }
+    apriPref(false);
+    mostra();
+  });
+  // stella vuota: salva (o aggiorna) GE e livello nel mondo attivo; piena: lo toglie
+  $("prefStella").addEventListener("click", () => {
+    const m = mondo(), lvl = livOk(S.livello), i = m.ge.findIndex(g => g.id === S.ge);
+    if (i < 0) m.ge.push({ id: S.ge, liv: lvl });
+    else if (m.ge[i].liv !== lvl) m.ge[i].liv = lvl;
+    else m.ge.splice(i, 1);
+    mostra();
+  });
+  // (23/11/2026, utente) Aperto dall'app: le TUE città importate (non le visitate né quelle da
+  // file JSON) diventano mondi con TUTTI i loro GE al livello da costruire (livello attuale + 1,
+  // come il pulsante del GE nella scheda Città). Un mondo per città, collegato con l'id della
+  // città (campo "citta"): resta collegato anche se lo rinomini, e a ogni apertura dall'app la
+  // sua lista si riscrive con i dati veri. Gli altri mondi non cambiano; senza città importate
+  // non cambia niente. Lettura dei dati dell'app (stesso sito): elenco in
+  // foe_global_profiles_v2, città in foe_p_<id>_city_v2 (JSON compresso zlib + base64, come
+  // writeStoredJson in src/utils/storage.ts).
+  async function daCittaApp() {
+    if (!apertoDallApp || typeof DecompressionStream === "undefined") return;
+    let citta = [];
+    try { citta = JSON.parse(localStorage.getItem("foe_global_profiles_v2") || "[]"); } catch { return; }
+    if (!Array.isArray(citta)) return;
+    const attiva = localStorage.getItem("foe_global_active_profile_v2");
+    let cambiato = false;
+    for (const c of citta) {
+      if (!c || !c.id || c.origine === "json") continue;
+      const tipo = c.tipo || (localStorage.getItem("foe_p_" + c.id + "_inventory_v2") ? "mia" : "visitata");
+      if (tipo !== "mia") continue;
+      const grezzo = localStorage.getItem("foe_p_" + c.id + "_city_v2");
+      if (!grezzo || grezzo.length > 8e6) continue;
+      let dati;
+      try {
+        const byte = Uint8Array.from(atob(grezzo), x => x.charCodeAt(0));
+        dati = JSON.parse(await new Response(new Blob([byte]).stream().pipeThrough(new DecompressionStream("deflate"))).text());
+      } catch { continue; }
+      const lista = (Array.isArray(dati && dati.greatBuildingsJson) ? dati.greatBuildingsJson : [])
+        .filter(([id, g]) => costi[id] && g && Number.isFinite(g.level))
+        .map(([id, g]) => ({ id, liv: Math.min(costi[id].length, Math.max(1, g.level + 1)) }))
+        .sort((x, y) => nome(x.id).localeCompare(nome(y.id), LINGUA));
+      if (!lista.length) continue;
+      const tutti = mondi();
+      // (il "Mondo 1" vuoto di partenza non serve più)
+      if (!cambiato && tutti.length === 1 && !tutti[0].citta && !tutti[0].ge.length) tutti.pop();
+      let m = tutti.find(x => x.citta === c.id);
+      if (!m) { m = { nome: String(c.name || c.id).slice(0, 30), citta: c.id, ge: [] }; tutti.push(m); }
+      m.ge = lista;
+      if (c.id === attiva) S.mondo = tutti.indexOf(m);
+      cambiato = true;
+    }
+    if (cambiato) mostra();
+  }
+  daCittaApp();
+  $("prefRinomina").addEventListener("click", () => {
+    const n = (prompt(T.prefNome, mondo().nome) || "").trim().slice(0, 30);
+    if (n) { mondo().nome = n; mostra(); }
+  });
+  $("prefElimina").addEventListener("click", () => {
+    if (!confirm(T.prefElConf(mondo().nome))) return;
+    mondi().splice(S.mondo, 1); S.mondo = Math.max(0, S.mondo - 1);
+    mostra();
   });
 
   $("ge").value = S.ge;

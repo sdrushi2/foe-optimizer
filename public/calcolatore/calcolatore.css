@@ -64,13 +64,43 @@ select:focus, input:focus { outline: none; border-color: var(--amber-dim); }
 button { font: inherit; font-weight: 700; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
 button:hover { border-color: var(--amber-dim); color: var(--amber); }
 /* riga 1: GE + livello */
-.riga { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+/* (23/11/2026, utente) spaziature ridotte di 4 px: GE, stella, frecce e livello (era 6 e 4) */
+.riga { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
 .riga select { flex: 1; min-width: 0; }
-.liv { display: flex; gap: 4px; align-items: center; }
+/* (23/11/2026) mondi e GE preferiti: riga riassuntiva, pannello con i mondi (schede che
+   scorrono di lato) e i GE del mondo in griglia (3 per riga, 4 da computer) */
+.pref { margin-bottom: 6px; }
+.pref-sommario { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; text-align: left; font-size: .85rem; background: var(--bg-deep); }
+.pref-sommario .stella { color: var(--amber); }
+.pref-sommario .mondo { color: var(--amber); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.pref-sommario .conta { color: var(--text-dim); font-weight: 600; white-space: nowrap; }
+.pref-sommario .dettaglio { color: var(--text-dim); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pref-sommario .freccia { margin-left: auto; color: var(--text-dim); }
+.pref-sommario[aria-expanded="true"] { border-color: var(--amber-dim); }
+.pref-pannello { border: 1px solid var(--border); border-radius: 8px; padding: 6px; margin-top: 4px; background: #0b1222; }
+.pref-mondi { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.pref-mondi::-webkit-scrollbar { display: none; }
+.pref-mondi button { font-size: .75rem; padding: 4px 9px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text-dim); white-space: nowrap; }
+.pref-mondi button.attivo { color: var(--amber); border-bottom-color: var(--amber); }
+.pref-mondi button[data-mondo="nuovo"] { color: var(--sky); font-size: .9rem; padding: 2px 10px; }
+.pref-griglia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.pref-griglia button { font-size: .74rem; padding: 5px 6px; display: flex; justify-content: space-between; gap: 4px; background: var(--bg-deep); white-space: nowrap; min-width: 0; }
+.pref-griglia button span { overflow: hidden; text-overflow: ellipsis; }
+.pref-griglia button b { color: var(--amber); }
+.pref-griglia button.attivo { border-color: var(--amber); background: rgba(251, 191, 36, .12); }
+.pref-vuoto { grid-column: 1 / -1; margin: 2px 2px 4px; font-size: .75rem; color: var(--text-dim); }
+.pref-azioni { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+.pref-azioni button { font-size: .7rem; font-weight: 600; padding: 3px 8px; color: var(--text-dim); background: transparent; }
+.pref-azioni button:hover { color: var(--text); }
+@media (min-width: 600px) { .pref-griglia { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.liv { display: flex; gap: 0; align-items: center; }
 .liv input { width: 56px; text-align: center; padding: 6px 4px; }
 /* (11/11/2026) aiuto: quale livello inserire (barra di avanzamento della finestra del GE) */
 .aiuto-liv { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 /* (frecce ritagliate dalla finestra del GE del gioco, 25×26, in file a parte; a destra le stesse specchiate) */
+.liv .stella-liv { width: 28px; height: 28px; padding: 0; font-size: 1.15rem; line-height: 1; color: var(--text-dim); background: transparent; border: 0; flex: none; }
+.liv .stella-liv.piena { color: var(--amber); }
+.liv .stella-liv:hover { color: var(--amber); }
 .liv .fr { width: 25px; height: 26px; padding: 0; border: 0; border-radius: 3px; background-color: transparent; background-size: 25px 26px; cursor: pointer; }
 .liv .fr:hover { filter: brightness(1.2); }
 .liv .fr:active { filter: brightness(.85); }
@@ -78,6 +108,9 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .liv .fr.doppia { background-image: url("freccia-doppia.png"); }
 .liv .fr.singola { background-image: url("freccia.png"); }
 .liv .fr.dx { transform: scaleX(-1); }
+/* (23/11/2026, utente) doppie frecce 2 px più vicine alle singole */
+.liv .fr.doppia:not(.dx) { margin-right: -2px; }
+.liv .fr.doppia.dx { margin-left: -2px; }
 /* barra del gioco: immagine 720×56 (barra.png: torri, barra vuota, nastri senza scritte); sopra, in %
    delle sue misure: riempimento verde (larghezza dal JS, già in % dell'immagine), PF,
    livello attuale (sinistra) e da fare (destra), cerchiato */
@@ -119,10 +152,13 @@ button:hover { border-color: var(--amber-dim); color: var(--amber); }
 .chat button.rame { color: var(--copper); } .chat button.rame.attivo { color: var(--bg-deep); background: var(--copper); border-color: var(--copper); }
 .chat button:disabled { opacity: .35; cursor: not-allowed; border-color: var(--border); }
 
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
-.stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; text-align: center; }
+/* (23/11/2026) dentro il primo riquadro, sotto le chat: sfondo scuro come i campi */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+.stat { background: var(--bg-deep); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; text-align: center; }
 .stat .k { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); line-height: 1.2; }
 .stat .v { font-family: ui-monospace, Consolas, monospace; font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+/* (valori allineati in basso anche quando un'etichetta va su due righe) */
+.stat { display: flex; flex-direction: column; } .stat .v { margin-top: auto; padding-top: 2px; }
 
 .card.tabella { padding: 4px 8px; }
 table { width: 100%; border-collapse: collapse; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
