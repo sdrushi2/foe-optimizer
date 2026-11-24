@@ -4410,7 +4410,10 @@ export default function App() {
   //  - solo con la pagina VISIBILE (mentre si gioca il tool in un'altra scheda
   //    tiene da parte l'ultimo pacchetto; l'import, ~1 s, si fa al ritorno);
   //  - 2 s dopo l'ultimo pacchetto (più modifiche di fila = un import solo);
-  //  - mai con il Planner aperto (si aggiorna quando si esce dal Planner);
+  //  - mai da solo con il Planner aperto (si aggiorna quando si esce dal Planner):
+  //    se nel frattempo la città selezionata è cambiata nel gioco il Planner mostra
+  //    un avviso con "Aggiorna" (pontePlanner), che importa e fa ripartire il
+  //    Planner dalla città nuova (plannerRev nella key);
   //  - solo se la città del gioco è quella selezionata, oppure non c'è ancora
   //    (si crea e si seleziona); un'altra città salvata si aggiorna quando la
   //    si seleziona (importaPayload agisce sulla città mostrata);
@@ -4426,9 +4429,47 @@ export default function App() {
   const ponte = usePonte();
   const paginaVisibile = usePaginaVisibile();
   const importandoPonte = useRef(false);
+  /** Città selezionata cambiata nel gioco mentre il Planner è aperto: avviso con "Aggiorna". */
+  const [pontePlanner, setPontePlanner] = useState<{ p: PacchettoPonte; chiave: string } | null>(null);
+  const [aggiornandoPlanner, setAggiornandoPlanner] = useState(false);
+  /** Cresce a ogni "Aggiorna" dall'avviso: nella key del Planner, che riparte dalla città nuova. */
+  const [plannerRev, setPlannerRev] = useState(0);
+  /** Import di un pacchetto del ponte (stesso import della bacchetta). */
+  const importaDalPonte = async (p: PacchettoPonte, chiave: string) => {
+    importandoPonte.current = true;
+    try {
+      const def = await definizioniDalPonte(p.entitaFirma);
+      // subito dopo le definizioni l'estensione manda una città fresca di quel mondo: si usa quella
+      const ultimo = pacchettoPonte(p.server, p.giocatore) ?? p;
+      if (ultimo.entitaFirma !== def.firma) return;
+      const senzaDef = JSON.parse(ultimo.json) as object;
+      const impronta = improntaDati(senzaDef);
+      const dati: unknown = { ...senzaDef, CityEntities: JSON.parse(def.testo) as unknown };
+      if (validateBookmarkletData(dati)) return;
+      await importaPayload(dati as BookmarkletData, false, { daPonte: true });
+      try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si reimporterà */ }
+    } catch (err) {
+      console.warn("[FOE] ponte: import non riuscito", err);
+    } finally {
+      importandoPonte.current = false;
+    }
+  };
+  const aggiornaPlannerDalPonte = async () => {
+    if (!pontePlanner || aggiornandoPlanner) return;
+    setAggiornandoPlanner(true);
+    try {
+      await importaDalPonte(pontePlanner.p, pontePlanner.chiave);
+      setPontePlanner(null);
+      setPlannerRev(r => r + 1);
+    } finally {
+      setAggiornandoPlanner(false);
+    }
+  };
   useEffect(() => {
-    if (!ponte.presente || ponte.pausa || !paginaVisibile || importandoPonte.current) return;
-    if (activeTab === "propria_citta" && showPlanner) return;
+    if (!ponte.presente || ponte.pausa) { setPontePlanner(null); return; }
+    if (!paginaVisibile || importandoPonte.current) return;
+    const nelPlanner = activeTab === "propria_citta" && showPlanner;
+    if (!nelPlanner) setPontePlanner(null);
     // pacchetto da importare: quello della città selezionata, altrimenti una città non ancora salvata
     type Scelta = { p: PacchettoPonte; chiave: string; nuova: boolean };
     let scelta: Scelta | null = null;
@@ -4444,29 +4485,14 @@ export default function App() {
       if (trovata) { scelta = { p, chiave, nuova: false }; break; }
       scelta ??= { p, chiave, nuova: true };
     }
+    if (nelPlanner) {
+      // nel Planner niente import automatico: solo l'avviso, e solo per la città selezionata
+      setPontePlanner(scelta && !scelta.nuova ? { p: scelta.p, chiave: scelta.chiave } : null);
+      return;
+    }
     if (!scelta) return;
     const { p, chiave } = scelta;
-    const tm = setTimeout(() => {
-      void (async () => {
-        importandoPonte.current = true;
-        try {
-          const def = await definizioniDalPonte(p.entitaFirma);
-          // subito dopo le definizioni l'estensione manda una città fresca di quel mondo: si usa quella
-          const ultimo = pacchettoPonte(p.server, p.giocatore) ?? p;
-          if (ultimo.entitaFirma !== def.firma) return;
-          const senzaDef = JSON.parse(ultimo.json) as object;
-          const impronta = improntaDati(senzaDef);
-          const dati: unknown = { ...senzaDef, CityEntities: JSON.parse(def.testo) as unknown };
-          if (validateBookmarkletData(dati)) return;
-          await importaPayload(dati as BookmarkletData, false, { daPonte: true });
-          try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si reimporterà */ }
-        } catch (err) {
-          console.warn("[FOE] ponte: import non riuscito", err);
-        } finally {
-          importandoPonte.current = false;
-        }
-      })();
-    }, 2000);
+    const tm = setTimeout(() => { void importaDalPonte(p, chiave); }, 2000);
     return () => clearTimeout(tm);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- importaPayload cambia a ogni render: si riparte solo per arrivi, pausa, visibilità, scheda e città
   }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles]);
@@ -7647,8 +7673,21 @@ export default function App() {
                     {t("plannerJsonIgnored", uiLang, ignorati.length, [...new Set(ignorati)].join(", "))}
                   </div>
                 )}
+                {/* Ponte: la città selezionata è cambiata nel gioco mentre il Planner è aperto */}
+                {!usaJson && pontePlanner && (
+                  <div role="status" className="mx-3 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 text-[12px] text-sky-200">
+                    <span className="min-w-0 flex-1">
+                      {t("r2PontePlannerAvviso", uiLang, new Date(pontePlanner.p.ts).toLocaleTimeString(uiLang === "it" ? "it-IT" : "en-GB", { hour: "2-digit", minute: "2-digit" }))}
+                    </span>
+                    <button type="button" onClick={() => { void aggiornaPlannerDalPonte(); }} disabled={aggiornandoPlanner}
+                      title={t("r2PontePlannerAggiornaTitle", uiLang)}
+                      className="shrink-0 rounded border border-sky-400/60 bg-sky-500/20 px-2.5 py-0.5 font-semibold text-sky-100 hover:bg-sky-500/30 disabled:cursor-wait disabled:opacity-60">
+                      {aggiornandoPlanner ? t("r2PontePlannerAggiornando", uiLang) : t("r2PontePlannerAggiorna", uiLang)}
+                    </button>
+                  </div>
+                )}
                 <PlannerView
-                  key={usaJson ? `json-${plannerJson!.n}` : `citta-${activeProfileId}`}
+                  key={usaJson ? `json-${plannerJson!.n}` : `citta-${activeProfileId}-${plannerRev}`}
                   cityMapBuildings={usaJson ? NESSUN_EDIFICIO : cityMapBuildings}
                   cityMapUnlockedCells={usaJson ? NESSUNA_CELLA : cityMapUnlockedCells}
                   esterna={usaJson ? plannerJson!.citta : null}

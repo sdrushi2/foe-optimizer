@@ -3,7 +3,7 @@
 ## Versione 2.027 (24/11/2026)
 ### Novità
 - FoE Optimizer Bridge, prima versione (in prova con pochi utenti): un'estensione che collega il gioco a FoE Optimizer, per Chrome e gli altri browser basati su Chromium (Edge, Opera, Brave, Vivaldi; Firefox e Safari per ora no). Con l'estensione e FoE Helper o Forge Hammer attivi, la tua città si aggiorna da sola nel tool a ogni modifica nel gioco (un edificio spostato, comprato, messo in magazzino, un alleato assemblato…), senza bacchetta. Funziona con più mondi aperti insieme (per esempio beta e live) e solo per le tue città: quelle che visiti si importano sempre con la bacchetta
-- Accanto alla bacchetta c'è l'indicatore del collegamento: LIVE verde quando la città arriva dal gioco, LIVE giallo quando l'estensione aspetta il gioco, PAUSA quando l'hai messo in pausa con un clic (riprendendo si importa subito l'ultima versione) e OFF senza estensione. Per chi non ha l'estensione non cambia nulla: la città si importa con la bacchetta, come sempre
+- Accanto alla bacchetta c'è l'indicatore del collegamento: LIVE verde quando la città arriva dal gioco, LIVE giallo quando l'estensione aspetta il gioco, PAUSA quando l'hai messo in pausa con un clic (riprendendo si importa subito l'ultima versione) e OFF senza estensione. Con il Planner aperto la città non cambia da sola: se nel gioco è cambiata compare un avviso con il pulsante Aggiorna, che la importa e fa ripartire il Planner dalla città nuova. Per chi non ha l'estensione non cambia nulla: la città si importa con la bacchetta, come sempre
 
 ---
 

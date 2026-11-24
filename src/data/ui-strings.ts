@@ -54,6 +54,16 @@ const UI_STRINGS = {
   },
   r2PonteClicPausa: { it: "Clic: metti in pausa", en: "Click: pause" },
   r2PontePausa: { it: "PAUSA", en: "PAUSED" },
+  r2PontePlannerAvviso: {
+    it: (ora: string) => `La tua città è cambiata nel gioco (ultimo aggiornamento alle ${ora}). Il Planner lavora ancora sulla città di prima`,
+    en: (ora: string) => `Your city changed in the game (last update at ${ora}). The Planner is still working on the previous city`,
+  },
+  r2PontePlannerAggiorna: { it: "Aggiorna", en: "Update" },
+  r2PontePlannerAggiornando: { it: "Aggiorno…", en: "Updating…" },
+  r2PontePlannerAggiornaTitle: {
+    it: "Importa la città dal gioco e fa ripartire il Planner da lì: ricerche, modifiche e risultati del Planner di adesso vanno persi",
+    en: "Imports the city from the game and restarts the Planner from it: the current Planner searches, edits and results are lost",
+  },
   r2PonteOffTitle: {
     it: "OFF: estensione FoE Optimizer Bridge non attiva. Coming soon! Per ora la città si importa con la bacchetta, come sempre",
     en: "OFF: FoE Optimizer Bridge extension not active. Coming soon! For now, import your city with the wand, as always",
