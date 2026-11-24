@@ -61,6 +61,10 @@ export interface PacchettoPonte {
   /** Firma delle definizioni degli edifici (versione del gioco). */
   entitaFirma: string;
   ts: number;
+  /** Il pacchetto già letto (con CityEntities vuoto), solo da leggere: calcolato una volta all'arrivo. */
+  leggero: Record<string, unknown> | null;
+  /** improntaDati del pacchetto, calcolata una volta all'arrivo ("" se illeggibile). */
+  impronta: string;
 }
 
 /** Pausa del ponte (24/11/2026): resta anche ricaricando il tool, finché non la si toglie. */
@@ -85,6 +89,18 @@ let avviato = false;
 /** Definizioni in arrivo a pezzi (una firma alla volta) e chi le aspetta. */
 let pezzi: { firma: string; parti: (string | null)[]; arrivate: number } | null = null;
 let attese: Array<{ firma: string; ok: (d: { firma: string; testo: string }) => void }> = [];
+/** Definizioni già ricevute, per firma (24/11/2026): finché la scheda del tool è aperta un
+ *  nuovo import non se le fa ridare dall'estensione (63 MB letti, passati e ricomposti a
+ *  ogni import). Cambiano solo con un aggiornamento del gioco; al massimo due versioni
+ *  (live e beta aperte insieme). Chiudendo la scheda si svuota: il primo import dopo la
+ *  riapertura le richiede all'estensione, che le ha salvate. */
+const DEF_IN_MEMORIA = 2;
+const definizioniInMemoria = new Map<string, string>();
+function ricordaDefinizioni(firma: string, testo: string) {
+  definizioniInMemoria.delete(firma);
+  definizioniInMemoria.set(firma, testo);
+  while (definizioniInMemoria.size > DEF_IN_MEMORIA) definizioniInMemoria.delete(definizioniInMemoria.keys().next().value!);
+}
 
 function aggiorna(nuovo: StatoPonte) { stato = nuovo; ascoltatori.forEach(f => f()); }
 
@@ -104,7 +120,9 @@ function ascolta(e: MessageEvent) {
   else if (m.event === "game-tabs" && typeof m.n === "number") aggiorna({ ...stato, presente: true, versione, schede: m.n });
   else if (m.event === "city" && typeof m.player === "string" && typeof m.server === "string" && typeof m.json === "string") {
     const ts = typeof m.ts === "number" ? m.ts : Date.now();
-    pacchetti.set(m.server + "|" + m.player, { json: m.json, server: m.server, giocatore: m.player, entitaFirma: typeof m.signature === "string" ? m.signature : "", ts });
+    let leggero: Record<string, unknown> | null = null, impronta = "";
+    try { leggero = { ...(JSON.parse(m.json) as Record<string, unknown>), CityEntities: {} }; impronta = improntaDati(leggero); } catch { /* illeggibile: App lo salta */ }
+    pacchetti.set(m.server + "|" + m.player, { json: m.json, server: m.server, giocatore: m.player, entitaFirma: typeof m.signature === "string" ? m.signature : "", ts, leggero, impronta });
     // una città arrivata vuol dire che almeno una scheda del gioco è aperta
     aggiorna({ ...stato, presente: true, versione, schede: Math.max(1, stato.schede), ultima: { giocatore: m.player, server: m.server, ts }, arrivi: stato.arrivi + 1 });
   } else if (m.event === "definitions" && typeof m.signature === "string" && typeof m.part === "number" && typeof m.parts === "number" && typeof m.text === "string") {
@@ -113,6 +131,7 @@ function ascolta(e: MessageEvent) {
     if (pezzi.arrivate === m.parts) {
       const fatto = { firma: pezzi.firma, testo: pezzi.parti.join("") };
       pezzi = null;
+      ricordaDefinizioni(fatto.firma, fatto.testo);
       const chi = attese.filter(a => a.firma === fatto.firma);
       attese = attese.filter(a => a.firma !== fatto.firma);
       chi.forEach(a => a.ok(fatto));
@@ -168,6 +187,8 @@ export function pacchettoPonte(server: string, giocatore: string): PacchettoPont
  *  sua copia salvata: il gioco non si ferma) e le restituisce come testo JSON.
  *  Subito dopo l'estensione manda anche una città fresca di quel mondo. */
 export function definizioniDalPonte(firma: string, attesaMs = 60_000): Promise<{ firma: string; testo: string }> {
+  const giaQui = definizioniInMemoria.get(firma);
+  if (giaQui !== undefined) { ricordaDefinizioni(firma, giaQui); return Promise.resolve({ firma, testo: giaQui }); }
   return new Promise((ok, ko) => {
     const voce = { firma, ok: (d: { firma: string; testo: string }) => { clearTimeout(tm); ok(d); } };
     const tm = setTimeout(() => { attese = attese.filter(a => a !== voce); ko(new Error("definizioni non arrivate dal ponte")); }, attesaMs);

@@ -4474,14 +4474,13 @@ export default function App() {
     type Scelta = { p: PacchettoPonte; chiave: string; nuova: boolean };
     let scelta: Scelta | null = null;
     for (const p of pacchettiPonte()) {
-      let leggero: BookmarkletData;
-      try { leggero = { ...(JSON.parse(p.json) as BookmarkletData), CityEntities: {} }; } catch { continue; }
-      const info = infoImport(leggero);
+      if (!p.leggero) continue;                 // illeggibile
+      const info = infoImport(p.leggero as unknown as BookmarkletData);
       if (info.tipo !== "mia") continue;
       const trovata = trovaCitta(profiles, info);
       if (trovata && trovata.id !== activeProfileId) continue; // si aggiorna quando la si seleziona
       const chiave = PONTE_ULTIMO_KEY + (info.mondo ?? "") + "_" + (info.playerId ?? info.nome ?? "");
-      if (trovata && localStorage.getItem(chiave) === improntaDati(leggero)) continue;
+      if (trovata && localStorage.getItem(chiave) === p.impronta) continue;
       if (trovata) { scelta = { p, chiave, nuova: false }; break; }
       scelta ??= { p, chiave, nuova: true };
     }
