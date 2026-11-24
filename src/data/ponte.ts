@@ -150,13 +150,31 @@ function avvia() {
   // aprendo il tool dopo il gioco non si creava nulla. Se ne chiede una fotografia
   // nuova adesso (leggera: solo le città, senza definizioni).
   window.postMessage({ type: "foe-bridge-request", what: "snapshot" }, location.origin);
+  // (24/11/2026, revisione) Con la scheda nascosta da più di 5 minuti Chrome fa girare i
+  // timer al massimo una volta al minuto, anche quelli dell'estensione nella pagina: i
+  // segnali di presenza diradano e il controllo dei 45 s dava OFF e BUTTAVA i pacchetti
+  // (tornando sul tool non si importava l'ultima modifica). Ora: niente OFF per silenzio
+  // mentre la pagina è nascosta; i pacchetti restano (si buttano solo con "offline", cioè
+  // estensione disattivata); tornando visibili si chiede subito presenza e fotografia.
+  // Finché il ponte non c'è la pagina si ripresenta ogni 10 s: l'estensione resta muta
+  // finché una pagina non si presenta (le altre pagine su localhost non ricevono nulla)
+  // e, iniettata in una scheda già aperta, aspetta questo segnale.
+  let giri = 0;
   setInterval(() => {
+    giri++;
+    if (!stato.presente && giri % 2 === 0) window.postMessage({ type: "foe-bridge-request", what: "presence" }, location.origin);
+    if (document.hidden) return;
     if (ultimoSegnale && Date.now() - ultimoSegnale > PRESENZA_MS) {
       ultimoSegnale = 0;
-      pacchetti.clear();
       aggiorna({ ...INIZIALE, ultima: stato.ultima, arrivi: stato.arrivi, pausa: stato.pausa });
     }
   }, 5_000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    if (ultimoSegnale) ultimoSegnale = Date.now();   // margine: il primo segnale arriva tra poco
+    window.postMessage({ type: "foe-bridge-request", what: "presence" }, location.origin);
+    window.postMessage({ type: "foe-bridge-request", what: "snapshot" }, location.origin);
+  });
 }
 
 /** Stato del ponte per l'indicatore (e per far ripartire l'import a ogni arrivo). */
