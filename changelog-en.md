@@ -1,5 +1,12 @@
 # FoE Optimizer Changelog
 
+## Version 2.027 (24/11/2026)
+### New
+- FoE Optimizer Bridge, first version (being tested by a few users): a Chrome extension that connects the game to FoE Optimizer. With the extension and FoE Helper or Forge Hammer active, your city updates by itself in the tool at every change in the game (a building moved, bought, put in the inventory, an ally assembled…), without the wand. It works with several worlds open together (for example beta and live) and only for your own cities: the cities you visit are still imported with the wand
+- Next to the wand there is the connection indicator: green LIVE when the city comes from the game, yellow LIVE when the extension is waiting for the game, PAUSED when you paused it with a click (resuming imports the latest version right away) and OFF without the extension. If you don't have the extension nothing changes: you import your city with the wand, as always
+
+---
+
 ## Version 2.026 (23/11/2026)
 ### Update
 - GB Calculator: in the text to copy into the chat the Great Building has a short name (for example "Galaxy" instead of "The Blue Galaxy", "Galassia" in the Italian version), in a field next to your name. You can change it: it stays saved for each Great Building, and clearing the field brings back the default one

@@ -39,6 +39,25 @@ const UI_STRINGS = {
     it: "Clic: importa la città copiata dal segnalibro · Trascinala nella barra dei preferiti per creare il segnalibro da usare nel gioco",
     en: "Click: import the city copied by the bookmark · Drag it to the bookmarks bar to create the bookmark to use in the game",
   },
+  // (24/11/2026) indicatore del ponte (estensione FoE Optimizer Bridge) accanto alla bacchetta
+  r2PonteLiveTitle: {
+    it: (g: string, s: string, ora: string) => `LIVE: collegato al gioco. La città di ${g} (${s}) arriva dal gioco a ogni modifica (ultima alle ${ora})`,
+    en: (g: string, s: string, ora: string) => `LIVE: connected to the game. ${g}'s city (${s}) comes from the game at every change (last at ${ora})`,
+  },
+  r2PonteWaitTitle: {
+    it: "LIVE: estensione FoE Optimizer Bridge attiva, in attesa del gioco. Apri il gioco con FoE Helper o Forge Hammer attivo e aspetta che la città sia caricata (se avevi appena attivato l'estensione, ricarica il gioco)",
+    en: "LIVE: FoE Optimizer Bridge extension active, waiting for the game. Open the game with FoE Helper or Forge Hammer active and wait for the city to load (if you just enabled the extension, reload the game)",
+  },
+  r2PontePausaTitle: {
+    it: "IN PAUSA: il ponte riceve ancora la città dal gioco ma non aggiorna né crea città nel tool. Clic per riprendere (si importa subito l'ultima versione, se è cambiata)",
+    en: "PAUSED: the bridge still receives the city from the game but does not update or create cities in the tool. Click to resume (the latest version is imported right away, if it changed)",
+  },
+  r2PonteClicPausa: { it: "Clic: metti in pausa", en: "Click: pause" },
+  r2PontePausa: { it: "PAUSA", en: "PAUSED" },
+  r2PonteOffTitle: {
+    it: "OFF: estensione FoE Optimizer Bridge non attiva. Coming soon! Per ora la città si importa con la bacchetta, come sempre",
+    en: "OFF: FoE Optimizer Bridge extension not active. Coming soon! For now, import your city with the wand, as always",
+  },
   exportNoProfiles: {
     it: "Nessun profilo da salvare",
     en: "No profiles to save",

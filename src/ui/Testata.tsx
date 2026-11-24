@@ -16,6 +16,7 @@ import Ribbon, { type RibbonGroup } from "./ribbon/Ribbon";
 import { t, type UiLang } from "../data/ui-strings";
 import SelettoreCitta, { type VoceCitta } from "./SelettoreCitta";
 import SelettoreLingua from "./SelettoreLingua";
+import IndicatorePonte from "./IndicatorePonte";
 
 export type Scheda = "database" | "citta" | "inventario" | "planner" | "alleati" | "insediamenti" | "opzioni" | "guida";
 
@@ -122,6 +123,8 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
             className="flex h-7 w-7 shrink-0 cursor-grab items-center justify-center rounded-md border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 hover:border-emerald-400/70 hover:bg-emerald-500/20 hover:text-emerald-200 active:cursor-grabbing">
             <Wand2 size={14} aria-hidden="true" />
           </button>
+          {/* (24/11/2026) stato del ponte (estensione facoltativa): LIVE / OFF */}
+          <IndicatorePonte uiLang={uiLang} compatta={livello >= 2} />
         </span>
         <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} avatar={avatar}
           uiLang={uiLang} maxW={livello >= 4 ? 44 : livello >= 2 ? 110 : 190} />

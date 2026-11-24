@@ -45,6 +45,7 @@ import type { RibbonGroup } from "./ui/ribbon/Ribbon";
 import type { CittaEsterna } from "./planner/PlannerView";
 import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/cityMapJson";
 import { cittaDaJson } from "./data/cittaDaJson";
+import { definizioniDalPonte, improntaDati, pacchettiPonte, pacchettoPonte, PONTE_ULTIMO_KEY, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
 
 /** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
 const NESSUN_ID = new Set<string>();
@@ -4273,7 +4274,7 @@ export default function App() {
 
   /** Crea o aggiorna una città dal payload (bacchetta o, 2.0, file JSON:
    *  `daJson` = città "ridotta", vedi data/cittaDaJson.ts). */
-  const importaPayload = async (data: BookmarkletData, daJson = false) => {
+  const importaPayload = async (data: BookmarkletData, daJson = false, opz: { daPonte?: boolean } = {}) => {
     // (19/11/2026, utente) Ogni tanto, importando la città di un vicino, FoE Helper
     // ha già nome e avatar ma la mappa piena di voci senza edifici: niente id,
     // niente mappa, e la città (anche una già salvata) veniva sovrascritta così.
@@ -4349,8 +4350,8 @@ export default function App() {
       // richiesto" invece di un alert nativo del browser) che spiega di
       // eliminare la vecchia bacchetta e trascinarne una nuova.
       const usedVersion = typeof data._v === "number" ? data._v : 0;
-      if (daJson) {
-        // città da JSON: niente avvisi sulla bacchetta
+      if (daJson || opz.daPonte) {
+        // città da JSON o dal ponte (24/11/2026): niente avvisi sulla bacchetta
       } else if (usedVersion < CURRENT_BOOKMARKLET_VERSION) {
         setIsBookmarkletOutdatedModalOpen(true);
       } else {
@@ -4401,6 +4402,74 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [profiles, storageVersion]);
   const chiudiAvviso = useCallback(() => setAvvisoCitta(null), []);
+
+  // ── Ponte (24/11/2026): la città PROPRIA dal gioco, via estensione ─────────
+  // L'estensione facoltativa "FoE Optimizer – Ponte" manda la città quando
+  // cambia nel gioco (data/ponte.ts). Si importa con lo stesso import della
+  // bacchetta (importaPayload), ma solo quando serve e senza disturbare:
+  //  - solo con la pagina VISIBILE (mentre si gioca il tool in un'altra scheda
+  //    tiene da parte l'ultimo pacchetto; l'import, ~1 s, si fa al ritorno);
+  //  - 2 s dopo l'ultimo pacchetto (più modifiche di fila = un import solo);
+  //  - mai con il Planner aperto (si aggiorna quando si esce dal Planner);
+  //  - solo se la città del gioco è quella selezionata, oppure non c'è ancora
+  //    (si crea e si seleziona); un'altra città salvata si aggiorna quando la
+  //    si seleziona (importaPayload agisce sulla città mostrata);
+  //  - non si reimporta una città uguale all'ultima importata dal ponte nelle
+  //    cose che contano per il tool (improntaDati: niente produzioni, PF nei GE,
+  //    magazzino, che cambiano di continuo);
+  //  - mai con il ponte in pausa (clic sull'indicatore): i pacchetti arrivano
+  //    lo stesso e, alla ripresa, si importa l'ultimo se è cambiato;
+  //  - con più giochi aperti (beta e live) c'è un pacchetto per mondo: prima la
+  //    città selezionata, poi, una alla volta, quelle non ancora salvate.
+  // Le definizioni degli edifici (~63 MB) si chiedono all'estensione solo al
+  // momento dell'import (dalla sua copia salvata: il gioco non si ferma).
+  const ponte = usePonte();
+  const paginaVisibile = usePaginaVisibile();
+  const importandoPonte = useRef(false);
+  useEffect(() => {
+    if (!ponte.presente || ponte.pausa || !paginaVisibile || importandoPonte.current) return;
+    if (activeTab === "propria_citta" && showPlanner) return;
+    // pacchetto da importare: quello della città selezionata, altrimenti una città non ancora salvata
+    type Scelta = { p: PacchettoPonte; chiave: string; nuova: boolean };
+    let scelta: Scelta | null = null;
+    for (const p of pacchettiPonte()) {
+      let leggero: BookmarkletData;
+      try { leggero = { ...(JSON.parse(p.json) as BookmarkletData), CityEntities: {} }; } catch { continue; }
+      const info = infoImport(leggero);
+      if (info.tipo !== "mia") continue;
+      const trovata = trovaCitta(profiles, info);
+      if (trovata && trovata.id !== activeProfileId) continue; // si aggiorna quando la si seleziona
+      const chiave = PONTE_ULTIMO_KEY + (info.mondo ?? "") + "_" + (info.playerId ?? info.nome ?? "");
+      if (trovata && localStorage.getItem(chiave) === improntaDati(leggero)) continue;
+      if (trovata) { scelta = { p, chiave, nuova: false }; break; }
+      scelta ??= { p, chiave, nuova: true };
+    }
+    if (!scelta) return;
+    const { p, chiave } = scelta;
+    const tm = setTimeout(() => {
+      void (async () => {
+        importandoPonte.current = true;
+        try {
+          const def = await definizioniDalPonte(p.entitaFirma);
+          // subito dopo le definizioni l'estensione manda una città fresca di quel mondo: si usa quella
+          const ultimo = pacchettoPonte(p.server, p.giocatore) ?? p;
+          if (ultimo.entitaFirma !== def.firma) return;
+          const senzaDef = JSON.parse(ultimo.json) as object;
+          const impronta = improntaDati(senzaDef);
+          const dati: unknown = { ...senzaDef, CityEntities: JSON.parse(def.testo) as unknown };
+          if (validateBookmarkletData(dati)) return;
+          await importaPayload(dati as BookmarkletData, false, { daPonte: true });
+          try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si reimporterà */ }
+        } catch (err) {
+          console.warn("[FOE] ponte: import non riuscito", err);
+        } finally {
+          importandoPonte.current = false;
+        }
+      })();
+    }, 2000);
+    return () => clearTimeout(tm);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- importaPayload cambia a ogni render: si riparte solo per arrivi, pausa, visibilità, scheda e città
+  }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles]);
   // Città salvate prima di questa versione: l'avatar non è nell'elenco. Quando
   // la città è aperta (avatar letto dal suo slot) lo si copia nell'elenco.
   useEffect(() => {
