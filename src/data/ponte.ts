@@ -216,7 +216,7 @@ export function definizioniDalPonte(firma: string, attesaMs = 60_000): Promise<{
 }
 
 /** Impronta veloce di un testo (FNV-1a): per non reimportare una città identica. */
-export function improntaTesto(s: string): string {
+function improntaTesto(s: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   return s.length + "-" + (h >>> 0).toString(36);
