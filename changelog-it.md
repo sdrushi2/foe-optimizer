@@ -1,5 +1,11 @@
 # Novità di FoE Optimizer
 
+## Versione 2.028 (25/11/2026)
+### Aggiornamenti
+- Da telefono e tablet (Android, iPhone, iPad) la bacchetta magica e l'indicatore del collegamento non compaiono più in alto, perché lì non possono funzionare: resta più spazio per il resto. I messaggi che prima dicevano di usare la bacchetta ora suggeriscono di caricare un file JSON della città
+
+---
+
 ## Versione 2.027 (24/11/2026)
 ### Novità
 - FoE Optimizer Bridge, prima versione (in prova con pochi utenti): un'estensione che collega il gioco a FoE Optimizer, per Chrome e gli altri browser basati su Chromium (Edge, Opera, Brave, Vivaldi; Firefox e Safari per ora no). Con l'estensione e FoE Helper o Forge Hammer attivi, la tua città si aggiorna da sola nel tool a ogni modifica nel gioco (un edificio spostato, comprato, messo in magazzino, un alleato assemblato…), senza bacchetta. Funziona con più mondi aperti insieme (per esempio beta e live) e solo per le tue città: quelle che visiti si importano sempre con la bacchetta

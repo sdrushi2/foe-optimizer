@@ -1,5 +1,11 @@
 # FoE Optimizer Changelog
 
+## Version 2.028 (25/11/2026)
+### Update
+- On phones and tablets (Android, iPhone, iPad) the magic wand and the connection indicator no longer appear at the top, because they cannot work there: more room for the rest. The messages that used to say to use the wand now suggest loading a JSON file of the city
+
+---
+
 ## Version 2.027 (24/11/2026)
 ### New
 - FoE Optimizer Bridge, first version (being tested by a few users): an extension that connects the game to FoE Optimizer, for Chrome and the other Chromium-based browsers (Edge, Opera, Brave, Vivaldi; not Firefox or Safari for now). With the extension and FoE Helper or Forge Hammer active, your city updates by itself in the tool at every change in the game (a building moved, bought, put in the inventory, an ally assembled…), without the wand. It works with several worlds open together (for example beta and live) and only for your own cities: the cities you visit are still imported with the wand

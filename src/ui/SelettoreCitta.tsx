@@ -16,6 +16,7 @@ import { AlertTriangle, Building2, ChevronDown, Eye, FileJson, Trash2 } from "lu
 import { t, type UiLang } from "../data/ui-strings";
 import type { TipoCitta } from "../data/citta";
 import { LIMITE_STORAGE, occupazioneStorage } from "../utils/storage";
+import { senzaEstensioni } from "../utils/dispositivo";
 
 export interface VoceCitta { id: string; nome: string; tipo: TipoCitta; avatar?: string | null;
   /** 2.0: città "ridotta" importata da un file JSON (sezione a parte nel menu). */
@@ -202,7 +203,7 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
               {visitate.map(riga)}
               {daJson.length > 0 && <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-slate-500">{t("r2JsonCities", uiLang)}</div>}
               {daJson.map(riga)}
-              {citta.length === 0 && <div className="px-2 py-1.5 text-slate-400">{t("r2NoCitiesYet", uiLang)}</div>}
+              {citta.length === 0 && <div className="px-2 py-1.5 text-slate-400">{t(senzaEstensioni ? "r2NoCitiesYetMobile" : "r2NoCitiesYet", uiLang)}</div>}
               {onImportaJson && (
                 <button type="button" title={t("r2ImportCityJsonTitle", uiLang)}
                   onClick={() => { setMenu(null); onImportaJson(); }}

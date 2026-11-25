@@ -45,6 +45,7 @@ import type { RibbonGroup } from "./ui/ribbon/Ribbon";
 import type { CittaEsterna } from "./planner/PlannerView";
 import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/cityMapJson";
 import { cittaDaJson } from "./data/cittaDaJson";
+import { senzaEstensioni } from "./utils/dispositivo";
 import { definizioniDalPonte, improntaDati, pacchettiPonte, pacchettoPonte, PONTE_ULTIMO_KEY, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
 
 /** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
@@ -7658,7 +7659,7 @@ export default function App() {
             if (usaJson && !plannerJson) {
               return (
                 <div className="px-4 py-6 text-center text-[13px] text-slate-300">
-                  {t("r2PlNoSource", uiLang)}
+                  {t(senzaEstensioni ? "r2PlNoSourceMobile" : "r2PlNoSource", uiLang)}
                   {plannerErrore && <div className="mt-2 text-red-400">{plannerErrore}</div>}
                 </div>
               );
@@ -8013,9 +8014,9 @@ export default function App() {
                           cityEntityIds.size > 0;
                         const showWandCta = noCityImported || noInventoryImportedAtAll;
                         const emptyMessagePrefix = noCityImported
-                          ? t("noCityImportedYet", uiLang)
+                          ? t(senzaEstensioni ? "noCityImportedYetMobile" : "noCityImportedYet", uiLang)
                           : noInventoryImportedAtAll
-                          ? t("noInventoryImportedYet", uiLang)
+                          ? t(senzaEstensioni ? "noInventoryImportedYetMobile" : "noInventoryImportedYet", uiLang)
                           : inventoryImportedButEmpty
                           ? t("inventoryEmpty", uiLang)
                           : t("noBuildingsFound", uiLang);

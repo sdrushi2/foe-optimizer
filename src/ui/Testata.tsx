@@ -17,6 +17,8 @@ import { t, type UiLang } from "../data/ui-strings";
 import SelettoreCitta, { type VoceCitta } from "./SelettoreCitta";
 import SelettoreLingua from "./SelettoreLingua";
 import IndicatorePonte from "./IndicatorePonte";
+import { usePonte } from "../data/ponte";
+import { senzaEstensioni } from "../utils/dispositivo";
 
 export type Scheda = "database" | "citta" | "inventario" | "planner" | "alleati" | "insediamenti" | "opzioni" | "guida";
 
@@ -95,6 +97,12 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
     if (el && livello < MAX_LIVELLO && el.scrollWidth > el.clientWidth + 1) setCompatta(s => ({ ...s, livello: s.livello + 1 }));
   }, [livello, giro]);
   const stretta = livello >= 1;
+  // (25/11/2026) su Android e iOS/iPadOS bacchetta e indicatore del ponte non possono
+  // funzionare: non si disegnano (utils/dispositivo.ts). Tornano se il ponte risponde.
+  const ponte = usePonte();
+  const conBacchetta = !senzaEstensioni || ponte.presente;
+  // se compaiono o spariscono, la riga va ricompattata da capo
+  useLayoutEffect(() => { setCompatta(s => ({ livello: 0, giro: s.giro + 1 })); }, [conBacchetta]);
   const soloIcone = livello >= 3;
 
   return (
@@ -114,6 +122,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
           {livello < 2 && (
             <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-[20px] leading-none font-black tracking-wide text-transparent uppercase">FoE Optimizer</span>
           )}
+          {conBacchetta && <>
           <button type="button" onClick={onImporta} draggable title={t("wandTitle", uiLang)} aria-label={t("wandTitle", uiLang)}
             onDragStart={e => {
               e.dataTransfer.setData("text/uri-list", BOOKMARKLET_JS);
@@ -125,6 +134,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
           </button>
           {/* (24/11/2026) stato del ponte (estensione facoltativa): LIVE / OFF */}
           <IndicatorePonte uiLang={uiLang} compatta={livello >= 2} />
+          </>}
         </span>
         <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} avatar={avatar}
           uiLang={uiLang} maxW={livello >= 4 ? 44 : livello >= 2 ? 110 : 190} />

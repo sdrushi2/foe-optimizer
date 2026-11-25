@@ -100,6 +100,8 @@ const UI_STRINGS = {
   r2VisitedCity: { it: "Città visitata", en: "Visited city" },
   r2GrpPlayer: { it: "Giocatore", en: "Player" },
   r2NoCitiesYet: { it: "Nessuna città: importala con la bacchetta verde in alto.", en: "No cities yet: import one with the green magic wand at the top." },
+  // (25/11/2026) su telefono e tablet la bacchetta non c'è (utils/dispositivo.ts)
+  r2NoCitiesYetMobile: { it: "Nessuna città: da qui puoi caricare un file JSON della tua città (Importa da JSON). La bacchetta funziona solo dal computer.", en: "No cities yet: from here you can load a JSON file of your city (Import from JSON). The magic wand works only on a computer." },
   r2RenameCity: { it: "Nome della città", en: "City name" },
   r2RenameCityHint: { it: "Doppio clic per rinominare la città", en: "Double-click to rename the city" },
   r2DeleteCity: { it: "Elimina", en: "Delete" },
@@ -690,6 +692,10 @@ const UI_STRINGS = {
   r2PlNoSource: {
     it: "Scegli la città da ottimizzare: importa una città con la bacchetta oppure carica un file JSON con \"Importa JSON\".",
     en: "Choose the city to optimize: import a city with the magic wand or load a JSON file with \"Import JSON\".",
+  },
+  r2PlNoSourceMobile: {
+    it: "Scegli la città da ottimizzare: carica un file JSON con \"Importa JSON\" (la bacchetta funziona solo dal computer).",
+    en: "Choose the city to optimize: load a JSON file with \"Import JSON\" (the magic wand works only on a computer).",
   },
   r2AllyFragments: { it: "Frammenti", en: "Fragments" },
   r2AllyFragmentsTitle: { it: "Mostra gli alleati di cui hai solo frammenti", en: "Show allies you only have fragments of" },
@@ -2417,6 +2423,14 @@ const UI_STRINGS = {
   noInventoryImportedYet: {
     it: "Nessun inventario importato. Usa la bacchetta magica in alto a sinistra",
     en: "No inventory imported yet. Use the magic wand in the top left",
+  },
+  noCityImportedYetMobile: {
+    it: "Nessuna città importata. Da qui puoi caricare un file JSON della tua città dal selettore delle città (Importa da JSON); la bacchetta magica funziona solo dal computer",
+    en: "No city imported yet. From here you can load a JSON file of your city from the city selector (Import from JSON); the magic wand works only on a computer",
+  },
+  noInventoryImportedYetMobile: {
+    it: "Nessun inventario importato. L'inventario arriva con la bacchetta magica, che funziona solo dal computer",
+    en: "No inventory imported yet. The inventory comes with the magic wand, which works only on a computer",
   },
   noImportedYetSuffix: {
     it: "per importare i tuoi dati da Forge of Empires.",
