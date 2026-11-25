@@ -1,6 +1,11 @@
 # Novità di FoE Optimizer
 
 ## Versione 2.028 (25/11/2026)
+### Novità
+- Insediamenti (Pirati e Mughal): la legenda degli edifici è una tabella con le colonne Dimensioni, Popolazione, Diplomazia, valuta (Dobloni o Rupie: produzione per edificio, con tutte le durate passando il mouse, oppure il costo) e quantità. Accanto ad AREA e POP ci sono anche i Dobloni dei Pirati, come le Rupie dei Mughal
+- Insediamenti: nuovo pulsante Mughal accanto a Pirati, con la stessa mappa dei Pirati: import con la bacchetta (dall'insediamento aperto nel gioco), Ambasciata da spostare, espansioni da aggiungere e togliere (solo contigue, con i loro ostacoli), ostacoli, edifici da aggiungere e spostare, AREA e POP, e accanto le Rupie dell'insediamento (dall'import) con quanto costano i Sentieri aggiunti e quante ne restano. Il calcolo automatico per ora c'è solo per i Pirati: nei Mughal gli edifici chiedono la strada. Se importi un insediamento nella scheda sbagliata, il tool ti dice quale aprire
+- Insediamenti, per chi prova l'estensione FoE Optimizer Bridge (beta): l'insediamento si aggiorna da solo mentre giochi, senza bacchetta. Con la scheda Insediamenti aperta, ogni volta che sposti, aggiungi o togli qualcosa nell'insediamento del gioco la mappa, AREA, POP e le Rupie (o i Dobloni) si aggiornano in un paio di secondi. Si prende l'insediamento del mondo della città selezionata. Se nel tool hai già fatto modifiche tue, non vengono cancellate: compare un avviso con il pulsante Aggiorna
+
 ### Aggiornamenti
 - Da telefono e tablet (Android, iPhone, iPad) la bacchetta magica e l'indicatore del collegamento non compaiono più in alto, perché lì non possono funzionare: resta più spazio per il resto. I messaggi che prima dicevano di usare la bacchetta ora suggeriscono di caricare un file JSON della città
 

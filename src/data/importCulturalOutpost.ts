@@ -13,15 +13,43 @@ import { parseNumberPair } from "./piratiBuildings";
 // Dimensione di un blocco di espansione (celle), stessa costante di data/piratiBuildings.ts.
 const BLOCK_SIZE = 4;
 
-// I 5 blocchi sbloccati di base, in coordinate blocco del TOOL. Da tenere
-// sincronizzati con BASE_UNLOCKED_BLOCK_KEYS in data/piratiBuildings.ts: sono l'ancora dell'offset.
-const TOOL_BASE_BLOCK_KEYS = ["0:3", "0:4", "1:2", "1:3", "1:4"];
+/**
+ * Cosa cambia da un insediamento all'altro nell'import (25/11/2026: Pirati e Mughal,
+ * vedi data/insediamenti.ts). Senza configurazione valgono i Pirati.
+ */
+export interface ImportaConfig {
+  /** cityentity_id del municipio (l'ancora dell'insediamento). */
+  municipio: string;
+  /** Ostacoli (1×2 o 2×1) e quale dei due è verticale (1 colonna, 2 righe). */
+  ostacoli: string[];
+  ostacoloVerticale: string;
+  /** Entità fuori griglia o non piazzabili come edifici: ignorate. */
+  ignorati: string[];
+  /** Blocchi di base in coordinate blocco del TOOL ("riga:colonna"). */
+  baseBlocchi: string[];
+  /** Tutti i blocchi possibili: serve all'ancora "generica". */
+  blocchiPermessi?: string[];
+  /**
+   * "pirati": la regola storica (riga più in alto e, in quella riga, il blocco più a
+   * sinistra; vale perché nei Pirati nessuna espansione sta sopra la base).
+   * "generica": l'unico spostamento per cui tutta la base è aperta e tutte le aree
+   * cadono dentro la mappa (per gli insediamenti con espansioni su ogni lato).
+   */
+  ancora: "pirati" | "generica";
+}
 
-// cityentity_id non gestiti dal solver di piazzamento (fuori griglia/non piazzabili
-// come edifici normali): vengono ignorati durante l'import.
-const IGNORED_CITYENTITY_IDS = new Set(["V_Pirates_Blackmarket", "Y_Pirates_Ship1"]);
-
-const IMPEDIMENT_CITYENTITY_IDS = new Set(["I_Pirates_Impediment1", "I_Pirates_Impediment2"]);
+// I 5 blocchi sbloccati di base dei Pirati, in coordinate blocco del TOOL (uguali a
+// BASE_UNLOCKED_BLOCK_KEYS in data/piratiBuildings.ts): sono l'ancora dell'offset.
+const PIRATI: ImportaConfig = {
+  municipio: "H_Pirates_Townhall",
+  ostacoli: ["I_Pirates_Impediment1", "I_Pirates_Impediment2"],
+  ostacoloVerticale: "I_Pirates_Impediment1",
+  // cityentity_id non gestiti dal solver di piazzamento (fuori griglia/non piazzabili
+  // come edifici normali): vengono ignorati durante l'import.
+  ignorati: ["V_Pirates_Blackmarket", "Y_Pirates_Ship1"],
+  baseBlocchi: ["0:3", "0:4", "1:2", "1:3", "1:4"],
+  ancora: "pirati",
+};
 
 type ImportedObstacleCell = { row: number; col: number };
 type ImportedBuildingPlacement = { cityentityId: string; row: number; col: number };
@@ -84,8 +112,12 @@ export type ImportResult = {
  */
 export function importCulturalOutpostPayload(
   payload: BookmarkletPirateOutpostData,
-  known: Map<string, string>
+  known: Map<string, string>,
+  cfg: ImportaConfig = PIRATI
 ): ImportResult {
+  const TOOL_BASE_BLOCK_KEYS = cfg.baseBlocchi;
+  const IGNORED_CITYENTITY_IDS = new Set(cfg.ignorati);
+  const IMPEDIMENT_CITYENTITY_IDS = new Set(cfg.ostacoli);
   // Il ramo 'cultural_outpost' del bookmarklet porta `_v` solo dalla v4 in poi
   // (vedi commento v4 in bookmarklet.ts): un payload senza `_v` viene da un
   // bookmarklet v3.1 "vecchio". Controllo PRIMA di ogni altra validazione,
@@ -122,7 +154,7 @@ export function importCulturalOutpostPayload(
   // questo controllo l'import "riusciva" con un municipio di fallback e tutti gli
   // edifici scartati come non riconosciuti; la fazione si legge dal prefisso del
   // cityentity_id (es. "H_Vikings_Townhall" -> "Vikings").
-  const hasPiratesTownhall = entities.some((entity) => entity.cityentity_id === "H_Pirates_Townhall");
+  const hasPiratesTownhall = entities.some((entity) => entity.cityentity_id === cfg.municipio);
   if (!hasPiratesTownhall) {
     const foreignTownhall = entities.find((entity) => /^H_[A-Za-z]+_Townhall$/.test(entity.cityentity_id));
     const factionMatch = foreignTownhall?.cityentity_id.match(/^H_([A-Za-z]+)_Townhall$/);
@@ -161,8 +193,19 @@ export function importCulturalOutpostPayload(
     ...toolBaseBlocks.filter((b) => b.row === toolMinRowBlock).map((b) => b.col)
   );
 
-  const rowBlockOffset = gameMinRowBlock - toolMinRowBlock;
-  const colBlockOffset = gameTopRowMinColBlock - toolTopRowMinColBlock;
+  let rowBlockOffset = gameMinRowBlock - toolMinRowBlock;
+  let colBlockOffset = gameTopRowMinColBlock - toolTopRowMinColBlock;
+  if (cfg.ancora === "generica") {
+    // si prova ad allineare ogni area aperta al primo blocco della base: vale lo
+    // spostamento per cui tutta la base risulta aperta e nessuna area esce dalla mappa
+    const aperte = new Set(gameAreaBlocks.map((b) => `${b.rowBlock}:${b.colBlock}`));
+    const permessi = new Set(cfg.blocchiPermessi ?? []);
+    const primo = toolBaseBlocks.reduce((m, b) => (b.row < m.row || (b.row === m.row && b.col < m.col) ? b : m), toolBaseBlocks[0]!);
+    const trovato = gameAreaBlocks.map((a) => ({ dr: a.rowBlock - primo.row, dc: a.colBlock - primo.col })).find(({ dr, dc }) =>
+      toolBaseBlocks.every((b) => aperte.has(`${b.row + dr}:${b.col + dc}`))
+      && gameAreaBlocks.every((a) => !permessi.size || permessi.has(`${a.rowBlock - dr}:${a.colBlock - dc}`)));
+    if (trovato) { rowBlockOffset = trovato.dr; colBlockOffset = trovato.dc; }
+  }
 
   // 2. Espansioni: blocchi del payload non presenti nei 5 di base.
   const baseBlockKeySet = new Set(TOOL_BASE_BLOCK_KEYS);
@@ -202,7 +245,7 @@ export function importCulturalOutpostPayload(
   const expandObstacle = (entity: BookmarkletPirateEntity, topLeft: { row: number; col: number }) => {
     // Il payload non porta width/length per gli Impediment: l'orientamento si deduce
     // dall'id (Impediment1 = 1x2 verticale, Impediment2 = 2x1 orizzontale).
-    const isVertical = entity.cityentity_id === "I_Pirates_Impediment1";
+    const isVertical = entity.cityentity_id === cfg.ostacoloVerticale;
     if (isVertical) {
       obstacleCells.push({ row: topLeft.row, col: topLeft.col });
       obstacleCells.push({ row: topLeft.row + 1, col: topLeft.col });
@@ -217,7 +260,7 @@ export function importCulturalOutpostPayload(
 
     const cell = toToolCell(entity.x, entity.y);
 
-    if (entity.cityentity_id === "H_Pirates_Townhall") {
+    if (entity.cityentity_id === cfg.municipio) {
       townhall = cell;
       return;
     }

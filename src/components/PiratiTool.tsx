@@ -19,11 +19,16 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 // file): Wand2 è importata da lucide-react per riusare l'IDENTICA immagine della
 // bacchetta magica mostrata come CTA in App.tsx (tab Città/Inventario, "Nessuna città
 // importata...") nella guida rapida in fondo al planner — stesso font/stile, stessa icona.
-import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, type LucideIcon } from "lucide-react";
+import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, type LucideIcon } from "lucide-react";
 import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
 import { isLegacyBookmarkletPayload, readPayloadDiagnostics, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
 import { importCulturalOutpostPayload, ImportCulturalOutpostFailure } from "../data/importCulturalOutpost";
 import { t, type UiLang } from "../data/ui-strings";
+import { formatInt } from "../utils/format";
+import { INSEDIAMENTI, type IdInsediamento } from "../data/insediamenti";
+
+/** Id del municipio nei piazzamenti: uguale in ogni insediamento (vedi data/insediamenti.ts). */
+const ID_MUNICIPIO = "municipio";
 import {
   type BuildingType,
   type Placement,
@@ -33,19 +38,11 @@ import {
   storageCell,
   displayCell,
   BLOCK_SIZE,
-  BASE_BLOCK_ROWS,
-  BASE_BLOCK_COLS,
   CELL_SIZE_PX,
-  ALLOWED_BLOCK_KEYS,
-  ALLOWED_BLOCK_SET,
   DIRECTIONS,
   SMALL_CUTOFF,
   BIG_THRESHOLD,
   SOLVE_TIME_LIMIT_MS,
-  MUNICIPIO,
-  MUNICIPIO_INITIAL_PLACEMENT,
-  INITIAL_BUILDINGS,
-  INITIAL_PLACEMENTS,
   blockKey,
   cellKey,
   parseBlockKey,
@@ -53,8 +50,8 @@ import {
   displayToStorageCell,
   storageToDisplayCell,
   layoutStatus,
-  buildUnlockedBlockSet,
-  isRemovableExpansion,
+  buildUnlockedBlockSet as buildUnlockedBlockSetDa,
+  isRemovableExpansion as isRemovableExpansionDa,
 } from "../data/piratiBuildings";
 
 // Icone SVG inline (stroke, coerenti con lo stile FoE Optimizer: niente libreria
@@ -160,7 +157,7 @@ function shiftPlacements(list: Placement[], rowDelta: number, colDelta: number):
 function withoutLostPlacements(snapshot: SolvedSnapshot, isLost: (placement: Placement) => boolean): SolvedSnapshot | null {
   const lost = snapshot.placements.filter(isLost);
   if (lost.length === 0) return snapshot;
-  if (lost.some((placement) => placement.buildingId === MUNICIPIO.id)) return null;
+  if (lost.some((placement) => placement.buildingId === ID_MUNICIPIO)) return null;
   const lostCounts = new Map<string, number>();
   for (const placement of lost) {
     lostCounts.set(placement.buildingId, (lostCounts.get(placement.buildingId) ?? 0) + 1);
@@ -306,17 +303,40 @@ export type PiratiToolHandle = {
    *  dal chiamante). Restituisce l'esito per il messaggio da mostrare
    *  all'utente, sullo stesso modello di runImport/importMessage interni. */
   importFromClipboardText: (rawText: string) => { kind: "success" | "error"; text: string };
+  /** (25/11/2026) Ci sono modifiche fatte a mano dopo l'ultimo import (o dalla partenza)?
+   *  Il ponte importa da solo solo se no; altrimenti chiede con un avviso. */
+  haModifiche: () => boolean;
 };
 
 type PiratiToolProps = {
   uiLang: UiLang;
+  /** (25/11/2026) Quale insediamento: stessa mappa e stessi comandi, cambia la
+   *  configurazione (data/insediamenti.ts). Predefinito: Pirati. */
+  insediamento?: IdInsediamento;
   /** 2.0: i comandi (Calcolo, Espansioni) stanno nel nastro: PiratiTool
    *  consegna qui i suoi gruppi a ogni cambio di stato. */
   onNastro?: (gruppi: RibbonGroup[]) => void;
 };
 
-const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function PiratiTool({ uiLang, onNastro }, ref) {
+const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function PiratiTool({ uiLang, onNastro, insediamento = "pirati" }, ref) {
+  // configurazione dell'insediamento: stessi nomi delle costanti dei Pirati di prima,
+  // così il resto del componente non cambia
+  const cfg = INSEDIAMENTI[insediamento];
+  const MUNICIPIO = cfg.municipio;
+  const MUNICIPIO_INITIAL_PLACEMENT = cfg.municipioIniziale;
+  const INITIAL_BUILDINGS = cfg.edifici;
+  const INITIAL_PLACEMENTS: Placement[] = [{ buildingId: ID_MUNICIPIO, row: MUNICIPIO_INITIAL_PLACEMENT.row, col: MUNICIPIO_INITIAL_PLACEMENT.col, w: MUNICIPIO.width, h: MUNICIPIO.height }];
+  const ALLOWED_BLOCK_KEYS = cfg.blocchiPermessi;
+  const ALLOWED_BLOCK_SET = useMemo(() => new Set(cfg.blocchiPermessi), [cfg]);
+  const BASE_BLOCK_ROWS = cfg.baseRighe;
+  const BASE_BLOCK_COLS = cfg.baseColonne;
+  const buildUnlockedBlockSet = useCallback((e: Set<string>) => buildUnlockedBlockSetDa(e, cfg.baseBlocchi), [cfg]);
+  const isRemovableExpansion = useCallback((e: Set<string>, k: string) => isRemovableExpansionDa(e, k, cfg.baseBlocchi), [cfg]);
   const [buildings, setBuildings] = useState<BuildingType[]>(INITIAL_BUILDINGS);
+  // (25/11/2026) valuta dell'insediamento (Mughal: Rupie): saldo dall'import e prezzi per edificio
+  const [saldoValuta, setSaldoValuta] = useState<number | null>(cfg.valuta?.iniziale ?? null);
+  const [costiValuta, setCostiValuta] = useState<Record<string, number>>(() =>
+    Object.fromEntries(cfg.edifici.filter((b) => b.currency?.cost).map((b) => [b.id, b.currency!.cost!])));
   const [placements, setPlacements] = useState<Placement[]>(INITIAL_PLACEMENTS);
   const [obstacles, setObstacles] = useState<Set<string>>(new Set());
   const [expansions, setExpansions] = useState<Set<string>>(new Set());
@@ -435,7 +455,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     return () => observer.disconnect();
   }, []);
 
-  const unlockedBlocks = useMemo(() => buildUnlockedBlockSet(expansions), [expansions]);
+  const unlockedBlocks = useMemo(() => buildUnlockedBlockSet(expansions), [expansions, buildUnlockedBlockSet]);
   const unlockedBlockPositions = useMemo(() => Array.from(unlockedBlocks).map(parseBlockKey), [unlockedBlocks]);
 
   const candidateExpansionBlocks = useMemo(() => {
@@ -444,7 +464,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       if (unlockedBlocks.has(key)) return false;
       return DIRECTIONS.some((direction) => unlockedBlocks.has(blockKey(row + direction.row, col + direction.col)));
     });
-  }, [unlockedBlocks]);
+  }, [unlockedBlocks, ALLOWED_BLOCK_KEYS]);
 
   const displayBlockPositions = editMode === "add-expansion"
     ? [...unlockedBlockPositions, ...candidateExpansionBlocks]
@@ -501,7 +521,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       }
     }
     return keys;
-  }, [placements, minUnlockedBlockRow, minUnlockedBlockCol]);
+  }, [placements, minUnlockedBlockRow, minUnlockedBlockCol, MUNICIPIO.id]);
 
   const removableExpansionKeys = useMemo(() => {
     const removable = new Set<string>();
@@ -515,7 +535,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       }
     });
     return removable;
-  }, [expansions, importedExpansions, municipioBlockKeys]);
+  }, [expansions, importedExpansions, municipioBlockKeys, isRemovableExpansion]);
 
   const nonRemovableExpansionKeys = useMemo(() => {
     const blocked = new Set<string>();
@@ -829,9 +849,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
               const diag = readPayloadDiagnostics(payload);
               if (diag.warnings.includes("outpost")) {
                 const helper = [diag.helperName, diag.helperVersion].filter(Boolean).join(" ") || "?";
-                return t("piratiImportHelperUnsupported", uiLang, helper);
+                return t(cfg.testi.helperNonSupportato, uiLang, helper);
               }
-              return t("piratiImportVisitOutpostFirst", uiLang);
+              return t(cfg.testi.visitaPrima, uiLang);
             })()
           : t("piratiImportInvalidStructure", uiLang);
       const message = { kind: "error" as const, text };
@@ -846,7 +866,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
 
     let result;
     try {
-      result = importCulturalOutpostPayload(pirateOutpostPayload, known);
+      result = importCulturalOutpostPayload(pirateOutpostPayload, known, cfg.importa);
     } catch (error) {
       let text: string;
       if (error instanceof ImportCulturalOutpostFailure) {
@@ -860,10 +880,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         text = error.detail.code === "OUTDATED_BOOKMARKLET"
           ? t("piratiImportOutdatedBookmarklet", uiLang)
           : error.detail.code === "NO_AREAS"
-            ? t("piratiImportVisitOutpostFirst", uiLang)
+            ? t(cfg.testi.visitaPrima, uiLang)
             : error.detail.code === "UNSUPPORTED_FACTION"
               ? t("piratiImportUnsupportedFaction", uiLang, error.detail.faction)
-              : t("piratiImportNoTownhall", uiLang);
+              : t(cfg.testi.nessunMunicipio, uiLang);
       } else {
         text = t("piratiImportUnknownError", uiLang);
       }
@@ -940,6 +960,19 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     // invece di lasciare lo stato "failed" senza alcun ripristino possibile.
     lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
     setHasImportedCity(true);
+    // valuta dell'insediamento: saldo dalle risorse della città, prezzi dalle definizioni del gioco
+    if (cfg.valuta) {
+      const v = cfg.valuta;
+      const p = payload as { resources?: Record<string, unknown>; CityEntities?: Record<string, { requirements?: { cost?: { resources?: Record<string, unknown> } } }> };
+      const saldo = p.resources?.[v.risorsa];
+      setSaldoValuta(typeof saldo === "number" ? saldo : null);
+      const costi: Record<string, number> = Object.fromEntries(INITIAL_BUILDINGS.filter((b) => b.currency?.cost).map((b) => [b.id, b.currency!.cost!]));
+      for (const b of INITIAL_BUILDINGS) {
+        const c = b.cityentityId ? p.CityEntities?.[b.cityentityId]?.requirements?.cost?.resources?.[v.risorsa] : undefined;
+        if (typeof c === "number") costi[b.id] = c;
+      }
+      setCostiValuta(costi);
+    }
 
     const unrecognizedNote = result.unrecognizedCityentityIds.length > 0
       ? t("piratiImportUnrecognizedNote", uiLang, result.unrecognizedCityentityIds.length, result.unrecognizedCityentityIds.join(", "))
@@ -954,6 +987,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
 
   useImperativeHandle(ref, () => ({
     importFromClipboardText: (rawText: string) => runImport(rawText),
+    haModifiche: () => hasChangesFromBaseline,
   }));
 
   // Il toast di esito import sparisce da solo dopo qualche secondo, non
@@ -1563,7 +1597,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       setIsSolving(false);
       stopSolvingRef.current = false;
     }
-  }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles, placements, uiLang]);
+  }, [buildings, gridCols, gridMask, gridRows, isSolving, obstacles, placements, uiLang, MUNICIPIO, MUNICIPIO_INITIAL_PLACEMENT]);
 
   const updateCount = async (id: string, delta: number) => {
     if (isSolving) return;
@@ -2027,6 +2061,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             setImportedExpansions(new Set());
             setImportedObstacleCells(new Set());
             setBaseline(emptyBaseline);
+            setSaldoValuta(cfg.valuta?.iniziale ?? null);
             // Stesso motivo dell'Undo sopra.
             setEditMode("obstacle");
             // Come per un nuovo import: lo stato vuoto è "risolto" per definizione
@@ -2053,10 +2088,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     const a = () => azioniRef.current;
     const gruppi: RibbonGroup[] = [
       { id: "pi-calcolo", label: L("r2GrpCalc"), icon: Play, priority: 3, rows: [[
-        isSolving
+        // (25/11/2026) Risolvi e Auto solo dove il solver vale (Mughal: strade e catena, non ancora)
+        ...(!cfg.solver ? [] : [isSolving
           ? b("risolvi", Square, L("r2PiStop"), () => void a().solve(), { active: true, danger: true })
           : b("risolvi", Play, L("r2PiSolve"), () => void a().solve(), { disabled: risolviBloccato }),
-        b("auto", Repeat, L("r2PiAuto"), () => setAutoMode(v => !v), { active: autoMode, disabled: isSolving, title: L("piratiAutoTitle") }),
+        b("auto", Repeat, L("r2PiAuto"), () => setAutoMode(v => !v), { active: autoMode, disabled: isSolving, title: L("piratiAutoTitle") })]),
         b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving, title: L("piratiUndoTitle") }),
         b("reset", Trash2, L("r2PiReset"), () => a().azzera(), { disabled: !hasImportedCity || isSolving, title: L("piratiResetTitle"), danger: true }),
       ]] },
@@ -2073,15 +2109,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firmaNastro]);
 
-  const buildingCategories = [
-    { title: t("piratiCategoryResidential", uiLang), ids: ["amaca", "capanno", "baracca"] },
-    { title: t("piratiCategoryGoods", uiLang), ids: ["pescatore", "spezie", "rum", "cannoni"] },
-    // Ex unico gruppo "Diplomazia", separato in due (agosto 2026, su richiesta
-    // esplicita): le tre imbarcazioni producono anche Dobloni oltre a Diplomazia
-    // (pop negativo più alto), i quattro moli danno solo Diplomazia pura.
-    { title: t("piratiCategoryDiplomacyDoubloons", uiLang), ids: ["imbarcazione", "brigantino", "galeone"] },
-    { title: t("piratiCategoryDiplomacyOnly", uiLang), ids: ["molo", "molo_lungo", "molo_largo", "grande_molo"] },
-  ];
+  // categorie dell'insediamento (data/insediamenti.ts)
+  const buildingCategories = cfg.categorie.map((c) => ({ title: t(c.titolo, uiLang), ids: c.ids }));
 
   return (
     <div className="h-full min-h-0 flex flex-col font-sans">
@@ -2142,6 +2171,45 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             {totalPopRequired}/{totalPopProvided}
           </span>
         </div>
+
+        {/* (25/11/2026) Valuta dell'insediamento (Mughal: Rupie): saldo dall'import, spesa per
+            gli edifici aggiunti rispetto all'import (solo quelli con un prezzo nella valuta) e
+            quanto resta; rosso se non basta. */}
+        {cfg.valuta && (() => {
+          const v = cfg.valuta;
+          // punto delle migliaia come nel resto del tool (anche 6.200: toLocaleString lo omette sotto 10.000)
+          const n = formatInt;
+          const contiImport = new Map(baseline.buildings.map((b) => [b.id, b.count]));
+          const spesa = buildings.reduce((s, b) => s + Math.max(0, b.count - (contiImport.get(b.id) ?? 0)) * (costiValuta[b.id] ?? 0), 0);
+          const resto = saldoValuta === null ? null : saldoValuta - spesa;
+          const rosso = resto !== null && resto < 0;
+          return (
+            <div
+              className={cx("flex h-7 items-center gap-1.5 rounded border px-2.5",
+                rosso ? "border-red-500/60 bg-red-500/15" : "border-amber-400/60 bg-amber-500/15")}
+              title={saldoValuta === null ? t("mughalRupeesNoImport", uiLang)
+                : t(!hasImportedCity && v.titoloIniziale ? v.titoloIniziale : v.titolo, uiLang, n(saldoValuta), n(spesa), n(resto ?? 0))}
+            >
+              <span className="font-semibold uppercase text-amber-200">{t(v.etichetta, uiLang)}</span>
+              <span className={cx("font-mono font-bold", rosso ? "text-red-400" : "text-amber-300")}>
+                {saldoValuta === null ? "—" : spesa > 0 ? `${n(saldoValuta)} − ${n(spesa)} = ${n(resto ?? 0)}` : n(saldoValuta)}
+              </span>
+            </div>
+          );
+        })()}
+
+        {/* (25/11/2026) Insediamento senza calcolo automatico (Mughal): avviso ben visibile,
+            su una riga sua (basis-full nella riga a capo delle pillole), che il tool per ora
+            disegna e conta ma non calcola ed è all'inizio dello sviluppo. */}
+        {!cfg.solver && (
+          <div role="note" className="flex basis-full items-center gap-2 rounded-md border border-violet-400/50 bg-violet-500/15 px-3 py-1.5 text-[12px] text-violet-100">
+            <Construction size={16} className="shrink-0 text-violet-300" aria-hidden="true" />
+            <span>
+              <strong className="font-semibold text-violet-200">{t("insediamentoInSviluppoTitolo", uiLang)}</strong>{" "}
+              {t("insediamentoInSviluppoTesto", uiLang)}
+            </span>
+          </div>
+        )}
 
         {/* 2.0: +EXP / −EXP sono nel nastro (gruppo Espansioni). */}
 
@@ -2210,7 +2278,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           (il contenuto ci sta già tutto in altezza) — nessuna regressione
           lì, e su mobile landscape resta sempre disponibile come rete di
           sicurezza. */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 sm:grid-cols-[minmax(0,270px)_1fr] gap-2 pt-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 grid grid-cols-1 sm:grid-cols-[minmax(0,410px)_1fr] gap-2 pt-1 overflow-y-auto">
         {/* Colonna destra: il planner, cioè la griglia di piazzamento.
             h-full/min-h-0 sm:only: sotto 'sm' (stack verticale) il planner
             occupa l'altezza naturale del contenuto, come la colonna edifici
@@ -2430,10 +2498,13 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       ...buildingColorStyle(building),
                     }}
                   >
-                    <span className="text-xl md:text-2xl drop-shadow-md pointer-events-none">{building.icon}</span>
-                    <span className="text-[8px] md:text-[10px] font-black text-black/60 uppercase tracking-tighter text-center px-1 overflow-hidden whitespace-nowrap pointer-events-none">
-                      {t(building.shortNameKey, uiLang)}
-                    </span>
+                    {/* senza icona (strade Mughal: un solo tipo) la casella resta vuota, solo il colore */}
+                    {building.icon && <span className="text-xl md:text-2xl drop-shadow-md pointer-events-none">{building.icon}</span>}
+                    {building.icon && (
+                      <span className="text-[8px] md:text-[10px] font-black text-black/60 uppercase tracking-tighter text-center px-1 overflow-hidden whitespace-nowrap pointer-events-none">
+                        {t(building.shortNameKey, uiLang)}
+                      </span>
+                    )}
                     {/* Il corpo dell'edificio serve solo a trascinare (sposta/scambia):
                         l'eliminazione passa esclusivamente da questa X, visibile solo in
                         hover, per evitare rimozioni accidentali con un click distratto.
@@ -2500,10 +2571,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       ...buildingColorStyle(building),
                     }}
                   >
-                    <span className="text-xl md:text-2xl drop-shadow-md">{building.icon}</span>
-                    <span className="text-[8px] md:text-[10px] font-black text-black/60 uppercase tracking-tighter text-center px-1 overflow-hidden whitespace-nowrap">
-                      {t(building.shortNameKey, uiLang)}
-                    </span>
+                    {building.icon && <span className="text-xl md:text-2xl drop-shadow-md">{building.icon}</span>}
+                    {building.icon && (
+                      <span className="text-[8px] md:text-[10px] font-black text-black/60 uppercase tracking-tighter text-center px-1 overflow-hidden whitespace-nowrap">
+                        {t(building.shortNameKey, uiLang)}
+                      </span>
+                    )}
                   </div>
                 );
               })()}
@@ -2627,7 +2700,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
               toolbar, incorporato nel flusso della frase. */}
           {!hasImportedCity && (
             <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 mt-2 text-slate-400 font-semibold text-xs shrink-0">
-              <span>{t("piratiImportHowToHintPrefix", uiLang)}</span>
+              <span>{t(cfg.testi.comeImportare, uiLang)}</span>
               <span
                 className="relative inline-flex items-center justify-center w-7 h-7 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 shrink-0"
                 aria-hidden="true"
@@ -2663,88 +2736,123 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         <div className="order-1 min-w-0 mt-1 sm:mt-0 sm:h-full sm:min-h-0 sm:overflow-y-auto">
           <section
             className={cx(
-              "rounded border p-2.5 space-y-3 transition-colors",
+              "rounded border p-2 transition-colors",
               hasStatsWarning ? "bg-red-950/20 border-red-500/30" : "bg-slate-900/60 border-slate-700/60"
             )}
           >
-            {buildingCategories.map((category) => {
-              const categoryBuildings = category.ids
-                .map((id) => buildings.find((building) => building.id === id))
-                .filter((building): building is BuildingType => Boolean(building));
-
+            {/* (25/11/2026) Legenda come tabella unica: Edificio, Dim., Pop, Dipl., valuta
+                (produzione per edificio o costo), N. con − / +. I gruppi sono righe di titolo. */}
+            {(() => {
+              const valuta = cfg.valuta ? (t(cfg.valuta.etichetta, uiLang) as string) : null;
+              const durata = (sec: number) => (sec < 3600 ? `${Math.round(sec / 60)}m` : `${Math.round(sec / 3600)}h`);
+              const trattino = <span className="text-slate-600">–</span>;
               return (
-                <div key={category.title} className="space-y-1">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500 px-0.5">{category.title}</h3>
-                  <div className="rounded border border-slate-700/60 bg-slate-800/40 divide-y divide-slate-700/60">
-                    {categoryBuildings.map((building) => {
-                      // canEditGrid (non solo !isSolving): aggiungere un edificio può
-                      // innescare l'auto-piazzamento (findAutoPlacement), che legge la
-                      // griglia in coordinate storage — va quindi bloccato fuori da
-                      // editMode 'obstacle' esattamente come le altre azioni sulla griglia.
-                      const canAddAnother =
-                        canEditGrid &&
-                        totalArea + building.width * building.height <= maxArea;
-
-                      return (
-                        <div key={building.id} className="flex items-center justify-between gap-1.5 px-2 py-1 text-xs">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-sm shrink-0">{building.icon}</span>
-                            <span className="text-white font-medium truncate">{t(building.nameKey, uiLang)}</span>
-                            <span className="text-slate-500 shrink-0 text-[11px]">
-                              ({building.width}x{building.height}
-                              {building.pop !== 0 && (
-                                <>
-                                  ,<span
+                <table className="w-full table-fixed border-collapse text-xs">
+                  <colgroup>
+                    <col />
+                    <col style={{ width: 38 }} />
+                    <col style={{ width: 40 }} />
+                    <col style={{ width: 40 }} />
+                    {valuta && <col style={{ width: 66 }} />}
+                    <col style={{ width: 66 }} />
+                  </colgroup>
+                  <thead>
+                    <tr className="text-[10.5px] text-slate-500">
+                      <th className="px-1 pb-1 text-left font-medium">{t("piratiColBuilding", uiLang)}</th>
+                      <th className="px-1 pb-1 text-right font-medium">{t("piratiColSize", uiLang)}</th>
+                      <th className="px-1 pb-1 text-right font-medium">{t("piratiColPop", uiLang)}</th>
+                      <th className="px-1 pb-1 text-right font-medium">{t("piratiColDiplomacy", uiLang)}</th>
+                      {valuta && <th className="px-1 pb-1 text-right font-medium" title={t("piratiColCurrencyTitle", uiLang, valuta) as string}>{valuta}</th>}
+                      <th className="px-1 pb-1 text-right font-medium">{t("piratiColCount", uiLang)}</th>
+                    </tr>
+                  </thead>
+                  {buildingCategories.map((category) => {
+                    const categoryBuildings = category.ids
+                      .map((id) => buildings.find((building) => building.id === id))
+                      .filter((building): building is BuildingType => Boolean(building));
+                    return (
+                      <tbody key={category.title}>
+                        <tr>
+                          <td colSpan={valuta ? 6 : 5} className="px-1 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">{category.title}</td>
+                        </tr>
+                        {categoryBuildings.map((building) => {
+                          // canEditGrid (non solo !isSolving): aggiungere un edificio può
+                          // innescare l'auto-piazzamento (findAutoPlacement), che legge la
+                          // griglia in coordinate storage — va quindi bloccato fuori da
+                          // editMode 'obstacle' esattamente come le altre azioni sulla griglia.
+                          const canAddAnother =
+                            canEditGrid &&
+                            totalArea + building.width * building.height <= maxArea;
+                          const prod = building.currency?.prod;
+                          const costo = costiValuta[building.id] ?? building.currency?.cost;
+                          const ultima = prod && prod.length ? prod[prod.length - 1]! : null;
+                          return (
+                            <tr key={building.id} className="border-t border-slate-700/50">
+                              <td className="px-1 py-1">
+                                <div className="flex min-w-0 items-center gap-1.5">
+                                  {building.icon
+                                    ? <span className="shrink-0 text-sm">{building.icon}</span>
+                                    // senza icona: un quadratino del colore dell'edificio, come sulla mappa
+                                    : <span className="ml-0.5 mr-0.5 inline-block h-3 w-3 shrink-0 rounded-sm border" style={buildingColorStyle(building)} aria-hidden="true" />}
+                                  <span className="truncate font-medium text-white">{t(building.nameKey, uiLang)}</span>
+                                </div>
+                              </td>
+                              <td className="px-1 py-1 text-right font-mono text-[11px] text-slate-400">{building.width}×{building.height}</td>
+                              <td className={cx("px-1 py-1 text-right font-mono text-[11px]", building.pop > 0 ? "text-green-400" : building.pop < 0 ? "text-red-400" : "")}>
+                                {building.pop > 0 ? `+${building.pop}` : building.pop < 0 ? building.pop : trattino}
+                              </td>
+                              <td className="px-1 py-1 text-right font-mono text-[11px] text-sky-300">
+                                {building.diplomacy ? `+${building.diplomacy}` : trattino}
+                              </td>
+                              {valuta && (
+                                <td className="px-1 py-1 text-right font-mono text-[11px]"
+                                  title={prod && prod.length > 1 ? (t("piratiProdOptionsTitle", uiLang, prod.map(([q, sec]) => `${durata(sec)} ${formatInt(q)}`).join(" · ")) as string) : undefined}>
+                                  {costo ? <span className="text-red-400">−{formatInt(costo)}</span>
+                                    : ultima ? <span className="text-amber-300">{formatInt(ultima[0])}<span className="text-slate-500">/{durata(ultima[1])}</span></span>
+                                    : trattino}
+                                </td>
+                              )}
+                              <td className="px-1 py-1">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    onClick={() => updateCount(building.id, -1)}
+                                    // isSolving: manca dal solo count<=0 usato altrove (updateCount
+                                    // già ignora il click con isSolving, ma senza disabled qui il
+                                    // pulsante restava visivamente cliccabile durante una ricerca).
+                                    disabled={building.count <= 0 || isSolving}
                                     className={cx(
-                                      "font-medium ml-0.5",
-                                      building.pop > 0 ? "text-green-400" : "text-red-400"
+                                      "w-5 h-5 flex items-center justify-center rounded text-xs transition-colors",
+                                      building.count <= 0 || isSolving
+                                        ? "bg-slate-800 text-slate-600 cursor-not-allowed"
+                                        : "bg-slate-700 hover:bg-slate-600 text-white"
                                     )}
                                   >
-                                    {building.pop > 0 ? `+${building.pop}` : building.pop}
-                                  </span>
-                                </>
-                              )}
-                              )
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              onClick={() => updateCount(building.id, -1)}
-                              // isSolving: manca dal solo count<=0 usato altrove (updateCount
-                              // già ignora il click con isSolving, ma senza disabled qui il
-                              // pulsante restava visivamente cliccabile durante una ricerca,
-                              // dando l'impressione di un tool bloccato/non responsivo).
-                              disabled={building.count <= 0 || isSolving}
-                              className={cx(
-                                "w-5 h-5 flex items-center justify-center rounded text-xs transition-colors",
-                                building.count <= 0 || isSolving
-                                  ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-                                  : "bg-slate-700 hover:bg-slate-600 text-white"
-                              )}
-                            >
-                              -
-                            </button>
-                            <span className="w-4 text-center font-mono font-bold text-amber-400 text-xs">{building.count}</span>
-                            <button
-                              onClick={() => updateCount(building.id, 1)}
-                              disabled={!canAddAnother}
-                              className={cx(
-                                "w-5 h-5 flex items-center justify-center rounded text-xs transition-colors",
-                                canAddAnother
-                                  ? "bg-slate-700 hover:bg-slate-600 text-white"
-                                  : "bg-slate-800 text-slate-600 cursor-not-allowed"
-                              )}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                                    -
+                                  </button>
+                                  <span className="w-5 text-center font-mono font-bold text-amber-400 text-xs">{building.count}</span>
+                                  <button
+                                    onClick={() => updateCount(building.id, 1)}
+                                    disabled={!canAddAnother}
+                                    className={cx(
+                                      "w-5 h-5 flex items-center justify-center rounded text-xs transition-colors",
+                                      canAddAnother
+                                        ? "bg-slate-700 hover:bg-slate-600 text-white"
+                                        : "bg-slate-800 text-slate-600 cursor-not-allowed"
+                                    )}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    );
+                  })}
+                </table>
               );
-            })}
+            })()}
           </section>
         </div>
       </div>

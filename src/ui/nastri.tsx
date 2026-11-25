@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_100, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni, iconBeniOro } from "../assets/icons";
+import { allies_100, badge_mughals, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni, iconBeniOro } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -74,7 +74,7 @@ export interface ContestoNastri {
     gruppi: RibbonGroup[];
   };
   /** Scheda Insediamenti: gruppi dati dallo strumento Pirati (Calcolo, Espansioni). */
-  insediamenti: { gruppi: RibbonGroup[] };
+  insediamenti: { gruppi: RibbonGroup[]; scelto: "pirati" | "mughal"; scegli: (s: "pirati" | "mughal") => void };
   /** Giocatore della città selezionata (null senza città). */
   giocatore: DatiGiocatore | null;
   /** Export CSV degli edifici selezionati (tabelle edifici). */
@@ -347,9 +347,13 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
           active: c.pergamene.attivo && c.pergamene.n !== null, onClick: c.pergamene.cambia, disabled: c.pergamene.n === null },
       ]] }];
     case "insediamenti":
-      // Tipo di insediamento: per ora solo i Pirati (gli altri arriveranno).
+      // Tipo di insediamento: Pirati e Mughal (25/11/2026: stesso planner, configurazione
+      // diversa). I gruppi del nastro sono quelli del planner dell'insediamento scelto.
       return [{ id: "insediamento", label: L("r2GrpSettlement"), icon: Anchor, priority: 1, rows: [[
-        { kind: "button", id: "pirati", icon: Anchor, img: badge_pirates, imgReale: true, label: L("r2Pirates"), active: true },
+        { kind: "button", id: "pirati", icon: Anchor, img: badge_pirates, imgReale: true, label: L("r2Pirates"),
+          active: c.insediamenti.scelto === "pirati", onClick: () => c.insediamenti.scegli("pirati") },
+        { kind: "button", id: "mughal", icon: Anchor, img: badge_mughals, imgReale: true, label: L("r2Mughals"),
+          active: c.insediamenti.scelto === "mughal", onClick: () => c.insediamenti.scegli("mughal") },
       ]] }, ...c.insediamenti.gruppi];
     case "planner": {
       const p = c.planner;

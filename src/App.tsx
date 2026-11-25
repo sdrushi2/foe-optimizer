@@ -46,7 +46,7 @@ import type { CittaEsterna } from "./planner/PlannerView";
 import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/cityMapJson";
 import { cittaDaJson } from "./data/cittaDaJson";
 import { senzaEstensioni } from "./utils/dispositivo";
-import { definizioniDalPonte, improntaDati, pacchettiPonte, pacchettoPonte, PONTE_ULTIMO_KEY, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
+import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, PONTE_ULTIMO_KEY, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
 
 /** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
 const NESSUN_ID = new Set<string>();
@@ -110,11 +110,15 @@ const PannelloPergamene = lazy(() => import("./components/PannelloPergamene"));
 /** Insediamento dei Pirati: il modulo si scarica al primo montaggio (cioè alla prima
  *  apertura della scheda, vedi `piratiAperto`). Non con `lazy`: quello di Preact non
  *  passa il `ref`, che serve alla bacchetta (importFromClipboardText). */
-const PiratiTool = forwardRef<PiratiToolHandle, { uiLang: UiLang; onNastro: (g: RibbonGroup[]) => void }>(function PiratiToolPigro(props, ref) {
+const PiratiTool = forwardRef<PiratiToolHandle, { uiLang: UiLang; onNastro: (g: RibbonGroup[]) => void; insediamento?: "pirati" | "mughal" }>(function PiratiToolPigro(props, ref) {
   const [C, setC] = useState<typeof PiratiToolModulo | null>(null);
   useEffect(() => { void import("./components/PiratiTool").then(m => setC(() => m.default)); }, []);
   return C ? <C ref={ref} {...props} /> : null;
 });
+
+const INSEDIAMENTO_KEY = "foe_global_insediamento_scelto";
+/** Impronta dell'ultimo insediamento importato dal ponte, per mondo e civiltà. */
+const PONTE_INSEDIAMENTO_KEY = "foe_global_ponte_insediamento_";
 
 const { buildings: buildingsCsv, allies: alliesCsv, events: eventsCsv, kit: kitData } = datiGioco();
 const BUILDINGS_FROM_CSV: Building[] = parseBuildingsCsv(buildingsCsv);
@@ -4194,6 +4198,14 @@ export default function App() {
   // invece di creare un profilo città/inventario — un solo pulsante bacchetta
   // in tutta l'app, nessuna icona duplicata dentro PiratiTool.
   const piratiToolRef = useRef<PiratiToolHandle | null>(null);
+  /** (25/11/2026) Insediamento Mughal: lo stesso planner dei Pirati con la configurazione Mughal. */
+  const mughalToolRef = useRef<PiratiToolHandle | null>(null);
+  const [gruppiMughal, setGruppiMughal] = useState<RibbonGroup[]>([]);
+  /** Insediamento mostrato nella scheda Insediamenti (scelta ricordata). */
+  const [insediamento, setInsediamento] = useState<"pirati" | "mughal">(() => { try { return localStorage.getItem(INSEDIAMENTO_KEY) === "mughal" ? "mughal" : "pirati"; } catch { return "pirati"; } });
+  const [mughalAperto, setMughalAperto] = useState(false);
+  useEffect(() => { if (activeTab === "pirati" && insediamento === "mughal") setMughalAperto(true); }, [activeTab, insediamento]);
+  const scegliInsediamento = useCallback((v: "pirati" | "mughal") => { setInsediamento(v); try { localStorage.setItem(INSEDIAMENTO_KEY, v); } catch { /* resta per la sessione */ } }, []);
   /** La scheda dei Pirati è stata aperta almeno una volta (da lì PiratiTool resta montato). */
   const [piratiAperto, setPiratiAperto] = useState(false);
   useEffect(() => { if (activeTab === "pirati") setPiratiAperto(true); }, [activeTab]);
@@ -4223,8 +4235,9 @@ export default function App() {
       }
       // Esito (successo/errore) mostrato SOLO dal toast interno di PiratiTool
       // (importMessage, testo colorato nella toolbar): nessun alert() qui,
-      // sarebbe un doppione dello stesso messaggio.
-      piratiToolRef.current?.importFromClipboardText(text);
+      // sarebbe un doppione dello stesso messaggio. Lo stesso per i Mughal.
+      if (insediamento === "mughal") mughalToolRef.current?.importFromClipboardText(text);
+      else piratiToolRef.current?.importFromClipboardText(text);
       return;
     }
 
@@ -4432,6 +4445,8 @@ export default function App() {
   const importandoPonte = useRef(false);
   /** Città selezionata cambiata nel gioco mentre il Planner è aperto: avviso con "Aggiorna". */
   const [pontePlanner, setPontePlanner] = useState<{ p: PacchettoPonte; chiave: string } | null>(null);
+  /** Insediamento cambiato nel gioco mentre nel suo planner ci sono modifiche a mano: avviso con "Aggiorna". */
+  const [ponteInsediamento, setPonteInsediamento] = useState<{ p: PacchettoPonte; chiave: string; impronta: string; tipo: "pirati" | "mughal" } | null>(null);
   const [aggiornandoPlanner, setAggiornandoPlanner] = useState(false);
   /** Cresce a ogni "Aggiorna" dall'avviso: nella key del Planner, che riparte dalla città nuova. */
   const [plannerRev, setPlannerRev] = useState(0);
@@ -4496,6 +4511,58 @@ export default function App() {
     return () => clearTimeout(tm);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- importaPayload cambia a ogni render: si riparte solo per arrivi, pausa, visibilità, scheda e città
   }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles]);
+
+  // ── Ponte per gli insediamenti (25/11/2026) ────────────────────────────────
+  // Il pacchetto del ponte contiene già l'insediamento attivo del gioco (pirateOutpost,
+  // aggiornato a ogni spostamento: CityMapUpdated) e le risorse (rupie, dobloni). Con la
+  // scheda Insediamenti visibile si prende quello del MONDO DELLA CITTÀ SELEZIONATA (con
+  // più giochi aperti; senza una città adatta, l'unico insediamento arrivato) e, se è del
+  // tipo mostrato (Pirati o Mughal), si importa nel suo planner come con la bacchetta:
+  //  - da solo se nel planner non ci sono modifiche a mano (haModifiche);
+  //  - altrimenti avviso con "Aggiorna" (ponteInsediamento), come nel Planner della città;
+  //  - un'impronta propria (improntaInsediamento: aree, edifici con posizione, rupie e
+  //    dobloni) evita di reimportare lo stesso insediamento; i cambi della città no.
+  // Pausa del ponte: niente import. Il planner si carica pigro: finché il suo ref non c'è
+  // si riprova (ponteGiro).
+  const [ponteGiro, setPonteGiro] = useState(0);
+  useEffect(() => {
+    if (!ponte.presente || ponte.pausa) { setPonteInsediamento(null); return; }
+    if (!paginaVisibile || activeTab !== "pirati") return;
+    const conInsediamento = pacchettiPonte()
+      .map(p => ({ p, ins: p.leggero ? improntaInsediamento(p.leggero) : null }))
+      .filter((x): x is { p: PacchettoPonte; ins: { fazione: string; impronta: string } } => x.ins !== null);
+    const della = (p: PacchettoPonte) => {
+      const info = infoImport(p.leggero as unknown as BookmarkletData);
+      const tr = info.tipo === "mia" ? trovaCitta(profiles, info) : null;
+      return { info, attiva: !!tr && tr.id === activeProfileId };
+    };
+    const scelto = conInsediamento.find(x => della(x.p).attiva) ?? (conInsediamento.length === 1 ? conInsediamento[0] : undefined);
+    if (!scelto) return;
+    const tipo = scelto.ins.fazione === "Mughals" ? "mughal" : scelto.ins.fazione === "Pirates" ? "pirati" : null;
+    if (!tipo || tipo !== insediamento) return;    // l'altro tipo si aggiorna quando lo si apre
+    const chiave = PONTE_INSEDIAMENTO_KEY + (della(scelto.p).info.mondo ?? "") + "_" + scelto.ins.fazione;
+    if (localStorage.getItem(chiave) === scelto.ins.impronta) { setPonteInsediamento(null); return; }
+    const { p } = scelto, { impronta } = scelto.ins;
+    const tm = setTimeout(() => {
+      const tool = (tipo === "mughal" ? mughalToolRef : piratiToolRef).current;
+      if (!tool) { setPonteGiro(g => g + 1); return; }
+      if (tool.haModifiche()) { setPonteInsediamento({ p, chiave, impronta, tipo }); return; }
+      tool.importFromClipboardText(p.json);
+      // anche se l'import non riesce: lo stesso pacchetto non si riprova a ogni arrivo
+      try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si riproverà */ }
+      setPonteInsediamento(null);
+    }, 1000);
+    return () => clearTimeout(tm);
+  }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, insediamento, activeProfileId, profiles, ponteGiro]);
+  const aggiornaInsediamentoDalPonte = () => {
+    if (!ponteInsediamento) return;
+    const { p, chiave, tipo } = ponteInsediamento;
+    const ultimo = pacchettoPonte(p.server, p.giocatore) ?? p;
+    (tipo === "mughal" ? mughalToolRef : piratiToolRef).current?.importFromClipboardText(ultimo.json);
+    const imp = ultimo.leggero ? improntaInsediamento(ultimo.leggero) : null;
+    try { localStorage.setItem(chiave, imp?.impronta ?? ponteInsediamento.impronta); } catch { /* storage pieno */ }
+    setPonteInsediamento(null);
+  };
   // Città salvate prima di questa versione: l'avatar non è nell'elenco. Quando
   // la città è aperta (avatar letto dal suo slot) lo si copia nell'elenco.
   useEffect(() => {
@@ -7263,7 +7330,7 @@ export default function App() {
       onChiudiJson: () => { setPlannerJson(null); setPlannerErrore(null); if (haCittaPlanner) setPlannerSorgente("citta"); },
       gruppi: gruppiPlanner,
     },
-    insediamenti: { gruppi: gruppiPirati },
+    insediamenti: { gruppi: insediamento === "mughal" ? gruppiMughal : gruppiPirati, scelto: insediamento, scegli: scegliInsediamento },
     giocatore: (() => {
       // Planner con un JSON: il giocatore del file (se lo ha: nostro export, Hammer)
       if (schedaCorrente === "planner" && plannerSorgente === "json") {
@@ -8309,7 +8376,29 @@ export default function App() {
               ridimensionamento del planner (gridWrapperSize). */}
           <div className={activeTab === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
             {/* (21/11/2026) montato alla prima apertura della scheda, poi resta montato come sopra */}
-            {piratiAperto && <PiratiTool ref={piratiToolRef} uiLang={uiLang} onNastro={setGruppiPirati} />}
+            {/* Ponte: insediamento cambiato nel gioco ma con modifiche a mano nel planner */}
+            {ponteInsediamento && ponteInsediamento.tipo === insediamento && (
+              <div role="status" className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 text-[12px] text-sky-200">
+                <span className="min-w-0 flex-1">
+                  {t("r2PonteInsediamentoAvviso", uiLang, new Date(ponteInsediamento.p.ts).toLocaleTimeString(uiLang === "it" ? "it-IT" : "en-GB", { hour: "2-digit", minute: "2-digit" }))}
+                </span>
+                <button type="button" onClick={aggiornaInsediamentoDalPonte} title={t("r2PonteInsediamentoAggiornaTitle", uiLang)}
+                  className="shrink-0 rounded border border-sky-400/60 bg-sky-500/20 px-2.5 py-0.5 font-semibold text-sky-100 hover:bg-sky-500/30">
+                  {t("r2PontePlannerAggiorna", uiLang)}
+                </button>
+              </div>
+            )}
+            {piratiAperto && (
+              <div className={insediamento === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
+                <PiratiTool ref={piratiToolRef} uiLang={uiLang} onNastro={setGruppiPirati} />
+              </div>
+            )}
+            {/* Mughal: montato alla prima scelta, poi resta montato (come i Pirati) */}
+            {piratiAperto && mughalAperto && (
+              <div className={insediamento === "mughal" ? "h-full min-h-0 flex flex-col" : "hidden"}>
+                <PiratiTool ref={mughalToolRef} uiLang={uiLang} onNastro={setGruppiMughal} insediamento="mughal" />
+              </div>
+            )}
           </div>
 
         </section>

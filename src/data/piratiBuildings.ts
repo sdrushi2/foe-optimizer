@@ -32,6 +32,11 @@ export type BuildingType = {
   pop: number;
   /** Id reale dell'edificio in game (CityEntities), usato per riconoscerlo durante l'import. */
   cityentityId?: string;
+  /** (25/11/2026) Diplomazia data dall'edificio (staticResources.diplomacy), per la legenda. */
+  diplomacy?: number;
+  /** (25/11/2026) Valuta dell'insediamento (Pirati: dobloni, Mughal: rupie): prezzo in valuta
+   *  (requirements.cost) e/o produzioni possibili [quantità, secondi] (available_products). */
+  currency?: { cost?: number; prod?: Array<[quantita: number, secondi: number]> };
 };
 
 /** ⚠️ Solo style inline, MAI una classe Tailwind arbitrary-value (`bg-[${fill}]`):
@@ -98,11 +103,9 @@ export const BASE_BLOCK_COLS = 3;
  * calcolo di gridWrapperSize in PiratiTool.tsx): 690px / 12 colonne della griglia
  * base (5 blocchi sbloccati di default, BASE_BLOCK_COLS+1 * BLOCK_SIZE). */
 export const CELL_SIZE_PX = 57.5;
-// Niente `export`: usata solo all'interno di questo file (nessun altro modulo
-// la importa) — rimosso durante la pulizia knip (agosto 2026). importCulturalOutpost.ts
-// ha una propria costante equivalente (TOOL_BASE_BLOCK_KEYS), tenuta sincronizzata a
-// mano (vedi commento lì), non un import di questa.
-const BASE_UNLOCKED_BLOCK_KEYS = ["0:3", "0:4", "1:2", "1:3", "1:4"];
+// I 5 blocchi aperti all'inizio nell'insediamento dei Pirati (25/11/2026: esportata per
+// data/insediamenti.ts, che ne fa la configurazione dei Pirati; i Mughal hanno la loro).
+export const BASE_UNLOCKED_BLOCK_KEYS = ["0:3", "0:4", "1:2", "1:3", "1:4"];
 export const ALLOWED_BLOCK_KEYS = [
   "0:3", "0:4", "0:5",
   "1:2", "1:3", "1:4", "1:5", "1:6",
@@ -110,7 +113,6 @@ export const ALLOWED_BLOCK_KEYS = [
   "3:0", "3:1", "3:2", "3:3", "3:4", "3:5", "3:6",
   "4:0", "4:1", "4:2", "4:3", "4:4", "4:5",
 ];
-export const ALLOWED_BLOCK_SET = new Set(ALLOWED_BLOCK_KEYS);
 export const DIRECTIONS: BlockPosition[] = [
   { row: -1, col: 0 },
   { row: 1, col: 0 },
@@ -175,9 +177,6 @@ export const INITIAL_BUILDINGS: BuildingType[] = [
   { id: "galeone", nameKey: "piratiBuildingGaleoneName", shortNameKey: "piratiBuildingGaleoneShort", width: 3, height: 5, fill: "#3498db", stroke: "#2980b9", icon: "⛵", count: 0, pop: -63, cityentityId: "J_Pirates_Diplomacy7" },
 ];
 
-export const INITIAL_PLACEMENTS: Placement[] = [
-  { buildingId: MUNICIPIO.id, row: MUNICIPIO_INITIAL_PLACEMENT.row, col: MUNICIPIO_INITIAL_PLACEMENT.col, w: MUNICIPIO.width, h: MUNICIPIO.height },
-];
 
 export function blockKey(row: number, col: number) {
   return `${row}:${col}`;
@@ -263,21 +262,21 @@ export function layoutStatus(buildings: BuildingType[], placements: Placement[])
   return popRequired <= popProvided ? "success" : "idle";
 }
 
-export function buildUnlockedBlockSet(expansions: Set<string>) {
-  const unlocked = new Set<string>(BASE_UNLOCKED_BLOCK_KEYS);
+export function buildUnlockedBlockSet(expansions: Set<string>, base: readonly string[] = BASE_UNLOCKED_BLOCK_KEYS) {
+  const unlocked = new Set<string>(base);
   expansions.forEach((key) => unlocked.add(key));
   return unlocked;
 }
 
-export function isRemovableExpansion(expansions: Set<string>, targetKey: string) {
+export function isRemovableExpansion(expansions: Set<string>, targetKey: string, base: readonly string[] = BASE_UNLOCKED_BLOCK_KEYS) {
   if (!expansions.has(targetKey)) return false;
 
   const remaining = new Set(expansions);
   remaining.delete(targetKey);
 
-  const unlocked = buildUnlockedBlockSet(remaining);
-  const visited = new Set<string>(BASE_UNLOCKED_BLOCK_KEYS);
-  const queue = [...BASE_UNLOCKED_BLOCK_KEYS];
+  const unlocked = buildUnlockedBlockSet(remaining, base);
+  const visited = new Set<string>(base);
+  const queue = [...base];
 
   while (queue.length > 0) {
     const current = queue.shift()!;

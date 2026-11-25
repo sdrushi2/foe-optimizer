@@ -1,6 +1,11 @@
 # FoE Optimizer Changelog
 
 ## Version 2.028 (25/11/2026)
+### New
+- Settlements (Pirates and Mughals): the building legend is a table with the columns Size, Population, Diplomacy, currency (Doubloons or Rupees: production per building, with all durations on hover, or the cost) and amount. Next to AREA and POP there are also the Pirates' Doubloons, like the Mughals' Rupees
+- Settlements: new Mughals button next to Pirates, with the same map as the Pirates: import with the wand (with the settlement open in the game), Embassy you can move, expansions to add and remove (adjacent only, with their obstacles), obstacles, buildings to add and move, AREA and POP, and next to them the settlement's Rupees (from the import) with what the added Groomed Paths cost and how many are left. Automatic solving is for the Pirates only for now: in the Mughal settlement buildings need a road. If you import a settlement in the wrong tab, the tool tells you which one to open
+- Settlements, for those testing the FoE Optimizer Bridge extension (beta): the settlement updates by itself while you play, with no wand. With the Settlements tab open, every time you move, add or remove something in the game's settlement the map, AREA, POP and the Rupees (or Doubloons) update within a couple of seconds. The settlement taken is the one from the selected city's world. If you have already made changes of your own in the tool, they are not overwritten: a notice appears with the Update button
+
 ### Update
 - On phones and tablets (Android, iPhone, iPad) the magic wand and the connection indicator no longer appear at the top, because they cannot work there: more room for the rest. The messages that used to say to use the wand now suggest loading a JSON file of the city
 

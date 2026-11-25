@@ -59,6 +59,15 @@ const UI_STRINGS = {
     en: (ora: string) => `Your city changed in the game (last update at ${ora}). The Planner is still working on the previous city`,
   },
   r2PontePlannerAggiorna: { it: "Aggiorna", en: "Update" },
+  // (25/11/2026) ponte per gli insediamenti
+  r2PonteInsediamentoAvviso: {
+    it: (ora: string) => `L'insediamento è cambiato nel gioco (ultimo aggiornamento alle ${ora}). Qui ci sono modifiche tue, quindi non l'ho aggiornato da solo`,
+    en: (ora: string) => `The settlement changed in the game (last update at ${ora}). There are changes of yours here, so it was not updated by itself`,
+  },
+  r2PonteInsediamentoAggiornaTitle: {
+    it: "Importa l'insediamento dal gioco: le modifiche fatte qui (edifici spostati, espansioni o ostacoli di prova) vanno perse",
+    en: "Imports the settlement from the game: the changes made here (moved buildings, test expansions or obstacles) are lost",
+  },
   r2PontePlannerAggiornando: { it: "Aggiorno…", en: "Updating…" },
   r2PontePlannerAggiornaTitle: {
     it: "Importa la città dal gioco e fa ripartire il Planner da lì: ricerche, modifiche e risultati del Planner di adesso vanno persi",
@@ -620,6 +629,81 @@ const UI_STRINGS = {
   // Nastro Insediamenti (2.0)
   r2GrpSettlement: { it: "Insediamento", en: "Settlement" },
   r2Pirates: { it: "Pirati", en: "Pirates" },
+  // (25/11/2026) Insediamento Mughal: stesso planner dei Pirati (data/insediamenti.ts)
+  r2Mughals: { it: "Mughal", en: "Mughals" },
+  mughalImportHowToHintPrefix: { it: "Apri FoE, visita l'insediamento Mughal, poi usa la bacchetta magica", en: "Open FoE, visit the Mughal settlement, then use the magic wand" },
+  mughalImportVisitOutpostFirst: { it: "Devi prima visitare il tuo insediamento Mughal almeno una volta in questa sessione di gioco, poi riprova.", en: "You must visit your Mughal settlement at least once in this game session first, then try again." },
+  mughalImportHelperUnsupported: {
+    it: (helper: string) => `L'helper in uso (${helper}) non espone i dati dell'insediamento: probabilmente la sua struttura è cambiata. Prova ad aggiornarlo o usa l'altro helper (FoE Helper o Forge Hammer).`,
+    en: (helper: string) => `The helper in use (${helper}) does not expose the settlement data: its structure probably changed. Try updating it or use the other helper (FoE Helper or Forge Hammer).`,
+  },
+  mughalImportNoTownhall: { it: "Nei dati non c'è l'Ambasciata dei Mughal (H_Mughals_Townhall): assicurati di essere nell'insediamento Mughal quando usi la bacchetta.", en: "The data holds no Mughal Embassy (H_Mughals_Townhall): make sure you are in the Mughal settlement when you use the wand." },
+  mughalRupeesLabel: { it: "Rupie", en: "Rupees" },
+  // (25/11/2026) dobloni dei Pirati (pillola accanto ad AREA/POP e colonna della legenda)
+  piratiDoubloonsLabel: { it: "Dobloni", en: "Doubloons" },
+  piratiDoubloonsTitle: {
+    it: (saldo: string) => `Dobloni nell'insediamento: ${saldo} (dall'ultimo import).`,
+    en: (saldo: string) => `Doubloons in the settlement: ${saldo} (from the last import).`,
+  },
+  // colonne della legenda degli edifici (Pirati e Mughal)
+  piratiColBuilding: { it: "Edificio", en: "Building" },
+  piratiColSize: { it: "Dim.", en: "Size" },
+  piratiColPop: { it: "Pop", en: "Pop" },
+  piratiColDiplomacy: { it: "Dipl.", en: "Dipl." },
+  piratiColCount: { it: "N.", en: "No." },
+  piratiColCurrencyTitle: {
+    it: (valuta: string) => `${valuta}: produzione per edificio (quantità / durata) oppure costo (in rosso)`,
+    en: (valuta: string) => `${valuta}: production per building (amount / duration) or cost (in red)`,
+  },
+  piratiProdOptionsTitle: { it: (o: string) => `Produzioni possibili: ${o}`, en: (o: string) => `Possible productions: ${o}` },
+  mughalRupeesTitle: {
+    it: (saldo: string, spesa: string, resto: string) => `Rupie nell'insediamento: ${saldo} (dall'ultimo import). Gli edifici aggiunti rispetto all'import costano ${spesa}: ne restano ${resto}. Nel gioco solo i Sentieri costano rupie (200 l'uno).`,
+    en: (saldo: string, spesa: string, resto: string) => `Rupees in the settlement: ${saldo} (from the last import). The buildings added since the import cost ${spesa}: ${resto} left. In the game only Groomed Paths cost rupees (200 each).`,
+  },
+  mughalRupeesStartTitle: {
+    it: (saldo: string, spesa: string, resto: string) => `Rupie di partenza dell'insediamento: ${saldo}. I Sentieri aggiunti costano ${spesa}: ne restano ${resto}. Con l'import della bacchetta qui compaiono le rupie che hai davvero.`,
+    en: (saldo: string, spesa: string, resto: string) => `Starting Rupees of the settlement: ${saldo}. The added Groomed Paths cost ${spesa}: ${resto} left. With the wand import your real Rupees appear here.`,
+  },
+  insediamentoInSviluppoTitolo: { it: "Lavori in corso.", en: "Work in progress." },
+  insediamentoInSviluppoTesto: {
+    it: "Il planner dei Mughal è nelle prime fasi di sviluppo e per ora non calcola nulla: puoi importare e disegnare l'insediamento e tenere il conto di area, popolazione e rupie. Il calcolo automatico arriverà più avanti.",
+    en: "The Mughal planner is in an early stage of development and doesn't calculate anything yet: you can import and lay out the settlement and keep track of area, population and rupees. Automatic calculation will come later.",
+  },
+  mughalRupeesNoImport: { it: "Le rupie compaiono dopo l'import con la bacchetta.", en: "Rupees appear after the import with the wand." },
+  mughalCategoryResidential: { it: "🏠 Edifici residenziali", en: "🏠 Residential buildings" },
+  mughalCategoryGoods: { it: "🛢️ Edifici per i beni", en: "🛢️ Goods buildings" },
+  mughalCategoryDiplomacyPop: { it: "🤝 Diplomazia (usa popolazione)", en: "🤝 Diplomacy (uses population)" },
+  mughalCategoryDiplomacyFree: { it: "🤝 Diplomazia (senza popolazione)", en: "🤝 Diplomacy (no population)" },
+  mughalCategoryRoads: { it: "🛤️ Strade", en: "🛤️ Roads" },
+  mughalBuildingEmbassyName: { it: "Ambasciata", en: "Embassy" },
+  mughalBuildingEmbassyShort: { it: "Ambasciata", en: "Embassy" },
+  mughalBuildingBhavanName: { it: "Bhavan", en: "Bhavan" },
+  mughalBuildingBhavanShort: { it: "Bhavan", en: "Bhavan" },
+  mughalBuildingShantiName: { it: "Shanti Ghar", en: "Shanti Ghar" },
+  mughalBuildingShantiShort: { it: "Shanti", en: "Shanti" },
+  mughalBuildingHaveliName: { it: "Haveli", en: "Haveli" },
+  mughalBuildingHaveliShort: { it: "Haveli", en: "Haveli" },
+  // edifici dei beni con il nome del bene (25/11/2026, utente: i nomi del gioco sono troppo lunghi)
+  mughalBuildingRiceName: { it: "Riso", en: "Rice" },
+  mughalBuildingRiceShort: { it: "Riso", en: "Rice" },
+  mughalBuildingSareeName: { it: "Sari", en: "Saree" },
+  mughalBuildingSareeShort: { it: "Sari", en: "Saree" },
+  mughalBuildingSpiceName: { it: "Spezie", en: "Spices" },
+  mughalBuildingSpiceShort: { it: "Spezie", en: "Spices" },
+  mughalBuildingLotusName: { it: "Loto", en: "Lotus" },
+  mughalBuildingLotusShort: { it: "Loto", en: "Lotus" },
+  mughalBuildingCanalName: { it: "Canale d'acqua", en: "Water Canal" },
+  mughalBuildingCanalShort: { it: "Canale", en: "Canal" },
+  mughalBuildingAlleyName: { it: "Vialetto", en: "Alley" },
+  mughalBuildingAlleyShort: { it: "Vialetto", en: "Alley" },
+  mughalBuildingChhatriName: { it: "Chhatri", en: "Chhatri" },
+  mughalBuildingChhatriShort: { it: "Chhatri", en: "Chhatri" },
+  mughalBuildingBaldachinName: { it: "Baldacchino", en: "Baldachin" },
+  mughalBuildingBaldachinShort: { it: "Baldac.", en: "Baldac." },
+  mughalBuildingCharbaghName: { it: "Chahar bagh", en: "Charbagh" },
+  mughalBuildingCharbaghShort: { it: "Bagh", en: "Bagh" },
+  mughalBuildingPathName: { it: "Sentiero curato", en: "Groomed Path" },
+  mughalBuildingPathShort: { it: "", en: "" },
   r2GrpCalc: { it: "Calcolo", en: "Calculation" },
   r2GrpExpansions: { it: "Espansioni", en: "Expansions" },
   r2PiSolve: { it: "Risolvi", en: "Solve" },
@@ -2588,8 +2672,12 @@ const UI_STRINGS = {
     en: "in the top left to import your data.",
   },
   piratiImportUnsupportedFaction: {
-    it: (faction: string) => `L'insediamento importato (${faction}) non è supportato: questo tool gestisce solo l'Insediamento dei Pirati.`,
-    en: (faction: string) => `The imported outpost (${faction}) is not supported: this tool only handles the Pirate Outpost.`,
+    it: (faction: string) => faction === "Mughals" ? "Questo è l'insediamento Mughal: aprilo con il pulsante Mughal nel nastro."
+      : faction === "Pirates" ? "Questo è l'Insediamento dei Pirati: aprilo con il pulsante Pirati nel nastro."
+      : `L'insediamento importato (${faction}) non è ancora supportato: per ora ci sono Pirati e Mughal.`,
+    en: (faction: string) => faction === "Mughals" ? "This is the Mughal settlement: open it with the Mughals button in the ribbon."
+      : faction === "Pirates" ? "This is the Pirate Settlement: open it with the Pirates button in the ribbon."
+      : `The imported settlement (${faction}) is not supported yet: for now there are Pirates and Mughals.`,
   },
   piratiImportNoTownhall: {
     it: "Nessun municipio dei Pirati (H_Pirates_Townhall) trovato nel payload: assicurati di essere sulla schermata dell'Insediamento dei Pirati quando usi la bacchetta.",

@@ -230,6 +230,27 @@ function improntaTesto(s: string): string {
  *  avatar e diagnostica. Dentro: edifici (tipo, posizione, era/livello,
  *  livello massimo, collegamento), espansioni, inventario (oggetto e quantità),
  *  alleati (quale, livello, dove), livello del Castello. */
+/**
+ * Impronta dell'insediamento (25/11/2026) dentro un pacchetto del ponte: civiltà (dal
+ * municipio), aree, edifici con posizione e le valute degli insediamenti (rupie, dobloni).
+ * null se nel pacchetto non c'è un insediamento visitato.
+ */
+export function improntaInsediamento(d: unknown): { fazione: string; impronta: string } | null {
+  const o = (d ?? {}) as Record<string, unknown>;
+  const po = o.pirateOutpost as { areas?: Array<Record<string, unknown>>; entities?: Array<Record<string, unknown>> } | undefined;
+  if (!po || !Array.isArray(po.areas) || !po.areas.length || !Array.isArray(po.entities)) return null;
+  let fazione = "";
+  for (const e of po.entities) {
+    const m = typeof e.cityentity_id === "string" ? /^H_([A-Za-z]+)_Townhall$/.exec(e.cityentity_id) : null;
+    if (m) { fazione = m[1]!; break; }
+  }
+  if (!fazione) return null;
+  const aree = po.areas.map(a => [a.x ?? 0, a.y ?? 0]).sort((a, b) => Number(a[0]) - Number(b[0]) || Number(a[1]) - Number(b[1]));
+  const edifici = po.entities.map(e => [e.cityentity_id, e.x ?? 0, e.y ?? 0].join(",")).sort();
+  const r = (o.resources ?? {}) as Record<string, unknown>;
+  return { fazione, impronta: improntaTesto(JSON.stringify([fazione, aree, edifici, r.rupees ?? null, r.doubloons ?? null])) };
+}
+
 export function improntaDati(d: unknown): string {
   const o = (d ?? {}) as Record<string, unknown>;
   const edifici = Object.values((o.CityMapData ?? {}) as Record<string, Record<string, unknown>>)
