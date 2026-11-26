@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoE Optimizer Bridge – Privacy</title>
+    <meta name="description" content="Informativa sulla privacy dell'estensione FoE Optimizer Bridge: quali dati legge dal gioco, dove vanno (solo nel tuo browser) e come cancellarli. Privacy policy of the FoE Optimizer Bridge extension.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="color-scheme" content="dark light">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="canonical" href="https://foe-optimizer.com/privacy-bridge.html">
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --bg-deep: #020617;
+        --panel: #1e293b;
+        --border: #334155;
+        --text: #e2e8f0;
+        --text-dim: #94a3b8;
+        --amber: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 50% -10%, var(--panel) 0%, var(--bg) 45%, var(--bg-deep) 100%);
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.6;
+      }
+      a { color: var(--amber); }
+      .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+      .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: 0.04em; color: var(--amber); text-decoration: none; font-size: 20px; }
+      .langs a { margin-left: 12px; text-decoration: none; }
+      h1 { font-size: 28px; margin: 0 0 4px; }
+      h2 { font-size: 20px; margin: 32px 0 8px; color: var(--amber); }
+      .dim { color: var(--text-dim); font-size: 14px; }
+      section.lang { background: rgba(30, 41, 59, 0.55); border: 1px solid var(--border); border-radius: 10px; padding: 8px 24px 20px; margin-bottom: 32px; }
+      ul { padding-left: 22px; }
+      li { margin: 4px 0; }
+      code { background: rgba(148, 163, 184, 0.15); padding: 1px 5px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <a class="brand" href="/">⚔️ FOE OPTIMIZER</a>
+        <div class="langs"><a href="#it">🇮🇹 Italiano</a><a href="#en">🇬🇧 English</a></div>
+      </div>
+
+      <section class="lang" id="it" lang="it">
+        <h1>FoE Optimizer Bridge – Informativa sulla privacy</h1>
+        <p class="dim">Ultimo aggiornamento: 26 novembre 2026</p>
+
+        <p>FoE Optimizer Bridge è un'estensione gratuita e non ufficiale che collega il gioco Forge of Empires al sito <a href="https://foe-optimizer.com">foe-optimizer.com</a>, così la tua città e i tuoi insediamenti si aggiornano nel tool mentre giochi, senza la bacchetta magica. Non è collegata a InnoGames, che pubblica Forge of Empires.</p>
+
+        <h2>In breve</h2>
+        <ul>
+          <li><strong>Nessun dato lascia il tuo browser.</strong> L'estensione non ha un server e non manda niente a nessuno: né a noi, né a terzi.</li>
+          <li>Niente pubblicità, niente statistiche, niente tracciamento, nessuna vendita o cessione di dati.</li>
+          <li>I dati vanno solo dalla scheda del gioco alla scheda di FoE Optimizer aperte nello stesso browser.</li>
+        </ul>
+
+        <h2>Quali dati legge</h2>
+        <p>Nella scheda del gioco (pagine <code>*.forgeofempires.com/game</code>) l'estensione legge gli stessi dati che copia la bacchetta magica del tool, dall'estensione di supporto che usi (FoE Helper o Forge Hammer):</p>
+        <ul>
+          <li>la città: edifici e loro posizione, aree sbloccate, inventario, alleati, risorse, livello del Castello;</li>
+          <li>l'insediamento aperto (edifici, aree, edifici sbloccati);</li>
+          <li>il nome del giocatore, il suo numero nel gioco, il mondo e l'immagine del profilo, per riconoscere la città nel tool;</li>
+          <li>le definizioni degli edifici del gioco (dati pubblici, uguali per tutti) e il numero di versione del gioco.</li>
+        </ul>
+        <p>Non legge password, email, dati di pagamento, chat o messaggi, e non legge nessun altro sito.</p>
+
+        <h2>Dove vanno e dove restano</h2>
+        <ul>
+          <li>Dalla scheda del gioco i dati passano, dentro il browser, alle schede di <code>foe-optimizer.com</code> aperte. Lì il tool li usa come se avessi usato la bacchetta e li salva nel browser come fa sempre (memoria locale del sito).</li>
+          <li>L'estensione conserva sul tuo computer, nella sua memoria locale: le definizioni degli edifici (circa 60 MB, per non doverle rileggere dal gioco a ogni avvio), l'elenco dei mondi visti con nome del giocatore e data dell'ultimo aggiornamento, e la lingua scelta nel menu.</li>
+        </ul>
+
+        <h2>Permessi</h2>
+        <ul>
+          <li>Accesso a <code>forgeofempires.com</code>: leggere i dati della città dalla scheda del gioco.</li>
+          <li>Accesso a <code>foe-optimizer.com</code>: consegnarli al tool.</li>
+          <li><code>storage</code> e <code>unlimitedStorage</code>: conservare sul tuo computer le definizioni degli edifici e le preferenze.</li>
+          <li><code>scripting</code>: rimettere il collegamento nelle schede del gioco già aperte quando l'estensione si installa o si aggiorna.</li>
+        </ul>
+
+        <h2>Come cancellare i dati</h2>
+        <ul>
+          <li>Nel menu dell'estensione, la ✕ accanto a un mondo (quando il suo gioco non è aperto) cancella tutti i dati salvati di quel mondo.</li>
+          <li>Disinstallando l'estensione il browser cancella tutto quello che aveva salvato.</li>
+          <li>Le città nel tool si eliminano dal tool stesso (selettore delle città, oppure Opzioni › Azzera › Cancella tutto).</li>
+        </ul>
+
+        <h2>Contatti</h2>
+        <p>Per domande: <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a>. Se questa informativa cambia, la nuova versione sarà pubblicata su questa pagina con la data aggiornata.</p>
+      </section>
+
+      <section class="lang" id="en" lang="en">
+        <h1>FoE Optimizer Bridge – Privacy policy</h1>
+        <p class="dim">Last updated: 26 November 2026</p>
+
+        <p>FoE Optimizer Bridge is a free, unofficial extension that connects the game Forge of Empires to <a href="https://foe-optimizer.com">foe-optimizer.com</a>, so your city and settlements update in the tool while you play, without the magic wand. It is not affiliated with InnoGames, the publisher of Forge of Empires.</p>
+
+        <h2>In short</h2>
+        <ul>
+          <li><strong>No data leaves your browser.</strong> The extension has no server and sends nothing to anyone: neither to us nor to third parties.</li>
+          <li>No ads, no analytics, no tracking, no sale or transfer of data.</li>
+          <li>Data only goes from the game tab to the FoE Optimizer tab open in the same browser.</li>
+        </ul>
+
+        <h2>What data it reads</h2>
+        <p>In the game tab (<code>*.forgeofempires.com/game</code> pages) the extension reads the same data the tool's magic wand copies, from the helper extension you use (FoE Helper or Forge Hammer):</p>
+        <ul>
+          <li>the city: buildings and their position, unlocked areas, inventory, allies, resources, Castle level;</li>
+          <li>the open settlement (buildings, areas, unlocked buildings);</li>
+          <li>the player name, in-game number, world and profile picture, to recognise the city in the tool;</li>
+          <li>the game's building definitions (public data, the same for everyone) and the game version number.</li>
+        </ul>
+        <p>It does not read passwords, email addresses, payment data, chats or messages, and it does not read any other website.</p>
+
+        <h2>Where it goes and where it stays</h2>
+        <ul>
+          <li>From the game tab the data goes, inside the browser, to the open <code>foe-optimizer.com</code> tabs. There the tool uses it as if you had used the wand and saves it in the browser as it always does (the site's local storage).</li>
+          <li>The extension keeps on your computer, in its local storage: the building definitions (about 60 MB, so they don't have to be read from the game at every start), the list of worlds seen with the player name and the time of the last update, and the language chosen in the menu.</li>
+        </ul>
+
+        <h2>Permissions</h2>
+        <ul>
+          <li>Access to <code>forgeofempires.com</code>: read the city data from the game tab.</li>
+          <li>Access to <code>foe-optimizer.com</code>: deliver it to the tool.</li>
+          <li><code>storage</code> and <code>unlimitedStorage</code>: keep the building definitions and the preferences on your computer.</li>
+          <li><code>scripting</code>: restore the connection in game tabs that are already open when the extension is installed or updated.</li>
+        </ul>
+
+        <h2>How to delete the data</h2>
+        <ul>
+          <li>In the extension menu, the ✕ next to a world (when its game is not open) deletes all the saved data of that world.</li>
+          <li>Uninstalling the extension makes the browser delete everything it had saved.</li>
+          <li>Cities in the tool are deleted from the tool itself (city selector, or Options › Reset › Erase everything).</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p>Questions: <a href="mailto:info@foe-optimizer.com">info@foe-optimizer.com</a>. If this policy changes, the new version will be published on this page with the updated date.</p>
+      </section>
+    </div>
+  </body>
+</html>
