@@ -30,9 +30,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState } from "react";
+import { chiaveGlobale } from "../utils/storage";
 
 /** Impronta dell'ultima città importata dal ponte, per mondo e giocatore (+ "<mondo>_<id>"). */
-export const PONTE_ULTIMO_KEY = "foe_global_ponte_ultimo_";
+/** Impronta dell'ultimo pacchetto importato, per mondo e giocatore. */
+export const chiavePonteUltimo = (mondo: string, giocatore: string) => chiaveGlobale("ponte_ultimo", mondo, giocatore);
 
 /** Oltre questo tempo senza segnali il ponte è spento (3 segnali persi). */
 const PRESENZA_MS = 45_000;
@@ -68,7 +70,7 @@ export interface PacchettoPonte {
 }
 
 /** Pausa del ponte (24/11/2026): resta anche ricaricando il tool, finché non la si toglie. */
-const PAUSA_KEY = "foe_global_ponte_pausa";
+const PAUSA_KEY = chiaveGlobale("ponte_pausa");
 function leggiPausa(): boolean { try { return localStorage.getItem(PAUSA_KEY) === "1"; } catch { return false; } }
 
 const INIZIALE: StatoPonte = { presente: false, versione: null, schede: -1, ultima: null, arrivi: 0, pausa: false };
@@ -237,7 +239,7 @@ function improntaTesto(s: string): string {
  */
 export function improntaInsediamento(d: unknown): { fazione: string; impronta: string } | null {
   const o = (d ?? {}) as Record<string, unknown>;
-  const po = o.pirateOutpost as { areas?: Array<Record<string, unknown>>; entities?: Array<Record<string, unknown>> } | undefined;
+  const po = o.pirateOutpost as { areas?: Array<Record<string, unknown>>; entities?: Array<Record<string, unknown>>; advancements?: unknown } | undefined;
   if (!po || !Array.isArray(po.areas) || !po.areas.length || !Array.isArray(po.entities)) return null;
   let fazione = "";
   for (const e of po.entities) {
@@ -248,7 +250,9 @@ export function improntaInsediamento(d: unknown): { fazione: string; impronta: s
   const aree = po.areas.map(a => [a.x ?? 0, a.y ?? 0]).sort((a, b) => Number(a[0]) - Number(b[0]) || Number(a[1]) - Number(b[1]));
   const edifici = po.entities.map(e => [e.cityentity_id, e.x ?? 0, e.y ?? 0].join(",")).sort();
   const r = (o.resources ?? {}) as Record<string, unknown>;
-  return { fazione, impronta: improntaTesto(JSON.stringify([fazione, aree, edifici, r.rupees ?? null, r.doubloons ?? null])) };
+  // sblocchi degli edifici (v9): un nuovo sblocco cambia l'impronta
+  const sbloccati = Array.isArray(po.advancements) ? (po.advancements as Array<Record<string, unknown>>).map((a) => (a && a.u === true ? 1 : 0)).join("") : "";
+  return { fazione, impronta: improntaTesto(JSON.stringify([fazione, aree, edifici, r.rupees ?? null, r.doubloons ?? null, sbloccati])) };
 }
 
 export function improntaDati(d: unknown): string {

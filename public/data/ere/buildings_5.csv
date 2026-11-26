@@ -1413,8 +1413,8 @@ W_MultiAge_GBG26G1;Nave da guerra di Steelport - Liv. 1;Steelport Warship - Lv. 
 W_MultiAge_GBG26G2;Nave da guerra Steelport - Liv. 2;Steelport Warship - Lv. 2;7cfaf4350;;51;5x5;;;3375;;;209;;;;;;;;;;;1875;;;;;;;;265;265;530;530;;;;;418;418;418;418;;;;;;;;;;;;;S;;;;;;;;;
 W_MultiAge_GBG26H1;Silo di Steelport - Liv. 1;Steelport Silo - Lv. 1;ea6aa6b78;;19;3x4;1.5;1;;;;;;;;;135;267;;;;;660;;;;;858;;;87;87;87;87;;;;;138;138;138;138;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG26H2;Silo di Steelport - Liv. 2;Steelport Silo - Lv. 2;bfc3c5980;;19;3x4;;;;;;;;;;;202;340;;;;;990;;;;;1287;;;131;131;131;131;;;;;131;131;131;131;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG27A1;Hangar del corpo aereo - Liv. 1;Air Corps Hangar - Lv. 1;fa88e4476;;51;4x5;2;1;;;;8;;;;;;22;;;;;486;;;;;;;;190;56;179;179;;;;;59;59;59;59;;;;;;;;;;;;;;;;;;;;;;
-W_MultiAge_GBG27A2;Hangar del corpo aereo - Liv. 2;Air Corps Hangar - Lv. 2;466f98109;;51;4x5;;;;;;12;;;;;;38;;;;;889;;;;;;;;292;82;284;284;;;;;107;107;107;107;;;;;;;;;;;;;;;;;;;;;;
+W_MultiAge_GBG27A1;Hangar del corpo aereo - Liv. 1;Air Corps Hangar - Lv. 1;fa88e4476;;51;4x5;2;1;;;;8;;;;;;22;;;;;486;;;;;;;;190;56;179;179;;;;;59;59;59;59;;;;;;;;;;;;;S;;;;;;;;;
+W_MultiAge_GBG27A2;Hangar del corpo aereo - Liv. 2;Air Corps Hangar - Lv. 2;466f98109;;51;4x5;;;;;;12;;;;;;38;;;;;889;;;;;;;;292;82;284;284;;;;;107;107;107;107;;;;;;;;;;;;;S;;;;;;;;;
 W_MultiAge_GBG27B1;Scuola di paracadutismo del corpo aereo - Liv. 1;Air Corps Parachute School - Lv. 1;4574cd172;;19;3x3;1.5;1;;;;;;;;;;;;;;;310;2310;;5700;;820;;;98;98;110;41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBG27B2;Scuola di paracadutismo del corpo aereo - Liv. 2;Air Corps Parachute School - Lv. 2;948592756;;19;3x3;;;;;;;;;;;;;;;;;410;3780;;9330;;1290;;;145;145;191;71;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 W_MultiAge_GBGWatchtower2023A;Torre dei Campioni - Liv. 1;Tower of Champions - Lv. 1;f7f55d3b6;;51;4x4;;;;;;18;;;;;;;;;;;100;;;;;;;;;;;;18;18;18;18;44;44;44;44;;;;;;;;;;;;;;;;;;;;;;

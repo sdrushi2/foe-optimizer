@@ -44,6 +44,18 @@ interface ConfigInsediamento {
    * requirements.cost.resources); prezzi e produzioni di partenza in `BuildingType.currency`.
    */
   valuta?: { risorsa: string; etichetta: UiKey; titolo: UiKey; iniziale?: number; titoloIniziale?: UiKey };
+  /**
+   * Sblocchi degli edifici (src/insediamenti/sblocchi.ts): casella nella legenda per ogni
+   * edificio con un cityentityId, tranne `partenza` (sbloccati da subito, sempre spuntati) e
+   * `senzaCasella` (la strada). `prefisso` riconosce gli advancements di questa civiltà.
+   */
+  sblocchi?: { prefisso: string; partenza: string[]; senzaCasella: string[] };
+  /**
+   * Ottimizzatore della disposizione (src/insediamenti/mughal/ottimizzatore.ts): le residenze
+   * (collegamento facoltativo, rupie), gli edifici senza strada e la strada. Tutto il resto
+   * con un numero > 0 nella legenda è "fisso" e sempre collegato.
+   */
+  ottimizzatore?: { residenze: string[]; senzaStrada: string[]; strada: string; diplomazia: string[] };
   testi: { comeImportare: UiKey; visitaPrima: UiKey; helperNonSupportato: UiKey; nessunMunicipio: UiKey };
 }
 
@@ -161,6 +173,16 @@ const MUGHAL: ConfigInsediamento = {
     ancora: "generica",
   },
   solver: false,
+  // (25/11/2026) di partenza: Bhavan, Risaia, Vialetto (J_Mughals_Diplomacy2) e il Sentiero;
+  // gli altri 9 si sbloccano con gli advancements (verificato su un insediamento nuovo del beta)
+  // diplomazia: esclusa dalla disposizione di produzione (serve solo per gli sblocchi, avrà la
+  // sua ottimizzazione); nella legenda niente − / + né casella (25/11/2026, utente)
+  ottimizzatore: { residenze: ["bhavan", "shanti", "haveli"], senzaStrada: ["canale", "vialetto"], strada: "sentiero", diplomazia: ["chhatri", "baldacchino", "charbagh", "canale", "vialetto"] },
+  sblocchi: {
+    prefisso: "_Mughals_",
+    partenza: ["R_Mughals_Residential1", "B_Mughals_CulturalGoodsProduction1", "J_Mughals_Diplomacy2", "S_Mughals_Street1"],
+    senzaCasella: ["S_Mughals_Street1"],
+  },
   // Rupie: nel gioco solo le strade le costano (200 l'una); il resto si paga in monete e merci
   // senza import si parte dalle rupie con cui comincia l'insediamento (6.200, dato dell'utente)
   valuta: { risorsa: "rupees", etichetta: "mughalRupeesLabel", titolo: "mughalRupeesTitle", iniziale: 6200, titoloIniziale: "mughalRupeesStartTitle" },

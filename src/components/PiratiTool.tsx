@@ -19,12 +19,15 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 // file): Wand2 è importata da lucide-react per riusare l'IDENTICA immagine della
 // bacchetta magica mostrata come CTA in App.tsx (tab Città/Inventario, "Nessuna città
 // importata...") nella guida rapida in fondo al planner — stesso font/stile, stessa icona.
-import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, type LucideIcon } from "lucide-react";
+import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, Sparkles, FastForward, X as IconaChiudi, type LucideIcon } from "lucide-react";
 import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
 import { isLegacyBookmarkletPayload, readPayloadDiagnostics, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
 import { importCulturalOutpostPayload, ImportCulturalOutpostFailure } from "../data/importCulturalOutpost";
 import { t, type UiLang } from "../data/ui-strings";
 import { formatInt } from "../utils/format";
+import LavoratoreMughal from "../insediamenti/mughal/lavoratore?worker&inline";
+import { posizioniAmbasciata, unisciTentativi, type RichiestaOttimizzatore, type Tentativo, type TipoOttimizzatore } from "../insediamenti/mughal/ottimizzatore";
+import { caricaSblocchi, leggiSblocchi, salvaSblocchi, statoDopoImport, type StatoSblocchi } from "../insediamenti/sblocchi";
 import { INSEDIAMENTI, type IdInsediamento } from "../data/insediamenti";
 
 /** Id del municipio nei piazzamenti: uguale in ogni insediamento (vedi data/insediamenti.ts). */
@@ -306,6 +309,34 @@ export type PiratiToolHandle = {
   /** (25/11/2026) Ci sono modifiche fatte a mano dopo l'ultimo import (o dalla partenza)?
    *  Il ponte importa da solo solo se no; altrimenti chiede con un avviso. */
   haModifiche: () => boolean;
+  /** (25/11/2026) Mondo (server) dell'insediamento mostrato: quello dell'ultimo import, null
+   *  prima di un import (Reset svuota il planner ma resta di quel mondo). Un planner per mondo: App fotografa lo stato prima di
+   *  passare a un altro mondo e lo rimette tornando indietro. */
+  mondo: () => string | null;
+  /** Sta risolvendo: niente cambio di mondo finché non finisce. */
+  occupato: () => boolean;
+  fotografia: () => FotoPlanner;
+  ripristina: (f: FotoPlanner) => void;
+};
+
+/** Stato completo del planner di un mondo (in memoria, finché la pagina resta aperta). */
+export type FotoPlanner = {
+  mondo: string | null;
+  buildings: BuildingType[];
+  saldoValuta: number | null;
+  costiValuta: Record<string, number>;
+  sblocchi: { mondo: string | null; stato: StatoSblocchi };
+  placements: Placement[];
+  obstacles: Set<string>;
+  expansions: Set<string>;
+  importedExpansions: Set<string>;
+  importedObstacleCells: Set<string>;
+  baseline: Baseline;
+  hasImportedCity: boolean;
+  lastSolved: SolvedSnapshot;
+  stats: { steps: number; time: number } | null;
+  /** Modifiche a mano rispetto all'ultimo import al momento della foto. */
+  modificato: boolean;
 };
 
 type PiratiToolProps = {
@@ -337,6 +368,23 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const [saldoValuta, setSaldoValuta] = useState<number | null>(cfg.valuta?.iniziale ?? null);
   const [costiValuta, setCostiValuta] = useState<Record<string, number>>(() =>
     Object.fromEntries(cfg.edifici.filter((b) => b.currency?.cost).map((b) => [b.id, b.currency!.cost!])));
+  // (25/11/2026) sblocchi degli edifici (solo se cfg.sblocchi): caselle della legenda, salvate
+  // per mondo; prima di un import si mostra l'ultimo mondo usato
+  const [sblocchi, setSblocchi] = useState<{ mondo: string | null; stato: StatoSblocchi }>(() => {
+    const c = cfg.sblocchi ? caricaSblocchi(cfg.id) : { mondo: null, stato: null };
+    return { mondo: c.mondo, stato: c.stato ?? { sbloccati: [] } };
+  });
+  const sbloccato = (cityentityId: string | undefined) =>
+    !cfg.sblocchi || !cityentityId || cfg.sblocchi.partenza.includes(cityentityId) || sblocchi.stato.sbloccati.includes(cityentityId);
+  const cambiaSblocco = (cityentityId: string, si: boolean) => {
+    setSblocchi((prec) => {
+      const s = new Set(prec.stato.sbloccati);
+      if (si) s.add(cityentityId); else s.delete(cityentityId);
+      const stato = { ...prec.stato, sbloccati: [...s].sort() };
+      salvaSblocchi(cfg.id, prec.mondo, stato);
+      return { mondo: prec.mondo, stato };
+    });
+  };
   const [placements, setPlacements] = useState<Placement[]>(INITIAL_PLACEMENTS);
   const [obstacles, setObstacles] = useState<Set<string>>(new Set());
   const [expansions, setExpansions] = useState<Set<string>>(new Set());
@@ -389,6 +437,23 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // quando non c'è niente da cancellare, rosso più chiaro e abilitato quando
   // c'è un import da cui tornare indietro).
   const [hasImportedCity, setHasImportedCity] = useState(false);
+  // mondo (server) dell'ultimo import: un planner per mondo, vedi FotoPlanner
+  const [mondo, setMondo] = useState<string | null>(null);
+  // (25/11/2026) ottimizzatore della disposizione (solo se cfg.ottimizzatore): tentativi, uno
+  // per numero di strade; quello mostrato sulla mappa; ricerca in corso e secondi passati
+  const [tentativi, setTentativi] = useState<Tentativo[]>([]);
+  const [tentativoScelto, setTentativoScelto] = useState<number | null>(null);
+  const [ottimizzando, setOttimizzando] = useState(false);
+  const [secondiOtt, setSecondiOtt] = useState(0);
+  const [partenzaOtt, setPartenzaOtt] = useState<{ strade: number; collegate: number; rupieOra: number } | null>(null);
+  // "Continua" (26/11/2026): ricerca senza limite di tempo che riparte dai tentativi trovati;
+  // vale solo se la richiesta (area, manifatture, residenze) è la stessa dell'ultima ricerca
+  const [ottInfinito, setOttInfinito] = useState(false);
+  // X del riquadro Tentativi (26/11/2026): lo nasconde (e ferma la ricerca); i tentativi restano
+  // per Continua, e il riquadro torna con Ottimizza o Continua
+  const [tentativiChiusi, setTentativiChiusi] = useState(false);
+  const ultimaRichiestaRef = useRef<{ req: RichiestaOttimizzatore; firma: string } | null>(null);
+  const lavoratoriRef = useRef<Worker[]>([]);
 
   // Ultima disposizione "risolta" nota (indipendente dalla baseline, che
   // cambia solo con import/Reset/Undo, anche se le due coincidono sempre
@@ -960,6 +1025,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     // invece di lasciare lo stato "failed" senza alcun ripristino possibile.
     lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
     setHasImportedCity(true);
+    setTentativi([]);
+    setTentativoScelto(null);
+    {
+      const server = (payload as { server?: unknown }).server;
+      setMondo(typeof server === "string" && /^[a-z]{2,4}[0-9]{1,3}$/.test(server) ? server : null);
+    }
     // valuta dell'insediamento: saldo dalle risorse della città, prezzi dalle definizioni del gioco
     if (cfg.valuta) {
       const v = cfg.valuta;
@@ -972,6 +1043,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
         if (typeof c === "number") costi[b.id] = c;
       }
       setCostiValuta(costi);
+    }
+    // sblocchi: dagli advancements del gioco se la bacchetta/il ponte li hanno portati,
+    // altrimenti le caselle salvate; in ogni caso sbloccato ciò che è già sulla mappa
+    if (cfg.sblocchi) {
+      const p = payload as { server?: unknown };
+      const mondo = typeof p.server === "string" && /^[a-z]{2,4}[0-9]{1,3}$/.test(p.server) ? p.server : null;
+      const adv = leggiSblocchi((pirateOutpostPayload as { advancements?: unknown }).advancements, cfg.sblocchi.prefisso);
+      const stato = statoDopoImport(caricaSblocchi(cfg.id, mondo).stato, adv, result.buildings.map((b) => b.cityentityId));
+      salvaSblocchi(cfg.id, mondo, stato);
+      setSblocchi({ mondo, stato });
     }
 
     const unrecognizedNote = result.unrecognizedCityentityIds.length > 0
@@ -988,6 +1069,34 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   useImperativeHandle(ref, () => ({
     importFromClipboardText: (rawText: string) => runImport(rawText),
     haModifiche: () => hasChangesFromBaseline,
+    mondo: () => mondo,
+    occupato: () => isSolving || ottimizzando,
+    fotografia: () => ({
+      mondo, buildings, saldoValuta, costiValuta, sblocchi, placements, obstacles, expansions,
+      importedExpansions, importedObstacleCells, baseline, hasImportedCity, lastSolved: lastSolvedRef.current, stats,
+      modificato: hasChangesFromBaseline,
+    }),
+    ripristina: (f: FotoPlanner) => {
+      setMondo(f.mondo);
+      setBuildings(f.buildings);
+      setSaldoValuta(f.saldoValuta);
+      setCostiValuta(f.costiValuta);
+      setSblocchi(f.sblocchi);
+      setPlacements(f.placements);
+      setObstacles(f.obstacles);
+      setExpansions(f.expansions);
+      setImportedExpansions(f.importedExpansions);
+      setImportedObstacleCells(f.importedObstacleCells);
+      setBaseline(f.baseline);
+      setHasImportedCity(f.hasImportedCity);
+      lastSolvedRef.current = f.lastSolved;
+      setStats(f.stats);
+      setStatus("success");
+      setEditMode("obstacle");
+      setImportMessage(null);
+      setTentativi([]);
+      setTentativoScelto(null);
+    },
   }));
 
   // Il toast di esito import sparisce da solo dopo qualche secondo, non
@@ -1978,6 +2087,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const totalPopProvided = buildings.reduce((accumulator, building) => accumulator + (building.pop > 0 ? building.pop * building.count : 0), 0);
   const totalPopRequired = buildings.reduce((accumulator, building) => accumulator + (building.pop < 0 ? Math.abs(building.pop) * building.count : 0), 0);
   const hasStatsWarning = totalArea > maxArea || totalPopRequired > totalPopProvided;
+  // (26/11/2026) diplomazia dell'insediamento: somma degli edifici costruiti (0 di partenza)
+  const totalDiplomazia = buildings.reduce((acc, b) => acc + (b.diplomacy ?? 0) * b.count, 0);
 
   // Undo deve attivarsi solo se lo stato corrente si è davvero discostato dalla
   // baseline (stato vuoto, o stato subito dopo l'ultimo import riuscito) — altrimenti
@@ -2071,13 +2182,155 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             setHasImportedCity(false);
   };
 
+  // ── Ottimizzatore della disposizione (25/11/2026, Mughal) ─────────────────
+  // Le manifatture le sceglie l'utente (numero nella legenda); il motore riempie con le
+  // residenze sbloccate cercando più rupie e meno strade, e propone un tentativo per ogni
+  // numero di strade. Gira in più worker, ognuno con una parte delle posizioni dell'Ambasciata.
+  const OTT_TEMPO_MS = 20_000;
+  const fermaOttimizzatore = useCallback(() => {
+    for (const w of lavoratoriRef.current) w.terminate();
+    lavoratoriRef.current = [];
+    setOttimizzando(false);
+  }, []);
+  useEffect(() => () => { for (const w of lavoratoriRef.current) w.terminate(); }, []);
+  useEffect(() => {
+    if (!ottimizzando) return;
+    const t0 = Date.now();
+    setSecondiOtt(0);
+    const id = setInterval(() => setSecondiOtt(Math.round((Date.now() - t0) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [ottimizzando]);
+  const richiestaOttimizzatore = (): RichiestaOttimizzatore | null => {
+    const opt = cfg.ottimizzatore;
+    if (!opt) return null;
+    const libere = new Uint8Array(gridRows * gridCols);
+    for (let r = 0; r < gridRows; r++) for (let c = 0; c < gridCols; c++) {
+      libere[r * gridCols + c] = gridMask[r]?.[c] && !obstacles.has(cellKey(storageCell(r, c))) ? 1 : 0;
+    }
+    const tipo = (b: BuildingType): TipoOttimizzatore => {
+      const p = b.currency?.prod?.[0];
+      return { id: b.id, w: b.width, h: b.height, pop: b.pop, rupieOra: p ? p[0] / (p[1] / 3600) : 0 };
+    };
+    const req: RichiestaOttimizzatore = {
+      righe: gridRows, colonne: gridCols, libere, ambasciata: { w: MUNICIPIO.width, h: MUNICIPIO.height },
+      fisse: buildings
+        .filter((b) => b.count > 0 && !opt.residenze.includes(b.id) && b.id !== opt.strada && !opt.diplomazia.includes(b.id))
+        .map((b) => ({ tipo: tipo(b), quante: b.count, senzaStrada: opt.senzaStrada.includes(b.id) })),
+      residenze: buildings.filter((b) => opt.residenze.includes(b.id) && sbloccato(b.cityentityId)).map(tipo),
+      tempoMs: OTT_TEMPO_MS,
+      // strade già costruite nel gioco (import): non si eliminano, al massimo si parcheggiano
+      stradeEsistenti: baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0,
+    };
+    return req;
+  };
+  const firmaRichiesta = (req: RichiestaOttimizzatore) =>
+    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), req.stradeEsistenti].join("|");
+  /** Lancia i worker: `base` = tentativi da cui ripartire (Continua), `infinito` = fino a Stop. */
+  const lanciaOttimizzatore = (req: RichiestaOttimizzatore, base: Tentativo[], infinito: boolean) => {
+    const posizioni = posizioniAmbasciata(req);
+    const quanti = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1, posizioni.length));
+    const liste: Tentativo[][] = Array.from({ length: quanti }, () => []);
+    let finiti = 0;
+    const seme0 = infinito ? (Date.now() % 100000) * 10 : 1;
+    const partenze = base.map((tt) => ({ ambasciata: tt.ambasciata, strade: tt.celleStrada }));
+    setOttInfinito(infinito);
+    setTentativiChiusi(false);
+    setOttimizzando(true);
+    lavoratoriRef.current = Array.from({ length: quanti }, (_, i) => {
+      const w = new LavoratoreMughal();
+      w.onmessage = (e: MessageEvent<{ tipo: "progresso" | "fine"; tentativi: Tentativo[] }>) => {
+        liste[i] = e.data.tentativi;
+        setTentativi(unisciTentativi([base, ...liste]));
+        if (e.data.tipo === "fine" && ++finiti === quanti) fermaOttimizzatore();
+      };
+      w.onerror = () => { if (++finiti === quanti) fermaOttimizzatore(); };
+      w.postMessage({ ...req, tempoMs: infinito ? 1e12 : OTT_TEMPO_MS, partenze, posizioni: posizioni.filter((_, j) => j % quanti === i), seme: seme0 + i + 1 });
+      return w;
+    });
+  };
+  const avviaOttimizzatore = () => {
+    const opt = cfg.ottimizzatore;
+    if (!opt || ottimizzando || isSolving || editMode !== "obstacle") return;
+    const req = richiestaOttimizzatore();
+    if (!req) return;
+    // scenario di partenza (la mappa di adesso), per le differenze nella tabella
+    let rupieOraPartenza = 0, collegatePartenza = 0;
+    for (const p of placements) {
+      if (!opt.residenze.includes(p.buildingId) || scollegati.has(p)) continue;
+      collegatePartenza++;
+      rupieOraPartenza += req.residenze.find((r) => r.id === p.buildingId)?.rupieOra ?? 0;
+    }
+    setPartenzaOtt({ strade: placements.filter((p) => p.buildingId === opt.strada).length, collegate: collegatePartenza, rupieOra: rupieOraPartenza });
+    ultimaRichiestaRef.current = { req, firma: firmaRichiesta(req) };
+    setTentativi([]);
+    setTentativoScelto(null);
+    lanciaOttimizzatore(req, [], false);
+  };
+  // Continua: stessa richiesta dell'ultima ricerca (se l'area o le manifatture sono cambiate
+  // serve un nuovo Ottimizza), riparte dai tentativi trovati e va avanti fino a Stop
+  const reqAttuale = cfg.ottimizzatore && tentativi.length > 0 && !ottimizzando ? richiestaOttimizzatore() : null;
+  const puoContinuare = !!reqAttuale && !!ultimaRichiestaRef.current && firmaRichiesta(reqAttuale) === ultimaRichiestaRef.current.firma;
+  const continuaOttimizzatore = () => {
+    const u = ultimaRichiestaRef.current;
+    if (!u || ottimizzando || isSolving || !puoContinuare) return;
+    lanciaOttimizzatore(u.req, tentativi, true);
+  };
+  /** Mostra un tentativo sulla mappa (come un Risolvi: Annulla torna all'import). */
+  const applicaTentativo = (tt: Tentativo) => {
+    const opt = cfg.ottimizzatore;
+    if (!opt || isSolving) return;
+    const pl: Placement[] = [{ buildingId: ID_MUNICIPIO, row: tt.ambasciata.row, col: tt.ambasciata.col, w: MUNICIPIO.width, h: MUNICIPIO.height }];
+    for (const s of [...tt.celleStrada, ...tt.parcheggiate]) pl.push({ buildingId: opt.strada, row: s.row, col: s.col, w: 1, h: 1 });
+    for (const e of tt.edifici) pl.push({ buildingId: e.id, row: e.row, col: e.col, w: e.w, h: e.h });
+    const conti = new Map<string, number>();
+    for (const p of pl) if (p.buildingId !== ID_MUNICIPIO) conti.set(p.buildingId, (conti.get(p.buildingId) ?? 0) + 1);
+    const nb = buildings.map((b) => ({ ...b, count: conti.get(b.id) ?? 0 }));
+    setBuildings(nb);
+    setPlacements(pl);
+    setStatus(layoutStatus(nb, pl));
+    lastSolvedRef.current = { buildings: nb.map((b) => ({ ...b })), placements: pl.map((p) => ({ ...p })) };
+    setTentativoScelto(tt.strade);
+  };
+
+  // (25/11/2026) Edifici che vorrebbero la strada ma non toccano una strada collegata
+  // all'Ambasciata (solo con cfg.ottimizzatore): tratteggiati sulla mappa. Le residenze
+  // staccate danno solo popolazione, le manifatture e i diplomatici non producono.
+  const scollegati = useMemo(() => {
+    const opt = cfg.ottimizzatore;
+    const out = new Set<Placement>();
+    if (!opt) return out;
+    const amb = placements.find((p) => p.buildingId === ID_MUNICIPIO);
+    if (!amb) return out;
+    const strade = new Set(placements.filter((p) => p.buildingId === opt.strada).map((p) => p.row + ":" + p.col));
+    const tocca = (r: number, c: number, x: Placement) => r >= x.row - 1 && r <= x.row + x.h && c >= x.col - 1 && c <= x.col + x.w &&
+      !(r >= x.row && r < x.row + x.h && c >= x.col && c < x.col + x.w) && (r === x.row - 1 || r === x.row + x.h ? c >= x.col && c < x.col + x.w : r >= x.row && r < x.row + x.h);
+    // strade collegate: partono da quelle attaccate all'Ambasciata
+    const collegate = new Set<string>();
+    const coda: Array<[number, number]> = [];
+    for (const k of strade) { const [r, c] = k.split(":").map(Number) as [number, number]; if (tocca(r, c, amb)) { collegate.add(k); coda.push([r, c]); } }
+    while (coda.length) {
+      const [r, c] = coda.pop()!;
+      for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const k = (r + dr) + ":" + (c + dc);
+        if (strade.has(k) && !collegate.has(k)) { collegate.add(k); coda.push([r + dr, c + dc]); }
+      }
+    }
+    for (const p of placements) {
+      if (p.buildingId === ID_MUNICIPIO || p.buildingId === opt.strada || opt.senzaStrada.includes(p.buildingId)) continue;
+      let ok = false;
+      for (const k of collegate) { const [r, c] = k.split(":").map(Number) as [number, number]; if (tocca(r, c, p)) { ok = true; break; } }
+      if (!ok) out.add(p);
+    }
+    return out;
+  }, [placements, cfg]);
+
   // ── Nastro (2.0) ────────────────────────────────────────────────────────
   // Come il Planner: i gruppi si ricostruiscono quando cambia lo stato che
   // mostrano (firma); i click passano da azioniRef (funzioni correnti).
-  const azioniRef = useRef({ solve, annulla, azzera });
-  azioniRef.current = { solve, annulla, azzera };
+  const azioniRef = useRef({ solve, annulla, azzera, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore });
+  azioniRef.current = { solve, annulla, azzera, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore };
   const risolviBloccato = (status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle") && !isSolving;
-  const firmaNastro = [isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
+  const firmaNastro = [ottimizzando, puoContinuare, isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
     candidateExpansionBlocks.length, removableExpansionKeys.size, uiLang].join("|");
   const onNastroRef = useRef(onNastro);
   onNastroRef.current = onNastro;
@@ -2093,7 +2346,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           ? b("risolvi", Square, L("r2PiStop"), () => void a().solve(), { active: true, danger: true })
           : b("risolvi", Play, L("r2PiSolve"), () => void a().solve(), { disabled: risolviBloccato }),
         b("auto", Repeat, L("r2PiAuto"), () => setAutoMode(v => !v), { active: autoMode, disabled: isSolving, title: L("piratiAutoTitle") })]),
-        b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving, title: L("piratiUndoTitle") }),
+        // (25/11/2026) Mughal: ottimizzatore della disposizione al posto di Risolvi
+        ...(!cfg.ottimizzatore ? [] : [ottimizzando
+          ? b("ottimizza", Square, L("r2PiStop"), () => a().fermaOttimizzatore(), { active: true, danger: true })
+          : b("ottimizza", Sparkles, L("r2PiOttimizza"), () => a().avviaOttimizzatore(), { disabled: isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaTitle") }),
+          b("continua", FastForward, L("r2PiContinua"), () => a().continuaOttimizzatore(), { disabled: ottimizzando || !puoContinuare, title: L("r2PiContinuaTitle") })]),
+        b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving || ottimizzando, title: L("piratiUndoTitle") }),
         b("reset", Trash2, L("r2PiReset"), () => a().azzera(), { disabled: !hasImportedCity || isSolving, title: L("piratiResetTitle"), danger: true }),
       ]] },
       { id: "pi-espansioni", label: L("r2GrpExpansions"), icon: SquarePlus, priority: 2, rows: [[
@@ -2170,6 +2428,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           <span className={cx("relative font-mono font-bold", totalPopRequired > totalPopProvided ? "text-red-400" : "text-emerald-400")}>
             {totalPopRequired}/{totalPopProvided}
           </span>
+        </div>
+
+        {/* (26/11/2026) Diplomazia: serve come soglia per gli sblocchi */}
+        <div className="flex h-7 items-center gap-1.5 rounded border border-sky-500/40 bg-sky-500/10 px-2.5" title={t("insDiplomaziaTitle", uiLang)}>
+          <span className="font-semibold uppercase text-sky-200">{t("insDiplomaziaLabel", uiLang)}</span>
+          <span className="font-mono font-bold text-sky-300">{formatInt(totalDiplomazia)}</span>
         </div>
 
         {/* (25/11/2026) Valuta dell'insediamento (Mughal: Rupie): saldo dall'import, spesa per
@@ -2468,16 +2732,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                   draggedPlacement.col === placement.col;
                 const canSwapHere = !!draggedPlacement && !isThisBeingDragged && canSwapPlacements(draggedPlacement, placement);
                 const uniqueKey = `${placement.buildingId}-${placement.row}-${placement.col}`;
+                const staccato = scollegati.has(placement);
+                const residenza = !!cfg.ottimizzatore?.residenze.includes(placement.buildingId);
                 return (
                   <div
                     key={uniqueKey}
                     onPointerDown={(event) => handlePlacementPointerDown(event, placement)}
                     title={
-                      !canEditGrid
-                        ? undefined
-                        : isMunicipio
-                          ? t("piratiMoveTownhallTitle", uiLang)
-                          : t("piratiMoveOrSwapTitle", uiLang)
+                      [staccato ? (t(residenza ? "mughalStaccataResidenza" : "mughalStaccatoEdificio", uiLang) as string) : null,
+                        !canEditGrid ? null : isMunicipio ? t("piratiMoveTownhallTitle", uiLang) : t("piratiMoveOrSwapTitle", uiLang)]
+                        .filter(Boolean).join("\n") || undefined
                     }
                     className={cx(
                       // 'group' abilita group-hover sulla X di rimozione qui sotto: va
@@ -2489,7 +2753,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       // trascinamento è comunque ignorato, quindi niente cursore "sposta".
                       canEditGrid ? "cursor-move touch-none" : "cursor-default pointer-events-none",
                       canSwapHere && "ring-2 ring-amber-300 brightness-110",
-                      isThisBeingDragged && "opacity-30"
+                      isThisBeingDragged && "opacity-30",
+                      // non collegato alla strada: tratteggiato e spento (residenze), rosso (gli altri)
+                      staccato && "!border-dashed saturate-50 opacity-70",
+                      staccato && !residenza && "ring-2 ring-red-500"
                     )}
                     style={{
                       gridRow: `${renderRow + 1} / span ${placement.h}`,
@@ -2734,6 +3001,72 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             vincolo di altezza, cresce col contenuto come sempre — lì lo
             scroll è già gestito dal contenitore esterno. */}
         <div className="order-1 min-w-0 mt-1 sm:mt-0 sm:h-full sm:min-h-0 sm:overflow-y-auto">
+          {/* (25/11/2026) Tentativi dell'ottimizzatore: uno per numero di strade, clic = sulla mappa */}
+          {cfg.ottimizzatore && !tentativiChiusi && (ottimizzando || tentativi.length > 0) && (() => {
+            const opt = cfg.ottimizzatore;
+            const saldo = saldoValuta ?? cfg.valuta?.iniziale ?? null;
+            const giaFatte = baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0;
+            const costo = costiValuta[opt.strada] ?? buildings.find((b) => b.id === opt.strada)?.currency?.cost ?? 0;
+            const nomi = new Map(buildings.map((b) => [b.id, t(b.nameKey, uiLang) as string]));
+            return (
+              <section className="mb-2 rounded border border-violet-400/40 bg-violet-500/10 p-2 text-xs">
+                <div className="mb-1 flex items-center gap-2">
+                  <Sparkles size={14} className="text-violet-300" aria-hidden="true" />
+                  <span className="font-bold uppercase tracking-wide text-violet-200">{t("mughalTentativiTitolo", uiLang)}</span>
+                  <span className="ml-auto text-[11px] text-slate-400">
+                    {ottimizzando
+                      ? (ottInfinito ? t("mughalTentativiContinua", uiLang, secondiOtt) : t("mughalTentativiInCorso", uiLang, secondiOtt, OTT_TEMPO_MS / 1000))
+                      : t("mughalTentativiClicca", uiLang)}
+                  </span>
+                  <button type="button" onClick={() => { if (ottimizzando) fermaOttimizzatore(); setTentativiChiusi(true); }}
+                    title={t("mughalTentativiChiudi", uiLang)} aria-label={t("mughalTentativiChiudi", uiLang)}
+                    className="-mr-0.5 shrink-0 rounded p-0.5 text-slate-400 hover:bg-violet-500/25 hover:text-white">
+                    <IconaChiudi size={14} />
+                  </button>
+                </div>
+                {tentativi.length === 0 ? (
+                  <div className="py-1 text-slate-400">{ottimizzando ? t("mughalTentativiAttesa", uiLang) : t("mughalTentativiNessuno", uiLang)}</div>
+                ) : (
+                  <table className="w-full border-collapse font-mono text-[11px]">
+                    <thead>
+                      <tr className="text-[10.5px] text-slate-400">
+                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColStrade", uiLang)}</th>
+                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColRimaste", uiLang)}</th>
+                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColCollegate", uiLang)}</th>
+                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColProduzione", uiLang)}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* dalla produzione più alta (richiesta utente) */}
+                      {/* solo i 5 migliori: la scelta cade sempre fra i primi (utente, 26/11/2026) */}
+                      {[...tentativi].sort((x, y) => y.rupieOra - x.rupieOra || x.strade - y.strade).slice(0, 5).map((tt) => {
+                        const rimaste = saldo === null ? null : saldo - Math.max(0, tt.strade - giaFatte) * costo;
+                        const collegate = Object.values(tt.collegate).reduce((a, b) => a + b, 0);
+                        const scelto = tentativoScelto === tt.strade;
+                        // differenza con lo scenario di partenza (la mappa quando hai premuto Ottimizza)
+                        const diff = (n: number, buonoSePiu: boolean) => {
+                          if (!partenzaOtt || n === 0) return null;
+                          const buono = (n > 0) === buonoSePiu;
+                          return <span className={cx("ml-0.5", buono ? "text-green-400/80" : "text-red-400/80")}>({n > 0 ? "+" : "−"}{formatInt(Math.abs(n))})</span>;
+                        };
+                        return (
+                          <tr key={tt.strade} onClick={() => applicaTentativo(tt)}
+                            className={cx("cursor-pointer border-t border-slate-700/50", scelto ? "bg-violet-500/30" : "hover:bg-violet-500/15")}
+                            title={[Object.entries(tt.collegate).map(([id, n]) => `${nomi.get(id) ?? id}: ${n}`).join(" · "),
+                              tt.parcheggiate.length ? (t("mughalParcheggiate", uiLang, tt.parcheggiate.length) as string) : ""].filter(Boolean).join("\n")}>
+                            <td className="px-1 py-0.5 text-right text-slate-200">{tt.strade}{partenzaOtt && diff(tt.strade - partenzaOtt.strade, false)}</td>
+                            <td className={cx("px-1 py-0.5 text-right", rimaste !== null && rimaste < 0 ? "text-red-400" : "text-amber-300")}>{rimaste === null ? "–" : formatInt(rimaste)}</td>
+                            <td className="px-1 py-0.5 text-right text-green-400">{collegate}{partenzaOtt && diff(collegate - partenzaOtt.collegate, true)}</td>
+                            <td className="px-1 py-0.5 text-right text-amber-300">{formatInt(Math.round(tt.rupieOra * 5))}<span className="text-slate-500">/5h</span>{partenzaOtt && diff(Math.round(tt.rupieOra * 5) - Math.round(partenzaOtt.rupieOra * 5), true)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </section>
+            );
+          })()}
           <section
             className={cx(
               "rounded border p-2 transition-colors",
@@ -2786,15 +3119,31 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                           const prod = building.currency?.prod;
                           const costo = costiValuta[building.id] ?? building.currency?.cost;
                           const ultima = prod && prod.length ? prod[prod.length - 1]! : null;
+                          // sblocchi: casella per gli edifici che si sbloccano; bloccato = riga in grigio
+                          // (si può aggiungere lo stesso, per pianificare; l'ottimizzatore no)
+                          const id = building.cityentityId;
+                          const diplomazia = !!cfg.ottimizzatore?.diplomazia.includes(building.id);
+                          const conCasella = !!cfg.sblocchi && !!id && !cfg.sblocchi.senzaCasella.includes(id) && !diplomazia;
+                          const diPartenza = !!cfg.sblocchi && !!id && cfg.sblocchi.partenza.includes(id);
+                          const spento = !sbloccato(id);
                           return (
-                            <tr key={building.id} className="border-t border-slate-700/50">
+                            <tr key={building.id} className={cx("border-t border-slate-700/50", spento && "[&>td:not(:first-child)]:opacity-45")}>
                               <td className="px-1 py-1">
                                 <div className="flex min-w-0 items-center gap-1.5">
+                                  {cfg.sblocchi && (conCasella
+                                    ? <input type="checkbox" className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-emerald-500 disabled:cursor-default disabled:opacity-60"
+                                        checked={!spento} disabled={diPartenza}
+                                        onChange={(e) => cambiaSblocco(id, e.currentTarget.checked)}
+                                        title={t(diPartenza ? "sbloccoPartenzaTitle" : spento ? "sbloccoBloccatoTitle" : "sbloccoSbloccatoTitle", uiLang) as string}
+                                        aria-label={t("sbloccoAria", uiLang, t(building.nameKey, uiLang)) as string} />
+                                    : <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden="true" />)}
+                                  <span className={cx("flex min-w-0 items-center gap-1.5", spento && "opacity-45")}>
                                   {building.icon
                                     ? <span className="shrink-0 text-sm">{building.icon}</span>
                                     // senza icona: un quadratino del colore dell'edificio, come sulla mappa
                                     : <span className="ml-0.5 mr-0.5 inline-block h-3 w-3 shrink-0 rounded-sm border" style={buildingColorStyle(building)} aria-hidden="true" />}
                                   <span className="truncate font-medium text-white">{t(building.nameKey, uiLang)}</span>
+                                  </span>
                                 </div>
                               </td>
                               <td className="px-1 py-1 text-right font-mono text-[11px] text-slate-400">{building.width}×{building.height}</td>
@@ -2813,6 +3162,13 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                                 </td>
                               )}
                               <td className="px-1 py-1">
+                                {diplomazia ? (
+                                  // diplomazia: la disporrà la sua ottimizzazione, qui solo quante ce ne sono
+                                  <div className="flex items-center justify-end gap-1">
+                                    <span className="w-5 text-center font-mono font-bold text-amber-400/70 text-xs">{building.count}</span>
+                                    <span className="w-5" aria-hidden="true" />
+                                  </div>
+                                ) : (
                                 <div className="flex items-center justify-end gap-1">
                                   <button
                                     onClick={() => updateCount(building.id, -1)}
@@ -2843,6 +3199,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                                     +
                                   </button>
                                 </div>
+                                )}
                               </td>
                             </tr>
                           );

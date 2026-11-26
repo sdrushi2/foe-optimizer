@@ -1,13 +1,29 @@
 # Novità di FoE Optimizer
 
+## Versione 2.029 (26/11/2026)
+### Novità
+- Insediamenti (Pirati e Mughal): tra POP e la valuta c'è la Diplomazia totale degli edifici costruiti (0 di partenza), che serve per gli sblocchi
+- Mughal, Ottimizza: nuovo pulsante Continua, che riprende la ricerca dai tentativi trovati e va avanti finché non premi Stop, per migliorarli
+
+### Aggiornamenti
+- Mughal, Ottimizza: la tabella mostra solo i 5 tentativi migliori, ordinati per produzione. La X in alto a destra chiude il riquadro dei tentativi (e ferma la ricerca); Continua lo riapre. L'avviso in alto spiega cosa fa oggi il planner dei Mughal, ancora in versione preliminare
+
+---
+
 ## Versione 2.028 (25/11/2026)
 ### Novità
 - Insediamenti (Pirati e Mughal): la legenda degli edifici è una tabella con le colonne Dimensioni, Popolazione, Diplomazia, valuta (Dobloni o Rupie: produzione per edificio, con tutte le durate passando il mouse, oppure il costo) e quantità. Accanto ad AREA e POP ci sono anche i Dobloni dei Pirati, come le Rupie dei Mughal
 - Insediamenti: nuovo pulsante Mughal accanto a Pirati, con la stessa mappa dei Pirati: import con la bacchetta (dall'insediamento aperto nel gioco), Ambasciata da spostare, espansioni da aggiungere e togliere (solo contigue, con i loro ostacoli), ostacoli, edifici da aggiungere e spostare, AREA e POP, e accanto le Rupie dell'insediamento (dall'import) con quanto costano i Sentieri aggiunti e quante ne restano. Il calcolo automatico per ora c'è solo per i Pirati: nei Mughal gli edifici chiedono la strada. Se importi un insediamento nella scheda sbagliata, il tool ti dice quale aprire
-- Insediamenti, per chi prova l'estensione FoE Optimizer Bridge (beta): l'insediamento si aggiorna da solo mentre giochi, senza bacchetta. Con la scheda Insediamenti aperta, ogni volta che sposti, aggiungi o togli qualcosa nell'insediamento del gioco la mappa, AREA, POP e le Rupie (o i Dobloni) si aggiornano in un paio di secondi. Si prende l'insediamento del mondo della città selezionata. Se nel tool hai già fatto modifiche tue, non vengono cancellate: compare un avviso con il pulsante Aggiorna
+- Insediamenti, per chi prova l'estensione FoE Optimizer Bridge (beta): l'insediamento si aggiorna da solo mentre giochi, senza bacchetta. Con la scheda Insediamenti aperta, ogni volta che sposti, aggiungi o togli qualcosa nell'insediamento del gioco la mappa, AREA, POP e le Rupie (o i Dobloni) si aggiornano in un paio di secondi. Si prende l'insediamento del mondo della città selezionata. Se nel tool hai già fatto modifiche tue, non vengono cancellate: compare un avviso con il pulsante Aggiorna. Se giochi su più mondi ognuno ha il suo insediamento: cambiando città ritrovi quello del suo mondo, con le modifiche che avevi fatto (finché la pagina resta aperta)
+- Mughal: nella legenda c'è una casella per ogni edificio, spuntata se è già sbloccato nel gioco. Di partenza sono sbloccati Bhavan, Risaia e Vialetto; gli edifici ancora bloccati sono in grigio ma puoi aggiungerli lo stesso per pianificare. Con la nuova bacchetta (va ricreata) o con l'estensione, se usi FoE Helper le caselle si spuntano da sole all'import; altrimenti spuntale tu. Restano salvate per ogni mondo
+- Mughal, nuovo pulsante Ottimizza (prima versione): scegli nella legenda quante manifatture mettere (per esempio 1 Risaia) e il tool cerca per circa 20 secondi la disposizione con più rupie e meno strade, usando solo le residenze sbloccate e spostando anche l'Ambasciata. Propone un tentativo per ogni numero di strade, con le rupie che ti restano e la produzione; cliccandone uno lo vedi sulla mappa e lo puoi ritoccare. Su un insediamento nuovo, con 1 Risaia, trova 20 Bhavan collegate con 12-13 strade. Sulla mappa gli edifici non collegati alla strada sono tratteggiati: le case danno solo popolazione, le manifatture e i diplomatici sono anche cerchiati di rosso perché così non producono. Ogni tentativo mostra la differenza con la mappa di partenza, per esempio 13 (−3) strade e 18 (−5) collegate. L'ottimizzazione di produzione ignora la diplomacia, che avrà la sua: nella legenda i diplomatici non hanno più − / + né casella. Le strade già costruite non si eliminano: se un tentativo ne usa meno, quelle in più vengono parcheggiate in caselle vuote.
 
 ### Aggiornamenti
 - Da telefono e tablet (Android, iPhone, iPad) la bacchetta magica e l'indicatore del collegamento non compaiono più in alto, perché lì non possono funzionare: resta più spazio per il resto. I messaggi che prima dicevano di usare la bacchetta ora suggeriscono di caricare un file JSON della città
+
+### Correzioni
+- Insediamenti: la scelta fra Pirati e Mughal si perdeva ricaricando la pagina. Ora resta
+- Estensione FoE Optimizer Bridge (beta): la pausa del collegamento si perdeva ricaricando la pagina. Ora resta
 
 ---
 

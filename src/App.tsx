@@ -27,7 +27,7 @@ import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_A
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
-  isStorageOutdated, PROFILE_SLOTS
+  isStorageOutdated, PROFILE_SLOTS, chiaveGlobale
 } from "./utils/storage";
 
 import { caricaBuildingsExtra, caricaBuildingsEra, caricaGe, datiGioco, caricaCastello, type LivelloCastello } from "./data/datiGioco";
@@ -46,7 +46,7 @@ import type { CittaEsterna } from "./planner/PlannerView";
 import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/cityMapJson";
 import { cittaDaJson } from "./data/cittaDaJson";
 import { senzaEstensioni } from "./utils/dispositivo";
-import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, PONTE_ULTIMO_KEY, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
+import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, chiavePonteUltimo, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
 
 /** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
 const NESSUN_ID = new Set<string>();
@@ -59,7 +59,7 @@ const NESSUNA_CELLA = new Set<string>();
 import type { Categoria, OpzioneProduzione } from "./ui/FiltriEdifici";
 import { useModalDismiss } from "./utils/useModalDismiss";
 import { dimensioniDaSize, senzaLivello, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner } from "./planner/modificheCitta";
-import type { PiratiToolHandle } from "./components/PiratiTool";
+import type { FotoPlanner, PiratiToolHandle } from "./components/PiratiTool";
 import type PiratiToolModulo from "./components/PiratiTool";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
@@ -116,9 +116,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, { uiLang: UiLang; onNastro: (g: 
   return C ? <C ref={ref} {...props} /> : null;
 });
 
-const INSEDIAMENTO_KEY = "foe_global_insediamento_scelto";
+const INSEDIAMENTO_KEY = chiaveGlobale("insediamento_scelto");
 /** Impronta dell'ultimo insediamento importato dal ponte, per mondo e civiltà. */
-const PONTE_INSEDIAMENTO_KEY = "foe_global_ponte_insediamento_";
+const chiavePonteInsediamento = (mondo: string, fazione: string) => chiaveGlobale("ponte_insediamento", mondo, fazione);
 
 const { buildings: buildingsCsv, allies: alliesCsv, events: eventsCsv, kit: kitData } = datiGioco();
 const BUILDINGS_FROM_CSV: Building[] = parseBuildingsCsv(buildingsCsv);
@@ -4495,7 +4495,7 @@ export default function App() {
       if (info.tipo !== "mia") continue;
       const trovata = trovaCitta(profiles, info);
       if (trovata && trovata.id !== activeProfileId) continue; // si aggiorna quando la si seleziona
-      const chiave = PONTE_ULTIMO_KEY + (info.mondo ?? "") + "_" + (info.playerId ?? info.nome ?? "");
+      const chiave = chiavePonteUltimo(info.mondo ?? "", String(info.playerId ?? info.nome ?? ""));
       if (trovata && localStorage.getItem(chiave) === p.impronta) continue;
       if (trovata) { scelta = { p, chiave, nuova: false }; break; }
       scelta ??= { p, chiave, nuova: true };
@@ -4525,6 +4525,8 @@ export default function App() {
   // Pausa del ponte: niente import. Il planner si carica pigro: finché il suo ref non c'è
   // si riprova (ponteGiro).
   const [ponteGiro, setPonteGiro] = useState(0);
+  // planner degli insediamenti degli altri mondi, per "Pirati/Mughal_mondo" (solo in memoria)
+  const fotoInsediamenti = useRef(new Map<string, FotoPlanner>());
   useEffect(() => {
     if (!ponte.presente || ponte.pausa) { setPonteInsediamento(null); return; }
     if (!paginaVisibile || activeTab !== "pirati") return;
@@ -4540,12 +4542,37 @@ export default function App() {
     if (!scelto) return;
     const tipo = scelto.ins.fazione === "Mughals" ? "mughal" : scelto.ins.fazione === "Pirates" ? "pirati" : null;
     if (!tipo || tipo !== insediamento) return;    // l'altro tipo si aggiorna quando lo si apre
-    const chiave = PONTE_INSEDIAMENTO_KEY + (della(scelto.p).info.mondo ?? "") + "_" + scelto.ins.fazione;
-    if (localStorage.getItem(chiave) === scelto.ins.impronta) { setPonteInsediamento(null); return; }
+    const chiave = chiavePonteInsediamento(della(scelto.p).info.mondo ?? "", scelto.ins.fazione);
     const { p } = scelto, { impronta } = scelto.ins;
+    const server = (p.leggero as { server?: unknown } | undefined)?.server;
+    const mondo = typeof server === "string" ? server : null;
     const tm = setTimeout(() => {
       const tool = (tipo === "mughal" ? mughalToolRef : piratiToolRef).current;
       if (!tool) { setPonteGiro(g => g + 1); return; }
+      // Un planner per mondo (25/11/2026): se il planner mostra l'insediamento di un altro
+      // mondo, lo si fotografa e si rimette quello di questo mondo (se visto in questa
+      // sessione) o lo si importa. Prima l'impronta del mondo bastava a dire "già importato",
+      // anche se nel planner c'era l'altro mondo (beta → live mostrava ancora il beta).
+      const attuale = tool.mondo();
+      if (mondo && attuale && attuale !== mondo) {
+        if (tool.occupato()) { setPonteGiro(g => g + 1); return; }   // finisce di risolvere
+        fotoInsediamenti.current.set(tipo + "_" + attuale, tool.fotografia());
+        const foto = fotoInsediamenti.current.get(tipo + "_" + mondo);
+        setPonteInsediamento(null);
+        if (!foto) {
+          tool.importFromClipboardText(p.json);
+          try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno */ }
+          return;
+        }
+        tool.ripristina(foto);
+        // poi come sempre: se nel frattempo il gioco è cambiato, import o avviso (sotto)
+        if (localStorage.getItem(chiave) === impronta) return;
+        if (foto.modificato) { setPonteInsediamento({ p, chiave, impronta, tipo }); return; }
+        tool.importFromClipboardText(p.json);
+        try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno */ }
+        return;
+      }
+      if (localStorage.getItem(chiave) === impronta) { setPonteInsediamento(null); return; }
       if (tool.haModifiche()) { setPonteInsediamento({ p, chiave, impronta, tipo }); return; }
       tool.importFromClipboardText(p.json);
       // anche se l'import non riesce: lo stesso pacchetto non si riprova a ogni arrivo

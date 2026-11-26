@@ -21,6 +21,12 @@ export type Profile = { id: string; name: string; tipo?: "mia" | "visitata"; pla
 const STORAGE_FORMAT_VERSION = 2;
 const V = `v${STORAGE_FORMAT_VERSION}`;
 
+/** Chiave globale con il suffisso di versione: SENZA il suffisso cleanupOrphanedKeys la
+ *  cancella a ogni avvio (successo il 25/11/2026 alle chiavi del ponte e degli insediamenti). */
+export function chiaveGlobale(...parti: string[]): string {
+  return `foe_global_${parti.join("_")}_${V}`;
+}
+
 export const PROFILES_KEY = `foe_global_profiles_${V}`;
 export const ACTIVE_PROFILE_KEY = `foe_global_active_profile_${V}`;
 export const DEFENSE_KEY = `foe_global_defense_${V}`;

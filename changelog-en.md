@@ -1,13 +1,29 @@
 # FoE Optimizer Changelog
 
+## Version 2.029 (26/11/2026)
+### New
+- Settlements (Pirates and Mughals): between POP and the currency there is the total Diplomacy of the buildings built (0 at the start), needed for unlocks
+- Mughals, Optimize: new Continue button, which resumes the search from the attempts found and keeps going until you press Stop, to improve them
+
+### Update
+- Mughals, Optimize: the table shows only the 5 best attempts, sorted by production. The X at the top right closes the attempts box (and stops the search); Continue reopens it. The notice at the top explains what the Mughal planner does today, still a preliminary version
+
+---
+
 ## Version 2.028 (25/11/2026)
 ### New
 - Settlements (Pirates and Mughals): the building legend is a table with the columns Size, Population, Diplomacy, currency (Doubloons or Rupees: production per building, with all durations on hover, or the cost) and amount. Next to AREA and POP there are also the Pirates' Doubloons, like the Mughals' Rupees
 - Settlements: new Mughals button next to Pirates, with the same map as the Pirates: import with the wand (with the settlement open in the game), Embassy you can move, expansions to add and remove (adjacent only, with their obstacles), obstacles, buildings to add and move, AREA and POP, and next to them the settlement's Rupees (from the import) with what the added Groomed Paths cost and how many are left. Automatic solving is for the Pirates only for now: in the Mughal settlement buildings need a road. If you import a settlement in the wrong tab, the tool tells you which one to open
-- Settlements, for those testing the FoE Optimizer Bridge extension (beta): the settlement updates by itself while you play, with no wand. With the Settlements tab open, every time you move, add or remove something in the game's settlement the map, AREA, POP and the Rupees (or Doubloons) update within a couple of seconds. The settlement taken is the one from the selected city's world. If you have already made changes of your own in the tool, they are not overwritten: a notice appears with the Update button
+- Settlements, for those testing the FoE Optimizer Bridge extension (beta): the settlement updates by itself while you play, with no wand. With the Settlements tab open, every time you move, add or remove something in the game's settlement the map, AREA, POP and the Rupees (or Doubloons) update within a couple of seconds. The settlement taken is the one from the selected city's world. If you have already made changes of your own in the tool, they are not overwritten: a notice appears with the Update button. If you play on several worlds each one has its own settlement: switching city you find the one of its world, with the changes you had made (as long as the page stays open)
+- Mughals: the legend has a checkbox for each building, ticked if it is already unlocked in the game. Bhavan, Rice and Alley are unlocked from the start; buildings still locked are greyed out but you can still add them to plan ahead. With the new wand (it must be created again) or with the extension, if you use FoE Helper the boxes are ticked by themselves on import; otherwise tick them yourself. They are saved for each world
+- Mughals, new Optimize button (first version): choose in the legend how many factories to place (for example 1 Rice) and the tool searches for about 20 seconds for the layout with the most rupees and the fewest roads, using only unlocked residences and also moving the Embassy. It suggests one attempt for each number of roads, with the rupees you have left and the production; click one to see it on the map and adjust it. On a new settlement, with 1 Rice, it finds 20 connected Bhavan with 12-13 roads. On the map buildings not connected to a road are dashed: houses give population only, factories and diplomacy buildings are also circled in red because they won't produce like this. Each attempt shows the difference with the starting map, for example 13 (−3) roads and 18 (−5) connected. The production optimization ignores diplomacy, which will get its own: in the legend diplomacy buildings no longer have − / + or a checkbox. Roads already built are never removed: if an attempt uses fewer, the extra ones are parked in empty cells.
 
 ### Update
 - On phones and tablets (Android, iPhone, iPad) the magic wand and the connection indicator no longer appear at the top, because they cannot work there: more room for the rest. The messages that used to say to use the wand now suggest loading a JSON file of the city
+
+### Bug Fixes
+- Settlements: the choice between Pirates and Mughals was lost when reloading the page. Now it is kept
+- FoE Optimizer Bridge extension (beta): the connection pause was lost when reloading the page. Now it is kept
 
 ---
 
