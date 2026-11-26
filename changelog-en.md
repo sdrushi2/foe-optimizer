@@ -2,10 +2,13 @@
 
 ## Version 2.029 (26/11/2026)
 ### New
+- Allies (yours and the Database ones): new View group in the ribbon, after Show rarity, with % Military and Productions (on by default) to hide the columns you don't care about. The choice is saved
 - Settlements (Pirates and Mughals): between POP and the currency there is the total Diplomacy of the buildings built (0 at the start), needed for unlocks
 - Mughals, Optimize: new Continue button, which resumes the search from the attempts found and keeps going until you press Stop, to improve them
 
 ### Update
+- Allies (yours and the Database ones): the table no longer takes the whole screen width but only the space it needs, centered, so on large screens names and values stay close. Nothing is cut: the abilities of legendary allies can be read in full
+- Allies (yours and the Database ones): Sum goods is in Options here too, with the same golden icon. It merges current and previous era goods into a single column with the total. It is the same option as in the building tables: on in one, on in all
 - Mughals, Optimize: the table shows only the 5 best attempts, sorted by production. The X at the top right closes the attempts box (and stops the search); Continue reopens it. The notice at the top explains what the Mughal planner does today, still a preliminary version
 
 ---

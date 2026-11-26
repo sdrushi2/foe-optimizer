@@ -35,6 +35,9 @@ export const SPED_ATTACK_KEY = `foe_global_spedizioni_attack_${V}`;
 export const SIGMA_KEY = `foe_global_sigma_enabled_${V}`;
 /** (18/11/2026) "Somma beni": Beni + BeniP + BeniS in un'unica colonna. */
 export const SOMMA_BENI_KEY = `foe_global_somma_beni_${V}`;
+/** (26/11/2026) Tabelle alleati › Visualizza: colonne % militari e Produzioni (di base mostrate). */
+export const ALLEATI_MIL_KEY = `foe_global_alleati_col_mil_${V}`;
+export const ALLEATI_PROD_KEY = `foe_global_alleati_col_prod_${V}`;
 export const POP_COLUMN_KEY = `foe_global_show_pop_column_${V}`;
 /** (10/11/2026) Tipo di efficienza della colonna EFF: mil | beni | pf | benig. */
 export const TIPO_EFF_KEY = `foe_global_tipo_eff_${V}`;

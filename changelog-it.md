@@ -2,10 +2,13 @@
 
 ## Versione 2.029 (26/11/2026)
 ### Novità
+- Alleati (i tuoi e quelli del Database): nuovo gruppo Visualizza nel nastro, dopo Visualizza rarità, con % Militari e Produzioni (accesi di base) per nascondere le colonne che non ti interessano. La scelta resta salvata
 - Insediamenti (Pirati e Mughal): tra POP e la valuta c'è la Diplomazia totale degli edifici costruiti (0 di partenza), che serve per gli sblocchi
 - Mughal, Ottimizza: nuovo pulsante Continua, che riprende la ricerca dai tentativi trovati e va avanti finché non premi Stop, per migliorarli
 
 ### Aggiornamenti
+- Alleati (i tuoi e quelli del Database): la tabella non occupa più tutta la larghezza dello schermo ma solo lo spazio che le serve, centrata, così sugli schermi grandi nome e valori restano vicini. Niente viene tagliato: le abilità degli alleati leggendari si leggono per intero
+- Alleati (i tuoi e quelli del Database): anche qui c'è Somma beni in Opzioni, con la stessa icona dorata. Unisce i beni dell'era attuale e della precedente in un'unica colonna col totale. L'opzione è la stessa delle tabelle degli edifici: accesa in una, è accesa in tutte
 - Mughal, Ottimizza: la tabella mostra solo i 5 tentativi migliori, ordinati per produzione. La X in alto a destra chiude il riquadro dei tentativi (e ferma la ricerca); Continua lo riapre. L'avviso in alto spiega cosa fa oggi il planner dei Mughal, ancora in versione preliminare
 
 ---

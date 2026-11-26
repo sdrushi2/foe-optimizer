@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
-import { allies_100, badge_mughals, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni, iconBeniOro } from "../assets/icons";
+import { allies_100, badge_mughals, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni, iconBeniOro, iconSword } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
 import { BloccoGiocatore, type DatiGiocatore } from "./InfoGiocatore";
@@ -49,6 +49,8 @@ export interface ContestoNastri {
   haCitteSalvate: boolean;
   /** Filtri delle tabelle edifici (Database). */
   filtri: StatoFiltri;
+  /** (26/11/2026) Tabelle alleati › Visualizza: colonne % militari e Produzioni. */
+  colonneAlleati: { mil: Interruttore; prod: Interruttore };
   /** Interruttori di Visualizza: attivo = mostrato. */
   vista: Record<"dettaglioProd" | "somme" | "sommaBeni" | "iqProd" | "pop" | "fel" | "sped", Interruttore>;
   /** Opzioni › Pesi statistiche: le spedizioni contano nell'efficienza (altrimenti ⚠️ su Visualizza › Spedizioni). */
@@ -181,6 +183,11 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const vistaAlleati: RibbonGroup = { id: "vista-alleati", label: L("r2GrpViewRarity"), icon: Eye, rows: [[
     { kind: "custom", id: "rarita", render: () => <BloccoRarita rarita={a.rarita} /> },
   ]] };
+  // (26/11/2026) Visualizza delle tabelle alleati: colonne % militari e Produzioni
+  const colonneAlleati: RibbonGroup = { id: "vista-colonne-alleati", label: L("r2GrpView"), icon: Eye, rows: [[
+    { ...tasto("col-mil", c.colonneAlleati.mil, Swords, "r2AllyColMil", "r2AllyColMilTitle"), img: iconSword } as RibbonItem,
+    { ...tasto("col-prod", c.colonneAlleati.prod, Package, "r2ProdDetail", "r2ProdDetailTitle"), img: iconProduzioni } as RibbonItem,
+  ]] };
   // Opzioni della tabella (2.0): Somma statistiche; nelle tabelle edifici
   // anche Somma beni (l'Export CSV è in Strumenti).
   // Pesi statistiche (Opzioni)
@@ -190,10 +197,12 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const opzioniTabella: RibbonGroup = { id: "opzioni-tabella", label: L("r2GrpTableOptions"), icon: SlidersHorizontal, rows: [[
     interruttore("somme", Sigma, "r2Sums", "r2SumsTitle"),
   ]] };
-  // "Somma beni" (18/11/2026): solo nelle tabelle edifici (le Alleati non hanno BeniS).
+  // "Somma beni" (18/11/2026): nelle tabelle edifici Beni + BeniP + BeniS; dal 26/11/2026 anche
+  // negli alleati (Beni + BeniP). Stessa opzione, condivisa fra tutte le tabelle.
   const opzioniEdifici: RibbonGroup = { ...opzioniTabella, rows: [[...opzioniTabella.rows[0]!,
     interruttore("sommaBeni", Sigma, "r2SumGoods", "r2SumGoodsTitle", iconBeniOro),
   ]] };
+  const opzioniAlleati: RibbonGroup = opzioniEdifici;
   // Export CSV degli edifici selezionati (grigio senza selezione): in Strumenti (18/11/2026, prima in Opzioni).
   const esportaSel: RibbonItem = { kind: "button", id: "esporta", icon: Download, label: c.esporta.n ? `${L("r2Export")} (${c.esporta.n})` : L("r2Export"),
     title: c.esporta.titolo, onClick: c.esporta.onClick, disabled: c.esporta.n === 0 };
@@ -238,7 +247,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         { kind: "button", id: "alleati", icon: Users, img: allies_100, label: L("r2AlliesCat"), active: c.catalogo === "alleati", onClick: () => c.setCatalogo("alleati") },
         { kind: "button", id: "ge", icon: Landmark, img: iconGE, label: L("r2GreatBuildingsCat"), active: c.catalogo === "ge", onClick: () => c.setCatalogo("ge") },
       ]] };
-      if (c.catalogo === "alleati") return [catalogo, ricerca, filtriAlleati, vistaAlleati, opzioniTabella];
+      if (c.catalogo === "alleati") return [catalogo, ricerca, filtriAlleati, vistaAlleati, colonneAlleati, opzioniAlleati];
       if (c.catalogo === "ge") {
         // Grandi Edifici: livello delle statistiche (solo quelli noti del gioco)
         const livello: RibbonGroup = { id: "livello-ge", label: L("r2GrpGeLevel"), icon: ChevronsUp, priority: 2, help: L("r2GeLevelHelp"), rows: [[
@@ -336,7 +345,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         calcGe,
       ]] }];
     case "alleati":
-      return [ricerca, filtriAlleati, vistaAlleati, opzioniTabella, { id: "analisi", label: L("r2GrpAnalysis"), icon: ChartColumn, help: L("r2AnalysisHelp"), rows: [[
+      return [ricerca, filtriAlleati, vistaAlleati, colonneAlleati, opzioniAlleati, { id: "analisi", label: L("r2GrpAnalysis"), icon: ChartColumn, help: L("r2AnalysisHelp"), rows: [[
         { ...tasto("livello100", c.livello100, UserCheck, "r2Level100", "r2Level100Title"), img: allies_100 } as RibbonItem,
         { kind: "button", id: "consigliere", icon: Lightbulb, img: allies_token, label: L("r2Advisor"), ...numero(c.consigliere.gettoni),
           title: L(c.consigliere.disponibile ? "r2AdvisorTitle" : "r2AdvisorNeedWand"),

@@ -23,7 +23,7 @@ import type { CityStore } from "./data/cityStore";
 import { CURRENT_BOOKMARKLET_VERSION, diagnosiClipboard, validateBookmarkletData, readPayloadDiagnostics, sanitizeCastleLevel, sanitizePortraitUrl, sanitizeResources, type BookmarkletData, type CityEntityDefinition, type CityMapEntry, type UnlockedArea } from "./data/bookmarklet";
 import type {
   Profile} from "./utils/storage";
-import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, SOMMA_BENI_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, TIPO_EFF_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
+import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, SOMMA_BENI_KEY, ALLEATI_MIL_KEY, ALLEATI_PROD_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, TIPO_EFF_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
   loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
@@ -1138,17 +1138,23 @@ const MilitaryBoostCells = memo(function MilitaryBoostCells({
  *  mostra "-" in quel caso, stesso trattamento di formatProdNum per un
  *  valore a zero. */
 const AllyProductionCells = memo(function AllyProductionCells({
-  pf, beni, beniP,
+  pf, beni, beniP, sommaBeni,
 }: {
   pf: number;
   beni: number;
   beniP: number;
+  /** (26/11/2026) "Somma beni": Beni + BeniP in un'unica colonna, come negli edifici. */
+  sommaBeni: boolean;
 }) {
   return (
     <>
       <td className={`cell-num section-divider${pf > 0 ? " cell-prod" : ""}`}>{formatProdNum(pf)}</td>
-      <td className={`cell-num${beni > 0 ? " cell-prod" : ""}`}>{formatProdNum(beni)}</td>
-      <td className={`cell-num${beniP > 0 ? " cell-prod" : ""}`}>{formatProdNum(beniP)}</td>
+      {sommaBeni ? (
+        <td className={`cell-num${beni + beniP > 0 ? " cell-prod" : ""}`}>{formatProdNum(beni + beniP)}</td>
+      ) : (<>
+        <td className={`cell-num${beni > 0 ? " cell-prod" : ""}`}>{formatProdNum(beni)}</td>
+        <td className={`cell-num${beniP > 0 ? " cell-prod" : ""}`}>{formatProdNum(beniP)}</td>
+      </>)}
     </>
   );
 });
@@ -2374,6 +2380,7 @@ function allySortValue(a: SortableAlly, key: SortKey, getName: (id: string) => s
     case "fp": return a.computedPf;
     case "beni": return a.computedBeni;
     case "benip": return a.computedBeniP;
+    case "benitot": return a.computedBeni + a.computedBeniP;
     default: return null;
   }
 }
@@ -3573,6 +3580,12 @@ export default function App() {
   // Pulsante Σ: somma General+Campi (e General+Spedizioni se abilitate)
   const [showSigmaColumns, setShowSigmaColumns] = useState<boolean>(() => localStorage.getItem(SIGMA_KEY) === "true");
   const [sommaBeni, setSommaBeni] = useState<boolean>(() => localStorage.getItem(SOMMA_BENI_KEY) === "true");
+  // (26/11/2026) Tabelle alleati › Visualizza: colonne % militari e Produzioni (di base sì)
+  const [alleatiMil, setAlleatiMil] = useState<boolean>(() => localStorage.getItem(ALLEATI_MIL_KEY) !== "false");
+  const [alleatiProd, setAlleatiProd] = useState<boolean>(() => localStorage.getItem(ALLEATI_PROD_KEY) !== "false");
+  useEffect(() => {
+    try { localStorage.setItem(ALLEATI_MIL_KEY, String(alleatiMil)); localStorage.setItem(ALLEATI_PROD_KEY, String(alleatiProd)); } catch { /* storage pieno */ }
+  }, [alleatiMil, alleatiProd]);
   // Opzioni › Bonus GE (Città/Inventario): valori militari ed efficienza con i moltiplicativi dei GE
   const [bonusGeTabella, setBonusGeTabella] = useState<boolean>(() => localStorage.getItem(BONUS_GE_KEY) === "true");
   // Colonne Pop/Fel/IQ-Mon-Mat: globali (non per-tab) come Sigma, di default
@@ -3979,8 +3992,11 @@ export default function App() {
   // "benip" già esistenti per gli edifici (stesso concetto), quindi
   // allySortValue in compareAllies non richiede chiavi nuove.
   const renderAllyProductionGroupHeader = () => (
-    <th className="py-2 px-2 text-center group-header-orange text-orange-400/80 whitespace-nowrap" colSpan={3}>
-      <TitoloGruppo icona={iconProduzioni} testo={t("groupProductions", uiLang)} />
+    // con Somma beni le colonne sono 2 (84 px): "PRODUZIONI" usciva dalla cella (segnalato
+    // dall'utente), quindi titolo breve e il nome intero nel suggerimento
+    <th className={`py-2 text-center group-header-orange text-orange-400/80 whitespace-nowrap overflow-hidden ${sommaBeni ? "px-1" : "px-2"}`} colSpan={sommaBeni ? 2 : 3}
+      title={sommaBeni ? t("groupProductions", uiLang) : undefined}>
+      <TitoloGruppo icona={iconProduzioni} testo={t(sommaBeni ? "groupProductionsShort" : "groupProductions", uiLang)} />
     </th>
   );
   const renderAllyProductionHeaders = (scope: SortScope) => {
@@ -3991,8 +4007,12 @@ export default function App() {
     return (
       <>
         <SortableHeader noGap label={<TableHeaderIcon src={iconFP} alt={t("prodForgePoints", uiLang)} />} sortKey="fp" onClick={() => onSort("fp")} active={activeSortBy === "fp"} order={activeSortOrder} className="th-col section-divider" title={t("prodForgePoints", uiLang)} />
-        <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => onSort("beni")} active={activeSortBy === "beni"} order={activeSortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
-        <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => onSort("benip")} active={activeSortBy === "benip"} order={activeSortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
+        {sommaBeni ? (
+          <SortableHeader noGap label={<TableHeaderIcon src={iconBeniOro} alt={t("prodGoodsSumAllies", uiLang)} />} sortKey="benitot" onClick={() => onSort("benitot")} active={activeSortBy === "benitot"} order={activeSortOrder} className="th-col" title={t("prodGoodsSumAllies", uiLang)} />
+        ) : (<>
+          <SortableHeader noGap label={<TableHeaderIcon src={iconBeni} alt={t("prodGoodsCurrent", uiLang)} />} sortKey="beni" onClick={() => onSort("beni")} active={activeSortBy === "beni"} order={activeSortOrder} className="th-col" title={t("prodGoodsCurrent", uiLang)} />
+          <SortableHeader noGap label={<TableHeaderIcon src={iconBeniP} alt={t("prodGoodsPrevious", uiLang)} />} sortKey="benip" onClick={() => onSort("benip")} active={activeSortBy === "benip"} order={activeSortOrder} className="th-col" title={t("prodGoodsPrevious", uiLang)} />
+        </>)}
       </>
     );
   };
@@ -6148,14 +6168,20 @@ export default function App() {
   // il valore più alto delle due come base comune, comunque solo un minimo:
   // se sottostimato la tabella si allarga lo stesso al contenuto reale via
   // table-fixed + col width, non si tronca nulla.
+  // (26/11/2026) Le tabelle alleati sono larghe quanto il loro contenuto (w-max, impaginazione
+  // automatica) e centrate: prima a tutta larghezza, su uno schermo grande nome e numeri finivano
+  // lontanissimi. Il nome parte da 320 px e si allarga quanto serve (abilità dei leggendari),
+  // così niente si taglia; le altre colonne restano alla loro larghezza.
+  const ALLY_NAME_W = 320;
   const alliesTableMinWidth = useMemo(() => {
-    const base = 240 + 64 + 50; // nome + Lvl (solo tab Posseduti) + EFF (max delle due tabelle)
-    const genCols = showSigmaColumns ? 0 : 4;
-    const gbgCols = 4;
-    const spedCols = 4; // 2.0: le tabelle alleati mostrano sempre le Spedizioni
-    const prodCols = 3; // sezione 📦 PRODUZIONI: PF/Beni/BeniP, sempre visibile
+    const base = ALLY_NAME_W + 50; // nome + EFF (+ Lvl 64 nella tabella dei tuoi alleati, vedi sotto)
+    // (26/11/2026) Visualizza › % Militari / Produzioni possono nascondere le due sezioni
+    const genCols = alleatiMil && !showSigmaColumns ? 4 : 0;
+    const gbgCols = alleatiMil ? 4 : 0;
+    const spedCols = alleatiMil ? 4 : 0; // 2.0: le tabelle alleati mostrano sempre le Spedizioni
+    const prodCols = !alleatiProd ? 0 : sommaBeni ? 2 : 3; // sezione 📦 PRODUZIONI: PF/Beni/BeniP (con Somma beni PF/Beni totali)
     return base + (genCols + gbgCols + spedCols + prodCols) * 42;
-  }, [showSigmaColumns]);
+  }, [showSigmaColumns, sommaBeni, alleatiMil, alleatiProd]);
 
   // Memoize city buildings list — avoids O(n) filter on every render
   // I valori att/dif riflettono l'era corrente (override da eraStats).
@@ -7337,6 +7363,10 @@ export default function App() {
       frammenti: schedaCorrente === "alleati" ? { attivo: mostraFrammentiAlleati, cambia: () => setMostraFrammentiAlleati(v => !v) } : undefined,
       conteggi: schedaCorrente === "alleati" ? conteggiAlleati : undefined,
     },
+    colonneAlleati: {
+      mil: { attivo: alleatiMil, cambia: () => setAlleatiMil(v => !v) },
+      prod: { attivo: alleatiProd, cambia: () => setAlleatiProd(v => !v) },
+    },
     livello100: { attivo: alleatiLivello100, cambia: () => setAlleatiLivello100(v => !v) },
     consigliere: {
       attivo: mostraConsigliere, cambia: () => setMostraConsigliere(v => !v),
@@ -8197,17 +8227,17 @@ export default function App() {
             </Suspense>
             {/* Tabella alleati importati (solo scheda Alleati, non nel catalogo del Database) */}
             {!alleatiDaDb && processedImportedAllies.length > 0 && (
-              <div className="bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
+              <div className="mx-auto w-fit max-w-full bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="building-table w-full table-fixed text-left border-collapse" style={{ minWidth: alliesTableMinWidth }}>
+                  <table className="building-table w-max text-left border-collapse" style={{ minWidth: alliesTableMinWidth + 64 }}>
                     <colgroup>
-                      <col className="w-full min-w-[240px]" />
+                      <col style={{ width: ALLY_NAME_W }} />
                       <col className="w-[64px]" />
                       <col className="w-[50px]" />
-                      {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
-                      {Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
-                      {Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
-                      {Array.from({ length: 3 }).map((_, i) => <col key={`prod-${i}`} className="w-[42px]" />)}
+                      {alleatiMil && !showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
+                      {alleatiMil && Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
+                      {alleatiMil && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
+                      {alleatiProd && Array.from({ length: sommaBeni ? 2 : 3 }).map((_, i) => <col key={`prod-${i}`} className="w-[42px]" />)}
                     </colgroup>
                     <thead>
                       <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
@@ -8218,15 +8248,15 @@ export default function App() {
                             {t("alliesVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{processedImportedAllies.length}</span>
                           </span>
                         </th>
-                        {renderMilitaryGroupHeaders(true)}
-                        {renderAllyProductionGroupHeader()}
+                        {alleatiMil && renderMilitaryGroupHeaders(true)}
+                        {alleatiProd && renderAllyProductionGroupHeader()}
                       </tr>
                       <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiOwn("name")} active={sortByAlleatiOwn === "name"} order={sortOrderAlleatiOwn} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
+                        <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiOwn("name")} active={sortByAlleatiOwn === "name"} order={sortOrderAlleatiOwn} className="py-0.5 px-2 text-left" />
                         <SortableHeader label="Lvl" sortKey="ally_level" onClick={() => handleSortAlleatiOwn("ally_level")} active={sortByAlleatiOwn === "ally_level"} order={sortOrderAlleatiOwn} className="py-0.5 px-1 text-center w-[64px]" title={t("allyLevelTitle", uiLang)} />
                         <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSortAlleatiOwn("eff")} active={sortByAlleatiOwn === "eff"} order={sortOrderAlleatiOwn} className="th-eff" />
-                        {renderMilitaryHeaders("alleati_own", true)}
-                        {renderAllyProductionHeaders("alleati_own")}
+                        {alleatiMil && renderMilitaryHeaders("alleati_own", true)}
+                        {alleatiProd && renderAllyProductionHeaders("alleati_own")}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
@@ -8282,8 +8312,8 @@ export default function App() {
                           <td className="cell-eff">
                             <span className="text-amber-400 text-sm">{formatEff(a.currentEff)}</span>
                           </td>
-                          <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled />
-                          <AllyProductionCells pf={a.computedPf} beni={a.computedBeni} beniP={a.computedBeniP} />
+                          {alleatiMil && <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled />}
+                          {alleatiProd && <AllyProductionCells pf={a.computedPf} beni={a.computedBeni} beniP={a.computedBeniP} sommaBeni={sommaBeni} />}
                         </tr>
                       ))}
                     </tbody>
@@ -8295,40 +8325,41 @@ export default function App() {
             {/* Tabella database alleati completo: solo nel catalogo Alleati del
                 Database (2.0; la scheda Alleati mostra solo i tuoi alleati) */}
             {alleatiDaDb && (
-            // 2.0: catalogo Alleati del Database da bordo a bordo, spigoli vivi
-            <div ref={buildingTableWrapperRef} className="-mx-2 bg-slate-900/20 border-y border-slate-800/80 overflow-hidden">
+            // (26/11/2026) come la tabella dei tuoi alleati: riquadro con bordo e spigoli arrotondati,
+            // largo quanto la tabella e centrato (prima da bordo a bordo, spigoli vivi)
+            <div ref={buildingTableWrapperRef} className="mx-auto mt-2 w-fit max-w-full bg-slate-900/20 border border-slate-800/80 rounded overflow-hidden">
               <div
                 ref={buildingTableScrollRef}
                 onScroll={() => syncBuildingTableScroll("table")} {...guidaScroll("table")}
                 className="overflow-x-auto"
               >
-              <table className="building-table w-full table-fixed text-left border-collapse" style={{ minWidth: alliesTableMinWidth }}>
+              <table className="building-table mx-auto w-max text-left border-collapse" style={{ minWidth: alliesTableMinWidth }}>
                   <colgroup>
-                    <col className="w-full min-w-[240px]" />
+                    <col style={{ width: ALLY_NAME_W }} />
                     <col className="w-[50px]" />
-                    {!showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
-                    {Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
-                    {Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
-                    {Array.from({ length: 3 }).map((_, i) => <col key={`prod-${i}`} className="w-[42px]" />)}
+                    {alleatiMil && !showSigmaColumns && Array.from({ length: 4 }).map((_, i) => <col key={`gen-${i}`} className="w-[42px]" />)}
+                    {alleatiMil && Array.from({ length: 4 }).map((_, i) => <col key={`gbg-${i}`} className="w-[42px]" />)}
+                    {alleatiMil && Array.from({ length: 4 }).map((_, i) => <col key={`sped-${i}`} className="w-[42px]" />)}
+                    {alleatiProd && Array.from({ length: sommaBeni ? 2 : 3 }).map((_, i) => <col key={`prod-${i}`} className="w-[42px]" />)}
                   </colgroup>
                   <thead>
                     <tr className="bt-thead-row1 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                       <th className="py-2 px-2 text-center" colSpan={2}>
-                        <div className="flex items-center justify-center gap-3">
+                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
                           <span className="text-slate-400 uppercase tracking-wider">{t("calcEfficiencyAtLevel", uiLang)}</span>
                           <div className="h-4 w-[1px] bg-slate-800 mx-2" />
                           <span className="text-slate-400 text-[11px] normal-case font-normal">{t("alliesVisualizedCount", uiLang)}: <span className="font-bold text-slate-300">{filteredAllies.length}</span></span>
                         </div>
                       </th>
-                      {renderMilitaryGroupHeaders(true)}
-                      {renderAllyProductionGroupHeader()}
+                      {alleatiMil && renderMilitaryGroupHeaders(true)}
+                      {alleatiProd && renderAllyProductionGroupHeader()}
                     </tr>
                     <tr className="bt-thead-row2 text-[13px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                      <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiDb("name")} active={sortByAlleatiDb === "name"} order={sortOrderAlleatiDb} className="py-0.5 px-2 w-full min-w-[240px] text-left" />
+                      <SortableHeader label={t("colAlly", uiLang)} sortKey="name" onClick={() => handleSortAlleatiDb("name")} active={sortByAlleatiDb === "name"} order={sortOrderAlleatiDb} className="py-0.5 px-2 text-left" />
                       <SortableHeader label="Eff" sortKey="eff" onClick={() => handleSortAlleatiDb("eff")} active={sortByAlleatiDb === "eff"} order={sortOrderAlleatiDb} className="th-eff" />
 
-                        {renderMilitaryHeaders("alleati_db", true)}
-                        {renderAllyProductionHeaders("alleati_db")}
+                        {alleatiMil && renderMilitaryHeaders("alleati_db", true)}
+                        {alleatiProd && renderAllyProductionHeaders("alleati_db")}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
@@ -8345,8 +8376,8 @@ export default function App() {
                           <span className="text-amber-400 text-sm">{formatEff(a.currentEff)}</span>
                         </td>
 
-                        <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled />
-                        <AllyProductionCells pf={a.computedPf} beni={a.computedBeni} beniP={a.computedBeniP} />
+                        {alleatiMil && <MilitaryBoostCells general={a.computedGeneral} gbg={a.computedGbg} sped={a.computedSped} showSigmaColumns={showSigmaColumns} spedizioniEnabled />}
+                        {alleatiProd && <AllyProductionCells pf={a.computedPf} beni={a.computedBeni} beniP={a.computedBeniP} sommaBeni={sommaBeni} />}
                       </tr>
                     );
                     })}
@@ -8354,7 +8385,7 @@ export default function App() {
                     {filteredAllies.length === 0 && (
                       <tr>
                         {/* nome+eff (2) + militari effettive: 4 con Σ, 8 senza, +4 se Spedizioni + 3 produzioni */}
-                        <td colSpan={2 + (showSigmaColumns ? 4 : 8) + 4 + 3} className="text-center py-12 text-slate-400 font-semibold">
+                        <td colSpan={2 + (alleatiMil ? (showSigmaColumns ? 4 : 8) + 4 : 0) + (!alleatiProd ? 0 : sommaBeni ? 2 : 3)} className="text-center py-12 text-slate-400 font-semibold">
                           {t("noAlliesFound", uiLang)}
                         </td>
                       </tr>
