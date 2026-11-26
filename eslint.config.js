@@ -22,7 +22,8 @@ export default tseslint.config(
     // planner-test/: città di prova locali (non in repo). sw-template.js ha
     // già il suo eslint-disable (è un template, non un modulo).
     // public/data/: dati generati dalla pipeline (mecenati-dati.js è uno script di dati, non codice).
-    ignores: ["dist/**", "node_modules/**", "planner-test/**", "public/data/**", "*.config.js", "*.config.ts", "sw-template.js"],
+    // estensione/: il ponte (estensione del browser), con le sue regole e i suoi globali.
+    ignores: ["dist/**", "node_modules/**", "planner-test/**", "public/data/**", "estensione/**", "*.config.js", "*.config.ts", "sw-template.js"],
   },
 
   // Regole base JS consigliate da eslint.

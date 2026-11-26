@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FoE Optimizer Bridge – monitor</title>
+<link rel="icon" href="icons/icon-32.png">
+<style>
+  :root { color-scheme: dark; --bg:#0f172a; --panel:#1e293b; --border:#334155; --text:#e2e8f0; --dim:#94a3b8; --green:#34d399; --red:#f87171; --amber:#fbbf24; }
+  body { margin:0; padding:20px; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, sans-serif; }
+  h1 { font-size:18px; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+  h1 img { width:24px; height:24px; }
+  h3 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); margin:18px 0 6px; }
+  .dim { color:var(--dim); }
+  #status { margin:8px 0 12px; }
+  .ok { color:var(--green); } .no { color:var(--red); } .wait { color:var(--amber); }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:10px; }
+  .card h2 { font-size:15px; margin:0 0 6px; }
+  .num { font-variant-numeric: tabular-nums; }
+  button { background:#0b1220; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer; margin-right:6px; }
+  button:hover { border-color:var(--amber); }
+  button:disabled { opacity:.4; cursor:default; border-color:var(--border); }
+  ul { margin:6px 0 0; padding-left:18px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  td, th { text-align:left; padding:3px 8px 3px 0; vertical-align:top; }
+  th { color:var(--dim); font-weight:normal; }
+  #log { font:12px/1.4 ui-monospace, monospace; color:var(--dim); white-space:pre-wrap; max-height:40vh; overflow:auto; border-top:1px solid var(--border); padding-top:8px; }
+</style>
+</head>
+<body>
+<h1><img src="icons/icon-32.png" alt="">FoE Optimizer Bridge <span class="dim" id="version"></span></h1>
+<div class="dim">Debug monitor. The bridge reads your city from FoE Helper or Forge Hammer when it changes in the game. Read-only: no requests to the game server.</div>
+<div id="status" class="wait">Connecting…</div>
+<div>
+  <button id="clear" title="Delete the building definitions stored in the extension: they are asked to the game again (sent in the background, in small slices, once)">Clear stored definitions</button>
+  <button id="clearLog">Clear log</button>
+  <button id="report" title="Copy a text report (versions, game tabs, stored definitions, worlds, log) to paste in a bug report">Copy debug report</button>
+</div>
+
+<h3>Game tabs</h3>
+<div id="tabs" class="dim">…</div>
+<div id="pages" class="dim" style="font-size:12px"></div>
+
+<h3>Stored definitions</h3>
+<div id="stored" class="dim">…</div>
+
+<h3>Cities received</h3>
+<div id="cities"></div>
+
+<h3>Log <span class="dim" style="text-transform:none;letter-spacing:0">(newest first; lines starting with "·" are steps of the extension)</span></h3>
+<div id="log"></div>
+<script src="monitor.js"></script>
+</body>
+</html>

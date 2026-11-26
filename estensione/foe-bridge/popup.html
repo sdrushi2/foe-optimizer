@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; --bg:#0f172a; --card:#151e30; --border:#263043; --text:#e2e8f0; --dim:#8391a7; --faint:#64748b;
+          --green:#34d399; --green-bg:#0f3b2f; --green-line:#2f6f5a; --amber:#fbbf24; --amber-bg:#3a2c0c; --red:#f87171; --red-bg:#3b1717; }
+  body { margin:0; width:310px; background:var(--bg); color:var(--text); font:12px/1.35 system-ui, sans-serif; }
+  header { display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid var(--border); }
+  header img { width:20px; height:20px; }
+  header .name { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  header b { font-size:13px; font-weight:600; }
+  .ver { color:var(--faint); font-size:10px; margin-left:4px; }
+  #lang { display:inline-flex; flex:none; border:1px solid #334155; border-radius:5px; overflow:hidden; }
+  #lang button { background:none; border:none; padding:2px 7px; font:600 10px system-ui, sans-serif; letter-spacing:.04em; color:var(--dim); cursor:pointer; }
+  #lang button[aria-pressed="true"] { background:#334155; color:var(--text); }
+  #lang button:hover { color:var(--text); }
+  #lang button:focus-visible { outline:2px solid var(--amber); outline-offset:-2px; }
+  #worlds { padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .card { position:relative; display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box; padding:7px 9px;
+          background:var(--card); color:inherit; border:1px solid var(--border); border-radius:7px; cursor:pointer; font:inherit; text-align:left; }
+  .card:hover { border-color:#3b4a63; }
+  .card:focus-visible { outline:2px solid var(--amber); outline-offset:1px; }
+  .card.live { border-color:var(--green-line); }
+  .tile { width:24px; height:24px; border-radius:5px; flex:none; display:flex; align-items:center; justify-content:center;
+          font-weight:600; font-size:12px; background:#1e293b; color:#94a3b8; }
+  .live .tile { background:var(--green-bg); color:#6ee7b7; }
+  .wait .tile { background:var(--amber-bg); color:var(--amber); }
+  .no .tile { background:var(--red-bg); color:var(--red); }
+  .info { flex:1; min-width:0; }
+  .l1, .l2 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .l1 { font-weight:600; }
+  .l1 .srv { color:var(--dim); font-weight:400; }
+  .l2 { color:var(--dim); font-size:11px; }
+  .wait .l2 { color:var(--amber); } .no .l2 { color:var(--red); }
+  .badge { flex:none; font-size:10px; letter-spacing:.05em; color:var(--dim); }
+  .live .badge { color:#6ee7b7; } .wait .badge { color:var(--amber); } .no .badge { color:var(--red); }
+  .forget { position:absolute; top:50%; right:6px; transform:translateY(-50%); width:22px; height:22px; padding:0; border:none; border-radius:5px;
+            background:var(--card); color:var(--faint); font-size:12px; cursor:pointer; opacity:0; }
+  .card:hover .forget, .card:focus-within .forget { opacity:1; }
+  .card.has-x:hover .badge, .card.has-x:focus-within .badge { visibility:hidden; }
+  .forget:hover { color:var(--red); }
+  .empty { color:var(--dim); padding:4px 4px 6px; }
+  footer { display:flex; justify-content:space-between; align-items:center; padding:7px 12px; border-top:1px solid var(--border); }
+  footer button { background:none; border:none; padding:2px 0; font:inherit; cursor:pointer; }
+  #tool { color:var(--amber); font-weight:600; }
+  #tool:hover { text-decoration:underline; }
+  #monitor { color:var(--faint); font-size:11px; }
+  #monitor:hover { color:var(--text); }
+</style>
+</head>
+<body>
+<header><img src="icons/icon-32.png" alt=""><span class="name"><b>FoE Optimizer Bridge</b><span class="ver" id="version"></span></span>
+  <span id="lang" role="group"><button type="button" data-lang="it" aria-pressed="true">IT</button><button type="button" data-lang="en" aria-pressed="false">EN</button></span></header>
+<div id="worlds"></div>
+<footer><button id="tool">Apri FoE Optimizer ↗</button><button id="monitor">Monitor</button></footer>
+<script src="popup.js"></script>
+</body>
+</html>

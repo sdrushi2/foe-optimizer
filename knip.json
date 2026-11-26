@@ -8,6 +8,7 @@
     "sw-template.js",
     "src/editor/condiviso.ts",
     "scripts/**",
-    "public/**"
+    "public/**",
+    "estensione/**"
   ]
 }

@@ -1,0 +1,109 @@
+FoE Optimizer Bridge - versione 0.9.2 beta
+==========================================
+
+Grazie per provare la beta!
+
+COS'È
+-----
+È una piccola estensione per Chrome che collega Forge of Empires a
+FoE Optimizer (https://foe-optimizer.com). Quando la tua città cambia nel
+gioco (un edificio spostato, comprato, messo in magazzino, un alleato
+assemblato...) si aggiorna da sola nel tool, senza usare la bacchetta.
+
+Legge solo i dati che hanno già FoE Helper o Forge Hammer (gli stessi che
+legge la bacchetta), più il numero di versione del gioco, che prende dal
+file del gioco già scaricato dal browser. Non manda richieste al server
+del gioco e non cambia niente nel gioco. Funziona solo per le tue città: quelle che visiti si
+importano sempre con la bacchetta.
+
+COSA SERVE
+----------
+- Chrome, oppure Edge, Opera, Brave o Vivaldi: zip "-chrome".
+- Firefox 140 o più recente: zip "-firefox", solo in prova (vedi sotto).
+  Safari no.
+- FoE Helper OPPURE Forge Hammer installato nello stesso browser.
+  Mai tutti e due attivi insieme: non possono funzionare insieme.
+
+INSTALLAZIONE (2 minuti)
+------------------------
+1. Scompatta lo zip in una cartella che non sposterai più, per esempio
+   D:\FOE\foe-optimizer-bridge
+2. Apri la pagina delle estensioni scrivendo nella barra degli indirizzi:
+   Chrome: chrome://extensions     Edge: edge://extensions
+   Opera: opera://extensions       Brave: brave://extensions
+3. Attiva la "Modalità sviluppatore" (in Chrome in alto a destra, in Edge
+   nella colonna di sinistra).
+4. Clicca "Carica estensione non pacchettizzata" (in Edge "Carica
+   decompressa") e scegli la cartella foe-optimizer-bridge.
+5. Consigliato: clicca l'icona del puzzle in alto a destra nel browser e
+   fissa (puntina) FoE Optimizer Bridge, così l'icona resta sempre visibile.
+
+Non serve ricaricare niente: le schede del gioco e di FoE Optimizer già
+aperte si collegano da sole.
+
+FIREFOX (in prova, installazione temporanea)
+--------------------------------------------
+Firefox accetta un'estensione non firmata solo in modo temporaneo: sparisce
+quando chiudi Firefox e va ricaricata a ogni avvio.
+1. Scompatta lo zip "-firefox" in una cartella.
+2. Scrivi about:debugging nella barra degli indirizzi, poi "Questo Firefox".
+3. "Carica componente aggiuntivo temporaneo..." e scegli il file
+   manifest.json dentro la cartella.
+4. Controlla i permessi: scrivi about:addons, apri FoE Optimizer Bridge,
+   scheda "Permessi", e verifica che siano attivi i siti
+   forgeofempires.com e foe-optimizer.com. Se non lo sono, attivali.
+5. Ricarica il gioco e la scheda di FoE Optimizer.
+Il menu si apre cliccando l'icona dell'estensione (se non la vedi, cerca
+l'icona del puzzle in alto a destra e fissala).
+
+COME SI USA
+-----------
+- Gioca normalmente e tieni FoE Optimizer aperto in un'altra scheda.
+- Accanto alla bacchetta verde del tool c'è l'indicatore:
+    LIVE verde   collegato: la città arriva dal gioco
+    LIVE giallo  l'estensione c'è ma aspetta il gioco
+    PAUSA        l'hai messo in pausa (clic sull'indicatore per
+                 mettere in pausa o riprendere)
+    OFF          estensione assente o disattivata
+- La città si aggiorna quando torni sulla scheda del tool (circa 2 secondi).
+  Mentre sei nel Planner non cambia da sola: compare un avviso con il
+  pulsante Aggiorna.
+- La prima volta, e poi solo dopo un aggiornamento del gioco, appena il
+  gioco è caricato l'estensione salva le schede di tutti gli edifici (le
+  "definizioni"). Lo fa in sottofondo, a piccoli pezzi, nei momenti in cui
+  il browser è libero: il gioco non si blocca e puoi giocare subito
+  normalmente, ci vogliono solo pochi secondi. Da lì in poi passano solo
+  le modifiche della città, leggere e istantanee: tutto è trasparente.
+- Cliccando l'icona dell'estensione si apre il menu: i tuoi mondi con lo
+  stato, l'helper e l'ultimo aggiornamento (clic per aprire il gioco su
+  quel mondo), Apri FoE Optimizer e il Monitor. IT | EN cambia la lingua.
+
+COSA PROVARE
+------------
+- Apri il gioco e il tool: la tua città compare o si aggiorna da sola?
+- Sposta, compra, metti in magazzino un edificio, assembla un alleato:
+  tornando sul tool la città è aggiornata?
+- Se giochi su più mondi (o sulla beta), aprili insieme.
+- Se usi Forge Hammer invece di FoE Helper (o passi dall'uno all'altro).
+- Il Planner: modifica qualcosa nel gioco mentre sei nel Planner.
+- La pausa: clic su LIVE, gioca, poi riprendi.
+
+SE QUALCOSA NON VA
+------------------
+1. Clicca l'icona dell'estensione: il menu spesso dice già cosa manca
+   (per esempio "ricarica il gioco").
+2. Se non basta: menu > Monitor > "Copy debug report", poi incolla il
+   testo in un messaggio per Sdrushi insieme a una breve descrizione di
+   cosa hai fatto e cosa ti aspettavi. Il report contiene versioni,
+   mondi, nomi dei giocatori e lo stato dell'estensione; nessuna password.
+
+AGGIORNARE A UNA NUOVA VERSIONE
+-------------------------------
+Sostituisci i file nella cartella con quelli nuovi e premi la freccia
+circolare (ricarica) sull'estensione nella pagina delle estensioni.
+
+TOGLIERLA
+---------
+Nella pagina delle estensioni: "Rimuovi". Le città nel tool restano.
+
+Questa è una beta: grazie per ogni segnalazione!

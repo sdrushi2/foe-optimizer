@@ -17,5 +17,8 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Zip dell'estensione (si rigenerano con py estensione/build.py)
+estensione/build/
+
 # Città di test del Planner (dati dei giocatori, non vanno in repo)
 planner-test/

@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "name": "FoE Optimizer Bridge",
+  "version": "0.9.2",
+  "version_name": "0.9.2 beta",
+  "minimum_chrome_version": "116",
+  "description": "__MSG_description__",
+  "default_locale": "it",
+  "permissions": [
+    "unlimitedStorage",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.forgeofempires.com/*",
+    "https://foe-optimizer.com/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "FoE Optimizer Bridge",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.forgeofempires.com/*"
+      ],
+      "include_globs": [
+        "*forgeofempires.com/game*"
+      ],
+      "js": [
+        "game-main.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://*.forgeofempires.com/*"
+      ],
+      "include_globs": [
+        "*forgeofempires.com/game*"
+      ],
+      "js": [
+        "game-relay.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://foe-optimizer.com/*",
+        "http://localhost/*"
+      ],
+      "js": [
+        "tool.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
