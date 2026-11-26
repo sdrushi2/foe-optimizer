@@ -27,6 +27,7 @@ import { t, type UiLang } from "../data/ui-strings";
 import { formatInt } from "../utils/format";
 import LavoratoreMughal from "../insediamenti/mughal/lavoratore?worker&inline";
 import { posizioniAmbasciata, unisciTentativi, type RichiestaOttimizzatore, type Tentativo, type TipoOttimizzatore } from "../insediamenti/mughal/ottimizzatore";
+import { confrontaDisposizioni, FrecciaConfronto, MappaSolaLettura, RiepilogoConfronto, type DatiRiepilogo } from "../insediamenti/ConfrontoMappe";
 import { caricaSblocchi, leggiSblocchi, salvaSblocchi, statoDopoImport, type StatoSblocchi } from "../insediamenti/sblocchi";
 import { INSEDIAMENTI, type IdInsediamento } from "../data/insediamenti";
 
@@ -348,6 +349,35 @@ type PiratiToolProps = {
    *  consegna qui i suoi gruppi a ogni cambio di stato. */
   onNastro?: (gruppi: RibbonGroup[]) => void;
 };
+
+/** Edifici che vorrebbero la strada e non toccano una strada collegata all'Ambasciata
+ *  (strade collegate = raggiungibili da quelle attaccate all'Ambasciata). */
+function nonCollegati(placements: Placement[], opt: { strada: string; senzaStrada: string[] } | undefined): Set<Placement> {
+  const out = new Set<Placement>();
+  if (!opt) return out;
+  const amb = placements.find((p) => p.buildingId === ID_MUNICIPIO);
+  if (!amb) return out;
+  const strade = new Set(placements.filter((p) => p.buildingId === opt.strada).map((p) => p.row + ":" + p.col));
+  const tocca = (r: number, c: number, x: Placement) => r >= x.row - 1 && r <= x.row + x.h && c >= x.col - 1 && c <= x.col + x.w &&
+    !(r >= x.row && r < x.row + x.h && c >= x.col && c < x.col + x.w) && (r === x.row - 1 || r === x.row + x.h ? c >= x.col && c < x.col + x.w : r >= x.row && r < x.row + x.h);
+  const collegate = new Set<string>();
+  const coda: Array<[number, number]> = [];
+  for (const k of strade) { const [r, c] = k.split(":").map(Number) as [number, number]; if (tocca(r, c, amb)) { collegate.add(k); coda.push([r, c]); } }
+  while (coda.length) {
+    const [r, c] = coda.pop()!;
+    for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+      const k = (r + dr) + ":" + (c + dc);
+      if (strade.has(k) && !collegate.has(k)) { collegate.add(k); coda.push([r + dr, c + dc]); }
+    }
+  }
+  for (const p of placements) {
+    if (p.buildingId === ID_MUNICIPIO || p.buildingId === opt.strada || opt.senzaStrada.includes(p.buildingId)) continue;
+    let ok = false;
+    for (const k of collegate) { const [r, c] = k.split(":").map(Number) as [number, number]; if (tocca(r, c, p)) { ok = true; break; } }
+    if (!ok) out.add(p);
+  }
+  return out;
+}
 
 const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function PiratiTool({ uiLang, onNastro, insediamento = "pirati" }, ref) {
   // configurazione dell'insediamento: stessi nomi delle costanti dei Pirati di prima,
@@ -2295,34 +2325,58 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // (25/11/2026) Edifici che vorrebbero la strada ma non toccano una strada collegata
   // all'Ambasciata (solo con cfg.ottimizzatore): tratteggiati sulla mappa. Le residenze
   // staccate danno solo popolazione, le manifatture e i diplomatici non producono.
-  const scollegati = useMemo(() => {
+  const scollegati = useMemo(() => nonCollegati(placements, cfg.ottimizzatore), [placements, cfg]);
+
+  // (26/11/2026, solo Mughal) Confronto fra l'insediamento nel gioco (baseline = ultimo import,
+  // a sinistra, sola lettura) e la disposizione nuova del planner (a destra): freccia, riepilogo
+  // delle variazioni e bordi colorati su ciò che si toglie, si sposta o è nuovo. Solo dopo un
+  // import, con modifiche e fuori dalle modalità espansione.
+  const confronto = useMemo(() => {
     const opt = cfg.ottimizzatore;
-    const out = new Set<Placement>();
-    if (!opt) return out;
-    const amb = placements.find((p) => p.buildingId === ID_MUNICIPIO);
-    if (!amb) return out;
-    const strade = new Set(placements.filter((p) => p.buildingId === opt.strada).map((p) => p.row + ":" + p.col));
-    const tocca = (r: number, c: number, x: Placement) => r >= x.row - 1 && r <= x.row + x.h && c >= x.col - 1 && c <= x.col + x.w &&
-      !(r >= x.row && r < x.row + x.h && c >= x.col && c < x.col + x.w) && (r === x.row - 1 || r === x.row + x.h ? c >= x.col && c < x.col + x.w : r >= x.row && r < x.row + x.h);
-    // strade collegate: partono da quelle attaccate all'Ambasciata
-    const collegate = new Set<string>();
-    const coda: Array<[number, number]> = [];
-    for (const k of strade) { const [r, c] = k.split(":").map(Number) as [number, number]; if (tocca(r, c, amb)) { collegate.add(k); coda.push([r, c]); } }
-    while (coda.length) {
-      const [r, c] = coda.pop()!;
-      for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-        const k = (r + dr) + ":" + (c + dc);
-        if (strade.has(k) && !collegate.has(k)) { collegate.add(k); coda.push([r + dr, c + dc]); }
+    if (!opt || !hasImportedCity || !hasChangesFromBaseline || editMode !== "obstacle") return null;
+    const bPos = Array.from(buildUnlockedBlockSet(baseline.expansions)).map(parseBlockKey);
+    const bMinR = Math.min(...bPos.map((b) => b.row)), bMinC = Math.min(...bPos.map((b) => b.col));
+    const bMaxR = Math.max(...bPos.map((b) => b.row)), bMaxC = Math.max(...bPos.map((b) => b.col));
+    const righe = Math.max(BASE_BLOCK_ROWS, bMaxR - bMinR + 1) * BLOCK_SIZE;
+    const colonne = Math.max(BASE_BLOCK_COLS, bMaxC - bMinC + 1) * BLOCK_SIZE;
+    const sblocc = new Set(bPos.map((b) => blockKey(b.row, b.col)));
+    const maschera = Array.from({ length: righe }, (_, r) => Array.from({ length: colonne }, (_, c) =>
+      sblocc.has(blockKey(bMinR + Math.floor(r / BLOCK_SIZE), bMinC + Math.floor(c / BLOCK_SIZE)))));
+    const prima = baseline.placements.map((p) => ({ p, r: p.row + bMinR * BLOCK_SIZE, c: p.col + bMinC * BLOCK_SIZE }));
+    const dopo = placements.map((p) => ({ p, r: p.row + minUnlockedBlockRow * BLOCK_SIZE, c: p.col + minUnlockedBlockCol * BLOCK_SIZE }));
+    const { statoPrima, statoDopo } = confrontaDisposizioni(prima, dopo);
+    // riepilogo
+    const conta = (l: Placement[]) => { const m = new Map<string, number>(); for (const p of l) m.set(p.buildingId, (m.get(p.buildingId) ?? 0) + 1); return m; };
+    const cP = conta(baseline.placements), cD = conta(placements);
+    const numeri = INITIAL_BUILDINGS
+      .filter((b) => b.id !== opt.strada && (cD.get(b.id) ?? 0) !== (cP.get(b.id) ?? 0))
+      .map((b) => ({ nome: t(b.nameKey, uiLang) as string, diff: (cD.get(b.id) ?? 0) - (cP.get(b.id) ?? 0) }));
+    const rupie5h = (l: Placement[]) => {
+      const staccati = nonCollegati(l, opt);
+      let tot = 0;
+      for (const p of l) {
+        if (!opt.residenze.includes(p.buildingId) || staccati.has(p)) continue;
+        const pr = INITIAL_BUILDINGS.find((b) => b.id === p.buildingId)?.currency?.prod?.[0];
+        if (pr) tot += (pr[0] / (pr[1] / 3600)) * 5;
       }
+      return tot;
+    };
+    let stradeSpostate = 0, daSpostare = 0, ambasciataSpostata = false;
+    for (const [p, st] of statoDopo) {
+      if (st !== "spostato") continue;
+      if (p.buildingId === opt.strada) stradeSpostate++;
+      else { daSpostare++; if (p.buildingId === ID_MUNICIPIO) ambasciataSpostata = true; }
     }
-    for (const p of placements) {
-      if (p.buildingId === ID_MUNICIPIO || p.buildingId === opt.strada || opt.senzaStrada.includes(p.buildingId)) continue;
-      let ok = false;
-      for (const k of collegate) { const [r, c] = k.split(":").map(Number) as [number, number]; if (tocca(r, c, p)) { ok = true; break; } }
-      if (!ok) out.add(p);
-    }
-    return out;
-  }, [placements, cfg]);
+    const riepilogo: DatiRiepilogo = {
+      numeri,
+      stradeNuove: Math.max(0, (cD.get(opt.strada) ?? 0) - (cP.get(opt.strada) ?? 0)),
+      stradeSpostate, daSpostare, ambasciataSpostata,
+      costoStrada: costiValuta[opt.strada] ?? INITIAL_BUILDINGS.find((b) => b.id === opt.strada)?.currency?.cost ?? 0,
+      rupiePrima: rupie5h(baseline.placements), rupieDopo: rupie5h(placements),
+    };
+    return { righe, colonne, maschera, statoPrima, statoDopo, riepilogo };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cfg, hasImportedCity, hasChangesFromBaseline, editMode, baseline, placements, minUnlockedBlockRow, minUnlockedBlockCol, uiLang, costiValuta]);
 
   // ── Nastro (2.0) ────────────────────────────────────────────────────────
   // Come il Planner: i gruppi si ricostruiscono quando cambia lo stato che
@@ -2462,12 +2516,11 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           );
         })()}
 
-        {/* (25/11/2026) Insediamento senza calcolo automatico (Mughal): avviso ben visibile,
-            su una riga sua (basis-full nella riga a capo delle pillole), che il tool per ora
-            disegna e conta ma non calcola ed è all'inizio dello sviluppo. */}
+        {/* (25/11/2026) Insediamento senza calcolo automatico (Mughal): avviso breve sulla
+            riga delle pillole, subito dopo la valuta (26/11/2026: prima su una riga sua). */}
         {!cfg.solver && (
-          <div role="note" className="flex basis-full items-center gap-2 rounded-md border border-violet-400/50 bg-violet-500/15 px-3 py-1.5 text-[12px] text-violet-100">
-            <Construction size={16} className="shrink-0 text-violet-300" aria-hidden="true" />
+          <div role="note" className="flex min-h-7 items-center gap-1.5 rounded border border-violet-400/50 bg-violet-500/15 px-2.5 py-0.5 text-[12px] text-violet-100">
+            <Construction size={14} className="shrink-0 text-violet-300" aria-hidden="true" />
             <span>
               <strong className="font-semibold text-violet-200">{t("insediamentoInSviluppoTitolo", uiLang)}</strong>{" "}
               {t("insediamentoInSviluppoTesto", uiLang)}
@@ -2557,6 +2610,25 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             REALMENTE residuo dopo hint/guida, che restano shrink-0) invece
             di sm:h-full fisso. */}
         <div className="order-2 min-w-0 flex flex-col sm:h-full sm:min-h-0">
+          {/* (26/11/2026, Mughal) con il confronto: attuale | freccia (+ riepilogo su schermi
+              larghi) | nuova, sempre affiancate; sugli schermi più stretti il riepilogo va sotto.
+              Senza confronto, "contents" lascia il layout di prima */}
+          <div className={confronto ? "flex w-full flex-col gap-2 sm:flex-1 sm:min-h-0" : "contents"}>
+          <div className={confronto ? "flex w-full flex-row gap-2 flex-1 min-h-0" : "contents"}>
+          {confronto && (
+            <MappaSolaLettura righe={confronto.righe} colonne={confronto.colonne} maschera={confronto.maschera}
+              ostacoli={baseline.obstacles} piazzamenti={baseline.placements} stato={confronto.statoPrima}
+              edificio={(id) => (id === ID_MUNICIPIO ? MUNICIPIO : INITIAL_BUILDINGS.find((b) => b.id === id))}
+              titolo={t("confrontoAttuale", uiLang) as string} uiLang={uiLang} />
+          )}
+          {confronto && (
+            <div className="flex shrink-0 flex-col items-center justify-center gap-2 lg:w-[190px]">
+              <FrecciaConfronto />
+              <div className="hidden w-full lg:flex lg:justify-center"><RiepilogoConfronto d={confronto.riepilogo} uiLang={uiLang} /></div>
+            </div>
+          )}
+          <div className={confronto ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
+          {confronto && <div className="mb-1 text-center text-[11px] font-bold uppercase tracking-wide text-violet-200">{t("confrontoNuova", uiLang)}</div>}
           <div ref={gridWrapperRef} className="flex items-start justify-center w-full sm:flex-1 sm:min-h-0">
             <div
               ref={gridContainerRef}
@@ -2756,6 +2828,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       isThisBeingDragged && "opacity-30",
                       // non collegato alla strada: tratteggiato e spento (residenze), rosso (gli altri)
                       staccato && "!border-dashed saturate-50 opacity-70",
+                      // confronto con l'attuale: bianco = nuovo, azzurro = spostato (verde e ambra si confondevano
+                      // con le case e l'Ambasciata)
+                      confronto?.statoDopo.get(placement) === "nuovo" && "outline outline-[3px] outline-white",
+                      confronto?.statoDopo.get(placement) === "spostato" && "outline outline-[3px] outline-sky-400",
                       staccato && !residenza && "ring-2 ring-red-500"
                     )}
                     style={{
@@ -2946,6 +3022,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                   );
                 })}
             </div>
+          </div>
+          </div>
+          </div>
+          {confronto && <div className="flex justify-center lg:hidden"><RiepilogoConfronto d={confronto.riepilogo} uiLang={uiLang} /></div>}
           </div>
 
           <p className="text-xs text-slate-400 mt-2 mb-2 sm:mb-0 text-center shrink-0">

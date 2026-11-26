@@ -195,8 +195,20 @@ export function usePonte(): StatoPonte {
 /** Ultimo pacchetto di ogni città propria arrivata dal gioco (uno per mondo e giocatore). */
 /** Mette in pausa o riprende il ponte (clic sull'indicatore). Riprendendo, App importa l'ultimo pacchetto se è cambiato. */
 export function impostaPausaPonte(pausa: boolean) {
+  const riparte = stato.pausa && !pausa;
   try { if (pausa) localStorage.setItem(PAUSA_KEY, "1"); else localStorage.removeItem(PAUSA_KEY); } catch { /* resta solo per questa sessione */ }
+  // (26/11/2026, utente) Ripartire dalla pausa = "aggiorna tutto": si dimenticano le impronte
+  // degli ultimi import (città e insediamenti), così ogni mondo si reimporta come con la
+  // bacchetta, e si chiede al gioco una copia fresca. Serve da refresh se qualcosa non si era
+  // aggiornato. Le modifiche a mano nei planner restano protette dai loro avvisi.
+  if (riparte) {
+    try {
+      const vecchie = Object.keys(localStorage).filter((k) => k.startsWith("foe_global_ponte_ultimo_") || k.startsWith("foe_global_ponte_insediamento_"));
+      for (const k of vecchie) localStorage.removeItem(k);
+    } catch { /* storage non disponibile */ }
+  }
   aggiorna({ ...stato, pausa });
+  if (riparte) window.postMessage({ type: "foe-bridge-request", what: "snapshot" }, location.origin);
 }
 
 export function pacchettiPonte(): PacchettoPonte[] { return [...pacchetti.values()]; }

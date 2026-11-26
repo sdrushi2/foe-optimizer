@@ -2,6 +2,8 @@
 
 ## Version 2.029 (26/11/2026)
 ### New
+- FoE Optimizer Bridge extension (beta): switching back to LIVE after the pause, the tool asks the game for a fresh copy and imports everything again (city, inventory, allies and settlements), like with the wand. It works as a full refresh if something had not been updated. Changes made by hand in the planners stay protected by the usual notice
+- Mughals: when you change the layout (by hand or with an Optimize attempt) you see the current map, as it is in the game, and the new one side by side, with an arrow and the summary of the changes in between: buildings added and removed, new and moved roads, buildings to move, Embassy moved and rupees every 5 hours before and after. On the maps a red border marks the buildings to remove, blue those to move and white the new ones. The current map is view only; Undo goes back to a single map
 - Allies (yours and the Database ones): new View group in the ribbon, after Show rarity, with % Military and Productions (on by default) to hide the columns you don't care about. The choice is saved
 - Settlements (Pirates and Mughals): between POP and the currency there is the total Diplomacy of the buildings built (0 at the start), needed for unlocks
 - Mughals, Optimize: new Continue button, which resumes the search from the attempts found and keeps going until you press Stop, to improve them

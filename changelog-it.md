@@ -2,6 +2,8 @@
 
 ## Versione 2.029 (26/11/2026)
 ### Novità
+- Estensione FoE Optimizer Bridge (beta): rimettendo LIVE dopo la pausa il tool chiede al gioco una copia fresca e reimporta tutto (città, inventario, alleati e insediamenti), come con la bacchetta. Serve da aggiornamento completo se qualcosa non si era aggiornato. Le modifiche fatte a mano nei planner restano protette dal solito avviso
+- Mughal: quando cambi la disposizione (a mano o con un tentativo di Ottimizza) vedi affiancate la mappa attuale, com'è nel gioco, e quella nuova, con in mezzo una freccia e il riepilogo delle variazioni: edifici in più e in meno, strade nuove e spostate, edifici da spostare, Ambasciata spostata e rupie ogni 5 ore prima e dopo. Sulle mappe un bordo rosso segna gli edifici da togliere, azzurro quelli da spostare e bianco quelli nuovi. La mappa attuale è solo da guardare; con Annulla torni a una sola mappa
 - Alleati (i tuoi e quelli del Database): nuovo gruppo Visualizza nel nastro, dopo Visualizza rarità, con % Militari e Produzioni (accesi di base) per nascondere le colonne che non ti interessano. La scelta resta salvata
 - Insediamenti (Pirati e Mughal): tra POP e la valuta c'è la Diplomazia totale degli edifici costruiti (0 di partenza), che serve per gli sblocchi
 - Mughal, Ottimizza: nuovo pulsante Continua, che riprende la ricerca dai tentativi trovati e va avanti finché non premi Stop, per migliorarli
