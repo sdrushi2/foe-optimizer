@@ -10,11 +10,12 @@
 import { ErroreJsonCitta, esportaCittaJson, leggiCittaDati, type MetaExport } from "../data/cityMapJson";
 import { messaggioErroreJson } from "../data/erroriJson";
 import { localDateStamp, prefissoFile } from "../utils/format";
+import { nomeCitta } from "../data/citta";
 
 export { impostaCatalogoExtra } from "../data/cityMapJson";
 
 /** Giocatore ed era della città nell'editor (per il JSON salvato). */
-type Meta = { player?: { id: number | null; name: string }; currentEra?: string; avatar?: string };
+type Meta = { player?: { id: number | null; name: string }; currentEra?: string; avatar?: string; mondo?: string };
 
 /** Qualsiasi JSON della città che legge il tool (completa o solo città: conta la
  *  mappa), convertito nel formato dell'export della Mappa, che l'editor disegna. */
@@ -27,8 +28,11 @@ export function leggiJson(testo: string, lang: "it" | "en"): { ok: true; json: u
       ...(c.giocatore ? { player: { id: c.giocatore.id, name: c.giocatore.nome } } : {}),
       ...(c.giocatore?.era ? { currentEra: c.giocatore.era } : {}),
       ...(c.avatar ? { avatar: c.avatar } : {}),
+      ...(c.mondo ? { mondo: c.mondo } : {}),
     };
-    return { ok: true, json: esportaCittaJson(c.buildings, c.aree, undefined, meta), ignorati: c.ignorati ?? [], nome: c.giocatore?.nome ?? null };
+    return { ok: true, json: esportaCittaJson(c.buildings, c.aree, undefined, meta), ignorati: c.ignorati ?? [],
+      // nome della città come nel tool: lettera del mondo + giocatore ("F · Sdrushi")
+      nome: c.giocatore ? nomeCitta(c.giocatore.nome, c.mondo ?? null) : null };
   } catch (err) {
     return { ok: false, errore: messaggioErroreJson(err, lang) };
   }

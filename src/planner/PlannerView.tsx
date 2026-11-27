@@ -1239,11 +1239,12 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
   /** Intestazione degli export: la città selezionata (undefined = quella impostata da App) o,
-   *  per una città da JSON, giocatore, era e avatar del file. */
+   *  per una città da JSON, giocatore, era, avatar e mondo del file. */
   const metaExport = (): MetaExport | undefined => esterna ? {
     ...(esterna.giocatore ? { player: { id: esterna.giocatore.id, name: esterna.giocatore.nome } } : {}),
     ...(esterna.giocatore?.era ? { currentEra: esterna.giocatore.era } : {}),
     ...(esterna.avatar ? { avatar: esterna.avatar } : {}),
+    ...(esterna.mondo ? { mondo: esterna.mondo } : {}),
   } : undefined;
   const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema(), undefined, metaExport()), nomeFile(n, "json"));
   /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */

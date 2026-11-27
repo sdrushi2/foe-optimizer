@@ -50,7 +50,7 @@ async function leggiJson(testo: string, lang: "it" | "en") {
   return (await lettura()).leggiJson(testo, lang);
 }
 /** Salva JSON dell'editor: vedi editor/lettura.ts. */
-async function jsonDaSalvare(json: unknown, meta: { player?: { id: number | null; name: string }; currentEra?: string; avatar?: string }, nome?: string | null) {
+async function jsonDaSalvare(json: unknown, meta: { player?: { id: number | null; name: string }; currentEra?: string; avatar?: string; mondo?: string }, nome?: string | null) {
   return (await lettura()).jsonDaSalvare(json, meta, nome);
 }
 

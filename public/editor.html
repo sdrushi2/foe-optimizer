@@ -425,10 +425,11 @@ function parse(data, colori) {
   }
   // nessuna strada 2×2 nella città: la Strada asfaltata del gioco (prima strada a due corsie)
   if (!s2) s2 = { eid: 'S_ProgressiveEra_CarStreet1', name: lingua === 'en' ? 'Two-lane road' : 'Strada asfaltata', w: 2, h: 2 };
-  // giocatore, era e avatar della città: finiscono nel JSON salvato
+  // giocatore, era, avatar e mondo della città: finiscono nel JSON salvato
   const pl = data.player && typeof data.player.name === 'string' ? { id: typeof data.player.id === 'number' ? data.player.id : null, name: data.player.name } : null;
   const meta = Object.assign({}, pl ? { player: pl } : {}, typeof data.currentEra === 'string' ? { currentEra: data.currentEra } : {},
-    typeof data.portraitUrl === 'string' ? { avatar: data.portraitUrl } : {});
+    typeof data.portraitUrl === 'string' ? { avatar: data.portraitUrl } : {},
+    typeof data.server === 'string' ? { mondo: data.server } : {});
   fonte = { ents, areeRaw, celle, meta, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h },
             strada2: s2 && { eid: s2.eid, name: s2.name, w: 2, h: 2 } };
   return { areas, items };

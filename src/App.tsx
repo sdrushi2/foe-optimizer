@@ -7061,6 +7061,7 @@ export default function App() {
     impostaMetaExport(haCitta ? {
       player: { id: p?.playerId ?? null, name: p ? nomeGiocatore(p) : "" },
       ...(sanitizePortraitUrl(p?.avatar) ? { avatar: sanitizePortraitUrl(p?.avatar) } : {}),
+      ...(p?.mondo ? { mondo: p.mondo } : {}),
       region: gameLang,
       ...(currentEra ? { currentEra } : {}),
       cittaReale: cityMapBuildings,
@@ -7774,7 +7775,7 @@ export default function App() {
                   cityMapBuildings={usaJson ? NESSUN_EDIFICIO : cityMapBuildings}
                   cityMapUnlockedCells={usaJson ? NESSUNA_CELLA : cityMapUnlockedCells}
                   esterna={usaJson ? plannerJson!.citta : null}
-                  nomePerFile={usaJson ? (plannerJson!.citta.giocatore?.nome ?? plannerJson!.citta.nome) : profiles.find(x => x.id === activeProfileId)?.name}
+                  nomePerFile={usaJson ? (plannerJson!.citta.giocatore ? nomeCitta(plannerJson!.citta.giocatore.nome, plannerJson!.citta.mondo ?? null) : plannerJson!.citta.nome) : profiles.find(x => x.id === activeProfileId)?.name}
                   candidati={plannerCandidati}
                   uiLang={uiLang}
                   onNastro={setGruppiPlanner}

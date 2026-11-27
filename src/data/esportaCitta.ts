@@ -37,6 +37,7 @@ export function fileCitta(p: Profile, completa: boolean, versioneApp: string): {
     player: { id: p.playerId ?? null, name: nomeGiocatore(p) },
     region: s.gameLang,
     ...(p.avatar ? { avatar: p.avatar } : {}),
+    ...(p.mondo ? { mondo: p.mondo } : {}),
     ...(s.currentEra ? { currentEra: s.currentEra } : {}),
     cittaReale: s.cityMapBuildings,
     grandiEdifici: new Map((s.greatBuildingsJson ?? []).map(([id, gb]) => [id, (gb.rawEntry ?? {}) as Record<string, unknown>])),

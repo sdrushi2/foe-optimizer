@@ -105,6 +105,8 @@ export function cittaDaJson(testo: string): CittaDaJson {
     ...(nome ? { playerName: nome } : {}),
     // avatar del file: importaPayload lo controlla (sanitizePortraitUrl) e lo mette alla città
     ...(l.avatar ? { portraitUrl: l.avatar } : {}),
+    // mondo del file: la città torna con la lettera del mondo e si distingue dalle altre (infoImport)
+    ...(l.mondo ? { server: l.mondo } : {}),
   };
   return { data, ignorati: l.ignorati, nome };
 }
