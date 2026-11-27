@@ -9,9 +9,13 @@
 //   - nella build (npm run build) viene compilato in dist/editor-condiviso.js
 //     (plugin editorCondivisoPlugin in vite.config.ts).
 //  Così una modifica all'export PNG del tool vale anche per l'editor.
+//  27/11/2026: anche "Importa JSON" e "Salva JSON" dell'editor passano da qui:
+//  stesso lettore del tool (leggiCitta, data/cityMapJson.ts), stessi messaggi
+//  d'errore (data/erroriJson.ts), stesso formato dell'export della Mappa.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { coloreEdificioMappa, renderCityMapPng } from "../components/cityMapPng";
+import { caricaBuildingsExtra, caricaDatiGioco } from "../data/datiGioco";
 
 /** Lingua del tool per l'editor aperto da solo (dal tool la lingua arriva nel
  *  messaggio "carica"): la scelta salvata dal tool (chiave UI_LANG_KEY di
@@ -31,7 +35,25 @@ function linguaUi(): "it" | "en" {
   return langs.some(l => l?.toLowerCase().startsWith("it")) ? "it" : "en";
 }
 
-const condiviso = { coloreEdificioMappa, renderCityMapPng, linguaUi };
+/** Lettore e scrittore dei JSON (editor/lettura.ts), caricati a richiesta: i loro
+ *  moduli (ere, catalogo) leggono i dati del gioco appena caricati, quindi prima
+ *  si scaricano i dati (come main.tsx prima dell'app), poi si importa il codice. */
+async function lettura() {
+  await caricaDatiGioco();
+  const m = await import("./lettura");
+  m.impostaCatalogoExtra(await caricaBuildingsExtra());
+  return m;
+}
+/** Importa JSON dell'editor: vedi editor/lettura.ts. */
+async function leggiJson(testo: string, lang: "it" | "en") {
+  return (await lettura()).leggiJson(testo, lang);
+}
+/** Salva JSON dell'editor: vedi editor/lettura.ts. */
+async function jsonDaSalvare(json: unknown, meta: { player?: { id: number | null; name: string }; currentEra?: string }) {
+  return (await lettura()).jsonDaSalvare(json, meta);
+}
+
+const condiviso = { coloreEdificioMappa, renderCityMapPng, linguaUi, leggiJson, jsonDaSalvare };
 
 declare global {
   interface Window { FoeCondiviso?: typeof condiviso }

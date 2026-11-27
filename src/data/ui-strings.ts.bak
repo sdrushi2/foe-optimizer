@@ -1,0 +1,3191 @@
+/** Lingue supportate dalla GUI: solo it/en per ora (a differenza del tipo
+ *  Lang usato per i dati di gioco, che ne ammette 5). */
+export type UiLang = "it" | "en";
+
+/** Elenco delle lingue GUI disponibili, nell'ordine in cui appaiono nel
+ *  selettore. Per aggiungerne una in futuro (es. tedesco): allargare
+ *  UiLang, aggiungere una riga qui con il suo nome nativo, aggiungere la sua
+ *  bandiera SVG in App.tsx (FlagXX) e mapparla in FLAG_BY_LANG. Nessun'altra
+ *  modifica al componente del selettore è necessaria: itera questa lista. */
+export const UI_LANGUAGES: ReadonlyArray<{ code: UiLang; nativeName: string }> = [
+  { code: "it", nativeName: "Italiano" },
+  { code: "en", nativeName: "English" },
+];
+
+/**
+ * Stringhe statiche della GUI (etichette, tooltip, messaggi, help).
+ *
+ * Diverso da translations.ts: quello traduce DATI di gioco (nomi di edifici,
+ * alleati, kit, ere), questo traduce il TESTO dell'interfaccia stessa.
+ *
+ * Fallback: lingua richiesta -> inglese -> chiave stessa (mai un buco
+ * visibile se manca una entry). Le parole identiche in italiano e inglese
+ * (prestiti comuni come "kit", "export", sigle come "LIGHT"/"FULL") non
+ * vanno duplicate: si scrivono una sola volta in UI_STRINGS_SHARED.
+ *
+ * Le chiavi sono nominate per CONTENUTO ("profileDelete"), non per
+ * posizione nella UI ("header.row2.btn3"): il layout cambia più spesso del
+ * significato di una stringa, quindi i nomi per contenuto richiedono meno
+ * manutenzione nel tempo.
+ */
+
+const UI_STRINGS = {
+  // ── Barra profili (header) ────────────────────────────────────────────
+  profileDelete: {
+    it: "Elimina profilo",
+    en: "Delete profile",
+  },
+  wandTitle: {
+    it: "Clic: importa la città copiata dal segnalibro · Trascinala nella barra dei preferiti per creare il segnalibro da usare nel gioco",
+    en: "Click: import the city copied by the bookmark · Drag it to the bookmarks bar to create the bookmark to use in the game",
+  },
+  // (24/11/2026) indicatore del ponte (estensione FoE Optimizer Bridge) accanto alla bacchetta
+  r2PonteLiveTitle: {
+    it: (g: string, s: string, ora: string) => `LIVE: collegato al gioco. La città di ${g} (${s}) arriva dal gioco a ogni modifica (ultima alle ${ora})`,
+    en: (g: string, s: string, ora: string) => `LIVE: connected to the game. ${g}'s city (${s}) comes from the game at every change (last at ${ora})`,
+  },
+  r2PonteWaitTitle: {
+    it: "LIVE: estensione FoE Optimizer Bridge attiva, in attesa del gioco. Apri il gioco con FoE Helper o Forge Hammer attivo e aspetta che la città sia caricata (se avevi appena attivato l'estensione, ricarica il gioco)",
+    en: "LIVE: FoE Optimizer Bridge extension active, waiting for the game. Open the game with FoE Helper or Forge Hammer active and wait for the city to load (if you just enabled the extension, reload the game)",
+  },
+  r2PontePausaTitle: {
+    it: "IN PAUSA: il ponte riceve ancora la città dal gioco ma non aggiorna né crea città nel tool. Clic per riprendere: si reimporta tutto dal gioco (città, inventario, alleati e insediamenti), come un aggiornamento completo",
+    en: "PAUSED: the bridge still receives the city from the game but does not update or create cities in the tool. Click to resume: everything is imported again from the game (city, inventory, allies and settlements), like a full refresh",
+  },
+  r2PonteClicPausa: { it: "Clic: metti in pausa", en: "Click: pause" },
+  r2PontePausa: { it: "PAUSA", en: "PAUSED" },
+  r2PontePlannerAvviso: {
+    it: (ora: string) => `La tua città è cambiata nel gioco (ultimo aggiornamento alle ${ora}). Il Planner lavora ancora sulla città di prima`,
+    en: (ora: string) => `Your city changed in the game (last update at ${ora}). The Planner is still working on the previous city`,
+  },
+  r2PontePlannerAggiorna: { it: "Aggiorna", en: "Update" },
+  // (25/11/2026) ponte per gli insediamenti
+  r2PonteInsediamentoAvviso: {
+    it: (ora: string) => `L'insediamento è cambiato nel gioco (ultimo aggiornamento alle ${ora}). Qui ci sono modifiche tue, quindi non l'ho aggiornato da solo`,
+    en: (ora: string) => `The settlement changed in the game (last update at ${ora}). There are changes of yours here, so it was not updated by itself`,
+  },
+  r2PonteInsediamentoAggiornaTitle: {
+    it: "Importa l'insediamento dal gioco: le modifiche fatte qui (edifici spostati, espansioni o ostacoli di prova) vanno perse",
+    en: "Imports the settlement from the game: the changes made here (moved buildings, test expansions or obstacles) are lost",
+  },
+  r2PontePlannerAggiornando: { it: "Aggiorno…", en: "Updating…" },
+  r2PontePlannerAggiornaTitle: {
+    it: "Importa la città dal gioco e fa ripartire il Planner da lì: ricerche, modifiche e risultati del Planner di adesso vanno persi",
+    en: "Imports the city from the game and restarts the Planner from it: the current Planner searches, edits and results are lost",
+  },
+  r2PonteOffTitle: {
+    it: "OFF: estensione FoE Optimizer Bridge non attiva. Coming soon! Per ora la città si importa con la bacchetta, come sempre",
+    en: "OFF: FoE Optimizer Bridge extension not active. Coming soon! For now, import your city with the wand, as always",
+  },
+  exportNoProfiles: {
+    it: "Nessun profilo da salvare",
+    en: "No profiles to save",
+  },
+  exportProfiles: {
+    it: "Salva profili",
+    en: "Save profiles",
+  },
+
+  // ── Tab di navigazione ────────────────────────────────────────────────
+  // ── FoE Optimizer 2.0: schede e nastro (ui/Testata.tsx, ui/nastri.tsx) ──
+  r2CityUpdated: { it: (n: string) => `Aggiornata ${n}`, en: (n: string) => `${n} updated` },
+  r2CityAdded: { it: (n: string) => `Aggiunta la tua città ${n}`, en: (n: string) => `Your city ${n} added` },
+  r2CityAddedVisited: { it: (n: string) => `Aggiunta la città di ${n}`, en: (n: string) => `${n}'s city added` },
+  r2CityAddedFull: { it: (n: string) => `Aggiunta ${n}, completa di inventario e alleati`, en: (n: string) => `${n} added, with inventory and allies` },
+  // Menu delle città: export e simboli (27/11/2026)
+  r2Editor: { it: "Editor", en: "Editor" },
+  r2EditorTitle: { it: "Apre l'editor della città in una nuova scheda, vuoto: carica una città con Importa JSON, spostala e salvala in JSON o PNG", en: "Opens the city editor in a new tab, empty: load a city with Import JSON, move things around and save it as JSON or PNG" },
+  r2ExportFull: { it: "Esporta la città completa", en: "Export the full city" },
+  r2ExportCityOnly: { it: "Esporta solo la città", en: "Export the city only" },
+  r2ExportNoMap: { it: "Questa città non ha la mappa: reimportala con la bacchetta o il ponte.", en: "This city has no map: import it again with the wand or the bridge." },
+  r2LegButtons: { it: "Pulsanti", en: "Buttons" },
+  r2LegFull: { it: "esporta la città completa: mappa, inventario, alleati, risorse e Castello", en: "export the full city: map, inventory, allies, resources and Castle" },
+  r2LegCityOnly: { it: "esporta solo la città: la mappa, per Forge Hammer o un altro giocatore", en: "export the city only: the map, for Forge Hammer or another player" },
+  r2LegDelete: { it: "elimina la città", en: "delete the city" },
+  r2JsonIsBackup: { it: "Questo file è un backup completo di FoE Optimizer: per caricarlo usa Opzioni › Ripristina backup.", en: "This file is a full FoE Optimizer backup: to load it, use Options › Restore backup." },
+  // Errori di lettura dei JSON della città (27/11/2026, data/erroriJson.ts)
+  r2JsonErrJson: { it: "Il file non è un JSON valido: forse è incompleto o non è il file giusto.", en: "The file is not valid JSON: it may be incomplete or not the right file." },
+  r2JsonErrNoCity: { it: "Il file non contiene una città: servono gli edifici (CityMapData, mapBuildings o cityData). Usa l'export di FoE Optimizer, della bacchetta o di Forge Hammer.", en: "The file contains no city: it needs the buildings (CityMapData, mapBuildings or cityData). Use an export from FoE Optimizer, the wand or Forge Hammer." },
+  r2JsonErrNoAreas: { it: "Nel file mancano le espansioni della città (UnlockedAreas o mapData).", en: "The file is missing the city expansions (UnlockedAreas or mapData)." },
+  r2JsonErrNoTownHall: { it: "Nel file manca il municipio: senza non si può aprire la città.", en: "The file has no town hall: the city can't be opened without it." },
+  r2JsonErrOther: { it: (m: string) => `Impossibile leggere la città: ${m}`, en: (m: string) => `Could not read the city: ${m}` },
+  r2JsonFullBad: { it: "il pacchetto della città completa è danneggiato", en: "the full city package is damaged" },
+  r2MyCities: { it: "Le tue città", en: "Your cities" },
+  r2JsonCities: { it: "Città importate da JSON", en: "Cities imported from JSON" },
+  r2VisitedCities: { it: "Città visitate", en: "Visited cities" },
+  r2VisitedCity: { it: "Città visitata", en: "Visited city" },
+  r2GrpPlayer: { it: "Giocatore", en: "Player" },
+  r2NoCitiesYet: { it: "Nessuna città. Puoi aggiungerne una così:", en: "No cities yet. You can add one like this:" },
+  r2NoCitiesWand: { it: "la bacchetta verde in alto: cliccala dal gioco, con FoE Helper o Forge Hammer", en: "the green magic wand at the top: click it from the game, with FoE Helper or Forge Hammer" },
+  r2NoCitiesBridge: { it: "l'estensione FoE Optimizer Bridge, che porta qui la città da sola mentre giochi", en: "the FoE Optimizer Bridge extension, which brings the city here by itself while you play" },
+  r2NoCitiesJson: { it: "Importa da JSON qui sotto, con un file della città", en: "Import from JSON below, with a city file" },
+  // (25/11/2026) su telefono e tablet la bacchetta non c'è (utils/dispositivo.ts)
+  r2NoCitiesYetMobile: { it: "Nessuna città: da qui puoi caricare un file JSON della tua città (Importa da JSON). La bacchetta funziona solo dal computer.", en: "No cities yet: from here you can load a JSON file of your city (Import from JSON). The magic wand works only on a computer." },
+  r2RenameCity: { it: "Nome della città", en: "City name" },
+  r2RenameCityHint: { it: "Doppio clic per rinominare la città", en: "Double-click to rename the city" },
+  r2DeleteCity: { it: "Elimina", en: "Delete" },
+  r2DeleteAsk: { it: (n: string) => `Eliminare ${n}?`, en: (n: string) => `Delete ${n}?` },
+  r2DeleteMine: {
+    it: "Verranno tolti mappa, inventario, alleati e insediamenti di questa città. Fai prima un backup da Opzioni se vuoi conservarli.",
+    en: "Map, inventory, allies and settlements of this city will be removed. Make a backup from Options first if you want to keep them.",
+  },
+  r2DeleteVisited: {
+    it: "Verrà tolta la mappa di questa città visitata. Potrai reimportarla quando vuoi.",
+    en: "The map of this visited city will be removed. You can import it again at any time.",
+  },
+  r2Cancel: { it: "Annulla", en: "Cancel" },
+  r2OnlyMine: { it: "Disponibile solo per le tue città", en: "Only available for your cities" },
+  r2GrpBackup: { it: "Backup", en: "Backup" },
+  r2Manage: { it: "Gestisci", en: "Manage" },
+  r2GrpReset: { it: "Azzera", en: "Reset" },
+  r2ResetAll: { it: "Cancella tutto", en: "Erase everything" },
+  r2ResetAllTitle: { it: "Cancella tutti i dati e le impostazioni salvati da questo sito nel browser (città, pesi, tema, lingua…) e ricarica la pagina", en: "Erase all data and settings this site saved in the browser (cities, weights, theme, language…) and reload the page" },
+  r2ResetAllConfirm: { it: "Cancellare TUTTI i dati e le impostazioni salvati (città, pesi, tema, lingua e qualunque altra cosa)?\n\nNon si può annullare: se vuoi tenerli, prima fai \"Esporta backup\".", en: "Erase ALL saved data and settings (cities, weights, theme, language and anything else)?\n\nThis cannot be undone: to keep them, use \"Export backup\" first." },
+  r2ExportAll: { it: "Esporta backup", en: "Export backup" },
+  r2Restore: { it: "Ripristina backup", en: "Restore backup" },
+  // Pannello del backup (27/11/2026, ui/PannelloBackup.tsx)
+  r2BkMie: { it: "Le tue città", en: "Your cities" },
+  r2BkMieCosa: { it: "di ognuna mappa, inventario, alleati, risorse e livello del Castello", en: "for each one map, inventory, allies, resources and Castle level" },
+  r2BkVisitate: { it: "Città visitate", en: "Visited cities" },
+  r2BkVisitateCosa: { it: "solo la mappa", en: "the map only" },
+  r2BkImpostazioni: { it: "Impostazioni", en: "Settings" },
+  r2BkImpostazioniCosa: { it: "lingua, tema, pesi delle statistiche, colonne e opzioni delle tabelle, potenza CPU del Planner", en: "language, theme, statistics weights, table columns and options, Planner CPU power" },
+  r2BkInsediamenti: { it: "Insediamenti", en: "Settlements" },
+  r2BkInsediamentiCosa: { it: (n: number) => `edifici sbloccati e insediamento scelto (${n} ${n === 1 ? "insediamento" : "insediamenti"})`, en: (n: number) => `unlocked buildings and chosen settlement (${n} ${n === 1 ? "settlement" : "settlements"})` },
+  r2BkNessuna: { it: "nessuna", en: "none" },
+  r2BkNessuno: { it: "nessuno", en: "none" },
+  r2BkDimensione: { it: (s: string) => `Dimensione del file: circa ${s}.`, en: (s: string) => `File size: about ${s}.` },
+  r2BkAnnulla: { it: "Annulla", en: "Cancel" },
+  r2BkEspIntro: { it: "Il backup salva in un file TUTTO quello che FoE Optimizer ha salvato in questo browser:", en: "The backup saves to a file EVERYTHING FoE Optimizer has saved in this browser:" },
+  r2BkEspAvviso: { it: "È un file personale: contiene i dati delle tue città e del tuo account di gioco (nomi e id dei giocatori, mondi). Non darlo ad altri giocatori. Per mandare una città a qualcuno usa il JSON della mappa (Città › Mappa › JSON).", en: "This is a personal file: it contains your cities and your game account data (player names and ids, worlds). Do not give it to other players. To send a city to someone, use the map JSON (City › Map › JSON)." },
+  r2BkEspFatto: { it: (f: string) => `Backup salvato: ${f}`, en: (f: string) => `Backup saved: ${f}` },
+  r2BkRipIntro: { it: "Il ripristino sostituisce tutti i dati di FoE Optimizer in questo browser con quelli di un file creato con \"Esporta backup\".", en: "Restoring replaces all FoE Optimizer data in this browser with those of a file made with \"Export backup\"." },
+  r2BkRipScegli: { it: "Scegli il file di backup", en: "Choose the backup file" },
+  r2BkRipAltroFile: { it: "Scegli un altro file", en: "Choose another file" },
+  r2BkRipContenuto: { it: (f: string) => `Contenuto di ${f}`, en: (f: string) => `Contents of ${f}` },
+  r2BkRipData: { it: (d: string) => `backup del ${d}`, en: (d: string) => `backup of ${d}` },
+  r2BkRipAvvisoCitta: { it: (n: number, nomi: string) => `Attenzione: ${n === 1 ? "la città salvata ora" : `le ${n} città salvate ora`} (${nomi}) ${n === 1 ? "verrà cancellata" : "verranno cancellate"} e tutte le impostazioni sovrascritte con quelle del backup. Non si può annullare.`, en: (n: number, nomi: string) => `Warning: ${n === 1 ? "the city saved now" : `the ${n} cities saved now`} (${nomi}) will be deleted and all settings overwritten with those of the backup. This cannot be undone.` },
+  r2BkRipAvvisoVuoto: { it: "Attenzione: tutte le impostazioni attuali verranno sovrascritte con quelle del backup. Non si può annullare.", en: "Warning: all current settings will be overwritten with those of the backup. This cannot be undone." },
+  r2BkErrJson: { it: "non è un file JSON valido.", en: "this is not a valid JSON file." },
+  r2BkErrCitta: { it: "è la mappa di una città, non un backup. Per aggiungerla usa \"Importa da JSON\" nel menu delle città.", en: "this is a city map, not a backup. To add it, use \"Import from JSON\" in the city menu." },
+  r2BkErrVuoto: { it: "il backup non contiene dati.", en: "the backup contains no data." },
+  r2BkErrAltroFile: { it: "non è un backup di FoE Optimizer.", en: "this is not a FoE Optimizer backup." },
+  r2BkErrLettura: { it: "Impossibile leggere il file.", en: "Could not read the file." },
+  r2BkErrSpazio: { it: "Ripristino non riuscito: la memoria del browser è piena. I dati di prima sono stati rimessi com'erano.", en: "Restore failed: the browser storage is full. Your previous data has been put back as it was." },
+  r2BkErrAltro: { it: "Ripristino non riuscito. I dati di prima sono stati rimessi com'erano.", en: "Restore failed. Your previous data has been put back as it was." },
+  r2TabDatabase: { it: "Database", en: "Database" },
+  r2TabCity: { it: "Città", en: "City" },
+  r2TabInventory: { it: "Inventario", en: "Inventory" },
+  r2TabPlanner: { it: "Planner", en: "Planner" },
+  r2TabAllies: { it: "Alleati", en: "Allies" },
+  r2TabSettlements: { it: "Insediamenti", en: "Settlements" },
+  r2TabOptions: { it: "Opzioni", en: "Options" },
+  r2TabHelp: { it: "Guida", en: "Help" },
+  r2GrpCatalog: { it: "Catalogo", en: "Catalog" },
+  r2GrpSearch: { it: "Ricerca", en: "Search" },
+  r2GrpCity: { it: "Città", en: "City" },
+  r2GrpTools: { it: "Tools", en: "Tools" },
+  r2GrpSource: { it: "Sorgente", en: "Source" },
+  r2GrpTheme: { it: "Tema", en: "Theme" },
+  r2GrpLearn: { it: "Impara", en: "Learn" },
+  r2GrpInfo: { it: "Info", en: "Info" },
+  r2Buildings: { it: "Edifici", en: "Buildings" },
+  r2AlliesCat: { it: "Alleati", en: "Allies" },
+  r2GreatBuildingsCat: { it: "Grandi Edifici", en: "Great Buildings" },
+  r2GrpGeLevel: { it: "Livello", en: "Level" },
+  r2GrpDbEra: { it: "Era", en: "Era" },
+  r2GrpDbEraSearch: { it: "Era e ricerca", en: "Era and search" },
+  r2DbEraHelp: {
+    it: "Valori del Database a quell'era: produzioni, valori militari, popolazione ed efficienza. Di base l'era più recente; le altre si scaricano quando le scegli.",
+    en: "Database values at that era: productions, military values, population and efficiency. By default the latest era; the others are downloaded when you pick them.",
+  },
+  r2DbEraFailed: { it: "Non è stato possibile scaricare i valori di quell'era: restano quelli dell'era più recente.", en: "Couldn't download the values for that era: the latest era values stay." },
+  r2GrpGeTier: { it: "Tier", en: "Tier" },
+  r2GeTierAll: { it: "Tutti", en: "All" },
+  r2GeTierCopper: { it: "Solo Rame", en: "Copper only" },
+  r2GeTierGold: { it: "Anche Oro", en: "With Gold" },
+  r2GeLevelHelp: {
+    it: "Statistiche dei Grandi Edifici al livello scelto: i soli livelli noti dai dati del gioco (fra due livelli la crescita non è lineare). I GE solo Rame si fermano al 200: dal 201 in su mostrano i valori del 200.",
+    en: "Great Building stats at the chosen level: only the levels known from the game data (growth between two levels is not linear). Copper-only GBs stop at 200: from 201 up they show the level 200 values.",
+  },
+  gbRelicsTitle: {
+    it: (p: number, r: number) => {
+      const ass = (p * r / 100).toLocaleString("it-IT", { maximumFractionDigits: 2 });
+      return `Reliquie nelle Spedizioni di gilda (dopo ogni incontro risolto):\n• ${p}% di probabilità di trovare una reliquia nascosta sulla mappa\n• se la trovi, ${r}% che sia rara (giada); altrimenti è comune o non comune\n• in tutto: ${ass}% di trovare una reliquia rara a ogni incontro`;
+    },
+    en: (p: number, r: number) => {
+      const ass = (p * r / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });
+      return `Relics in Guild Expeditions (after each solved encounter):\n• ${p}% chance to find a relic hidden on the map\n• if you find one, ${r}% chance it is rare (jade); otherwise it is common or uncommon\n• overall: ${ass}% chance of a rare relic per encounter`;
+    },
+  },
+  gbCritCopperTitle: {
+    it: (v: number) => `Colpo critico (tier Rame): ${v}% di probabilità che una tua unità infligga il 150% del danno quando colpisce un'unità nemica della sua stessa era.\nVale in tutte le battaglie tranne Arena PvP, Incursioni quantiche e Insediamento egizio.`,
+    en: (v: number) => `Critical hit (Copper tier): ${v}% chance that one of your units deals 150% damage when it hits an enemy unit of its same age.\nApplies to all battles except the PvP Arena, Quantum Incursions and the Egyptian settlement.`,
+  },
+  gbCritGoldTitle: {
+    it: (v: number) => `Colpo critico potenziato (tier Oro): ${v}% di probabilità che una tua unità infligga il 150% del danno quando colpisce un'unità nemica di un'era diversa dalla sua (il Rame vale solo per la stessa era).\nNon vale per i Furfanti.`,
+    en: (v: number) => `Enhanced critical hit (Gold tier): ${v}% chance that one of your units deals 150% damage when it hits an enemy unit of a different age from its own (Copper only covers the same age).\nDoes not apply to Rogues.`,
+  },
+  gbRepelTitle: {
+    it: (p: number, n: number) => `Respingi saccheggi: quando un altro giocatore che ti ha sconfitto prova a saccheggiare un tuo edificio, ${p}% di probabilità che il saccheggio venga respinto.${n ? `\nVale per ${n === 1 ? "1 tentativo" : `${n} tentativi`} di saccheggio; il contatore si ricarica a ogni raccolta della Torre (di solito ogni 24 ore, oppure subito quando la fai salire di livello).` : ""}`,
+    en: (p: number, n: number) => `Repel plunder: when another player who defeated you tries to plunder one of your buildings, ${p}% chance that the plunder is repelled.${n ? `\nCovers ${n === 1 ? "1 plunder attempt" : `${n} plunder attempts`}; the counter refills at every collection of the Tower (usually every 24 hours, or right away when you level it up).` : ""}`,
+  },
+  gbHelpCopperTitle: {
+    it: (v: number) => `Mani amiche (tier Rame): ogni volta che aiuti un altro giocatore, ${v}% di probabilità di ricevere anche una risorsa casuale (monete, materiali, beni, medaglie o diamanti).`,
+    en: (v: number) => `Helping hands (Copper tier): every time you aid another player, ${v}% chance to also receive a random resource (coins, supplies, goods, medals or diamonds).`,
+  },
+  gbHelpGoldTitle: {
+    it: (v: number) => `Mani amiche migliorate (tier Oro): ogni volta che aiuti un altro giocatore, ${v}% di probabilità di ottenere una ricompensa migliore.`,
+    en: (v: number) => `Improved helping hands (Gold tier): every time you aid another player, ${v}% chance of getting a better reward.`,
+  },
+  gbContribCopperTitle: {
+    it: (v: number) => `Bonus di contributo (tier Rame): +${v}% sulle ricompense quando versi Punti Forge nei Grandi Edifici degli altri giocatori, sui livelli del tier Rame (fino al livello 100, o su tutti i livelli dei GE solo Rame).`,
+    en: (v: number) => `Contribution boost (Copper tier): +${v}% on rewards when you contribute Forge Points to other players' Great Buildings, on Copper tier levels (up to level 100, or every level of Copper-only GBs).`,
+  },
+  gbContribGoldTitle: {
+    it: (v: number) => `Bonus di contributo Oro (tier Oro): +${v}% sulle ricompense quando versi Punti Forge nei livelli del tier Oro dei Grandi Edifici degli altri giocatori (dal livello 101 dei GE con il tier Oro).\nSi somma agli altri bonus di contributo Oro (Arca, Sifone, tecnologie dell'Era Stellare).`,
+    en: (v: number) => `Gold contribution boost (Gold tier): +${v}% on rewards when you contribute Forge Points to Gold tier levels of other players' Great Buildings (from level 101 of GBs with a Gold tier).\nAdds up with the other Gold contribution boosts (Arc, Siphon, Stellar Age technologies).`,
+  },
+  gbAidBlueprintsTitle: {
+    it: (v: number) => `Assistenza Progetti rame (tier Rame): +${v.toLocaleString("it-IT")}% di probabilità in più, rispetto a quella normale, di trovare un Progetto rame quando aiuti un altro giocatore.`,
+    en: (v: number) => `Copper blueprint assistance (Copper tier): +${v.toLocaleString("en-US")}% chance, compared to the normal one, to find a Copper blueprint when you aid another player.`,
+  },
+  allyBoostLevelTitle: {
+    it: (b: number, l: number) => `+${b} livelli dal Grande Edificio (Colosseo o Tempio del Loto, tier Oro): le statistiche sono calcolate come al livello ${l}`,
+    en: (b: number, l: number) => `+${b} levels from the Great Building (Colosseum or Lotus Temple, Gold tier): stats are computed as at level ${l}`,
+  },
+  gbDoubleCollectTitle: {
+    it: (p: number, n: number) => `Doppio incasso (tier Rame): per i primi ${n} edifici raccolti nella città, c'è una probabilità del ${p}% che le risorse raccolte vengano raddoppiate. Sono esclusi il Municipio e i Grandi Edifici. Si aggiorna a ogni raccolta di questo edificio.`,
+    en: (p: number, n: number) => `Double collection (Copper tier): for the first ${n} buildings collected in your city, ${p}% chance that the collected resources are doubled. Town Hall and Great Buildings excluded. Refreshes at every collection of this building.`,
+  },
+  gbDoubleCollectGoldTitle: {
+    it: (p: number, n: number) => `Doppio incasso nell'insediamento IQ (tier Oro): per i primi ${n} edifici raccolti nel tuo insediamento IQ attivo, c'è una probabilità del ${p}% che le risorse raccolte vengano raddoppiate. Escluso il municipio. Si aggiorna a ogni raccolta di questo edificio.`,
+    en: (p: number, n: number) => `QI settlement double collection (Gold tier): for the first ${n} buildings collected in your active QI settlement, ${p}% chance that the collected resources are doubled. Town hall excluded. Refreshes at every collection of this building.`,
+  },
+  gbShardsTitle: {
+    it: (p: number, r: number) => `Schegge misteriose (tier Rame): ${p}% di probabilità di generare una Scheggia Premio nel tuo Insediamento culturale attivo una volta ogni 4 ore; ${r}% di probabilità che la Scheggia sia rara. Ogni Scheggia va raccolta a mano, altrimenti scompare dopo 1 giorno. La Scheggia dà una ricompensa casuale (comune, non comune o rara: punti forge, beni, unità, progetti, kit…).`,
+    en: (p: number, r: number) => `Mysterious Shards (Copper tier): ${p}% chance to spawn a Reward Shard in your active Cultural Settlement once every 4 hours; ${r}% chance that the Shard is rare. Each Shard must be collected by hand, otherwise it disappears after 1 day. The Shard gives a random reward (common, uncommon or rare: forge points, goods, units, blueprints, kits…).`,
+  },
+  gbPlunderGoodsTitle: {
+    it: (g: number, n: number) => `Saccheggia Beni (tier Rame): le prime ${n} volte che saccheggi un edificio, ricevi ${g} beni casuali dell'età a cui quell'edificio appartiene.`,
+    en: (g: number, n: number) => `Plunder Goods (Copper tier): the first ${n} times you plunder a building, you receive ${g} random goods of the age that building belongs to.`,
+  },
+  gbAidGoodsTitle: {
+    it: (g: number, n: number) => `Beni per bene (tier Rame): le prime ${n} volte che assisti un edificio, ricevi ${g === 1 ? "un bene casuale" : `${g} beni casuali`} dell'età a cui quell'edificio appartiene.`,
+    en: (g: number, n: number) => `Goods for Good (Copper tier): the first ${n} times you aid a building, you receive ${g === 1 ? "a random good" : `${g} random goods`} of the age that building belongs to.`,
+  },
+  gbStrikeTitle: {
+    it: (p: number, n: number) => `Primo colpo (tier Rame): nelle prime ${n} battaglie ci sarà un ${p}% di probabilità di uccidere un'unità nemica all'inizio della battaglia. Nelle battaglie a due ondate funziona soltanto nella prima. Non utilizzabile nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `First Strike (Copper tier): in the first ${n} battles there is a ${p}% chance to kill one enemy unit at the start of the battle. In two-wave battles it works only in the first wave. Not usable in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbStrikeGoldTitle: {
+    it: (p: number, n: number) => `Secondo colpo (tier Oro): nelle prime ${n} battaglie c'è una probabilità del ${p}% di uccidere un'unità nemica all'inizio della seconda ondata. Non utilizzabile nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Second Strike (Gold tier): in the first ${n} battles there is a ${p}% chance to kill one enemy unit at the start of the second wave. Not usable in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbQuestTitle: {
+    it: (p: number) => `Incrementa le ricompense delle missioni (tier Rame): quando ottieni monete, materiali, beni, diamanti o medaglie come ricompense per le missioni, ricevi il ${p}% in più.`,
+    en: (p: number) => `Quest Reward Boost (Copper tier): when you get coins, supplies, goods, diamonds or medals as quest rewards, you receive ${p}% more.`,
+  },
+  gbQuestGoldTitle: {
+    it: (p: number) => `Potenziamento ricompense missioni Taverna Eroica (tier Oro): quando ottieni ricompense dalle missioni della Taverna Eroica, ricevi il ${p}% in più.`,
+    en: (p: number) => `Heroic Tavern Quest Reward Boost (Gold tier): when you get rewards from Heroic Tavern quests, you receive ${p}% more.`,
+  },
+  gbSpoilsTitle: {
+    it: (p: number, n: number) => `Bottino di Guerra (tier Rame): nelle prime ${n} battaglie vinte nella città principale ci sarà il ${p}% di possibilità di ricevere una ricompensa casuale. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Spoils of War (Copper tier): in the first ${n} battles won in your main city there is a ${p}% chance to receive a random reward. Refreshes at every collection.`,
+  },
+  gbSpoilsGoldTitle: {
+    it: (p: number, n: number) => `Bottino di guerra migliorato (tier Oro): nelle prime ${n} battaglie vinte nella città principale ci sarà il ${p}% di possibilità di ricevere una ricompensa casuale (migliore). Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Enhanced Spoils of War (Gold tier): in the first ${n} battles won in your main city there is a ${p}% chance to receive a (better) random reward. Refreshes at every collection.`,
+  },
+  gbCoinBoostTitle: {
+    it: (p: number, n: number) => `Potenziamento monete (tier Rame): le prime ${n} raccolte di monete aumentano del ${p}% la quantità di base. Si aggiorna con la raccolta successiva di questo edificio.`,
+    en: (p: number, n: number) => `Coin Boost (Copper tier): the first ${n} coin collections increase the base amount by ${p}%. Refreshes with the next collection of this building.`,
+  },
+  gbSupplyBoostTitle: {
+    it: (p: number, n: number) => `Potenziamento materiali (tier Rame): le prime ${n} raccolte di materiali aumentano del ${p}% la quantità di base. Si aggiorna con la raccolta successiva di questo edificio.`,
+    en: (p: number, n: number) => `Supply Boost (Copper tier): the first ${n} supply collections increase the base amount by ${p}%. Refreshes with the next collection of this building.`,
+  },
+  gbMissileTitle: {
+    it: (p: number, n: number) => `Lancio missilistico (tier Rame): nelle prime ${n} battaglie ci sarà una possibilità del ${p}% di uccidere metà delle unità nemiche all'inizio della battaglia. Nelle battaglie a due ondate funziona soltanto nella prima. Non utilizzabile contro i giocatori né nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Missile Launch (Copper tier): in the first ${n} battles there is a ${p}% chance to kill half of the enemy units at the start of the battle. In two-wave battles it works only in the first wave. Not usable against players or in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbMissileGoldTitle: {
+    it: (p: number, n: number) => `Lancio missilistico - Seconda ondata (tier Oro): nelle prime ${n} battaglie ci sarà una possibilità del ${p}% di uccidere metà delle unità nemiche all'inizio della seconda ondata. Non utilizzabile contro i giocatori né nell'Arena PvP. Si aggiorna a ogni raccolta.`,
+    en: (p: number, n: number) => `Missile Launch - Second Wave (Gold tier): in the first ${n} battles there is a ${p}% chance to kill half of the enemy units at the start of the second wave. Not usable against players or in the PvP Arena. Refreshes at every collection.`,
+  },
+  gbDiploGiftsTitle: {
+    it: (p: number, n: number) => `Regali diplomatici (tier Rame): nelle prime ${n} negoziazioni riuscite ci sarà un ${p}% di possibilità di fornirti una ricompensa casuale. Si aggiorna con ogni raccolta.`,
+    en: (p: number, n: number) => `Diplomatic Gifts (Copper tier): in the first ${n} successful negotiations there is a ${p}% chance to give you a random reward. Refreshes with every collection.`,
+  },
+  gbAiCoreTitle: {
+    it: (p: number, n: number) => `Nucleo I.A. (tier Rame): per le prime ${n} raccolte nella città principale di edifici che producono Beni speciali, raccogli il ${p}% in più di Beni speciali dopo aver raggiunto il Futuro Artico. Vale solo per Porto Artico, Terminal Oceanico, Sintetizzatori di Beni speciali ed edifici Evento che offrono Beni speciali.`,
+    en: (p: number, n: number) => `A.I. Core (Copper tier): for the first ${n} collections in your main city of buildings producing Special Goods, collect ${p}% more Special Goods after reaching Arctic Future. Applies only to Arctic Harbor, Oceanic Terminal, Special Goods Synthesizers and Event buildings offering Special Goods.`,
+  },
+  gbPillageTitle: {
+    it: (p: number) => `Saccheggio raddoppiato (tier Rame): ${p}% di probabilità di raddoppiare quello che saccheggi dagli edifici degli altri giocatori.`,
+    en: (p: number) => `Plunder and Pillage (Copper tier): ${p}% chance to double what you plunder from other players' buildings.`,
+  },
+  gbOtherTitle: { it: "Altri bonus, senza colonna:", en: "Other bonuses, without a column:" },
+  r2GreatBuildings: { it: "Grandi edifici", en: "Great buildings" },
+  r2Map: { it: "Mappa", en: "Map" },
+  r2SelectedCity: { it: "Città selezionata", en: "Selected city" },
+  r2ImportJson: { it: "Importa JSON", en: "Import JSON" },
+  r2Dark: { it: "Scuro", en: "Dark" },
+  r2Light: { it: "Chiaro", en: "Light" },
+  r2Guide: { it: "Guida", en: "Guide" },
+  r2ImportHow: { it: "Come importare la città", en: "How to import your city" },
+  r2PlannerHow: { it: "Come usare il planner", en: "How to use the planner" },
+  r2PlannerHowIntro: {
+    it: "Il video tutorial mostra passo passo come usare il Planner.",
+    en: "The video tutorial shows step by step how to use the Planner.",
+  },
+  r2ImpIntro: {
+    it: "La bacchetta magica porta qui la tua città dal gioco con due clic: un segnalibro copia i dati mentre giochi, la bacchetta li legge e li importa. Si prepara una volta sola.",
+    en: "The magic wand brings your city here from the game in two clicks: a bookmark copies the data while you play, the wand reads and imports it. You only set it up once.",
+  },
+  r2ImpSteps: { it: "I passi", en: "Steps" },
+  r2ImpStep1: { it: "Installa FoE Helper o Forge Hammer", en: "Install FoE Helper or Forge Hammer" },
+  r2ImpStep1Body: {
+    it: "Sono estensioni gratuite del browser, non fanno parte di questo progetto: leggono i dati di Forge of Empires mentre giochi. Ne basta una.",
+    en: "These are free browser extensions, not part of this project: they read Forge of Empires data while you play. One is enough.",
+  },
+  r2ImpStep2: { it: "Trascina la bacchetta nella barra dei preferiti", en: "Drag the wand to your bookmarks bar" },
+  r2ImpStep2Body: {
+    it: "Tieni premuto sul pulsante verde (questo qui o quello in alto, accanto al nome del tool) e lascialo nella barra dei preferiti: diventa un segnalibro, che puoi rinominare come vuoi.",
+    en: "Press and hold the green button (this one or the one at the top, next to the tool's name) and drop it on your bookmarks bar: it becomes a bookmark you can rename as you like.",
+  },
+  r2ImpStep2Tip: {
+    it: "La barra dei preferiti non si vede? Mostrala con Ctrl+Maiusc+B (Cmd+Maiusc+B su Mac).",
+    en: "Can't see the bookmarks bar? Show it with Ctrl+Shift+B (Cmd+Shift+B on Mac).",
+  },
+  r2ImpDragTitle: { it: "Trascinami nella barra dei preferiti", en: "Drag me to the bookmarks bar" },
+  r2ImpStep3: { it: "Nel gioco, clicca il segnalibro", en: "In the game, click the bookmark" },
+  r2ImpStep3Body: {
+    it: "Con Forge of Empires aperto e l'estensione attiva, clicca il segnalibro: copia in silenzio i dati negli appunti del computer. Se qualcosa non va, compare un messaggio.",
+    en: "With Forge of Empires open and the extension active, click the bookmark: it silently copies the data to your computer's clipboard. If something goes wrong, a message appears.",
+  },
+  r2ImpStep4: { it: "Torna qui e clicca la bacchetta", en: "Come back here and click the wand" },
+  r2ImpStep4Body: {
+    it: "FoE Optimizer legge gli appunti e importa la città. La prima volta il browser può chiederti il permesso di leggere gli appunti: concedilo.",
+    en: "FoE Optimizer reads the clipboard and imports the city. The first time, your browser may ask for permission to read the clipboard: allow it.",
+  },
+  r2ImpUpdateTitle: { it: "Per aggiornare:", en: "To update:" },
+  r2ImpUpdateBody: {
+    it: "ripeti i passi 3 e 4. La città viene riconosciuta dall'id del giocatore e aggiornata, senza crearne una copia.",
+    en: "repeat steps 3 and 4. The city is recognised by the player id and updated, without creating a copy.",
+  },
+  r2ImpVideo: { it: "Video tutorial", en: "Video tutorial" },
+  r2ImpVideoNote: {
+    it: "Il video mostra l'interfaccia della versione 1: i passi sono gli stessi.",
+    en: "The video shows the version 1 interface: the steps are the same.",
+  },
+  r2ImpWhat: { it: "Cosa viene importato", en: "What gets imported" },
+  r2ImpWhatMine: { it: "La tua città:", en: "Your city:" },
+  r2ImpWhatMineBody: {
+    it: "mappa ed edifici, inventario, alleati e magazzino.",
+    en: "map and buildings, inventory, allies and storage.",
+  },
+  r2ImpWhatVisited: { it: "La città di un altro giocatore:", en: "Another player's city:" },
+  r2ImpWhatVisitedBody: {
+    it: "clicca il segnalibro mentre la visiti; entra come città visitata (solo la mappa: il gioco non mostra inventario e alleati degli altri).",
+    en: "click the bookmark while visiting it; it is added as a visited city (map only: the game doesn't show other players' inventory and allies).",
+  },
+  r2ImpWhatPirates: { it: "L'Insediamento dei Pirati:", en: "The Pirate Settlement:" },
+  r2ImpWhatPiratesBody: {
+    it: "se l'hai aperto nella sessione di gioco, arriva insieme alla città e lo trovi nella scheda Insediamenti.",
+    en: "if you opened it during the game session, it comes along with the city and you'll find it in the Settlements tab.",
+  },
+  r2ImpOther: { it: "Altri modi", en: "Other ways" },
+  r2ImpOtherJson: { it: "Da un file JSON:", en: "From a JSON file:" },
+  r2ImpOtherJsonBody: {
+    it: "Importa da JSON, in fondo al selettore delle città, legge l'export di FoE Optimizer o il piano di Forge Hammer.",
+    en: "Import from JSON, at the bottom of the city selector, reads a FoE Optimizer export or a Forge Hammer plan.",
+  },
+  r2ImpOtherBackup: { it: "Backup:", en: "Backup:" },
+  r2ImpOtherBackupBody: {
+    it: "Opzioni › Esporta backup salva in un file tutte le città e le impostazioni; Ripristina backup le riporta qui (anche su un altro computer) e sostituisce quelle che ci sono.",
+    en: "Options › Export backup saves every city and setting to a file; Restore backup brings them back (even on another computer) and replaces what is there.",
+  },
+  r2ImpPrivacy: {
+    it: "Il segnalibro copia solo i dati che l'estensione mette a disposizione, e solo negli appunti del tuo computer: non viene inviato nulla a nessun server.",
+    en: "The bookmark copies only the data the extension provides, and only to your computer's clipboard: nothing is sent to any server.",
+  },
+  r2About: { it: "Informazioni", en: "About" },
+  r2EffTitle: { it: "Come si calcola l'efficienza", en: "How efficiency is calculated" },
+  r2EffIntro: {
+    it: "L'efficienza (colonna EFF) dice quanto rende un edificio in bonus militari per ogni casella che occupa in città, strada compresa. Si aggiorna subito quando cambi i pesi qui sopra, in tutte le tabelle.",
+    en: "Efficiency (EFF column) tells how much military bonus a building gives for each tile it takes in the city, road included. It updates right away when you change the weights above, in every table.",
+  },
+  r2EffFormula: {
+    it: "EFF = (somma dei bonus × il loro peso) ÷ (caselle dell'edificio + caselle di strada)",
+    en: "EFF = (sum of bonuses × their weight) ÷ (building tiles + road tiles)",
+  },
+  r2EffWhatTitle: { it: "Quali bonus contano", en: "Which bonuses count" },
+  r2EffWhat: { it: "Solo i bonus di attacco e difesa, in tre gruppi:", en: "Only attack and defense bonuses, in three groups:" },
+  r2EffGeneral: { it: "Generale", en: "General" },
+  r2EffGeneralBody: { it: "valgono ovunque (mappa dei continenti, Campi di Battaglia, Spedizioni…).", en: "valid everywhere (continent map, Battlegrounds, Expeditions…)." },
+  r2EffGbg: { it: "Campi di Battaglia", en: "Battlegrounds" },
+  r2EffGbgBody: { it: "valgono solo nei Campi di Battaglia di Gilda.", en: "valid only in Guild Battlegrounds." },
+  r2EffGe: { it: "Spedizioni", en: "Expeditions" },
+  r2EffGeBody: { it: "valgono solo nelle Spedizioni di Gilda; contano solo se le attivi.", en: "valid only in Guild Expeditions; they count only if you enable them." },
+  r2EffArmies: {
+    it: "Per ogni gruppo si sommano attacco e difesa sia dell'esercito che attacca sia di quello che difende.",
+    en: "For each group, attack and defense of both the attacking and the defending army are added up.",
+  },
+  r2EffNotCounted: {
+    it: "Non contano: i bonus delle Incursioni Quantiche e le produzioni (punti forge, beni, monete…), che vedi nelle loro colonne.",
+    en: "Not counted: Quantum Incursion bonuses and productions (forge points, goods, coins…), which you see in their own columns.",
+  },
+  r2EffWeightsTitle: { it: "I pesi che puoi scegliere", en: "The weights you can choose" },
+  r2EffDefBody: {
+    it: "l'attacco vale sempre 1; la difesa vale 0,8 (80%) o quanto l'attacco (100%).",
+    en: "attack is always worth 1; defense is worth 0.8 (80%) or as much as attack (100%).",
+  },
+  r2EffGeOnBody: { it: "se è spenta i bonus delle Spedizioni non contano.", en: "when off, Expedition bonuses don't count." },
+  r2EffSplitBody: {
+    it: "con le Spedizioni attive, come dividere il peso fra Campi e Spedizioni: per esempio 80 / 20 vuol dire che un bonus dei Campi vale 0,8 e uno delle Spedizioni 0,2.",
+    en: "with Expeditions on, how to split the weight between Battlegrounds and Expeditions: for example 80 / 20 means a Battlegrounds bonus is worth 0.8 and an Expedition one 0.2.",
+  },
+  r2EffNowTitle: { it: "Pesi in uso adesso:", en: "Weights in use now:" },
+  r2EffAtk: { it: "Attacco", en: "Attack" },
+  r2EffDef: { it: "Difesa", en: "Defense" },
+  r2EffSpaceTitle: { it: "Lo spazio", en: "The space" },
+  r2EffSpace: {
+    it: "Le caselle dell'edificio (larghezza × altezza) più la sua parte di strada: metà del lato corto, perché una strada serve gli edifici su entrambi i lati. Gli edifici che non richiedono strada contano solo le loro caselle.",
+    en: "The building's tiles (width × height) plus its share of road: half of the short side, since a road serves buildings on both sides. Buildings that need no road count only their own tiles.",
+  },
+  r2EffExampleTitle: { it: "Un esempio", en: "An example" },
+  r2EffExample: {
+    it: "Neo Colosso liv. 11: 4×4 con strada (16 + 2 = 18 caselle), bonus 64% in tutte e quattro le caselle Generali, 60% nei Campi, 74% nelle Spedizioni. Ogni gruppo dà (attacco + difesa × peso difesa) × 2 eserciti, moltiplicato per il suo peso (Generale 1, Campi e Spedizioni secondo la divisione).",
+    en: "Neo Colossus lv. 11: 4×4 with a road (16 + 2 = 18 tiles), 64% bonus in all four General cells, 60% in Battlegrounds, 74% in Expeditions. Each group gives (attack + defense × defense weight) × 2 armies, times its weight (General 1, Battlegrounds and Expeditions per the split).",
+  },
+  r2EffCaseWeights: { it: "Pesi", en: "Weights" },
+  r2EffCaseSum: { it: "Somma ÷ spazio", en: "Sum ÷ space" },
+  r2EffCase1: { it: "Predefiniti", en: "Default" },
+  r2EffCase2: { it: "Con le Spedizioni", en: "With Expeditions" },
+  r2EffCase3: { it: "Spedizioni e difesa al 100%", en: "Expeditions and defense at 100%" },
+  r2EffCaseMine: { it: "I tuoi pesi", en: "Your weights" },
+  r2EffNoGe: { it: "senza Spedizioni", en: "no Expeditions" },
+  r2EffAlliesTitle: { it: "Gli alleati", en: "Allies" },
+  r2EffAllies: {
+    it: "Stessi bonus e stessi pesi, ma senza dividere per lo spazio: un alleato sta dentro un edificio e non occupa caselle.",
+    en: "Same bonuses and same weights, but not divided by space: an ally sits inside a building and takes no tiles.",
+  },
+  r2EffWhere: {
+    it: "Nel Database i valori sono quelli dell'ultima era; nella Città e nell'Inventario quelli dell'era vera di ogni edificio.",
+    en: "In the Database values are those of the latest age; in City and Inventory those of each building's actual age.",
+  },
+  r2WhatsNew: { it: "Novità", en: "What's new" },
+  r2WhatsNewIntro: {
+    it: "Le novità di FoE Optimizer, dalla più recente.",
+    en: "What's new in FoE Optimizer, latest first.",
+  },
+  r2WhatsNewLatest: { it: "ultima", en: "latest" },
+  r2WhatsNewMinor: { it: "Modifiche minori e correzioni", en: "Minor changes and fixes" },
+  r2InfoProject: { it: "Il progetto", en: "The project" },
+  r2CleanTitle: { it: "Pulito, per scelta", en: "Clean, by choice" },
+  r2CleanSubtitle: { it: "Niente pubblicità, niente cookie, niente tracciamento. Solo lo strumento.", en: "No ads, no cookies, no tracking. Just the tool." },
+  r2Clean1: { it: "Nessuna pubblicità", en: "No ads" },
+  r2Clean2: { it: "Nessun cookie (e quindi nessun banner dei cookie da cliccare)", en: "No cookies (so no cookie banner to click)" },
+  r2Clean3: { it: "Nessun tracciamento e nessuna statistica sulle visite", en: "No tracking and no visitor analytics" },
+  r2Clean4: { it: "Nessuna profilazione", en: "No profiling" },
+  r2Clean5: { it: "Nessuno script di terze parti", en: "No third-party scripts" },
+  r2Clean6: { it: "Nessun pixel o pulsante \"condividi\" dei social", en: "No social media pixels or \"share\" buttons" },
+  r2Clean7: { it: "Nessun account: niente registrazione, niente email richiesta", en: "No account: no sign-up, no email required" },
+  r2Clean8: { it: "Nessun popup, nessuna newsletter, nessuna notifica push", en: "No popups, no newsletter, no push notifications" },
+  r2Clean9: { it: "Nessun abbonamento, nessuna versione \"premium\", nessun contenuto a pagamento", en: "No subscription, no \"premium\" version, no paid content" },
+  r2Clean10: { it: "Nessun \"disattiva l'adblock per continuare\"", en: "No \"disable your adblocker to continue\"" },
+  r2Clean11: { it: "Nessun dato mandato a un server: le tue città restano nel tuo browser", en: "No data sent to a server: your cities stay in your browser" },
+  r2CleanNote: {
+    it: "Le città e le impostazioni sono salvate solo nella memoria del tuo browser, non in cookie, e puoi cancellarle quando vuoi da Opzioni › Cancella tutto. Le uniche richieste verso altri siti sono gli avatar dei giocatori, presi dai server di InnoGames come nel gioco. Il sito è ospitato da GitHub Pages.",
+    en: "Cities and settings are saved only in your browser's storage, not in cookies, and you can erase them whenever you like from Options › Erase everything. The only requests to other sites are player avatars, loaded from InnoGames' servers just like in the game. The site is hosted on GitHub Pages.",
+  },
+  r2InfoAmateur: {
+    it: "FoE Optimizer è un progetto amatoriale e gratuito, nato e sviluppato nel tempo libero da un giocatore di Forge of Empires per gli altri giocatori.",
+    en: "FoE Optimizer is a free hobby project, built in spare time by a Forge of Empires player for other players.",
+  },
+  r2InfoNotAffiliated: {
+    it: "Non è affiliato, sponsorizzato né approvato da InnoGames GmbH. Forge of Empires, i suoi nomi, le immagini e i marchi appartengono a InnoGames GmbH.",
+    en: "It is not affiliated with, sponsored or endorsed by InnoGames GmbH. Forge of Empires, its names, images and trademarks belong to InnoGames GmbH.",
+  },
+  r2InfoData: {
+    it: "I dati del gioco vengono aggiornati con regolarità, ma possono contenere errori: segnalazioni e suggerimenti sono sempre benvenuti.",
+    en: "Game data is updated regularly but may contain mistakes: reports and suggestions are always welcome.",
+  },
+  r2InfoContacts: { it: "Contatti", en: "Contact" },
+  r2CoffeeTitle: { it: "Offrimi un caffè o una birra", en: "Buy me a coffee or a beer" },
+  r2CoffeeText: {
+    it: "Se FoE Optimizer ti è utile e ti va di ringraziare, puoi offrirmi un caffè o una birra. Non è obbligatorio e non cambia nulla: il tool resta gratuito e completo per tutti.",
+    en: "If FoE Optimizer is useful to you and you'd like to say thanks, you can buy me a coffee or a beer. It's entirely optional and changes nothing: the tool stays free and complete for everyone.",
+  },
+  r2CoffeeZoom: { it: "Clicca per ingrandire", en: "Click to enlarge" },
+  r2CoffeeSatispayAlt: { it: "Codice QR Satispay", en: "Satispay QR code" },
+  r2InfoEmailNote: { it: "Segnalazioni, idee, domande", en: "Bug reports, ideas, questions" },
+  r2InfoSourcePrivacy: { it: "Codice sorgente e privacy", en: "Source code and privacy" },
+  r2InfoSourceNote: { it: "Codice sorgente pubblico su GitHub", en: "Public source code on GitHub" },
+  r2InfoPrivacyNote: { it: "Quali dati usa il tool e come", en: "Which data the tool uses and how" },
+  r2Search: { it: "Cerca…", en: "Search…" },
+  r2SearchHelp: {
+    it: "Come cercare:\n• Per nome: scrivi una parte del nome (maiuscole e minuscole sono uguali), es. \"boutique\".\n• Per id: metti \"\\\" davanti, es. \"\\W_MultiAge_SUM24\".\n• Più ricerche insieme: separale con la virgola, es. \"boutique, provviste\" mostra gli edifici che contengono l'una o l'altra.\n  Vale anche per gli id: \"\\W_A, W_B\".",
+    en: "How to search:\n• By name: type part of the name (case doesn't matter), e.g. \"boutique\".\n• By id: put \"\\\" in front, e.g. \"\\W_MultiAge_SUM24\".\n• Several searches at once: separate them with a comma, e.g. \"boutique, supplies\" shows the buildings matching either.\n  Works for ids too: \"\\W_A, W_B\".",
+  },
+  r2SearchHelpAllies: {
+    it: "Come cercare:\n• Scrivi una parte del nome dell'alleato (maiuscole e minuscole sono uguali).\n• Più ricerche insieme: separale con la virgola, es. \"falco, regina\" mostra gli alleati che contengono l'una o l'altra.",
+    en: "How to search:\n• Type part of the ally's name (case doesn't matter).\n• Several searches at once: separate them with a comma, e.g. \"falcon, queen\" shows the allies matching either.",
+  },
+  // Nastro Database (2.0): Filtri, Visualizza; Opzioni: Pesi statistiche
+  r2GrpFilters: { it: "Filtri", en: "Filters" },
+  r2GrpView: { it: "Visualizza", en: "View" },
+  r2GrpViewRarity: { it: "Visualizza rarità", en: "Show rarity" },
+  r2GrpWeights: { it: "Pesi statistiche", en: "Stat weights" },
+  r2CatSettlements: { it: "Premi insediamenti", en: "Settlement prizes" },
+  r2CatGbg: { it: "Premi dei campi", en: "GBG prizes" },
+  r2CatQi: { it: "Premi delle IQ", en: "QI prizes" },
+  r2CatFragments: { it: "Prod. frammenti", en: "Prod. fragments" },
+  r2NeedsRoad: { it: "Richiede strada", en: "Needs road" },
+  r2AllEvents: { it: "Tutti gli eventi", en: "All events" },
+  effTypeMil: { it: "Efficienza militare", en: "Military efficiency" },
+  effTypeBeni: { it: "Efficienza beni", en: "Goods efficiency" },
+  effTypePf: { it: "Efficienza Punti Forge", en: "Forge Points efficiency" },
+  effTypeBenig: { it: "Efficienza beni di gilda", en: "Guild goods efficiency" },
+  effTypeTitle: {
+    it: "Cosa misura la colonna EFF, per casella di area più strade: valori militari con i pesi, oppure produzione al giorno di beni (era attuale, precedente e successiva), Punti Forge o beni di gilda. In Città e Inventario i boost % di beni e PF contano sulla produzione della tua città",
+    en: "What the EFF column measures, per tile of area plus roads: military values with the weights, or daily production of goods (current, previous and next age), Forge Points or guild goods. In City and Inventory the goods and FP % boosts count on your city's production",
+  },
+  r2Production: { it: "Produzione", en: "Production" },
+  r2ProdFilterTitle: {
+    it: "Edifici che producono (verde) o non producono (rosso) le risorse scelte: un clic sì, due no, tre niente",
+    en: "Buildings that produce (green) or don't produce (red) the chosen resources: one click yes, two no, three off",
+  },
+  r2ProdModeTitle: {
+    it: "Ogni riquadro è un filtro (verde: la produce, rosso: non la produce): basta che ne valga almeno uno, oppure devono valere tutti",
+    en: "Each box is a filter (green: produces it, red: doesn't produce it): at least one must hold, or all of them",
+  },
+  r2ProdAll: { it: "Tutte le produzioni insieme", en: "All productions at once" },
+  r2ProdStateOff: { it: "Clic: solo chi la produce", en: "Click: only buildings producing it" },
+  r2ProdStateYes: { it: "Produce (verde) · clic: chi NON la produce", en: "Produces (green) · click: buildings NOT producing it" },
+  r2ProdStateNo: { it: "Non la produce (rosso) · clic: nessun filtro", en: "Doesn't produce it (red) · click: no filter" },
+  r2ProdOr: { it: "Almeno un filtro", en: "Any filter" },
+  r2ProdAnd: { it: "Tutti i filtri", en: "All filters" },
+  r2ProdNone: { it: "Azzera", en: "Reset" },
+  r2EffMin: { it: "Eff. min", en: "Min eff." },
+  r2Reset: { it: "Azzera", en: "Reset" },
+  r2NonRush: { it: "Non accelerabili", en: "Not rushable" },
+  r2NonRushTitle: {
+    it: "Mostra gli edifici che non si possono accelerare (🚫)",
+    en: "Show buildings that cannot be rushed (🚫)",
+  },
+  r2AutoAge: { it: "Era automatica", en: "Auto age" },
+  /** (nov. 2026) Gli edifici a era automatica prendono da soli l'era della città e
+   *  NON si possono riportare a un'era precedente con i kit: va detto chiaramente. */
+  r2AutoAgeTitle: {
+    it: "Edifici a era automatica (^): prendono da soli l'era della tua città e salgono con te. Non si possono portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione",
+    en: "Auto-age buildings (^): they take your city's age by themselves and move up with you. They can't be taken back to a previous age with the One Down Kit or the Reversion Kit",
+  },
+  r2Limited: { it: "Limitati / Ascesi", en: "Limited / Ascended" },
+  r2LimitedTitle: {
+    it: "Mostra gli edifici a tempo e la colonna dei limitati",
+    en: "Show limited buildings and the limited column",
+  },
+  r2ProdDetail: { it: "Produzioni", en: "Productions" },
+  r2AllyColMil: { it: "% Militari", en: "% Military" },
+  r2AllyColMilTitle: { it: "Mostra le colonne dei bonus militari (Generali, Campi, Spedizioni)", en: "Show the military bonus columns (Generals, GBG, Expeditions)" },
+  r2ProdDetailTitle: { it: "Mostra le colonne delle produzioni", en: "Show the production columns" },
+  r2Sums: { it: "Somma %", en: "Sum %" },
+  r2SumGoods: { it: "Somma beni", en: "Sum goods" },
+  r2SumGoodsTitle: {
+    it: "Unisce le colonne dei beni personali (era attuale, precedente e successiva; negli alleati attuale e precedente) in un'unica colonna col totale",
+    en: "Merges the personal goods columns (current, previous and next era; for allies current and previous) into a single column with the total",
+  },
+  prodGoodsSum: { it: "Beni totali (era attuale + precedente + successiva)", en: "Total goods (current + previous + next era)" },
+  groupProductionsShort: { it: "Prod.", en: "Prod." },
+  prodGoodsSumAllies: { it: "Beni totali (era attuale + precedente)", en: "Total goods (current + previous era)" },
+  r2Patrons: { it: "Calcolatore", en: "Calculator" },
+  r2GbCalc: { it: "Calcolatore GE", en: "GB Calculator" },
+  r2GbCalcShort: { it: "Calc. GE", en: "GB Calc." },
+  gbCalcOpen: { it: (l: number) => `Calcolatore GE per il livello ${l}`, en: (l: number) => `GB Calculator for level ${l}` },
+  r2EraInvAll: { it: "Tutte le ere", en: "All ages" },
+  r2BeniEraInvAll: { it: "Beni di tutte le ere", en: "Goods of all ages" },
+  r2BeniEraInvVoce: { it: (e: string) => `Beni: ${e}`, en: (e: string) => `Goods: ${e}` },
+  r2BeniEraInvTitle: { it: "Mostra gli edifici posseduti che producono beni di quest'era: quelli della stessa era (beni), dell'era dopo (beni dell'era precedente) e dell'era prima (beni dell'era successiva), con i valori della loro era; la colonna che dà quei beni è evidenziata", en: "Show the owned buildings that produce goods of this age: those of the same age (goods), of the next age (previous age goods) and of the previous age (next age goods), with the values of their own age; the column giving those goods is highlighted" },
+  r2EraInvTitle: { it: "Mostra solo gli edifici posseduti di quest'era (gli edifici fabbricati con i kit nascono all'era attuale). Per vedere le ere serve un import dell'inventario recente.", en: "Show only the owned buildings of this age (buildings made with kits are born at your current age). Ages need a recent inventory import." },
+  gbReportOpen: { it: "Report del GE: bonus e costi livello per livello", en: "GB report: bonuses and costs level by level" },
+  r2PatronsTitle: { it: "Calcolatore dei Grandi Edifici: posti mecenate di ogni livello (foe-optimizer.com/ge, si apre in una nuova scheda)", en: "Great Building calculator: patron spots of each level (foe-optimizer.com/gb, opens in a new tab)" },
+  r2GbBonus: { it: "Bonus GE", en: "GB bonus" },
+  r2GbBonusTitle: {
+    it: "Valori militari ed efficienza con i bonus moltiplicativi dei Grandi Edifici della città (tier Oro e Sifone; più GE dello stesso tipo si sommano): Generali × bonus globali, Campi e Spedizioni × bonus della modalità + globali, IQ × bonus IQ. I valori cambiati sono in azzurro / rosa.",
+    en: "Military values and efficiency with the multiplicative bonuses of the city's Great Buildings (Gold tier and Siphon; GBs of the same type add up): Generals × global bonuses, Battlegrounds and Expeditions × that mode's bonuses + global ones, QI × QI bonuses. Changed values are in light blue / pink.",
+  },
+  r2GbBonusNone: { it: "Nessun Grande Edificio della città ha bonus moltiplicativi", en: "No Great Building in the city has multiplicative bonuses" },
+  r2Export: { it: "CSV", en: "CSV" },
+  r2SumsTitle: {
+    it: "Mostra le colonne con la somma delle statistiche (Generale + Campi, e Generale + Spedizioni)",
+    en: "Show the columns with the summed stats (General + GBG, and General + Expeditions)",
+  },
+  r2IqProd: { it: "IQ mon/mat", en: "QI coins/supp." },
+  r2Pop: { it: "Popolazione", en: "Population" },
+  r2Fel: { it: "Felicità", en: "Happiness" },
+  // Pesi statistiche (2.0, solo testo)
+  r2WDefIs: { it: "Difesa vale", en: "Defense is" },
+  r2WOfAtk: { it: "dell'attacco", en: "of attack" },
+  r2WIncludeGe: { it: "Conta anche le spedizioni", en: "Include expeditions" },
+  r2WSplit: { it: "Campi / Sped.", en: "GBG / GE" },
+  r2HowItWorks: { it: "Come si calcola", en: "How it works" },
+  // Nastro Città (2.0)
+  r2GrpStats: { it: "Statistiche città", en: "City statistics" },
+  r2GrpHide: { it: "Nascondi", en: "Hide" },
+  r2GrpHideShow: { it: "Nascondi / Mostra", en: "Hide / Show" },
+  r2TriAll: { it: "tutti (clic: nascondi)", en: "all (click: hide)" },
+  r2TriHidden: { it: "nascosti (clic: mostra solo questi)", en: "hidden (click: show only these)" },
+  r2TriOnly: { it: "solo questi (clic: tutti)", en: "only these (click: all)" },
+  r2PlusInv: { it: "+ Inventario", en: "+ Inventory" },
+  r2Upgradable: { it: "Aggiornabili", en: "Upgradable" },
+  r2Sped: { it: "Spedizioni", en: "Expeditions" },
+  r2SpedTitle: { it: "Mostra o nasconde le colonne Spedizioni nella tabella", en: "Shows or hides the Expeditions columns in the table" },
+  r2SpedNotWeighted: {
+    it: "⚠️ Le spedizioni non contano nell'efficienza: attivale in Opzioni › Pesi statistiche",
+    en: "⚠️ Expeditions don't count towards efficiency: enable them in Options › Stat weights",
+  },
+  r2UpgradableTitle: {
+    it: "Edifici della città che puoi aggiornare con i kit e i frammenti che hai",
+    en: "City buildings you can upgrade with the kits and fragments you own",
+  },
+  r2StatRoads: { it: "Efficienza strade", en: "Road efficiency" },
+  r2StatProd: { it: "Produzione", en: "Production" },
+  r2StatMil: { it: "Valori militari", en: "Military values" },
+  r2StatEra: { it: "Cambio era", en: "Era change" },
+  r2HideIq: { it: "Utili per IQ", en: "QI useful" },
+  r2HideIqTitle: { it: "Nascondi gli edifici utili per le IQ", en: "Hide buildings useful for QI" },
+  r2HideAlly: { it: "Slot alleato", en: "Ally slot" },
+  r2HideAid: { it: "Fr. auto-aiuto", en: "Mass aid fr." },
+  r2HideStore: { it: "Fr. immagazzina", en: "Store bld. fr." },
+  r2Debug: { it: "Debug", en: "Debug" },
+  r2Outdated: { it: "Edifici vecchi", en: "Outdated" },
+  r2Declassable: { it: "Invecchiabili", en: "Ageable" },
+  r2ReadyOnly: { it: "Solo pronti", en: "Ready only" },
+  r2Ready: { it: "Pronti", en: "Ready" },
+  // Alleati (2.0)
+  r2AllyTypeMil: { it: "Militari", en: "Military" },
+  r2AllyTypeSci: { it: "Scienza", en: "Science" },
+  // Nastro Insediamenti (2.0)
+  r2GrpSettlement: { it: "Insediamento", en: "Settlement" },
+  r2Pirates: { it: "Pirati", en: "Pirates" },
+  // (25/11/2026) Insediamento Mughal: stesso planner dei Pirati (data/insediamenti.ts)
+  r2Mughals: { it: "Mughal", en: "Mughals" },
+  mughalImportHowToHintPrefix: { it: "Apri FoE, visita l'insediamento Mughal, poi usa la bacchetta magica", en: "Open FoE, visit the Mughal settlement, then use the magic wand" },
+  mughalImportVisitOutpostFirst: { it: "Devi prima visitare il tuo insediamento Mughal almeno una volta in questa sessione di gioco, poi riprova.", en: "You must visit your Mughal settlement at least once in this game session first, then try again." },
+  mughalImportHelperUnsupported: {
+    it: (helper: string) => `L'helper in uso (${helper}) non espone i dati dell'insediamento: probabilmente la sua struttura è cambiata. Prova ad aggiornarlo o usa l'altro helper (FoE Helper o Forge Hammer).`,
+    en: (helper: string) => `The helper in use (${helper}) does not expose the settlement data: its structure probably changed. Try updating it or use the other helper (FoE Helper or Forge Hammer).`,
+  },
+  mughalImportNoTownhall: { it: "Nei dati non c'è l'Ambasciata dei Mughal (H_Mughals_Townhall): assicurati di essere nell'insediamento Mughal quando usi la bacchetta.", en: "The data holds no Mughal Embassy (H_Mughals_Townhall): make sure you are in the Mughal settlement when you use the wand." },
+  mughalRupeesLabel: { it: "Rupie", en: "Rupees" },
+  // (25/11/2026) dobloni dei Pirati (pillola accanto ad AREA/POP e colonna della legenda)
+  piratiDoubloonsLabel: { it: "Dobloni", en: "Doubloons" },
+  piratiDoubloonsTitle: {
+    it: (saldo: string) => `Dobloni nell'insediamento: ${saldo} (dall'ultimo import).`,
+    en: (saldo: string) => `Doubloons in the settlement: ${saldo} (from the last import).`,
+  },
+  // colonne della legenda degli edifici (Pirati e Mughal)
+  piratiColBuilding: { it: "Edificio", en: "Building" },
+  piratiColSize: { it: "Dim.", en: "Size" },
+  piratiColPop: { it: "Pop", en: "Pop" },
+  piratiColDiplomacy: { it: "Dipl", en: "Dipl" },
+  piratiColCount: { it: "N.", en: "No." },
+  piratiColCurrencyTitle: {
+    it: (valuta: string) => `${valuta}: produzione per edificio (quantità / durata) oppure costo (in rosso)`,
+    en: (valuta: string) => `${valuta}: production per building (amount / duration) or cost (in red)`,
+  },
+  piratiProdOptionsTitle: { it: (o: string) => `Produzioni possibili: ${o}`, en: (o: string) => `Possible productions: ${o}` },
+  mughalRupeesTitle: {
+    it: (saldo: string, spesa: string, resto: string) => `Rupie nell'insediamento: ${saldo} (dall'ultimo import). Gli edifici aggiunti rispetto all'import costano ${spesa}: ne restano ${resto}. Nel gioco solo i Sentieri costano rupie (200 l'uno).`,
+    en: (saldo: string, spesa: string, resto: string) => `Rupees in the settlement: ${saldo} (from the last import). The buildings added since the import cost ${spesa}: ${resto} left. In the game only Groomed Paths cost rupees (200 each).`,
+  },
+  mughalRupeesStartTitle: {
+    it: (saldo: string, spesa: string, resto: string) => `Rupie di partenza dell'insediamento: ${saldo}. I Sentieri aggiunti costano ${spesa}: ne restano ${resto}. Con l'import della bacchetta qui compaiono le rupie che hai davvero.`,
+    en: (saldo: string, spesa: string, resto: string) => `Starting Rupees of the settlement: ${saldo}. The added Groomed Paths cost ${spesa}: ${resto} left. With the wand import your real Rupees appear here.`,
+  },
+  sbloccoPartenzaTitle: { it: "Sbloccato dall'inizio dell'insediamento", en: "Unlocked from the start of the settlement" },
+  sbloccoSbloccatoTitle: { it: "Sbloccato. Togli la spunta se nel gioco è ancora bloccato", en: "Unlocked. Untick it if it is still locked in the game" },
+  sbloccoBloccatoTitle: { it: "Ancora bloccato. Spunta quando lo sblocchi nel gioco (con la bacchetta o l'estensione si aggiorna da solo, se c'è FoE Helper)", en: "Still locked. Tick it when you unlock it in the game (with the wand or the extension it updates by itself, if FoE Helper is installed)" },
+  sbloccoAria: { it: (n: string) => `${n} sbloccato`, en: (n: string) => `${n} unlocked` },
+  r2PiOttimizza: { it: "Ottimizza", en: "Optimize" },
+  r2PiOttimizzaTitle: {
+    it: "Cerca la disposizione con più rupie e meno strade: scegli prima nella legenda quante manifatture mettere, le residenze le aggiunge lui (solo quelle sbloccate). Propone un tentativo per ogni numero di strade",
+    en: "Looks for the layout with the most rupees and the fewest roads: first choose in the legend how many factories to place, it adds the residences itself (unlocked ones only). It suggests one attempt for each number of roads",
+  },
+  mughalStaccataResidenza: { it: "Non collegata alla strada: dà solo popolazione, niente rupie", en: "Not connected to a road: gives population only, no rupees" },
+  mughalStaccatoEdificio: { it: "Non collegato alla strada: così non produce", en: "Not connected to a road: it won't produce like this" },
+  mughalParcheggiate: {
+    it: (n: number) => `${n} strade già costruite in più, parcheggiate in caselle vuote (le strade non si eliminano)`,
+    en: (n: number) => `${n} roads already built and not needed, parked in empty cells (roads are never removed)`,
+  },
+  r2PiContinua: { it: "Continua", en: "Continue" },
+  r2PiContinuaTitle: {
+    it: "Riprende la ricerca dai tentativi trovati e continua finché non premi Stop, per migliorarli. Se hai cambiato area o manifatture serve un nuovo Ottimizza",
+    en: "Resumes the search from the attempts found and keeps going until you press Stop, to improve them. If you changed the area or the factories, press Optimize again",
+  },
+  mughalTentativiContinua: { it: (s: number) => `Continua… ${s} s (Stop per fermare)`, en: (s: number) => `Continuing… ${s} s (Stop to end)` },
+  insDiplomaziaLabel: { it: "Dipl", en: "Dipl" },
+  insDiplomaziaTitle: {
+    it: "Diplomazia totale degli edifici dell'insediamento: serve a raggiungere la soglia per sbloccare gli edifici successivi",
+    en: "Total diplomacy of the settlement buildings: it is needed to reach the threshold to unlock the next buildings",
+  },
+  mughalTentativiChiudi: { it: "Chiudi (ferma la ricerca se è in corso; Continua lo riapre)", en: "Close (stops the search if running; Continue reopens it)" },
+  confrontoAttuale: { it: "Attuale (nel gioco)", en: "Current (in game)" },
+  confrontoNuova: { it: "Nuova", en: "New" },
+  confrontoTitolo: { it: "Variazioni", en: "Changes" },
+  confrontoStradeNuove: { it: "Strade nuove", en: "New roads" },
+  confrontoStradeSpostate: { it: "Strade spostate", en: "Roads moved" },
+  confrontoDaSpostare: { it: "Edifici da spostare", en: "Buildings to move" },
+  confrontoAmbasciata: { it: "Ambasciata spostata", en: "Embassy moved" },
+  confrontoRupie: { it: "Rupie ogni 5 ore", en: "Rupees every 5 hours" },
+  confrontoLegTolto: { it: "da togliere", en: "to remove" },
+  confrontoLegSpostato: { it: "spostato", en: "moved" },
+  confrontoLegNuovo: { it: "nuovo", en: "new" },
+  mughalTentativiTitolo: { it: "Tentativi", en: "Attempts" },
+  mughalTentativiInCorso: { it: (s: number, max: number) => `Ricerca in corso… ${s}/${max} s`, en: (s: number, max: number) => `Searching… ${s}/${max} s` },
+  mughalTentativiClicca: { it: "Clicca un tentativo per vederlo sulla mappa", en: "Click an attempt to see it on the map" },
+  mughalTentativiAttesa: { it: "Primi tentativi tra qualche secondo…", en: "First attempts in a few seconds…" },
+  mughalTentativiNessuno: {
+    it: "Nessuna disposizione trovata: le manifatture non entrano nell'area o la popolazione non basta",
+    en: "No layout found: the factories don't fit in the area or there isn't enough population",
+  },
+  mughalColStrade: { it: "Strade", en: "Roads" },
+  mughalColRimaste: { it: "Rupie rimaste", en: "Rupees left" },
+  mughalColCollegate: { it: "Collegate", en: "Connected" },
+  mughalColProduzione: { it: "Produzione", en: "Production" },
+  insediamentoInSviluppoTitolo: { it: "Versione preliminare.", en: "Preliminary version." },
+  insediamentoInSviluppoTesto: {
+    it: "Il planner dei Mughal è ancora in sviluppo ed è incompleto.",
+    en: "The Mughal planner is still in development and incomplete.",
+  },
+  mughalRupeesNoImport: { it: "Le rupie compaiono dopo l'import con la bacchetta.", en: "Rupees appear after the import with the wand." },
+  mughalCategoryResidential: { it: "🏠 Edifici residenziali", en: "🏠 Residential buildings" },
+  mughalCategoryGoods: { it: "🛢️ Edifici per i beni", en: "🛢️ Goods buildings" },
+  mughalCategoryDiplomacyPop: { it: "🤝 Diplomazia (usa popolazione)", en: "🤝 Diplomacy (uses population)" },
+  mughalCategoryDiplomacyFree: { it: "🤝 Diplomazia (senza popolazione)", en: "🤝 Diplomacy (no population)" },
+  mughalCategoryRoads: { it: "🛤️ Strade", en: "🛤️ Roads" },
+  mughalBuildingEmbassyName: { it: "Ambasciata", en: "Embassy" },
+  mughalBuildingEmbassyShort: { it: "Ambasciata", en: "Embassy" },
+  mughalBuildingBhavanName: { it: "Bhavan", en: "Bhavan" },
+  mughalBuildingBhavanShort: { it: "Bhavan", en: "Bhavan" },
+  mughalBuildingShantiName: { it: "Shanti Ghar", en: "Shanti Ghar" },
+  mughalBuildingShantiShort: { it: "Shanti", en: "Shanti" },
+  mughalBuildingHaveliName: { it: "Haveli", en: "Haveli" },
+  mughalBuildingHaveliShort: { it: "Haveli", en: "Haveli" },
+  // edifici dei beni con il nome del bene (25/11/2026, utente: i nomi del gioco sono troppo lunghi)
+  mughalBuildingRiceName: { it: "Riso", en: "Rice" },
+  mughalBuildingRiceShort: { it: "Riso", en: "Rice" },
+  mughalBuildingSareeName: { it: "Sari", en: "Saree" },
+  mughalBuildingSareeShort: { it: "Sari", en: "Saree" },
+  mughalBuildingSpiceName: { it: "Spezie", en: "Spices" },
+  mughalBuildingSpiceShort: { it: "Spezie", en: "Spices" },
+  mughalBuildingLotusName: { it: "Loto", en: "Lotus" },
+  mughalBuildingLotusShort: { it: "Loto", en: "Lotus" },
+  mughalBuildingCanalName: { it: "Canale d'acqua", en: "Water Canal" },
+  mughalBuildingCanalShort: { it: "Canale", en: "Canal" },
+  mughalBuildingAlleyName: { it: "Vialetto", en: "Alley" },
+  mughalBuildingAlleyShort: { it: "Vialetto", en: "Alley" },
+  mughalBuildingChhatriName: { it: "Chhatri", en: "Chhatri" },
+  mughalBuildingChhatriShort: { it: "Chhatri", en: "Chhatri" },
+  mughalBuildingBaldachinName: { it: "Baldacchino", en: "Baldachin" },
+  mughalBuildingBaldachinShort: { it: "Baldac.", en: "Baldac." },
+  mughalBuildingCharbaghName: { it: "Chahar bagh", en: "Charbagh" },
+  mughalBuildingCharbaghShort: { it: "Bagh", en: "Bagh" },
+  mughalBuildingPathName: { it: "Sentiero curato", en: "Groomed Path" },
+  mughalBuildingPathShort: { it: "", en: "" },
+  r2GrpCalc: { it: "Calcolo", en: "Calculation" },
+  r2GrpExpansions: { it: "Espansioni", en: "Expansions" },
+  r2PiSolve: { it: "Risolvi", en: "Solve" },
+  r2PiStop: { it: "Stop", en: "Stop" },
+  r2PiAuto: { it: "Auto", en: "Auto" },
+  r2PiUndo: { it: "Annulla", en: "Undo" },
+  r2PiReset: { it: "Reset", en: "Reset" },
+  r2PiAddExp: { it: "Aggiungi", en: "Add" },
+  r2PiRemoveExp: { it: "Rimuovi", en: "Remove" },
+  // Nastro Planner (2.0)
+  r2GrpCurrentStats: { it: "Statistiche attuali", en: "Current stats" },
+  r2StWithRoad: { it: "Con strada", en: "With road" },
+  r2StNoRoad: { it: "Senza strada", en: "Without road" },
+  r2StRoads: { it: "Strade (caselle)", en: "Roads (tiles)" },
+  r2StChains: { it: "A catena", en: "Chain" },
+  // Forma degli edifici con strada (18/11/2026): gli scenari del Planner sono
+  // pensati per città con più edifici verticali (molte strade orizzontali)
+  r2StSquare: { it: "quadrati", en: "square" },
+  r2StHoriz: { it: "orizzontali", en: "horizontal" },
+  r2StVert: { it: "verticali", en: "vertical" },
+  r2StShapeTitle: {
+    it: "Edifici con strada per forma, come sulla mappa: orizzontali = più larghi che alti, verticali = più alti che larghi. Le catene contano come un blocco unico con la loro forma intera.",
+    en: "Buildings with road by shape, as on the map: horizontal = wider than tall, vertical = taller than wide. Chains count as one block with their whole shape.",
+  },
+  r2StSets: { it: "Set", en: "Sets" },
+  r2PlMilitaryRoad: { it: "Edifici militari da collegare a strada:", en: "Military buildings to connect to a road:" },
+  r2PlDisconnected: { it: "Edifici scollegati in città da collegare a strada:", en: "Buildings disconnected in the city to connect to a road:" },
+  r2PlDetachedLinks: { it: "Anelli di catena staccati in città da attaccare:", en: "Chain links detached in the city to attach:" },
+  r2PlDetachedLinksTitle: {
+    it: "Anelli di una catena che nella tua città non sono attaccati a nessun inizio della loro catena. Acceso: il Planner li attacca agli inizi, così la catena diventa più lunga e va ricollocata, anche nella Configurazione attuale (può servire qualche strada in più); spento: restano staccati come ora in città, come edifici senza strada, e gli inizi restano dove sono",
+    en: "Chain links that in your city are not attached to any start of their chain. On: the Planner attaches them to the starts, so the chain gets longer and has to be placed again, also in the Current layout (it may need a few more roads); off: they stay detached as they are now in the city, as buildings without a road, and the starts stay where they are",
+  },
+  plannerLinkAttach: { it: "Attaccato alla sua catena", en: "Attached to its chain" },
+  plannerLinkDetached: { it: "Staccato, come in città", en: "Detached, as in the city" },
+  r2PlDisconnectedTitle: {
+    it: "Edifici che richiedono la strada ma nella tua città sono scollegati (es. case tenute per la popolazione, fabbriche per la Royal Albert Hall). Spento: restano senza strada anche nella nuova disposizione; acceso: la nuova disposizione li collega",
+    en: "Buildings that need a road but are disconnected in your city (e.g. houses kept for population, factories for the Royal Albert Hall). Off: they stay without a road in the new layout too; on: the new layout connects them",
+  },
+  r2GrpLayout: { it: "Disposizione", en: "Layout" },
+  r2GrpCpu: { it: "Processore", en: "Processor" },
+  r2GrpHelp: { it: "Aiuto", en: "Help" },
+  r2PlOptimize: { it: "Ottimizza", en: "Optimize" },
+  r2PlPause: { it: "Pausa", en: "Pause" },
+  r2PlSmooth: { it: "Smussa", en: "Smooth" },
+  r2PlComplete: { it: "Completa", en: "Complete" },
+  r2PlUndoComplete: { it: "Annulla completamento", en: "Undo completion" },
+  r2PlUndoManual: { it: "Annulla modifiche", en: "Undo edits" },
+  r2PlReset: { it: "Reset", en: "Reset" },
+  r2PlEditCity: { it: "Modifica", en: "Edit" },
+  r2PlVideo: { it: "Video tutorial", en: "Video tutorial" },
+  r2StorageUsed: { it: "Spazio utilizzato", en: "Storage used" },
+  r2StorageTitle: {
+    it: "Spazio del browser per FoE Optimizer (circa 5 milioni di caratteri, condiviso da tutte le città). Passa sopra una città nella barra per vedere quanto occupa.",
+    en: "Browser storage for FoE Optimizer (about 5 million characters, shared by all cities). Hover a city in the bar to see how much it takes.",
+  },
+  r2StorageMine: { it: (n: number) => `le tue città (${n})`, en: (n: number) => `your cities (${n})` },
+  r2StorageVisited: { it: (n: number) => `visitate (${n})`, en: (n: number) => `visited (${n})` },
+  r2StorageJson: { it: (n: number) => `da JSON (${n})`, en: (n: number) => `from JSON (${n})` },
+  r2StorageFree: { it: (n: number) => `spazio per altre ~${n} città`, en: (n: number) => `room for ~${n} more cities` },
+  r2ImportCityJson: { it: "Importa da JSON", en: "Import from JSON" },
+  r2ImportCityJsonTitle: {
+    it: "Aggiunge una città da un file JSON tra le città importate: la città completa esportata da questo menu (con inventario e alleati), oppure solo la città (export del menu, della Mappa, del Planner, di Forge Hammer: mappa e Grandi Edifici, niente inventario né alleati)",
+    en: "Adds a city from a JSON file to the imported cities: a full city exported from this menu (with inventory and allies), or the city only (export from this menu, the Map, the Planner, Forge Hammer: map and Great Buildings, no inventory or allies)",
+  },
+  r2PlJsonClose: { it: "Chiudi il JSON importato", en: "Close the imported JSON" },
+  r2PlJsonTitle: {
+    it: "Apre nel Planner la città di un file JSON: export della Mappa, del menu delle città (della completa conta solo la mappa), di uno scenario del Planner o di Forge Hammer. Non la salva tra le città: per salvarla usa Importa da JSON nel menu delle città",
+    en: "Opens in the Planner the city of a JSON file: export from the Map, the city menu (of a full city only the map counts), a Planner scenario or Forge Hammer. It isn't saved among the cities: to save it, use Import from JSON in the city menu",
+  },
+  r2MapPngTitle: { it: "Scarica l'immagine della mappa (PNG)", en: "Download the map image (PNG)" },
+  r2MapJsonTitle: { it: "Scarica solo la città in JSON (la mappa): per Forge Hammer, un altro planner o un altro giocatore. La città completa si esporta dal menu delle città", en: "Download the city only as JSON (the map): for Forge Hammer, another planner or another player. The full city is exported from the city menu" },
+  r2MapEditorTitle: { it: "Apre la città nell'editor (nuova scheda): sposta e togli edifici e strade, poi salva il PNG", en: "Opens the city in the editor (new tab): move and remove buildings and roads, then save the PNG" },
+  r2PlNoSource: {
+    it: "Scegli la città da ottimizzare: importa una città con la bacchetta oppure carica un file JSON con \"Importa JSON\".",
+    en: "Choose the city to optimize: import a city with the magic wand or load a JSON file with \"Import JSON\".",
+  },
+  r2PlNoSourceMobile: {
+    it: "Scegli la città da ottimizzare: carica un file JSON con \"Importa JSON\" (la bacchetta funziona solo dal computer).",
+    en: "Choose the city to optimize: load a JSON file with \"Import JSON\" (the magic wand works only on a computer).",
+  },
+  r2AllyFragments: { it: "Frammenti", en: "Fragments" },
+  r2AllyFragmentsTitle: { it: "Mostra gli alleati di cui hai solo frammenti", en: "Show allies you only have fragments of" },
+  r2Level100: { it: "Livello 100", en: "Level 100" },
+  r2Level100Title: {
+    it: "Statistiche dei tuoi alleati come se fossero portati a livello 100",
+    en: "Stats of your allies as if they were raised to level 100",
+  },
+  r2AllyMilTitle: { it: "Mostra gli alleati militari", en: "Show military allies" },
+  r2AllySciTitle: { it: "Mostra gli alleati scienza", en: "Show science allies" },
+  r2GrpTableOptions: { it: "Opzioni", en: "Options" },
+  r2GrpAnalysis: { it: "Analisi", en: "Analysis" },
+  r2Advisor: { it: "Gettoni", en: "Tokens" },
+  r2Scrolls: { it: "Pergamene", en: "Scrolls" },
+  r2AnalysisHelp: {
+    it: "• Livello 100: le statistiche dei tuoi alleati come se fossero già al livello 100.\n• Gettoni: quali alleati evolvere di rarità con i Gettoni Valore, in ordine di efficienza guadagnata per gettone.\n• Pergamene: quali alleati far salire di livello con le Pergamene Eroiche, e di quanti livelli, per il massimo aumento di attacco e difesa (secondo i pesi).",
+    en: "• Level 100: your allies' stats as if they were already level 100.\n• Tokens: which allies to evolve in rarity with Valor Tokens, in order of efficiency gained per token.\n• Scrolls: which allies to level up with Heroic Scrolls, and by how many levels, for the largest attack and defense increase (according to the weights).",
+  },
+  r2ScrollsTitle: { it: "Quali alleati far salire di livello con le Pergamene Eroiche che hai", en: "Which allies to level up with the Heroic Scrolls you have" },
+  r2AdvisorTitle: {
+    it: "Quali alleati far crescere e quali vendere, con pergamene e gettoni valore che hai",
+    en: "Which allies to grow and which to sell, with the scrolls and value tokens you have",
+  },
+  r2AdvisorNeedWand: {
+    it: "Serve un import con la bacchetta aggiornata (magazzino risorse)",
+    en: "Needs an import with the updated magic wand (resource stock)",
+  },
+  r2NoCity: { it: "Nessuna città", en: "No city" },
+  r2NeedCity: { it: "Importa prima una città", en: "Import a city first" },
+  r2VersionTitle: { it: "Versione di FoE Optimizer: clic per le novità", en: "FoE Optimizer version: click for what's new" },
+  tabCity: {
+    it: "Città",
+    en: "City",
+  },
+  tabInventory: {
+    it: "Inventario",
+    en: "Inventory",
+  },
+  tabAllies: {
+    it: "Alleati",
+    en: "Allies",
+  },
+  tabPirates: {
+    it: "Pirati",
+    en: "Pirates",
+  },
+  tabHelp: {
+    it: "Guida",
+    en: "Help",
+  },
+  tabHelpTitle: {
+    it: "Apri la guida",
+    en: "Open the guide",
+  },
+
+  // ── Switch vista LIGHT/FULL ───────────────────────────────────────────
+  lightFullTitle: {
+    it: "LIGHT: solo edifici principali · FULL: tutti, inclusi livelli intermedi. Ha effetto sulla tab Info.",
+    en: "LIGHT: main buildings only · FULL: all buildings, including intermediate levels. Affects the Info tab.",
+  },
+
+  // ── Selettore lingua GUI ──────────────────────────────────────────────
+  r2TabSelectLabel: { it: "Scheda", en: "Tab" },
+  languageSwitchTitle: {
+    it: "Cambia lingua dell'interfaccia",
+    en: "Change interface language",
+  },
+
+  // ── Modale Importa Profili ───────────────────────────────────────────
+  closeAriaLabel: {
+    it: "Chiudi",
+    en: "Close",
+  },
+
+  // ── Conferma eliminazione di un singolo profilo ───────────────────────
+  defaultProfileName: {
+    it: (n: number) => `Profilo ${n}`,
+    en: (n: number) => `Profile ${n}`,
+  },
+  genericProfileFallback: {
+    it: "questo profilo",
+    en: "this profile",
+  },
+  confirmDeleteProfile: {
+    it: (name: string) => `Sei sicuro di voler eliminare il profilo "${name}"?\n\nTutti i dati associati (città, inventario, alleati) verranno persi.`,
+    en: (name: string) => `Are you sure you want to delete the profile "${name}"?\n\nAll associated data (city, inventory, allies) will be lost.`,
+  },
+
+  // ── Conferma eliminazione di tutti i profili ─────────────────────────
+
+  // ── Barra filtri (ricerca, categoria, evento, pesi) ──────────────────
+  searchPlaceholder: {
+    it: "Cerca...",
+    en: "Search...",
+  },
+  searchInputLabel: {
+    it: "Cerca edificio",
+    en: "Search building",
+  },
+  spedizioniAttackSliderLabel: {
+    it: "Ripartizione del peso tra Campi di battaglia e Spedizioni",
+    en: "Weight split between Guild Battlegrounds and Expeditions",
+  },
+  resetFiltersTitle: {
+    it: "Reimposta tutti i filtri e l'ordinamento ai valori predefiniti",
+    en: "Reset all filters and sorting to default values",
+  },
+  weightAtk: {
+    it: "Att",
+    en: "Atk",
+  },
+  weightDef: {
+    it: "Dif",
+    en: "Def",
+  },
+  weightGbg: {
+    it: "CAM",
+    en: "GBG",
+  },
+  weightGe: {
+    it: "SPE",
+    en: "GE",
+  },
+  categoryFilterTitle: {
+    it: "Filtro categoria",
+    en: "Category filter",
+  },
+  catAll: {
+    it: "⚙️ Tutti",
+    en: "⚙️ All",
+  },
+  catIq: {
+    it: "✊🏾 Utili per IQ",
+    en: "✊🏾 Useful for QI",
+  },
+  catAlly: {
+    it: "⭐ Slot alleato",
+    en: "⭐ Ally slot",
+  },
+  catSettlements: {
+    it: "🏘️ Insediamenti",
+    en: "🏘️ Settlements",
+  },
+  catBattlegroundsPrizes: {
+    it: "🔰 Premi Campi",
+    en: "🔰 GBG prizes",
+  },
+  catQiPrizes: {
+    it: "✊🏾 Premi IQ",
+    en: "✊🏾 QI prizes",
+  },
+  eventFilterTitle: {
+    it: "Filtro evento",
+    en: "Event filter",
+  },
+  eventsDefaultOption: {
+    it: "📅 Eventi",
+    en: "📅 Events",
+  },
+  efficiencyHelpTitle: {
+    it: "Guida: come funziona l'efficienza e i pesi",
+    en: "Guide: how efficiency and weights work",
+  },
+  sigmaShowTitle: {
+    it: "Nascondi colonne somma Sigma",
+    en: "Hide Sigma sum columns",
+  },
+  sigmaHideTitle: {
+    it: "Mostra colonne somma Gen+Campi (e Gen+Sped)",
+    en: "Show Gen+GBG sum columns (and Gen+GE)",
+  },
+  timeColumnShowTitle: {
+    it: "Nascondi edifici limitati e colonna Tempo",
+    en: "Hide limited buildings and Time column",
+  },
+  timeColumnHideTitle: {
+    it: "Mostra edifici limitati e colonna Tempo",
+    en: "Show limited buildings and Time column",
+  },
+  popColumnShowTitle: {
+    it: "Nascondi Popolazione",
+    en: "Hide Population",
+  },
+  popColumnHideTitle: {
+    it: "Mostra Popolazione",
+    en: "Show Population",
+  },
+  felColumnShowTitle: {
+    it: "Nascondi Felicità",
+    en: "Hide Happiness",
+  },
+  felColumnHideTitle: {
+    it: "Mostra Felicità",
+    en: "Show Happiness",
+  },
+  iqProdColumnsTitle: {
+    it: "Mostra/nascondi monete/materiali quantistici",
+    en: "Show/hide quantum coins/supplies",
+  },
+  prodColumnsShowTitle: {
+    it: "Nascondi Produzioni",
+    en: "Hide Productions",
+  },
+  prodColumnsHideTitle: {
+    it: "Mostra Produzioni",
+    en: "Show Productions",
+  },
+  hideNoRushLabel: {
+    it: "Nascondi",
+    en: "Hide",
+  },
+  hideNoRushTitle: {
+    it: "Nascondi tutti gli edifici NoRush",
+    en: "Hide all NoRush buildings",
+  },
+  hideNoRushActiveTitle: {
+    it: "Mostra di nuovo gli edifici NoRush",
+    en: "Show NoRush buildings again",
+  },
+  hideEraMutableLabel: {
+    it: "Nascondi",
+    en: "Hide",
+  },
+  hideEraMutableTitle: {
+    it: "Nascondi tutti gli edifici a era automatica",
+    en: "Hide all auto-age buildings",
+  },
+  hideEraMutableActiveTitle: {
+    it: "Mostra di nuovo gli edifici a era automatica",
+    en: "Show auto-age buildings again",
+  },
+  filterLabel: {
+    it: "Filtra",
+    en: "Filter",
+  },
+  hideBuildingsLabel: {
+    it: "Nascondi edifici →",
+    en: "Hide buildings →",
+  },
+  showInventoryInCityButton: {
+    it: "MOSTRA ANCHE INVENTARIO",
+    en: "SHOW INVENTORY TOO",
+  },
+  showInventoryInCityTitle: {
+    it: "Aggiunge alla tabella anche gli edifici disponibili in Inventario (stesso elenco della tab Inventario), evidenziati con uno sfondo verde. Non sono istanze piazzate: filtri e badge specifici della città (obsoleto, declassabile, disconnesso, slot alleato) non si applicano a queste righe.",
+    en: "Adds the buildings available in Inventory to the table too (same list as the Inventory tab), highlighted with a green background. These are not placed instances: city-specific filters and badges (outdated, declassable, disconnected, ally slot) don't apply to these rows.",
+  },
+  hideInventoryInCityTitle: {
+    it: "Nasconde di nuovo gli edifici da Inventario",
+    en: "Hide the Inventory buildings again",
+  },
+
+  // ── Titoli delle icone produzione (colonne + filtro) ─────────────────
+  staleDataWarning: {
+    it: "Importa nuovamente i dati per vedere questi valori",
+    en: "Re-import your data to see these values",
+  },
+  prodCoins: {
+    it: "Monete",
+    en: "Coins",
+  },
+  prodMaterials: {
+    it: "Materiali",
+    en: "Supplies",
+  },
+  prodMedals: {
+    it: "Medaglie",
+    en: "Medals",
+  },
+  prodForgePoints: {
+    it: "Punti Forge",
+    en: "Forge Points",
+  },
+  prodForgePointsBoost: {
+    it: "Punti Forge Boost",
+    en: "Forge Points Boost",
+  },
+  prodRogues: {
+    it: "Furfanti",
+    en: "Rogues",
+  },
+  prodUnitsCurrentEra: {
+    it: "Truppe dell'era corrente",
+    en: "Current era units",
+  },
+  prodUnitsNextEra: {
+    it: "Truppe dell'era successiva",
+    en: "Next era units",
+  },
+  prodGoodsCurrent: {
+    it: "Beni era attuale",
+    en: "Current era goods",
+  },
+  prodGoodsPrevious: {
+    it: "Beni era precedente",
+    en: "Previous era goods",
+  },
+  prodGoodsNext: {
+    it: "Beni era successiva",
+    en: "Next era goods",
+  },
+  prodGoodsSpecial: {
+    it: "Beni Speciali",
+    en: "Special Goods",
+  },
+  prodGoodsSpecialBoost: {
+    it: "Beni Speciali Boost",
+    en: "Special Goods Boost",
+  },
+  prodCoinsBoost: { it: "Monete Boost", en: "Coins Boost" },
+  prodMaterialsBoost: { it: "Materiali Boost", en: "Supplies Boost" },
+  prodMedalsBoost: { it: "Medaglie Boost", en: "Medals Boost" },
+  prodGoodsBoost: {
+    it: "Beni Boost",
+    en: "Goods Boost",
+  },
+  prodGuildGoods: {
+    it: "Beni Gilda",
+    en: "Guild Goods",
+  },
+  prodBlueprints: {
+    it: "Progetti",
+    en: "Blueprints",
+  },
+  prodRushSpecial: {
+    it: "Frammenti di Termina produzione speciale",
+    en: "Fragments of Finish Special Production",
+  },
+  prodRushMaterials: {
+    it: "Frammenti di Termina tutte le produzioni di materiali",
+    en: "Fragments of Finish All Supply Productions",
+  },
+  prodRushGoods: {
+    it: "Frammenti di Termina produzione di beni",
+    en: "Fragments of Finish Goods Production",
+  },
+  prodMassAid: {
+    it: "Frammenti di Kit auto-aiuto di massa",
+    en: "Fragments of Mass Self-Aid Kit",
+  },
+  prodOneUpKit: {
+    it: "Frammenti di Kit modernizzatore",
+    en: "Fragments of One Up Kit",
+  },
+  prodOneDownKit: {
+    it: "Kit Invecchiatore",
+    en: "One Down Kit",
+  },
+  prodReversionKit: {
+    it: "Kit di Inversione",
+    en: "Reversion Kit",
+  },
+  prodRenovationKit: {
+    it: "Frammenti di Kit rinnovamento",
+    en: "Fragments of Renovation Kit",
+  },
+  prodStoreBuilding: {
+    it: "Frammenti di Immagazzina edificio",
+    en: "Fragments of Store Building",
+  },
+
+  // ── Nomi brevi di sezione (senza emoji), usati dentro boostTitle() ───
+  sectionGeneral: {
+    it: "Generale",
+    en: "General",
+  },
+  sectionGbg: {
+    it: "Campi",
+    en: "GBG",
+  },
+  sectionGe: {
+    it: "Spedizioni",
+    en: "GE",
+  },
+  sectionGenPlusGbg: {
+    it: "Gen+Campi",
+    en: "Gen+GBG",
+  },
+  sectionGenPlusGe: {
+    it: "Gen+Sped",
+    en: "Gen+GE",
+  },
+  sectionQi: {
+    it: "IQ",
+    en: "QI",
+  },
+
+  // ── Titoli di gruppo header tabella (Generale/Campi/Spedizioni) ──────
+  // (novembre 2026: l'icona del gioco la mette TitoloGruppo in App.tsx; con Σ
+  // "GEN + CAMPI" / "GEN + SPED." si compongono le forme brevi)
+  groupGenerals: { it: "Generali", en: "Generals" },
+  groupGbg: { it: "Campi", en: "GBG-Only" },
+  groupGe: { it: "Spedizioni", en: "GE-Only" },
+  groupGenShort: { it: "GEN", en: "GEN" },
+  groupGbgShort: { it: "CAMPI", en: "GBG" },
+  groupGeShort: { it: "SPED.", en: "GE" },
+  groupIq: { it: "Incursioni", en: "Incursions" },
+  groupProductions: { it: "Produzioni", en: "Productions" },
+
+  // ── Colonne scalari IQ (Beni/Truppe/Azioni/CAP quantistici) ──────────
+  iqCoinsBoost: {
+    it: "Boost % monete IQ",
+    en: "Quantum Coins Boost %",
+  },
+  iqMaterialsBoost: {
+    it: "Boost % materiali IQ",
+    en: "Quantum Supplies Boost %",
+  },
+  iqCoinsStart: {
+    it: "Monete IQ iniziali aggiuntive",
+    en: "Quantum Start Coins",
+  },
+  iqMaterialsStart: {
+    it: "Materiali IQ iniziali aggiuntivi",
+    en: "Quantum Start Supplies",
+  },
+  iqGoods: {
+    it: "Beni IQ iniziali aggiuntivi",
+    en: "Quantum Start Goods",
+  },
+  iqUnits: {
+    it: "Truppe IQ iniziali aggiuntive",
+    en: "Quantum Start Units",
+  },
+  iqActions: {
+    it: "Azioni quantistiche aggiuntive",
+    en: "Quantum Actions per Recharge Cycle",
+  },
+  iqCap: {
+    it: "Capacità azioni quantistiche",
+    en: "Quantum Actions Capacity",
+  },
+
+  // ── Colonne base tabella (Edificio/Eff/Size/Strada/Pop/Fel) ──────────
+  selectAllTitle: {
+    it: "Seleziona/deseleziona tutto",
+    en: "Select/deselect all",
+  },
+  selectBuildingLabel: {
+    it: (name: string) => `Seleziona ${name}`,
+    en: (name: string) => `Select ${name}`,
+  },
+  minEffInputLabel: {
+    it: "Efficienza minima",
+    en: "Minimum efficiency",
+  },
+  colBuilding: {
+    it: "Edificio",
+    en: "Building",
+  },
+  colSize: {
+    it: "Dimensione edificio",
+    en: "Building size",
+  },
+  colRoad: {
+    it: "Fabbisogno stradale",
+    en: "Road requirement",
+  },
+  colPop: {
+    it: "Popolazione fornita/sottratta",
+    en: "Population provided/required",
+  },
+  colFel: {
+    it: "Felicità fornita/sottratta",
+    en: "Happiness provided/required",
+  },
+  buildingsVisualizedCount: {
+    it: "Edifici visualizzati",
+    en: "Buildings shown",
+  },
+  alliesVisualizedCount: {
+    it: "Alleati visualizzati",
+    en: "Allies shown",
+  },
+
+  // ── Badge/tooltip celle tabella edifici ───────────────────────────────
+  unresolvedValuesTitle: {
+    it: "I valori di questo edificio non sono disponibili",
+    en: "This building's values are not available",
+  },
+  disconnectedFromRoadTitle: {
+    it: "Edificio non connesso a strade",
+    en: "Building not connected to roads",
+  },
+  disconnectedFromRoadBadge: {
+    it: "NON CONNESSO A STRADE",
+    en: "NO ROAD CONNECTION",
+  },
+  needlesslyConnectedTitle: {
+    it: "Edificio connesso inutilmente a una strada",
+    en: "Building needlessly connected to a road",
+  },
+  needlesslyConnectedBadge: {
+    it: (n: number) => n > 1 ? `${n}x CONNESSI INUTILMENTE` : "CONNESSO INUTILMENTE",
+    en: (n: number) => n > 1 ? `${n}x NEEDLESSLY CONNECTED` : "NEEDLESSLY CONNECTED",
+  },
+  /** Tooltip del badge slot alleato (⭐ militare / 🔬 scienza, vedi App.tsx
+   *  getAllySlotIcon). "military"/"science" è il valore grezzo di
+   *  allyType (M/S -> nome esteso), non serve una label pre-risolta: la
+   *  frase è la stessa per le due lingue, cambia solo il tipo interpolato. */
+  historicalAllySlotTitleMilitary: {
+    it: "L'edificio può ospitare un Alleato Storico (militare)",
+    en: "The building can host a Historical Ally (military)",
+  },
+  historicalAllySlotTitleScience: {
+    it: "L'edificio può ospitare un Alleato Storico (scienza)",
+    en: "The building can host a Historical Ally (science)",
+  },
+  gbMultSpedTitle: {
+    it: "Bonus moltiplicativo (tier Oro, in giallo): moltiplica il totale della città per questa modalità, non è contato nell'efficienza",
+    en: "Multiplicative bonus (Gold tier, in yellow): multiplies the city total for this mode, not counted in the efficiency",
+  },
+  gbMultIqTitle: {
+    it: "Bonus moltiplicativo (tier Oro): moltiplica il totale della città nelle Incursioni, non è contato nell'efficienza",
+    en: "Multiplicative bonus (Gold tier): multiplies the city total in Incursions, not counted in the efficiency",
+  },
+  gbMultTitle: {
+    it: "Bonus del tier Oro che agiscono sul totale della città o sugli alleati: non sono contati nelle colonne né nell'efficienza.",
+    en: "Gold tier bonuses acting on the city total or on allies: not counted in the columns or in the efficiency.",
+  },
+  gbMultLine: {
+    it: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacco esercito attaccante", attacker_defense_boost: "Difesa esercito attaccante", defender_attack_boost: "Attacco esercito in difesa", defense_boost: "Difesa esercito in difesa", military_boost: "Attacco e difesa esercito attaccante", fierce_resistance: "Attacco e difesa esercito in difesa", advanced_tactics: "Attacco e difesa di entrambi gli eserciti", goods_production_boost: "Produzione di beni", special_goods_production_boost: "Produzione di beni speciali", military_ally_boost: "Alleati militari", science_ally_boost: "Alleati scienza" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} livelli a tutti gli alleati di questo tipo (un alleato al 100 vale come al ${100 + v})` : ` (${({ all: "ovunque", battleground: "Campi di battaglia", guild_expedition: "Spedizioni", guild_raids: "Incursioni quantiche" } as Record<string, string>)[mod] ?? mod}): +${v}%`}`,
+    en: (tipo: string, mod: string, v: number) => `• ${({ attack_boost: "Attacking army attack", attacker_defense_boost: "Attacking army defense", defender_attack_boost: "Defending army attack", defense_boost: "Defending army defense", military_boost: "Attacking army attack and defense", fierce_resistance: "Defending army attack and defense", advanced_tactics: "Attack and defense of both armies", goods_production_boost: "Goods production", special_goods_production_boost: "Special goods production", military_ally_boost: "Military allies", science_ally_boost: "Science allies" } as Record<string, string>)[tipo] ?? tipo}${tipo.endsWith("_ally_boost") ? `: +${v} levels to every ally of this type (an ally at level 100 counts as level ${100 + v})` : ` (${({ all: "everywhere", battleground: "Battlegrounds", guild_expedition: "Expeditions", guild_raids: "Quantum Incursions" } as Record<string, string>)[mod] ?? mod}): +${v}%`}`,
+  },
+  setBuildingTitle: {
+    it: (nome: string) => `Fa parte di un set: ${nome}.\nI bonus in tabella sono quelli massimi: si ottengono solo con gli altri edifici del set accanto.`,
+    en: (name: string) => `Part of a set: ${name}.\nThe bonuses in the table are the maximum ones: you only get them with the other set buildings next to it.`,
+  },
+  wonInGbgTitle: {
+    it: "L'edificio si vince nei Campi",
+    en: "The building is won in GBG",
+  },
+  wonInQiTitle: {
+    it: "L'edificio si vince nelle IQ",
+    en: "The building is won in QI",
+  },
+
+  // ── Nomi insediamenti (tooltip icona, tab Città/Inventario) ───────────
+  settlementVikings: {
+    it: "Insediamento Vichinghi",
+    en: "Vikings Settlement",
+  },
+  settlementJapan: {
+    it: "Insediamento Giappone",
+    en: "Japan Settlement",
+  },
+  settlementEgyptians: {
+    it: "Insediamento Egizi",
+    en: "Egypt Settlement",
+  },
+  settlementAztecs: {
+    it: "Insediamento Aztechi",
+    en: "Aztecs Settlement",
+  },
+  settlementMughals: {
+    it: "Insediamento Mughal",
+    en: "Mughals Settlement",
+  },
+  settlementPolynesia: {
+    it: "Insediamento Polinesia",
+    en: "Polynesia Settlement",
+  },
+  settlementPirates: {
+    it: "Insediamento Pirati",
+    en: "Pirates Settlement",
+  },
+
+  // ── Badge/tooltip celle tabella alleati ───────────────────────────────
+  fragmentsCountTitle: {
+    it: (n: number) => `${n} frammenti`,
+    en: (n: number) => `${n} fragments`,
+  },
+  fragmentsBadge: {
+    it: (n: number) => `${n} FRAMMENTI`,
+    en: (n: number) => `${n} FRAGMENTS`,
+  },
+  allyPlacedTitle: {
+    it: "Posizionato in città",
+    en: "Placed in the city",
+  },
+  allyNotPlacedTitle: {
+    it: "Non posizionato in città",
+    en: "Not placed in the city",
+  },
+  allyNotPlacedBadge: {
+    it: "NON POSIZIONATO",
+    en: "NOT PLACED",
+  },
+  allyHasUnplacedCopyTitle: {
+    it: "Hai una copia non posizionata in città",
+    en: "You have an unplaced copy in your city",
+  },
+  colAlly: {
+    it: "Alleato",
+    en: "Ally",
+  },
+
+  // ── Barra "Calcola efficienza a livello" (tab Alleati) ────────────────
+  calcEfficiencyAtLevel: {
+    it: "Efficienza calcolata a livello 100",
+    en: "Efficiency calculated at level 100",
+  },
+  importAlliesFirstTitle: {
+    it: "Importa prima i tuoi alleati",
+    en: "Import your allies first",
+  },
+  showFullDatabaseTitle: {
+    it: "Mostra tutto il database",
+    en: "Show the full database",
+  },
+  showOnlyOwnedTitle: {
+    it: "Mostra solo gli alleati posseduti",
+    en: "Show only owned allies",
+  },
+  onlyOwnedLabel: {
+    it: "Solo posseduti",
+    en: "Only owned",
+  },
+
+  // ── Modale "Edifici aggiornabili/ascendibili" (breakdown kit) ────────
+  inventoryRequiredTitle: {
+    it: "Inventario richiesto",
+    en: "Inventory required",
+  },
+  inventoryRequiredBody: {
+    it: "Per calcolare queste tabelle serve anche l'inventario importato nella tab Inventario.",
+    en: "To calculate these tables, you also need inventory data imported in the Inventory tab.",
+  },
+  noUpgradableFound: {
+    it: "Nessun edificio aggiornabile o ascendibile individuato con i dati attuali.",
+    en: "No upgradable or ascendable buildings found with the current data.",
+  },
+  upgradableBuildingsTitle: {
+    it: "Edifici aggiornabili",
+    en: "Upgradable buildings",
+  },
+  ascendableBuildingsTitle: {
+    it: "Edifici ascendibili",
+    en: "Ascendable buildings",
+  },
+  colInCity: {
+    it: "In città",
+    en: "In City",
+  },
+  colCurrentLevel: {
+    it: "Liv. attuale",
+    en: "Curr lvl",
+  },
+  colMaxLevel: {
+    it: "Liv. max",
+    en: "Max lvl",
+  },
+  colAvailableKits: {
+    it: "Kit disponibili (selezione / aggiornamento)",
+    en: "Available kits (selection / upgrade)",
+  },
+
+  // ── Pannello PROD + STAT (riepilogo produzioni/statistiche tab Città) ─
+  prodColumnLabel: {
+    it: "Produzione",
+    en: "Production",
+  },
+  prodColInStock: {
+    it: "in inv.",
+    en: "in inv.",
+  },
+  prodColFragmentsPerDay: {
+    it: "framm/g",
+    en: "frag/d",
+  },
+  prodColKitsPerMonth: {
+    it: "kit/mese",
+    en: "kit/mo",
+  },
+  prodColKitsPerYear: {
+    it: "kit/anno",
+    en: "kit/yr",
+  },
+  prodFragmentsPanel: { it: "Produzione frammenti", en: "Fragment production" },
+  prodFpGoodsPanel: { it: "Produzione Punti Forge e beni", en: "Forge Points and goods production" },
+  prodGoodsTotal: { it: "Totale beni", en: "Total goods" },
+  prodDisconnected: { it: "(scollegato)", en: "(disconnected)" },
+  prodDisconnectedTitle: {
+    it: (v: string) => `Scollegato dalla strada: non produce. Collegato darebbe ${v}`,
+    en: (v: string) => `Disconnected from the road: it doesn't produce. Connected it would give ${v}`,
+  },
+  prodGoodsScienceAllies: { it: "Alleati scienza", en: "Science allies" },
+  prodCastle: { it: (n: number) => `Castello (liv. ${n})`, en: (n: number) => `Castle (lv. ${n})` },
+  prodGoodsDetailTitle: { it: "Clic: dettaglio per edificio", en: "Click: detail by building" },
+  prodGoodsBoostTitle: {
+    it: (p: number) => `Con il bonus produzione beni della città: +${p}%`,
+    en: (p: number) => `With the city's goods production bonus: +${p}%`,
+  },
+  dailyQuantityLabel: {
+    it: "Quantità giornaliera",
+    en: "Daily quantity",
+  },
+
+  // ── Pannello efficienza strade (tab Città) ──────────────────────────
+  roadEfficiencyTitle: {
+    it: "Efficienza strade",
+    en: "Road efficiency",
+  },
+  roadEfficiencyFormula: {
+    it: "Efficienza = Fabbisogno Stradale Edifici Collegati ÷ Area Totale delle Strade × 100",
+    en: "Efficiency = Connected Buildings Road Requirement ÷ Total Road Area × 100",
+  },
+  roadEfficiencyConnectedArea: {
+    it: "Fabbisogno stradale edifici collegati",
+    en: "Connected buildings road requirement",
+  },
+  roadEfficiencyRoadArea: {
+    it: "Area totale delle strade",
+    en: "Total road area",
+  },
+  roadEfficiencyResult: {
+    it: "Efficienza strade",
+    en: "Road efficiency",
+  },
+  roadEfficiencyDisconnectedWarning: {
+    it: "In città ci sono edifici scollegati dalla strada.\nSe venissero collegati, senza costruire altre strade, l'efficienza cambierebbe:",
+    en: "There are buildings disconnected from the road network.\nIf they were connected, without building any more roads, efficiency would change to:",
+  },
+  roadEfficiencyDisconnectedArea: {
+    it: "Fabbisogno stradale edifici scollegati (potenziale)",
+    en: "Disconnected buildings road requirement (potential)",
+  },
+  roadEfficiencyHypothetical: {
+    it: "Efficienza se tutti collegati",
+    en: "Efficiency if all connected",
+  },
+  statRowGlobal: {
+    it: "Globale",
+    en: "Global",
+  },
+  statColLabel: {
+    it: "Statistica",
+    en: "Statistic",
+  },
+  statColFromBuildings: {
+    it: "da edifici",
+    en: "from buildings",
+  },
+  statColFromGB: {
+    it: "da GE",
+    en: "from GB",
+  },
+  statColFromAllies: {
+    it: "da alleati",
+    en: "from allies",
+  },
+  statColTotal: {
+    it: "totale",
+    en: "total",
+  },
+  gbContribCellTitle: {
+    it: (p: number, n: number) => `Nella tua città questo +${p}% vale +${n.toLocaleString("it-IT")} (sul totale della statistica): contato nell'efficienza.`,
+    en: (p: number, n: number) => `In your city this +${p}% is worth +${n.toLocaleString("en-US")} (on the stat total): counted in efficiency.`,
+  },
+  gbBonusCellTitle: {
+    it: (p: number) => `Con i bonus moltiplicativi dei GE: +${p}%`,
+    en: (p: number) => `With the multiplicative GB bonuses: +${p}%`,
+  },
+  statColGbBonus: {
+    it: "bonus GE",
+    en: "GB bonus",
+  },
+  statColGbBonusTitle: {
+    it: "Bonus moltiplicativi dei Grandi Edifici (tier Oro e Sifone): percentuale applicata al totale. Per Campi e Spedizioni si sommano anche quelli globali.",
+    en: "Multiplicative Great Building bonuses (Gold tier and Siphon): percentage applied to the total. For Battlegrounds and Expeditions the global ones are added too.",
+  },
+  statGbBonusCellTitle: {
+    it: (a: number, d: number) => `Attacco +${a}%, difesa +${d}% sul totale`,
+    en: (a: number, d: number) => `Attack +${a}%, defense +${d}% on the total`,
+  },
+  statColTotalWithBonus: {
+    it: "totale con bonus",
+    en: "total with bonus",
+  },
+  statColCastle: { it: (n: number) => `castello (liv. ${n})`, en: (n: number) => `castle (lv. ${n})` },
+  statColCastleTitle: {
+    it: "Bonus permanente del Castello per il tuo livello: attacco e difesa dell'esercito attaccante (righe rosse) e difensore (righe blu). Entra nel totale, quindi anche lui viene moltiplicato dai bonus dei GE; non vale nelle Incursioni quantiche",
+    en: "Permanent Castle bonus for your level: attack and defense of the attacking army (red rows) and defending army (blue rows). It is part of the total, so the GB multipliers apply to it too; it doesn't apply in Quantum Incursions",
+  },
+  statTotalsFootnote: {
+    it: "*Nei totali non sono considerati i bonus temporanei",
+    en: "*Temporary bonuses are not included in the totals",
+  },
+
+  // ── Pannelli Debug (tab Città e Inventario) ──────────────────────────
+  debugMatchedBuildings: {
+    it: "Edifici matchati",
+    en: "Matched buildings",
+  },
+  debugGreatBuildings: {
+    it: "Grandi Edifici",
+    en: "Great Buildings",
+  },
+  debugUnmatchedBuildings: {
+    it: "Edifici senza match",
+    en: "Unmatched buildings",
+  },
+  debugUnmatchedBuildingsTitle: {
+    it: "Edifici sconosciuti: non sono né nel catalogo né tra gli edifici fuori catalogo (di solito edifici appena usciti, non ancora aggiunti)",
+    en: "Unknown buildings: neither in the catalog nor among the off-catalog buildings (usually brand-new buildings not added yet)",
+  },
+  debugExtraBuildings: {
+    it: "Fuori catalogo",
+    en: "Off catalog",
+  },
+  debugExtraBuildingsTitle: {
+    it: "Edifici riconosciuti ma non presenti nel catalogo degli edifici (militari, fabbriche di beni, alcuni premi come la Tana dei furfanti): il tool ne conosce dimensioni e strada, non le statistiche",
+    en: "Buildings recognised but not in the building catalog (military, goods factories, some prizes like the Rogue Den): the tool knows their size and road, not their stats",
+  },
+  debugSelectionKits: {
+    it: "Kit di selezione",
+    en: "Selection kits",
+  },
+  debugUpgradeKits: {
+    it: "Kit di aggiornamento",
+    en: "Upgrade kits",
+  },
+  tierPlatinum: {
+    it: "Platino",
+    en: "Platinum",
+  },
+  tierGold: {
+    it: "Oro",
+    en: "Gold",
+  },
+  tierSilver: {
+    it: "Argento",
+    en: "Silver",
+  },
+  tierNormal: {
+    it: "Base",
+    en: "Base",
+  },
+  onlyReadyBuildings: {
+    it: "Solo edifici pronti",
+    en: "Only ready buildings",
+  },
+  onlyReadyBuildingsTitle: {
+    it: "Edifici già presenti in inventario, da piazzare subito (gli altri si fanno con i kit)",
+    en: "Buildings already in inventory, ready to place (the others are made with kits)",
+  },
+
+  // ── Mappa città (CityMapView.tsx) ────────────────────────────────────
+  mapViewTitle: {
+    it: "Vista Mappa",
+    en: "Map View",
+  },
+  mapViewVertical: {
+    it: "Verticale",
+    en: "Vertical",
+  },
+  mapViewIsometric: {
+    it: "Isometrica",
+    en: "Isometric",
+  },
+  zoomOutTitle: {
+    it: "Riduci zoom",
+    en: "Zoom out",
+  },
+  zoomInTitle: {
+    it: "Aumenta zoom",
+    en: "Zoom in",
+  },
+  // Prima il testo consigliava "Prova l'export SVG": il pulsante SVG è stato
+  // rimosso l'11 agosto 2026 (restano PNG e JSON). Il caso "profilo senza aree
+  // sbloccate salvate", che si risolve solo reimportando, ha un messaggio suo.
+  exportPngFailedAlert: {
+    it: "Impossibile esportare la mappa in PNG (dettagli nella console del browser).",
+    en: "Unable to export the map as PNG (details in the browser console).",
+  },
+  exportPngNeedsReimportAlert: {
+    it: "Per esportare la mappa in PNG reimporta la città con la bacchetta magica: questo profilo è stato salvato prima che il tool memorizzasse le espansioni sbloccate.",
+    en: "To export the map as PNG, re-import your city with the magic wand: this profile was saved before the tool stored the unlocked expansions.",
+  },
+  mapLegendTitle: {
+    it: "Legenda Mappa",
+    en: "Map Legend",
+  },
+  legendTownHall: {
+    it: "Municipio",
+    en: "Town Hall",
+  },
+  legendGreatBuildings: {
+    it: "Grandi Edifici",
+    en: "Great Buildings",
+  },
+  legendMilitaryBuildings: {
+    it: "Edifici militari",
+    en: "Military buildings",
+  },
+  legendMilitary2Buildings: {
+    it: "Edifici militari a 2 corsie",
+    en: "2-lane military buildings",
+  },
+  legendRoadRequired: {
+    it: "Richiede strada",
+    en: "Requires road",
+  },
+  legendRoad2Required: {
+    it: "Richiede strada a 2 corsie",
+    en: "Requires 2-lane road",
+  },
+  legendNoRoadRequired: {
+    it: "Non richiede strada",
+    en: "Doesn't require road",
+  },
+  legendNeedlesslyConnected: {
+    it: "Connessi inutilmente",
+    en: "Needlessly connected",
+  },
+  legendInactive: {
+    it: "Inattivi",
+    en: "Inactive",
+  },
+  legendStreets: {
+    it: "Strade",
+    en: "Streets",
+  },
+  legendFreeSpace: {
+    it: "Spazio libero",
+    en: "Free space",
+  },
+  legendUnavailableSpace: {
+    it: "Spazio non disponibile",
+    en: "Unavailable space",
+  },
+
+  // ── Tooltip "Frammenti / Kit prodotti da" ─────────────────────────────
+  // Niente emoji 🧩 nel testo: il chiamante antepone iconFragment (icona
+  // ufficiale Inno) come <img>, coerente col badge in tabella.
+  fragmentsProducedByTitle: {
+    it: "Frammenti prodotti da:",
+    en: "Fragments produced by:",
+  },
+  inCityBadge: {
+    it: "CITTÀ",
+    en: "CITY",
+  },
+
+  // ── Riga filtri tab Città (era, debug, download, mappa, vecchi, GB) ──
+  profileEraTitle: {
+    it: (era: string) => `Tutti i dati del profilo visualizzato corrispondono all'era: ${era}`,
+    en: (era: string) => `All data for the displayed profile corresponds to the age: ${era}`,
+  },
+  showOnlyOldBuildingsTitle: {
+    it: "Mostra solo edifici di ere precedenti",
+    en: "Show only buildings from previous ages",
+  },
+  outdatedSummaryTitle: {
+    it: "SE AGGIORNI TUTTI GLI EDIFICI VECCHI",
+    en: "IF YOU UPGRADE ALL OLD BUILDINGS",
+  },
+  outdatedSummaryFallbackTitle: {
+    it: "SE AGGIORNI TUTTI GLI EDIFICI IN CITTÀ",
+    en: "IF YOU UPGRADE ALL BUILDINGS IN YOUR CITY",
+  },
+  outdatedSummaryCount: {
+    it: (copies: number) => `(${copies} IN TOTALE)`,
+    en: (copies: number) => `(${copies} IN TOTAL)`,
+  },
+  outdatedSummaryToCurrentEra: {
+    it: "ALL'ERA CORRENTE:",
+    en: "TO THE CURRENT AGE:",
+  },
+  outdatedSummaryToMaxEra: {
+    it: "ALL'ERA MASSIMA:",
+    en: "TO THE LATEST AGE:",
+  },
+  outdatedSummaryButtonTitle: {
+    it: "Riepilogo: cosa cambia aggiornando tutti gli edifici vecchi (era attuale ed era massima)",
+    en: "Summary: what changes if you upgrade all old buildings (current age and latest age)",
+  },
+  outdatedSummaryEmpty: {
+    it: "Tutti gli edifici della città sono già aggiornati all'era corrente.",
+    en: "All buildings in the city are already up to date with the current age.",
+  },
+  outdatedSummaryAlreadyAtMax: {
+    it: "Sei già all'ultima era gestita: nessun confronto aggiuntivo.",
+    en: "You're already at the latest supported age: no extra comparison.",
+  },
+  outdatedSummaryUnchangedTitle: {
+    it: "Statistiche invariate",
+    en: "Unchanged stats",
+  },
+  upgradableBuildingsButton: {
+    it: "EDIFICI AGGIORNABILI",
+    en: "UPGRADABLE BUILDINGS",
+  },
+  showQiUsefulTitle: {
+    it: "Nascondi edifici utili per le IQ",
+    en: "Hide buildings useful for QI",
+  },
+  hideQiUsefulTitle: {
+    it: "Mostra edifici utili per le IQ",
+    en: "Show buildings useful for QI",
+  },
+  hideHistoricalAllyBuildingsTitle: {
+    it: "Nascondi edifici che possono ospitare Alleati Storici",
+    en: "Hide buildings with room for Historical Allies",
+  },
+  showHistoricalAllyBuildingsTitle: {
+    it: "Mostra edifici che possono ospitare Alleati Storici",
+    en: "Show buildings with room for Historical Allies",
+  },
+  hideMassAidBuildingsTitle: {
+    it: "Nascondi edifici che producono frammenti di Auto-aiuto di massa",
+    en: "Hide buildings that produce Mass Self-Aid fragments",
+  },
+  showMassAidBuildingsTitle: {
+    it: "Mostra edifici che producono frammenti di Auto-aiuto di massa",
+    en: "Show buildings that produce Mass Self-Aid fragments",
+  },
+  hideStoreBuildingBuildingsTitle: {
+    it: "Nascondi edifici che producono frammenti di Immagazzina edificio",
+    en: "Hide buildings that produce Store Building fragments",
+  },
+  showStoreBuildingBuildingsTitle: {
+    it: "Mostra edifici che producono frammenti di Immagazzina edificio",
+    en: "Show buildings that produce Store Building fragments",
+  },
+  hideGreatBuildingsTitle: {
+    it: "Nascondi Grandi Edifici",
+    en: "Hide Great Buildings",
+  },
+  showGreatBuildingsTitle: {
+    it: "Mostra Grandi Edifici",
+    en: "Show Great Buildings",
+  },
+  /** Tooltip del badge 🔒 (noRush(b), derivato da b.flags): testo ufficiale
+   *  mostrato dal gioco stesso sull'edificio ("Instant production finish
+   *  disabled"), non una parafrasi nostra. */
+  noRushBadgeTitle: {
+    it: "Completa istantaneamente produzione disabilitato",
+    en: "Instant production finish disabled",
+  },
+  /** Tooltip del badge ciano (isEraMutable(b), derivato da b.flags bit 2):
+   *  l'edificio si aggiorna automaticamente all'era corrente della città,
+   *  senza bisogno di un kit di aggiornamento manuale. */
+  eraMutableBadgeTitle: {
+    it: "Era automatica: prende da solo l'era della tua città. Non si può portare a un'era precedente con il Kit Invecchiatore o il Kit di Inversione",
+    en: "Auto age: it takes your city's age by itself. It can't be taken back to a previous age with the One Down Kit or the Reversion Kit",
+  },
+  daySuffix: {
+    it: "g",
+    en: "d",
+  },
+  viewOnWikiTitle: {
+    it: (name: string, lang: string) => `Vedi ${name} su FoE Wiki (${lang})`,
+    en: (name: string, lang: string) => `View ${name} on FoE Wiki (${lang})`,
+  },
+  // Placeholder nel popup immagine (👁️/? in cella nome) quando manca
+  // l'hash: alcuni livelli intermedi di set a gradazione riusano lo sprite
+  // di un livello precedente e non hanno un hash proprio nel CSV.
+  noImageAvailable: {
+    it: "Nessuna immagine disponibile",
+    en: "No image available",
+  },
+  ownedAlliesCount: {
+    it: "Alleati posseduti",
+    en: "Owned allies",
+  },
+  // Niente emoji 🧩: il chiamante antepone iconFragment come <img>.
+  fragmentsProducedTitle: {
+    it: "Produce frammenti di:",
+    en: "Produces fragments of:",
+  },
+  daFrammentiTitle: { it: "Si ottiene con i frammenti di", en: "Made from the fragments of" },
+  daFrammentiRichiesti: { it: (n: number) => `${n} frammenti`, en: (n: number) => `${n} fragments` },
+  daFrammentiEdificio: { it: (nome: string) => `Frammenti di ${nome}`, en: (nome: string) => `${nome} fragments` },
+  daFrammentiScelta: { it: "a scelta fra:", en: "choice of:" },
+  daFrammentiColProd: { it: "Edificio che produce i frammenti", en: "Building producing the fragments" },
+  daFrammentiColGiorno: { it: "Framm/g", en: "Frag/d" },
+  daFrammentiColCitta: { it: "Città", en: "City" },
+  daFrammentiColInv: { it: "Invent.", en: "Invent." },
+  daFrammentiColGiorni: { it: "Giorni x kit", en: "Days x kit" },
+  // (kit: true = kit di selezione, false = frammenti dell'edificio stesso)
+  daFrammentiCitta: {
+    it: (f: number, g: number, kit: boolean) => `Con i tuoi edifici in città: ${f} ${f === 1 ? "frammento" : "frammenti"} al giorno → ${kit ? "un kit" : "un edificio"} ogni ${g} ${g === 1 ? "giorno" : "giorni"}.`,
+    en: (f: number, g: number, kit: boolean) => `With your city buildings: ${f} ${f === 1 ? "fragment" : "fragments"} a day → ${kit ? "a kit" : "a building"} every ${g} ${g === 1 ? "day" : "days"}.`,
+  },
+  daFrammentiConInv: {
+    it: (f: number, g: number, kit: boolean) => `Mettendo in città anche quelli in inventario: ${f} al giorno → ${kit ? "un kit" : "un edificio"} ogni ${g} ${g === 1 ? "giorno" : "giorni"}.`,
+    en: (f: number, g: number, kit: boolean) => `Also placing the ones in your inventory: ${f} a day → ${kit ? "a kit" : "a building"} every ${g} ${g === 1 ? "day" : "days"}.`,
+  },
+  daFrammentiNessuno: { it: "Non hai edifici che producono questi frammenti.", en: "You have no buildings producing these fragments." },
+  daFrammentiNota: {
+    it: "Frammenti con gli edifici motivati; esclusi i forzieri a caso. In città contano solo gli edifici collegati alla strada.",
+    en: "Fragments with motivated buildings; random chests excluded. In the city only buildings connected to a road count.",
+  },
+  r2FromFragments: { it: "Da frammenti", en: "From fragments" },
+  r2FromFragmentsTitle: { it: "Edifici che si possono fabbricare con i frammenti prodotti da altri edifici", en: "Buildings you can make from fragments produced by other buildings" },
+  selectionKitOptionsTitle: {
+    it: "Opzioni del kit di selezione:",
+    en: "Selection kit options:",
+  },
+  requiredKits: {
+    it: "Kit necessari:",
+    en: "Required kits:",
+  },
+  upgradableBadge: {
+    it: "AGGIORNABILE",
+    en: "UPGRADABLE",
+  },
+
+  // ── Modale "Efficienza e Pesi" ────────────────────────────────────────
+  // Solo edifici: il campo min EFF esiste nella tabella edifici (tab Info, Città,
+  // Inventario), non nelle tabelle Alleati (prima il testo diceva "edifici o alleati").
+
+  // ── Modale "Profili e Bacchetta Magica" ───────────────────────────────
+
+  // ── Contatore "Alleati posseduti" (riga header tabella alleati) ──────
+  alliesPlacedInCity: {
+    it: "posizionati in città,",
+    en: "placed in the city,",
+  },
+  alliesInInventory: {
+    it: "in inventario e",
+    en: "in inventory and",
+  },
+  alliesFragmented: {
+    it: "frammentati)",
+    en: "fragmented)",
+  },
+  allyLevelTitle: {
+    it: "Livello alleato",
+    en: "Ally level",
+  },
+
+  // ── Tooltip "edificio vecchio" (confronto era-su-era) ────────────────
+  oldBuildingSingular: {
+    it: "edificio vecchio",
+    en: "old building",
+  },
+  oldBuildingPlural: {
+    it: "edifici vecchi",
+    en: "old buildings",
+  },
+  upgradeToEraTitle: {
+    it: (era: string) => `✨ Se aggiorni a ${era}:`,
+    en: (era: string) => `✨ If you upgrade to ${era}:`,
+  },
+  copySingular: {
+    it: "copia",
+    en: "copy",
+  },
+  copyPlural: {
+    it: "copie",
+    en: "copies",
+  },
+  fromEraWord: {
+    it: "da",
+    en: "from",
+  },
+  eraDiffSingular: {
+    it: "-1 era",
+    en: "-1 era",
+  },
+  eraDiffPlural: {
+    it: (n: number) => `-${n} ere`,
+    en: (n: number) => `-${n} eras`,
+  },
+  noProductionChanges: {
+    it: "Nessuna variazione nelle produzioni.",
+    en: "No production changes.",
+  },
+  goodsEraChangeNote: {
+    it: (currentEra: string, oldEra: string) => `📦 I Beni prodotti saranno di ${currentEra} invece che di ${oldEra}.`,
+    en: (currentEra: string, oldEra: string) => `📦 Goods produced will be from ${currentEra} instead of ${oldEra}.`,
+  },
+  upgradeKitsAvailable: {
+    it: "Kit per aggiornare:",
+    en: "Kits to upgrade:",
+  },
+  inInventoryCount: {
+    it: (n: number) => `${n} in inventario`,
+    en: (n: number) => `${n} in inventory`,
+  },
+  upgradableLabel: {
+    it: "Aggiornabile",
+    en: "Upgradable",
+  },
+  upgradeTargetLabel: {
+    it: "Target:",
+    en: "Target:",
+  },
+  upgradeBody: {
+    it: "Puoi aggiornarlo con i kit di aggiornamento che hai in inventario.",
+    en: "You can upgrade it with the upgrade kits you have in your inventory.",
+  },
+  upgradeAutoEraNote: {
+    it: "passa automaticamente all'era attuale",
+    en: "automatically moves to the current era",
+  },
+
+  // ── Secondo tooltip "Aggiornabile a:" (kit selection, edifici città) ─
+  upgradableToLabel: {
+    it: "Aggiornabile a:",
+    en: "Upgradable to:",
+  },
+  kitsInInventoryLabel: {
+    it: "Kit in inventario:",
+    en: "Kits in inventory:",
+  },
+
+  // ── DIFF_FIELDS: etichette compatte del confronto era-su-era ─────────
+  diffPopulation: {
+    it: "Popolazione",
+    en: "Population",
+  },
+  diffHappiness: {
+    it: "Felicità",
+    en: "Happiness",
+  },
+  diffGenAtkAtk: {
+    it: "Att. attaccante",
+    en: "Atk attacker",
+  },
+  diffGenDefAtk: {
+    it: "Dif. attaccante",
+    en: "Def attacker",
+  },
+  diffGenAtkDef: {
+    it: "Att. difensore",
+    en: "Atk defender",
+  },
+  diffGenDefDef: {
+    it: "Dif. difensore",
+    en: "Def defender",
+  },
+  diffGbgAtkAtk: {
+    it: "Campi att. att.",
+    en: "GBG atk atk.",
+  },
+  diffGbgDefAtk: {
+    it: "Campi dif. att.",
+    en: "GBG def atk.",
+  },
+  diffGbgAtkDef: {
+    it: "Campi att. dif.",
+    en: "GBG atk def.",
+  },
+  diffGbgDefDef: {
+    it: "Campi dif. dif.",
+    en: "GBG def def.",
+  },
+  diffGeAtkAtk: {
+    it: "Sped. att. att.",
+    en: "GE atk atk.",
+  },
+  diffGeDefAtk: {
+    it: "Sped. dif. att.",
+    en: "GE def atk.",
+  },
+  diffGeAtkDef: {
+    it: "Sped. att. dif.",
+    en: "GE atk def.",
+  },
+  diffGeDefDef: {
+    it: "Sped. dif. dif.",
+    en: "GE def def.",
+  },
+  diffIqAtkAtk: {
+    it: "IQ att. att.",
+    en: "QI atk atk.",
+  },
+  diffIqDefAtk: {
+    it: "IQ dif. att.",
+    en: "QI def atk.",
+  },
+  diffIqAtkDef: {
+    it: "IQ att. dif.",
+    en: "QI atk def.",
+  },
+  diffIqDefDef: {
+    it: "IQ dif. dif.",
+    en: "QI def def.",
+  },
+  diffIqCoinsBoost: {
+    it: "IQ Monete %",
+    en: "QI Coins %",
+  },
+  diffIqMaterialsBoost: {
+    it: "IQ Materiali %",
+    en: "QI Supplies %",
+  },
+  diffIqCoins: {
+    it: "IQ Monete",
+    en: "QI Coins",
+  },
+  diffIqMaterials: {
+    it: "IQ Materiali",
+    en: "QI Supplies",
+  },
+  diffIqGoods: {
+    it: "IQ Beni",
+    en: "QI Goods",
+  },
+  diffIqUnits: {
+    it: "IQ Truppe",
+    en: "QI Units",
+  },
+  diffIqActions: {
+    it: "IQ Azioni",
+    en: "QI Actions",
+  },
+  diffIqCapacity: {
+    it: "IQ Capacità",
+    en: "QI Capacity",
+  },
+  diffCoins: {
+    it: "Monete",
+    en: "Coins",
+  },
+  diffMaterials: {
+    it: "Materiali",
+    en: "Supplies",
+  },
+  diffMedals: {
+    it: "Medaglie",
+    en: "Medals",
+  },
+  diffForgePoints: {
+    it: "Punti Forge",
+    en: "Forge Points",
+  },
+  diffForgePointsBoost: {
+    it: "Boost PF",
+    en: "FP Boost",
+  },
+  diffRogues: {
+    it: "Furfanti",
+    en: "Rogues",
+  },
+  diffUnits: {
+    it: "Truppe",
+    en: "Units",
+  },
+  diffUnitsNextEra: {
+    it: "Truppe era succ.",
+    en: "Next era units",
+  },
+  diffGoods: {
+    it: "Beni",
+    en: "Goods",
+  },
+  diffGoodsPreviousEra: {
+    it: "Beni era prec.",
+    en: "Prev. era goods",
+  },
+  diffGoodsNextEra: {
+    it: "Beni era succ.",
+    en: "Next era goods",
+  },
+  diffGoodsSpecial: {
+    it: "Beni Speciali",
+    en: "Special Goods",
+  },
+  diffGoodsSpecialBoost: {
+    it: "Beni Speciali Boost",
+    en: "Special Goods Boost",
+  },
+  diffGoodsBoost: {
+    it: "Boost Beni",
+    en: "Goods Boost",
+  },
+  diffTreasuryGoods: {
+    it: "Beni tesoreria",
+    en: "Treasury Goods",
+  },
+  diffBlueprints: {
+    it: "Progetti",
+    en: "Blueprints",
+  },
+  diffMassAid: {
+    it: "Aiuto di massa",
+    en: "Mass Self-Aid",
+  },
+  diffOneUpKit: {
+    it: "Kit modernizz.",
+    en: "One Up Kit",
+  },
+  diffRenovationKit: {
+    it: "Kit rinnovo",
+    en: "Renovation Kit",
+  },
+  diffStoreBuilding: {
+    it: "Immagazzina",
+    en: "Store",
+  },
+
+  // ── Alert (bacchetta magica, export) ──────────────────────────────────
+  clipboardEmptyAlert: {
+    it: "Dati non validi: per importare la città consulta la Guida alla Bacchetta magica.",
+    en: "Invalid data: to import your city, see the Magic Wand Guide.",
+  },
+  clipboardNotJsonScript: {
+    it: "Dati non validi: negli appunti c'è il codice del bookmarklet, non i dati della città. Il bookmarklet va CLICCATO dalla barra dei preferiti mentre sei nel gioco, non copiato. Se lo hai creato incollando il codice a mano, ricrealo trascinando nei preferiti la bacchetta verde in alto a sinistra.",
+    en: "Invalid data: the clipboard contains the bookmarklet code, not the city data. The bookmarklet must be CLICKED from the bookmarks bar while you are in the game, not copied. If you created it by pasting the code by hand, recreate it by dragging the green magic wand (top left) to your bookmarks bar.",
+  },
+  clipboardNotJsonTruncated: {
+    it: (n: number) => `Dati non validi: negli appunti ci sono i dati del bookmarklet, ma incompleti o rovinati (${n.toLocaleString("it-IT")} caratteri). Chiudi il browser, riapri sia il gioco sia il tool e importa di nuovo la città (bookmarklet nel gioco, poi subito la bacchetta magica).`,
+    en: (n: number) => `Invalid data: the clipboard contains the bookmarklet data, but incomplete or damaged (${n.toLocaleString("en-US")} characters). Close the browser, reopen both the game and the tool and import the city again (bookmarklet in the game, then the magic wand right away).`,
+  },
+  clipboardNotJsonUrl: {
+    it: "Dati non validi: negli appunti c'è un indirizzo web, non i dati della città: il bookmarklet non ha copiato niente. Vai sulla pagina del gioco (con FoE Helper o Forge Hammer attivo), clicca il bookmarklet dalla barra dei preferiti e poi subito la bacchetta magica.",
+    en: "Invalid data: the clipboard contains a web address, not the city data: the bookmarklet did not copy anything. Go to the game page (with FoE Helper or Forge Hammer active), click the bookmarklet from the bookmarks bar and then the magic wand right away.",
+  },
+  clipboardNotJsonOther: {
+    it: (n: number) => `Dati non validi: negli appunti c'è un altro testo (${n.toLocaleString("it-IT")} caratteri), non i dati di gioco. Per importare la città consulta la Guida alla Bacchetta magica.`,
+    en: (n: number) => `Invalid data: the clipboard contains some other text (${n.toLocaleString("en-US")} characters), not the game data. To import your city, see the Magic Wand Guide.`,
+  },
+  clipboardPermissionDeniedAlert: {
+    it: "Import fallito: il browser ha negato a questo sito il permesso di leggere gli appunti. Alcuni browser (es. Vivaldi, Brave) lo bloccano di default. Prova a: 1) ricaricare la pagina e riprovare; 2) controllare le autorizzazioni del sito nelle impostazioni del browser (di solito in Impostazioni > Privacy/Sicurezza > Autorizzazioni sito, voce \"Appunti\") e abilitare manualmente l'accesso per foe-optimizer.com; 3) ricaricare e riprovare.",
+    en: "Import failed: your browser denied this site permission to read the clipboard. Some browsers (e.g. Vivaldi, Brave) block it by default. Try: 1) reloading the page and trying again; 2) checking the site's permissions in your browser settings (usually under Settings > Privacy/Security > Site permissions, \"Clipboard\") and manually allowing access for foe-optimizer.com; 3) reload and retry.",
+  },
+  clipboardReadErrorAlert: {
+    it: "Dati non validi: impossibile leggere la clipboard.",
+    en: "Invalid data: unable to read the clipboard.",
+  },
+  bookmarkletInvalidFormat: {
+    it: "Dati non validi: formato non riconosciuto.",
+    en: "Invalid data: unrecognized format.",
+  },
+  bookmarkletMissingFields: {
+    it: (fields: string) => `Dati non validi: mancano i campi ${fields}.`,
+    en: (fields: string) => `Invalid data: missing fields ${fields}.`,
+  },
+  bookmarkletNoBuildings: {
+    it: (helper: string) => `${helper} non ha ancora i dati della città: negli appunti non c'è nessun edificio (manca anche il municipio). La città non è stata creata né aggiornata.\n\nRicarica il gioco, apri di nuovo la città (o visita di nuovo il giocatore) e riprova con la bacchetta.`,
+    en: (helper: string) => `${helper} doesn't have the city data yet: the clipboard contains no buildings (not even the town hall). The city was not created or updated.\n\nReload the game, open the city again (or visit the player again) and try the wand again.`,
+  },
+  importErrorAlert: {
+    it: (detail: string) => `Errore durante l'importazione dei dati. Il profilo non è stato creato.\n\nDettaglio: ${detail}`,
+    en: (detail: string) => `Error while importing data. The profile was not created.\n\nDetail: ${detail}`,
+  },
+  // ── Consigliere Gettoni Valore (tab Alleati, bacchetta v6) ──────────────
+  allyMatrixSortTitle: { it: (r: string) => `Ordina per EFF ${r}`, en: (r: string) => `Sort by ${r} EFF` },
+  allyMatrixOwnedTitle: {
+    it: (r: string, n: number, u: number) => `${r}: possiedi ${n} ${n === 1 ? "copia" : "copie"}${u > 0 ? ` (${u} non posizionat${u === 1 ? "a" : "e"})` : ""}`,
+    en: (r: string, n: number, u: number) => `${r}: you own ${n} ${n === 1 ? "copy" : "copies"}${u > 0 ? ` (${u} not placed)` : ""}`,
+  },
+  allyAdvisorTitle: { it: "Potenziale alleati e Gettoni Valore", en: "Ally potential and Valor Tokens" },
+  allyAdvisorLegend: {
+    it: "Celle: EFF al livello 100 per rarità, dal rosso (più bassa) al verde (più alta) su tutta la matrice. Riquadro bianco = rarità posseduta. Badge #n = posizione nella coda dei Gettoni Valore, sulla rarità di arrivo (verde = lo puoi già pagare con i gettoni posseduti). Bordo tratteggiato = rarità saltata da un'evoluzione multipla. Clicca sul nome per il dettaglio dei boost.",
+    en: "Cells: level-100 EFF per rarity, from red (lowest) to green (highest) across the matrix. White frame = owned rarity. Badge #n = position in the Valor Token queue, on the target rarity (green = you can already afford it with your tokens). Dashed border = rarity skipped by a multi-step evolution. Click a name for the boost details.",
+  },
+  allyAdvisorStepTitle: {
+    it: (rank: number, from: string, to: string, cost: string, gain: string, ratio: string) => `#${rank}: ${from} → ${to} — ${cost} gettoni, EFF +${gain}, ${ratio} EFF/gettone`,
+    en: (rank: number, from: string, to: string, cost: string, gain: string, ratio: string) => `#${rank}: ${from} → ${to} — ${cost} tokens, EFF +${gain}, ${ratio} EFF/token`,
+  },
+  allyAdvisorBestNow: {
+    it: (rank: number, name: string, cost: string) => `Con i gettoni attuali il passo migliore è il #${rank}, ${name} (${cost} gettoni); i badge verdi sono quelli che puoi già pagare.`,
+    en: (rank: number, name: string, cost: string) => `With your current tokens the best step is #${rank}, ${name} (${cost} tokens); green badges are the ones you can already afford.`,
+  },
+  allyAdvisorColNext: { it: "Prossima evoluzione", en: "Next evolution" },
+  allyAdvisorSortPriorityTitle: { it: "Ordina per priorità nella coda dei Gettoni Valore", en: "Sort by priority in the Valor Token queue" },
+  allyAdvisorExpandTitle: { it: "Mostra/nascondi il dettaglio delle evoluzioni e dei boost", en: "Show/hide evolution and boost details" },
+  allyAdvisorTokensShort: { it: "gettoni", en: "tokens" },
+  allyAdvisorNoNext: { it: "— nessuna evoluzione utile", en: "— no useful evolution" },
+  allyScrollsTitle: { it: "Potenziale alleati e Pergamene Eroiche", en: "Ally potential and Heroic Scrolls" },
+  allyScrollsOwned: { it: "Pergamene Eroiche possedute", en: "Heroic Scrolls owned" },
+  allyScrollsIntro: {
+    it: "Ogni livello in più costa pergamene (di più ai livelli alti, fino al 100) e aumenta attacco e difesa dell'alleato. Ecco quali alleati militari far salire, e di quanti livelli, per il massimo aumento di attacco e difesa con le pergamene che hai: le colonne contano come nella colonna EFF, con i pesi attuali (la rarità resta quella di adesso).",
+    en: "Each extra level costs scrolls (more at higher levels, up to 100) and raises the ally's attack and defense. Here is which military allies to level up, and by how many levels, for the largest attack and defense increase with the scrolls you have: columns count as in the EFF column, with the current weights (rarity stays as it is now).",
+  },
+  allyScrollsDeltaNote: { it: "Aumenti dei boost", en: "Boost increases" },
+  allyScrollsTotal: { it: "Totale", en: "Total" },
+  allyScrollsSummary: {
+    it: (spese: string, n: number, g: string, resto: string) => `Spendi ${spese} pergamene su ${n === 1 ? "1 alleato" : `${n} alleati`}: efficienza +${g}. Ne avanzano ${resto}.`,
+    en: (spese: string, n: number, g: string, resto: string) => `Spend ${spese} scrolls on ${n === 1 ? "1 ally" : `${n} allies`}: efficiency +${g}. ${resto} left over.`,
+  },
+  allyScrollsNotEnough: {
+    it: (c: string) => `Le pergamene non bastano per nessun livello: il più economico ne costa ${c}.`,
+    en: (c: string) => `Not enough scrolls for any level: the cheapest costs ${c}.`,
+  },
+  allyScrollsAllMax: { it: "I tuoi alleati militari sono tutti al livello massimo.", en: "All your military allies are at the maximum level." },
+  allyScrollsApprox: {
+    it: "Pergamene molte: calcolo veloce, il risultato può discostarsi di poco dall'ottimo.",
+    en: "Many scrolls: fast calculation, the result may differ slightly from the optimum.",
+  },
+  allyScrollsColLevel: { it: "Livello", en: "Level" },
+  allyScrollsColScrolls: { it: "Pergamene", en: "Scrolls" },
+  allyScrollsColGain: { it: "Efficienza", en: "Efficiency" },
+  allyAdvisorValorOwned: { it: "Gettoni Valore posseduti", en: "Valor Tokens owned" },
+  allyAdvisorIntro: {
+    it: (maxR: string) => `Ogni alleato militare posseduto è valutato al livello 100 (prima o poi verrà maxato), fino alla rarità ${maxR}: slot e Pergamene Eroiche non sono considerati vincoli, solo i Gettoni Valore. Le copie identiche (stesso alleato e rarità) sono una sola riga. L'efficienza usa gli stessi pesi della colonna EFF.`,
+    en: (maxR: string) => `Every owned military ally is evaluated at level 100 (it will be maxed sooner or later), up to ${maxR} rarity: slots and Heroic Scrolls are not treated as constraints, only Valor Tokens. Identical copies (same ally and rarity) are a single row. Efficiency uses the same weights as the EFF column.`,
+  },
+  allyAdvisorQueueNext: {
+    it: (name: string, missing: string) => `Prossimo obiettivo: ${name} (mancano ${missing} gettoni).`,
+    en: (name: string, missing: string) => `Next target: ${name} (${missing} tokens missing).`,
+  },
+  allyAdvisorQueueAllAffordable: { it: "Hai gettoni sufficienti per tutta la coda.", en: "You have enough tokens for the whole queue." },
+  allyAdvisorColAlly: { it: "Alleato", en: "Ally" },
+  allyAdvisorColStep: { it: "Evoluzione", en: "Evolution" },
+  allyAdvisorColTokens: { it: "Gettoni", en: "Tokens" },
+  allyAdvisorColGain: { it: "EFF +", en: "EFF +" },
+  allyAdvisorColRatio: { it: "EFF/gettone", en: "EFF/token" },
+  allyAdvisorDeltaNote: { it: "Δ boost al livello 100 dopo l'evoluzione", en: "Δ boosts at level 100 after evolving" },
+  allyAdvisorMultiStep: {
+    it: (n: number) => `(${n} evoluzioni insieme: il passo intermedio da solo rende meno)`,
+    en: (n: number) => `(${n} evolutions together: the intermediate step alone returns less)`,
+  },
+  allyAdvisorScienceTitle: { it: "Non valutati (alleati scienza)", en: "Not evaluated (science allies)" },
+  allyAdvisorScienceNote: {
+    it: "Il tool valuta solo le statistiche militari: per questi alleati solo dati di fatto, nessun consiglio.",
+    en: "The tool only evaluates military stats: for these allies, facts only, no advice.",
+  },
+  allyAdvisorScienceFacts: {
+    it: (pf: string, beni: string, beniP: string) => `al livello 100: ${pf} PF, ${beni} beni, ${beniP} beni era precedente.`,
+    en: (pf: string, beni: string, beniP: string) => `at level 100: ${pf} FP, ${beni} goods, ${beniP} previous-age goods.`,
+  },
+  allyAdvisorFootnote: {
+    it: (n: number) => `${n} alleati militari distinti valutati. Esclusi gli alleati frammentati (non ancora completi). La scelta di vendere un alleato è lasciata a te.`,
+    en: (n: number) => `${n} distinct military allies evaluated. Fragmented allies (not yet complete) are excluded. Whether to sell an ally is up to you.`,
+  },
+  // v5: l'import è riuscito ma lo script non ha trovato alcune sezioni nell'helper.
+  bookmarkletWarningsAlert: {
+    it: (sections: string, helper: string) => `Importazione completata, ma l'helper (${helper}) non ha fornito alcune sezioni: ${sections}.\n\nPotrebbe essere cambiata la sua struttura dopo un aggiornamento: i dati importati sono incompleti. Segnalalo allo sviluppatore indicando helper e versione.`,
+    en: (sections: string, helper: string) => `Import completed, but the helper (${helper}) did not provide some sections: ${sections}.\n\nIts structure may have changed after an update: the imported data is incomplete. Please report it to the developer, mentioning helper and version.`,
+  },
+  // ── Modale "Bacchetta magica obsoleta" (bookmarklet v1/v2 in uso) ─────
+  bookmarkletOutdatedModalTitle: {
+    it: "Bacchetta magica obsoleta",
+    en: "Outdated magic wand",
+  },
+  bookmarkletOutdatedModalIntro: {
+    it: "Import riuscito, ma hai usato una versione precedente della bacchetta magica: alcuni dati potrebbero mancare o non essere aggiornati.",
+    en: "Import successful, but you used an older version of the magic wand: some data may be missing or outdated.",
+  },
+  bookmarkletOutdatedModalReimport: {
+    it: "Infine, importa nuovamente la città.",
+    en: "Finally, import the city again.",
+  },
+  bookmarkletOutdatedModalSteps: {
+    // {elimina}…{/elimina} = in grassetto; {bacchetta} = il pulsante verde della testata (App.tsx)
+    it: "Per aggiornarla: {elimina}elimina{/elimina} la vecchia bacchetta magica dalla barra dei preferiti, poi trascina di nuovo il pulsante {bacchetta} per creare quella aggiornata.",
+    en: "To update it: {elimina}delete{/elimina} the old magic wand from your bookmarks bar, then drag the {bacchetta} button again to create the updated one.",
+  },
+  bookmarkletOutdatedModalButton: {
+    it: "Ho capito",
+    en: "Got it",
+  },
+  // ── Modale "Aggiornamento richiesto" (dati salvati obsoleti) ─────────
+  outdatedModalTitle: {
+    it: "Aggiornamento richiesto",
+    en: "Update required",
+  },
+  outdatedModalIntro: {
+    it: "È stata rilevata una versione obsoleta dei dati salvati.",
+    en: "An outdated version of the saved data was detected.",
+  },
+  outdatedModalBody: {
+    it: (action: string) => `A causa di un aggiornamento strutturale dell'applicazione, ${action} per garantire il corretto funzionamento.`,
+    en: (action: string) => `Due to a structural update of the application, ${action} to ensure everything works correctly.`,
+  },
+  outdatedModalBodyEmphasis: {
+    it: "tutti i profili attuali verranno rimossi",
+    en: "all current profiles will be removed",
+  },
+  outdatedModalDetail: {
+    it: "I dati della versione precedente non sono compatibili con questa versione e verranno rimossi. Dovrai reimportare i tuoi dati dal gioco tramite la bacchetta magica.",
+    en: "Data from the previous version is not compatible with this version and will be removed. You'll need to re-import your game data using the magic wand.",
+  },
+  outdatedModalButton: {
+    it: "Ho capito, pulisci tutto",
+    en: "Got it, clear everything",
+  },
+
+  // ── Filtro rarità alleati (toggle Comune/Raro/Epico/Leggendario/ecc.) ─
+  hideRarityTitle: {
+    it: (rarity: string) => `Nascondi ${rarity}`,
+    en: (rarity: string) => `Hide ${rarity}`,
+  },
+  showRarityTitle: {
+    it: (rarity: string) => `Mostra ${rarity}`,
+    en: (rarity: string) => `Show ${rarity}`,
+  },
+  fromInventoryLabel: {
+    it: "Da inventario:",
+    en: "From inventory:",
+  },
+  // ── Guida › Informazioni (prima modale "Chi sono · Contatti") ─────────────────────────────────────────────────────
+  aboutServerItLabel: {
+    it: "Server Italiano",
+    en: "Italian Server",
+  },
+  aboutServerBetaLabel: {
+    it: "Server Beta",
+    en: "Beta Server",
+  },
+  // Testi alternativi degli avatar nell'AboutModal (prima fissi in italiano,
+  // con "--" al posto del trattino lungo).
+  aboutAvatarItAlt: {
+    it: "Sdrushi — server italiano",
+    en: "Sdrushi — Italian server",
+  },
+  aboutAvatarBetaAlt: {
+    it: "Sdrushi — server beta",
+    en: "Sdrushi — beta server",
+  },
+  aboutWorldLabel: {
+    it: "Mondo",
+    en: "World",
+  },
+  aboutPrivacyLabel: {
+    it: "Informativa sulla privacy",
+    en: "Privacy policy",
+  },
+  emptyAllySlotBadgeTitle: {
+    it: "Slot alleato libero",
+    en: "Empty ally slot",
+  },
+  filledAllySlotBadgeTitle: {
+    it: (allyDisplayName: string) => `Alleato: ${allyDisplayName}`,
+    en: (allyDisplayName: string) => `Ally: ${allyDisplayName}`,
+  },
+  showOnlyWithAllySlotTitle: {
+    it: "Mostra solo gli edifici con uno slot alleato",
+    en: "Show only buildings with an ally slot",
+  },
+  showOnlyWithFragmentsTitle: {
+    it: "Mostra solo gli edifici che producono frammenti di edifici o di kit di selezione/aggiornamento",
+    en: "Show only buildings that produce fragments of buildings or selection/upgrade kits",
+  },
+  showOnlyDeclassableTitle: {
+    it: "Mostra solo gli edifici che portati all'Età del Bronzo con i kit danno gli stessi beni (era attuale, precedente e successiva) e gli stessi valori militari: per produrre beni di un'era vecchia senza perdere niente",
+    en: "Show only the buildings that, taken to the Bronze Age with kits, give the same goods (current, previous and next age) and the same military values: to produce goods of an old age without losing anything",
+  },
+  showOnlyDeclassableDbTitle: {
+    it: "Mostra solo gli edifici che portati all'Età del Bronzo con i kit danno gli stessi beni (era attuale, precedente e successiva) e gli stessi valori militari dell'era più recente",
+    en: "Show only the buildings that, taken to the Bronze Age with kits, give the same goods (current, previous and next age) and the same military values as the latest age",
+  },
+  ageableLimitedWarning: {
+    it: "Attenzione: edificio limitato / asceso. Se lo invecchi, alla scadenza riascendendolo torna all'era più alta che hai raggiunto e perdi l'invecchiamento. Per toglierli dall'elenco: Nascondi › Limitati / Ascesi",
+    en: "Warning: limited / ascended building. If you age it down, when it expires re-ascending it brings it back to the highest age you reached and the aging is lost. To remove them from the list: Hide › Limited / Ascended",
+  },
+  declassableTooltipHeader: {
+    it: "Edificio invecchiabile",
+    en: "Ageable building",
+  },
+  declassableSame: {
+    it: (era: string) => `Stessi beni e stessi valori militari anche all'${era}`,
+    en: (era: string) => `Same goods and same military values in the ${era} too`,
+  },
+  declassablePopGainLabel: {
+    it: "Risparmio",
+    en: "Savings",
+  },
+  declassableKitSection: {
+    it: "Kit necessario",
+    en: "Required kit",
+  },
+
+  // ── Tabella edifici: export e placeholder ────────────────────────────
+  exportSelectFirstTitle: {
+    it: "Seleziona almeno un edificio",
+    en: "Select at least one building",
+  },
+  exportSelectedCsvTitle: {
+    it: (n: number) => `Esporta ${n} edifici in CSV`,
+    en: (n: number) => `Export ${n} buildings to CSV`,
+  },
+  noBuildingsFound: {
+    it: "Nessun edificio trovato.",
+    en: "No buildings found.",
+  },
+  noCityImportedYet: {
+    it: "Nessuna città importata. Usa la bacchetta magica in alto a sinistra",
+    en: "No city imported yet. Use the magic wand in the top left",
+  },
+  noInventoryImportedYet: {
+    it: "Nessun inventario importato. Usa la bacchetta magica in alto a sinistra",
+    en: "No inventory imported yet. Use the magic wand in the top left",
+  },
+  noCityImportedYetMobile: {
+    it: "Nessuna città importata. Da qui puoi caricare un file JSON della tua città dal selettore delle città (Importa da JSON); la bacchetta magica funziona solo dal computer",
+    en: "No city imported yet. From here you can load a JSON file of your city from the city selector (Import from JSON); the magic wand works only on a computer",
+  },
+  noInventoryImportedYetMobile: {
+    it: "Nessun inventario importato. L'inventario arriva con la bacchetta magica, che funziona solo dal computer",
+    en: "No inventory imported yet. The inventory comes with the magic wand, which works only on a computer",
+  },
+  noImportedYetSuffix: {
+    it: "per importare i tuoi dati da Forge of Empires.",
+    en: "to import your data from Forge of Empires.",
+  },
+  /** Import riuscito ma l'inventario di gioco è davvero vuoto (comune a inizio
+   *  partita) — distinto da noInventoryImportedYet (mai importato). Nessun
+   *  CTA verso la bacchetta magica: qui l'azione giusta non è re-importare. */
+  inventoryEmpty: {
+    it: "Il tuo inventario è vuoto.",
+    en: "Your inventory is empty.",
+  },
+  noAlliesFound: {
+    it: "Nessun alleato trovato con questa ricerca.",
+    en: "No allies found for this search.",
+  },
+  fabChoiceLabel: {
+    it: "Scelta:",
+    en: "Choice:",
+  },
+  r2JsonCityTip: { it: "Città importata da JSON", en: "City imported from JSON" },
+  r2AvatarJson: { it: "Città da file JSON: l'avatar non è salvato nel file", en: "City from a JSON file: the avatar is not stored in the file" },
+  avatarOutdatedTitle: {
+    it: "Avatar non disponibile: stai usando una versione vecchia della bacchetta magica. Aggiorna il bookmarklet e reimporta i dati per vedere il tuo avatar.",
+    en: "Avatar not available: you are using an old version of the magic wand. Update the bookmarklet and re-import your data to see your avatar.",
+  },
+
+  // ── Header gruppo Produzioni, tab Città ──────────────────────────────
+  // Chiarisce che i valori delle righe si riferiscono all'era corrente del
+  // giocatore (anche per le copie di ere precedenti — comportamento voluto,
+  // il dettaglio per-era sta nel tooltip del triangolo "obsoleto").
+  prodDbEraHint: {
+    it: "Per vedere produzioni e valori di un'altra era, sceglila nel selettore Era del nastro (gruppo Era e ricerca). Clic qui per aprirlo.",
+    en: "To see the productions and values of another era, pick it in the Era selector of the ribbon (Era and search group). Click here to open it.",
+  },
+  prodValuesOfEra: {
+    it: (era: string) => `valori di ${era}`,
+    en: (era: string) => `${era} values`,
+  },
+
+  // ── Avviso aggiornamento service worker (vedi src/registerSW.ts) ─────
+  // Solo informativo: il reload è automatico, nessun pulsante di conferma.
+  swUpdateAvailable: {
+    it: "Nuova versione disponibile — aggiornamento in corso…",
+    en: "New version available — updating…",
+  },
+
+  // ── Tab Pirati: toolbar (components/PiratiTool.tsx) ──────────────────
+  piratiSolveLabel: { it: "Risolvi", en: "Solve" },
+  piratiStopLabel: { it: "Stop", en: "Stop" },
+  piratiAutoLabel: { it: "AUTO", en: "AUTO" },
+  piratiAutoTitle: {
+    it: "AUTO: quando aggiungi un edificio che non trova subito posto, prova a risolvere da sola; se non riesce, toglie quell'edificio.",
+    en: "AUTO: when you add a building that doesn't immediately find a spot, it tries to solve automatically; if it still fails, it removes that building.",
+  },
+  piratiUndoLabel: { it: "Undo", en: "Undo" },
+  piratiUndoTitle: {
+    it: "Torna allo stato subito dopo l'ultimo import (o allo stato vuoto se non hai ancora importato)",
+    en: "Revert to the state right after the last import (or the empty state if you haven't imported yet)",
+  },
+  piratiResetLabel: { it: "Reset", en: "Reset" },
+  piratiResetTitle: {
+    it: "Riporta tutto alla situazione di partenza, cancellando anche i dati importati",
+    en: "Reset everything to the starting state, also discarding imported data",
+  },
+  piratiAddExpLabel: { it: "+ EXP", en: "+ EXP" },
+  piratiRemoveExpLabel: { it: "− EXP", en: "− EXP" },
+  piratiAddExpTitle: {
+    it: "Sblocca una nuova espansione (area 4x4) dell'Insediamento",
+    en: "Unlock a new expansion (4x4 area) of the Outpost",
+  },
+  piratiAddExpNoneTitle: {
+    it: "Nessuna nuova espansione disponibile da sbloccare",
+    en: "No new expansion available to unlock",
+  },
+  piratiRemoveExpTitle: {
+    it: "Richiudi un'espansione (area 4x4) già sbloccata",
+    en: "Close a previously unlocked expansion (4x4 area)",
+  },
+  piratiRemoveExpNoneTitle: {
+    it: "Nessuna espansione richiudibile al momento",
+    en: "No expansion can be closed right now",
+  },
+  piratiStepsLabel: { it: "Stati", en: "States" },
+  piratiStepsCountLabel: {
+    it: (n: number) => `${n.toLocaleString()} passi`,
+    en: (n: number) => `${n.toLocaleString()} steps`,
+  },
+  piratiAreaLabel: { it: "Area", en: "Area" },
+  piratiAreaOccupiedTitle: { it: "Area occupata", en: "Occupied area" },
+  piratiAreaOccupiedWithObstaclesTitle: {
+    it: (n: number) => `Area occupata (-${n} per ostacoli)`,
+    en: (n: number) => `Occupied area (-${n} for obstacles)`,
+  },
+  piratiPopLabel: { it: "Pop", en: "Pop" },
+  piratiPopOccupiedTitle: { it: "Popolazione occupata", en: "Occupied population" },
+  piratiTimedOutMessage: {
+    it: "Tempo massimo superato, nessuna soluzione trovata",
+    en: "Maximum time exceeded, no solution found",
+  },
+  piratiInterruptedMessage: { it: "Ricerca interrotta", en: "Search interrupted" },
+  piratiSolverCrashed: {
+    it: "Errore imprevisto durante la ricerca: ripristinata l'ultima disposizione valida (dettagli nella console del browser)",
+    en: "Unexpected error during the search: restored the last valid layout (details in the browser console)",
+  },
+  piratiRestoredLastSolutionMessage: {
+    it: "Nessuna soluzione trovata: ripristinata l'ultima disposizione valida",
+    en: "No solution found: restored the last valid layout",
+  },
+  piratiImportBlockedWhileSolving: {
+    it: "Attendi la fine della ricerca (o premi Stop) prima di importare",
+    en: "Wait for the search to finish (or press Stop) before importing",
+  },
+  piratiRestoredLastSolutionCutoffMessage: {
+    it: "Nessuna soluzione trovata entro il limite di tentativi (potrebbe comunque esisterne una): ripristinata l'ultima disposizione valida",
+    en: "No solution found within the attempt limit (one may still exist): restored the last valid layout",
+  },
+  piratiAreaExcessiveMessage: { it: "Area eccessiva", en: "Area exceeded" },
+  piratiPopInsufficientMessage: { it: "Popolazione insufficiente", en: "Insufficient population" },
+
+  // ── Tab Pirati: import (bacchetta magica, esiti runImport) ───────────
+  piratiImportInvalidJson: {
+    it: "JSON non valido: controlla di aver copiato tutto il testo dal bookmarklet.",
+    en: "Invalid JSON: make sure you copied all the text from the bookmarklet.",
+  },
+  piratiImportInvalidStructure: {
+    it: "Il JSON non ha la struttura attesa (servono i campi 'areas' e 'entities').",
+    en: "The JSON doesn't have the expected structure (the 'areas' and 'entities' fields are required).",
+  },
+  piratiImportUnknownError: {
+    it: "Errore sconosciuto durante l'import.",
+    en: "Unknown error during import.",
+  },
+  piratiImportOutdatedBookmarklet: {
+    it: "Stai usando una bacchetta magica vecchia. Cancellala dalla barra dei preferiti e ricreala.",
+    en: "You're using an old magic wand bookmarklet. Delete it from your bookmarks bar and recreate it.",
+  },
+  piratiImportHelperUnsupported: {
+    it: (helper: string) => `L'helper in uso (${helper}) non espone i dati dell'Insediamento dei Pirati: probabilmente la sua struttura è cambiata dopo un aggiornamento. Segnalalo allo sviluppatore indicando helper e versione.`,
+    en: (helper: string) => `The helper in use (${helper}) does not expose the Pirate Outpost data: its structure has probably changed after an update. Please report it to the developer, mentioning helper and version.`,
+  },
+  piratiImportVisitOutpostFirst: {
+    it: "Devi prima visitare il tuo Insediamento dei Pirati almeno una volta in questa sessione di gioco, poi riprova.",
+    en: "You need to visit your Pirate Outpost at least once in this game session first, then try again.",
+  },
+  // Spezzata in prefix/suffix (invece di un'unica stringa) per incorniciare
+  // l'icona Wand2 nel flusso della frase, stesso pattern di noCityImportedYet
+  // + noImportedYetSuffix in App.tsx ("...in alto a sinistra [icona] per...").
+  piratiImportHowToHintPrefix: {
+    it: "Apri FoE, visita l'Insediamento dei Pirati, poi usa la bacchetta magica",
+    en: "Open FoE, visit your Pirate Outpost, then use the magic wand",
+  },
+  piratiImportHowToHintSuffix: {
+    it: "in alto a sinistra per importare i dati.",
+    en: "in the top left to import your data.",
+  },
+  piratiImportUnsupportedFaction: {
+    it: (faction: string) => faction === "Mughals" ? "Questo è l'insediamento Mughal: aprilo con il pulsante Mughal nel nastro."
+      : faction === "Pirates" ? "Questo è l'Insediamento dei Pirati: aprilo con il pulsante Pirati nel nastro."
+      : `L'insediamento importato (${faction}) non è ancora supportato: per ora ci sono Pirati e Mughal.`,
+    en: (faction: string) => faction === "Mughals" ? "This is the Mughal settlement: open it with the Mughals button in the ribbon."
+      : faction === "Pirates" ? "This is the Pirate Settlement: open it with the Pirates button in the ribbon."
+      : `The imported settlement (${faction}) is not supported yet: for now there are Pirates and Mughals.`,
+  },
+  piratiImportNoTownhall: {
+    it: "Nessun municipio dei Pirati (H_Pirates_Townhall) trovato nel payload: assicurati di essere sulla schermata dell'Insediamento dei Pirati quando usi la bacchetta.",
+    en: "No Pirate townhall (H_Pirates_Townhall) found in the payload: make sure you're on the Pirate Outpost screen when using the wand.",
+  },
+  piratiImportSuccess: {
+    it: (buildings: number, obstacles: number, expansions: number) =>
+      `Importati ${buildings} edifici, ${obstacles} celle ostacolo, ${expansions} espansioni extra.`,
+    en: (buildings: number, obstacles: number, expansions: number) =>
+      `Imported ${buildings} buildings, ${obstacles} obstacle cells, ${expansions} extra expansions.`,
+  },
+  piratiImportUnrecognizedNote: {
+    it: (count: number, ids: string) => ` (${count} tipo/i non riconosciuto/i: ${ids})`,
+    en: (count: number, ids: string) => ` (${count} unrecognized type(s): ${ids})`,
+  },
+
+  // ── Tab Pirati: griglia/tooltip ────────────────────────────────────────
+  piratiCellRemoveObstacleTitle: { it: "Clicca per rimuovere", en: "Click to remove" },
+  piratiCellAddObstacleTitle: { it: "Clicca per segnare come ostacolo", en: "Click to mark as obstacle" },
+  piratiMoveTownhallTitle: {
+    it: "Trascina in un area libera per spostare",
+    en: "Drag to a free area to move",
+  },
+  piratiMoveOrSwapTitle: {
+    it: "Trascina per spostare o scambiare",
+    en: "Drag to move or swap",
+  },
+  piratiDeleteBuildingTitle: { it: "Elimina edificio", en: "Delete building" },
+  piratiExpansionObstacleTitle: {
+    it: "Ostacolo presente in questa espansione (da un import)",
+    en: "Obstacle present in this expansion (from an import)",
+  },
+  piratiExpansionAdd4x4: { it: "+ 4x4", en: "+ 4x4" },
+  piratiExpansionRemoveLabel: { it: "Rimuovi", en: "Remove" },
+  piratiExpansionLockedLabel: { it: "Vincolo", en: "Locked" },
+  piratiExpansionLockedTitle: {
+    it: "Rimuoverla isolerebbe altre espansioni dal resto della mappa.",
+    en: "Removing it would isolate other expansions from the rest of the map.",
+  },
+  piratiExpansionLockedTownhallTitle: {
+    it: "Contiene il Municipio: spostalo altrove prima di rimuovere questa espansione.",
+    en: "It contains the Townhall: move it elsewhere before removing this expansion.",
+  },
+  // Esiti di removeExpansion quando il blocco richiuso conteneva edifici (vedi
+  // layoutAfterBlockRemoval in PiratiTool.tsx): spostati in uno spazio libero,
+  // oppure usciti dalla mappa perché non c'era posto (conteggi invariati).
+  piratiExpansionRemovedRelocated: {
+    it: (n: number) => n === 1
+      ? "Espansione rimossa: l'edificio al suo interno è stato spostato in uno spazio libero."
+      : `Espansione rimossa: i ${n} edifici al suo interno sono stati spostati in uno spazio libero.`,
+    en: (n: number) => n === 1
+      ? "Expansion removed: the building inside it was moved to a free spot."
+      : `Expansion removed: the ${n} buildings inside it were moved to free spots.`,
+  },
+  piratiExpansionRemovedUnplaced: {
+    it: (n: number) => n === 1
+      ? "Espansione rimossa: un edificio al suo interno non ha più posto ed è uscito dalla mappa (il conteggio resta). Premi Risolvi per ridisporre tutto."
+      : `Espansione rimossa: ${n} edifici al suo interno non hanno più posto e sono usciti dalla mappa (i conteggi restano). Premi Risolvi per ridisporre tutto.`,
+    en: (n: number) => n === 1
+      ? "Expansion removed: a building inside it no longer fits and left the map (its count is kept). Press Solve to rearrange everything."
+      : `Expansion removed: ${n} buildings inside it no longer fit and left the map (their counts are kept). Press Solve to rearrange everything.`,
+  },
+  piratiAddExpansionHint: {
+    it: "Seleziona col mouse uno slot 4x4 verde per sbloccarlo. Le ❌ semitrasparenti mostrano gli ostacoli già presenti in quell'area (da un import).",
+    en: "Click a green 4x4 slot to unlock it. The semi-transparent ❌ show obstacles already present in that area (from an import).",
+  },
+  piratiRemoveExpansionHint: {
+    it: "Seleziona col mouse un'espansione rossa per rimuoverla.",
+    en: "Click a red expansion to remove it.",
+  },
+
+  // ── Tab Pirati: pannello edifici (categorie) ──────────────────────────
+  piratiCategoryResidential: { it: "🏠 Edifici residenziali", en: "🏠 Residential buildings" },
+  piratiCategoryGoods: { it: "🛢️ Edifici per i beni", en: "🛢️ Goods buildings" },
+  piratiCategoryDiplomacyDoubloons: { it: "🤝 Diplomazia e Dobloni", en: "🤝 Diplomacy and Doubloons" },
+  piratiCategoryDiplomacyOnly: { it: "🤝 Solo Diplomazia", en: "🤝 Diplomacy only" },
+
+  // ── Tab Pirati: nomi edifici (nome completo / etichetta breve in griglia) ──
+  // shortName è pensato per restare leggibile dentro la cella della griglia
+  // (spazio minimo): non è sempre la prima parola del nome completo, a
+  // differenza del vecchio comportamento (name.split(" ")[0]) — scelto a
+  // mano per lingua così anche l'inglese resta riconoscibile.
+  piratiBuildingMunicipioName: { it: "Municipio", en: "Townhall" },
+  piratiBuildingMunicipioShort: { it: "Municipio", en: "Townhall" },
+  piratiBuildingPescatoreName: { it: "Pesci", en: "Fish" },
+  piratiBuildingPescatoreShort: { it: "Pesci", en: "Fish" },
+  piratiBuildingSpezieName: { it: "Spezie", en: "Spices" },
+  piratiBuildingSpezieShort: { it: "Spezie", en: "Spices" },
+  piratiBuildingRumName: { it: "Rum", en: "Rum" },
+  piratiBuildingRumShort: { it: "Rum", en: "Rum" },
+  piratiBuildingCannoniName: { it: "Cannoni", en: "Cannons" },
+  piratiBuildingCannoniShort: { it: "Cannoni", en: "Cannons" },
+  piratiBuildingAmacaName: { it: "Amaca", en: "Hammock" },
+  piratiBuildingAmacaShort: { it: "Amaca", en: "Hammock" },
+  piratiBuildingCapannoName: { it: "Capanno", en: "Small Shed" },
+  piratiBuildingCapannoShort: { it: "Capanno", en: "Small Shed" },
+  piratiBuildingBaraccaName: { it: "Baracca", en: "Barrack" },
+  piratiBuildingBaraccaShort: { it: "Baracca", en: "Barrack" },
+  piratiBuildingMoloName: { it: "Molo Piccolo", en: "Small Pier" },
+  piratiBuildingMoloShort: { it: "Molo", en: "S. Pier" },
+  piratiBuildingMoloLungoName: { it: "Molo Lungo", en: "Long Pier" },
+  piratiBuildingMoloLungoShort: { it: "M. Lungo", en: "Long Pier" },
+  piratiBuildingMoloLargoName: { it: "Molo Largo", en: "Wide Pier" },
+  piratiBuildingMoloLargoShort: { it: "M. Largo", en: "W. Pier" },
+  piratiBuildingGrandeMoloName: { it: "Grande Molo", en: "Big Pier" },
+  piratiBuildingGrandeMoloShort: { it: "Gr. Molo", en: "Big Pier" },
+  piratiBuildingImbarcazioneName: { it: "Imbarcazione", en: "Small Cutter" },
+  piratiBuildingImbarcazioneShort: { it: "Imbarc.", en: "Small Cutter" },
+  piratiBuildingBrigantinoName: { it: "Brigantino", en: "Red Sailed Brig" },
+  piratiBuildingBrigantinoShort: { it: "Brigantino", en: "Red Sailed Brig" },
+  piratiBuildingGaleoneName: { it: "Galeone", en: "Galleon" },
+  piratiBuildingGaleoneShort: { it: "Galeone", en: "Galleon" },
+  // ── Planner (PlannerView, editorPonte, dueCorsie) ───────────────────
+  plannerExperimental: { it: "sperimentale", en: "experimental" },
+  plannerOptimize: { it: "▶ Ottimizza", en: "▶ Optimize" },
+  plannerResumeTitle: {
+    it: "La ricerca continua a cercare disposizioni migliori partendo da quelle mostrate (anche modificate a mano nell'editor o smussate)",
+    en: "The search keeps looking for better layouts starting from the ones shown (also edited by hand in the editor or smoothed)",
+  },
+  plannerPause: { it: "⏸ Pausa", en: "⏸ Pause" },
+  plannerPauseTitle: {
+    it: "Mette in pausa la ricerca: puoi modificare le mappe nell'editor (✏ Modifica), smussare i bordi o completare",
+    en: "Pauses the search: you can edit the maps in the editor (✏ Edit), smooth the edges or complete",
+  },
+  plannerSmooth: { it: "✨ Smussa", en: "✨ Smooth" },
+  plannerSmoothTitle: {
+    it: "Solo con la ricerca in pausa: sposta e scambia gli edifici con strada (strade invariate) per ridurre gli angoli di 90° del contorno e i buchi: il riempimento finale incastra meglio i pezzi piccoli. Continua finché non lo metti in pausa",
+    en: "Only while the search is paused: moves and swaps road buildings (roads unchanged) to reduce the 90° corners of the outline and the holes, so the final fill fits small pieces better. Runs until you pause it",
+  },
+  plannerComplete: { it: "⏭ COMPLETA", en: "⏭ COMPLETE" },
+  plannerCompleteTitle: {
+    it: "Solo con la ricerca in pausa: chiude la ricerca su TUTTE le mappe (ciascuna tiene quella mostrata) e passa al riempimento con gli edifici senza strada",
+    en: "Only while the search is paused: ends the search on ALL maps (each keeps the one shown) and moves on to filling with the buildings that need no road",
+  },
+  plannerFillResumeTitle: { it: "Riprende il riempimento", en: "Resumes the filling" },
+  plannerFillPauseTitle: {
+    it: "Mette in pausa il riempimento: nell'editor (✏ Modifica) puoi spostare gli edifici (le strade restano dove sono)",
+    en: "Pauses the filling: in the editor (✏ Edit) you can move buildings (roads stay where they are)",
+  },
+  plannerUndoComplete: { it: "↩ Annulla completamento", en: "↩ Undo completion" },
+  plannerUndoCompleteTitle: {
+    it: "Interrompe il completamento e torna alla ricerca in pausa, con le disposizioni che c'erano quando hai premuto COMPLETA",
+    en: "Stops the completion and goes back to the paused search, with the layouts there were when you pressed COMPLETE",
+  },
+  plannerUndoManual: { it: "↶ Annulla modifiche manuali", en: "↶ Undo manual edits" },
+  plannerUndoManualTitle: {
+    it: "Ripristina, sulle mappe modificate a mano, l'ultima disposizione trovata dall'ottimizzatore o dallo smussatore",
+    en: "Restores, on the maps edited by hand, the last layout found by the optimizer or by the smoother",
+  },
+  plannerReset: { it: "↺ Reset", en: "↺ Reset" },
+  plannerCpuGroup: { it: "Potenza del processore", en: "Processor power" },
+  plannerCpuTitle: {
+    it: (core: number, n: number, semi: number, lav: number, perc: number) => `Potenza del processore usata dal Planner: MAX ≈ 100%, MED ≈ 50%, MIN ≈ 25%.\nCore visti dal browser: ${core} · scenari: ${n} · ricerche per scenario: ${semi} · lavoro di ogni ricerca: ${lav}% → ricerche su ${perc}% dei core (più i thread del browser, es. la raccolta della memoria)`,
+    en: (core: number, n: number, semi: number, lav: number, perc: number) => `Processor power used by the Planner: MAX ≈ 100%, MED ≈ 50%, MIN ≈ 25%.\nCores seen by the browser: ${core} · scenarios: ${n} · searches per scenario: ${semi} · work of each search: ${lav}% → searches on ${perc}% of the cores (plus the browser's threads, e.g. garbage collection)`,
+  },
+  plannerCityInfo: {
+    it: (b: number, r: number) => `${b} edifici · ${r} strade`,
+    en: (b: number, r: number) => `${b} buildings · ${r} roads`,
+  },
+  plannerMirrorChain: {
+    it: "Non disponibile: in città ci sono edifici a catena in questa direzione (specchiati resterebbero scollegati dalla strada)",
+    en: "Not available: the city has chain buildings in this direction (mirrored, they would be cut off from the road)",
+  },
+  plannerEditCity: { it: "✎ Modifica città", en: "✎ Edit city" },
+  plannerEditCityTitle: {
+    it: "Prima di ottimizzare: togli edifici della città e aggiungine altri dall'inventario o dal database. Le modifiche sono temporanee (Reset le azzera).",
+    en: "Before optimizing: remove buildings from the city and add others from the inventory or the database. Changes are temporary (Reset clears them).",
+  },
+  plannerEditCityLocked: { it: "Metti in pausa o azzera il Planner per modificare la città.", en: "Pause or reset the Planner to edit the city." },
+  plannerEditCityIntro: {
+    it: "Togli edifici e aggiungine altri: il Planner disporrà la città modificata. Modifiche temporanee.",
+    en: "Remove buildings and add others: the Planner will lay out the edited city. Temporary changes.",
+  },
+  plannerEditCityRestore: { it: "↺ Ripristina città", en: "↺ Restore city" },
+  plannerEditCityRestarts: { it: "Cambiare la città riavvia il Planner.", en: "Changing the city restarts the Planner." },
+  plannerEditRemoved: { it: "Tolti:", en: "Removed:" },
+  plannerEditAdded: { it: "Aggiunti:", en: "Added:" },
+  plannerEditCells: { it: "celle", en: "cells" },
+  plannerEditFree: { it: "Celle libere per le strade:", en: "Cells left for roads:" },
+  plannerEditFreeNow: {
+    it: (l: number, s: number) => `(oggi ${l}; la città usa ${s} strade)`,
+    en: (l: number, s: number) => `(now ${l}; the city uses ${s} roads)`,
+  },
+  plannerEditWarnGe: {
+    it: "Hai tolto un Grande Edificio: nel gioco non torna in inventario, eliminarlo è definitivo.",
+    en: "You removed a Great Building: in the game it does not go back to the inventory, deleting it is permanent.",
+  },
+  plannerEditWarnChain: {
+    it: (n: string) => `Anelli di catena senza il loro inizio (verranno trattati come edifici normali): ${n}.`,
+    en: (n: string) => `Chain links without their start (they will be treated as normal buildings): ${n}.`,
+  },
+  plannerEditWarnNoSpace: {
+    it: "Non c'è spazio: gli edifici occupano tutte le celle sbloccate.",
+    en: "No space: the buildings take up all the unlocked cells.",
+  },
+  plannerEditWarnSpace: {
+    it: (s: number, l: number, d: number) => `Spazio stretto: oggi la città usa ${s} strade, dopo le modifiche restano ${l} celle libere. Il Planner dovrebbe risparmiare almeno ${d} strade: non è detto che ci riesca, alcuni edifici potrebbero restare fuori.`,
+    en: (s: number, l: number, d: number) => `Tight space: the city uses ${s} roads now, ${l} free cells are left after the changes. The Planner would have to save at least ${d} roads: it may not manage, some buildings may not fit.`,
+  },
+  plannerEditWarnMaybe: {
+    it: (l: number, s: number) => `Sulla carta c'è spazio (${l} celle libere per le strade, oggi la città ne usa ${s}), ma non è detto che gli edifici aggiunti ci stiano: dipende da quanto il Planner riesce a ottimizzare.`,
+    en: (l: number, s: number) => `On paper there is room (${l} free cells for roads, the city uses ${s} now), but the added buildings may not fit: it depends on how well the Planner can optimize.`,
+  },
+  plannerEditUndo: { it: "Annulla questa modifica", en: "Undo this change" },
+  plannerEditDeltaTitle: { it: "Cosa cambia con queste modifiche", en: "What these changes do" },
+  plannerEditDeltaArea: { it: "Celle occupate dagli edifici", en: "Cells taken by buildings" },
+  plannerEditDeltaEraMax: {
+    it: (n: number, era: string) => `Valori all'era massima (${era}) per ${n} ${n === 1 ? "edificio" : "edifici"} del Database: la tua città è a un'altra era (o non è importata), i valori veri sono diversi.`,
+    en: (n: number, era: string) => `Values at the highest age (${era}) for ${n} Database ${n === 1 ? "building" : "buildings"}: your city is at another age (or not imported), the real values are different.`,
+  },
+  plannerEditDeltaNoData: {
+    it: (n: number) => `${n} ${n === 1 ? "edificio" : "edifici"} senza dati: nella tabella c'è solo la loro area.`,
+    en: (n: number) => `${n} ${n === 1 ? "building" : "buildings"} without data: the table only counts their area.`,
+  },
+  plannerEditDeltaAllies: {
+    it: (n: number) => `Negli edifici tolti ${n === 1 ? "c'è 1 alleato" : `ci sono ${n} alleati`}: i loro valori non sono nella tabella, ricordati di spostarli.`,
+    en: (n: number) => `The removed buildings host ${n} ${n === 1 ? "ally" : "allies"}: their values are not in the table, remember to move them.`,
+  },
+  plannerEditInCity: { it: "In città", en: "In the city" },
+  plannerEditSearch: { it: "Cerca…", en: "Search…" },
+  plannerEditSortName: { it: "per nome", en: "by name" },
+  plannerEditSortEff: { it: "meno efficienti prima", en: "least efficient first" },
+  plannerEditSortEffBest: { it: "più efficienti prima", en: "most efficient first" },
+  plannerEditSortLabel: { it: "Ordina", en: "Sort" },
+  plannerEditLevelLabel: { it: "Livello", en: "Level" },
+  plannerEditRemove: { it: "Togli un edificio", en: "Remove one building" },
+  plannerEditAdd: { it: "Aggiungi", en: "Add" },
+  plannerEditFromInventory: { it: "Inventario", en: "Inventory" },
+  plannerEditFromDatabase: { it: "Database", en: "Database" },
+  plannerEditNoResults: { it: "Nessun edificio trovato.", en: "No buildings found." },
+  plannerEditNoInventory: {
+    it: "Inventario vuoto: importalo con la bacchetta magica.",
+    en: "Empty inventory: import it with the magic wand.",
+  },
+  plannerEditLeft: { it: "Rimasti in città", en: "Left in the city" },
+  plannerEditAvailable: { it: "Copie disponibili", en: "Available copies" },
+  plannerEditAddOne: { it: "Aggiungi un edificio", en: "Add one building" },
+  plannerEditTypeToSearch: {
+    it: "Scrivi almeno 2 lettere per cercare nel database (anche Grandi Edifici, eventi, negozi).",
+    en: "Type at least 2 letters to search the database (Great Buildings, events, shops too).",
+  },
+  plannerEditMoreResults: {
+    it: (n: number) => `…e altri ${n}: affina la ricerca.`,
+    en: (n: number) => `…and ${n} more: refine the search.`,
+  },
+  plannerPngChangesTitle: { it: "Modifiche alla città", en: "City changes" },
+  plannerPngRemovedTitle: {
+    it: (n: number, c: number) => `Tolti: ${n} ${n === 1 ? "edificio" : "edifici"} (−${c} celle)`,
+    en: (n: number, c: number) => `Removed: ${n} ${n === 1 ? "building" : "buildings"} (−${c} cells)`,
+  },
+  plannerPngAddedTitle: {
+    it: (n: number, c: number) => `Aggiunti: ${n} ${n === 1 ? "edificio" : "edifici"} (+${c} celle)`,
+    en: (n: number, c: number) => `Added: ${n} ${n === 1 ? "building" : "buildings"} (+${c} cells)`,
+  },
+  plannerPngChangesNote: {
+    it: "Sulla mappa gli edifici aggiunti hanno il bordo bianco.",
+    en: "On the map, added buildings have a white border.",
+  },
+  plannerLevel: { it: (n: number) => `Liv. ${n}`, en: (n: number) => `Lv. ${n}` },
+  plannerVideo: { it: "🎬 VIDEO TUTORIAL", en: "🎬 VIDEO TUTORIAL" },
+  plannerVideoTitle: { it: "Video tutorial del Planner", en: "Planner video tutorial" },
+  plannerImportJson: { it: "📂 Importa JSON", en: "📂 Import JSON" },
+  plannerImportJsonTitle: {
+    it: "Carica l'export JSON della mappa di un'altra città (pulsante JSON del pannello MAPPA) per provarci il Planner. Non viene salvato.",
+    en: "Loads the JSON map export of another city (JSON button of the MAP panel) to try the Planner on it. It is not saved.",
+  },
+  plannerImportedTitle: { it: "Il Planner sta usando questa città importata", en: "The Planner is using this imported city" },
+  plannerProfileCity: { it: "↩ Città del profilo", en: "↩ Profile city" },
+  plannerJsonIgnored: {
+    it: (n: number, ids: string) => `⚠️ ${n} ${n === 1 ? "pezzo saltato" : "pezzi saltati"} perché non ne conosco le dimensioni: ${ids}`,
+    en: (n: number, ids: string) => `⚠️ ${n} ${n === 1 ? "piece" : "pieces"} skipped (unknown size): ${ids}`,
+  },
+  plannerUnsuitable: {
+    it: "City Builder: città non adatta (servono almeno 4 edifici con strada e spazio attorno al municipio) — uso il motore semplice.",
+    en: "City Builder: city not suitable (at least 4 road buildings and space around the town hall are needed) — using the simple engine.",
+  },
+  plannerSetsTitle: { it: "Set di edifici non gestiti.", en: "Building sets not supported." },
+  plannerSetsBody: {
+    it: (n: number) => `La città ha ${n === 1 ? "un edificio" : `${n} edifici`} di vecchi set a bonus di adiacenza (il bonus cresce con i pezzi diversi del set che si toccano): il Planner non li tiene vicini fra loro, quindi ${n === 1 ? "verrà disposto" : "verranno disposti"} come edifici normali e il bonus del set può andare perso.`,
+    en: (n: number) => `Your city has ${n === 1 ? "a building" : `${n} buildings`} from old adjacency-bonus sets (the bonus grows with the different set pieces touching each other): the Planner does not keep them together, so ${n === 1 ? "it will be placed" : "they will be placed"} as normal buildings and the set bonus may be lost.`,
+  },
+  plannerSetsList: { it: "Edifici:", en: "Buildings:" },
+  plannerClose: { it: "Chiudi", en: "Close" },
+  plannerCloseNotice: { it: "Chiudi avviso", en: "Close notice" },
+  plannerMilitaryTitle: { it: "Edifici militari.", en: "Military buildings." },
+  plannerMilitaryIn: { it: "In città c'è", en: "Your city has" },
+  plannerAnd: { it: "e", en: "and" },
+  plannerMilitaryBody: {
+    it: "che produce ogni 24 ore le truppe di un edificio militare anche se non è collegato alla strada. Scegli quali edifici militari collegare comunque alla strada (gli altri vengono trattati come edifici senza strada); cambiare una scelta riavvia il Planner.",
+    en: "which produces the units of a military building every 24 hours even if it is not connected to a road. Choose which military buildings to connect to the road anyway (the others are treated as buildings without road); changing a choice restarts the Planner.",
+  },
+  plannerSwitchLocked: { it: "Ferma o azzera il Planner per cambiare", en: "Pause or reset the Planner to change it" },
+  plannerSwitchOn: { it: "Collegato alla strada", en: "Connected to the road" },
+  plannerSwitchOff: { it: "Senza strada", en: "No road" },
+  plannerTwoLaneTag: { it: " (due corsie)", en: " (two lanes)" },
+  plannerTwoLaneRoad: { it: "Strada asfaltata", en: "Two-lane road" },
+  plannerScenarioConnector: { it: (n: number) => `Raccordo a ${n}`, en: (n: number) => `Connector ${n}` },
+  plannerScenarioCurrent: { it: "Configurazione attuale", en: "Current layout" },
+  plannerScenarioPinwheel: { it: "Girandola", en: "Pinwheel" },
+  plannerScenarioPinwheel2: { it: "Girandola 2", en: "Pinwheel 2" },
+  plannerPhaseTwoLane: { it: "Preparazione delle strade a due corsie…", en: "Preparing the two-lane roads…" },
+  plannerPhaseStart: { it: (n: number) => `Scelta della partenza migliore (${n} prove)…`, en: (n: number) => `Choosing the best start (${n} trials)…` },
+  plannerPhaseTownhall: { it: "Scelta della posizione del municipio…", en: "Choosing the town hall position…" },
+  plannerPhaseTitle: { it: "Lo scenario sta preparando la ricerca: non è bloccato, sta lavorando", en: "The scenario is preparing the search: it isn't stuck, it's working" },
+  plannerStatsPlaced: { it: "Con strada", en: "With road" },
+  plannerStatsNoRoad: { it: "Senza strada", en: "Without road" },
+  plannerMissingWithRoad: { it: "Edifici con strada non piazzati", en: "Buildings with road not placed" },
+  plannerMissingNoRoad: { it: "Edifici senza strada non piazzati", en: "Buildings without road not placed" },
+  plannerStatsRoads: { it: "Strade", en: "Roads" },
+  plannerStatsCorners: { it: "Angoli", en: "Corners" },
+  plannerStatsCornersTitle: {
+    it: "Angoli di 90° del contorno di edifici e strade (esclusi quelli contro il bordo della mappa): meno angoli, riempimento più facile",
+    en: "90° corners of the outline of buildings and roads (excluding those against the map border): fewer corners, easier filling",
+  },
+  plannerStatsLayouts: { it: "prove", en: "attempts" },
+  plannerMoveAllTitle: { it: "Sposta l'intera città (edifici e strade) di una cella", en: "Moves the whole city (buildings and roads) by one cell" },
+  plannerMirror: { it: "Specchia", en: "Mirror" },
+  plannerMirrorTitle: {
+    it: "Specchia l'intera città (edifici e strade): i collegamenti restano gli stessi",
+    en: "Mirrors the whole city (buildings and roads): connections stay the same",
+  },
+  plannerMirrorH: { it: "Specchia in orizzontale (destra ↔ sinistra)", en: "Mirror horizontally (right ↔ left)" },
+  plannerMirrorV: { it: "Specchia in verticale (alto ↔ basso)", en: "Mirror vertically (top ↔ bottom)" },
+  plannerEdit: { it: "✏ Modifica", en: "✏ Edit" },
+  plannerEditTitle: {
+    it: "Apre la mappa nell'editor (nuova scheda): sposta e togli edifici e strade, poi \"Applica al Planner\"",
+    en: "Opens the map in the editor (new tab): move and remove buildings and roads, then \"Apply to Planner\"",
+  },
+  plannerEditLockedTitle: {
+    it: "Metti in pausa il Planner (⏸ Pausa) per modificare la mappa nell'editor",
+    en: "Pause the Planner (⏸ Pause) to edit the map in the editor",
+  },
+  plannerJsonTitle: {
+    it: "Scarica questo scenario in JSON (solo la città: edifici e strade). Si apre in Forge Hammer, nel Planner (Importa JSON) o tra le città (Importa da JSON)",
+    en: "Downloads this scenario as JSON (city only: buildings and roads). It opens in Forge Hammer, in the Planner (Import JSON) or among the cities (Import from JSON)",
+  },
+  plannerDeleteTitle: {
+    it: "Elimina questo scenario: la sua ricerca si ferma e le altre proseguono",
+    en: "Deletes this scenario: its search stops and the others continue",
+  },
+  plannerPopupBlocked: {
+    it: "Il browser ha bloccato la finestra dell'editor: consenti i popup per questo sito.",
+    en: "The browser blocked the editor window: allow popups for this site.",
+  },
+  plannerEditorRestarted: {
+    it: "Il Planner è stato azzerato o riavviato dopo l'apertura dell'editor: riaprilo con ✏ Modifica.",
+    en: "The Planner was reset or restarted after the editor was opened: open it again with ✏ Edit.",
+  },
+  plannerEditorPauseFirst: {
+    it: "Metti in pausa il Planner (⏸ Pausa) prima di applicare le modifiche.",
+    en: "Pause the Planner (⏸ Pause) before applying the changes.",
+  },
+  plannerAppliedTo: { it: (n: string) => `Applicata a ${n}`, en: (n: string) => `Applied to ${n}` },
+  // errori delle modifiche dall'editor (editorPonte.ts, dueCorsie.ts)
+  plannerErrInvalidData: { it: (m: string) => `Dati non validi: ${m}`, en: (m: string) => `Invalid data: ${m}` },
+  plannerErrNewBuilding: {
+    it: (n: string) => `${n}: edificio nuovo o duplicato (il Planner usa solo gli edifici della città)`,
+    en: (n: string) => `${n}: new or duplicated building (the Planner only uses the city's buildings)`,
+  },
+  plannerErrTownHallRemoved: { it: "Il municipio non si può togliere.", en: "The town hall cannot be removed." },
+  plannerErrChainBroken: {
+    it: (n: string) => `${n}: catena spezzata, sposta o togli tutti i suoi pezzi insieme.`,
+    en: (n: string) => `${n}: broken chain, move or remove all its pieces together.`,
+  },
+  plannerErrChainLoose: {
+    it: (n: string) => `${n}: anello staccato, va attaccato all'inizio di una catena o a un altro anello.`,
+    en: (n: string) => `${n}: detached link, attach it to the start of a chain or to another link.`,
+  },
+  plannerErrChainRingRemoved: {
+    it: (n: string) => `${n}: anello tolto da solo; rimettilo in una catena oppure togli anche l'inizio di una catena.`,
+    en: (n: string) => `${n}: link removed on its own; put it back in a chain or also remove the start of a chain.`,
+  },
+  plannerErrChainShape: {
+    it: (n: string) => `${n}: catena montata in una forma che il Planner non gestisce.`,
+    en: (n: string) => `${n}: chain assembled in a shape the Planner does not handle.`,
+  },
+  plannerErrRoad: { it: "strada", en: "road" },
+  plannerErrOthers: { it: (n: number) => ` e altri ${n}`, en: (n: number) => ` and ${n} more` },
+  plannerErrOutside: { it: (l: string) => `Fuori dall'area sbloccata: ${l}.`, en: (l: string) => `Outside the unlocked area: ${l}.` },
+  plannerErrOverlap: { it: (l: string) => `Sovrapposti: ${l}.`, en: (l: string) => `Overlapping: ${l}.` },
+  plannerErrFillRoads: {
+    it: "Durante il completamento le strade devono restare dove sono.",
+    en: "During the completion the roads must stay where they are.",
+  },
+  plannerErrFillTownHall: {
+    it: "Durante il completamento il municipio deve restare dov'è.",
+    en: "During the completion the town hall must stay where it is.",
+  },
+  plannerErrFillMissing: {
+    it: "Durante il completamento gli edifici con strada si possono spostare ma non togliere o aggiungere.",
+    en: "During the completion road buildings can be moved but not removed or added.",
+  },
+  plannerErrDetached: {
+    it: (l: string) => `Edifici con strada non attaccati a una strada: ${l}.`,
+    en: (l: string) => `Road buildings not attached to a road: ${l}.`,
+  },
+  plannerErrTwoLaneMisaligned: {
+    it: "Strade a due corsie sfalsate: due blocchi 2×2 che si toccano devono essere allineati.",
+    en: "Misaligned two-lane roads: two touching 2×2 blocks must be aligned.",
+  },
+  plannerErrTwoLaneDisconnected: {
+    it: "Strade a due corsie non collegate al municipio (direttamente o tramite altri blocchi 2×2 allineati).",
+    en: "Two-lane roads not connected to the town hall (directly or through other aligned 2×2 blocks).",
+  },
+  plannerErrTwoLaneDetached: {
+    it: (l: string) => `Edifici che richiedono due corsie senza una strada 2×2 collegata accanto: ${l}.`,
+    en: (l: string) => `Buildings requiring two lanes without a connected 2×2 road next to them: ${l}.`,
+  },
+} as const;
+
+/** Stringhe identiche in italiano e inglese: una sola entry, niente da
+ *  tradurre due volte (es. termini gaming/tecnici già condivisi). */
+const UI_STRINGS_SHARED = {
+  tabInfo: "Info",
+  debugLabel: "Debug",
+  effHelpSigmaTitle: "Σ Sigma",
+  inInventoryBadge: "INV",
+  zoomResetTitle: "Reset zoom",
+} as const;
+
+export type UiKey = keyof typeof UI_STRINGS;
+type UiSharedKey = keyof typeof UI_STRINGS_SHARED;
+
+export function t(key: UiSharedKey): string;
+export function t(key: UiKey, lang: UiLang, ...args: unknown[]): string;
+export function t(key: UiKey | UiSharedKey, lang?: UiLang, ...args: unknown[]): string {
+  if (key in UI_STRINGS_SHARED) {
+    return UI_STRINGS_SHARED[key as UiSharedKey];
+  }
+  const entry = UI_STRINGS[key as UiKey];
+  const resolved = entry[lang as UiLang] ?? entry.en;
+  return typeof resolved === "function"
+    ? (resolved as (...a: unknown[]) => string)(...args)
+    : resolved;
+}
+
+/**
+ * Titoli/alt delle colonne bonus militari: seguono tutti lo stesso schema
+ * "{Attacco|Difesa} {rosso|blu} (Sezione)", spesso con prefisso "Σ" per le
+ * varianti sigma — 16 colonne per il blocco Generale/Campi/Spedizioni, e si
+ * ripete identico per le colonne IQ. Componendo i pezzi invece di scrivere
+ * ~30 frasi quasi identiche, una correzione (es. di terminologia) si fa in
+ * un punto solo.
+ */
+type BoostSide = "atk" | "def";
+type BoostColor = "red" | "blue";
+
+const BOOST_SIDE: Record<BoostSide, Record<UiLang, string>> = {
+  atk: { it: "Attacco", en: "Attack" },
+  def: { it: "Difesa", en: "Defense" },
+};
+const BOOST_COLOR: Record<BoostColor, Record<UiLang, string>> = {
+  red: { it: "Rosso", en: "Red" },
+  blue: { it: "Blu", en: "Blue" },
+};
+
+/** Es. boostTitle("it", "atk", "red", "Generale") -> "Attacco Rosso (Generale)"
+ *  Es. boostTitle("en", "def", "blue", "GBG", true) -> "Σ Blue Defense (Gen+GBG)" */
+export function boostTitle(lang: UiLang, side: BoostSide, color: BoostColor, section: string, sigma = false): string {
+  const base = lang === "en"
+  ? `${BOOST_COLOR[color][lang]} ${BOOST_SIDE[side][lang]}`
+  : `${BOOST_SIDE[side][lang]} ${BOOST_COLOR[color][lang]}`;
+  return sigma ? `Σ ${base} (${section})` : `${base} (${section})`;
+}

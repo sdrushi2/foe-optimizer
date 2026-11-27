@@ -46,6 +46,8 @@ interface Props {
   onRinominaCitta: (id: string, nome: string) => void;
   /** 2.0: "Importa da JSON" in fondo al menu del selettore città. */
   onImportaCittaJson?: () => void;
+  /** 27/11/2026: export della città dal menu del selettore (completa o solo la città). */
+  onEsportaCitta?: (id: string, completa: boolean) => void;
   onImporta: () => void;
   /** Avviso breve dopo l'import ("Aggiornata …"), sparisce da solo. */
   avviso: string | null;
@@ -60,7 +62,7 @@ interface Props {
   onLingua: (l: UiLang) => void;
 }
 
-export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, onSelezionaCitta, onEliminaCitta, onRinominaCitta, onImportaCittaJson, onImporta, avviso, onChiudiAvviso, versione, onVersione, gruppi, uiLang, onLingua, avatar }: Props) {
+export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, onSelezionaCitta, onEliminaCitta, onRinominaCitta, onImportaCittaJson, onEsportaCitta, onImporta, avviso, onChiudiAvviso, versione, onVersione, gruppi, uiLang, onLingua, avatar }: Props) {
   const nomeCitta = citta.find(c => c.id === cittaAttiva)?.nome ?? null;
   useEffect(() => {
     if (!avviso) return;
@@ -136,7 +138,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
           <IndicatorePonte uiLang={uiLang} compatta={livello >= 2} />
           </>}
         </span>
-        <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} avatar={avatar}
+        <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} onEsporta={onEsportaCitta} avatar={avatar}
           uiLang={uiLang} maxW={livello >= 4 ? 44 : livello >= 2 ? 110 : 190} />
         {livello >= 5 ? (
           <select value={scheda} onChange={(e) => onScheda(e.currentTarget.value as Scheda)} aria-label={t("r2TabSelectLabel", uiLang)}

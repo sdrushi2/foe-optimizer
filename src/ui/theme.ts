@@ -8,9 +8,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useState } from "react";
+import { TEMA_KEY } from "../utils/storage";
 
 export type Tema = "dark" | "light";
-const CHIAVE = "foe2-tema";
+const CHIAVE = TEMA_KEY;
 
 function leggiTema(): Tema {
   try {

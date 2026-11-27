@@ -22,6 +22,7 @@ import { anelliStaccati, espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI
 import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_STREET2, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp } from "../utils/format";
+import { POTENZA_PLANNER_KEY } from "../utils/storage";
 import { esportaCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
 import { ChartColumn, Clapperboard, Cpu, Map as MapIcon, Pause, Pencil, Play, RotateCcw, SkipForward, Sparkles, Undo2, type LucideIcon } from "lucide-react";
 import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
@@ -102,7 +103,7 @@ type Potenza = "min" | "med" | "max";
 // locale che crea mappe e insiemi a ogni tentativo): con 6 ricerche si sta
 // attorno al 50% reale. MIN (una ricerca per scenario) era già giusto.
 const QUOTA: Record<Potenza, number> = { min: 0.25, med: 0.35, max: 1 };
-const CHIAVE_POTENZA = "foe-planner-potenza";
+const CHIAVE_POTENZA = POTENZA_PLANNER_KEY;
 const leggiPotenza = (): Potenza => {
   // default MED (richiesta dell'utente); la scelta salvata ha la precedenza
   try { const v = localStorage.getItem(CHIAVE_POTENZA); return v === "min" || v === "med" || v === "max" ? v : "med"; } catch { return "med"; }

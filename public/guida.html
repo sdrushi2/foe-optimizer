@@ -604,8 +604,8 @@
 
         <h3>Altri modi</h3>
         <ul>
-          <li><strong>Da un file JSON</strong>: Opzioni › Importa da JSON (o la voce "Importa da JSON" del selettore città) legge l'export di FoE Optimizer (pulsante JSON della Mappa, Planner) o il piano di Forge Hammer. Diventa una città "ridotta": mappa e Grandi Edifici completi, statistiche degli altri edifici dal catalogo, niente inventario né alleati.</li>
-          <li><strong>Da un backup</strong>: Opzioni › Ripristina riporta tutte le città salvate con Esporta tutto, anche su un altro computer.</li>
+          <li><strong>Da un file JSON</strong>: la voce "Importa da JSON" in fondo al selettore delle città. Legge la città completa esportata dal selettore (con inventario e alleati) oppure solo la città: l'export del selettore, il pulsante JSON della Mappa, il Planner o il piano di Forge Hammer. Solo la città vuol dire mappa e Grandi Edifici completi, statistiche degli altri edifici dal catalogo, niente inventario né alleati. Le città da JSON finiscono sempre tra le importate: non toccano mai le città importate con la bacchetta o il ponte, e viceversa.</li>
+          <li><strong>Da un backup</strong>: Opzioni › Ripristina backup riporta tutte le città e le impostazioni salvate con Esporta backup, anche su un altro computer. Sostituisce quelle che ci sono.</li>
         </ul>
       </section>
 
@@ -621,11 +621,12 @@
           <tbody>
             <tr><td class="k">Le tue città</td><td>Importate con la bacchetta dalla tua città: tutte le schede disponibili.</td></tr>
             <tr><td class="k">Città visitate</td><td>Città di altri giocatori: solo la mappa, quindi Città e Planner sì, Inventario e Alleati no ("Disponibile solo per le tue città").</td></tr>
-            <tr><td class="k">Città importate da JSON</td><td>Città caricate da un file: come le visitate, ma con le statistiche degli edifici prese dal catalogo.</td></tr>
+            <tr><td class="k">Città importate da JSON</td><td>Città caricate da un file: con la sola mappa (come le visitate, con le statistiche degli edifici prese dal catalogo) oppure complete (anche inventario e alleati, con tutte le schede). I pulsanti di export dicono quale: le complete li hanno tutti e due.</td></tr>
           </tbody>
         </table>
         <ul>
           <li>Un clic su una città la rende attiva.</li>
+          <li>Accanto al nome due pulsanti scaricano la città in un file JSON: <strong>città completa</strong> (mappa, inventario, alleati, risorse e Castello: per spostarla su un altro computer o darla a chi vuoi) e <strong>solo la città</strong> (la mappa: per Forge Hammer, un altro planner o un altro giocatore). Le città visitate e le importate senza inventario hanno solo il secondo. La legenda nel menu spiega i pulsanti.</li>
           <li>Il cestino accanto al nome la elimina, dopo una conferma. Per la tua città vengono tolti mappa, inventario, alleati e insediamenti: se vuoi conservarli, fai prima un backup.</li>
           <li>Dopo un import compare per qualche secondo un avviso: "Aggiunta la tua città…", "Aggiornata…" oppure "Aggiunta la città di…".</li>
         </ul>
@@ -684,7 +685,8 @@
 
         <h3>Tools</h3>
         <ul>
-          <li><strong>Export</strong>: spunta le caselle a sinistra delle righe e scarica in CSV gli edifici selezionati. Il numero tra parentesi dice quanti ne hai scelti.</li>
+          <li><strong>CSV</strong>: spunta le caselle a sinistra delle righe e scarica in CSV gli edifici selezionati. Il numero tra parentesi dice quanti ne hai scelti.</li>
+          <li><strong>Editor</strong> (solo in Database): apre l'editor della città vuoto, in una nuova scheda. Con <strong>Importa JSON</strong> ci carichi una città (completa o solo città: conta la mappa) che resta solo nell'editor; la sposti e la salvi con <strong>Salva JSON</strong> (solo la città) o <strong>Salva PNG</strong>. Importa e Salva JSON ci sono anche nell'editor aperto dalla Mappa, non in quello aperto dal Planner.</li>
           <li><strong>Calc. GE</strong>: apre il <a href="/ge/">Calcolatore GE</a> in una nuova scheda (in Database, Città e Inventario).</li>
         </ul>
 
@@ -731,12 +733,12 @@
           <tbody>
             <tr><td class="k">Visualizza</td><td>Oltre alle colonne, <strong>+ Inventario</strong> aggiunge alla tabella gli edifici disponibili in Inventario (sfondo verde), per confrontarli con quelli che hai già piazzato.</td></tr>
             <tr><td class="k">Statistiche</td><td><strong>Mappa</strong> (vedi sotto) e i pannelli di riepilogo: <strong>Efficienza strade</strong> (quanta strada usi rispetto a quanta ne serve), <strong>Produzione</strong> (totali della città), <strong>Valori militari</strong> (somma dei bonus di attacco e difesa), <strong>Cambio era</strong> (cosa cambierebbe aggiornando tutti gli edifici vecchi all'era attuale e a quella massima), <strong>Aggiornabili</strong> (edifici che puoi far salire di livello con i kit e i frammenti che hai).</td></tr>
-            <tr><td class="k">Tools</td><td><strong>Export</strong> (CSV degli edifici selezionati), <strong>Debug</strong> (elenco degli edifici riconosciuti, dei Grandi Edifici e di quelli non ancora in catalogo) e <strong>Calc. GE</strong> (apre il Calcolatore GE).</td></tr>
+            <tr><td class="k">Tools</td><td><strong>CSV</strong> (gli edifici selezionati), <strong>Debug</strong> (elenco degli edifici riconosciuti, dei Grandi Edifici e di quelli non ancora in catalogo) e <strong>Calc. GE</strong> (apre il Calcolatore GE).</td></tr>
           </tbody>
         </table>
 
         <h3>La mappa</h3>
-        <p>Il pulsante <strong>Mappa</strong> mostra la disposizione reale della città, con i colori della legenda: municipio, Grandi Edifici, edifici militari, edifici che richiedono la strada (a una o due corsie), che non la richiedono, collegati inutilmente, inattivi, strade e spazio libero. Puoi passare dalla vista <strong>Verticale</strong> a quella <strong>Isometrica</strong>, ingrandire e rimpicciolire, e scaricare la mappa come immagine <strong>PNG</strong> o come file <strong>JSON</strong>.</p>
+        <p>Il pulsante <strong>Mappa</strong> mostra la disposizione reale della città, con i colori della legenda: municipio, Grandi Edifici, edifici militari, edifici che richiedono la strada (a una o due corsie), che non la richiedono, collegati inutilmente, inattivi, strade e spazio libero. Puoi passare dalla vista <strong>Verticale</strong> a quella <strong>Isometrica</strong>, ingrandire e rimpicciolire, e scaricare la mappa come immagine <strong>PNG</strong> o come file <strong>JSON</strong> (solo la città: si apre in Forge Hammer, nel Planner o con Importa da JSON).</p>
       </section>
 
       <span class="top-of-page"><a href="#panoramica">↑ torna all'indice</a></span>
@@ -783,7 +785,7 @@
         </div>
 
         <h3>Quale città</h3>
-        <p>Il gruppo <strong>Sorgente</strong> sceglie cosa ottimizzare: la <strong>Città selezionata</strong> oppure un file con <strong>Importa JSON</strong> (l'export della Mappa, o un file mandato da un altro giocatore). Il file non viene salvato: la ✕ sul pulsante lo chiude, e finché è caricato un clic sul suo nome ci torna.</p>
+        <p>Il gruppo <strong>Sorgente</strong> sceglie cosa ottimizzare: la <strong>Città selezionata</strong> oppure un file con <strong>Importa JSON</strong>: l'export della Mappa, del menu delle città (di una città completa conta solo la mappa), di uno scenario del Planner, di Forge Hammer o un file mandato da un altro giocatore. Il file non viene salvato tra le città (per quello c'è Importa da JSON nel menu delle città): la ✕ sul pulsante lo chiude, e finché è caricato un clic sul suo nome ci torna.</p>
 
         <h3>Come si usa</h3>
         <ol class="steps">
@@ -906,18 +908,17 @@
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-opzioni">
         <h2>⚙️ 13. Opzioni</h2>
-        <p class="lede">Città salvate, backup, pesi e aspetto.</p>
+        <p class="lede">Backup, pesi, aspetto e azzeramento.</p>
         <table>
           <tbody>
-            <tr><td class="k">Città salvate</td><td><strong>Importa da JSON</strong> aggiunge una città da un file; <strong>Elimina tutte</strong> cancella tutte le città salvate, dopo una conferma.</td></tr>
-            <tr><td class="k">Backup</td><td><strong>Esporta tutto</strong> salva tutte le città in un file; <strong>Ripristina</strong> le riporta qui (anche su un altro computer o browser).</td></tr>
+            <tr><td class="k">Backup</td><td><strong>Esporta backup</strong> salva in un file tutto quello che il sito ha salvato nel browser: città, impostazioni, edifici sbloccati degli insediamenti. È un file personale: non darlo ad altri giocatori (per mandare una città usa il JSON della mappa). <strong>Ripristina backup</strong> mostra cosa contiene il file e, dopo la conferma, <strong>sostituisce</strong> tutto: le città di adesso vengono cancellate e le impostazioni sovrascritte (anche su un altro computer o browser).</td></tr>
             <tr><td class="k">Pesi statistiche</td><td>I pesi dell'efficienza (vedi <a href="#efficienza">sezione 12</a>).</td></tr>
             <tr><td class="k">Tema</td><td><strong>Scuro</strong> o <strong>Chiaro</strong>.</td></tr>
             <tr><td class="k">Azzera</td><td><strong>Cancella tutto</strong> svuota tutti i dati e le impostazioni salvati dal sito (città, pesi, tema, lingua…) e ricarica la pagina. Non si può annullare: prima fai un backup.</td></tr>
           </tbody>
         </table>
         <div class="callout">
-          Tutto vive solo nel tuo browser: fare un <strong>Esporta tutto</strong> ogni tanto (soprattutto prima di cambiare browser o computer, o di cancellare i dati di navigazione) è una buona abitudine.
+          Tutto vive solo nel tuo browser: fare un <strong>Esporta backup</strong> ogni tanto (soprattutto prima di cambiare browser o computer, o di cancellare i dati di navigazione) è una buona abitudine.
         </div>
       </section>
 
@@ -966,7 +967,7 @@
 
         <div class="card">
           <h3 style="margin-top:0">Posso usarlo da telefono?</h3>
-          <p>Sì: il sito si adatta allo schermo e si può "installare" come app sulla schermata home. L'importazione con la bacchetta però richiede un browser da computer con FoE Helper o Forge Hammer; sul telefono puoi portare le città con un backup (Esporta tutto / Ripristina).</p>
+          <p>Sì: il sito si adatta allo schermo e si può "installare" come app sulla schermata home. L'importazione con la bacchetta però richiede un browser da computer con FoE Helper o Forge Hammer; sul telefono puoi portare le città con un backup (Esporta backup / Ripristina backup).</p>
         </div>
 
         <div class="card">

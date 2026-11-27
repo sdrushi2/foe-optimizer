@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useDeferredValue, useCallback, memo, lazy, Suspense, Fragment, createContext, useContext, forwardRef, type ReactNode } from "react";
 import {
-  X as XIcon,
   RotateCcw,
-  Upload,
   Check,
   Wand2,
   ChartColumn,
@@ -26,7 +24,7 @@ import type {
 import { PROFILES_KEY, ACTIVE_PROFILE_KEY, DEFENSE_KEY, SPED_ENABLED_KEY, SPED_ATTACK_KEY, SPED_COLUMNS_KEY, SIGMA_KEY, SOMMA_BENI_KEY, ALLEATI_MIL_KEY, ALLEATI_PROD_KEY, BONUS_GE_KEY, POP_COLUMN_KEY, TIPO_EFF_KEY, FEL_COLUMN_KEY, IQ_PROD_COLUMNS_KEY, PROD_COLUMNS_KEY, SHOW_CITY_MAP_KEY, UI_LANG_KEY,
   profileStorageKey, readStoredJson, writeStoredJson, clearStoredJson, reviveMap, reviveSet,
   initCityStore, initInventoryStore, initAlliesStore, cleanupOrphanedKeys,
-  loadProfiles, getActiveProfileId, collectFoeLocalStorage, mergeImportedProfiles,
+  loadProfiles, getActiveProfileId,
   isStorageOutdated, PROFILE_SLOTS, chiaveGlobale
 } from "./utils/storage";
 
@@ -38,6 +36,7 @@ import type { CityMapDragState } from "./components/CityMapView";
 import { PERGAMENE_RESOURCE, VALOR_RESOURCE } from "./data/allyAdvisor";
 import { setEdificio } from "./data/setEdifici";
 import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
+import { fileCitta, leggiPacchettoCompleto, scaricaFile, type PacchettoCompleto } from "./data/esportaCitta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
 import { useTema } from "./ui/theme";
@@ -45,6 +44,7 @@ import type { RibbonGroup } from "./ui/ribbon/Ribbon";
 import type { CittaEsterna } from "./planner/PlannerView";
 import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/cityMapJson";
 import { cittaDaJson } from "./data/cittaDaJson";
+import { messaggioErroreJson } from "./data/erroriJson";
 import { senzaEstensioni } from "./utils/dispositivo";
 import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, chiavePonteUltimo, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
 
@@ -101,6 +101,7 @@ const PannelloReportGe = lazy(() => import("./components/PannelloReportGe"));
 // pannelli Potenziale e Pergamene degli alleati, Insediamento dei Pirati.
 const CityMapView = lazy(() => import("./components/CityMapView"));
 const PannelloEfficienza = lazy(() => import("./ui/PannelloEfficienza"));
+const PannelloBackup = lazy(() => import("./ui/PannelloBackup"));
 const PannelloImporta = lazy(() => import("./ui/PannelloImporta"));
 const PannelloNovita = lazy(() => import("./ui/PannelloNovita"));
 const VideoTutorial = lazy(() => import("./planner/VideoTutorial"));
@@ -224,10 +225,6 @@ const ERE_DB = [...AGES_BY_ID.values()].filter(a => a.id >= 1).sort((a, b) => a.
 function allyName(id: string, lang: Lang = "it"): string {
   return translateName(id, lang);
 }
-
-// Estrae un messaggio leggibile da un errore di tipo unknown (catch).
-const errMessage = (err: unknown, fallback = "unknown error"): string =>
-  err instanceof Error ? err.message : (typeof err === "string" ? err : fallback);
 
 /** Revive difensivo di declassableBuildings dal CityStore serializzato:
  *  valida la forma della prima entry (deve essere [string, oggetto]) prima
@@ -2415,14 +2412,8 @@ export default function App() {
     getActiveProfileId(loadProfiles())
   );
 
-  // ── Export/Import Sessione ──────────────────────────────────────────────
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  // (2.0: lo stato "in corso" di export/import non è più mostrato: i pulsanti
-  // sono in Opzioni → Backup.)
-  const [, setExportLoading] = useState(false);
-  const [, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState<string>("");
-  const [importSuccess, setImportSuccess] = useState<string>("");
+  // ── Backup (Opzioni › Backup, 27/11/2026: pannello ui/PannelloBackup.tsx) ──
+  const [pannelloBackup, setPannelloBackup] = useState<"esporta" | "ripristina" | null>(null);
 
   // Carica dati del profilo attivo in tutti gli stati della città
   const loadProfileData = (profileId: string) => {
@@ -2520,26 +2511,7 @@ export default function App() {
     }
   };
 
-  const deleteAllProfiles = () => {
-    if (!confirm(t("confirmDeleteAllProfiles", uiLang))) {
-      return;
-    }
 
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith("foe_p_"))
-      .forEach((key) => localStorage.removeItem(key));
-
-    writeStoredJson(PROFILES_KEY, []);
-    localStorage.removeItem(ACTIVE_PROFILE_KEY);
-
-    // Nessun profilo ricreato: si torna allo stato vuoto iniziale
-    setProfiles([]);
-    setActiveProfileId("");
-    loadProfileData("");
-    // 2.0: via anche la città importata da JSON nel Planner
-    setPlannerJson(null);
-    setPlannerErrore(null);
-  };
 
 
 
@@ -2803,9 +2775,7 @@ export default function App() {
   // qui in App: vedi useModalDismiss — il click sullo sfondo non chiude più il
   // modale durante una selezione di testo. Non per i due avvisi a z-200
   // (storage obsoleto, bacchetta obsoleta): richiedono il loro pulsante.
-  const closeImportModal = useCallback(() => setIsImportModalOpen(false), []);
   const closeJsonEntry = useCallback(() => setSelectedJsonEntry(null), []);
-  const importModalBackdrop = useModalDismiss(isImportModalOpen, closeImportModal);
   // Solo Esc: questo modale non si chiudeva col click sullo sfondo e resta così.
   useModalDismiss(selectedJsonEntry !== null, closeJsonEntry);
 
@@ -2885,87 +2855,6 @@ export default function App() {
   const greatBuildingIds = useMemo(() => {
     return Array.from(greatBuildingsJson.keys());
   }, [greatBuildingsJson]);
-
-  // ── Funzioni Export/Import Sessione (file locale) ────────────────────────
-  const handleExportSession = () => {
-    setExportLoading(true);
-    try {
-      const storage = collectFoeLocalStorage();
-      const sessionData = {
-        app: "foe-optimizer",
-        version: "1.1",
-        exportedAt: new Date().toISOString(),
-        profileId: activeProfileId,
-        storage,
-      };
-      const jsonString = JSON.stringify(sessionData, null, 0);
-      const blob = new Blob([jsonString], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const date = localDateStamp();
-      a.href = url;
-      a.download = `foe-optimizer-${date}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err: unknown) {
-      alert(t("exportErrorAlert", uiLang, errMessage(err, t("unknownErrorFallback", uiLang))));
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
-  const handleImportSession = (file: File) => {
-    setImportLoading(true);
-    setImportError("");
-    setImportSuccess("");
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const sessionData = JSON.parse(text);
-        if (!sessionData.app || sessionData.app !== "foe-optimizer") {
-          throw new Error(t("importInvalidFile", uiLang));
-        }
-        if (!sessionData.storage || typeof sessionData.storage !== "object") {
-          throw new Error(t("importInvalidFile", uiLang));
-        }
-
-        const { ok, failedKeys, mergedProfiles } = mergeImportedProfiles(
-          sessionData.storage,
-          (n) => t("defaultProfileName", uiLang, n),
-        );
-        const restoredActiveId = getActiveProfileId(mergedProfiles);
-        setProfiles(mergedProfiles);
-        setActiveProfileId(restoredActiveId);
-        loadProfileData(restoredActiveId);
-
-        if (!ok) {
-          const heavyKeys = failedKeys.filter((k) => k.includes("map") || k.includes("inv"));
-          const msg = heavyKeys.length > 0
-            ? t("importPartialHeavy", uiLang)
-            : t("importPartialKeys", uiLang, failedKeys.length);
-          setImportError(msg);
-        } else {
-          setImportSuccess(t("importSuccessMessage", uiLang));
-          setTimeout(() => setIsImportModalOpen(false), 1000);
-        }
-      } catch (err: unknown) {
-        const rawMessage = errMessage(err, t("importGenericError", uiLang));
-        setImportError(rawMessage === "INVALID_IMPORT_FILE" ? t("importInvalidFile", uiLang) : rawMessage);
-      } finally {
-        setImportLoading(false);
-      }
-    };
-    reader.onerror = () => {
-      setImportError(t("importReadFileError", uiLang));
-      setImportLoading(false);
-    };
-    reader.readAsText(file);
-  };
-  
-
 
   const handleImportCityMap = async (preloadedData: BookmarkletData, targetProfileId?: string) => {
     const pid = targetProfileId ?? activeProfileId;
@@ -4340,8 +4229,10 @@ export default function App() {
       for (const k of impronta) if (salvata.has(k)) comuni++;
       return comuni / impronta.size;
     };
-    const trovata = trovaCitta(profiles, info, somiglianza);
-    const esistente = daJson && trovata && trovata.origine !== "json" ? undefined : trovata;
+    // 27/11/2026: un file JSON aggiorna solo città importate da JSON, bacchetta e ponte solo
+    // le loro (prima la bacchetta poteva trasformare una città da JSON in una città sua:
+    // con le città complete diventerebbe "tua" la città di un altro giocatore)
+    const esistente = trovaCitta(profiles.filter(p => (p.origine === "json") === daJson), info, somiglianza);
     const haInventario = (pid: string) => !!localStorage.getItem(profileStorageKey(pid, "inventory"));
     const tipoFinale: TipoCitta = !daJson && esistente && tipoCitta(esistente, haInventario) === "mia" ? "mia" : info.tipo;
     const soloCitta = info.tipo === "visitata";
@@ -4364,6 +4255,8 @@ export default function App() {
     const updated = esistente ? profiles.map(p => (p.id === id ? newProfile : p)) : [...profiles, newProfile];
     // copia degli slot di una città esistente, per ripristinarla se l'import fallisce
     const slotPrima = esistente ? PROFILE_SLOTS.map(slot => [slot, localStorage.getItem(profileStorageKey(id, slot))] as const) : null;
+    // una città completa reimportata solo come città perde inventario, alleati e risorse
+    if (daJson && esistente?.completa) for (const slot of ["inventory", "allies", "resources"] as const) localStorage.removeItem(profileStorageKey(id, slot));
     setProfiles(updated);
     writeStoredJson(PROFILES_KEY, updated);
     // Ricorda il profilo precedente per il rollback in caso di errore.
@@ -4429,7 +4322,7 @@ export default function App() {
 
 
   // 2.0: elenco delle città per il selettore (tipo dedotto per quelle salvate prima della 2.0)
-  const vociCitta = useMemo(() => profiles.map(p => ({ id: p.id, nome: p.name, daJson: p.origine === "json",
+  const vociCitta = useMemo(() => profiles.map(p => ({ id: p.id, nome: p.name, daJson: p.origine === "json", completa: p.origine === "json" && !!p.completa,
     tipo: tipoCitta(p, (pid) => !!localStorage.getItem(profileStorageKey(pid, "inventory"))),
     avatar: sanitizePortraitUrl(p.avatar) || null })),
   // storageVersion: il tipo legge localStorage (non reattivo)
@@ -7218,13 +7111,62 @@ export default function App() {
     return { buildings, cells, aree, grid, bounds, nome: plannerJson.citta.nome };
   }, [plannerJson]);
   /** 2.0: città "ridotta" da un file JSON → nel selettore come città visitata. */
+  /** 27/11/2026: città completa (data/esportaCitta.ts): gli slot del file come sono,
+   *  tra le città importate; aggiorna la città importata dello stesso giocatore e mondo. */
+  const importaCittaCompleta = (pk: PacchettoCompleto, nomeFile: string) => {
+    const g = pk.giocatore;
+    const esistente = g.id !== null ? profiles.find(p => p.origine === "json" && p.playerId === g.id && (p.mondo ?? null) === g.mondo) : undefined;
+    const id = esistente?.id ?? `p_${Date.now()}`;
+    const base = g.nome ? nomeCitta(g.nome, g.mondo) : nomeFile.replace(/\.json$/i, "");
+    let name = esistente?.nomeUtente ? esistente.name : base;
+    if (!esistente) {
+      const usati = new Set(profiles.map(p => p.name));
+      for (let i = 2; usati.has(name); i++) name = `${base} ${i}`;
+    }
+    const avatar = sanitizePortraitUrl(g.avatar);
+    const nuovo: Profile = { id, name, tipo: "mia", origine: "json", completa: true,
+      ...(g.id !== null ? { playerId: g.id } : {}), ...(g.mondo ? { mondo: g.mondo } : {}), ...(avatar ? { avatar } : {}),
+      ...(esistente?.nomeUtente ? { nomeUtente: true as const } : {}) };
+    const prima = PROFILE_SLOTS.map(slot => [slot, localStorage.getItem(profileStorageKey(id, slot))] as const);
+    try {
+      for (const slot of PROFILE_SLOTS) {
+        const v = pk.slot[slot];
+        if (v) localStorage.setItem(profileStorageKey(id, slot), v); else localStorage.removeItem(profileStorageKey(id, slot));
+      }
+      if (!initCityStore(id)?.cityMapBuildings?.length) throw new Error(t("r2JsonFullBad", uiLang));
+    } catch (err) {
+      for (const [slot, v] of prima) { try { if (v === null) localStorage.removeItem(profileStorageKey(id, slot)); else localStorage.setItem(profileStorageKey(id, slot), v); } catch { /* best-effort */ } }
+      alert(t("importErrorAlert", uiLang, err instanceof Error ? err.message : String(err)));
+      return;
+    }
+    const aggiornati = esistente ? profiles.map(p => (p.id === id ? nuovo : p)) : [...profiles, nuovo];
+    setProfiles(aggiornati);
+    writeStoredJson(PROFILES_KEY, aggiornati);
+    setActiveProfileId(id);
+    localStorage.setItem(ACTIVE_PROFILE_KEY, id);
+    loadProfileData(id);
+    bumpStorage();
+    setAvvisoCitta(esistente ? t("r2CityUpdated", uiLang, name) : t("r2CityAddedFull", uiLang, name));
+  };
+  /** 27/11/2026: export dal menu delle città (completa o solo la città). */
+  const esportaCitta = (idCitta: string, completa: boolean) => {
+    const p = profiles.find(x => x.id === idCitta);
+    const f = p && fileCitta(p, completa, __BUILD_VERSION__);
+    if (!f) { alert(t("r2ExportNoMap", uiLang)); return; }
+    scaricaFile(f.dati, f.nome);
+  };
   const importaCittaJson = async (file: File) => {
     let conv: ReturnType<typeof cittaDaJson>;
     try {
       impostaCatalogoExtra(await caricaBuildingsExtra());
-      conv = cittaDaJson(await file.text());
+      const testo = await file.text();
+      let d: unknown = null;
+      try { d = JSON.parse(testo); } catch { /* lo segnala cittaDaJson */ }
+      const pk = leggiPacchettoCompleto(d);
+      if (pk) { importaCittaCompleta(pk, file.name); return; }
+      conv = cittaDaJson(testo);
     } catch (err) {
-      alert(t("plannerInvalidJson", uiLang, err instanceof Error ? err.message : String(err)));
+      alert(messaggioErroreJson(err, uiLang));
       return;
     }
     // senza nome del giocatore nel file: il nome del file
@@ -7245,7 +7187,7 @@ export default function App() {
       setPlannerSorgente("json");
       setPlannerErrore(null);
     } catch (err) {
-      setPlannerErrore(t("plannerInvalidJson", uiLang, err instanceof Error ? err.message : String(err)));
+      setPlannerErrore(messaggioErroreJson(err, uiLang));
     }
   };
   const importaDaNastro = () => { void handleWandClick({ preventDefault() {} } as unknown as React.MouseEvent); };
@@ -7297,8 +7239,8 @@ export default function App() {
 
   const gruppiNastro = costruisciNastri(schedaCorrente, {
     uiLang, ricerca: searchTerm, setRicerca: setSearchTerm,
-    onEliminaTutte: deleteAllProfiles, onImportaCittaJson: () => cittaJsonRef.current?.click(), onEsporta: () => { void handleExportSession(); }, onRipristina: () => { setImportError(""); setImportSuccess(""); setIsImportModalOpen(true); },
-    haCitteSalvate: profiles.length > 0,
+    onEsporta: () => setPannelloBackup(p => (p === "esporta" ? null : "esporta")), onRipristina: () => setPannelloBackup(p => (p === "ripristina" ? null : "ripristina")),
+    backupAperto: pannelloBackup,
     haCitta, mappa: showCityMap,
     onMappa: () => { const v = !showCityMap; setShowCityMap(v); localStorage.setItem(SHOW_CITY_MAP_KEY, String(v)); },
     tema, setTema, informazioni: { attivo: pannelloGuida === "info", cambia: () => setPannelloGuida(p => (p === "info" ? null : "info")) },
@@ -7468,7 +7410,7 @@ export default function App() {
       <Testata scheda={schedaCorrente} onScheda={scegliScheda}
         spente={spente}
         citta={vociCitta} cittaAttiva={activeProfileId} onSelezionaCitta={switchProfile}
-        onEliminaCitta={(id) => deleteProfile(id, false)} onRinominaCitta={rinominaCitta} onImportaCittaJson={() => cittaJsonRef.current?.click()} onImporta={importaDaNastro}
+        onEliminaCitta={(id) => deleteProfile(id, false)} onRinominaCitta={rinominaCitta} onImportaCittaJson={() => cittaJsonRef.current?.click()} onEsportaCitta={esportaCitta} onImporta={importaDaNastro}
         avviso={avvisoCitta} onChiudiAvviso={chiudiAvviso}
         versione={__BUILD_VERSION__} onVersione={cliccaVersione} gruppi={gruppiNastro}
         uiLang={uiLang} onLingua={handleUiLangChange} avatar={portraitUrl || null} />
@@ -7495,6 +7437,13 @@ export default function App() {
 
           {/* 2.0: pannelli della Guida (sopra il contenuto dell'ultima scheda di lavoro) */}
           {/* 2.0: Opzioni › Pesi statistiche › "?": come si calcola l'efficienza (prima era un popup) */}
+          {schedaCorrente === "opzioni" && pannelloBackup && (
+            <div className="px-3 py-2">
+              <Suspense fallback={null}>
+                <PannelloBackup key={pannelloBackup} uiLang={uiLang} modo={pannelloBackup} versioneApp={__BUILD_VERSION__} onChiudi={() => setPannelloBackup(null)} />
+              </Suspense>
+            </div>
+          )}
           {schedaCorrente === "opzioni" && isEfficiencyHelpOpen && (
             <div className="px-3 py-2">
               <Suspense fallback={null}>
@@ -7795,6 +7744,15 @@ export default function App() {
                 {ignorati && ignorati.length > 0 && (
                   <div className="px-3 pt-2 text-[12px] text-amber-300" title={[...new Set(ignorati)].join("\n")}>
                     {t("plannerJsonIgnored", uiLang, ignorati.length, [...new Set(ignorati)].join(", "))}
+                  </div>
+                )}
+                {/* 27/11/2026: JSON non letto mentre il Planner mostra già una città (prima l'errore
+                    si vedeva solo senza città: l'import falliva in silenzio) */}
+                {plannerErrore && (
+                  <div role="alert" className="mx-3 mt-2 flex items-start gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-[12px] text-red-300">
+                    <span className="min-w-0 flex-1">{plannerErrore}</span>
+                    <button type="button" onClick={() => setPlannerErrore(null)} title={t("closeAriaLabel", uiLang)} aria-label={t("closeAriaLabel", uiLang)}
+                      className="shrink-0 rounded px-1 text-red-300 hover:bg-red-500/20">✕</button>
                   </div>
                 )}
                 {/* Ponte: la città selezionata è cambiata nel gioco mentre il Planner è aperto */}
@@ -8461,70 +8419,6 @@ export default function App() {
 
         </section>
       </main>
-
-
-      {/* ── Modale Import Sessione ────────────────────────────────────────── */}
-      {isImportModalOpen && (
-        <div
-          className="modal-overlay"
-          {...importModalBackdrop}
-        >
-          <div
-            className="flex w-full max-w-md flex-col rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
-              <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wide flex items-center gap-2">
-                <Upload size={16} />
-                {t("importModalTitle", uiLang).toUpperCase()}
-              </h3>
-              <button
-                onClick={() => setIsImportModalOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
-                aria-label={t("closeAriaLabel", uiLang)}
-              >
-                <XIcon size={16} />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              {importSuccess ? (
-                <div className="bg-emerald-950/30 border border-emerald-900/50 rounded-lg p-3 text-emerald-400 text-sm text-center flex items-center justify-center gap-2">
-                  <Check size={16} />
-                  {importSuccess}
-                </div>
-              ) : (
-                <>
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    {t("importModalAddedNotice", uiLang)}
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/30 p-6 cursor-pointer hover:border-amber-500/40 hover:bg-slate-800/50 transition-all">
-                      <Upload size={24} className="text-slate-500" />
-                      <span className="text-xs font-semibold text-slate-400">{t("importModalDropLabel", uiLang)}</span>
-                      <input
-                        type="file"
-                        accept=".json,application/json"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) handleImportSession(f);
-                        }}
-                      />
-                    </label>
-
-                    {importError && (
-                      <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-3 text-red-400 text-xs">
-                        ⚠️ {importError}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
 
       {selectedJsonEntry && (

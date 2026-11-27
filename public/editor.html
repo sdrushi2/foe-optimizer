@@ -32,6 +32,12 @@
   Editor della città (idea e prima versione: Sdrushi), ottobre 2026.
   - 2.0: niente più "Apri JSON" / "Salva JSON": l'editor si apre solo dal
     tool (pannello MAPPA o Planner), che gli manda la città.
+  - 27/11/2026: tornano "Importa JSON" e "Salva JSON", ma passano dal codice del
+    tool (editor-condiviso.js: stesso lettore, stessi messaggi, stesso formato
+    dell'export della Mappa). Importa JSON carica la città (completa o solo città:
+    conta la mappa) SOLO nell'editor; Salva JSON scarica solo la città
+    (<giocatore>-citta-<data>.json). Non ci sono quando l'editor è aperto dal
+    Planner. Dal nastro (Database › Tools › Editor) l'editor si apre vuoto.
   - Aperto dal pannello MAPPA (pulsante "Editor"): riceve la città con
     {tipo:"carica", planner:false}; niente "Applica al Planner".
   - "Salva PNG": stesso codice dell'export PNG del tool (renderCityMapPng),
@@ -217,6 +223,25 @@
     </svg>
     <span data-t="salvaPng">Salva PNG</span>
   </button>
+  <label class="btn" id="importa" data-tt="importaTitle">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <span data-t="importa">Importa JSON</span>
+    <input type="file" id="fileJson" accept=".json,application/json" hidden>
+  </label>
+  <button type="button" class="btn" id="salvaJson" data-tt="salvaJsonTitle" disabled>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span data-t="salvaJson">Salva JSON</span>
+  </button>
   <span class="zoom">
     <button type="button" class="btn" id="zoomOut" data-tt="zoomOut">−</button>
     <span id="zoomPct">100%</span>
@@ -233,7 +258,7 @@
   <div id="hints"></div>   <!-- riempito da applicaLingua -->
 </header>
 
-<main><div id="map" data-vuoto="Apri l'editor dal tool (Mappa o Planner) per visualizzare la città"></div></main>
+<main><div id="map" data-vuoto="Carica una città con Importa JSON, oppure apri l'editor dalla Mappa o dal Planner del tool"></div></main>
 
 
 <script>
@@ -253,7 +278,12 @@ let mapSize = MIN_SIZE;
 const TESTI = {
   it: {
     titolo: 'Editor città', salvaPng: 'Salva PNG',
-    applica: '✔ Applica al Planner', vuoto: 'Apri l\'editor dal tool (Mappa o Planner) per visualizzare la città',
+    applica: '✔ Applica al Planner', vuoto: 'Carica una città con Importa JSON, oppure apri l\'editor dalla Mappa o dal Planner del tool',
+    importa: 'Importa JSON', salvaJson: 'Salva JSON',
+    importaTitle: 'Apre una città da un file JSON solo nell\'editor (completa o solo città: conta la mappa). Non la salva nel tool',
+    salvaJsonTitle: 'Scarica la città modificata in JSON: solo la città (la mappa), come il JSON della Mappa',
+    ignorati: n => n + (n === 1 ? ' pezzo saltato' : ' pezzi saltati') + ' perché non ne conosco le dimensioni',
+    noJson: 'Importa e salva JSON non disponibili (manca /editor-condiviso.js)',
     hints: ['<kbd>Trascina</kbd> sposta', '<kbd>Trascina sul vuoto</kbd> seleziona',
             '<kbd>Shift</kbd> aggiungi alla selezione',
             '<kbd>Ctrl</kbd> + <kbd>A</kbd> seleziona tutto', '<kbd>Doppio clic</kbd> aggiungi / togli strada', '<kbd>Shift</kbd> + <kbd>Doppio clic</kbd> strada a due corsie',
@@ -269,7 +299,12 @@ const TESTI = {
   },
   en: {
     titolo: 'City editor', salvaPng: 'Save PNG',
-    applica: '✔ Apply to Planner', vuoto: 'Open the editor from the tool (Map or Planner) to show the city',
+    applica: '✔ Apply to Planner', vuoto: 'Load a city with Import JSON, or open the editor from the tool\'s Map or Planner',
+    importa: 'Import JSON', salvaJson: 'Save JSON',
+    importaTitle: 'Opens a city from a JSON file in the editor only (full or city only: the map counts). It isn\'t saved in the tool',
+    salvaJsonTitle: 'Downloads the edited city as JSON: city only (the map), like the Map JSON',
+    ignorati: n => n + (n === 1 ? ' piece skipped' : ' pieces skipped') + ' (unknown size)',
+    noJson: 'Import and save JSON not available (/editor-condiviso.js missing)',
     hints: ['<kbd>Drag</kbd> move', '<kbd>Drag on empty space</kbd> select',
             '<kbd>Shift</kbd> add to selection',
             '<kbd>Ctrl</kbd> + <kbd>A</kbd> select all', '<kbd>Double click</kbd> add / remove road', '<kbd>Shift</kbd> + <kbd>Double click</kbd> two-lane road',
@@ -350,6 +385,9 @@ function parse(data, colori) {
   const ents = data.CityEntities || {};
   const areeRaw = data.UnlockedAreas || [];
   const areas = [], items = [];
+  // era di ogni copia (mapBuildings dell'export, o CityMapData salvata dall'editor)
+  const eraDi = {};
+  (data.mapBuildings || []).forEach(m => { if (m && m.id != null && m.era) eraDi[m.id] = m.era; });
 
   areeRaw.forEach(a =>
     areas.push({ x: a.x || 0, y: a.y || 0, w: a.width || 4, h: a.length || 4 }));
@@ -361,7 +399,7 @@ function parse(data, colori) {
     const id = b.id != null ? b.id : k;
     const lv = livelloStrada(e);
     items.push({ id, eid: b.cityentity_id, x: b.x || 0, y: b.y || 0, w: d[0], h: d[1], type, noRoad: lv < 1, livello: lv,
-                 cls: colorClass(type, lv), colore: colori && colori[id], name: e.name || b.cityentity_id });
+                 cls: colorClass(type, lv), colore: colori && colori[id], name: e.name || b.cityentity_id, era: b.era || eraDi[id] || null });
   });
 
   // celle sbloccate (per le strade col doppio clic e il controllo delle posizioni)
@@ -379,7 +417,10 @@ function parse(data, colori) {
   }
   // nessuna strada 2×2 nella città: la Strada asfaltata del gioco (prima strada a due corsie)
   if (!s2) s2 = { eid: 'S_ProgressiveEra_CarStreet1', name: lingua === 'en' ? 'Two-lane road' : 'Strada asfaltata', w: 2, h: 2 };
-  fonte = { ents, areeRaw, celle, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h },
+  // giocatore ed era della città: finiscono nel JSON salvato
+  const pl = data.player && typeof data.player.name === 'string' ? { id: typeof data.player.id === 'number' ? data.player.id : null, name: data.player.name } : null;
+  const meta = Object.assign({}, pl ? { player: pl } : {}, typeof data.currentEra === 'string' ? { currentEra: data.currentEra } : {});
+  fonte = { ents, areeRaw, celle, meta, strada: s && { eid: s.eid, name: s.name, w: s.w, h: s.h },
             strada2: s2 && { eid: s2.eid, name: s2.name, w: 2, h: 2 } };
   return { areas, items };
 }
@@ -412,6 +453,7 @@ function draw({ areas, items }) {
 
   items.forEach(i => addBuilding(i));
   document.getElementById('png').disabled = false;
+  document.getElementById('salvaJson').disabled = false;
   verifica();
 }
 
@@ -676,7 +718,7 @@ function esporta() {
     let id = i.id;
     if (id == null || usati.has(String(id))) id = prossimo++;
     usati.add(String(id));
-    CityMapData[id] = { id, cityentity_id: i.eid, type: i.type, x: i.x, y: i.y };
+    CityMapData[id] = Object.assign({ id, cityentity_id: i.eid, type: i.type, x: i.x, y: i.y }, i.era ? { era: i.era } : {});
     if (!CityEntities[i.eid]) {
       const orig = fonte.ents[i.eid];
       CityEntities[i.eid] = orig || Object.assign({ id: i.eid, name: i.name, type: i.type, width: i.w, length: i.h },
@@ -711,6 +753,41 @@ document.getElementById('png').addEventListener('click', () => {
     a.remove();
   } catch (err) {
     alert(tr('pngErr') + err.message);
+  }
+});
+
+// ---- Importa JSON / Salva JSON (27/11/2026): codice del tool, da /editor-condiviso.js ----
+document.getElementById('fileJson').addEventListener('change', async ev => {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  const C = window.FoeCondiviso;
+  if (!f) return;
+  if (!C || !C.leggiJson) { alert(tr('noJson')); return; }
+  const r = await C.leggiJson(await f.text(), lingua);
+  if (!r.ok) { alert(r.errore); return; }
+  // la città importata vive solo qui: niente più legami con chi ha aperto l'editor
+  token = null;
+  document.getElementById('applica').hidden = true;
+  nuoviDalPlanner = new Set();
+  riepilogoPng = null;
+  document.getElementById('dettaglio').textContent = f.name;
+  document.title = f.name + ' – ' + tr('titolo') + ' – FoE Optimizer';
+  draw(parse(r.json));
+  stato(r.ignorati.length ? tr('ignorati')(r.ignorati.length) : '', r.ignorati.length ? 'err' : undefined);
+});
+document.getElementById('salvaJson').addEventListener('click', async () => {
+  const C = window.FoeCondiviso;
+  if (!fonte) return;
+  if (!C || !C.jsonDaSalvare) { alert(tr('noJson')); return; }
+  try {
+    const { nome, testo } = await C.jsonDaSalvare(esporta(), fonte.meta || {});
+    const url = URL.createObjectURL(new Blob([testo], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert(err.message);
   }
 });
 
@@ -757,6 +834,9 @@ window.addEventListener('message', ev => {
     if (m.lang) { linguaDaTool = true; applicaLingua(m.lang); }
     document.title = (dalPlanner ? 'Editor · ' + (m.titolo || 'Planner') : tr('titolo')) + ' – FoE Optimizer';
     document.getElementById('applica').hidden = !dalPlanner;
+    // dal Planner niente Importa / Salva JSON: l'editor lavora sullo scenario
+    document.getElementById('importa').hidden = dalPlanner;
+    document.getElementById('salvaJson').hidden = dalPlanner;
     nuoviDalPlanner = new Set((m.nuovi || []).map(String));
     riepilogoPng = m.riepilogo || null;
     draw(parse(m.json, m.colori));

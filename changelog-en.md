@@ -1,5 +1,29 @@
 # FoE Optimizer Changelog
 
+## Version 2.030 (27/11/2026)
+### New
+- City menu: next to the name there are buttons to download the city as a JSON file. Your cities have two: full city (map, inventory, allies, resources and Castle: to take it to another computer or give it to whoever you want) and city only (the map: for Forge Hammer, another planner or another player). Visited cities only have the second. On the right of the menu (at the bottom on narrow screens) a legend explains the buttons. The files are called player-completa-date.json and player-citta-date.json
+- Database › Tools: new Editor button, before GB Calc. It opens the city editor empty in a new tab
+- City editor: new Import JSON and Save JSON buttons. Import JSON loads a city from a file (full or city only: the map counts, also from Forge Hammer or a Planner scenario) in the editor only, without saving it in the tool, with the same error messages as the tool. Save JSON downloads the edited city as city only (player-citta-date.json), in the same format as the Map JSON. They aren't there when the editor is opened from the Planner
+- Import from JSON recognises the full city: it adds it to the imported cities with inventory and allies, and the Inventory and Allies tabs work as for your own cities. A full imported city has both export buttons, one with the map only just the second: so you can see at once what it contains. Importing the same city again updates it, also going from full to city only or the other way round
+
+### Update
+- Options › Backup: the buttons are now called Export backup and Restore backup, and the backup is complete. Export backup opens a panel listing what goes into the file (your cities with map, inventory, allies, resources and Castle, visited cities with the map only, all with their names, settings such as language, theme, weights, columns and Planner CPU power, unlocked settlement buildings) and how big it is, reminds you that it is a personal file not to give to other players, and asks for confirmation. The file is called foe-optimizer-backup-YYYY-MM-DD.json. It also works with no saved cities
+- Restore backup: once you pick the file, the panel shows what it contains (backup date, cities, settings) and warns you which cities will be deleted. When you confirm it replaces everything, cities and settings, and reloads the page. Before, the backup cities were added to the ones already there (restoring twice duplicated them) and the settings did not come back. If the restore fails, for example because the browser storage is full, your previous data stays as it was. Backups made with version 1 can be restored too (the cities yes, the settings of that time no)
+- Restore backup: if you pick a city map instead of a backup, the panel tells you and points you to Import from JSON
+- Import from JSON and the Planner read JSON files the same way: they always take the file's layout. Before, importing a Planner scenario JSON among the cities saved the city as it is in the game instead of the scenario. Error messages are the same in both places, in the chosen language, and say what is missing (broken file, no city, expansions, town hall) or that the file is a backup
+- Cities imported from JSON and those imported with the wand or the bridge no longer mix: a JSON file only updates a city imported from JSON, and the wand or the bridge only theirs. Before, the wand could turn a JSON city into one of your cities
+- Import from JSON: if you pick a backup file, it tells you to use Options › Restore backup. The Map's JSON button now saves player-citta-date.json
+- City menu with no cities: the box is narrow as before (the legend only appears when there are cities) and explains the three ways to add one: the green magic wand, the FoE Optimizer Bridge extension and Import from JSON
+- Tools: the Export button, which downloads the selected buildings as CSV, is now called CSV
+- Options: removed the Saved cities group. Import from JSON stays at the bottom of the city selector; cities are deleted one at a time with the selector's bin, or all together (with the settings) from Reset › Erase everything
+
+### Bug Fixes
+- Planner: if the chosen JSON couldn't be read while a city was already open, no message appeared. Now the error shows above the Planner and closes with the X
+- Importing a JSON into the Planner, buildings of unknown size are reported even when the file has CityMapData (before they disappeared silently)
+
+---
+
 ## Version 2.029 (26/11/2026)
 ### New
 - FoE Optimizer Bridge extension (beta): switching back to LIVE after the pause, the tool asks the game for a fresh copy and imports everything again (city, inventory, allies and settlements), like with the wand. It works as a full refresh if something had not been updated. Changes made by hand in the planners stay protected by the usual notice

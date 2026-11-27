@@ -22,11 +22,12 @@
 //  ignorano le altre. cityData (città reale per il confronto in Hammer) non
 //  c'è: nell'export della città coincide con il piano.
 //
-//  IMPORT (`leggiCittaJson`, usato dal Planner): accetta questo formato,
-//  l'intero payload del bookmarklet (anche dentro "data"), l'export del
-//  Planner di FORGE HAMMER (2.0: mapBuildings / mapData, vedi `leggiHammer`)
-//  e il VECCHIO formato semplificato (buildings / roads / unlocked_areas),
-//  usato dalle città del banco di prova (planner-test).
+//  IMPORT (27/11/2026: un solo lettore, `leggiCitta`, per Importa da JSON,
+//  Planner ed editor): accetta questo formato, l'intero payload del bookmarklet
+//  (anche dentro "data"), il piano di FORGE HAMMER (mapBuildings / mapData) e il
+//  VECCHIO formato semplificato (buildings / roads / unlocked_areas), usato dalle
+//  città del banco di prova (planner-test). Errori: `ErroreJsonCitta` con un
+//  codice, tradotto per l'utente da data/erroriJson.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { CityMapBuilding } from "./cityMap";
@@ -182,7 +183,7 @@ function edificio(entityId: string, mapEntityId: string, name: string, x: number
  *  (buildings.py scrive f"{size_y}x{size_x}"), quindi width = secondo numero.
  *  Livello di strada: colonna RoadLvl (0/1/2); se manca (CSV vecchi) chi
  *  richiede la strada (Road > 0) ha livello 1. */
-export type VoceCat = { w: number; h: number; lv: number; nome: string };
+type VoceCat = { w: number; h: number; lv: number; nome: string };
 let catalogo: Map<string, VoceCat> | null = null;
 let testoExtra = "";
 function aggiungi(m: Map<string, VoceCat>, csv: string) {
@@ -197,7 +198,7 @@ export function impostaCatalogoExtra(csv: string): void {
   testoExtra = csv;
   catalogo = null;
 }
-export function voceCatalogo(entityId: string): VoceCat | undefined {
+function voceCatalogo(entityId: string): VoceCat | undefined {
   if (!catalogo) {
     catalogo = new Map();
     aggiungi(catalogo, datiGioco().buildings);
@@ -206,49 +207,122 @@ export function voceCatalogo(entityId: string): VoceCat | undefined {
   return catalogo.get(entityId);
 }
 
-/** Export del Planner di Forge Hammer (version 3): il piano è `mapBuildings`
- *  ({ metaId, x, y, era, id? }), le espansioni `mapData`; `cityData` (città
- *  reale) serve solo per il tipo. Dimensioni e livello di strada: CityEntities
- *  se c'è (file universale), altrimenti il catalogo (buildings.csv +
- *  buildings_extra.csv); senza extra, ripiego municipio 6×7 e strade 1×1 /
- *  2×2 ("CarStreet"). I pezzi sconosciuti vengono saltati (`ignorati`). */
-function leggiHammer(d: Record<string, unknown>): CittaJson {
-  const aree = Array.isArray(d.mapData) ? (d.mapData as UnlockedArea[]) : [];
-  if (!aree.length) throw new Error("manca 'mapData' (espansioni)");
-  const ents = (d.CityEntities ?? {}) as Record<string, CityEntityDefinition & { name?: string; type?: string }>;
-  const city = (d.cityData ?? {}) as Record<string, { type?: unknown }>;
+/** Errore di lettura di un JSON della città: `codice` diventa il messaggio per
+ *  l'utente (messaggioErroreJson in App / editorPonte), nella sua lingua. */
+export type CodiceErroreJson = "json" | "backup" | "senzaCitta" | "senzaEspansioni" | "senzaMunicipio";
+export class ErroreJsonCitta extends Error {
+  constructor(readonly codice: CodiceErroreJson) { super(codice); this.name = "ErroreJsonCitta"; }
+}
+
+/** Un pezzo della città letto dal file (edificio o tessera di strada). */
+interface PezzoLetto {
+  /** id della copia sulla mappa (chiave di CityMapData, id di mapBuildings…) */
+  key: string;
+  entityId: string; type: string; nome: string;
+  x: number; y: number; w: number; h: number;
+  /** livello di strada richiesto (0 = nessuno), dal file o dal catalogo */
+  lv: number;
+  /** era della copia (codice, es. "ModernEra"), se il file la dice */
+  era: string | null;
+  /** voce del gioco della copia (cityData o CityMapData: livello e bonus dei GE…) */
+  voce: Record<string, unknown>;
+}
+export interface CittaLetta {
+  pezzi: PezzoLetto[];
+  aree: UnlockedArea[];
+  /** pezzi saltati perché senza dimensioni note (né nel file né nel catalogo) */
+  ignorati: string[];
+  giocatore: { nome: string; id: number | null } | null;
+  currentEra: string | null;
+  /** solo vecchio formato (buildings / roads): celle di strada dichiarate */
+  strade?: number;
+}
+
+const FUORI_GRIGLIA = new Set(["hub_main", "hub_part", "off_grid", "outpost_ship", "friends_tavern"]);
+type Rec = Record<string, unknown>;
+const oggetto = (v: unknown): Rec | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : null);
+const numero = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+
+/**
+ * L'UNICO lettore dei JSON della città (27/11/2026): lo usano Importa da JSON
+ * (data/cittaDaJson.ts), il Planner (leggiCittaJson) e il canale con l'editor
+ * (leggiCittaDati). Accetta il nostro export (Mappa, menu delle città, Planner),
+ * il payload della bacchetta (anche dentro "data"), il piano di Forge Hammer e il
+ * vecchio formato buildings / roads / unlocked_areas (banco di prova).
+ * La disposizione è SEMPRE quella del file: CityMapData, poi mapBuildings, poi il
+ * vecchio formato, e solo se manca tutto cityData. cityData (in Hammer e negli
+ * export del Planner è la città com'è nel gioco) serve solo per arricchire le
+ * copie con lo stesso id: tipo, era, livello e bonus dei Grandi Edifici.
+ * Dimensioni e strada: CityEntities del file, poi il catalogo (buildings.csv +
+ * buildings_extra.csv), poi municipio 6×7 e strade 1×1 / 2×2 ("CarStreet").
+ */
+export function leggiCitta(dati: unknown): CittaLetta {
+  const radice = oggetto(dati);
+  if (!radice) throw new ErroreJsonCitta("senzaCitta");
+  if (radice.app === "foe-optimizer" && radice.storage) throw new ErroreJsonCitta("backup");
+  const d = oggetto(radice.data) ?? radice;
+  const ents = (oggetto(d.CityEntities) ?? {}) as Record<string, CityEntityDefinition & { name?: string; type?: string }>;
+  const cityData = (oggetto(d.cityData) ?? {}) as Record<string, Rec>;
+  const pl = oggetto(d.player);
+  const giocatore = pl && typeof pl.name === "string" && pl.name.trim() ? { nome: pl.name.trim(), id: numero(pl.id) ?? null } : null;
+  const currentEra = typeof d.currentEra === "string" ? d.currentEra : null;
+
+  // 1) la disposizione: voci grezze { key, entityId, x, y, era?, voce }
+  type Grezza = { key: string; entityId: string; x: unknown; y: unknown; era?: unknown; voce: Rec; w?: number; h?: number; lv?: number; nome?: string; tipo?: string };
+  let grezze: Grezza[];
+  let aree: unknown;
+  let strade: number | undefined;
+  const cityMap = oggetto(d.CityMapData);
+  if (cityMap && Object.keys(cityMap).length) {
+    grezze = Object.entries(cityMap).map(([k, v]) => { const o = oggetto(v) ?? {}; const key = String(o.id ?? k);
+      return { key, entityId: String(o.cityentity_id ?? ""), x: o.x, y: o.y, era: o.era, voce: { ...(cityData[key] ?? {}), ...o } }; });
+    aree = d.UnlockedAreas ?? d.mapData;
+  } else if (Array.isArray(d.mapBuildings) && d.mapBuildings.length) {
+    grezze = (d.mapBuildings as unknown[]).map((v, i) => { const o = oggetto(v) ?? {}; const key = o.id != null ? String(o.id) : `hammer-${i}`;
+      return { key, entityId: String(o.metaId ?? ""), x: o.x, y: o.y, era: o.era, voce: { ...(cityData[key] ?? {}) } }; });
+    aree = d.mapData ?? d.UnlockedAreas;
+  } else if (Array.isArray(d.buildings) && Array.isArray(d.unlocked_areas)) {
+    // vecchio formato: dimensioni e strada nel file
+    grezze = (d.buildings as unknown[]).map((v, i) => { const o = oggetto(v) ?? {}; const entityId = String(o.cityentity_id ?? "");
+      return { key: String(o.id ?? `ext-${i}`), entityId, x: o.x, y: o.y, voce: {}, w: Number(o.width ?? 1), h: Number(o.length ?? 1),
+        lv: Number(o.road_requirement ?? 0), nome: String(o.name ?? entityId), tipo: entityId.startsWith("H_") ? "main_building" : "building" }; });
+    aree = d.unlocked_areas;
+    const r = oggetto(d.roads);
+    strade = Number(r?.single ?? 0) + Number(r?.two_lane ?? 0) * 4;
+  } else if (Object.keys(cityData).length) {
+    grezze = Object.entries(cityData).map(([k, o]) => { const key = String(o.id ?? k);
+      return { key, entityId: String(o.cityentity_id ?? ""), x: o.x, y: o.y, era: o.era, voce: o }; });
+    aree = d.UnlockedAreas ?? d.mapData;
+  } else throw new ErroreJsonCitta("senzaCitta");
+  if (!Array.isArray(aree) || !aree.length) throw new ErroreJsonCitta("senzaEspansioni");
+
+  // 2) dimensioni, tipo, strada
+  const pezzi: PezzoLetto[] = [];
   const ignorati: string[] = [];
-  const buildings: CityMapBuilding[] = [];
-  (d.mapBuildings as Array<{ metaId?: unknown; id?: unknown; x?: unknown; y?: unknown }>).forEach((m, i) => {
-    const entityId = String(m?.metaId ?? "");
-    if (!entityId) return;
-    const id = m.id != null ? String(m.id) : `hammer-${i}`;
-    const tipoCitta = m.id != null ? city[String(m.id)]?.type : undefined;
-    const pre = entityId.slice(0, 2);
-    const type = String(tipoCitta ?? ents[entityId]?.type ?? (pre === "H_" ? "main_building" : pre === "S_" ? "street" : pre === "X_" ? "greatbuilding" : "generic_building"));
-    if (["hub_main", "hub_part", "off_grid", "outpost_ship", "friends_tavern"].includes(type)) return;
-    let w = 0, h = 0, lv = 0, nome = entityId;
+  for (const g of grezze) {
+    const entityId = g.entityId;
+    if (!entityId) continue;
     const e = ents[entityId];
-    const c = e ? undefined : voceCatalogo(entityId);
-    if (e) {
-      [w, h] = BuildingModel.getCityEntitySize(e);
-      lv = BuildingModel.requiredRoadLevel(e);
-      nome = String(e.name ?? entityId);
-    } else if (c) {
-      w = c.w; h = c.h; nome = c.nome;
-      lv = isGreatBuildingId(entityId) ? 1 : c.lv;
-    } else if (type === "main_building") { w = 6; h = 7; }                       // ripiego senza buildings_extra.csv
-    else if (type === "street") { w = h = /CarStreet/i.test(entityId) ? 2 : 1; }
-    // il municipio tiene il suo livello (come con la bacchetta: requiredRoadLevel = 1)
+    const cat = e ? undefined : voceCatalogo(entityId);
+    const pre = entityId.slice(0, 2);
+    const type = String(g.tipo ?? g.voce.type ?? e?.type
+      ?? (pre === "H_" ? "main_building" : pre === "S_" ? "street" : pre === "X_" ? "greatbuilding" : "generic_building"));
+    if (FUORI_GRIGLIA.has(type)) continue;
+    let w = g.w ?? 0, h = g.h ?? 0, lv = g.lv ?? 0, nome = g.nome ?? entityId;
+    if (g.w === undefined) {
+      if (e) { [w, h] = BuildingModel.getCityEntitySize(e); lv = BuildingModel.requiredRoadLevel(e); nome = String(e.name ?? entityId); }
+      else if (cat) { w = cat.w; h = cat.h; nome = cat.nome; lv = isGreatBuildingId(entityId) ? Math.max(1, cat.lv) : cat.lv; }
+      else if (type === "main_building") { w = 6; h = 7; }
+      else if (type === "street") { w = h = /CarStreet/i.test(entityId) ? 2 : 1; }
+      else if (isGreatBuildingId(entityId)) lv = 1;
+    }
     if (type === "street") lv = 0;
-    else if (type === "main_building" && lv === 0) lv = 1;
-    if (!(w > 0 && h > 0)) { ignorati.push(entityId); return; }
-    buildings.push(edificio(entityId, id, nome, Number(m.x ?? 0), Number(m.y ?? 0), w, h, type, lv));
-  });
-  if (!buildings.some(b => b.type === "main_building")) throw new Error("manca il municipio");
-  segnaStradeInutili(buildings);
-  const strade = buildings.filter(b => b.type === "street").reduce((t, b) => t + b.w * b.h, 0);
-  return { buildings, cells: celle(aree), strade, aree: areeBookmarklet(aree), ...(ignorati.length ? { ignorati } : {}) };
+    if (!(w > 0 && h > 0)) { ignorati.push(entityId); continue; }
+    const era = typeof g.era === "string" ? g.era : typeof g.voce.era === "string" ? (g.voce.era as string) : null;
+    pezzi.push({ key: g.key, entityId, type, nome, x: Number(g.x ?? 0) || 0, y: Number(g.y ?? 0) || 0, w, h, lv, era, voce: g.voce });
+  }
+  if (!pezzi.some(p => p.type === "main_building")) throw new ErroreJsonCitta("senzaMunicipio");
+  return { pezzi, aree: aree as UnlockedArea[], ignorati, giocatore, currentEra, ...(strade !== undefined ? { strade } : {}) };
 }
 
 /** "Connessi inutilmente" (come l'import con la bacchetta, App.tsx): edifici
@@ -267,65 +341,30 @@ function segnaStradeInutili(buildings: CityMapBuilding[]): void {
   }
 }
 
-/** Legge l'export JSON della mappa (nuovo o vecchio formato), il payload del bookmarklet o l'export di Forge Hammer. */
+/** Legge un file JSON della città (testo) per il Planner. */
 export function leggiCittaJson(testo: string): CittaJson {
-  const dati = JSON.parse(testo) as unknown;
-  const citta = leggiCittaDati(dati);
-  const d = (dati && typeof dati === "object" ? dati : {}) as { player?: { id?: unknown; name?: unknown }; currentEra?: unknown };
-  const nome = typeof d.player?.name === "string" ? d.player.name.trim() : "";
-  if (nome) citta.giocatore = {
-    nome,
-    id: typeof d.player?.id === "number" && Number.isFinite(d.player.id) ? d.player.id : null,
-    era: typeof d.currentEra === "string" ? d.currentEra : null,
-  };
-  return citta;
+  let dati: unknown;
+  try { dati = JSON.parse(testo); } catch { throw new ErroreJsonCitta("json"); }
+  return leggiCittaDati(dati);
 }
 
 /** Come leggiCittaJson, ma da un oggetto già letto (canale Planner ↔ editor). */
 export function leggiCittaDati(dati: unknown): CittaJson {
-  if (!dati || typeof dati !== "object") throw new Error("dati della città mancanti");
-  let d = dati as Record<string, unknown>;
-  if (d.data && typeof d.data === "object") d = d.data as Record<string, unknown>;
-  let buildings: CityMapBuilding[];
-  let cells: Set<string>;
-  if (d.CityMapData && typeof d.CityMapData === "object") {
-    const ents = (d.CityEntities ?? {}) as Record<string, CityEntityDefinition & { name?: string; type?: string }>;
-    if (!Array.isArray(d.UnlockedAreas)) throw new Error("manca 'UnlockedAreas'");
-    cells = celle(d.UnlockedAreas as UnlockedArea[]);
-    buildings = [];
-    for (const [k, v] of Object.entries(d.CityMapData as Record<string, { id?: unknown; cityentity_id?: unknown; type?: unknown; x?: unknown; y?: unknown }>)) {
-      const entityId = String(v?.cityentity_id ?? "");
-      const e = ents[entityId];
-      const [w, h] = BuildingModel.getCityEntitySize(e);
-      if (!e || !(w > 0 && h > 0)) continue;           // senza dimensioni non si può piazzare
-      const type = String(v.type ?? e.type ?? "");
-      if (["hub_main", "hub_part", "off_grid", "outpost_ship", "friends_tavern"].includes(type)) continue;
-      buildings.push(edificio(entityId, String(v.id ?? k), String(e.name ?? entityId), Number(v.x ?? 0), Number(v.y ?? 0), w, h, type,
-        type === "street" ? 0 : BuildingModel.requiredRoadLevel(e)));
-    }
-  } else if (Array.isArray(d.mapBuildings)) {
-    return leggiHammer(d);
-  } else {
-    const v = d as {
-      buildings?: Array<{ id?: unknown; cityentity_id?: unknown; name?: unknown; width?: unknown; length?: unknown; x?: unknown; y?: unknown; road_requirement?: unknown }>;
-      roads?: { single?: unknown; two_lane?: unknown };
-      unlocked_areas?: UnlockedArea[];
-    };
-    if (!Array.isArray(v.buildings) || !Array.isArray(v.unlocked_areas)) throw new Error("mancano 'CityMapData', 'mapBuildings' (Forge Hammer) o 'buildings'/'unlocked_areas'");
-    cells = celle(v.unlocked_areas);
-    buildings = v.buildings.map((b, i) => {
-      const entityId = String(b.cityentity_id ?? "");
-      return edificio(entityId, String(b.id ?? `ext-${i}`), String(b.name ?? entityId), Number(b.x ?? 0), Number(b.y ?? 0),
-        Number(b.width ?? 1), Number(b.length ?? 1), entityId.startsWith("H_") ? "main_building" : "building", Number(b.road_requirement ?? 0));
-    });
-    const strade = Number(v.roads?.single ?? 0) + Number(v.roads?.two_lane ?? 0) * 4;
-    if (!buildings.some(b => b.type === "main_building")) throw new Error("manca il municipio (cityentity_id H_…)");
-    return { buildings, cells, strade, aree: areeBookmarklet(v.unlocked_areas) };
-  }
-  if (!buildings.some(b => b.type === "main_building")) throw new Error("manca il municipio");
+  const l = leggiCitta(dati);
+  const buildings = l.pezzi.map(p => {
+    const b = edificio(p.entityId, p.key, p.nome, p.x, p.y, p.w, p.h, p.type,
+      // il municipio tiene il suo livello (come con la bacchetta: requiredRoadLevel = 1)
+      p.type === "main_building" ? Math.max(1, p.lv) : p.lv);
+    if (p.era) b.era = p.era;
+    return b;
+  });
   segnaStradeInutili(buildings);
-  const strade = buildings.filter(b => b.type === "street").reduce((t, b) => t + b.w * b.h, 0);
-  return { buildings, cells, strade, aree: areeBookmarklet(d.UnlockedAreas as UnlockedArea[]) };
+  const strade = l.strade ?? buildings.filter(b => b.type === "street").reduce((t, b) => t + b.w * b.h, 0);
+  return {
+    buildings, cells: celle(l.aree), strade, aree: areeBookmarklet(l.aree),
+    ...(l.ignorati.length ? { ignorati: l.ignorati } : {}),
+    ...(l.giocatore ? { giocatore: { ...l.giocatore, era: l.currentEra } } : {}),
+  };
 }
 
 /** Scarica un oggetto come file JSON (indentato). */

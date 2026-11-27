@@ -15,20 +15,19 @@
 //   - il collegamento alla strada (`connected`) non c'è nei file: si ricalcola
 //     (strade raggiungibili dal municipio; livello 2 = strade 2×2 raggiungibili
 //     solo da strade 2×2).
-//  Quale città: `cityData` (la città reale) se c'è, altrimenti CityMapData,
-//  altrimenti mapBuildings (piano di Hammer senza cityData).
+//  27/11/2026: il file lo legge `leggiCitta` (data/cityMapJson.ts), lo stesso
+//  lettore del Planner: la città è la disposizione del file (CityMapData, poi
+//  mapBuildings…), cityData arricchisce solo le copie (livello e bonus dei GE).
+//  Prima qui si prendeva cityData per primo: con l'export di uno scenario del
+//  Planner si salvava la città com'è nel gioco invece dello scenario.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { BookmarkletData, CityEntityDefinition, CityMapEntry, UnlockedArea } from "./bookmarklet";
+import type { BookmarkletData, CityEntityDefinition, CityMapEntry } from "./bookmarklet";
 import { CURRENT_BOOKMARKLET_VERSION } from "./bookmarklet";
 import { AGE_BY_CODE } from "./ages";
-import { voceCatalogo } from "./cityMapJson";
+import { ErroreJsonCitta, leggiCitta } from "./cityMapJson";
 import { isGreatBuildingId } from "./buildingClassification";
 
-/** Tipi fuori griglia (Hammer li mette in cityData senza posizione). */
-const FUORI_GRIGLIA = new Set(["hub_main", "hub_part", "off_grid", "outpost_ship", "friends_tavern"]);
-
-type Voce = Record<string, unknown>;
 type Entita = CityEntityDefinition & { id: string; name?: string; type?: string; width?: number; length?: number };
 
 export interface CittaDaJson {
@@ -39,70 +38,28 @@ export interface CittaDaJson {
   nome: string | null;
 }
 
-const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
-
 export function cittaDaJson(testo: string): CittaDaJson {
-  const radice = JSON.parse(testo) as unknown;
-  if (!radice || typeof radice !== "object" || Array.isArray(radice)) throw new Error("non è un oggetto JSON");
-  let d = radice as Record<string, unknown>;
-  if (d.data && typeof d.data === "object" && !Array.isArray(d.data)) d = d.data as Record<string, unknown>;
+  let dati: unknown;
+  try { dati = JSON.parse(testo); } catch { throw new ErroreJsonCitta("json"); }
+  const l = leggiCitta(dati);
 
-  const obj = (v: unknown) => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, Voce>) : null);
-  const cityData = obj(d.cityData), cityMap = obj(d.CityMapData);
-  const mapBuildings = Array.isArray(d.mapBuildings) ? (d.mapBuildings as Voce[]) : null;
-  // era per copia dal piano (mapBuildings ha l'era anche quando cityData manca)
-  const eraPiano = new Map<string, string>();
-  mapBuildings?.forEach(m => { if (m && m.id != null && typeof m.era === "string") eraPiano.set(String(m.id), m.era); });
-
-  let voci: Voce[];
-  if (cityData && Object.keys(cityData).length) voci = Object.entries(cityData).map(([k, v]) => ({ id: k, ...v }));
-  else if (cityMap && Object.keys(cityMap).length) voci = Object.entries(cityMap).map(([k, v]) => ({ id: k, ...v }));
-  else if (mapBuildings?.length) voci = mapBuildings.map((m, i) => ({ id: m.id ?? `j${i}`, cityentity_id: m.metaId, x: m.x, y: m.y, era: m.era }));
-  else throw new Error("mancano 'cityData', 'CityMapData' o 'mapBuildings'");
-
-  const aree = (Array.isArray(d.UnlockedAreas) ? d.UnlockedAreas : Array.isArray(d.mapData) ? d.mapData : null) as UnlockedArea[] | null;
-  if (!aree?.length) throw new Error("mancano le espansioni ('UnlockedAreas' o 'mapData')");
-
-  const entitaFile = (obj(d.CityEntities) ?? {}) as Record<string, Entita>;
-  const CityEntities: Record<string, Entita> = {};
-  const ignorati: string[] = [];
-  const currentEra = typeof d.currentEra === "string" ? d.currentEra : null;
-
-  // 1) voci con dimensioni note
+  // 1) voci del payload: una per pezzo, con l'era della copia come `level` (id dell'era)
   type Pezzo = { key: string; voce: CityMapEntry; w: number; h: number };
   const pezzi: Pezzo[] = [];
-  for (const v of voci) {
-    const entityId = String(v.cityentity_id ?? "");
-    if (!entityId) continue;
-    const pre = entityId.slice(0, 2);
-    let e = entitaFile[entityId];
-    const cat = voceCatalogo(entityId);
-    const type = String(v.type ?? e?.type ?? (pre === "H_" ? "main_building" : pre === "S_" ? "street" : pre === "X_" ? "greatbuilding" : "generic_building"));
-    if (FUORI_GRIGLIA.has(type)) continue;
-    let w = num(e?.width) ?? 0, h = num(e?.length) ?? 0;
-    if (!(w > 0 && h > 0) && cat) { w = cat.w; h = cat.h; }
-    if (!(w > 0 && h > 0) && type === "street") w = h = /CarStreet/i.test(entityId) ? 2 : 1;
-    if (!(w > 0 && h > 0)) { ignorati.push(entityId); continue; }
-    if (!CityEntities[entityId]) {
-      const lv = e?.requirements?.street_connection_level ?? (cat ? cat.lv : isGreatBuildingId(entityId) ? 1 : 0);
-      e = { id: entityId, name: String(e?.name ?? cat?.nome ?? entityId), type, width: w, length: h,
-        ...(type !== "street" && Number(lv) > 0 ? { requirements: { street_connection_level: Number(lv) } } : {}) };
-      CityEntities[entityId] = e;
-    }
-    const key = String(v.id);
-    const gb = isGreatBuildingId(entityId);
-    // era della copia → level (id dell'era), come nella voce del gioco; i GE tengono il loro livello
-    const era = typeof v.era === "string" ? v.era : eraPiano.get(key) ?? currentEra;
+  const CityEntities: Record<string, Entita> = {};
+  for (const p of l.pezzi) {
+    if (!CityEntities[p.entityId]) CityEntities[p.entityId] = { id: p.entityId, name: p.nome, type: p.type, width: p.w, length: p.h,
+      ...(p.type !== "street" && p.lv > 0 ? { requirements: { street_connection_level: p.lv } } : {}) };
+    const gb = isGreatBuildingId(p.entityId);
+    const era = p.era ?? l.currentEra;
     const idEra = era ? AGE_BY_CODE.get(era)?.id : undefined;
-    const { era: _era, state: _s, next_state_transition_at: _a, next_state_transition_in: _i, connected: _c, player_id: _p, ...resto } = v;
+    const { era: _era, state: _s, next_state_transition_at: _a, next_state_transition_in: _i, connected: _c, player_id: _p, ...resto } = p.voce;
     const voce: CityMapEntry = {
-      ...resto, id: Number(key) || key, cityentity_id: entityId, type,
-      x: num(v.x) ?? 0, y: num(v.y) ?? 0,
+      ...resto, id: Number(p.key) || p.key, cityentity_id: p.entityId, type: p.type, x: p.x, y: p.y,
       ...(gb ? {} : idEra !== undefined ? { level: idEra } : {}),
     };
-    pezzi.push({ key, voce, w, h });
+    pezzi.push({ key: p.key, voce, w: p.w, h: p.h });
   }
-  if (!pezzi.some(p => p.voce.type === "main_building")) throw new Error("manca il municipio");
 
   // 2) collegamento alla strada (il file non lo ha): strade raggiungibili dal municipio
   const strada = new Map<string, 1 | 2>(); // cella → corsie della strada
@@ -130,7 +87,7 @@ export function cittaDaJson(testo: string): CittaDaJson {
   };
   const r1 = raggiungibili(false), r2 = raggiungibili(true);
   const CityMapData: Record<string, CityMapEntry> = {};
-  const playerId = num((d.player as { id?: unknown } | undefined)?.id);
+  const playerId = l.giocatore?.id ?? undefined;
   for (const p of pezzi) {
     if (p.voce.type !== "street" && p.voce.type !== "main_building") {
       const v = vicini(p);
@@ -141,11 +98,11 @@ export function cittaDaJson(testo: string): CittaDaJson {
     CityMapData[p.key] = p.voce;
   }
 
-  const nome = typeof (d.player as { name?: unknown } | undefined)?.name === "string" ? String((d.player as { name: string }).name).trim() || null : null;
+  const nome = l.giocatore?.nome ?? null;
   const data: BookmarkletData = {
     _v: CURRENT_BOOKMARKLET_VERSION, activeMap: "OtherPlayer",
-    inventory: [], allies: {}, CityMapData, CityEntities, UnlockedAreas: aree,
+    inventory: [], allies: {}, CityMapData, CityEntities, UnlockedAreas: l.aree,
     ...(nome ? { playerName: nome } : {}),
   };
-  return { data, ignorati, nome };
+  return { data, ignorati: l.ignorati, nome };
 }

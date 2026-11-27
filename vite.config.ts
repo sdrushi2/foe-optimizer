@@ -205,7 +205,8 @@ function serviceWorkerPlugin(version: string): Plugin {
 // L'editor carica /editor-condiviso.js = src/editor/condiviso.ts compilato
 // (export PNG e palette della vista MAPPA: UN SOLO codice per tool ed editor).
 // - dev: /editor-condiviso.js è rediretto al sorgente, compilato da Vite al volo;
-// - build: compilato a parte (libreria ES, un solo file) in dist/editor-condiviso.js.
+// - build: compilato a parte (libreria ES) in dist/editor-condiviso.js, più
+//   dist/editor-condiviso-lettura-*.js (Importa / Salva JSON, caricato a richiesta).
 function editorCondivisoPlugin(): Plugin {
   const entry = path.resolve(__dirname, "src/editor/condiviso.ts");
   let outDir = path.resolve(__dirname, "dist");
@@ -233,6 +234,9 @@ function editorCondivisoPlugin(): Plugin {
             emptyOutDir: false,
             copyPublicDir: false,
             lib: { entry, formats: ["es"], fileName: () => "editor-condiviso.js" },
+            // Importa / Salva JSON (editor/lettura.ts) è un import a richiesta: un
+            // secondo file, caricato solo quando serve (27/11/2026)
+            rollupOptions: { output: { chunkFileNames: "editor-condiviso-[name]-[hash].js" } },
           },
         });
       } finally {

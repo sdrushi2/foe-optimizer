@@ -11,7 +11,7 @@
 //  Opzioni (Pesi).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Trash2, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, FileJson, EyeOff, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
+import { BookOpen, Calculator, Building, Building2, ChevronsUp, Clock4, Coins, Download, Eye, FileUp, Funnel, Info, Landmark, Map as MapIcon, Moon, Package, Scale, Search, Sigma, Smile, Sun, Upload, Users, UsersRound, Wand2, ZapOff, Route, Factory, Swords, TrendingUp, Atom, LifeBuoy, Archive, Bug, PackagePlus, ArrowBigUpDash, ChartColumn, Compass, EyeOff, PencilRuler, Lightbulb, Anchor, FlaskConical, UserCheck, Puzzle, SlidersHorizontal, UserRound, Eraser, Megaphone, type LucideIcon } from "lucide-react";
 import { allies_100, badge_mughals, badge_pirates, iconBuildings, allies_military, allies_science, allies_slot_full, allies_token, allies_train, iconAiuto, iconAutoAge, iconFel, iconFragment, iconFragmentFrom, iconGE, iconImm, iconInventario, iconIQ, iconIQProd, iconLimitati, iconNoRush, iconPop, iconProduzioni, iconRoad, iconSpedizioni, iconBeniOro, iconSword } from "../assets/icons";
 import { BloccoFiltri, type StatoFiltri } from "./FiltriEdifici";
 import { BloccoRarita, type StatoAlleati } from "./FiltriAlleati";
@@ -41,12 +41,10 @@ export interface ContestoNastri {
   comeUsarePlanner: Interruttore;
   /** Guida › Novità: pannello con changelog-it.md / changelog-en.md. */
   novita: Interruttore;
-  onEliminaTutte: () => void;
-  /** 2.0: città "ridotta" da un file JSON (nostro export, Planner, Forge Hammer). */
-  onImportaCittaJson: () => void;
   onEsporta: () => void;
   onRipristina: () => void;
-  haCitteSalvate: boolean;
+  /** pannello del backup aperto (il pulsante resta acceso) */
+  backupAperto: "esporta" | "ripristina" | null;
   /** Filtri delle tabelle edifici (Database). */
   filtri: StatoFiltri;
   /** (26/11/2026) Tabelle alleati › Visualizza: colonne % militari e Produzioni. */
@@ -207,6 +205,10 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
   const esportaSel: RibbonItem = { kind: "button", id: "esporta", icon: Download, label: c.esporta.n ? `${L("r2Export")} (${c.esporta.n})` : L("r2Export"),
     title: c.esporta.titolo, onClick: c.esporta.onClick, disabled: c.esporta.n === 0 };
   // (22/11/2026) Calcolatore dei GE anche nei Tools di Database, Città e Inventario
+  // Database › Tools › Editor (27/11/2026): l'editor della città vuoto, in una nuova scheda
+  // (si carica una città con Importa JSON). noopener: non è legato al tool.
+  const editorVuoto: RibbonItem = { kind: "button", id: "editor", icon: PencilRuler, label: L("r2Editor"), title: L("r2EditorTitle"),
+    onClick: () => window.open("/editor.html", "_blank", "noopener") };
   const calcGe: RibbonItem = { kind: "button", id: "calcolatore-ge", icon: Calculator, label: L("r2GbCalcShort"), title: L("r2PatronsTitle"),
     onClick: () => window.open(c.uiLang === "it" ? "/ge/?da=app" : "/gb/?da=app", "_blank", "noopener") };
   // Città / Inventario: anche "Bonus GE" (moltiplicativi dei GE nei valori e nell'efficienza)
@@ -304,7 +306,7 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
         ) },
       ], [campoRicerca]] };
       return [catalogo, eraDb, filtri, vista(), nascondiMostra(), opzioniEdifici,
-        { id: "strumenti", label: L("r2GrpTools"), icon: Download, rows: [[esportaSel, calcGe]] }];
+        { id: "strumenti", label: L("r2GrpTools"), icon: Download, rows: [[esportaSel, editorVuoto, calcGe]] }];
     }
     case "citta": {
       const k = c.citta;
@@ -379,12 +381,11 @@ function gruppiScheda(scheda: Scheda, c: ContestoNastri): RibbonGroup[] {
       ]] }, ...p.gruppi];
     }
     case "opzioni":
-      return [{ id: "citta", label: L("r2GrpSavedCities"), icon: Building2, priority: 1, rows: [[
-        { kind: "button", id: "importa-json", icon: FileJson, label: L("r2ImportCityJson"), title: L("r2ImportCityJsonTitle"), onClick: c.onImportaCittaJson },
-        { kind: "button", id: "elimina", icon: Trash2, label: L("r2DeleteAll"), onClick: c.onEliminaTutte, disabled: !c.haCitteSalvate, danger: true },
-      ]] }, { id: "backup", label: L("r2GrpBackup"), icon: Download, priority: 1, rows: [[
-        { kind: "button", id: "esporta", icon: Download, label: L("r2ExportAll"), onClick: c.onEsporta, disabled: !c.haCitteSalvate },
-        { kind: "button", id: "ripristina", icon: Upload, label: L("r2Restore"), onClick: c.onRipristina },
+      // (27/11/2026: tolto il gruppo Città salvate. Importa da JSON resta nel selettore delle città;
+      // le città si eliminano una alla volta dal selettore o tutte con Azzera › Cancella tutto)
+      return [{ id: "backup", label: L("r2GrpBackup"), icon: Download, priority: 1, rows: [[
+        { kind: "button", id: "esporta", icon: Download, label: L("r2ExportAll"), onClick: c.onEsporta, active: c.backupAperto === "esporta" },
+        { kind: "button", id: "ripristina", icon: Upload, label: L("r2Restore"), onClick: c.onRipristina, active: c.backupAperto === "ripristina" },
       ]] }, pesi, { id: "tema", label: L("r2GrpTheme"), icon: Moon, rows: [[
         { kind: "button", id: "scuro", icon: Moon, label: L("r2Dark"), active: c.tema === "dark", onClick: () => c.setTema("dark") },
         { kind: "button", id: "chiaro", icon: Sun, label: L("r2Light"), active: c.tema === "light", onClick: () => c.setTema("light") },

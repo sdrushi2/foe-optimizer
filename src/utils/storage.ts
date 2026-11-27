@@ -12,6 +12,8 @@ import type { CityStore } from "../data/cityStore";
 export type Profile = { id: string; name: string; tipo?: "mia" | "visitata"; playerId?: number; mondo?: string; avatar?: string;
   /** 2.0: città "ridotta" importata da un file JSON (data/cittaDaJson.ts). */
   origine?: "json";
+  /** 27/11/2026: città da JSON importata COMPLETA (con inventario e alleati: data/esportaCitta.ts). */
+  completa?: true;
   /** 2.005: nome scelto dall'utente (doppio clic sul selettore): i reimport non lo cambiano. */
   nomeUtente?: true };
 
@@ -20,6 +22,13 @@ export type Profile = { id: string; name: string; tipo?: "mia" | "visitata"; pla
 // non vengono più letti e vengono ripuliti da cleanupOrphanedKeys().
 const STORAGE_FORMAT_VERSION = 2;
 const V = `v${STORAGE_FORMAT_VERSION}`;
+/** Suffisso di versione delle chiavi ("v2"): serve al backup (utils/backup.ts). */
+export const VERSIONE_STORAGE = V;
+
+/** Le due preferenze salvate fuori dal prefisso foe_ (nate così, restano così):
+ *  il backup le aggiunge a mano (utils/backup.ts). */
+export const TEMA_KEY = "foe2-tema";
+export const POTENZA_PLANNER_KEY = "foe-planner-potenza";
 
 /** Chiave globale con il suffisso di versione: SENZA il suffisso cleanupOrphanedKeys la
  *  cancella a ogni avvio (successo il 25/11/2026 alle chiavi del ponte e degli insediamenti). */
@@ -302,139 +311,3 @@ export function getActiveProfileId(profiles: Profile[]): string {
   return profiles[0]!.id;
 }
 
-export function collectFoeLocalStorage(): Record<string, string> {
-  const snapshot: Record<string, string> = {};
-  for (let i = 0; i < localStorage.length; i += 1) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith("foe_")) {
-      snapshot[key] = localStorage.getItem(key) ?? "";
-    }
-  }
-  return snapshot;
-}
-
-/**
- * @param fallbackProfileName nome per i profili importati senza nome, dato il
- *        numero progressivo. storage.ts non ha accesso a uiLang/t(), quindi il
- *        chiamante (App.tsx) passa la versione localizzata (defaultProfileName);
- *        il default "Profilo N" resta solo come rete di sicurezza.
- */
-export function mergeImportedProfiles(
-  snapshot: Record<string, string>,
-  fallbackProfileName: (n: number) => string = (n) => `Profilo ${n}`,
-): { ok: boolean; failedKeys: string[]; mergedProfiles: Profile[] } {
-  // Il file potrebbe essere stato esportato da una versione di storage diversa
-  // (suffisso _vN differente). Cerchiamo la chiave profili in QUALSIASI versione
-  // presente nello snapshot, non solo in quella corrente, per non rifiutare a
-  // torto i file più vecchi o più recenti.
-  const profilesKeyInSnapshot =
-    snapshot[PROFILES_KEY] !== undefined
-      ? PROFILES_KEY
-      : Object.keys(snapshot).find(k => /^foe_global_profiles_v\d+$/.test(k));
-
-  const importedProfiles = profilesKeyInSnapshot
-    ? (JSON.parse(snapshot[profilesKeyInSnapshot] ?? "[]") as Profile[])
-    : [];
-  if (!Array.isArray(importedProfiles) || importedProfiles.length === 0) {
-    // Codice d'errore stabile (non testo per l'utente): storage.ts non ha
-    // accesso a uiLang/t(), quindi il chiamante (App.tsx) traduce questo
-    // messaggio in base alla lingua corrente — vedi importInvalidFile in
-    // ui-strings.ts.
-    throw new Error("INVALID_IMPORT_FILE");
-  }
-
-  const currentProfiles = loadProfiles();
-  const usedIds = new Set(currentProfiles.map(p => p.id));
-
-  // Genera un ID univoco di fallback per i profili importati che hanno id
-  // mancante o in conflitto con uno già esistente.
-  const makeFallbackId = (index: number) =>
-    `p_imported_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 7)}`;
-
-  // idMap: indicizzata sull'index dell'array (sempre univoco), non su profile.id
-  // che potrebbe essere "" o undefined per più profili, causando collisioni.
-  const idMap = new Map<number, string>();
-
-  const nextProfiles = importedProfiles.map((profile, index) => {
-    // Usa l'id originale solo se valido e non in conflitto; altrimenti
-    // genera subito un fallback random (no while-loop in caso normale).
-    let id = profile.id && !usedIds.has(profile.id) ? profile.id : makeFallbackId(index);
-    // Salvaguardia teorica: nuovo random nel caso astronomicamente raro di collisione.
-    while (usedIds.has(id)) id = makeFallbackId(index);
-    usedIds.add(id);
-    idMap.set(index, id);
-    // 2.0: tipo / id del giocatore / mondo conservati se validi (file di terzi: dati non fidati)
-    const extra: Pick<Profile, "tipo" | "playerId" | "mondo" | "avatar" | "origine"> = {};
-    if (profile.origine === "json") extra.origine = "json";
-    if (profile.tipo === "mia" || profile.tipo === "visitata") extra.tipo = profile.tipo;
-    if (typeof profile.playerId === "number" && Number.isFinite(profile.playerId)) extra.playerId = profile.playerId;
-    if (typeof profile.mondo === "string" && profile.mondo.length <= 20) extra.mondo = profile.mondo;
-    // avatar: solo https e lunghezza ragionevole; chi lo mostra lo rivalida (sanitizePortraitUrl)
-    if (typeof profile.avatar === "string" && profile.avatar.startsWith("https://") && profile.avatar.length <= 300) extra.avatar = profile.avatar;
-    return { id, name: profile.name || fallbackProfileName(currentProfiles.length + index + 1), ...extra };
-  });
-
-  const failedKeys: string[] = [];
-
-  // Cerca un blob profilo nello snapshot indipendentemente dal suffisso di
-  // versione: i dati di un profilo esportato da una versione precedente hanno
-  // chiavi foe_p_<id>_<slot>_vN con N diverso da quello corrente, quindi il
-  // match è su prefisso `foe_p_<id>_<slot>_v` (qualsiasi N).
-  //
-  // Se l'id originale è vuoto/undefined non c'è modo di recuperare il blob in
-  // modo affidabile (cercare "il primo blob di questo slot" assocerebbe dati a
-  // caso al profilo sbagliato), quindi si restituisce undefined: il profilo
-  // viene creato senza i suoi dati di slot. È un caso degenerato raro (file
-  // esportati con profili privi di id) e il fallback "nessun dato" è più sicuro
-  // di un possibile mismatch.
-  const findProfileBlob = (originalId: string | undefined, slot: ProfileSlot): string | undefined => {
-    if (originalId) {
-      // Match esatto su qualsiasi versione: foe_p_<id>_<slot>_vN
-      const exactPrefix = `foe_p_${originalId}_${slot}_v`;
-      const exactKey = Object.keys(snapshot).find(k => k.startsWith(exactPrefix));
-      if (exactKey) return snapshot[exactKey];
-    }
-    return undefined;
-  };
-
-  importedProfiles.forEach((importedProfile, index) => {
-    const newId = idMap.get(index);
-    if (!newId) return;
-    PROFILE_SLOTS.forEach((slot) => {
-      const value = findProfileBlob(importedProfile.id, slot);
-      if (!value) return;
-      // Riscrivi SEMPRE con la chiave della versione corrente: i blob compressi
-      // restano validi (è solo gzip+base64 di JSON, indipendente dalla versione
-      // di storage), ma vengono ricollocati sotto il suffisso _vN attuale.
-      // CAVEAT: questo assume che la FORMA interna del JSON (CityStore/
-      // InventoryStore) non sia cambiata tra la versione del file e quella
-      // corrente. Se un futuro bump di STORAGE_FORMAT_VERSION cambia la forma
-      // dei dati profilo (non solo le chiavi), qui andrà aggiunta una
-      // migrazione esplicita per-slot prima della riscrittura.
-      const newKey = profileStorageKey(newId, slot);
-      try {
-        localStorage.setItem(newKey, value);
-      } catch {
-        failedKeys.push(newKey);
-      }
-    });
-  });
-
-  const mergedProfiles = [...currentProfiles, ...nextProfiles];
-  // writeStoredJson non lancia mai: cattura internamente e restituisce false
-  // (un try/catch qui sarebbe un ramo morto e la scrittura fallita della
-  // lista profili passerebbe inosservata con ok=true).
-  if (!writeStoredJson(PROFILES_KEY, mergedProfiles)) {
-    failedKeys.push(PROFILES_KEY);
-  }
-
-  if (!localStorage.getItem(ACTIVE_PROFILE_KEY) && mergedProfiles[0]) {
-    try {
-      localStorage.setItem(ACTIVE_PROFILE_KEY, mergedProfiles[0].id);
-    } catch {
-      failedKeys.push(ACTIVE_PROFILE_KEY);
-    }
-  }
-
-  return { ok: failedKeys.length === 0, failedKeys, mergedProfiles };
-}

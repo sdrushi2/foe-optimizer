@@ -9,10 +9,15 @@
 //  non viene tagliato dalla riga delle schede (overflow hidden).
 //  Doppio clic sul pulsante (2.005): il nome diventa un campo per rinominare
 //  la città (Invio o clic fuori = salva, Esc = annulla).
+//  27/11/2026: su ogni riga i pulsanti di export (data/esportaCitta.ts): le tue
+//  città "completa" e "solo la città", le visitate solo la seconda, le importate
+//  da JSON secondo cosa contengono (i pulsanti dicono già se una città importata
+//  è completa: niente simboli dopo il nome). Legenda dei pulsanti a destra del
+//  menu su schermo largo, in fondo su schermo stretto.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Building2, ChevronDown, Eye, FileJson, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AlertTriangle, Building2, ChevronDown, Eye, FileJson, Map as MapIcon, Package, Trash2 } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
 import type { TipoCitta } from "../data/citta";
 import { LIMITE_STORAGE, occupazioneStorage } from "../utils/storage";
@@ -20,7 +25,30 @@ import { senzaEstensioni } from "../utils/dispositivo";
 
 export interface VoceCitta { id: string; nome: string; tipo: TipoCitta; avatar?: string | null;
   /** 2.0: città "ridotta" importata da un file JSON (sezione a parte nel menu). */
-  daJson?: boolean }
+  daJson?: boolean;
+  /** 27/11/2026: città da JSON importata completa (inventario e alleati). */
+  completa?: boolean }
+
+/** Si può esportare completa? Le tue città, e le importate complete. */
+const esportabileCompleta = (c: VoceCitta) => (c.daJson ? !!c.completa : c.tipo === "mia");
+
+/** Larghezza del menu: con la legenda a destra da 768 px in su. */
+const LARGO = 768, W_STRETTO = 280, W_LARGO = 540;
+
+/** Legenda dei pulsanti. */
+function Legenda({ uiLang, stretta }: { uiLang: UiLang; stretta?: boolean }) {
+  const riga = (icona: ReactNode, testo: string) => (
+    <div className="flex items-start gap-1.5"><span className="mt-px flex shrink-0 items-center">{icona}</span><span>{testo}</span></div>
+  );
+  return (
+    <div className={`space-y-1 text-[11px] leading-snug text-slate-400 ${stretta ? "mt-1 border-t border-slate-800 px-2 pt-1.5" : ""}`}>
+      <div className="text-slate-500">{t("r2LegButtons", uiLang)}</div>
+      {riga(<Package size={13} strokeWidth={1.75} className="text-slate-300" />, t("r2LegFull", uiLang))}
+      {riga(<MapIcon size={13} strokeWidth={1.75} className="text-slate-300" />, t("r2LegCityOnly", uiLang))}
+      {riga(<Trash2 size={13} className="text-red-400" />, t("r2LegDelete", uiLang))}
+    </div>
+  );
+}
 
 /** Mini-avatar del giocatore (16 px) o, se manca, l'icona del tipo di città. */
 function Miniatura({ c, size = 16 }: { c: VoceCitta | undefined; size?: number }) {
@@ -87,8 +115,10 @@ interface Props {
   onSeleziona: (id: string) => void;
   onElimina: (id: string) => void;
   onRinomina: (id: string, nome: string) => void;
-  /** 2.0: aggiunge una città da un file JSON (come Opzioni › Importa da JSON). */
+  /** 2.0: aggiunge una città da un file JSON (27/11/2026: unico posto, non più anche in Opzioni). */
   onImportaJson?: () => void;
+  /** 27/11/2026: scarica la città (completa = con inventario e alleati). */
+  onEsporta?: (id: string, completa: boolean) => void;
   uiLang: UiLang;
   /** Avatar del giocatore della città attiva (mini-foto nel pulsante). */
   avatar?: string | null;
@@ -96,7 +126,7 @@ interface Props {
   maxW: number;
 }
 
-export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, onRinomina, onImportaJson, uiLang, maxW, avatar }: Props) {
+export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, onRinomina, onImportaJson, onEsporta, uiLang, maxW, avatar }: Props) {
   const [menu, setMenu] = useState<{ left: number; top: number } | null>(null);
   /** Nome in modifica (doppio clic), null = non si sta rinominando. */
   const [nuovoNome, setNuovoNome] = useState<string | null>(null);
@@ -136,16 +166,27 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
     if (e.detail > 1) return;
     if (menu) { setMenu(null); return; }
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenu({ left: Math.max(4, Math.min(r.left, window.innerWidth - 284)), top: r.bottom + 4 });
+    // largo (con la legenda) solo se ci sono città: vuoto basta il riquadro stretto
+    const w = window.innerWidth >= LARGO && citta.length > 0 ? W_LARGO : W_STRETTO;
+    setMenu({ left: Math.max(4, Math.min(r.left, window.innerWidth - w - 4)), top: r.bottom + 4 });
     setDaEliminare(null);
   };
 
+  const tasto = "rounded p-0.5 text-slate-500 hover:bg-slate-700 hover:text-slate-100";
   const riga = (c: VoceCitta) => {
     return (
-      <div key={c.id} className={`group flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 ${c.id === attiva ? "bg-sky-950/70 text-slate-50" : "text-slate-200 hover:bg-slate-800"}`}
+      <div key={c.id} className={`group flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 ${c.id === attiva ? "bg-sky-950/70 text-slate-50" : "text-slate-200 hover:bg-slate-800"}`}
         onClick={() => { onSeleziona(c.id); setMenu(null); }}>
         <Miniatura c={c} />
         <span className="min-w-0 flex-1 truncate">{c.nome}</span>
+        {onEsporta && esportabileCompleta(c) && (
+          <button type="button" title={t("r2ExportFull", uiLang)} aria-label={t("r2ExportFull", uiLang)}
+            onClick={(e) => { e.stopPropagation(); onEsporta(c.id, true); }} className={tasto}><Package size={14} strokeWidth={1.75} /></button>
+        )}
+        {onEsporta && (
+          <button type="button" title={t("r2ExportCityOnly", uiLang)} aria-label={t("r2ExportCityOnly", uiLang)}
+            onClick={(e) => { e.stopPropagation(); onEsporta(c.id, false); }} className={tasto}><MapIcon size={14} strokeWidth={1.75} /></button>
+        )}
         <button type="button" title={t("r2DeleteCity", uiLang)} aria-label={t("r2DeleteCity", uiLang)}
           onClick={(e) => { e.stopPropagation(); setDaEliminare(c); }}
           className="rounded p-0.5 text-slate-500 hover:bg-red-950/60 hover:text-red-400"><Trash2 size={14} /></button>
@@ -184,7 +225,7 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
       )}
       {menu && (
         <div ref={rifMenu} style={{ left: menu.left, top: menu.top }}
-          className="fixed z-[60] w-[280px] rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-[12px] whitespace-normal shadow-xl">
+          className={`fixed z-[60] w-[280px] rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-[12px] whitespace-normal shadow-xl ${citta.length > 0 ? "md:w-[540px]" : ""}`}>
           {daEliminare ? (
             <div className="p-1.5">
               <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-red-400"><AlertTriangle size={14} />{t("r2DeleteAsk", uiLang, daEliminare.nome)}</div>
@@ -196,14 +237,24 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
               </div>
             </div>
           ) : (
-            <>
+            <div className={citta.length > 0 ? "md:flex md:gap-3" : ""}>
+            <div className={citta.length > 0 ? "md:w-[280px] md:shrink-0" : ""}>
               {mie.length > 0 && <div className="px-2 pt-1 pb-0.5 text-[11px] text-slate-500">{t("r2MyCities", uiLang)}</div>}
               {mie.map(riga)}
               {visitate.length > 0 && <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-slate-500">{t("r2VisitedCities", uiLang)}</div>}
               {visitate.map(riga)}
               {daJson.length > 0 && <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-slate-500">{t("r2JsonCities", uiLang)}</div>}
               {daJson.map(riga)}
-              {citta.length === 0 && <div className="px-2 py-1.5 text-slate-400">{t(senzaEstensioni ? "r2NoCitiesYetMobile" : "r2NoCitiesYet", uiLang)}</div>}
+              {citta.length === 0 && (senzaEstensioni
+                ? <div className="px-2 py-1.5 text-slate-400">{t("r2NoCitiesYetMobile", uiLang)}</div>
+                : <div className="px-2 py-1.5 text-slate-400">
+                    {t("r2NoCitiesYet", uiLang)}
+                    <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                      <li>{t("r2NoCitiesWand", uiLang)}</li>
+                      <li>{t("r2NoCitiesBridge", uiLang)}</li>
+                      <li>{t("r2NoCitiesJson", uiLang)}</li>
+                    </ul>
+                  </div>)}
               {onImportaJson && (
                 <button type="button" title={t("r2ImportCityJsonTitle", uiLang)}
                   onClick={() => { setMenu(null); onImportaJson(); }}
@@ -212,8 +263,15 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
                   {t("r2ImportCityJson", uiLang)}
                 </button>
               )}
+              {citta.length > 0 && onEsporta && <div className="md:hidden"><Legenda uiLang={uiLang} stretta /></div>}
               {citta.length > 0 && <BarraSpazio citta={citta} uiLang={uiLang} />}
-            </>
+            </div>
+            {citta.length > 0 && onEsporta && (
+              <div className="hidden min-w-0 flex-1 border-l border-slate-800 py-1 pr-1 pl-3 md:block">
+                <Legenda uiLang={uiLang} />
+              </div>
+            )}
+            </div>
           )}
         </div>
       )}

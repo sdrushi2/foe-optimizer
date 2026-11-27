@@ -604,8 +604,8 @@
 
         <h3>Other ways</h3>
         <ul>
-          <li><strong>From a JSON file</strong>: Options › Import from JSON (or "Import from JSON" in the city selector) reads a FoE Optimizer export (the Map's JSON button, Planner) or a Forge Hammer plan. It becomes a "reduced" city: full map and Great Buildings, other buildings' stats from the catalogue, no inventory or allies.</li>
-          <li><strong>From a backup</strong>: Options › Restore brings back all the cities saved with Export all, even on another computer.</li>
+          <li><strong>From a JSON file</strong>: "Import from JSON" at the bottom of the city selector. It reads a full city exported from the selector (with inventory and allies) or the city only: the selector export, the Map's JSON button, the Planner or a Forge Hammer plan. City only means full map and Great Buildings, other buildings' stats from the catalogue, no inventory or allies. JSON cities always go among the imported ones: they never touch the cities imported with the wand or the bridge, and the other way round.</li>
+          <li><strong>From a backup</strong>: Options › Restore backup brings back all the cities and settings saved with Export backup, even on another computer. It replaces what is there.</li>
         </ul>
       </section>
 
@@ -621,11 +621,12 @@
           <tbody>
             <tr><td class="k">Your cities</td><td>Imported with the wand from your own city: every tab is available.</td></tr>
             <tr><td class="k">Visited cities</td><td>Other players' cities: map only, so City and Planner yes, Inventory and Allies no ("Only available for your cities").</td></tr>
-            <tr><td class="k">Cities imported from JSON</td><td>Cities loaded from a file: like visited ones, with building stats taken from the catalogue.</td></tr>
+            <tr><td class="k">Cities imported from JSON</td><td>Cities loaded from a file: with the map only (like visited ones, with building stats taken from the catalogue) or full (inventory and allies too, with every tab). The export buttons tell which: full ones have both.</td></tr>
           </tbody>
         </table>
         <ul>
           <li>Click a city to make it active.</li>
+          <li>Next to the name two buttons download the city as a JSON file: <strong>full city</strong> (map, inventory, allies, resources and Castle: to move it to another computer or give it to whoever you want) and <strong>city only</strong> (the map: for Forge Hammer, another planner or another player). Visited cities and imported ones without inventory only have the second. The legend in the menu explains the buttons.</li>
           <li>The bin next to the name deletes it, after a confirmation. For your own city, map, inventory, allies and settlements are removed: make a backup first if you want to keep them.</li>
           <li>After an import a notice appears for a few seconds: "Your city … added", "… updated" or "…'s city added".</li>
         </ul>
@@ -684,7 +685,8 @@
 
         <h3>Tools</h3>
         <ul>
-          <li><strong>Export</strong>: tick the boxes to the left of the rows and download the selected buildings as CSV. The number in brackets tells you how many you picked.</li>
+          <li><strong>CSV</strong>: tick the boxes to the left of the rows and download the selected buildings as CSV. The number in brackets tells you how many you picked.</li>
+          <li><strong>Editor</strong> (Database only): opens the city editor empty, in a new tab. With <strong>Import JSON</strong> you load a city into it (full or city only: the map counts) that stays in the editor only; you move things around and save it with <strong>Save JSON</strong> (city only) or <strong>Save PNG</strong>. Import and Save JSON are also in the editor opened from the Map, not in the one opened from the Planner.</li>
           <li><strong>GB Calc.</strong>: opens the <a href="/gb/">GB Calculator</a> in a new tab (in Database, City and Inventory).</li>
         </ul>
 
@@ -731,12 +733,12 @@
           <tbody>
             <tr><td class="k">View</td><td>Besides the columns, <strong>+ Inventory</strong> adds the buildings available in Inventory to the table (green background), to compare them with the ones already placed.</td></tr>
             <tr><td class="k">Statistics</td><td><strong>Map</strong> (see below) and the summary panels: <strong>Road efficiency</strong> (how much road you use compared to how much you need), <strong>Production</strong> (city totals), <strong>Military values</strong> (sum of attack and defence bonuses), <strong>Era change</strong> (what would change upgrading all old buildings to the current and the maximum age), <strong>Upgradable</strong> (buildings you can level up with the kits and fragments you have).</td></tr>
-            <tr><td class="k">Tools</td><td><strong>Export</strong> (CSV of the selected buildings), <strong>Debug</strong> (list of recognised buildings, Great Buildings and those not yet in the catalogue) and <strong>GB Calc.</strong> (opens the GB Calculator).</td></tr>
+            <tr><td class="k">Tools</td><td><strong>CSV</strong> (the selected buildings), <strong>Debug</strong> (list of recognised buildings, Great Buildings and those not yet in the catalogue) and <strong>GB Calc.</strong> (opens the GB Calculator).</td></tr>
           </tbody>
         </table>
 
         <h3>The map</h3>
-        <p>The <strong>Map</strong> button shows your city's real layout with the legend colours: town hall, Great Buildings, military buildings, buildings needing a road (one or two lanes), not needing one, needlessly connected, inactive, roads and free space. You can switch between <strong>Vertical</strong> and <strong>Isometric</strong> view, zoom in and out, and download the map as a <strong>PNG</strong> image or a <strong>JSON</strong> file.</p>
+        <p>The <strong>Map</strong> button shows your city's real layout with the legend colours: town hall, Great Buildings, military buildings, buildings needing a road (one or two lanes), not needing one, needlessly connected, inactive, roads and free space. You can switch between <strong>Vertical</strong> and <strong>Isometric</strong> view, zoom in and out, and download the map as a <strong>PNG</strong> image or a <strong>JSON</strong> file (city only: it opens in Forge Hammer, in the Planner or with Import from JSON).</p>
       </section>
 
       <span class="top-of-page"><a href="#overview">↑ back to contents</a></span>
@@ -783,7 +785,7 @@
         </div>
 
         <h3>Which city</h3>
-        <p>The <strong>Source</strong> group chooses what to optimize: the <strong>Selected city</strong> or a file via <strong>Import JSON</strong> (the Map export, or a file sent by another player). The file isn't saved: the ✕ on the button closes it, and while it's loaded a click on its name brings you back to it.</p>
+        <p>The <strong>Source</strong> group chooses what to optimize: the <strong>Selected city</strong> or a file via <strong>Import JSON</strong>: the export from the Map, the city menu (of a full city only the map counts), a Planner scenario, Forge Hammer or a file sent by another player. The file isn't saved among the cities (that's what Import from JSON in the city menu is for): the ✕ on the button closes it, and while it's loaded a click on its name brings you back to it.</p>
 
         <h3>How to use it</h3>
         <ol class="steps">
@@ -906,18 +908,17 @@
       <!-- ═══════════════════════════════════════════════════════ -->
       <section id="tab-options">
         <h2>⚙️ 13. Options</h2>
-        <p class="lede">Saved cities, backup, weights and appearance.</p>
+        <p class="lede">Backup, weights, appearance and reset.</p>
         <table>
           <tbody>
-            <tr><td class="k">Saved cities</td><td><strong>Import from JSON</strong> adds a city from a file; <strong>Delete all</strong> removes every saved city, after a confirmation.</td></tr>
-            <tr><td class="k">Backup</td><td><strong>Export all</strong> saves every city to a file; <strong>Restore</strong> brings them back (even on another computer or browser).</td></tr>
+            <tr><td class="k">Backup</td><td><strong>Export backup</strong> saves to a file everything the site stored in the browser: cities, settings, unlocked settlement buildings. It is a personal file: don't give it to other players (to send a city, use the map JSON). <strong>Restore backup</strong> shows what the file contains and, after you confirm, <strong>replaces</strong> everything: the current cities are deleted and the settings overwritten (even on another computer or browser).</td></tr>
             <tr><td class="k">Stat weights</td><td>The efficiency weights (see <a href="#efficiency">section 12</a>).</td></tr>
             <tr><td class="k">Theme</td><td><strong>Dark</strong> or <strong>Light</strong>.</td></tr>
             <tr><td class="k">Reset</td><td><strong>Erase everything</strong> clears all data and settings saved by the site (cities, weights, theme, language…) and reloads the page. It can't be undone: make a backup first.</td></tr>
           </tbody>
         </table>
         <div class="callout">
-          Everything lives only in your browser: running <strong>Export all</strong> now and then (especially before switching browser or computer, or clearing browsing data) is a good habit.
+          Everything lives only in your browser: running <strong>Export backup</strong> now and then (especially before switching browser or computer, or clearing browsing data) is a good habit.
         </div>
       </section>
 
@@ -966,7 +967,7 @@
 
         <div class="card">
           <h3 style="margin-top:0">Can I use it on my phone?</h3>
-          <p>Yes: the site adapts to the screen and can be "installed" as an app on your home screen. Importing with the wand, though, needs a desktop browser with FoE Helper or Forge Hammer; on your phone you can bring your cities over with a backup (Export all / Restore).</p>
+          <p>Yes: the site adapts to the screen and can be "installed" as an app on your home screen. Importing with the wand, though, needs a desktop browser with FoE Helper or Forge Hammer; on your phone you can bring your cities over with a backup (Export backup / Restore backup).</p>
         </div>
 
         <div class="card">

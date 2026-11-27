@@ -85,30 +85,40 @@ const UI_STRINGS = {
     it: "Salva profili",
     en: "Save profiles",
   },
-  importProfiles: {
-    it: "Carica profili",
-    en: "Load profiles",
-  },
-  deleteAllProfiles: {
-    it: "Elimina tutti i profili",
-    en: "Delete all profiles",
-  },
-  deleteAllNoProfiles: {
-    it: "Nessun profilo da eliminare",
-    en: "No profiles to delete",
-  },
 
   // ── Tab di navigazione ────────────────────────────────────────────────
   // ── FoE Optimizer 2.0: schede e nastro (ui/Testata.tsx, ui/nastri.tsx) ──
   r2CityUpdated: { it: (n: string) => `Aggiornata ${n}`, en: (n: string) => `${n} updated` },
   r2CityAdded: { it: (n: string) => `Aggiunta la tua città ${n}`, en: (n: string) => `Your city ${n} added` },
   r2CityAddedVisited: { it: (n: string) => `Aggiunta la città di ${n}`, en: (n: string) => `${n}'s city added` },
+  r2CityAddedFull: { it: (n: string) => `Aggiunta ${n}, completa di inventario e alleati`, en: (n: string) => `${n} added, with inventory and allies` },
+  // Menu delle città: export e simboli (27/11/2026)
+  r2Editor: { it: "Editor", en: "Editor" },
+  r2EditorTitle: { it: "Apre l'editor della città in una nuova scheda, vuoto: carica una città con Importa JSON, spostala e salvala in JSON o PNG", en: "Opens the city editor in a new tab, empty: load a city with Import JSON, move things around and save it as JSON or PNG" },
+  r2ExportFull: { it: "Esporta la città completa", en: "Export the full city" },
+  r2ExportCityOnly: { it: "Esporta solo la città", en: "Export the city only" },
+  r2ExportNoMap: { it: "Questa città non ha la mappa: reimportala con la bacchetta o il ponte.", en: "This city has no map: import it again with the wand or the bridge." },
+  r2LegButtons: { it: "Pulsanti", en: "Buttons" },
+  r2LegFull: { it: "esporta la città completa: mappa, inventario, alleati, risorse e Castello", en: "export the full city: map, inventory, allies, resources and Castle" },
+  r2LegCityOnly: { it: "esporta solo la città: la mappa, per Forge Hammer o un altro giocatore", en: "export the city only: the map, for Forge Hammer or another player" },
+  r2LegDelete: { it: "elimina la città", en: "delete the city" },
+  r2JsonIsBackup: { it: "Questo file è un backup completo di FoE Optimizer: per caricarlo usa Opzioni › Ripristina backup.", en: "This file is a full FoE Optimizer backup: to load it, use Options › Restore backup." },
+  // Errori di lettura dei JSON della città (27/11/2026, data/erroriJson.ts)
+  r2JsonErrJson: { it: "Il file non è un JSON valido: forse è incompleto o non è il file giusto.", en: "The file is not valid JSON: it may be incomplete or not the right file." },
+  r2JsonErrNoCity: { it: "Il file non contiene una città: servono gli edifici (CityMapData, mapBuildings o cityData). Usa l'export di FoE Optimizer, della bacchetta o di Forge Hammer.", en: "The file contains no city: it needs the buildings (CityMapData, mapBuildings or cityData). Use an export from FoE Optimizer, the wand or Forge Hammer." },
+  r2JsonErrNoAreas: { it: "Nel file mancano le espansioni della città (UnlockedAreas o mapData).", en: "The file is missing the city expansions (UnlockedAreas or mapData)." },
+  r2JsonErrNoTownHall: { it: "Nel file manca il municipio: senza non si può aprire la città.", en: "The file has no town hall: the city can't be opened without it." },
+  r2JsonErrOther: { it: (m: string) => `Impossibile leggere la città: ${m}`, en: (m: string) => `Could not read the city: ${m}` },
+  r2JsonFullBad: { it: "il pacchetto della città completa è danneggiato", en: "the full city package is damaged" },
   r2MyCities: { it: "Le tue città", en: "Your cities" },
   r2JsonCities: { it: "Città importate da JSON", en: "Cities imported from JSON" },
   r2VisitedCities: { it: "Città visitate", en: "Visited cities" },
   r2VisitedCity: { it: "Città visitata", en: "Visited city" },
   r2GrpPlayer: { it: "Giocatore", en: "Player" },
-  r2NoCitiesYet: { it: "Nessuna città: importala con la bacchetta verde in alto.", en: "No cities yet: import one with the green magic wand at the top." },
+  r2NoCitiesYet: { it: "Nessuna città. Puoi aggiungerne una così:", en: "No cities yet. You can add one like this:" },
+  r2NoCitiesWand: { it: "la bacchetta verde in alto: cliccala mentre giochi, con FoE Helper o Forge Hammer installati", en: "the green magic wand at the top: click it while you play, with FoE Helper or Forge Hammer installed" },
+  r2NoCitiesBridge: { it: "l'estensione FoE Optimizer Bridge, che porta qui tutte le città mentre giochi", en: "the FoE Optimizer Bridge extension, which brings all cities here while you play" },
+  r2NoCitiesJson: { it: "Importa da JSON qui sotto, con un file della città", en: "Import from JSON below, with a city file" },
   // (25/11/2026) su telefono e tablet la bacchetta non c'è (utils/dispositivo.ts)
   r2NoCitiesYetMobile: { it: "Nessuna città: da qui puoi caricare un file JSON della tua città (Importa da JSON). La bacchetta funziona solo dal computer.", en: "No cities yet: from here you can load a JSON file of your city (Import from JSON). The magic wand works only on a computer." },
   r2RenameCity: { it: "Nome della città", en: "City name" },
@@ -125,16 +135,44 @@ const UI_STRINGS = {
   },
   r2Cancel: { it: "Annulla", en: "Cancel" },
   r2OnlyMine: { it: "Disponibile solo per le tue città", en: "Only available for your cities" },
-  r2GrpSavedCities: { it: "Città salvate", en: "Saved cities" },
   r2GrpBackup: { it: "Backup", en: "Backup" },
   r2Manage: { it: "Gestisci", en: "Manage" },
-  r2DeleteAll: { it: "Elimina tutte", en: "Delete all" },
   r2GrpReset: { it: "Azzera", en: "Reset" },
   r2ResetAll: { it: "Cancella tutto", en: "Erase everything" },
   r2ResetAllTitle: { it: "Cancella tutti i dati e le impostazioni salvati da questo sito nel browser (città, pesi, tema, lingua…) e ricarica la pagina", en: "Erase all data and settings this site saved in the browser (cities, weights, theme, language…) and reload the page" },
-  r2ResetAllConfirm: { it: "Cancellare TUTTI i dati e le impostazioni salvati (città, pesi, tema, lingua e qualunque altra cosa)?\n\nNon si può annullare: se vuoi tenerli, prima fai \"Esporta tutto\".", en: "Erase ALL saved data and settings (cities, weights, theme, language and anything else)?\n\nThis cannot be undone: to keep them, use \"Export all\" first." },
-  r2ExportAll: { it: "Esporta tutto", en: "Export all" },
-  r2Restore: { it: "Ripristina", en: "Restore" },
+  r2ResetAllConfirm: { it: "Cancellare TUTTI i dati e le impostazioni salvati (città, pesi, tema, lingua e qualunque altra cosa)?\n\nNon si può annullare: se vuoi tenerli, prima fai \"Esporta backup\".", en: "Erase ALL saved data and settings (cities, weights, theme, language and anything else)?\n\nThis cannot be undone: to keep them, use \"Export backup\" first." },
+  r2ExportAll: { it: "Esporta backup", en: "Export backup" },
+  r2Restore: { it: "Ripristina backup", en: "Restore backup" },
+  // Pannello del backup (27/11/2026, ui/PannelloBackup.tsx)
+  r2BkMie: { it: "Le tue città", en: "Your cities" },
+  r2BkMieCosa: { it: "di ognuna mappa, inventario, alleati, risorse e livello del Castello", en: "for each one map, inventory, allies, resources and Castle level" },
+  r2BkVisitate: { it: "Città visitate", en: "Visited cities" },
+  r2BkVisitateCosa: { it: "solo la mappa", en: "the map only" },
+  r2BkImpostazioni: { it: "Impostazioni", en: "Settings" },
+  r2BkImpostazioniCosa: { it: "lingua, tema, pesi delle statistiche, colonne e opzioni delle tabelle, potenza CPU del Planner", en: "language, theme, statistics weights, table columns and options, Planner CPU power" },
+  r2BkInsediamenti: { it: "Insediamenti", en: "Settlements" },
+  r2BkInsediamentiCosa: { it: (n: number) => `edifici sbloccati e insediamento scelto (${n} ${n === 1 ? "insediamento" : "insediamenti"})`, en: (n: number) => `unlocked buildings and chosen settlement (${n} ${n === 1 ? "settlement" : "settlements"})` },
+  r2BkNessuna: { it: "nessuna", en: "none" },
+  r2BkNessuno: { it: "nessuno", en: "none" },
+  r2BkDimensione: { it: (s: string) => `Dimensione del file: circa ${s}.`, en: (s: string) => `File size: about ${s}.` },
+  r2BkAnnulla: { it: "Annulla", en: "Cancel" },
+  r2BkEspIntro: { it: "Il backup salva in un file TUTTO quello che FoE Optimizer ha salvato in questo browser:", en: "The backup saves to a file EVERYTHING FoE Optimizer has saved in this browser:" },
+  r2BkEspAvviso: { it: "È un file personale: contiene i dati delle tue città e del tuo account di gioco (nomi e id dei giocatori, mondi). Non darlo ad altri giocatori. Per mandare una città a qualcuno usa il JSON della mappa (Città › Mappa › JSON).", en: "This is a personal file: it contains your cities and your game account data (player names and ids, worlds). Do not give it to other players. To send a city to someone, use the map JSON (City › Map › JSON)." },
+  r2BkEspFatto: { it: (f: string) => `Backup salvato: ${f}`, en: (f: string) => `Backup saved: ${f}` },
+  r2BkRipIntro: { it: "Il ripristino sostituisce tutti i dati di FoE Optimizer in questo browser con quelli di un file creato con \"Esporta backup\".", en: "Restoring replaces all FoE Optimizer data in this browser with those of a file made with \"Export backup\"." },
+  r2BkRipScegli: { it: "Scegli il file di backup", en: "Choose the backup file" },
+  r2BkRipAltroFile: { it: "Scegli un altro file", en: "Choose another file" },
+  r2BkRipContenuto: { it: (f: string) => `Contenuto di ${f}`, en: (f: string) => `Contents of ${f}` },
+  r2BkRipData: { it: (d: string) => `backup del ${d}`, en: (d: string) => `backup of ${d}` },
+  r2BkRipAvvisoCitta: { it: (n: number, nomi: string) => `Attenzione: ${n === 1 ? "la città salvata ora" : `le ${n} città salvate ora`} (${nomi}) ${n === 1 ? "verrà cancellata" : "verranno cancellate"} e tutte le impostazioni sovrascritte con quelle del backup. Non si può annullare.`, en: (n: number, nomi: string) => `Warning: ${n === 1 ? "the city saved now" : `the ${n} cities saved now`} (${nomi}) will be deleted and all settings overwritten with those of the backup. This cannot be undone.` },
+  r2BkRipAvvisoVuoto: { it: "Attenzione: tutte le impostazioni attuali verranno sovrascritte con quelle del backup. Non si può annullare.", en: "Warning: all current settings will be overwritten with those of the backup. This cannot be undone." },
+  r2BkErrJson: { it: "non è un file JSON valido.", en: "this is not a valid JSON file." },
+  r2BkErrCitta: { it: "è la mappa di una città, non un backup. Per aggiungerla usa \"Importa da JSON\" nel menu delle città.", en: "this is a city map, not a backup. To add it, use \"Import from JSON\" in the city menu." },
+  r2BkErrVuoto: { it: "il backup non contiene dati.", en: "the backup contains no data." },
+  r2BkErrAltroFile: { it: "non è un backup di FoE Optimizer.", en: "this is not a FoE Optimizer backup." },
+  r2BkErrLettura: { it: "Impossibile leggere il file.", en: "Could not read the file." },
+  r2BkErrSpazio: { it: "Ripristino non riuscito: la memoria del browser è piena. I dati di prima sono stati rimessi com'erano.", en: "Restore failed: the browser storage is full. Your previous data has been put back as it was." },
+  r2BkErrAltro: { it: "Ripristino non riuscito. I dati di prima sono stati rimessi com'erano.", en: "Restore failed. Your previous data has been put back as it was." },
   r2TabDatabase: { it: "Database", en: "Database" },
   r2TabCity: { it: "Città", en: "City" },
   r2TabInventory: { it: "Inventario", en: "Inventory" },
@@ -361,13 +399,13 @@ const UI_STRINGS = {
   r2ImpOther: { it: "Altri modi", en: "Other ways" },
   r2ImpOtherJson: { it: "Da un file JSON:", en: "From a JSON file:" },
   r2ImpOtherJsonBody: {
-    it: "Opzioni › Importa da JSON (o dal selettore delle città) legge l'export di FoE Optimizer o il piano di Forge Hammer.",
-    en: "Options › Import from JSON (or the city selector) reads a FoE Optimizer export or a Forge Hammer plan.",
+    it: "Importa da JSON, in fondo al selettore delle città, legge l'export di FoE Optimizer o il piano di Forge Hammer.",
+    en: "Import from JSON, at the bottom of the city selector, reads a FoE Optimizer export or a Forge Hammer plan.",
   },
   r2ImpOtherBackup: { it: "Backup:", en: "Backup:" },
   r2ImpOtherBackupBody: {
-    it: "Opzioni › Esporta tutto salva tutte le città in un file; Ripristina le riporta qui, anche su un altro computer.",
-    en: "Options › Export all saves every city to a file; Restore brings them back, even on another computer.",
+    it: "Opzioni › Esporta backup salva in un file tutte le città e le impostazioni; Ripristina backup le riporta qui (anche su un altro computer) e sostituisce quelle che ci sono.",
+    en: "Options › Export backup saves every city and setting to a file; Restore backup brings them back (even on another computer) and replaces what is there.",
   },
   r2ImpPrivacy: {
     it: "Il segnalibro copia solo i dati che l'estensione mette a disposizione, e solo negli appunti del tuo computer: non viene inviato nulla a nessun server.",
@@ -580,7 +618,7 @@ const UI_STRINGS = {
     en: "Military values and efficiency with the multiplicative bonuses of the city's Great Buildings (Gold tier and Siphon; GBs of the same type add up): Generals × global bonuses, Battlegrounds and Expeditions × that mode's bonuses + global ones, QI × QI bonuses. Changed values are in light blue / pink.",
   },
   r2GbBonusNone: { it: "Nessun Grande Edificio della città ha bonus moltiplicativi", en: "No Great Building in the city has multiplicative bonuses" },
-  r2Export: { it: "Export", en: "Export" },
+  r2Export: { it: "CSV", en: "CSV" },
   r2SumsTitle: {
     it: "Mostra le colonne con la somma delle statistiche (Generale + Campi, e Generale + Spedizioni)",
     en: "Show the columns with the summed stats (General + GBG, and General + Expeditions)",
@@ -819,14 +857,17 @@ const UI_STRINGS = {
   r2StorageFree: { it: (n: number) => `spazio per altre ~${n} città`, en: (n: number) => `room for ~${n} more cities` },
   r2ImportCityJson: { it: "Importa da JSON", en: "Import from JSON" },
   r2ImportCityJsonTitle: {
-    it: "Aggiunge una città da un file JSON (Esporta JSON città, Planner, Forge Hammer). Città ridotta: mappa e Grandi Edifici completi, statistiche degli edifici dal catalogo, niente inventario né alleati",
-    en: "Adds a city from a JSON file (Export city JSON, Planner, Forge Hammer). Reduced city: full map and Great Buildings, building stats from the catalogue, no inventory or allies",
+    it: "Aggiunge una città da un file JSON tra le città importate: la città completa esportata da questo menu (con inventario e alleati), oppure solo la città (export del menu, della Mappa, del Planner, di Forge Hammer: mappa e Grandi Edifici, niente inventario né alleati)",
+    en: "Adds a city from a JSON file to the imported cities: a full city exported from this menu (with inventory and allies), or the city only (export from this menu, the Map, the Planner, Forge Hammer: map and Great Buildings, no inventory or allies)",
   },
   r2PlJsonClose: { it: "Chiudi il JSON importato", en: "Close the imported JSON" },
   r2PlJsonTitle: {
-    it: "Carica la città da un file JSON (esportato da MAPPA o mandato da un altro giocatore). Non viene salvata.",
-    en: "Load the city from a JSON file (exported from MAP or sent by another player). It is not saved.",
+    it: "Apre nel Planner la città di un file JSON: export della Mappa, del menu delle città (della completa conta solo la mappa), di uno scenario del Planner o di Forge Hammer. Non la salva tra le città: per salvarla usa Importa da JSON nel menu delle città",
+    en: "Opens in the Planner the city of a JSON file: export from the Map, the city menu (of a full city only the map counts), a Planner scenario or Forge Hammer. It isn't saved among the cities: to save it, use Import from JSON in the city menu",
   },
+  r2MapPngTitle: { it: "Scarica l'immagine della mappa (PNG)", en: "Download the map image (PNG)" },
+  r2MapJsonTitle: { it: "Scarica solo la città in JSON (la mappa): per Forge Hammer, un altro planner o un altro giocatore. La città completa si esporta dal menu delle città", en: "Download the city only as JSON (the map): for Forge Hammer, another planner or another player. The full city is exported from the city menu" },
+  r2MapEditorTitle: { it: "Apre la città nell'editor (nuova scheda): sposta e togli edifici e strade, poi salva il PNG", en: "Opens the city in the editor (new tab): move and remove buildings and roads, then save the PNG" },
   r2PlNoSource: {
     it: "Scegli la città da ottimizzare: importa una città con la bacchetta oppure carica un file JSON con \"Importa JSON\".",
     en: "Choose the city to optimize: import a city with the magic wand or load a JSON file with \"Import JSON\".",
@@ -903,45 +944,9 @@ const UI_STRINGS = {
   },
 
   // ── Modale Importa Profili ───────────────────────────────────────────
-  importModalTitle: {
-    it: "Importa profili",
-    en: "Import profiles",
-  },
   closeAriaLabel: {
     it: "Chiudi",
     en: "Close",
-  },
-  importModalAddedNotice: {
-    it: "I profili importati verranno aggiunti a quelli attuali.",
-    en: "Imported profiles will be added to your current ones.",
-  },
-  importModalDropLabel: {
-    it: "Carica il file foe-optimizer-YYYY-MM-DD.json",
-    en: "Upload the foe-optimizer-YYYY-MM-DD.json file",
-  },
-  importInvalidFile: {
-    it: "⚠️ Il file selezionato non è valido.",
-    en: "⚠️ The selected file is not valid.",
-  },
-  importPartialHeavy: {
-    it: "⚠️ Profili importati parzialmente: alcuni dati pesanti non sono stati salvati (quota localStorage esaurita). Prova a svuotare i dati di altri profili.",
-    en: "⚠️ Profiles partially imported: some large data wasn't saved (localStorage quota exceeded). Try clearing data from other profiles.",
-  },
-  importPartialKeys: {
-    it: (n: number) => `⚠️ Profili importati parzialmente: ${n} chiavi non salvate per quota esaurita nel LocalStorage.`,
-    en: (n: number) => `⚠️ Profiles partially imported: ${n} keys not saved because the LocalStorage quota was exceeded.`,
-  },
-  importSuccessMessage: {
-    it: "✅ Profili importati con successo.",
-    en: "✅ Profiles imported successfully.",
-  },
-  importGenericError: {
-    it: "Errore durante l'import.",
-    en: "An error occurred during import.",
-  },
-  importReadFileError: {
-    it: "Impossibile leggere il file.",
-    en: "Unable to read the file.",
   },
 
   // ── Conferma eliminazione di un singolo profilo ───────────────────────
@@ -959,10 +964,6 @@ const UI_STRINGS = {
   },
 
   // ── Conferma eliminazione di tutti i profili ─────────────────────────
-  confirmDeleteAllProfiles: {
-    it: "Sei sicuro di voler eliminare TUTTE le città salvate (anche quelle importate da JSON) e il JSON caricato nel Planner?",
-    en: "Are you sure you want to delete ALL saved cities (including those imported from JSON) and the JSON loaded in the Planner?",
-  },
 
   // ── Barra filtri (ricerca, categoria, evento, pesi) ──────────────────
   searchPlaceholder: {
@@ -2270,14 +2271,6 @@ const UI_STRINGS = {
   },
 
   // ── Alert (bacchetta magica, export) ──────────────────────────────────
-  unknownErrorFallback: {
-    it: "errore sconosciuto",
-    en: "unknown error",
-  },
-  exportErrorAlert: {
-    it: (msg: string) => `Errore durante l'export: ${msg}`,
-    en: (msg: string) => `Error during export: ${msg}`,
-  },
   clipboardEmptyAlert: {
     it: "Dati non validi: per importare la città consulta la Guida alla Bacchetta magica.",
     en: "Invalid data: to import your city, see the Magic Wand Guide.",
@@ -3004,7 +2997,6 @@ const UI_STRINGS = {
     it: (n: number, ids: string) => `⚠️ ${n} ${n === 1 ? "pezzo saltato" : "pezzi saltati"} perché non ne conosco le dimensioni: ${ids}`,
     en: (n: number, ids: string) => `⚠️ ${n} ${n === 1 ? "piece" : "pieces"} skipped (unknown size): ${ids}`,
   },
-  plannerInvalidJson: { it: (m: string) => `JSON non valido: ${m}`, en: (m: string) => `Invalid JSON: ${m}` },
   plannerUnsuitable: {
     it: "City Builder: città non adatta (servono almeno 4 edifici con strada e spazio attorno al municipio) — uso il motore semplice.",
     en: "City Builder: city not suitable (at least 4 road buildings and space around the town hall are needed) — using the simple engine.",
@@ -3066,8 +3058,8 @@ const UI_STRINGS = {
     en: "Pause the Planner (⏸ Pause) to edit the map in the editor",
   },
   plannerJsonTitle: {
-    it: "Scarica la soluzione in JSON (formato del bookmarklet: CityMapData / CityEntities / UnlockedAreas, strade comprese)",
-    en: "Downloads the solution as JSON (bookmarklet format: CityMapData / CityEntities / UnlockedAreas, roads included)",
+    it: "Scarica questo scenario in JSON (solo la città: edifici e strade). Si apre in Forge Hammer, nel Planner (Importa JSON) o tra le città (Importa da JSON)",
+    en: "Downloads this scenario as JSON (city only: buildings and roads). It opens in Forge Hammer, in the Planner (Import JSON) or among the cities (Import from JSON)",
   },
   plannerDeleteTitle: {
     it: "Elimina questo scenario: la sua ricerca si ferma e le altre proseguono",

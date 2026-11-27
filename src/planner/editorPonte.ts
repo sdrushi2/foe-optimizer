@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { leggiCittaDati, type CittaJson } from "../data/cityMapJson";
+import { messaggioErroreJson } from "../data/erroriJson";
 import { toccaStradaZona, type PlannerFrame } from "./engine";
 import { ricomponiCatene, type Raggruppamento } from "./catene";
 import { t, type UiLang } from "../data/ui-strings";
@@ -40,7 +41,7 @@ export function cittaDaEditor(dati: unknown, { raggruppamento, idMap, frame, sol
 }): RitornoEditor {
   const { problem: vecchio, blocchi } = raggruppamento;
   let citta: CittaJson;
-  try { citta = leggiCittaDati(dati); } catch (err) { return { errori: [t("plannerErrInvalidData", lang, err instanceof Error ? err.message : String(err))], placements: new Map(), roads: new Set(), blocchi: [], raggruppamento }; }
+  try { citta = leggiCittaDati(dati); } catch (err) { return { errori: [t("plannerErrInvalidData", lang, messaggioErroreJson(err, lang))], placements: new Map(), roads: new Set(), blocchi: [], raggruppamento }; }
   const errori: string[] = [];
   const pos = new Map<string, { x: number; y: number }>();
   const roads = new Set<string>();
