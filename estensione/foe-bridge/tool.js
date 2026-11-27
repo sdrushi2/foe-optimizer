@@ -60,7 +60,8 @@
     if (!alive()) { goOffline(); return; }
     try { port = chrome.runtime.connect({ name: "foe-bridge" }); } catch { port = null; goOffline(); return; }
     port.onMessage.addListener((m) => {
-      if (m.type === "city") toSite({ event: "city", reason: m.reason, ts: m.ts, server: m.server, player: m.player, playerId: m.playerId, signature: m.signature, json: m.json });
+      // kind (0.10.0): "own" or "visited" (a site that does not know it treats every city as own)
+      if (m.type === "city") toSite({ event: "city", kind: m.kind === "visited" ? "visited" : "own", reason: m.reason, ts: m.ts, server: m.server, player: m.player, playerId: m.playerId, signature: m.signature, json: m.json });
       else if (m.type === "definitions") {
         toSite({ event: "definitions", signature: m.signature, part: m.part, parts: m.parts, text: m.text });
         const n = (parts.get(m.signature) || 0) + 1; parts.set(m.signature, n);

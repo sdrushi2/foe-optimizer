@@ -168,8 +168,8 @@ const UI_STRINGS = {
     en: "Map, inventory, allies and settlements of this city will be removed. Make a backup from Options first if you want to keep them.",
   },
   r2DeleteVisited: {
-    it: "Verrà tolta la mappa di questa città visitata. Potrai reimportarla quando vuoi.",
-    en: "The map of this visited city will be removed. You can import it again at any time.",
+    it: "Verrà tolta la mappa di questa città visitata. Potrai reimportarla quando vuoi. Se nell'estensione FoE Optimizer Bridge è accesa, torna alla prossima visita: per fermarla spegnila nel menu dell'estensione.",
+    en: "The map of this visited city will be removed. You can import it again at any time. If it is switched on in the FoE Optimizer Bridge extension, it comes back at the next visit: to stop it, switch it off in the extension's menu.",
   },
   r2Cancel: { it: "Annulla", en: "Cancel" },
   r2OnlyMine: { it: "Disponibile solo per le tue città", en: "Only available for your cities" },

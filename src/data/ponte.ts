@@ -5,8 +5,9 @@
 //  PROPRIA da FoE Helper quando cambia nel gioco e la passa a questa pagina
 //  con window.postMessage ({ type: "foe-bridge", event, … }; l'estensione è
 //  tutta in inglese, protocollo compreso). Solo lettura:
-//  nessuna richiesta al server del gioco. Le città visitate non passano mai
-//  dal ponte (per quelle resta la bacchetta).
+//  nessuna richiesta al server del gioco. Dalla 0.10.0 dell'estensione passano
+//  anche le città visitate che l'utente accende nel menu dell'estensione
+//  (campo `kind` "own" | "visited"; senza, è la città propria).
 //
 //  Eventi dall'estensione (campo `event`):
 //   - "presence": segnale ogni 15 s, con le schede del gioco aperte
@@ -61,8 +62,10 @@ export interface StatoPonte {
   pausa: boolean;
 }
 
-/** Ultimo pacchetto della città propria arrivato dal gioco. */
+/** Ultimo pacchetto di una città arrivata dal gioco (propria o visitata). */
 export interface PacchettoPonte {
+  /** (27/11/2026) Città propria o visitata (estensione 0.10.0; prima solo la propria). */
+  tipo: "mia" | "visitata";
   /** Pacchetto della bacchetta senza CityEntities, come testo JSON. */
   json: string;
   server: string;
@@ -84,13 +87,13 @@ const INIZIALE: StatoPonte = { presente: false, versione: null, schede: -1, ulti
 
 /** Messaggio dell'estensione (protocollo in inglese). */
 interface MessaggioPonte {
-  type?: unknown; event?: unknown; version?: unknown; gameTabs?: unknown; n?: unknown;
+  type?: unknown; event?: unknown; version?: unknown; gameTabs?: unknown; n?: unknown; kind?: unknown;
   player?: unknown; server?: unknown; ts?: unknown; json?: unknown; signature?: unknown;
   part?: unknown; parts?: unknown; text?: unknown;
 }
 
 let stato: StatoPonte = { ...INIZIALE, pausa: leggiPausa() };
-/** Ultimo pacchetto per mondo e giocatore ("it6|Sdrushi"). */
+/** Ultimo pacchetto per mondo, giocatore e tipo ("it6|Sdrushi|mia"). */
 const pacchetti = new Map<string, PacchettoPonte>();
 const ascoltatori = new Set<() => void>();
 let ultimoSegnale = 0;
@@ -131,9 +134,12 @@ function ascolta(e: MessageEvent) {
     const ts = typeof m.ts === "number" ? m.ts : Date.now();
     let leggero: Record<string, unknown> | null = null, impronta = "";
     try { leggero = { ...(JSON.parse(m.json) as Record<string, unknown>), CityEntities: {} }; impronta = improntaDati(leggero); } catch { /* illeggibile: App lo salta */ }
-    pacchetti.set(m.server + "|" + m.player, { json: m.json, server: m.server, giocatore: m.player, entitaFirma: typeof m.signature === "string" ? m.signature : "", ts, leggero, impronta });
-    // una città arrivata vuol dire che almeno una scheda del gioco è aperta
-    aggiorna({ ...stato, presente: true, versione, schede: Math.max(1, stato.schede), ultima: { giocatore: m.player, server: m.server, ts }, arrivi: stato.arrivi + 1 });
+    const tipo = m.kind === "visited" ? "visitata" : "mia";
+    const p: PacchettoPonte = { tipo, json: m.json, server: m.server, giocatore: m.player, entitaFirma: typeof m.signature === "string" ? m.signature : "", ts, leggero, impronta };
+    pacchetti.set(chiavePacchetto(p), p);
+    // una città arrivata vuol dire che almeno una scheda del gioco è aperta; l'indicatore
+    // racconta solo la città propria
+    aggiorna({ ...stato, presente: true, versione, schede: Math.max(1, stato.schede), ...(tipo === "mia" ? { ultima: { giocatore: m.player, server: m.server, ts } } : {}), arrivi: stato.arrivi + 1 });
   } else if (m.event === "definitions" && typeof m.signature === "string" && typeof m.part === "number" && typeof m.parts === "number" && typeof m.text === "string") {
     if (!pezzi || pezzi.firma !== m.signature || pezzi.parti.length !== m.parts) pezzi = { firma: m.signature, parti: new Array<string | null>(m.parts).fill(null), arrivate: 0 };
     if (pezzi.parti[m.part] == null) { pezzi.parti[m.part] = m.text; pezzi.arrivate++; }
@@ -224,8 +230,9 @@ export function risincronizzaPonte() {
 }
 
 export function pacchettiPonte(): PacchettoPonte[] { return [...pacchetti.values()]; }
-/** Ultimo pacchetto di quel mondo e giocatore. */
-export function pacchettoPonte(server: string, giocatore: string): PacchettoPonte | null { return pacchetti.get(server + "|" + giocatore) ?? null; }
+const chiavePacchetto = (p: Pick<PacchettoPonte, "server" | "giocatore" | "tipo">) => p.server + "|" + p.giocatore + "|" + p.tipo;
+/** Ultimo pacchetto arrivato della stessa città (stesso mondo, giocatore e tipo). */
+export function pacchettoPonte(p: Pick<PacchettoPonte, "server" | "giocatore" | "tipo">): PacchettoPonte | null { return pacchetti.get(chiavePacchetto(p)) ?? null; }
 
 /** Chiede all'estensione le definizioni degli edifici con quella firma (dalla
  *  sua copia salvata: il gioco non si ferma) e le restituisce come testo JSON.

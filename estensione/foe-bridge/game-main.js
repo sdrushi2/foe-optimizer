@@ -18,8 +18,15 @@
 //     not change the map.
 //  One second after the last signal it reads the city data (FoE Helper:
 //  MainParser; Forge Hammer: FH.Main) and builds the same package as the FoE
-//  Optimizer magic wand (v8, same fields), always for the player's OWN city
-//  (never a visited one).
+//  Optimizer magic wand (v8, same fields), for the player's OWN city (kind "own").
+//
+//  Visited cities (0.10.0): the response to OtherPlayerService.visitPlayer (the
+//  same data FoE Helper and Forge Hammer read for their city map) becomes the
+//  wand's package of a visited city (kind "visited": map, areas, name, avatar;
+//  no inventory or allies, as with the wand). The helper's "ActiveMapUpdated"
+//  event tells when the player leaves the visited city ("map" message).
+//  Whether a city goes on to FoE Optimizer is decided by the extension (the
+//  switches in its menu), not here.
 //
 //  The building definitions (CityEntities, ~63 MB) do not fit in a Chrome
 //  message (64 MB limit) and do not change during a session: they are left out
@@ -91,7 +98,7 @@
     if (MP && FP && typeof FP.addFoeHelperHandler === "function") return {
       name: "FoE Helper", S: MP,
       onEvent: (ev, f) => FP.addFoeHelperHandler(ev, f),
-      onResponse: typeof FP.addHandler === "function" ? (service, f) => FP.addHandler(service, f) : null,
+      onResponse: typeof FP.addHandler === "function" ? (service, f, method) => (method ? FP.addHandler(service, method, f) : FP.addHandler(service, f)) : null,
       version: () => g("extVersion") ?? null,
       playerName: () => g("ExtPlayerName"), playerId: () => g("ExtPlayerID") ?? null, avatar: () => g("ExtPlayerAvatar"),
       allies: () => g("Allies") || MP.Allies,
@@ -105,7 +112,7 @@
     if (FH && FH.Main && FH.proxy && typeof FH.proxy.addCustomHandler === "function") return {
       name: "Forge Hammer", S: FH.Main,
       onEvent: (ev, f) => FH.proxy.addCustomHandler(ev, f),
-      onResponse: typeof FH.proxy.addHandler === "function" ? (service, f) => FH.proxy.addHandler(service, f) : null,
+      onResponse: typeof FH.proxy.addHandler === "function" ? (service, f, method) => (method ? FH.proxy.addHandler(service, method, f) : FH.proxy.addHandler(service, f)) : null,
       version: () => (FH.BaseData && FH.BaseData.extVersion) ?? null,
       playerName: () => FH.Player && FH.Player.Name, playerId: () => (FH.Player && FH.Player.ID) || null, avatar: () => FH.Player && FH.Player.Avatar,
       allies: () => g("Allies") || FH.Main.Allies,
@@ -237,7 +244,7 @@
       if (json === lastJson && reason !== "request" && reason !== "hooked") return;
       lastJson = json;
       emit({
-        type: "city", reason, ts: Date.now(),
+        type: "city", kind: "own", reason, ts: Date.now(),
         server: r.data.server, player: r.data.playerName || "", playerId: r.playerId,
         helper: r.helper, map: r.map, ...(clientVerKnown ? { gameVersion: clientVerKnown } : {}),
         signature: definitionsSignature(source().S), prepMs: Math.round(performance.now() - t0), json,
@@ -337,6 +344,58 @@
     }
   }
 
+  /** Map areas as the wand writes them (4×4 blocks without their size). */
+  const areas = (list) => (list || []).map(o => {
+    const x = o.x || 0, y = o.y || 0;
+    return o.width == 4 && o.length == 4 ? { x, y } : { x, y, width: o.width, length: o.length };
+  });
+
+  /**
+   * A visit to another player's city (OtherPlayerService.visitPlayer): the same package as
+   * the wand clicked while visiting (activeMap "OtherPlayer"), built from the game's answer
+   * itself, so it does not depend on when the helper copies it into CityMap.OtherPlayer.
+   * Every visit is sent (also the same city twice): the extension keeps the list of the
+   * last visits and decides what goes to FoE Optimizer.
+   */
+  function visited(data) {
+    if (!active() || blockedByConflict()) return;
+    const t0 = performance.now();
+    try {
+      const src = source();
+      const rd = data && data.responseData;
+      const op = rd && rd.other_player, cm = rd && rd.city_map;
+      const N = serverId();
+      if (!src || !op || !cm || !Array.isArray(cm.entities) || !N) return;
+      const signature = definitionsSignature(src.S);
+      let A = null;
+      try { const sl = g("srcLinks"); if (sl && op.avatar) A = sl.GetPortrait(op.avatar); } catch { A = null; }
+      const W = [];
+      if (!cm.unlocked_areas) W.push("areas");
+      if (!A) W.push("avatar");
+      const d = {
+        _v: WAND_VERSION,
+        helper: { n: src.name, v: src.version() },
+        activeMap: "OtherPlayer",
+        server: N,
+        inventory: [],
+        allies: {},
+        CityMapData: Object.assign({}, ...cm.entities.map(e => ({ [e.id]: e }))),
+        UnlockedAreas: areas(cm.unlocked_areas),
+        portraitUrl: A,
+        playerName: op.name || null,
+        warn: W,
+      };
+      emit({
+        type: "city", kind: "visited", reason: "visit", ts: Date.now(),
+        server: N, player: op.name || "", playerId: op.player_id ?? null, avatar: A,
+        helper: d.helper, map: "OtherPlayer", ...(clientVerKnown ? { gameVersion: clientVerKnown } : {}),
+        signature, prepMs: Math.round(performance.now() - t0), json: JSON.stringify(d),
+      });
+    } catch (e) {
+      emit({ type: "status", status: "error while reading the visited city: " + (e && e.message), server: serverId() });
+    }
+  }
+
   let timer = null;
   const schedule = (reason) => { if (!active()) return; clearTimeout(timer); timer = setTimeout(() => send(reason), DELAY_MS); };
 
@@ -364,7 +423,10 @@
     if (src.onResponse) {
       src.onResponse("InventoryService", () => schedule("InventoryService"));
       src.onResponse("AllyService", () => schedule("AllyService"));
+      src.onResponse("OtherPlayerService", (data) => visited(data), "visitPlayer");
     }
+    // which map the game shows (main, OtherPlayer, settlements…): the menu marks the city being visited
+    src.onEvent("ActiveMapUpdated", () => { if (active()) emit({ type: "map", map: src.map(), server: serverId() }); });
     emit({ type: "status", status: "hooked to " + src.name + (src.version() ? " " + src.version() : ""), helper: { n: src.name, v: src.version() }, server: serverId() });
     // the game client version for the monitor, a little after the startup (not while the game loads)
     setTimeout(() => clientVersion().then(v => { if (v && active()) emit({ type: "status", status: "game client " + v, gameVersion: v, server: serverId() }); }), 10000);

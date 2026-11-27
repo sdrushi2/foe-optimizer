@@ -4364,6 +4364,9 @@ export default function App() {
   //    magazzino, che cambiano di continuo);
   //  - mai con il ponte in pausa (clic sull'indicatore): i pacchetti arrivano
   //    lo stesso e, alla ripresa, si importa l'ultimo se è cambiato;
+  //  - (27/11/2026, estensione 0.10.0) anche le città VISITATE che l'utente ha acceso nel
+  //    menu dell'estensione: stesse regole, ma una visitata nuova non toglie la città
+  //    selezionata (compare nel menu con l'avviso "aggiunta"); fra le nuove prima le proprie;
   //  - con più giochi aperti (beta e live) c'è un pacchetto per mondo: prima la
   //    città selezionata, poi, una alla volta, quelle non ancora salvate.
   // Le definizioni degli edifici (~63 MB) si chiedono all'estensione solo al
@@ -4379,12 +4382,14 @@ export default function App() {
   /** Cresce a ogni "Aggiorna" dall'avviso: nella key del Planner, che riparte dalla città nuova. */
   const [plannerRev, setPlannerRev] = useState(0);
   /** Import di un pacchetto del ponte (stesso import della bacchetta). */
-  const importaDalPonte = async (p: PacchettoPonte, chiave: string) => {
+  const importaDalPonte = async (p: PacchettoPonte, chiave: string, nuova = false) => {
     importandoPonte.current = true;
+    // una città visitata nuova non prende il posto di quella selezionata
+    const primaAttiva = nuova && p.tipo === "visitata" ? activeProfileId : null;
     try {
       const def = await definizioniDalPonte(p.entitaFirma);
       // subito dopo le definizioni l'estensione manda una città fresca di quel mondo: si usa quella
-      const ultimo = pacchettoPonte(p.server, p.giocatore) ?? p;
+      const ultimo = pacchettoPonte(p) ?? p;
       if (ultimo.entitaFirma !== def.firma) return;
       const senzaDef = JSON.parse(ultimo.json) as object;
       const impronta = improntaDati(senzaDef);
@@ -4392,6 +4397,11 @@ export default function App() {
       if (validateBookmarkletData(dati)) return;
       await importaPayload(dati as BookmarkletData, false, { daPonte: true });
       try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si reimporterà */ }
+      if (primaAttiva && localStorage.getItem(ACTIVE_PROFILE_KEY) !== primaAttiva && profiles.some(x => x.id === primaAttiva)) {
+        setActiveProfileId(primaAttiva);
+        localStorage.setItem(ACTIVE_PROFILE_KEY, primaAttiva);
+        loadProfileData(primaAttiva);
+      }
     } catch (err) {
       console.warn("[FOE] ponte: import non riuscito", err);
     } finally {
@@ -4417,10 +4427,13 @@ export default function App() {
     // pacchetto da importare: quello della città selezionata, altrimenti una città non ancora salvata
     type Scelta = { p: PacchettoPonte; chiave: string; nuova: boolean };
     let scelta: Scelta | null = null;
-    for (const p of pacchettiPonte()) {
+    // prima le città proprie: fra le nuove si crea per prima la propria (che resta selezionata)
+    const ordinati = [...pacchettiPonte()].sort((a, b) => (a.tipo === "mia" ? 0 : 1) - (b.tipo === "mia" ? 0 : 1));
+    for (const p of ordinati) {
       if (!p.leggero) continue;                 // illeggibile
       const info = infoImport(p.leggero as unknown as BookmarkletData);
-      if (info.tipo !== "mia") continue;
+      // il tipo dichiarato dall'estensione e quello del pacchetto devono coincidere
+      if (info.tipo !== p.tipo) continue;
       const trovata = trovaCitta(profiles, info);
       if (trovata && trovata.id !== activeProfileId) continue; // si aggiorna quando la si seleziona
       const chiave = chiavePonteUltimo(info.mondo ?? "", String(info.playerId ?? info.nome ?? ""));
@@ -4434,8 +4447,8 @@ export default function App() {
       return;
     }
     if (!scelta) return;
-    const { p, chiave } = scelta;
-    const tm = setTimeout(() => { void importaDalPonte(p, chiave); }, 2000);
+    const { p, chiave, nuova } = scelta;
+    const tm = setTimeout(() => { void importaDalPonte(p, chiave, nuova); }, 2000);
     return () => clearTimeout(tm);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- importaPayload cambia a ogni render: si riparte solo per arrivi, pausa, visibilità, scheda e città
   }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles]);
@@ -4512,7 +4525,7 @@ export default function App() {
   const aggiornaInsediamentoDalPonte = () => {
     if (!ponteInsediamento) return;
     const { p, chiave, tipo } = ponteInsediamento;
-    const ultimo = pacchettoPonte(p.server, p.giocatore) ?? p;
+    const ultimo = pacchettoPonte(p) ?? p;
     (tipo === "mughal" ? mughalToolRef : piratiToolRef).current?.importFromClipboardText(ultimo.json);
     const imp = ultimo.leggero ? improntaInsediamento(ultimo.leggero) : null;
     try { localStorage.setItem(chiave, imp?.impronta ?? ponteInsediamento.impronta); } catch { /* storage pieno */ }

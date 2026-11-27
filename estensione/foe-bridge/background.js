@@ -15,6 +15,14 @@
 //  Debug: the state of every game tab (world, helper, script version, last
 //  status, last snapshot) is kept in memory and sent to the monitor and the
 //  menu; diagnostic lines ("log") go to the monitor only.
+//
+//  Which cities go to FoE Optimizer (0.10.0, switches in the menu): per world
+//  a pause and, per city, a switch. The player's own city starts ON; the last
+//  10 visited cities of each world are remembered (with their last package)
+//  and start OFF: switched ON, the stored package goes to FoE Optimizer at
+//  once and every new visit keeps it updated. Everything lives in
+//  storage.local (the service worker can be stopped at any moment). The
+//  number on the icon (badge) is the number of remembered cities.
 // ─────────────────────────────────────────────────────────────────────────────
 const VERSION = chrome.runtime.getManifest().version;
 const PART = 8 * 1024 * 1024;
@@ -91,7 +99,7 @@ async function clearStored() {
 }
 
 // ── Game tabs ──
-/** tabId → { server, url, helper, version, gameVersion, status, statusTs, lastCity, signature, map, player } (in memory: rebuilt after a restart) */
+/** tabId → { server, url, helper, version, gameVersion, status, statusTs, lastCity, signature, map, player, visiting } (in memory: rebuilt after a restart) */
 const gameState = new Map();
 async function gameTabs() { return chrome.tabs.query({ url: GAME }); }
 async function requestSnapshot() {
@@ -106,7 +114,9 @@ function tabInfo(tab, m) {
   if (m.version) st.version = m.version;
   if (m.helper) st.helper = m.helper;
   if (m.gameVersion) st.gameVersion = m.gameVersion;
-  if (m.type === "city") { st.lastCity = m.ts || Date.now(); st.noSignature = !m.signature; st.signature = m.signature || st.signature; st.map = m.map ?? st.map; st.player = m.player || st.player; st.reason = m.reason; st.prepMs = m.prepMs; st.conflict = false; }
+  if (m.type === "city" && m.kind === "visited") { st.visiting = { id: cityKey(m), name: m.player || "" }; st.map = "OtherPlayer"; st.conflict = false; }
+  else if (m.type === "city") { st.lastCity = m.ts || Date.now(); st.noSignature = !m.signature; st.signature = m.signature || st.signature; st.map = m.map ?? st.map; st.player = m.player || st.player; st.reason = m.reason; st.prepMs = m.prepMs; st.conflict = false; }
+  if (m.type === "map") { st.map = m.map ?? st.map; if (m.map !== "OtherPlayer") st.visiting = null; }
   if (m.type === "status") { st.status = m.status; st.statusTs = Date.now(); st.conflict = !!m.conflict; }
   gameState.set(tab.id, st);
   sendTabs();
@@ -196,18 +206,22 @@ function askGame(signature, tab) {
   return a;
 }
 
-/** Game snapshot → every page, preceded by the definitions if the page wants them and lacks them. */
-async function deliver(msg) {
+/** Game snapshot → the pages, preceded by the definitions if the page wants them and lacks them.
+ *  `tool: false` = not to FoE Optimizer (city switched off or world paused: the monitor still
+ *  gets it); `only` = just these pages (stored visited cities sent to one page). */
+async function deliver(msg, { tool = true, only = null } = {}) {
   const S = msg.signature;
   if (!S) {
     // no reliable signature (see game-main.js): the city goes to the monitor, no definitions
     log(`snapshot from ${msg.server} without a definitions signature: nothing stored, FoE Optimizer cannot import it`);
-    for (const [port, st] of ports) if (st.kind === "monitor") send(port, msg);
+    for (const [port, st] of ports) if (st.kind === "monitor" && (!only || only.includes(port))) send(port, msg);
     return;
   }
-  log(`snapshot from ${msg.server} (${msg.reason}, ${(msg.json.length / 1024).toFixed(0)} KB, signature ${short(S)}), connected pages: ${ports.size}`);
+  log(`${msg.kind === "visited" ? "visited city" : "snapshot"} from ${msg.server} (${msg.player || "?"}, ${msg.reason}, ${(msg.json.length / 1024).toFixed(0)} KB, signature ${short(S)})${tool ? "" : ", NOT for FoE Optimizer (switched off or paused)"}, connected pages: ${ports.size}`);
   let text = null, looked = false;
   for (const [port, st] of [...ports]) {
+    if (only && !only.includes(port)) continue;
+    if (st.kind !== "monitor" && !tool) continue;
     if (st.known === S) { send(port, msg); continue; }
     // the page wants the definitions of another world only, or none for now
     if ((st.only && st.only !== S) || st.noDefinitions) { send(port, msg); continue; }
@@ -288,6 +302,8 @@ chrome.runtime.onConnect.addListener((port) => {
       const n = await requestSnapshot();
       send(port, { type: "game-tabs", n });
       sendTabs();
+      // the visited cities switched on are not in the games: they come from the store
+      if (st.kind !== "monitor" && st.noDefinitions) sendVisits([port]);
     } else if (m.type === "ping") {
       send(port, { type: "pong", gameTabs: (await gameTabs()).length });
     } else if (m.type === "stored") {
@@ -319,6 +335,121 @@ function rememberWorld(m, tab) {
   });
 }
 
+// ── Switches: which cities go to FoE Optimizer (0.10.0) ─────────────────────
+// storage.local "sync": server → { paused, own: { id → { name, on, ts } },
+//   visited: [{ id, name, avatar, ts, on }] (most recent first) }
+// storage.local "visit:<server>:<id>": last package of a visited city.
+// id = the player id (the name if the helper gives no id).
+const MAX_VISITED = 10;
+const cityKey = (m) => String(m.playerId ?? m.player ?? "");
+const pkgKey = (server, id) => "visit:" + server + ":" + id;
+let syncQueue = Promise.resolve();
+/** Changes "sync" in a queue (one change at a time). `f(sync)` returns [result, changed]. */
+function syncEdit(f) {
+  const p = syncQueue.then(async () => {
+    const { sync = {} } = await chrome.storage.local.get("sync");
+    const [r, changed] = await f(sync);
+    if (changed) await chrome.storage.local.set({ sync });
+    return r;
+  });
+  syncQueue = p.catch((e) => log("switches: " + (e && e.message)));
+  return p;
+}
+const worldOf = (sync, server) => (sync[server] ||= { paused: false, own: {}, visited: [] });
+
+/** A city from the game: remembered (visited: with its package, at the top of the list).
+ *  Resolves to true if it goes to FoE Optimizer (switch on, world not paused). */
+function noteCity(m) {
+  const id = cityKey(m);
+  if (!m.server || !id) return Promise.resolve(m.kind !== "visited");
+  return syncEdit(async (sync) => {
+    const w = worldOf(sync, m.server);
+    if (m.kind === "visited") {
+      const i = w.visited.findIndex(v => v.id === id);
+      const prev = i >= 0 ? w.visited.splice(i, 1)[0] : null;
+      const v = { id, name: m.player || (prev && prev.name) || "?", avatar: m.avatar || (prev && prev.avatar) || null, ts: m.ts || Date.now(), on: prev ? !!prev.on : false };
+      w.visited.unshift(v);
+      const pkg = { ...m }; delete pkg.tab; delete pkg.from; delete pkg.toTool;
+      await chrome.storage.local.set({ [pkgKey(m.server, id)]: pkg });
+      // over the limit: the oldest switched-off cities go, with their package (those on stay)
+      const gone = [];
+      while (w.visited.length > MAX_VISITED) {
+        let j = -1;
+        for (let k = w.visited.length - 1; k >= 0; k--) if (!w.visited[k].on) { j = k; break; }
+        if (j < 0) break;
+        gone.push(w.visited.splice(j, 1)[0]);
+      }
+      if (gone.length) { await chrome.storage.local.remove(gone.map(x => pkgKey(m.server, x.id))); log(`visited cities forgotten (over ${MAX_VISITED}): ${gone.map(x => x.name).join(", ")}`); }
+      return [!w.paused && v.on, true];
+    }
+    const prev = w.own[id];
+    const changed = !prev || (m.player && prev.name !== m.player);
+    w.own[id] = { name: m.player || (prev && prev.name) || "?", on: prev ? !!prev.on : true, ts: prev && !changed ? prev.ts : (m.ts || Date.now()) };
+    return [!w.paused && w.own[id].on, changed];
+  });
+}
+
+/** Stored visited cities switched on (worlds not paused) → FoE Optimizer pages (`targets`:
+ *  those pages; null = all of them). Only one world / one city with `server` / `id`. */
+async function sendVisits(targets, server = null, id = null) {
+  try {
+    const { sync = {} } = await chrome.storage.local.get("sync");
+    const keys = [];
+    for (const [s, w] of Object.entries(sync)) {
+      if (w.paused || (server && s !== server)) continue;
+      for (const v of w.visited || []) if (v.on && (!id || v.id === id)) keys.push(pkgKey(s, v.id));
+    }
+    if (!keys.length) return;
+    const got = await chrome.storage.local.get(keys);
+    const only = targets || [...ports].filter(([, st]) => st.kind !== "monitor").map(([p]) => p);
+    for (const k of keys) if (got[k] && typeof got[k].json === "string") await deliver({ ...got[k], reason: "stored" }, { only });
+  } catch (e) { log("could not send the stored visited cities: " + (e && e.message)); }
+}
+
+/** Menu: pause of a world, switch of a city, ✕ of a visited city. */
+async function setSwitch(m) {
+  const what = await syncEdit((sync) => {
+    const w = worldOf(sync, m.server);
+    if (m.type === "sync-pause") { const was = w.paused; w.paused = !!m.paused; return [was && !w.paused ? "resume" : null, was !== w.paused]; }
+    if (m.type === "sync-own") {
+      const c = w.own[m.id]; if (!c) return [null, false];
+      const was = c.on; c.on = !!m.on;
+      return [!was && c.on && !w.paused ? "own" : null, was !== c.on];
+    }
+    if (m.type === "sync-visited") {
+      const v = w.visited.find(x => x.id === m.id); if (!v) return [null, false];
+      const was = v.on; v.on = !!m.on;
+      return [!was && v.on && !w.paused ? "visit" : null, was !== v.on];
+    }
+    if (m.type === "sync-forget") {
+      const i = w.visited.findIndex(x => x.id === m.id); if (i < 0) return [null, false];
+      w.visited.splice(i, 1);
+      return ["forget", true];
+    }
+    return [null, false];
+  });
+  log(`menu: ${m.type} ${m.server}${m.id ? " " + m.id : ""}${"on" in m ? " → " + (m.on ? "on" : "off") : ""}${"paused" in m ? " → " + (m.paused ? "paused" : "live") : ""}`);
+  if (what === "forget") await chrome.storage.local.remove(pkgKey(m.server, m.id));
+  // back on: the own city is asked to the game, the visited ones come from the store
+  if (what === "resume") { requestSnapshot(); sendVisits(null, m.server); }
+  if (what === "own") requestSnapshot();
+  if (what === "visit") sendVisits(null, m.server, m.id);
+}
+
+/** Badge on the icon: how many cities the extension remembers (own + visited, all worlds). */
+async function updateBadge() {
+  try {
+    const { sync = {} } = await chrome.storage.local.get("sync");
+    let n = 0;
+    for (const w of Object.values(sync)) n += Object.keys(w.own || {}).length + (w.visited || []).length;
+    await chrome.action.setBadgeBackgroundColor({ color: "#475569" });
+    if (chrome.action.setBadgeTextColor) await chrome.action.setBadgeTextColor({ color: "#ffffff" });
+    await chrome.action.setBadgeText({ text: n <= 0 ? "" : n > 9 ? "9+" : String(n) });
+  } catch { /* no badge: not important */ }
+}
+chrome.storage.onChanged.addListener((ch, area) => { if (area === "local" && ch.sync) updateBadge(); });
+updateBadge();
+
 /**
  * ✕ in the menu: forgets a world and the data kept for it. The definitions are per game
  * version, not per world: those still used by another remembered world or by an open
@@ -331,6 +462,9 @@ function forgetWorld(server) {
     const { worlds = {} } = await chrome.storage.local.get("worlds");
     delete worlds[server];
     await chrome.storage.local.set({ worlds });
+    // its switches and the visited cities remembered for it
+    const old = await syncEdit((sync) => { const w = sync[server]; delete sync[server]; return [w, !!w]; });
+    if (old) await chrome.storage.local.remove((old.visited || []).map(v => pkgKey(server, v.id)));
     const rest = Object.values(worlds);
     const inUse = new Set(rest.map(w => w.signature).filter(Boolean));
     const open = new Set((await gameTabs()).map(t => t.id));
@@ -353,9 +487,18 @@ function forgetWorld(server) {
   return done;
 }
 
+/** A message from one of the extension's own pages (menu, monitor), not from a web page. */
+const fromExtension = (sender) => !!sender && typeof sender.url === "string" && sender.url.startsWith(chrome.runtime.getURL(""));
+
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   if (!m) return;
   // ✕ in the menu
+  // switches in the menu
+  // (only from the extension's own pages: never from a game page, which any script there could imitate)
+  if (typeof m.type === "string" && m.type.startsWith("sync-") && typeof m.server === "string" && fromExtension(sender)) {
+    setSwitch(m).then(() => reply({ ok: true }), (e) => { log("switch not changed: " + (e && e.message)); reply({ error: true }); });
+    return true;
+  }
   if (m.type === "forget-world" && typeof m.server === "string") {
     forgetWorld(m.server).then(reply, (e) => { log("could not forget the world: " + (e && e.message)); reply({ error: true }); });
     return true;
@@ -372,7 +515,13 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
   }
   if (m.from !== "game" || !sender.tab) return;
   const tab = sender.tab.id;
-  if (m.type === "city") { tabInfo(sender.tab, m); rememberWorld(m, sender.tab); deliver({ ...m, tab }); }
+  if (m.type === "city") {
+    tabInfo(sender.tab, m);
+    if (m.kind !== "visited") rememberWorld(m, sender.tab);
+    // FoE Optimizer gets it only with its switch on and the world not paused (the monitor always)
+    noteCity(m).catch(() => m.kind !== "visited").then((toTool) => deliver({ ...m, tab, toTool }, { tool: toTool }));
+  }
+  else if (m.type === "map") tabInfo(sender.tab, m);
   else if (m.type === "definitions") partFromGame(m, tab);
   else if (m.type === "status") { tabInfo(sender.tab, m); for (const [p, st] of ports) if (st.kind === "monitor") send(p, { ...m, tab }); }
 });

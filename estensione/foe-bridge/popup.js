@@ -2,6 +2,11 @@
 // world (world, player, helper, state or last update; click = focus its tab if
 // open, otherwise open the game on that world; ✕ on hover forgets a world that is not open),
 // FoE Optimizer (the tool tab used last, or the site) and the monitor.
+// 0.10.0: in each card the LIVE / PAUSED pill (pause of the whole world), the
+// player's own city and the last visited cities, each with its switch (what goes
+// to FoE Optimizer), a green dot on the city being visited now and a ✕ (with a
+// confirmation in the row) that removes a visited city from the extension only.
+// The switches live in background.js (storage "sync"); the menu only shows them.
 // Italian by default, English with the IT | EN switch in the header.
 const $ = (id) => document.getElementById(id);
 const GAME = ["https://*.forgeofempires.com/game*"];
@@ -32,6 +37,18 @@ const TEXT = {
     remove: (n, s) => `Elimina ${n} (${s}) e i suoi dati dall'estensione (le città in FoE Optimizer restano)`,
     empty: "I tuoi mondi compaiono qui dopo che hai giocato con FoE Helper o Forge Hammer attivo.",
     tool: "Apri FoE Optimizer ↗", monitor: "Monitor", langTitle: "Lingua del menu",
+    live: "LIVE", paused: "PAUSA",
+    pauseTip: "Sincronizzazione attiva: clic per mettere in pausa questo mondo. Nessuna sua città va a FoE Optimizer finché non riprendi; gli interruttori restano come sono",
+    resumeTip: "In pausa: clic per riprendere. Le città accese tornano subito in FoE Optimizer",
+    yourCity: "La tua città", visitedCities: "Città visitate",
+    noVisits: "Le città che visiti nel gioco compaiono qui (le ultime 10 per mondo).",
+    onTip: (n) => `${n}: sincronizzata con FoE Optimizer. Clic per fermarla (in FoE Optimizer resta com'è)`,
+    offTip: (n) => `${n}: non va in FoE Optimizer. Clic per portarla subito e tenerla aggiornata a ogni visita`,
+    ownOnTip: (n) => `${n}: sincronizzata con FoE Optimizer a ogni modifica nel gioco. Clic per metterla in pausa`,
+    ownOffTip: (n) => `${n}: in pausa, non va in FoE Optimizer. Clic per riprendere`,
+    visitingNow: "La stai visitando ora", visitedAgo: (t) => `visitata ${t}`,
+    removeCity: (n) => `Togli ${n} dall'estensione (in FoE Optimizer resta)`,
+    confirmRemove: (n) => `Togliere ${n} dall'estensione?`, yes: "Togli", no: "Annulla",
   },
   en: {
     justNow: "just now", minAgo: (n) => `${n} min ago`, hAgo: (n) => `${n} h ago`, dAgo: (n) => `${n} d ago`,
@@ -50,6 +67,18 @@ const TEXT = {
     remove: (n, s) => `Delete ${n} (${s}) and its data from the extension (the cities in FoE Optimizer stay)`,
     empty: "Your worlds appear here after you play with FoE Helper or Forge Hammer active.",
     tool: "Open FoE Optimizer ↗", monitor: "Monitor", langTitle: "Menu language",
+    live: "LIVE", paused: "PAUSED",
+    pauseTip: "Sync on: click to pause this world. None of its cities goes to FoE Optimizer until you resume; the switches stay as they are",
+    resumeTip: "Paused: click to resume. The cities switched on go back to FoE Optimizer at once",
+    yourCity: "Your city", visitedCities: "Visited cities",
+    noVisits: "The cities you visit in the game appear here (the last 10 per world).",
+    onTip: (n) => `${n}: synced with FoE Optimizer. Click to stop it (it stays in FoE Optimizer as it is)`,
+    offTip: (n) => `${n}: not sent to FoE Optimizer. Click to bring it there now and keep it updated at every visit`,
+    ownOnTip: (n) => `${n}: synced with FoE Optimizer at every change in the game. Click to pause it`,
+    ownOffTip: (n) => `${n}: paused, not sent to FoE Optimizer. Click to resume`,
+    visitingNow: "You are visiting it now", visitedAgo: (t) => `visited ${t}`,
+    removeCity: (n) => `Remove ${n} from the extension (it stays in FoE Optimizer)`,
+    confirmRemove: (n) => `Remove ${n} from the extension?`, yes: "Remove", no: "Cancel",
   },
 };
 let lang = "it";
@@ -86,14 +115,32 @@ function tabsState() {
   });
 }
 
+/** Last state drawn (redrawn when the switches change while the menu is open). */
+let last = null;
+/** A ✕ waiting for its confirmation ("server|id"): no redraw while it is open. */
+let confirming = null;
+
 async function show() {
   const VERSION = chrome.runtime.getManifest().version;
   $("version").textContent = "v" + (chrome.runtime.getManifest().version_name || VERSION);
-  const { worlds = {}, lang: saved } = await chrome.storage.local.get(["worlds", "lang"]);
+  const { worlds = {}, sync = {}, lang: saved } = await chrome.storage.local.get(["worlds", "sync", "lang"]);
   setLang(saved === "en" ? "en" : "it");
   const open = await chrome.tabs.query({ url: GAME });
-  draw(worlds, open, null, VERSION);                    // at once with what is stored
-  if (open.length) draw(worlds, open, await tabsState(), VERSION); // then with the live state of the game tabs
+  last = { worlds, sync, open, st: last && last.st, VERSION };
+  draw(worlds, sync, open, last.st, VERSION);                         // at once with what is stored
+  if (open.length) { last.st = await tabsState(); draw(worlds, sync, open, last.st, VERSION); } // then with the live state of the game tabs
+}
+// a new visit or a switch changed while the menu is open
+chrome.storage.onChanged.addListener((ch, area) => {
+  if (area !== "local" || !ch.sync || !last || confirming) return;
+  last.sync = ch.sync.newValue || {};
+  draw(last.worlds, last.sync, last.open, last.st, last.VERSION);
+});
+
+/** Tells the extension (background.js) to change a switch, then redraws. */
+async function toBackground(m) {
+  await new Promise((ok) => { try { chrome.runtime.sendMessage(m, () => { void chrome.runtime.lastError; ok(); }); } catch { ok(); } });
+  show();
 }
 
 /** State of one open game tab → class (live / wait / no), second line, badge. */
@@ -109,7 +156,7 @@ function tabLine(t, VERSION) {
 }
 
 /** One card per world: the open ones first (with their live state), then the others by last use. */
-function draw(worlds, open, st, VERSION) {
+function draw(worlds, sync, open, st, VERSION) {
   const tabs = (st && st.list) || [];
   const openByHost = new Map(open.map(t => [new URL(t.url).host, t]));
   const cards = [];
@@ -119,7 +166,7 @@ function draw(worlds, open, st, VERSION) {
     const tab = openByHost.get(host);
     const state = tab ? tabs.find(x => x.server === server) || tabs.find(x => x.url && new URL(x.url).host === host) : null;
     if (tab) shown.add(host);
-    cards.push({ server, player: w.player, url: w.url, host, open: !!tab, ts: tab && state && state.lastCity ? state.lastCity : w.ts,
+    cards.push({ server, player: w.player, url: w.url, host, open: !!tab, state, ts: tab && state && state.lastCity ? state.lastCity : w.ts,
                  line: tab ? tabLine(st ? state : null, VERSION) : { cls: "", l2: `${w.helper || T.lastPlayed} · ${timeAgo(w.ts)}`, badge: T.play } });
   }
   // open game tabs of a world not seen yet (no city received so far)
@@ -127,11 +174,11 @@ function draw(worlds, open, st, VERSION) {
     if (shown.has(host)) continue;
     const state = tabs.find(x => x.url && new URL(x.url).host === host);
     const server = (state && state.server) || host.split(".")[0];
-    cards.push({ server, player: state && state.player, url: tab.url, host, open: true, ts: Date.now(), line: tabLine(st ? state : null, VERSION), unknown: true });
+    cards.push({ server, player: state && state.player, url: tab.url, host, open: true, state, ts: Date.now(), line: tabLine(st ? state : null, VERSION), unknown: true });
   }
   cards.sort((a, b) => (b.open - a.open) || (b.ts - a.ts));
 
-  $("worlds").replaceChildren(...cards.map(c => card(c)));
+  $("worlds").replaceChildren(...cards.map(c => card(c, sync[c.server] || { paused: false, own: {}, visited: [] })));
   if (!cards.length) {
     const p = document.createElement("div");
     p.className = "empty";
@@ -140,33 +187,63 @@ function draw(worlds, open, st, VERSION) {
   }
 }
 
-function card(c) {
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+/** Switch (on / off) for a city. */
+function toggle(on, tip, onClick) {
+  const b = el("button", "switch" + (on ? " on" : ""));
+  b.type = "button";
+  b.setAttribute("role", "switch");
+  b.setAttribute("aria-checked", String(on));
+  b.title = b.ariaLabel = tip;
+  b.append(el("span", "knob"));
+  b.addEventListener("click", (e) => { e.stopPropagation(); b.disabled = true; onClick(); });
+  return b;
+}
+
+/** Small picture of a city: the player's avatar, or the first letter. */
+function face(avatar, name) {
+  const f = el("span", "face");
+  if (avatar && /^https:\/\/[^/]*innogamescdn\.com\//.test(avatar)) {
+    const img = document.createElement("img");
+    img.src = avatar; img.alt = ""; img.referrerPolicy = "no-referrer";
+    img.addEventListener("error", () => { img.remove(); f.textContent = (name || "?").slice(0, 1).toUpperCase(); });
+    f.append(img);
+  } else f.textContent = (name || "?").slice(0, 1).toUpperCase();
+  return f;
+}
+
+function card(c, sw) {
   const name = worldName(c.server);
-  const el = document.createElement("div");
-  el.className = "card " + c.line.cls;
-  el.tabIndex = 0;
-  el.setAttribute("role", "button");
-  el.title = c.open ? T.focusTab : T.openOn(c.server);
-  const tile = document.createElement("span"); tile.className = "tile"; tile.textContent = name === "Beta" ? "β" : name.slice(0, 2);
-  const info = document.createElement("span"); info.className = "info";
-  const l1 = document.createElement("div"); l1.className = "l1";
-  const srv = document.createElement("span"); srv.className = "srv"; srv.textContent = " · " + c.server;
-  l1.append(c.player || T.gameTab, srv);
-  const l2 = document.createElement("div"); l2.className = "l2"; l2.textContent = c.line.l2; l2.title = c.line.tip || c.line.l2;
+  const box = el("div", "world " + c.line.cls + (sw.paused ? " paused" : ""));
+  // ── head: the world (click = its game tab) and the LIVE / PAUSED pill ──
+  const head = el("div", "card");
+  head.tabIndex = 0;
+  head.setAttribute("role", "button");
+  head.title = c.open ? T.focusTab : T.openOn(c.server);
+  const tile = el("span", "tile", name === "Beta" ? "β" : name.slice(0, 2));
+  const info = el("span", "info");
+  const l1 = el("div", "l1");
+  l1.append(c.player || T.gameTab, el("span", "srv", " · " + c.server));
+  const l2 = el("div", "l2", c.line.l2); l2.title = c.line.tip || c.line.l2;
   info.append(l1, l2);
-  const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = c.line.badge;
-  el.append(tile, info, badge);
+  const pill = el("button", "pill" + (sw.paused ? " paused" : ""), sw.paused ? T.paused : T.live);
+  pill.type = "button";
+  pill.title = pill.ariaLabel = sw.paused ? T.resumeTip : T.pauseTip;
+  pill.setAttribute("aria-pressed", String(!!sw.paused));
+  pill.addEventListener("click", (e) => { e.stopPropagation(); pill.disabled = true; toBackground({ type: "sync-pause", server: c.server, paused: !sw.paused }); });
+  pill.addEventListener("keydown", (e) => e.stopPropagation());
+  head.append(tile, info, pill);
   const go = () => focusOrOpen(GAME, c.url, c.host);
-  el.addEventListener("click", go);
-  el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  head.addEventListener("click", go);
+  head.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
   if (!c.open) {
     // ✕: deletes this world and its data from the extension (background.js forgetWorld:
-    // the definitions no other world uses; with the last world, all of them). It comes
-    // back by itself at the next update from its game. FoE Optimizer's cities stay.
-    // Not on open worlds: their tab keeps them in the menu anyway, the ✕ would seem to do nothing.
-    const x = document.createElement("button");
-    x.className = "forget";
-    x.textContent = "✕";
+    // the definitions no other world uses; with the last world, all of them; its switches and
+    // visited cities). It comes back by itself at the next update from its game.
+    // FoE Optimizer's cities stay. Not on open worlds: their tab keeps them in the menu anyway.
+    const x = el("button", "forget", "✕");
+    x.type = "button";
     x.title = x.ariaLabel = T.remove(name, c.server);
     x.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -175,10 +252,55 @@ function card(c) {
       show();
     });
     x.addEventListener("keydown", (e) => e.stopPropagation());
-    el.append(x);
-    el.classList.add("has-x");
+    head.insertBefore(x, pill);
+    head.classList.add("has-x");
   }
-  return el;
+  box.append(head);
+
+  // ── the cities of this world ──
+  const list = el("div", "cities");
+  const own = Object.entries(sw.own || {});
+  if (own.length) {
+    list.append(el("div", "sec", T.yourCity));
+    for (const [id, o] of own) {
+      const row = el("div", "city");
+      const nm = el("span", "nm", o.name);
+      row.append(face(null, o.name), nm,
+        toggle(!!o.on, o.on ? T.ownOnTip(o.name) : T.ownOffTip(o.name), () => toBackground({ type: "sync-own", server: c.server, id, on: !o.on })));
+      list.append(row);
+    }
+  }
+  const visiting = c.state && c.state.visiting ? c.state.visiting.id : null;
+  list.append(el("div", "sec", T.visitedCities));
+  if (!(sw.visited || []).length) list.append(el("div", "none", T.noVisits));
+  for (const v of sw.visited || []) {
+    const row = el("div", "city");
+    const key = c.server + "|" + v.id;
+    if (confirming === key) {
+      // inline confirmation of the ✕
+      row.classList.add("ask");
+      const yes = el("button", "yes", T.yes), no = el("button", "no", T.no);
+      yes.type = no.type = "button";
+      yes.addEventListener("click", () => { confirming = null; toBackground({ type: "sync-forget", server: c.server, id: v.id }); });
+      no.addEventListener("click", () => { confirming = null; show(); });
+      row.append(el("span", "nm", T.confirmRemove(v.name)), yes, no);
+      list.append(row);
+      continue;
+    }
+    const nm = el("span", "nm");
+    nm.append(v.name);
+    if (visiting === v.id) { const dot = el("span", "now"); dot.title = dot.ariaLabel = T.visitingNow; nm.append(dot); }
+    const when = el("span", "when", T.visitedAgo(timeAgo(v.ts)));
+    const x = el("button", "rm", "✕");
+    x.type = "button";
+    x.title = x.ariaLabel = T.removeCity(v.name);
+    x.addEventListener("click", () => { confirming = key; draw(last.worlds, last.sync, last.open, last.st, last.VERSION); });
+    row.append(face(v.avatar, v.name), nm, when, x,
+      toggle(!!v.on, v.on ? T.onTip(v.name) : T.offTip(v.name), () => toBackground({ type: "sync-visited", server: c.server, id: v.id, on: !v.on })));
+    list.append(row);
+  }
+  box.append(list);
+  return box;
 }
 
 /** Applies the language to the fixed texts and the IT | EN switch. */

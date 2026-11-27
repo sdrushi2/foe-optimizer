@@ -69,7 +69,7 @@ function drawTabs() {
       : t.helper ? `${esc(t.helper.n)} ${esc(t.helper.v || "")}` : '<span class="wait">not found yet</span>';
     return `<tr title="${esc(t.url)}"><td>${esc(t.server || "?")}${t.incognito ? " (incognito)" : ""}${t.player ? " · " + esc(t.player) : ""}${t.gameVersion ? `<div class="dim">game ${esc(t.gameVersion)}</div>` : ""}</td><td>${helper}</td>`
       + `<td>${t.version ? (old ? `<span class="no" title="Different from the extension (${esc(VERSION)}): reload the game">${esc(t.version)}</span>` : esc(t.version)) : '<span class="no" title="No bridge script answering in this tab: reload the game">none</span>'}</td>`
-      + `<td>${esc(t.map ?? "")}</td><td>${t.lastCity ? ago(t.lastCity) + (t.reason ? " (" + esc(t.reason) + (t.prepMs != null ? ", " + esc(t.prepMs) + " ms" : "") + ")" : "") : "never"}</td>`
+      + `<td>${esc(t.map ?? "")}${t.visiting ? " · " + esc(t.visiting.name) : ""}</td><td>${t.lastCity ? ago(t.lastCity) + (t.reason ? " (" + esc(t.reason) + (t.prepMs != null ? ", " + esc(t.prepMs) + " ms" : "") + ")" : "") : "never"}</td>`
       + `<td>${t.status ? esc(t.status) + " · " + ago(t.statusTs) : ""}</td></tr>`;
   }).join("") + "</table>" : "No game tab open.";
   $("pages").textContent = pages ? `Connected pages: FoE Optimizer ${pages.tool}, monitor ${pages.monitor}${pages.other ? ", other " + pages.other : ""}` : "";
@@ -89,7 +89,7 @@ function draw() {
   $("cities").innerHTML = [...cities.values()].map((c) => {
     const d = c.data, e = definitions.get(c.m.signature);
     const def = e && e.names ? `definitions: ${e.count} building types (${e.mb} MB)` : `definitions: waiting (${e && e.parts ? e.arrived + "/" + e.parts.length + " parts" : "not arrived yet"})`;
-    return `<div class="card"><h2>${esc(c.m.player || "?")} <span class="dim">· ${esc(c.m.server)}${c.m.helper ? " · " + esc(c.m.helper.n) : ""}</span></h2>
+    return `<div class="card"><h2>${esc(c.m.player || "?")} <span class="dim">· ${esc(c.m.server)}${c.m.helper ? " · " + esc(c.m.helper.n) : ""}${c.m.kind === "visited" ? " · visited city" : ""}${c.m.toTool === false ? " · not sent to FoE Optimizer (switched off or paused)" : ""}</span></h2>
       <div class="num">Buildings: <b>${c.map.size}</b> · inventory: ${(d.inventory || []).length} · allies: ${Object.keys(d.allies || {}).length}
       · package ${kb(c.m.json.length)} · prepared in ${esc(c.m.prepMs)} ms</div>
       <div class="dim">${esc(def)}</div>
@@ -145,7 +145,7 @@ function connect() {
       const map = buildingMap(data);
       const changes = differences(prev && prev.map, map, m.signature);
       cities.set(k, { m, data, map, changes: changes.length ? changes : (prev ? prev.changes : []), n: (prev ? prev.n : 0) + 1 });
-      log(`${m.player || "?"} (${m.server}): ${m.reason}, ${map.size} buildings, ${kb(m.json.length)}${prev ? ", " + changes.length + " changes" : ""}`);
+      log(`${m.kind === "visited" ? "Visited " : ""}${m.player || "?"} (${m.server}): ${m.reason}${m.toTool === false ? " [not for FoE Optimizer]" : ""}, ${map.size} buildings, ${kb(m.json.length)}${prev ? ", " + changes.length + " changes" : ""}`);
       draw();
     }
   });

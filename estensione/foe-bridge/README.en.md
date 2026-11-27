@@ -14,8 +14,13 @@ see Debugging). It only uses the helper extension you already have,
 events `CityMapUpdated` and `InventoryUpdated` and its response handlers for
 `InventoryService` and `AllyService`, then reads the city data (`MainParser` in FoE
 Helper, `FH.Main` in Forge Hammer: the same data the magic wand reads). One of the two is
-required. Visited cities never go through the bridge: for
-those, use the magic wand.
+required.
+
+**Visited cities** (from 0.10.0): when you visit another player's city the bridge reads the
+game's answer to the visit (`OtherPlayerService.visitPlayer`, the same one FoE Helper and
+Forge Hammer read) and turns it into the wand's package of a visited city (map, expansions,
+name and avatar; no inventory or allies). The extension remembers the last 10 visited cities
+of each world; only those you switch on in the menu go to FoE Optimizer.
 
 ## Browsers
 
@@ -59,6 +64,10 @@ For a new version: replace the files in the folder and press ↻ on the extensio
   for them again.
 - **No duplicates.** When a game signal changes nothing (identical package) the city is
   not sent again.
+- **What goes to FoE Optimizer** is decided by the switches in the menu (below): your city
+  (on at the start) and the visited cities you switch on; a paused world sends nothing.
+  Visited cities switched on also come from the copy stored in the extension (when the tool
+  opens, when resuming from the pause, after "Delete all cities"), without visiting them again.
 
 ## The menu
 
@@ -83,6 +92,18 @@ is saved). The monitor and the log stay in English.
   The world comes back by itself when you play it again, and the game sends the
   definitions once more, in the background. Open worlds have no ✕: their tab
   keeps them in the menu.
+- **LIVE / PAUSED** on the right of the card: pauses (or resumes) the whole world. While
+  paused none of its cities goes to FoE Optimizer; the switches stay as they are and, when
+  resuming, the cities switched on come back at once.
+- **Your city**, with its switch: on at the start, it can be paused.
+- **Visited cities**: the last 10 of each world, most recent first, with avatar and "visited
+  … ago"; the **green dot** marks the one you are visiting now. The switch (off at the
+  start) brings it to FoE Optimizer at once and keeps it updated at every visit; switched
+  off, it stays in FoE Optimizer as it is. From the eleventh visit on, the oldest one
+  switched off goes (those switched on always stay). The ✕ (on hover, with a confirmation
+  in the row) removes it from the extension only: it stays in FoE Optimizer.
+- **The number on the icon** is how many cities the extension remembers (yours and
+  visited, all worlds): 1 to 9, then "9+"; with no city there is none.
 - **Open FoE Optimizer ↗**: brings the tool tab used last to the front (online or on
   localhost), otherwise opens the site. **Monitor**: the test page.
 
@@ -132,8 +153,10 @@ definitions, worlds, cities, log) to paste into a bug report.
   `chrome://extensions` and reload the game.
 - **Switching helper** during a session (disable one, enable the other, reload the
   game): the bridge hooks to the active one; the stored definitions stay valid.
-- **Visited cities, outposts, Quantum Incursions, GBG**: the bridge always reads your
-  main city; the other maps never go through it.
+- **Outposts, Quantum Incursions, GBG**: the bridge reads your main city and the cities
+  you visit; the other maps do not go through it.
+- **Several accounts on the same world**: each has its own row under "Your city",
+  recognised by the player id.
 - **Several worlds open** (for example beta and live): each tab sends its own city;
   FoE Optimizer keeps them apart.
 - **Other pages on localhost** (another project in development): the extension enters them
@@ -152,7 +175,8 @@ Lines starting with "·" in the monitor log describe every step of the extension
 
 - `game-main.js` – in the game page, next to FoE Helper or Forge Hammer: reads and builds the package.
 - `game-relay.js` – passes messages between the game page and the extension.
-- `background.js` – forwards packages and stores the definitions.
+- `background.js` – forwards packages, stores the definitions, the switches, the last
+  visited cities and the number on the icon.
 - `tool.js` – on the FoE Optimizer page: presence signal, packages via `postMessage`.
 - `popup.html` / `popup.js` – the menu opened by the extension icon (Italian and English).
 - `monitor.html` / `monitor.js` – test page.

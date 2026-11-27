@@ -13,8 +13,13 @@ client, vedi Debug). Usa soltanto l'estensione helper che hai già,
 **FoE Helper o Forge Hammer** (ne può essere attiva una sola): i suoi eventi interni
 `CityMapUpdated` e `InventoryUpdated` e le sue risposte per `InventoryService` e
 `AllyService`, poi legge i dati della città (`MainParser` in FoE Helper, `FH.Main` in
-Forge Hammer: gli stessi dati che legge la bacchetta). Uno dei due è indispensabile. Le
-città visitate non passano mai dal bridge: per quelle si usa la bacchetta.
+Forge Hammer: gli stessi dati che legge la bacchetta). Uno dei due è indispensabile.
+
+**Città visitate** (dalla 0.10.0): quando visiti la città di un altro giocatore il bridge
+legge la risposta del gioco alla visita (`OtherPlayerService.visitPlayer`, la stessa che
+leggono FoE Helper e Forge Hammer) e ne fa il pacchetto della bacchetta in visita (mappa,
+espansioni, nome e avatar; niente inventario né alleati). L'estensione ricorda le ultime
+10 città visitate di ogni mondo; in FoE Optimizer vanno solo quelle che accendi nel menu.
 
 ## Browser
 
@@ -63,6 +68,10 @@ si ricollegano da sole.
   aperta: gli import successivi non le richiedono più.
 - **Niente doppioni.** Se un segnale del gioco non cambia nulla (pacchetto identico) la
   città non viene rimandata.
+- **Cosa va a FoE Optimizer** lo decidono gli interruttori del menu (sotto): la tua città
+  (accesa all'inizio) e le città visitate che accendi; un mondo in pausa non manda nulla.
+  Le città visitate accese arrivano anche dalla copia salvata nell'estensione (aprendo il
+  tool, riprendendo dalla pausa, dopo "Elimina tutte le città"), senza rivisitarle.
 
 ## Il menu
 
@@ -88,6 +97,18 @@ scelta resta salvata). Il monitor e il log restano in inglese.
   cancellano dal tool). Il mondo torna da solo quando ci giochi di nuovo, e il gioco
   rimanda le definizioni una volta, in sottofondo. I mondi aperti non hanno la
   ✕: la loro scheda del gioco li tiene nel menu.
+- **LIVE / PAUSA** a destra della scheda: mette in pausa (o riprende) tutto il mondo.
+  In pausa nessuna sua città va a FoE Optimizer; gli interruttori restano come sono e,
+  riprendendo, le città accese tornano subito.
+- **La tua città**, con il suo interruttore: accesa all'inizio, la si può mettere in pausa.
+- **Città visitate**: le ultime 10 di ogni mondo, dalla più recente, con avatar e "visitata
+  … fa"; il **pallino verde** segna quella che stai visitando ora. L'interruttore (spento
+  all'inizio) la porta subito in FoE Optimizer e la tiene aggiornata a ogni visita; spento,
+  in FoE Optimizer resta com'è. Dall'undicesima visita in poi esce la più vecchia spenta
+  (le accese restano sempre). La ✕ (passando il mouse, con una conferma nella riga) la
+  toglie solo dall'estensione: in FoE Optimizer resta.
+- **Il numero sull'icona** dell'estensione è quante città ricorda l'estensione (tue e
+  visitate, tutti i mondi): da 1 a 9, poi "9+"; con nessuna città non c'è.
 - **Apri FoE Optimizer ↗**: porta in primo piano la scheda del tool usata per ultima
   (online o su localhost), altrimenti apre il sito. **Monitor**: la pagina di prova.
 
@@ -138,8 +159,10 @@ definizioni salvate, mondi, città, log) da incollare in una segnalazione.
   uno in `chrome://extensions` e ricarica il gioco.
 - **Cambio di helper** durante una sessione (ne disattivi uno, attivi l'altro, ricarichi
   il gioco): il bridge si aggancia a quello attivo; le definizioni salvate restano valide.
-- **Città visitate, avamposti, Incursioni Quantiche, CdG**: il bridge legge sempre la tua
-  città principale; le altre mappe non passano mai da lì.
+- **Avamposti, Incursioni Quantiche, CdG**: il bridge legge la tua città principale e le
+  città che visiti; le altre mappe non passano da lì.
+- **Più account sullo stesso mondo**: ognuno ha la sua riga in "La tua città",
+  riconosciuta dall'id del giocatore.
 - **Più mondi aperti** (per esempio beta e live): ogni scheda manda la sua città; FoE
   Optimizer le tiene separate.
 - **Altre pagine su localhost** (un altro progetto in sviluppo): l'estensione entra anche lì
@@ -157,7 +180,8 @@ definizioni salvate, mondi, città, log) da incollare in una segnalazione.
 - `game-main.js` – nella pagina del gioco, accanto a FoE Helper o Forge Hammer: legge e
   prepara il pacchetto.
 - `game-relay.js` – passa i messaggi tra la pagina del gioco e l'estensione.
-- `background.js` – inoltra i pacchetti e conserva le definizioni.
+- `background.js` – inoltra i pacchetti, conserva le definizioni, gli interruttori, le
+  ultime città visitate e il numero sull'icona.
 - `tool.js` – nella pagina di FoE Optimizer: segnale di presenza, pacchetti via
   `postMessage`.
 - `popup.html` / `popup.js` – il menu che si apre dall'icona dell'estensione (italiano e
