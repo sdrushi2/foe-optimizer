@@ -46,7 +46,7 @@ import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/
 import { cittaDaJson } from "./data/cittaDaJson";
 import { messaggioErroreJson } from "./data/erroriJson";
 import { senzaEstensioni } from "./utils/dispositivo";
-import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, chiavePonteUltimo, risincronizzaPonte, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
+import { definizioniDalPonte, dimenticaVisitateTolte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, chiavePonteUltimo, risincronizzaPonte, segnaVisitataTolta, usePaginaVisibile, usePonte, visitataTolta, type PacchettoPonte } from "./data/ponte";
 
 /** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
 const NESSUN_ID = new Set<string>();
@@ -2497,6 +2497,8 @@ export default function App() {
     setPlannerJson(null);
     setPlannerErrore(null);
     bumpStorage();
+    // le visitate eliminate una per una tornano anche loro (se accese nell'estensione)
+    dimenticaVisitateTolte();
     risincronizzaPonte();
   };
   const deleteProfile = (profileId: string, chiedi = true) => {
@@ -2505,6 +2507,11 @@ export default function App() {
     if (chiedi && !confirm(t("confirmDeleteProfile", uiLang, name))) {
       return;
     }
+    // (27/11/2026) una visitata accesa nell'estensione tornerebbe subito dalla sua copia
+    // salvata: si segna, così torna solo con una visita nuova
+    if (profile && profile.origine !== "json" && profile.mondo && profile.playerId !== undefined
+        && tipoCitta(profile, (pid) => !!localStorage.getItem(profileStorageKey(pid, "inventory"))) === "visitata")
+      segnaVisitataTolta(profile.mondo, String(profile.playerId));
     const updated = profiles.filter(p => p.id !== profileId);
     writeStoredJson(PROFILES_KEY, updated);
     clearStoredJson(profileStorageKey(profileId, "city"));
@@ -4308,6 +4315,7 @@ export default function App() {
           alert(t("bookmarkletWarningsAlert", uiLang, missing.join(", "), helper));
         }
       }
+      return id;
     } catch (err) {
       // L'import ha fallito DOPO che il profilo era già stato creato: può
       // capitare in caso di dati parziali che superano la validazione iniziale
@@ -4381,6 +4389,9 @@ export default function App() {
   const [aggiornandoPlanner, setAggiornandoPlanner] = useState(false);
   /** Cresce a ogni "Aggiorna" dall'avviso: nella key del Planner, che riparte dalla città nuova. */
   const [plannerRev, setPlannerRev] = useState(0);
+  /** Cresce alla fine di ogni import dal ponte: i pacchetti arrivati DURANTE l'import (es.
+   *  più città nuove dopo "Elimina tutte") si guardano di nuovo, senza aspettarne un altro. */
+  const [ponteFatti, setPonteFatti] = useState(0);
   /** Import di un pacchetto del ponte (stesso import della bacchetta). */
   const importaDalPonte = async (p: PacchettoPonte, chiave: string, nuova = false) => {
     importandoPonte.current = true;
@@ -4395,9 +4406,12 @@ export default function App() {
       const impronta = improntaDati(senzaDef);
       const dati: unknown = { ...senzaDef, CityEntities: JSON.parse(def.testo) as unknown };
       if (validateBookmarkletData(dati)) return;
-      await importaPayload(dati as BookmarkletData, false, { daPonte: true });
+      const nuovaId = await importaPayload(dati as BookmarkletData, false, { daPonte: true });
       try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si reimporterà */ }
-      if (primaAttiva && localStorage.getItem(ACTIVE_PROFILE_KEY) !== primaAttiva && profiles.some(x => x.id === primaAttiva)) {
+      // (solo dopo un import riuscito: uno che fallisce non si ripete in giro)
+      setPonteFatti(n => n + 1);
+      // solo se è ancora selezionata la città appena importata (non se nel frattempo l'utente ne ha scelta un'altra)
+      if (primaAttiva && nuovaId && localStorage.getItem(ACTIVE_PROFILE_KEY) === nuovaId && nuovaId !== primaAttiva && profiles.some(x => x.id === primaAttiva)) {
         setActiveProfileId(primaAttiva);
         localStorage.setItem(ACTIVE_PROFILE_KEY, primaAttiva);
         loadProfileData(primaAttiva);
@@ -4435,6 +4449,8 @@ export default function App() {
       // il tipo dichiarato dall'estensione e quello del pacchetto devono coincidere
       if (info.tipo !== p.tipo) continue;
       const trovata = trovaCitta(profiles, info);
+      // visitata eliminata nel tool dopo questa visita: torna solo con una visita nuova
+      if (!trovata && p.tipo === "visitata" && info.mondo && info.playerId !== null && visitataTolta(info.mondo, String(info.playerId), p.ts)) continue;
       if (trovata && trovata.id !== activeProfileId) continue; // si aggiorna quando la si seleziona
       const chiave = chiavePonteUltimo(info.mondo ?? "", String(info.playerId ?? info.nome ?? ""));
       if (trovata && localStorage.getItem(chiave) === p.impronta) continue;
@@ -4451,7 +4467,7 @@ export default function App() {
     const tm = setTimeout(() => { void importaDalPonte(p, chiave, nuova); }, 2000);
     return () => clearTimeout(tm);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- importaPayload cambia a ogni render: si riparte solo per arrivi, pausa, visibilità, scheda e città
-  }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles]);
+  }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles, ponteFatti]);
 
   // ── Ponte per gli insediamenti (25/11/2026) ────────────────────────────────
   // Il pacchetto del ponte contiene già l'insediamento attivo del gioco (pirateOutpost,

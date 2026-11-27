@@ -1,7 +1,7 @@
-FoE Optimizer Bridge - versione 0.9.2 beta
-==========================================
+FoE Optimizer Bridge - versione 0.10.0
+======================================
 
-Grazie per provare la beta!
+Grazie per provarla!
 
 COS'È
 -----
@@ -13,8 +13,8 @@ assemblato...) si aggiorna da sola nel tool, senza usare la bacchetta.
 Legge solo i dati che hanno già FoE Helper o Forge Hammer (gli stessi che
 legge la bacchetta), più il numero di versione del gioco, che prende dal
 file del gioco già scaricato dal browser. Non manda richieste al server
-del gioco e non cambia niente nel gioco. Funziona solo per le tue città: quelle che visiti si
-importano sempre con la bacchetta.
+del gioco e non cambia niente nel gioco. Ricorda anche le ultime 10 città
+che visiti in ogni mondo: nel tool vanno solo quelle che accendi nel menu.
 
 COSA SERVE
 ----------
@@ -77,16 +77,25 @@ COME SI USA
 - Cliccando l'icona dell'estensione si apre il menu: i tuoi mondi con lo
   stato, l'helper e l'ultimo aggiornamento (clic per aprire il gioco su
   quel mondo), Apri FoE Optimizer e il Monitor. IT | EN cambia la lingua.
+- Le tue città: una riga per mondo; LIVE / PAUSA mette in pausa tutto il
+  mondo, l'interruttore è quello della città. Città visitate: tutti i
+  mondi, dalla più recente, ognuna con il suo interruttore (acceso = va nel tool e si aggiorna; la tua parte
+  accesa, le visitate spente). Il
+  pallino verde segna la città che stai visitando, la ✕ toglie una
+  visitata dall'estensione (nel tool resta). Il numero sull'icona è
+  quante città ricorda l'estensione.
 
 COSA PROVARE
 ------------
 - Apri il gioco e il tool: la tua città compare o si aggiorna da sola?
 - Sposta, compra, metti in magazzino un edificio, assembla un alleato:
   tornando sul tool la città è aggiornata?
-- Se giochi su più mondi (o sulla beta), aprili insieme.
+- Se giochi su più mondi (o sulla Beta), aprili insieme.
 - Se usi Forge Hammer invece di FoE Helper (o passi dall'uno all'altro).
 - Il Planner: modifica qualcosa nel gioco mentre sei nel Planner.
 - La pausa: clic su LIVE, gioca, poi riprendi.
+- Visita qualche città: compare nel menu? Accendila: arriva nel tool tra
+  le città visitate? Rivisitala: si aggiorna?
 
 SE QUALCOSA NON VA
 ------------------
@@ -106,4 +115,4 @@ TOGLIERLA
 ---------
 Nella pagina delle estensioni: "Rimuovi". Le città nel tool restano.
 
-Questa è una beta: grazie per ogni segnalazione!
+Grazie per ogni segnalazione!

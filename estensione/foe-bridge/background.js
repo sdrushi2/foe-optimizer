@@ -222,6 +222,11 @@ async function deliver(msg, { tool = true, only = null } = {}) {
   for (const [port, st] of [...ports]) {
     if (only && !only.includes(port)) continue;
     if (st.kind !== "monitor" && !tool) continue;
+    if (msg.kind === "visited" && st.kind !== "monitor") {
+      const k = msg.server + "|" + cityKey(msg);
+      st.visits ||= {};
+      st.visits[k] = Math.max(st.visits[k] || 0, msg.ts || 0);
+    }
     if (st.known === S) { send(port, msg); continue; }
     // the page wants the definitions of another world only, or none for now
     if ((st.only && st.only !== S) || st.noDefinitions) { send(port, msg); continue; }
@@ -288,7 +293,7 @@ async function partFromGame(m, tab) {
 
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "foe-bridge") return;
-  ports.set(port, { kind: "?", known: null, noDefinitions: false, only: null });
+  ports.set(port, { kind: "?", known: null, noDefinitions: false, only: null, visits: {} });
   port.onDisconnect.addListener(() => { ports.delete(port); sendTabs(); });
   port.onMessage.addListener(async (m) => {
     const st = ports.get(port);
@@ -298,6 +303,8 @@ chrome.runtime.onConnect.addListener((port) => {
       st.known = m.signature || null;
       st.noDefinitions = !!m.noDefinitions;
       st.only = m.only || null;
+      // visited cities the page already has (key → time of the visit): not sent again from the store
+      if (m.visits && typeof m.visits === "object") st.visits = { ...m.visits };
       log(`${m.type} from a page (${st.kind}; definitions it has: ${m.signature ? short(m.signature) : "none"}${st.only ? "; wants " + short(st.only) : ""}${st.noDefinitions ? "; no definitions wanted" : ""})`);
       const n = await requestSnapshot();
       send(port, { type: "game-tabs", n });
@@ -382,9 +389,13 @@ function noteCity(m) {
       if (gone.length) { await chrome.storage.local.remove(gone.map(x => pkgKey(m.server, x.id))); log(`visited cities forgotten (over ${MAX_VISITED}): ${gone.map(x => x.name).join(", ")}`); }
       return [!w.paused && v.on, true];
     }
-    const prev = w.own[id];
-    const changed = !prev || (m.player && prev.name !== m.player);
-    w.own[id] = { name: m.player || (prev && prev.name) || "?", on: prev ? !!prev.on : true, ts: prev && !changed ? prev.ts : (m.ts || Date.now()) };
+    let prev = w.own[id];
+    let changed = !prev || (m.player && prev.name !== m.player) || (m.avatar && prev.avatar !== m.avatar);
+    // saved by name (the helper gave no id) and now with the id: one entry, same switch
+    if (m.playerId != null && m.player) for (const [k, o] of Object.entries(w.own)) {
+      if (k !== id && o.name === m.player && !/^\d+$/.test(k)) { prev ||= o; delete w.own[k]; changed = true; }
+    }
+    w.own[id] = { name: m.player || (prev && prev.name) || "?", avatar: m.avatar || (prev && prev.avatar) || null, on: prev ? !!prev.on : true, ts: prev && !changed ? prev.ts : (m.ts || Date.now()) };
     return [!w.paused && w.own[id].on, changed];
   });
 }
@@ -401,14 +412,27 @@ async function sendVisits(targets, server = null, id = null) {
     }
     if (!keys.length) return;
     const got = await chrome.storage.local.get(keys);
-    const only = targets || [...ports].filter(([, st]) => st.kind !== "monitor").map(([p]) => p);
-    for (const k of keys) if (got[k] && typeof got[k].json === "string") await deliver({ ...got[k], reason: "stored" }, { only });
+    const pages = targets || [...ports].filter(([, st]) => st.kind !== "monitor").map(([p]) => p);
+    for (const k of keys) {
+      const pkg = got[k];
+      if (!pkg || typeof pkg.json !== "string") continue;
+      // only to the pages that do not have this visit yet (a page asks again at every return to its tab)
+      const vk = pkg.server + "|" + cityKey(pkg);
+      const only = pages.filter(p => { const st = ports.get(p); return st && !((st.visits || {})[vk] >= (pkg.ts || 0)); });
+      if (only.length) await deliver({ ...pkg, reason: "stored" }, { only });
+    }
   } catch (e) { log("could not send the stored visited cities: " + (e && e.message)); }
 }
 
-/** Menu: pause of a world, switch of a city, ✕ of a visited city. */
+/** Menu: pause of a world, switch of a city, ✕ of a visited city, "Delete all" visited cities. */
 async function setSwitch(m) {
   const what = await syncEdit((sync) => {
+    if (m.type === "sync-forget-all") {
+      // "Delete all" in the menu: every visited city of every world (the own ones stay)
+      const gone = [];
+      for (const [srv, w] of Object.entries(sync)) { for (const v of w.visited || []) gone.push(pkgKey(srv, v.id)); w.visited = []; }
+      return [gone, gone.length > 0];
+    }
     const w = worldOf(sync, m.server);
     if (m.type === "sync-pause") { const was = w.paused; w.paused = !!m.paused; return [was && !w.paused ? "resume" : null, was !== w.paused]; }
     if (m.type === "sync-own") {
@@ -428,8 +452,9 @@ async function setSwitch(m) {
     }
     return [null, false];
   });
-  log(`menu: ${m.type} ${m.server}${m.id ? " " + m.id : ""}${"on" in m ? " → " + (m.on ? "on" : "off") : ""}${"paused" in m ? " → " + (m.paused ? "paused" : "live") : ""}`);
+  log(`menu: ${m.type} ${m.server || ""}${m.id ? " " + m.id : ""}${"on" in m ? " → " + (m.on ? "on" : "off") : ""}${"paused" in m ? " → " + (m.paused ? "paused" : "live") : ""}`);
   if (what === "forget") await chrome.storage.local.remove(pkgKey(m.server, m.id));
+  if (Array.isArray(what) && what.length) await chrome.storage.local.remove(what);
   // back on: the own city is asked to the game, the visited ones come from the store
   if (what === "resume") { requestSnapshot(); sendVisits(null, m.server); }
   if (what === "own") requestSnapshot();
@@ -487,6 +512,20 @@ function forgetWorld(server) {
   return done;
 }
 
+const MAX_CITY_CHARS = 16 * 1024 * 1024;
+/** World code, the tab's world, package size, ids and names of a city from a game page. */
+function validCity(m, tab) {
+  const bad = (why) => { validCity.why = why; return false; };
+  if (typeof m.server !== "string" || !/^[a-z]{1,5}\d{1,4}$/.test(m.server)) return bad("unknown world " + String(m.server).slice(0, 20));
+  let host = ""; try { host = new URL(tab.url).hostname; } catch { /* no url */ }
+  if (host !== m.server + ".forgeofempires.com") return bad(`world ${m.server} in a tab of ${host || "?"}`);
+  if (typeof m.json !== "string" || m.json.length > MAX_CITY_CHARS) return bad("package missing or too big");
+  if (m.kind === "visited" && (m.playerId == null || String(m.playerId).length > 20)) return bad("visited city without a player id");
+  if (m.player != null && (typeof m.player !== "string" || m.player.length > 100)) return bad("player name");
+  if (m.avatar != null && (typeof m.avatar !== "string" || m.avatar.length > 500)) return bad("avatar");
+  return true;
+}
+
 /** A message from one of the extension's own pages (menu, monitor), not from a web page. */
 const fromExtension = (sender) => !!sender && typeof sender.url === "string" && sender.url.startsWith(chrome.runtime.getURL(""));
 
@@ -495,16 +534,16 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
   // ✕ in the menu
   // switches in the menu
   // (only from the extension's own pages: never from a game page, which any script there could imitate)
-  if (typeof m.type === "string" && m.type.startsWith("sync-") && typeof m.server === "string" && fromExtension(sender)) {
+  if (typeof m.type === "string" && m.type.startsWith("sync-") && (typeof m.server === "string" || m.type === "sync-forget-all") && fromExtension(sender)) {
     setSwitch(m).then(() => reply({ ok: true }), (e) => { log("switch not changed: " + (e && e.message)); reply({ error: true }); });
     return true;
   }
-  if (m.type === "forget-world" && typeof m.server === "string") {
+  if (m.type === "forget-world" && typeof m.server === "string" && fromExtension(sender)) {
     forgetWorld(m.server).then(reply, (e) => { log("could not forget the world: " + (e && e.message)); reply({ error: true }); });
     return true;
   }
   // the menu asks for the state of the game tabs
-  if (m.type === "popup-status") {
+  if (m.type === "popup-status" && fromExtension(sender)) {
     (async () => {
       let list = await tabsReport();
       // after a restart of the service worker the state is empty: ask the games and wait a moment
@@ -515,6 +554,9 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
   }
   if (m.from !== "game" || !sender.tab) return;
   const tab = sender.tab.id;
+  // a city must come from the world of its tab and be of a sane size: any script in the game
+  // page could send messages, and the visited cities are stored (unlimitedStorage)
+  if (m.type === "city" && !validCity(m, sender.tab)) { log("city refused: " + validCity.why); return; }
   if (m.type === "city") {
     tabInfo(sender.tab, m);
     if (m.kind !== "visited") rememberWorld(m, sender.tab);

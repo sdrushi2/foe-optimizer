@@ -16,46 +16,55 @@
   #lang button[aria-pressed="true"] { background:#334155; color:var(--text); }
   #lang button:hover { color:var(--text); }
   #lang button:focus-visible { outline:2px solid var(--amber); outline-offset:-2px; }
-  #worlds { padding:8px; display:flex; flex-direction:column; gap:6px; }
-  .world { background:var(--card); border:1px solid var(--border); border-radius:7px; }
-  .world.live { border-color:var(--green-line); }
-  .card { position:relative; display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box; padding:7px 9px;
-          color:inherit; border-radius:7px; cursor:pointer; font:inherit; text-align:left; }
-  .card:hover { background:#18233a; }
-  .card:focus-visible { outline:2px solid var(--amber); outline-offset:-2px; }
-  .tile { width:24px; height:24px; border-radius:5px; flex:none; display:flex; align-items:center; justify-content:center;
-          font-weight:600; font-size:12px; background:#1e293b; color:#94a3b8; }
-  .live .tile { background:var(--green-bg); color:#6ee7b7; }
-  .wait .tile { background:var(--amber-bg); color:var(--amber); }
-  .no .tile { background:var(--red-bg); color:var(--red); }
+  #worlds { padding:8px; display:flex; flex-direction:column; gap:10px; }
+  /* two groups (your cities, visited cities), rows like a table: no lines between rows */
+  .gtitle { display:flex; align-items:center; gap:6px; min-height:20px; margin:0 2px 4px; }
+  .gname { flex:1; min-width:0; color:var(--faint); font-size:10px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+  .gtitle button { flex:none; border:1px solid transparent; border-radius:5px; background:none; padding:1px 6px; font:inherit; font-size:11px; cursor:pointer; color:var(--faint); }
+  .gtitle .all:hover { color:var(--red); border-color:#7f2a2a; }
+  .gtitle .yes { border-color:#7f2a2a; color:var(--red); }
+  .gtitle .no { border-color:var(--border); color:var(--dim); }
+  .gtitle button:hover { filter:brightness(1.2); }
+  .gtitle button:focus-visible { outline:2px solid var(--amber); outline-offset:1px; }
+  /* confirmation of "Delete all": takes the place of the title */
+  .gtitle:has(.ask-all) .gname { display:none; }
+  .ask-all { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); font-size:11px; }
+  .table { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:3px 0; }
+  .row { position:relative; display:flex; align-items:center; gap:9px; box-sizing:border-box; min-height:36px; padding:4px 9px; color:inherit; }
+  .row[role="button"] { cursor:pointer; }
+  .row:hover { background:#18233a; }
+  .row:focus-visible { outline:2px solid var(--amber); outline-offset:-2px; }
+  .row.paused .face, .row.paused .info, .row.paused .when, .row.paused .switch { opacity:.55; }
+  .face { width:26px; height:26px; flex:none; border-radius:6px; overflow:hidden; background:#1e293b; color:#94a3b8;
+          display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; }
+  .face img { width:100%; height:100%; object-fit:cover; }
+  .live .face { background:var(--green-bg); color:#6ee7b7; }
+  .wait .face { background:var(--amber-bg); color:var(--amber); box-shadow:0 0 0 1px var(--amber); }
+  .no .face { background:var(--red-bg); color:var(--red); box-shadow:0 0 0 1px var(--red); }
   .info { flex:1; min-width:0; }
   .l1, .l2 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .l1 { font-weight:600; }
   .l1 .srv { color:var(--dim); font-weight:400; }
-  .l2 { color:var(--dim); font-size:11px; }
+  .l2 { font-size:11px; }
   .wait .l2 { color:var(--amber); } .no .l2 { color:var(--red); }
   /* LIVE / PAUSED: pause of the whole world (the switches stay) */
-  .pill { flex:none; padding:2px 7px; border-radius:999px; border:1px solid var(--green-line); background:var(--green-bg); color:#6ee7b7;
+  .pill, .pill-space { flex:none; width:52px; box-sizing:border-box; }
+  .pill { padding:2px 0; text-align:center; border-radius:999px; border:1px solid var(--green-line); background:var(--green-bg); color:#6ee7b7;
           font:600 10px system-ui, sans-serif; letter-spacing:.05em; cursor:pointer; }
   .pill.paused { border-color:#2b5d80; background:#0c2a3e; color:#7dd3fc; }
   .pill:hover { filter:brightness(1.25); }
   .pill:focus-visible { outline:2px solid var(--amber); outline-offset:1px; }
-  .cities { padding:0 9px 7px; border-top:1px solid var(--border); }
-  .paused .cities { opacity:.55; }
-  .sec { color:var(--faint); font-size:10px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin:7px 0 3px; }
-  .none { color:var(--faint); font-size:11px; padding:0 0 2px; }
-  .city { display:flex; align-items:center; gap:7px; min-height:24px; }
-  .face { width:18px; height:18px; flex:none; border-radius:4px; overflow:hidden; background:#1e293b; color:#94a3b8;
-          display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; }
-  .face img { width:100%; height:100%; object-fit:cover; }
-  .city .nm { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .now { display:inline-block; width:7px; height:7px; margin-left:5px; border-radius:50%; background:var(--green); box-shadow:0 0 5px rgba(52,211,153,.7); vertical-align:1px; }
+  .switch-space { flex:none; width:28px; }
+  .now { display:inline-block; width:7px; height:7px; margin-left:6px; border-radius:50%; background:var(--green); box-shadow:0 0 5px rgba(52,211,153,.7); vertical-align:1px; }
   .when { flex:none; color:var(--faint); font-size:10px; }
-  .rm { flex:none; width:18px; height:18px; padding:0; border:none; border-radius:4px; background:none; color:var(--faint); font-size:11px; cursor:pointer; visibility:hidden; }
-  .city:hover .rm, .rm:focus-visible { visibility:visible; }
-  .city:hover .when { display:none; }
+  /* ✕ of a visited city: on hover or keyboard focus (it takes the place of "visited … ago") */
+  .rm { flex:none; width:18px; height:18px; padding:0; border:none; border-radius:4px; background:none; color:var(--faint); font-size:11px; cursor:pointer;
+        position:absolute; opacity:0; pointer-events:none; }
+  .city:hover .rm, .city:focus-within .rm { position:static; opacity:1; pointer-events:auto; }
+  .city:hover .when, .city:focus-within .when { display:none; }
+  .rm:focus-visible { outline:2px solid var(--amber); outline-offset:-1px; }
   .rm:hover { color:var(--red); }
-  .ask .nm { color:var(--text); }
+  .ask .nm { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
   .ask button { flex:none; border:1px solid var(--border); border-radius:5px; background:none; padding:1px 7px; font:inherit; font-size:11px; cursor:pointer; color:var(--dim); }
   .ask .yes { border-color:#7f2a2a; color:var(--red); }
   .ask button:hover { color:var(--text); }
@@ -65,11 +74,13 @@
   .switch.on { background:var(--green-bg); border-color:var(--green-line); }
   .switch.on .knob { left:14px; background:var(--green); }
   .switch:focus-visible { outline:2px solid var(--amber); outline-offset:1px; }
+  /* ✕ of a world that is not open: on hover, before the pill */
   .forget { flex:none; width:20px; height:20px; padding:0; border:none; border-radius:5px; background:none; color:var(--faint); font-size:12px; cursor:pointer; opacity:0; }
-  .card:hover .forget, .card:focus-within .forget { opacity:1; }
+  .row:hover .forget, .row:focus-within .forget { opacity:1; }
   .forget:hover { color:var(--red); }
   .empty { color:var(--dim); padding:4px 4px 6px; }
-  footer { display:flex; justify-content:space-between; align-items:center; padding:7px 12px; border-top:1px solid var(--border); }
+  /* links (FoE Optimizer, monitor): right under the header */
+  footer { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; border-bottom:1px solid var(--border); }
   footer button { background:none; border:none; padding:2px 0; font:inherit; cursor:pointer; }
   #tool { color:var(--amber); font-weight:600; }
   #tool:hover { text-decoration:underline; }
@@ -80,8 +91,9 @@
 <body>
 <header><img src="icons/icon-32.png" alt=""><span class="name"><b>FoE Optimizer Bridge</b><span class="ver" id="version"></span></span>
   <span id="lang" role="group"><button type="button" data-lang="it" aria-pressed="true">IT</button><button type="button" data-lang="en" aria-pressed="false">EN</button></span></header>
-<div id="worlds"></div>
 <footer><button id="tool">Apri FoE Optimizer ↗</button><button id="monitor">Monitor</button></footer>
+<div id="worlds"></div>
+
 <script src="popup.js"></script>
 </body>
 </html>

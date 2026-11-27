@@ -226,10 +226,27 @@ export function risincronizzaPonte() {
     const vecchie = Object.keys(localStorage).filter((k) => k.startsWith("foe_global_ponte_ultimo_") || k.startsWith("foe_global_ponte_insediamento_"));
     for (const k of vecchie) localStorage.removeItem(k);
   } catch { /* storage non disponibile */ }
-  if (!stato.pausa) window.postMessage({ type: "foe-bridge-request", what: "snapshot" }, location.origin);
+  // fresh: l'estensione rimanda anche le città visitate accese che questa pagina aveva già
+  if (!stato.pausa) window.postMessage({ type: "foe-bridge-request", what: "snapshot", fresh: true }, location.origin);
 }
 
 export function pacchettiPonte(): PacchettoPonte[] { return [...pacchetti.values()]; }
+
+// (27/11/2026) Città visitate eliminate nel tool: l'estensione rimanda la sua copia salvata
+// delle visitate accese (aprendo il tool, ricollegandosi), quindi una visitata eliminata
+// tornerebbe subito. Si segna quando la si elimina: torna solo con una visita più recente.
+// "Elimina tutte le città" toglie i segni (lì devono tornare tutte).
+const chiaveTolta = (mondo: string, id: string) => chiaveGlobale("ponte_tolta", mondo, id);
+export function segnaVisitataTolta(mondo: string, id: string) {
+  try { localStorage.setItem(chiaveTolta(mondo, id), String(Date.now())); } catch { /* storage pieno: tornerà */ }
+}
+/** La visitata è stata eliminata nel tool dopo questo pacchetto (ts = ora della visita)? */
+export function visitataTolta(mondo: string, id: string, ts: number): boolean {
+  try { const v = Number(localStorage.getItem(chiaveTolta(mondo, id))); return v > 0 && ts <= v; } catch { return false; }
+}
+export function dimenticaVisitateTolte() {
+  try { Object.keys(localStorage).filter((k) => k.startsWith("foe_global_ponte_tolta_")).forEach((k) => localStorage.removeItem(k)); } catch { /* niente */ }
+}
 const chiavePacchetto = (p: Pick<PacchettoPonte, "server" | "giocatore" | "tipo">) => p.server + "|" + p.giocatore + "|" + p.tipo;
 /** Ultimo pacchetto arrivato della stessa città (stesso mondo, giocatore e tipo). */
 export function pacchettoPonte(p: Pick<PacchettoPonte, "server" | "giocatore" | "tipo">): PacchettoPonte | null { return pacchetti.get(chiavePacchetto(p)) ?? null; }

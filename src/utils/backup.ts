@@ -23,8 +23,8 @@ import {
 
 const CHIAVI_EXTRA: readonly string[] = [TEMA_KEY, POTENZA_PLANNER_KEY];
 const nostra = (k: string) => k.startsWith("foe_") || CHIAVI_EXTRA.includes(k);
-/** Impronte degli ultimi import del ponte (data/ponte.ts): né esportate né ripristinate. */
-const impronta = (k: string) => /^foe_global_ponte_(ultimo|insediamento)_/.test(k);
+/** Impronte degli ultimi import del ponte (data/ponte.ts) e città visitate tolte (27/11/2026): né esportate né ripristinate. */
+const impronta = (k: string) => /^foe_global_ponte_(ultimo|insediamento|tolta)_/.test(k);
 const chiaveProfili = /^foe_global_profiles_v\d+$/;
 const chiaveAttivo = /^foe_global_active_profile_v\d+$/;
 

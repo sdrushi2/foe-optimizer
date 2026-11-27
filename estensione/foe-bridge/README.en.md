@@ -1,4 +1,4 @@
-# FoE Optimizer Bridge (beta)
+# FoE Optimizer Bridge
 
 *Italiano: [README.md](README.md)*
 
@@ -71,17 +71,19 @@ For a new version: replace the files in the folder and press ↻ on the extensio
 
 ## The menu
 
-Click the extension icon to open the menu: one card per world, the open ones first. The
+Click the extension icon to open the menu: two groups of rows, like a table. **Your
+cities** (one row per world, the open ones first) and **Visited cities** (all worlds, most
+recent first; the group appears when there is at least one). The
 menu is in Italian by default; the **IT | EN** switch in the header changes it (the choice
 is saved). The monitor and the log stay in English.
 
-- Each card shows the world (F, β for Beta…), the player, the server, the helper and the
-  state: **LIVE** with the last update, **WAIT** or **RELOAD** with what is missing,
-  **CONFLICT** when FoE Helper and Forge Hammer are both active, **ERROR** when the city
-  arrives but the tool cannot import it (the helper no longer points to the definitions
-  file: use the wand and send the report), **PLAY** with the last
-  game for a world that is not open.
-- Click a card: if the game is already open on that world its tab comes to the front,
+- The row of a world: your city's avatar (or the world's letter, β for Beta), the
+  player, the world, **LIVE / PAUSED** and your city's switch. The helper and the last
+  update are in the tooltip (on hover). A second line appears only when there is a problem:
+  what is missing (reload the game, wait for the helper…), FoE Helper and Forge Hammer both
+  active, or the city arrives but the tool cannot import it (the helper no longer points to
+  the definitions file: use the wand and send the report).
+- Click the row of a world: if the game is already open on that world its tab comes to the front,
   otherwise the game opens on that world. Before the first game there is no card (the
   extension cannot know your server and language), only a short note.
 - On a world that is not open, the ✕ that appears on hover deletes that world and its data
@@ -95,16 +97,19 @@ is saved). The monitor and the log stay in English.
 - **LIVE / PAUSED** on the right of the card: pauses (or resumes) the whole world. While
   paused none of its cities goes to FoE Optimizer; the switches stay as they are and, when
   resuming, the cities switched on come back at once.
-- **Your city**, with its switch: on at the start, it can be paused.
-- **Visited cities**: the last 10 of each world, most recent first, with avatar and "visited
+- **The switch of the row** is your city's: on at the start, it can be paused.
+- **Visited cities**: the last 10 of each world, all together most recent first, with the world next to the name, with avatar and "visited
   … ago"; the **green dot** marks the one you are visiting now. The switch (off at the
   start) brings it to FoE Optimizer at once and keeps it updated at every visit; switched
   off, it stays in FoE Optimizer as it is. From the eleventh visit on, the oldest one
   switched off goes (those switched on always stay). The ✕ (on hover, with a confirmation
   in the row) removes it from the extension only: it stays in FoE Optimizer.
+- **Delete all**, on the title row of the visited cities (with a confirmation on the same
+  row), removes every visited city from the extension, also those switched on; they stay in
+  FoE Optimizer.
 - **The number on the icon** is how many cities the extension remembers (yours and
   visited, all worlds): 1 to 9, then "9+"; with no city there is none.
-- **Open FoE Optimizer ↗**: brings the tool tab used last to the front (online or on
+- **Open FoE Optimizer ↗** (under the header): brings the tool tab used last to the front (online or on
   localhost), otherwise opens the site. **Monitor**: the test page.
 
 ## Debugging
@@ -157,7 +162,7 @@ definitions, worlds, cities, log) to paste into a bug report.
   you visit; the other maps do not go through it.
 - **Several accounts on the same world**: each has its own row under "Your city",
   recognised by the player id.
-- **Several worlds open** (for example beta and live): each tab sends its own city;
+- **Several worlds open** (for example Beta and live): each tab sends its own city;
   FoE Optimizer keeps them apart.
 - **Other pages on localhost** (another project in development): the extension enters them
   too but stays silent until the page introduces itself as FoE Optimizer: pages that do not
@@ -184,4 +189,4 @@ Lines starting with "·" in the monitor log describe every step of the extension
   shows it in the browser's language, in Italian for languages other than English).
 - `icons/` – the FoE Optimizer icon (16, 32, 48, 128 px).
 - `README.md` (Italian) / `README.en.md` (English) – this guide.
-- `istruzioni.txt` – short instructions for beta testers (Italian).
+- `istruzioni.txt` – short instructions for testers (Italian).

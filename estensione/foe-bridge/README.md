@@ -1,4 +1,4 @@
-# FoE Optimizer Bridge (beta)
+# FoE Optimizer Bridge
 
 *English: [README.en.md](README.en.md)*
 
@@ -75,17 +75,19 @@ si ricollegano da sole.
 
 ## Il menu
 
-Clicca l'icona dell'estensione per aprire il menu: una scheda per ogni mondo, prima
-quelli aperti. Il menu è in italiano; il selettore **IT | EN** nella testata lo cambia (la
+Clicca l'icona dell'estensione per aprire il menu: due gruppi di righe, come una tabella.
+**Le tue città** (una riga per mondo, prima quelli aperti) e **Città visitate** (tutti i
+mondi, dalla più recente; il gruppo compare se ce n'è almeno una). Il menu è in italiano; il selettore **IT | EN** nella testata lo cambia (la
 scelta resta salvata). Il monitor e il log restano in inglese.
 
-- Ogni scheda mostra il mondo (F, β per la Beta…), il giocatore, il server, l'helper e lo
-  stato: **LIVE** con l'ultimo aggiornamento, **ATTESA** o **RICARICA** con quello che
-  manca, **CONFLITTO** quando FoE Helper e Forge Hammer sono attivi insieme, **ERRORE**
-  quando la città arriva ma il tool non la può importare (l'helper non indica più il file
-  delle definizioni: si usa la bacchetta e si manda il report), **GIOCA**
-  con l'ultima partita per un mondo che non è aperto.
-- Clic su una scheda: se il gioco è già aperto su quel mondo la sua scheda del browser
+- La riga di un mondo: l'avatar della tua città (o la lettera del mondo, β per la Beta),
+  il giocatore, il mondo, **LIVE / PAUSA** e l'interruttore della tua città. L'helper e
+  l'ultimo aggiornamento sono nel suggerimento (passando il mouse). Una seconda riga compare
+  solo se c'è un problema: quello che manca (ricarica il gioco, aspetta l'helper…), FoE
+  Helper e Forge Hammer attivi insieme, oppure la città arriva ma il tool non la può
+  importare (l'helper non indica più il file delle definizioni: si usa la bacchetta e si
+  manda il report).
+- Clic sulla riga di un mondo: se il gioco è già aperto su quel mondo la sua scheda del browser
   passa in primo piano, altrimenti il gioco si apre su quel mondo. Prima della prima
   partita non c'è nessuna scheda (l'estensione non può sapere server e lingua), solo una
   breve nota.
@@ -100,16 +102,20 @@ scelta resta salvata). Il monitor e il log restano in inglese.
 - **LIVE / PAUSA** a destra della scheda: mette in pausa (o riprende) tutto il mondo.
   In pausa nessuna sua città va a FoE Optimizer; gli interruttori restano come sono e,
   riprendendo, le città accese tornano subito.
-- **La tua città**, con il suo interruttore: accesa all'inizio, la si può mettere in pausa.
-- **Città visitate**: le ultime 10 di ogni mondo, dalla più recente, con avatar e "visitata
+- **L'interruttore della riga** è quello della tua città: acceso all'inizio, la si può mettere
+  in pausa.
+- **Città visitate**: le ultime 10 di ogni mondo, tutte insieme dalla più recente, con il mondo accanto al nome, con avatar e "visitata
   … fa"; il **pallino verde** segna quella che stai visitando ora. L'interruttore (spento
   all'inizio) la porta subito in FoE Optimizer e la tiene aggiornata a ogni visita; spento,
   in FoE Optimizer resta com'è. Dall'undicesima visita in poi esce la più vecchia spenta
   (le accese restano sempre). La ✕ (passando il mouse, con una conferma nella riga) la
   toglie solo dall'estensione: in FoE Optimizer resta.
+- **Elimina tutte**, sulla riga del titolo delle città visitate (con una conferma sulla stessa
+  riga), toglie tutte le città visitate dall'estensione, anche quelle accese; in FoE
+  Optimizer restano.
 - **Il numero sull'icona** dell'estensione è quante città ricorda l'estensione (tue e
   visitate, tutti i mondi): da 1 a 9, poi "9+"; con nessuna città non c'è.
-- **Apri FoE Optimizer ↗**: porta in primo piano la scheda del tool usata per ultima
+- **Apri FoE Optimizer ↗** (sotto la testata): porta in primo piano la scheda del tool usata per ultima
   (online o su localhost), altrimenti apre il sito. **Monitor**: la pagina di prova.
 
 ## Debug
@@ -163,7 +169,7 @@ definizioni salvate, mondi, città, log) da incollare in una segnalazione.
   città che visiti; le altre mappe non passano da lì.
 - **Più account sullo stesso mondo**: ognuno ha la sua riga in "La tua città",
   riconosciuta dall'id del giocatore.
-- **Più mondi aperti** (per esempio beta e live): ogni scheda manda la sua città; FoE
+- **Più mondi aperti** (per esempio Beta e live): ogni scheda manda la sua città; FoE
   Optimizer le tiene separate.
 - **Altre pagine su localhost** (un altro progetto in sviluppo): l'estensione entra anche lì
   ma resta muta finché la pagina non si presenta come FoE Optimizer: le pagine che non si
@@ -191,4 +197,4 @@ definizioni salvate, mondi, città, log) da incollare in una segnalazione.
   compare nella lingua del browser, in italiano per le lingue diverse dall'inglese).
 - `icons/` – l'icona di FoE Optimizer (16, 32, 48, 128 px).
 - `README.md` (italiano) / `README.en.md` (inglese) – questa guida.
-- `istruzioni.txt` – istruzioni brevi per chi prova la beta.
+- `istruzioni.txt` – istruzioni brevi per chi prova l'estensione.

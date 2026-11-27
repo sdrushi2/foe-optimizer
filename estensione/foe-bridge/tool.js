@@ -39,12 +39,15 @@
    *  again after a reconnection, so the request is not lost while the worker sleeps. */
   let wanted = null, wantedAt = 0;
   const WANTED_MS = 60000;   // the site gives up after a minute: so do we
-  const askDefinitions = () => port && port.postMessage({ type: "request", kind: "tool", signature: null, noDefinitions: false, only: wanted || null });
+  /** Visited cities passed to this page (server|player id → time of the visit): the extension
+   *  does not send them again from its store when the page reconnects or asks for a snapshot. */
+  const visits = {};
+  const askDefinitions = () => port && port.postMessage({ type: "request", kind: "tool", signature: null, noDefinitions: false, only: wanted || null, visits });
   const hello = () => {
     if (!port) return;
     if (wanted !== null && Date.now() - wantedAt > WANTED_MS) wanted = null;
     if (wanted !== null) askDefinitions();
-    else port.postMessage({ type: "hello", kind: "tool", signature: known, noDefinitions: true });
+    else port.postMessage({ type: "hello", kind: "tool", signature: known, noDefinitions: true, visits });
   };
   let offline = false;
   let beat = null;
@@ -61,6 +64,7 @@
     try { port = chrome.runtime.connect({ name: "foe-bridge" }); } catch { port = null; goOffline(); return; }
     port.onMessage.addListener((m) => {
       // kind (0.10.0): "own" or "visited" (a site that does not know it treats every city as own)
+      if (m.type === "city" && m.kind === "visited") { const k = m.server + "|" + String(m.playerId ?? m.player ?? ""); visits[k] = Math.max(visits[k] || 0, m.ts || 0); }
       if (m.type === "city") toSite({ event: "city", kind: m.kind === "visited" ? "visited" : "own", reason: m.reason, ts: m.ts, server: m.server, player: m.player, playerId: m.playerId, signature: m.signature, json: m.json });
       else if (m.type === "definitions") {
         toSite({ event: "definitions", signature: m.signature, part: m.part, parts: m.parts, text: m.text });
@@ -97,9 +101,14 @@
       wanted = typeof e.data.signature === "string" ? e.data.signature : ""; wantedAt = Date.now();
       if (!port) connect(); else askDefinitions();
     }
-    // snapshot: with the connection closed (worker asleep, tab hidden) the reconnection asks
-    // for one by itself (hello = fresh snapshot); otherwise it is asked now
-    else if (!port) connect();
-    else port.postMessage({ type: "request", kind: "tool", signature: known, noDefinitions: true });
+    else {
+      // fresh (the site emptied its cities or resumed from its pause): everything again, also
+      // the visited cities it already had
+      if (e.data.fresh) for (const k of Object.keys(visits)) delete visits[k];
+      // snapshot: with the connection closed (worker asleep, tab hidden) the reconnection asks
+      // for one by itself (hello = fresh snapshot); otherwise it is asked now
+      if (!port) connect();
+      else port.postMessage({ type: "request", kind: "tool", signature: known, noDefinitions: true, visits });
+    }
   });
 })();

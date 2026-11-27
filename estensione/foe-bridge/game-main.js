@@ -245,7 +245,7 @@
       lastJson = json;
       emit({
         type: "city", kind: "own", reason, ts: Date.now(),
-        server: r.data.server, player: r.data.playerName || "", playerId: r.playerId,
+        server: r.data.server, player: r.data.playerName || "", playerId: r.playerId, avatar: r.data.portraitUrl || null,
         helper: r.helper, map: r.map, ...(clientVerKnown ? { gameVersion: clientVerKnown } : {}),
         signature: definitionsSignature(source().S), prepMs: Math.round(performance.now() - t0), json,
       });
