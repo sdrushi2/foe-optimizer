@@ -23,7 +23,7 @@ import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_STREET2, type Riepilog
 import { t, type UiLang } from "../data/ui-strings";
 import { localDateStamp, prefissoFile } from "../utils/format";
 import { POTENZA_PLANNER_KEY } from "../utils/storage";
-import { esportaCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
+import { esportaCittaJson, scaricaJson, type CittaJson, type MetaExport } from "../data/cityMapJson";
 import { ChartColumn, Clapperboard, Cpu, Map as MapIcon, Pause, Pencil, Play, RotateCcw, SkipForward, Sparkles, Undo2, type LucideIcon } from "lucide-react";
 import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
 import { cittaDaEditor } from "./editorPonte";
@@ -1238,7 +1238,14 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     return `${prefissoFile(nomePerFile)}-planner-${disposizione}-${localDateStamp()}.${ext}`;
   };
   /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
-  const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema(), undefined, esterna ? null : undefined), nomeFile(n, "json"));
+  /** Intestazione degli export: la città selezionata (undefined = quella impostata da App) o,
+   *  per una città da JSON, giocatore, era e avatar del file. */
+  const metaExport = (): MetaExport | undefined => esterna ? {
+    ...(esterna.giocatore ? { player: { id: esterna.giocatore.id, name: esterna.giocatore.nome } } : {}),
+    ...(esterna.giocatore?.era ? { currentEra: esterna.giocatore.era } : {}),
+    ...(esterna.avatar ? { avatar: esterna.avatar } : {}),
+  } : undefined;
+  const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema(), undefined, metaExport()), nomeFile(n, "json"));
   /** Scarica la mappa come PNG, con lo stesso disegno dell'export del pannello MAPPA (renderCityMapPng). */
   /** Riquadro delle modifiche per il PNG (Planner ed editor): undefined se la
    *  città non è modificata ("Modifica città"). */
@@ -1310,7 +1317,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     const edifici = edificiFrame(f, e.n);
     e.idMap = new Map();
     e.gen = genRef.current;
-    const json = esportaCittaJson(edifici, areeProblema(), e.idMap, esterna ? null : undefined);
+    const json = esportaCittaJson(edifici, areeProblema(), e.idMap, metaExport());
     const perId = new Map(edifici.map(b => [b.mapEntityId, b]));
     const colori: Record<string, string> = {};
     for (const [jid, mid] of e.idMap) {

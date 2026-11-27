@@ -7060,6 +7060,7 @@ export default function App() {
     const p = profiles.find(x => x.id === activeProfileId);
     impostaMetaExport(haCitta ? {
       player: { id: p?.playerId ?? null, name: p ? nomeGiocatore(p) : "" },
+      ...(sanitizePortraitUrl(p?.avatar) ? { avatar: sanitizePortraitUrl(p?.avatar) } : {}),
       region: gameLang,
       ...(currentEra ? { currentEra } : {}),
       cittaReale: cityMapBuildings,

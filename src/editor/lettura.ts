@@ -14,7 +14,7 @@ import { localDateStamp, prefissoFile } from "../utils/format";
 export { impostaCatalogoExtra } from "../data/cityMapJson";
 
 /** Giocatore ed era della città nell'editor (per il JSON salvato). */
-type Meta = { player?: { id: number | null; name: string }; currentEra?: string };
+type Meta = { player?: { id: number | null; name: string }; currentEra?: string; avatar?: string };
 
 /** Qualsiasi JSON della città che legge il tool (completa o solo città: conta la
  *  mappa), convertito nel formato dell'export della Mappa, che l'editor disegna. */
@@ -26,6 +26,7 @@ export function leggiJson(testo: string, lang: "it" | "en"): { ok: true; json: u
     const meta: MetaExport = {
       ...(c.giocatore ? { player: { id: c.giocatore.id, name: c.giocatore.nome } } : {}),
       ...(c.giocatore?.era ? { currentEra: c.giocatore.era } : {}),
+      ...(c.avatar ? { avatar: c.avatar } : {}),
     };
     return { ok: true, json: esportaCittaJson(c.buildings, c.aree, undefined, meta), ignorati: c.ignorati ?? [], nome: c.giocatore?.nome ?? null };
   } catch (err) {

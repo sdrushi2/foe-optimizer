@@ -58,6 +58,9 @@ export interface CityMapJson {
   /** Espansioni con width/length sempre esplicite (come i file di Hammer). */
   mapData: Array<{ x: number; y: number; width: number; length: number }>;
   // ── bookmarklet / Linnun / FoE Optimizer
+  /** (27/11/2026) Avatar del giocatore: URL sui server del gioco, come la chiave della
+   *  bacchetta (gli altri tool la ignorano; Importa da JSON lo mette alla città). */
+  portraitUrl?: string;
   CityMapData: Record<string, MapEntryJson>;
   CityEntities: Record<string, EntityJson>;
   UnlockedAreas: UnlockedArea[];
@@ -69,6 +72,8 @@ export interface CityMapJson {
  *  es. Planner con una città da JSON). */
 export interface MetaExport {
   player?: { id: number | null; name: string }; region?: string; currentEra?: string;
+  /** Avatar del giocatore (URL), scritto in `portraitUrl`. */
+  avatar?: string;
   /** Città REALE (per `cityData`): negli export del Planner è diversa dal
    *  piano; se manca, cityData = il piano stesso. */
   cittaReale?: readonly CityMapBuilding[];
@@ -144,6 +149,7 @@ export function esportaCittaJson(buildings: readonly CityMapBuilding[], aree: re
     ...(m.currentEra ? { currentEra: m.currentEra } : {}),
     cityData, mapBuildings, storedBuildings: [], deletedBuildings: [],
     mapData: UnlockedAreas.map(a => ({ x: Number(a.x ?? 0), y: Number(a.y ?? 0), width: Number(a.width ?? 4), length: Number(a.length ?? 4) })),
+    ...(m.avatar ? { portraitUrl: m.avatar } : {}),
     CityMapData, CityEntities, UnlockedAreas,
   };
 }
@@ -157,6 +163,8 @@ export interface CittaJson {
   /** Giocatore del file (player / currentEra di Hammer e del nostro export):
    *  il gruppo "Giocatore" del nastro del Planner con la sorgente JSON. */
   giocatore?: { nome: string; id: number | null; era: string | null };
+  /** (27/11/2026) Avatar del giocatore del file (portraitUrl). */
+  avatar?: string;
 }
 
 function celle(aree: ReadonlyArray<{ x?: unknown; y?: unknown; width?: unknown; length?: unknown }>): Set<string> {
@@ -234,6 +242,8 @@ export interface CittaLetta {
   ignorati: string[];
   giocatore: { nome: string; id: number | null } | null;
   currentEra: string | null;
+  /** avatar del giocatore (portraitUrl, come la bacchetta), se il file lo ha */
+  avatar: string | null;
   /** solo vecchio formato (buildings / roads): celle di strada dichiarate */
   strade?: number;
 }
@@ -266,6 +276,8 @@ export function leggiCitta(dati: unknown): CittaLetta {
   const pl = oggetto(d.player);
   const giocatore = pl && typeof pl.name === "string" && pl.name.trim() ? { nome: pl.name.trim(), id: numero(pl.id) ?? null } : null;
   const currentEra = typeof d.currentEra === "string" ? d.currentEra : null;
+  // (controllo completo dell'indirizzo, host del gioco compreso, all'import: sanitizePortraitUrl)
+  const avatar = typeof d.portraitUrl === "string" && d.portraitUrl.startsWith("https://") && d.portraitUrl.length <= 300 ? d.portraitUrl : null;
 
   // 1) la disposizione: voci grezze { key, entityId, x, y, era?, voce }
   type Grezza = { key: string; entityId: string; x: unknown; y: unknown; era?: unknown; voce: Rec; w?: number; h?: number; lv?: number; nome?: string; tipo?: string };
@@ -322,7 +334,7 @@ export function leggiCitta(dati: unknown): CittaLetta {
     pezzi.push({ key: g.key, entityId, type, nome, x: Number(g.x ?? 0) || 0, y: Number(g.y ?? 0) || 0, w, h, lv, era, voce: g.voce });
   }
   if (!pezzi.some(p => p.type === "main_building")) throw new ErroreJsonCitta("senzaMunicipio");
-  return { pezzi, aree: aree as UnlockedArea[], ignorati, giocatore, currentEra, ...(strade !== undefined ? { strade } : {}) };
+  return { pezzi, aree: aree as UnlockedArea[], ignorati, giocatore, currentEra, avatar, ...(strade !== undefined ? { strade } : {}) };
 }
 
 /** "Connessi inutilmente" (come l'import con la bacchetta, App.tsx): edifici
@@ -364,6 +376,7 @@ export function leggiCittaDati(dati: unknown): CittaJson {
     buildings, cells: celle(l.aree), strade, aree: areeBookmarklet(l.aree),
     ...(l.ignorati.length ? { ignorati: l.ignorati } : {}),
     ...(l.giocatore ? { giocatore: { ...l.giocatore, era: l.currentEra } } : {}),
+    ...(l.avatar ? { avatar: l.avatar } : {}),
   };
 }
 

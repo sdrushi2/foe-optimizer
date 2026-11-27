@@ -103,6 +103,8 @@ export function cittaDaJson(testo: string): CittaDaJson {
     _v: CURRENT_BOOKMARKLET_VERSION, activeMap: "OtherPlayer",
     inventory: [], allies: {}, CityMapData, CityEntities, UnlockedAreas: l.aree,
     ...(nome ? { playerName: nome } : {}),
+    // avatar del file: importaPayload lo controlla (sanitizePortraitUrl) e lo mette alla città
+    ...(l.avatar ? { portraitUrl: l.avatar } : {}),
   };
   return { data, ignorati: l.ignorati, nome };
 }
