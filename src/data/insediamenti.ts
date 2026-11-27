@@ -53,9 +53,11 @@ interface ConfigInsediamento {
   /**
    * Ottimizzatore della disposizione (src/insediamenti/mughal/ottimizzatore.ts): le residenze
    * (collegamento facoltativo, rupie), gli edifici senza strada e la strada. Tutto il resto
-   * con un numero > 0 nella legenda è "fisso" e sempre collegato.
+   * con un numero > 0 nella legenda è "fisso" e sempre collegato. `produttori` (27/11/2026):
+   * edifici che producono rupie consumando popolazione; se sbloccati l'ottimizzatore sceglie
+   * quanti metterne, insieme alle residenze.
    */
-  ottimizzatore?: { residenze: string[]; senzaStrada: string[]; strada: string; diplomazia: string[] };
+  ottimizzatore?: { residenze: string[]; produttori: string[]; senzaStrada: string[]; strada: string; diplomazia: string[] };
   testi: { comeImportare: UiKey; visitaPrima: UiKey; helperNonSupportato: UiKey; nessunMunicipio: UiKey };
 }
 
@@ -177,7 +179,8 @@ const MUGHAL: ConfigInsediamento = {
   // gli altri 9 si sbloccano con gli advancements (verificato su un insediamento nuovo del beta)
   // diplomazia: esclusa dalla disposizione di produzione (serve solo per gli sblocchi, avrà la
   // sua ottimizzazione); nella legenda niente − / + né casella (25/11/2026, utente)
-  ottimizzatore: { residenze: ["bhavan", "shanti", "haveli"], senzaStrada: ["canale", "vialetto"], strada: "sentiero", diplomazia: ["chhatri", "baldacchino", "charbagh", "canale", "vialetto"] },
+  // (27/11/2026) Chhatri, Baldacchino e Chahar bagh producono rupie: li dispone l'ottimizzatore
+  ottimizzatore: { residenze: ["bhavan", "shanti", "haveli"], produttori: ["chhatri", "baldacchino", "charbagh"], senzaStrada: ["canale", "vialetto"], strada: "sentiero", diplomazia: ["chhatri", "baldacchino", "charbagh", "canale", "vialetto"] },
   sblocchi: {
     prefisso: "_Mughals_",
     partenza: ["R_Mughals_Residential1", "B_Mughals_CulturalGoodsProduction1", "J_Mughals_Diplomacy2", "S_Mughals_Street1"],

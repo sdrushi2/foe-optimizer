@@ -352,6 +352,17 @@ type PiratiToolProps = {
 
 /** Edifici che vorrebbero la strada e non toccano una strada collegata all'Ambasciata
  *  (strade collegate = raggiungibili da quelle attaccate all'Ambasciata). */
+/** (27/11/2026) Rupie all'ora di un edificio collegato. Le residenze hanno un solo tempo; i
+ *  produttori della diplomazia ne hanno sei: si conta quello da 5 ore (`ORE_RACCOLTA`), lo stesso
+ *  ritmo della colonna Produzione dei tentativi ("/5h"). */
+const ORE_RACCOLTA = 5;
+function rupieOraDi(b: { currency?: { prod?: Array<[number, number]> } } | undefined): number {
+  const prod = b?.currency?.prod;
+  if (!prod?.length) return 0;
+  const p = prod.find(([, sec]) => sec === ORE_RACCOLTA * 3600) ?? prod[0]!;
+  return p[0] / (p[1] / 3600);
+}
+
 function nonCollegati(placements: Placement[], opt: { strada: string; senzaStrada: string[] } | undefined): Set<Placement> {
   const out = new Set<Placement>();
   if (!opt) return out;
@@ -2237,16 +2248,15 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     for (let r = 0; r < gridRows; r++) for (let c = 0; c < gridCols; c++) {
       libere[r * gridCols + c] = gridMask[r]?.[c] && !obstacles.has(cellKey(storageCell(r, c))) ? 1 : 0;
     }
-    const tipo = (b: BuildingType): TipoOttimizzatore => {
-      const p = b.currency?.prod?.[0];
-      return { id: b.id, w: b.width, h: b.height, pop: b.pop, rupieOra: p ? p[0] / (p[1] / 3600) : 0 };
-    };
+    const tipo = (b: BuildingType): TipoOttimizzatore => ({ id: b.id, w: b.width, h: b.height, pop: b.pop, rupieOra: rupieOraDi(b) });
     const req: RichiestaOttimizzatore = {
       righe: gridRows, colonne: gridCols, libere, ambasciata: { w: MUNICIPIO.width, h: MUNICIPIO.height },
       fisse: buildings
         .filter((b) => b.count > 0 && !opt.residenze.includes(b.id) && b.id !== opt.strada && !opt.diplomazia.includes(b.id))
         .map((b) => ({ tipo: tipo(b), quante: b.count, senzaStrada: opt.senzaStrada.includes(b.id) })),
       residenze: buildings.filter((b) => opt.residenze.includes(b.id) && sbloccato(b.cityentityId)).map(tipo),
+      // (27/11/2026) Chhatri & co.: quanti metterne lo sceglie l'ottimizzatore
+      produttori: buildings.filter((b) => opt.produttori.includes(b.id) && sbloccato(b.cityentityId) && rupieOraDi(b) > 0).map(tipo),
       tempoMs: OTT_TEMPO_MS,
       // strade già costruite nel gioco (import): non si eliminano, al massimo si parcheggiano
       stradeEsistenti: baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0,
@@ -2254,7 +2264,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     return req;
   };
   const firmaRichiesta = (req: RichiestaOttimizzatore) =>
-    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), req.stradeEsistenti].join("|");
+    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), (req.produttori ?? []).map((r) => r.id).join(","), req.stradeEsistenti].join("|");
   /** Lancia i worker: `base` = tentativi da cui ripartire (Continua), `infinito` = fino a Stop. */
   const lanciaOttimizzatore = (req: RichiestaOttimizzatore, base: Tentativo[], infinito: boolean) => {
     const posizioni = posizioniAmbasciata(req);
@@ -2286,9 +2296,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     // scenario di partenza (la mappa di adesso), per le differenze nella tabella
     let rupieOraPartenza = 0, collegatePartenza = 0;
     for (const p of placements) {
-      if (!opt.residenze.includes(p.buildingId) || scollegati.has(p)) continue;
+      if (!(opt.residenze.includes(p.buildingId) || opt.produttori.includes(p.buildingId)) || scollegati.has(p)) continue;
       collegatePartenza++;
-      rupieOraPartenza += req.residenze.find((r) => r.id === p.buildingId)?.rupieOra ?? 0;
+      rupieOraPartenza += rupieOraDi(buildings.find((b) => b.id === p.buildingId));
     }
     setPartenzaOtt({ strade: placements.filter((p) => p.buildingId === opt.strada).length, collegate: collegatePartenza, rupieOra: rupieOraPartenza });
     ultimaRichiestaRef.current = { req, firma: firmaRichiesta(req) };
@@ -2355,9 +2365,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       const staccati = nonCollegati(l, opt);
       let tot = 0;
       for (const p of l) {
-        if (!opt.residenze.includes(p.buildingId) || staccati.has(p)) continue;
-        const pr = INITIAL_BUILDINGS.find((b) => b.id === p.buildingId)?.currency?.prod?.[0];
-        if (pr) tot += (pr[0] / (pr[1] / 3600)) * 5;
+        if (!(opt.residenze.includes(p.buildingId) || opt.produttori.includes(p.buildingId)) || staccati.has(p)) continue;
+        tot += rupieOraDi(INITIAL_BUILDINGS.find((b) => b.id === p.buildingId)) * ORE_RACCOLTA;
       }
       return tot;
     };

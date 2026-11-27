@@ -7,6 +7,8 @@
  * - un edificio è collegato se almeno una sua casella tocca (di lato) una strada collegata;
  * - manifatture dei beni e diplomatici con popolazione: SEMPRE collegati;
  * - residenze: collegate producono rupie, staccate danno solo popolazione;
+ * - produttori (27/11/2026: Chhatri, Baldacchino, Chahar bagh): producono rupie se collegati
+ *   ma CONSUMANO popolazione; quanti metterne lo decide l'ottimizzatore (vedi `valuta`);
  * - Canale d'acqua e Vialetto: niente strada (non ancora usati qui);
  * - popolazione mai negativa; nessuna rotazione; l'Ambasciata si può spostare.
  * Obiettivo: più rupie dalle residenze collegate, meno strade. Le due cose si contraddicono,
@@ -47,6 +49,9 @@ export interface RichiestaOttimizzatore {
   fisse: Array<{ tipo: TipoOttimizzatore; quante: number; senzaStrada?: boolean }>;
   /** Residenze sbloccate da usare. */
   residenze: TipoOttimizzatore[];
+  /** (27/11/2026) Produttori sbloccati (rupie se collegati, popolazione negativa): il loro
+   *  numero lo sceglie l'ottimizzatore, insieme alle residenze. */
+  produttori?: TipoOttimizzatore[];
   /** Tempo massimo (ms); il banco di prova lo usa, il worker anche. */
   tempoMs: number;
   seme?: number;
@@ -79,7 +84,7 @@ export interface Tentativo {
   edifici: EdificioPiazzato[];
   /** Popolazione data − richiesta. */
   popolazione: number;
-  /** Residenze collegate per tipo. */
+  /** Residenze e produttori collegati per tipo. */
   collegate: Record<string, number>;
   /** Strade già costruite in più, parcheggiate in caselle vuote (non collegano niente). */
   parcheggiate: Array<{ row: number; col: number }>;
@@ -137,6 +142,8 @@ interface Valutazione {
   bordo: number;
   edifici?: EdificioPiazzato[];
   popolazione?: number;
+  /** Produttori messi (collegati) nel riempimento goloso. */
+  produttori?: number;
 }
 
 class Valutatore {
@@ -146,15 +153,18 @@ class Valutatore {
   private adj: Uint8Array;
   private segno: Int32Array; private giro = 1;
   private req: RichiestaOttimizzatore; private amb: { row: number; col: number };
+  /** Residenze poi produttori: i candidati collegati del riempimento goloso. */
+  private tipi: TipoOttimizzatore[]; private nRes: number;
   constructor(req: RichiestaOttimizzatore, amb: { row: number; col: number }) {
     this.req = req; this.amb = amb;
+    this.tipi = [...req.residenze, ...(req.produttori ?? [])]; this.nRes = req.residenze.length;
     this.R = req.righe; this.C = req.colonne; this.N = this.R * this.C;
     this.base = new Uint8Array(this.N);
     for (let i = 0; i < this.N; i++) this.base[i] = req.libere[i] ? 0 : 1;
     for (let i = 0; i < req.ambasciata.h; i++) for (let j = 0; j < req.ambasciata.w; j++) this.base[(amb.row + i) * this.C + amb.col + j] = 1;
     this.occ = new Uint8Array(this.N);
     this.adj = new Uint8Array(this.N);
-    this.segno = new Int32Array(this.N * (req.residenze.length + 1));
+    this.segno = new Int32Array(this.N * (this.tipi.length + 1));
   }
   libera(i: number) { return this.base[i] === 0; }
   /** Caselle rimaste vuote dopo l'ultima valutazione. */
@@ -178,7 +188,26 @@ class Valutatore {
     for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) this.occ[(r + i) * this.C + c + j] = 1;
   }
 
+  /** Valuta una rete. Con i produttori la popolazione può non bastare: allora si cerca (per
+   *  bisezione) il numero massimo di produttori con cui il risultato è valido; i posti lasciati
+   *  liberi vanno alle residenze, collegate o staccate. */
   valuta(strade: Int32Array | number[], completa: boolean): Valutazione {
+    const tutto = this.prova(strade, completa, Infinity);
+    const messi = tutto.produttori ?? 0;
+    if (tutto.valido || messi === 0) return tutto;
+    let lo = 0, hi = messi - 1, migliore = -1, ultima = -1, ris: Valutazione | null = null;
+    while (lo <= hi) {
+      const m = (lo + hi) >> 1;
+      const v = this.prova(strade, false, m);
+      ultima = m;
+      if (v.valido) { migliore = m; ris = v; lo = m + 1; } else hi = m - 1;
+    }
+    if (migliore < 0) return this.prova(strade, completa, 0);
+    // completa, o stato interno (caselle vuote) da allineare all'ultima prova
+    return completa || ultima !== migliore ? this.prova(strade, completa, migliore) : ris!;
+  }
+
+  private prova(strade: Int32Array | number[], completa: boolean, limite: number): Valutazione {
     const { R, C, N } = this;
     this.occ.set(this.base);
     for (const s of strade) this.occ[s] = 1;
@@ -222,8 +251,10 @@ class Valutatore {
         if (completa) edifici.push({ id: tipo.id, row: r, col: c, w: tipo.w, h: tipo.h, collegato: true });
       }
     }
-    // 2. residenze collegate: insieme indipendente pesato, scelta golosa valore/(1+sovrapposizioni)
-    const res = this.req.residenze;
+    // 2. residenze e produttori collegati: insieme indipendente pesato, scelta golosa
+    //    valore/(1+sovrapposizioni); al massimo `limite` produttori
+    const res = this.tipi;
+    let nProd = 0;
     const cand: Candidato[] = [];
     for (let t = 0; t < res.length; t++) {
       const tp = res[t]!;
@@ -252,6 +283,7 @@ class Valutatore {
       let best = -1, bestS = -Infinity;
       for (let a = 0; a < cand.length; a++) {
         if (!vivo[a]) continue;
+        if (nProd >= limite && cand[a]!.tipo >= this.nRes) continue;
         const tp = res[cand[a]!.tipo]!;
         const s = tp.rupieOra / (1 + grado[a]! * 0.5) - a * 1e-9;
         if (s > bestS) { bestS = s; best = a; }
@@ -260,6 +292,7 @@ class Valutatore {
       const k = cand[best]!, tp = res[k.tipo]!;
       this.occupa(k.r, k.c, tp.w, tp.h);
       rupie += tp.rupieOra; pop += tp.pop;
+      if (k.tipo >= this.nRes) nProd++;
       if (completa) edifici.push({ id: tp.id, row: k.r, col: k.c, w: tp.w, h: tp.h, collegato: true });
       // togli i candidati sovrapposti e aggiorna i gradi dei loro vicini
       const g = ++this.giro;
@@ -281,7 +314,7 @@ class Valutatore {
           for (let i = 0; i < tipo.h; i++) for (let j = 0; j < tipo.w; j++) a += this.adj[(r + i) * C + c + j];
           if (a < postoAdj) { postoAdj = a; posto = r * C + c; if (a === 0) break; }
         }
-        if (posto < 0) return { valido: false, rupieOra: 0, bordo };
+        if (posto < 0) return { valido: false, rupieOra: 0, bordo, produttori: nProd };
         const r = Math.floor(posto / C), c = posto % C;
         this.occupa(r, c, tipo.w, tipo.h);
         pop += tipo.pop;
@@ -291,7 +324,7 @@ class Valutatore {
     // 4. popolazione: residenze staccate dove c'è posto (quella con più pop per casella)
     // solo quante ne servono: se la popolazione basta, il buco resta vuoto (richiesta utente)
     if (pop < 0) {
-      const ordinate = [...res].sort((a, b) => b.pop / (b.w * b.h) - a.pop / (a.w * a.h));
+      const ordinate = [...this.req.residenze].sort((a, b) => b.pop / (b.w * b.h) - a.pop / (a.w * a.h));
       for (const tp of ordinate) {
         for (let r = 0; r + tp.h <= R; r++) for (let c = 0; c + tp.w <= C; c++) {
           if (pop >= 0) break;
@@ -302,8 +335,8 @@ class Valutatore {
         }
       }
     }
-    if (pop < 0) return { valido: false, rupieOra: rupie, bordo };
-    return { valido: true, rupieOra: rupie, bordo, edifici: completa ? edifici : undefined, popolazione: pop };
+    if (pop < 0) return { valido: false, rupieOra: rupie, bordo, produttori: nProd };
+    return { valido: true, rupieOra: rupie, bordo, edifici: completa ? edifici : undefined, popolazione: pop, produttori: nProd };
   }
 }
 
@@ -475,7 +508,8 @@ function tentativi(req: RichiestaOttimizzatore, archivio: Archivio): Tentativo[]
     if (vuote.length < daParcheggiare) continue;
     const parcheggiate = vuote.slice(0, daParcheggiare).map((s) => ({ row: Math.floor(s / req.colonne), col: s % req.colonne }));
     const collegate: Record<string, number> = {};
-    for (const e of val.edifici!) if (e.collegato && req.residenze.some((r) => r.id === e.id)) collegate[e.id] = (collegate[e.id] ?? 0) + 1;
+    const conRupie = [...req.residenze, ...(req.produttori ?? [])];
+    for (const e of val.edifici!) if (e.collegato && conRupie.some((r) => r.id === e.id)) collegate[e.id] = (collegate[e.id] ?? 0) + 1;
     out.push({
       strade: k, rupieOra: val.rupieOra, ambasciata: a.amb,
       celleStrada: a.strade.map((s) => ({ row: Math.floor(s / req.colonne), col: s % req.colonne })),
