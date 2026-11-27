@@ -114,6 +114,8 @@ interface Props {
   attiva: string;
   onSeleziona: (id: string) => void;
   onElimina: (id: string) => void;
+  /** 27/11/2026: elimina tutte le città (le preferenze restano). */
+  onEliminaTutte?: () => void;
   onRinomina: (id: string, nome: string) => void;
   /** 2.0: aggiunge una città da un file JSON (27/11/2026: unico posto, non più anche in Opzioni). */
   onImportaJson?: () => void;
@@ -126,12 +128,13 @@ interface Props {
   maxW: number;
 }
 
-export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, onRinomina, onImportaJson, onEsporta, uiLang, maxW, avatar }: Props) {
+export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, onEliminaTutte, onRinomina, onImportaJson, onEsporta, uiLang, maxW, avatar }: Props) {
   const [menu, setMenu] = useState<{ left: number; top: number } | null>(null);
   /** Nome in modifica (doppio clic), null = non si sta rinominando. */
   const [nuovoNome, setNuovoNome] = useState<string | null>(null);
   const rifCampo = useRef<HTMLInputElement>(null);
   const [daEliminare, setDaEliminare] = useState<VoceCitta | null>(null);
+  const [eliminaTutte, setEliminaTutte] = useState(false);
   const rifMenu = useRef<HTMLDivElement>(null);
   const rifPulsante = useRef<HTMLButtonElement>(null);
   const corrente = citta.find(c => c.id === attiva);
@@ -144,9 +147,9 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
     const fuori = (e: MouseEvent) => {
       const n = e.target as Node;
       if (rifMenu.current?.contains(n) || rifPulsante.current?.contains(n)) return;
-      setMenu(null); setDaEliminare(null);
+      setMenu(null); setDaEliminare(null); setEliminaTutte(false);
     };
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setMenu(null); setDaEliminare(null); } };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setMenu(null); setDaEliminare(null); setEliminaTutte(false); } };
     const tm = setTimeout(() => document.addEventListener("mousedown", fuori));
     document.addEventListener("keydown", esc);
     return () => { clearTimeout(tm); document.removeEventListener("mousedown", fuori); document.removeEventListener("keydown", esc); };
@@ -169,7 +172,7 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
     // largo (con la legenda) solo se ci sono città: vuoto basta il riquadro stretto
     const w = window.innerWidth >= LARGO && citta.length > 0 ? W_LARGO : W_STRETTO;
     setMenu({ left: Math.max(4, Math.min(r.left, window.innerWidth - w - 4)), top: r.bottom + 4 });
-    setDaEliminare(null);
+    setDaEliminare(null); setEliminaTutte(false);
   };
 
   const tasto = "rounded p-0.5 text-slate-500 hover:bg-slate-700 hover:text-slate-100";
@@ -226,7 +229,17 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
       {menu && (
         <div ref={rifMenu} style={{ left: menu.left, top: menu.top }}
           className={`fixed z-[60] w-[280px] rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-[12px] whitespace-normal shadow-xl ${citta.length > 0 ? "md:w-[540px]" : ""}`}>
-          {daEliminare ? (
+          {eliminaTutte ? (
+            <div className="p-1.5">
+              <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-red-400"><AlertTriangle size={14} />{t("r2DeleteAllAsk", uiLang)}</div>
+              <div className="mb-2.5 text-slate-400">{t("r2DeleteAllBody", uiLang, citta.length)}</div>
+              <div className="flex justify-end gap-1.5">
+                <button type="button" onClick={() => setEliminaTutte(false)} className="rounded-md border border-slate-700 px-2.5 py-1 text-slate-200 hover:bg-slate-800">{t("r2Cancel", uiLang)}</button>
+                <button type="button" onClick={() => { onEliminaTutte?.(); setEliminaTutte(false); setMenu(null); }}
+                  className="rounded-md border border-red-500 bg-red-800 px-2.5 py-1 text-white hover:bg-red-700">{t("r2DeleteAllCities", uiLang)}</button>
+              </div>
+            </div>
+          ) : daEliminare ? (
             <div className="p-1.5">
               <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-red-400"><AlertTriangle size={14} />{t("r2DeleteAsk", uiLang, daEliminare.nome)}</div>
               <div className="mb-2.5 text-slate-400">{t(daEliminare.tipo === "mia" ? "r2DeleteMine" : "r2DeleteVisited", uiLang)}</div>
@@ -261,6 +274,13 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
                   className="mt-1 flex w-full items-center gap-2 rounded-md border-t border-slate-800 px-2 py-1.5 text-left text-slate-300 hover:bg-slate-800 hover:text-slate-50">
                   <FileJson size={14} strokeWidth={1.75} className="shrink-0 text-sky-300" aria-hidden="true" />
                   {t("r2ImportCityJson", uiLang)}
+                </button>
+              )}
+              {citta.length > 0 && onEliminaTutte && (
+                <button type="button" onClick={() => setEliminaTutte(true)}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-red-400 hover:bg-red-950/50 hover:text-red-300">
+                  <Trash2 size={14} className="shrink-0" aria-hidden="true" />
+                  {t("r2DeleteAllCities", uiLang)}
                 </button>
               )}
               {citta.length > 0 && onEsporta && <div className="md:hidden"><Legenda uiLang={uiLang} stretta /></div>}

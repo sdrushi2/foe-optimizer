@@ -124,6 +124,12 @@ const UI_STRINGS = {
   r2RenameCity: { it: "Nome della città", en: "City name" },
   r2RenameCityHint: { it: "Doppio clic per rinominare la città", en: "Double-click to rename the city" },
   r2DeleteCity: { it: "Elimina", en: "Delete" },
+  r2DeleteAllCities: { it: "Elimina tutte le città", en: "Delete all cities" },
+  r2DeleteAllAsk: { it: "Eliminare tutte le città?", en: "Delete all cities?" },
+  r2DeleteAllBody: {
+    it: (n: number) => `Verranno tolte ${n === 1 ? "l'unica città salvata" : `tutte le ${n} città salvate`}, con mappe, inventari e alleati. Lingua, tema, pesi e le altre impostazioni restano. Con l'estensione FoE Optimizer Bridge attiva le tue città tornano da sole mentre giochi. Per conservarle tutte, prima fai un backup (Opzioni › Esporta backup).`,
+    en: (n: number) => `${n === 1 ? "The only saved city" : `All ${n} saved cities`} will be removed, with maps, inventories and allies. Language, theme, weights and the other settings stay. With the FoE Optimizer Bridge extension on, your cities come back by themselves while you play. To keep them all, make a backup first (Options › Export backup).`,
+  },
   r2DeleteAsk: { it: (n: string) => `Eliminare ${n}?`, en: (n: string) => `Delete ${n}?` },
   r2DeleteMine: {
     it: "Verranno tolti mappa, inventario, alleati e insediamenti di questa città. Fai prima un backup da Opzioni se vuoi conservarli.",

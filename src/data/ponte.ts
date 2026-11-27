@@ -201,14 +201,19 @@ export function impostaPausaPonte(pausa: boolean) {
   // degli ultimi import (città e insediamenti), così ogni mondo si reimporta come con la
   // bacchetta, e si chiede al gioco una copia fresca. Serve da refresh se qualcosa non si era
   // aggiornato. Le modifiche a mano nei planner restano protette dai loro avvisi.
-  if (riparte) {
-    try {
-      const vecchie = Object.keys(localStorage).filter((k) => k.startsWith("foe_global_ponte_ultimo_") || k.startsWith("foe_global_ponte_insediamento_"));
-      for (const k of vecchie) localStorage.removeItem(k);
-    } catch { /* storage non disponibile */ }
-  }
   aggiorna({ ...stato, pausa });
-  if (riparte) window.postMessage({ type: "foe-bridge-request", what: "snapshot" }, location.origin);
+  if (riparte) risincronizzaPonte();
+}
+
+/** Dimentica le impronte degli ultimi import (città e insediamenti) e chiede al gioco una
+ *  copia fresca: ogni mondo aperto si reimporta come con la bacchetta. Usata alla ripresa
+ *  dalla pausa e dopo "Elimina tutte le città" (27/11/2026). Senza estensione non succede nulla. */
+export function risincronizzaPonte() {
+  try {
+    const vecchie = Object.keys(localStorage).filter((k) => k.startsWith("foe_global_ponte_ultimo_") || k.startsWith("foe_global_ponte_insediamento_"));
+    for (const k of vecchie) localStorage.removeItem(k);
+  } catch { /* storage non disponibile */ }
+  if (!stato.pausa) window.postMessage({ type: "foe-bridge-request", what: "snapshot" }, location.origin);
 }
 
 export function pacchettiPonte(): PacchettoPonte[] { return [...pacchetti.values()]; }

@@ -46,7 +46,7 @@ import { impostaCatalogoExtra, impostaMetaExport, leggiCittaJson } from "./data/
 import { cittaDaJson } from "./data/cittaDaJson";
 import { messaggioErroreJson } from "./data/erroriJson";
 import { senzaEstensioni } from "./utils/dispositivo";
-import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, chiavePonteUltimo, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
+import { definizioniDalPonte, improntaDati, improntaInsediamento, pacchettiPonte, pacchettoPonte, chiavePonteUltimo, risincronizzaPonte, usePaginaVisibile, usePonte, type PacchettoPonte } from "./data/ponte";
 
 /** Nessun edificio evidenziato (Mappa della città da JSON nel Planner). */
 const NESSUN_ID = new Set<string>();
@@ -2484,6 +2484,21 @@ export default function App() {
   };
 
   /** `chiedi` false: la conferma l'ha già data il selettore della città (2.0). */
+  /** Menu delle città › Elimina tutte le città (27/11/2026): via tutte le città salvate
+   *  (tue, visitate, importate), le preferenze restano. Con l'estensione attiva le tue città
+   *  tornano dal gioco (risincronizzaPonte). La conferma è nel menu. */
+  const eliminaTutteLeCitta = () => {
+    Object.keys(localStorage).filter((k) => k.startsWith("foe_p_")).forEach((k) => localStorage.removeItem(k));
+    writeStoredJson(PROFILES_KEY, []);
+    localStorage.removeItem(ACTIVE_PROFILE_KEY);
+    setProfiles([]);
+    setActiveProfileId("");
+    loadProfileData("");
+    setPlannerJson(null);
+    setPlannerErrore(null);
+    bumpStorage();
+    risincronizzaPonte();
+  };
   const deleteProfile = (profileId: string, chiedi = true) => {
     const profile = profiles.find(p => p.id === profileId);
     const name = profile?.name ?? t("genericProfileFallback", uiLang);
@@ -7412,7 +7427,7 @@ export default function App() {
       <Testata scheda={schedaCorrente} onScheda={scegliScheda}
         spente={spente}
         citta={vociCitta} cittaAttiva={activeProfileId} onSelezionaCitta={switchProfile}
-        onEliminaCitta={(id) => deleteProfile(id, false)} onRinominaCitta={rinominaCitta} onImportaCittaJson={() => cittaJsonRef.current?.click()} onEsportaCitta={esportaCitta} onImporta={importaDaNastro}
+        onEliminaCitta={(id) => deleteProfile(id, false)} onEliminaTutte={eliminaTutteLeCitta} onRinominaCitta={rinominaCitta} onImportaCittaJson={() => cittaJsonRef.current?.click()} onEsportaCitta={esportaCitta} onImporta={importaDaNastro}
         avviso={avvisoCitta} onChiudiAvviso={chiudiAvviso}
         versione={__BUILD_VERSION__} onVersione={cliccaVersione} gruppi={gruppiNastro}
         uiLang={uiLang} onLingua={handleUiLangChange} avatar={portraitUrl || null} />

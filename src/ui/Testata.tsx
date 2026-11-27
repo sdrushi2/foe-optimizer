@@ -42,6 +42,8 @@ interface Props {
   cittaAttiva: string;
   onSelezionaCitta: (id: string) => void;
   onEliminaCitta: (id: string) => void;
+  /** 27/11/2026: "Elimina tutte le città" in fondo al menu del selettore. */
+  onEliminaTutte?: () => void;
   /** Doppio clic sul nome della città: rinomina. */
   onRinominaCitta: (id: string, nome: string) => void;
   /** 2.0: "Importa da JSON" in fondo al menu del selettore città. */
@@ -62,7 +64,7 @@ interface Props {
   onLingua: (l: UiLang) => void;
 }
 
-export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, onSelezionaCitta, onEliminaCitta, onRinominaCitta, onImportaCittaJson, onEsportaCitta, onImporta, avviso, onChiudiAvviso, versione, onVersione, gruppi, uiLang, onLingua, avatar }: Props) {
+export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, onSelezionaCitta, onEliminaCitta, onEliminaTutte, onRinominaCitta, onImportaCittaJson, onEsportaCitta, onImporta, avviso, onChiudiAvviso, versione, onVersione, gruppi, uiLang, onLingua, avatar }: Props) {
   const nomeCitta = citta.find(c => c.id === cittaAttiva)?.nome ?? null;
   useEffect(() => {
     if (!avviso) return;
@@ -138,7 +140,7 @@ export default function Testata({ scheda, onScheda, spente, citta, cittaAttiva, 
           <IndicatorePonte uiLang={uiLang} compatta={livello >= 2} />
           </>}
         </span>
-        <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} onEsporta={onEsportaCitta} avatar={avatar}
+        <SelettoreCitta citta={citta} attiva={cittaAttiva} onSeleziona={onSelezionaCitta} onElimina={onEliminaCitta} onEliminaTutte={onEliminaTutte} onRinomina={onRinominaCitta} onImportaJson={onImportaCittaJson} onEsporta={onEsportaCitta} avatar={avatar}
           uiLang={uiLang} maxW={livello >= 4 ? 44 : livello >= 2 ? 110 : 190} />
         {livello >= 5 ? (
           <select value={scheda} onChange={(e) => onScheda(e.currentTarget.value as Scheda)} aria-label={t("r2TabSelectLabel", uiLang)}
