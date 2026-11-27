@@ -544,6 +544,7 @@
           <tbody>
             <tr><td class="k">⚔️ Logo and version</td><td>The version number (e.g. <code>v2.000</code>) goes up by one every day: it tells you how recent your version is.</td></tr>
             <tr><td class="k">🪄 Green wand</td><td>One click imports the city copied by the bookmark; dragged to the bookmarks bar it creates the bookmark. See <a href="#importing">Importing your city</a>.</td></tr>
+            <tr><td class="k">LIVE / OFF</td><td>The state of the optional <strong>FoE Optimizer Bridge</strong> extension. Green LIVE: connected to the game, the city comes by itself. Amber LIVE: waiting for the game. PAUSED: one click starts it again. OFF: extension missing or disabled; one click opens a panel that explains what it does, with the links to install it.</td></tr>
             <tr><td class="k">City selector</td><td>The active city (avatar and name). Open it to switch city, delete one or import one from JSON. See <a href="#saved-cities">Saved cities</a>.</td></tr>
             <tr><td class="k">Tabs</td><td>Database, City, Inventory, Planner, Allies, Settlements, Options, Help. Greyed-out tabs aren't available: hover over them to see why (e.g. "Import a city first").</td></tr>
             <tr><td class="k">🇮🇹 / 🇬🇧 Language</td><td>Changes the interface language (the page reloads).</td></tr>
@@ -604,6 +605,7 @@
 
         <h3>Other ways</h3>
         <ul>
+          <li><strong>With the FoE Optimizer Bridge extension</strong> (<a href="https://chromewebstore.google.com/detail/eedhjnglkiejoklcpnmgdbklblojhmgn" target="_blank" rel="noopener">Chrome Web Store</a>, also for Edge, Brave and Opera; Firefox coming soon): brings your city here by itself, with inventory, allies and settlements, while you play, and updates it at every change, without bookmark or wand. It needs FoE Helper or Forge Hammer. The LIVE indicator next to the wand tells you whether it is connected; one click pauses it or starts it again.</li>
           <li><strong>From a JSON file</strong>: "Import from JSON" at the bottom of the city selector. It reads a full city exported from the selector (with inventory and allies) or the city only: the selector export, the Map's JSON button, the Planner or a Forge Hammer plan. City only means full map and Great Buildings, other buildings' stats from the catalogue, no inventory or allies. JSON cities always go among the imported ones: they never touch the cities imported with the wand or the bridge, and the other way round.</li>
           <li><strong>From a backup</strong>: Options › Restore backup brings back all the cities and settings saved with Export backup, even on another computer. It replaces what is there.</li>
         </ul>

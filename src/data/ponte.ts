@@ -36,6 +36,13 @@ import { chiaveGlobale } from "../utils/storage";
 /** Impronta dell'ultimo pacchetto importato, per mondo e giocatore. */
 export const chiavePonteUltimo = (mondo: string, giocatore: string) => chiaveGlobale("ponte_ultimo", mondo, giocatore);
 
+/** (27/11/2026) Pagine dell'estensione negli store. Firefox vuoto = ancora in
+ *  revisione su AMO: i link mostrano "in arrivo" (ui/StorePonte.tsx). */
+export const STORE_PONTE = {
+  chrome: "https://chromewebstore.google.com/detail/eedhjnglkiejoklcpnmgdbklblojhmgn",
+  firefox: "",
+};
+
 /** Oltre questo tempo senza segnali il ponte è spento (3 segnali persi). */
 const PRESENZA_MS = 45_000;
 

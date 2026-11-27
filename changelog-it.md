@@ -2,6 +2,7 @@
 
 ## Versione 2.030 (27/11/2026)
 ### Novità
+- L'estensione FoE Optimizer Bridge è sul Chrome Web Store (va bene anche per Edge, Brave e Opera; Firefox in arrivo): porta qui da sola la tua città, con inventario, alleati e insediamenti, mentre giochi. Se non l'hai installata, l'indicatore OFF accanto alla bacchetta ora si clicca: apre un pannello che spiega cosa fa, cosa serve e dove installarla. Il link c'è anche nel menu delle città vuoto, in Guida › Come importare la città e nelle guide
 - Menu delle città: accanto al nome ci sono i pulsanti per scaricare la città in un file JSON. Le tue città ne hanno due: città completa (mappa, inventario, alleati, risorse e Castello: per portarla su un altro computer o darla a chi vuoi) e solo la città (la mappa: per Forge Hammer, un altro planner o un altro giocatore). Le città visitate hanno solo il secondo. A destra del menu (in fondo su schermo stretto) una legenda spiega i pulsanti. I file si chiamano giocatore-completa-data.json e giocatore-citta-data.json
 - Menu delle città: in fondo c'è Elimina tutte le città, che toglie tutte le città salvate (tue, visitate e importate) dopo una conferma, lasciando lingua, tema, pesi e le altre impostazioni. Con l'estensione FoE Optimizer Bridge attiva le tue città tornano da sole mentre giochi
 - Database › Tools: nuovo pulsante Editor, prima di Calc. GE. Apre l'editor della città vuoto in una nuova scheda

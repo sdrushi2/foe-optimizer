@@ -74,9 +74,41 @@ const UI_STRINGS = {
     en: "Imports the city from the game and restarts the Planner from it: the current Planner searches, edits and results are lost",
   },
   r2PonteOffTitle: {
-    it: "OFF: estensione FoE Optimizer Bridge non attiva. Coming soon! Per ora la città si importa con la bacchetta, come sempre",
-    en: "OFF: FoE Optimizer Bridge extension not active. Coming soon! For now, import your city with the wand, as always",
+    it: "OFF: estensione FoE Optimizer Bridge non attiva. Clic per sapere cos'è e come installarla",
+    en: "OFF: FoE Optimizer Bridge extension not active. Click to find out what it is and how to install it",
   },
+  // (27/11/2026) pannello dell'indicatore OFF (IndicatorePonte) e link agli store (StorePonte)
+  r2PonteInfoSub: { it: "Estensione gratuita del browser", en: "Free browser extension" },
+  r2PonteInfoClose: { it: "Chiudi", en: "Close" },
+  r2PonteInfoIntro: {
+    it: "Porta qui la tua città da sola, mentre giochi: niente segnalibro, niente bacchetta, niente appunti.",
+    en: "Brings your city here by itself while you play: no bookmark, no wand, no clipboard.",
+  },
+  r2PonteInfoP1: {
+    it: "Importa città, inventario, alleati e insediamenti, e li aggiorna a ogni modifica nel gioco.",
+    en: "Imports city, inventory, allies and settlements, and updates them at every change in the game.",
+  },
+  r2PonteInfoP2: {
+    it: "Con l'indicatore LIVE qui in alto la metti in pausa e la riprendi quando vuoi.",
+    en: "With the LIVE indicator up here you pause and resume it whenever you want.",
+  },
+  r2PonteInfoP3: {
+    it: "Solo lettura: non manda nulla al gioco e i dati restano nel tuo browser.",
+    en: "Read-only: it sends nothing to the game and the data stays in your browser.",
+  },
+  r2PonteInfoReq: {
+    it: "Serve FoE Helper o Forge Hammer, come per la bacchetta. Funziona dal computer.",
+    en: "It needs FoE Helper or Forge Hammer, as the wand does. It works on a computer.",
+  },
+  r2PonteInfoGia: {
+    it: "Già installata? Controlla che sia attiva, poi ricarica il gioco e questa pagina.",
+    en: "Already installed? Check that it is enabled, then reload the game and this page.",
+  },
+  r2PonteInfoPrivacy: { it: "Informativa privacy", en: "Privacy policy" },
+  r2PonteStoreChromeNote: { it: "Anche per Edge, Brave e Opera", en: "Also for Edge, Brave and Opera" },
+  r2PonteStoreSoon: { it: "in arrivo", en: "coming soon" },
+  r2PonteStoreSoonTitle: { it: "In revisione su Firefox Add-ons: il link arriva appena è approvata", en: "Under review on Firefox Add-ons: the link comes as soon as it is approved" },
+  r2NoCitiesBridgeLink: { it: "installala", en: "install it" },
   exportNoProfiles: {
     it: "Nessun profilo da salvare",
     en: "No profiles to save",
@@ -403,6 +435,11 @@ const UI_STRINGS = {
     en: "if you opened it during the game session, it comes along with the city and you'll find it in the Settlements tab.",
   },
   r2ImpOther: { it: "Altri modi", en: "Other ways" },
+  r2ImpOtherBridge: { it: "Con l'estensione FoE Optimizer Bridge:", en: "With the FoE Optimizer Bridge extension:" },
+  r2ImpOtherBridgeBody: {
+    it: "porta qui da sola la tua città (con inventario, alleati e insediamenti) mentre giochi e la aggiorna a ogni modifica, senza segnalibro né bacchetta. Serve FoE Helper o Forge Hammer. L'indicatore LIVE accanto alla bacchetta dice se è collegata e la mette in pausa.",
+    en: "brings your city (with inventory, allies and settlements) here by itself while you play and updates it at every change, without bookmark or wand. It needs FoE Helper or Forge Hammer. The LIVE indicator next to the wand tells you whether it is connected and pauses it.",
+  },
   r2ImpOtherJson: { it: "Da un file JSON:", en: "From a JSON file:" },
   r2ImpOtherJsonBody: {
     it: "Importa da JSON, in fondo al selettore delle città, legge l'export di FoE Optimizer o il piano di Forge Hammer.",

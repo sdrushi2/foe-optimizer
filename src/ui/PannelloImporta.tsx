@@ -10,9 +10,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ReactNode } from "react";
-import { ExternalLink, Wand2, RefreshCw, Building2, Eye, Anchor, FileJson, Download, ShieldCheck, Keyboard } from "lucide-react";
+import { ExternalLink, Wand2, RefreshCw, Building2, Eye, Anchor, FileJson, Download, ShieldCheck, Keyboard, Plug } from "lucide-react";
 import { BOOKMARKLET_JS } from "../data/bookmarklet";
 import { t, type UiLang } from "../data/ui-strings";
+import StorePonte from "./StorePonte";
 
 const ESTENSIONI = [
   { nome: "FoE Helper", chrome: "https://chromewebstore.google.com/detail/foe-helper/bkagcmloachflbbkfmfiggipaelfamdf", firefox: "https://addons.mozilla.org/en-US/firefox/addon/foe-helper/" },
@@ -133,6 +134,10 @@ export default function PannelloImporta({ uiLang }: { uiLang: UiLang }) {
 
           <div className="space-y-2">
             <Titoletto>{L("r2ImpOther")}</Titoletto>
+            <Voce icona={<Plug size={14} />} titolo={L("r2ImpOtherBridge")}>
+              {L("r2ImpOtherBridgeBody")}
+              <span className="mt-1.5 block"><StorePonte uiLang={uiLang} /></span>
+            </Voce>
             <Voce icona={<FileJson size={14} />} titolo={L("r2ImpOtherJson")}>{L("r2ImpOtherJsonBody")}</Voce>
             <Voce icona={<Download size={14} />} titolo={L("r2ImpOtherBackup")}>{L("r2ImpOtherBackupBody")}</Voce>
           </div>

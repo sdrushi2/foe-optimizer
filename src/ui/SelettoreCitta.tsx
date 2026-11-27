@@ -17,8 +17,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Building2, ChevronDown, Eye, FileJson, Map as MapIcon, Package, Trash2 } from "lucide-react";
+import { AlertTriangle, Building2, ChevronDown, ExternalLink, Eye, FileJson, Map as MapIcon, Package, Trash2 } from "lucide-react";
 import { t, type UiLang } from "../data/ui-strings";
+import { STORE_PONTE } from "../data/ponte";
 import type { TipoCitta } from "../data/citta";
 import { LIMITE_STORAGE, occupazioneStorage } from "../utils/storage";
 import { senzaEstensioni } from "../utils/dispositivo";
@@ -264,7 +265,10 @@ export default function SelettoreCitta({ citta, attiva, onSeleziona, onElimina, 
                     {t("r2NoCitiesYet", uiLang)}
                     <ul className="mt-1 list-disc space-y-0.5 pl-4">
                       <li>{t("r2NoCitiesWand", uiLang)}</li>
-                      <li>{t("r2NoCitiesBridge", uiLang)}</li>
+                      {/* (27/11/2026) link al Chrome Web Store; Firefox quando AMO l'approva */}
+                      <li>{t("r2NoCitiesBridge", uiLang)}: <a href={STORE_PONTE.chrome} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-0.5 whitespace-nowrap text-emerald-300 underline decoration-emerald-500/40 underline-offset-2 hover:text-emerald-200">
+                        {t("r2NoCitiesBridgeLink", uiLang)}<ExternalLink size={10} aria-hidden="true" /></a></li>
                       <li>{t("r2NoCitiesJson", uiLang)}</li>
                     </ul>
                   </div>)}
