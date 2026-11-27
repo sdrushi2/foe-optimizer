@@ -18,7 +18,7 @@ type Meta = { player?: { id: number | null; name: string }; currentEra?: string 
 
 /** Qualsiasi JSON della città che legge il tool (completa o solo città: conta la
  *  mappa), convertito nel formato dell'export della Mappa, che l'editor disegna. */
-export function leggiJson(testo: string, lang: "it" | "en"): { ok: true; json: unknown; ignorati: string[] } | { ok: false; errore: string } {
+export function leggiJson(testo: string, lang: "it" | "en"): { ok: true; json: unknown; ignorati: string[]; nome: string | null } | { ok: false; errore: string } {
   try {
     let dati: unknown;
     try { dati = JSON.parse(testo); } catch { throw new ErroreJsonCitta("json"); }
@@ -27,16 +27,17 @@ export function leggiJson(testo: string, lang: "it" | "en"): { ok: true; json: u
       ...(c.giocatore ? { player: { id: c.giocatore.id, name: c.giocatore.nome } } : {}),
       ...(c.giocatore?.era ? { currentEra: c.giocatore.era } : {}),
     };
-    return { ok: true, json: esportaCittaJson(c.buildings, c.aree, undefined, meta), ignorati: c.ignorati ?? [] };
+    return { ok: true, json: esportaCittaJson(c.buildings, c.aree, undefined, meta), ignorati: c.ignorati ?? [], nome: c.giocatore?.nome ?? null };
   } catch (err) {
     return { ok: false, errore: messaggioErroreJson(err, lang) };
   }
 }
 
 /** Solo la città (la mappa modificata), nel formato dell'export della Mappa;
- *  nome <giocatore>-citta-<data>.json. `json` = esporta() dell'editor. */
-export function jsonDaSalvare(json: unknown, meta: Meta): { nome: string; testo: string } {
+ *  nome <città>-citta-<data>.json (`nome` = nome della città dal tool o dal file importato,
+ *  altrimenti il giocatore del JSON). `json` = esporta() dell'editor. */
+export function jsonDaSalvare(json: unknown, meta: Meta, nome?: string | null): { nome: string; testo: string } {
   const c = leggiCittaDati(json);
   const out = esportaCittaJson(c.buildings, c.aree, undefined, { ...meta, cittaReale: c.buildings });
-  return { nome: `${prefissoFile(meta.player?.name)}-citta-${localDateStamp()}.json`, testo: JSON.stringify(out, null, 2) };
+  return { nome: `${prefissoFile(nome || meta.player?.name)}-citta-${localDateStamp()}.json`, testo: JSON.stringify(out, null, 2) };
 }

@@ -35,7 +35,7 @@ import { BuildingModel, countSpecialGoodEras, type GreatBuilding, type EraStats 
 import type { CityMapDragState } from "./components/CityMapView";
 import { PERGAMENE_RESOURCE, VALOR_RESOURCE } from "./data/allyAdvisor";
 import { setEdificio } from "./data/setEdifici";
-import { improntaCitta, infoImport, nomeCitta, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
+import { improntaCitta, infoImport, nomeCitta, nomeGiocatore, nomiMondoDavanti, tipoCitta, trovaCitta, type TipoCitta } from "./data/citta";
 import { fileCitta, leggiPacchettoCompleto, scaricaFile, type PacchettoCompleto } from "./data/esportaCitta";
 import Testata, { type Scheda } from "./ui/Testata";
 import { costruisciNastri } from "./ui/nastri";
@@ -7059,7 +7059,7 @@ export default function App() {
   useEffect(() => {
     const p = profiles.find(x => x.id === activeProfileId);
     impostaMetaExport(haCitta ? {
-      player: { id: p?.playerId ?? null, name: p?.name ?? "" },
+      player: { id: p?.playerId ?? null, name: p ? nomeGiocatore(p) : "" },
       region: gameLang,
       ...(currentEra ? { currentEra } : {}),
       cittaReale: cityMapBuildings,
@@ -7773,6 +7773,7 @@ export default function App() {
                   cityMapBuildings={usaJson ? NESSUN_EDIFICIO : cityMapBuildings}
                   cityMapUnlockedCells={usaJson ? NESSUNA_CELLA : cityMapUnlockedCells}
                   esterna={usaJson ? plannerJson!.citta : null}
+                  nomePerFile={usaJson ? (plannerJson!.citta.giocatore?.nome ?? plannerJson!.citta.nome) : profiles.find(x => x.id === activeProfileId)?.name}
                   candidati={plannerCandidati}
                   uiLang={uiLang}
                   onNastro={setGruppiPlanner}

@@ -15,11 +15,13 @@
 - Le città importate da JSON e quelle importate con la bacchetta o il ponte non si mescolano più: un file JSON aggiorna solo una città importata da JSON, e la bacchetta o il ponte solo le loro. Prima la bacchetta poteva trasformare una città da JSON in una tua città
 - Importa da JSON: se scegli un file di backup, ti dice di usare Opzioni › Ripristina backup. Il pulsante JSON della Mappa ora salva giocatore-citta-data.json
 - Menu delle città senza città: il riquadro è stretto come prima (la legenda c'è solo quando ci sono città) e spiega i tre modi per aggiungerne una: la bacchetta verde, l'estensione FoE Optimizer Bridge e Importa da JSON
+- Tutti i file scaricati cominciano con il nome della città: dal Planner città-planner-disposizione-data (per esempio f-sdrushi-planner-raccordo3), dalla Mappa città-citta-data anche per il PNG, dall'editor città-editor-data.png e città-citta-data.json. Così i file della stessa città stanno vicini nella cartella dei download
 - Tools: il pulsante Export, che scarica in CSV gli edifici selezionati, ora si chiama CSV
 - Opzioni: tolto il gruppo Città salvate. Importa da JSON resta in fondo al selettore delle città; le città si eliminano una alla volta con il cestino del selettore, oppure tutte insieme (con le impostazioni) da Azzera › Cancella tutto
 
 ### Correzioni
 - Planner: se il JSON scelto non si poteva leggere e c'era già una città aperta, non compariva nessun messaggio. Ora l'errore si vede sopra il Planner e si chiude con la X
+- Il JSON della Mappa scriveva come giocatore il nome della città con la lettera del mondo (F · Sdrushi): reimportandolo la città diventava "F · F · Sdrushi". Ora il giocatore è scritto senza la lettera
 - Importando un JSON nel Planner, gli edifici di cui non si conoscono le dimensioni vengono segnalati anche se il file ha CityMapData (prima sparivano in silenzio)
 
 ---

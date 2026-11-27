@@ -345,6 +345,14 @@ let riepilogoPng = null;
 let fonte = null;          // { ents, areeRaw, celle:Set, strada:{eid,name,w,h}|null, strada2 (2×2)|null }
 // Canale col Planner: token dell'apertura (null = editor usato da solo)
 let token = null;
+// Nome della città per i file scaricati (<città>-editor-<data>.png, <città>-citta-<data>.json):
+// dal tool (messaggio "carica") o dal file importato; se manca, il giocatore del JSON
+let nomeCittaFile = null;
+const prefisso = () => {
+  const C = window.FoeCondiviso;
+  const n = nomeCittaFile || (fonte && fonte.meta && fonte.meta.player && fonte.meta.player.name) || '';
+  return C && C.prefissoFile ? C.prefissoFile(n) : 'foe';
+};
 
 // Imposta la dimensione (in celle) della mappa
 function setMapSize(n) {
@@ -746,7 +754,7 @@ document.getElementById('png').addEventListener('click', () => {
     C.renderCityMapPng(canvas, edifici, fonte.areeRaw, 2, nomeMunicipio, riepilogoPng || undefined);
     const a = document.createElement('a');
     const d = new Date(), p = n => String(n).padStart(2, '0');
-    a.download = 'foe-editor-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.png';
+    a.download = prefisso() + '-editor-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.png';
     a.href = canvas.toDataURL('image/png');
     document.body.appendChild(a);
     a.click();
@@ -771,6 +779,7 @@ document.getElementById('fileJson').addEventListener('change', async ev => {
   nuoviDalPlanner = new Set();
   riepilogoPng = null;
   document.getElementById('dettaglio').textContent = f.name;
+  nomeCittaFile = r.nome || f.name.replace(/\.json$/i, '');
   document.title = f.name + ' – ' + tr('titolo') + ' – FoE Optimizer';
   draw(parse(r.json));
   stato(r.ignorati.length ? tr('ignorati')(r.ignorati.length) : '', r.ignorati.length ? 'err' : undefined);
@@ -780,7 +789,7 @@ document.getElementById('salvaJson').addEventListener('click', async () => {
   if (!fonte) return;
   if (!C || !C.jsonDaSalvare) { alert(tr('noJson')); return; }
   try {
-    const { nome, testo } = await C.jsonDaSalvare(esporta(), fonte.meta || {});
+    const { nome, testo } = await C.jsonDaSalvare(esporta(), fonte.meta || {}, nomeCittaFile);
     const url = URL.createObjectURL(new Blob([testo], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = nome;
@@ -838,6 +847,7 @@ window.addEventListener('message', ev => {
     document.getElementById('importa').hidden = dalPlanner;
     document.getElementById('salvaJson').hidden = dalPlanner;
     nuoviDalPlanner = new Set((m.nuovi || []).map(String));
+    nomeCittaFile = typeof m.nome === 'string' && m.nome ? m.nome : null;
     riepilogoPng = m.riepilogo || null;
     draw(parse(m.json, m.colori));
     if (m.nomeMunicipio) { nomeMunicipio = String(m.nomeMunicipio); nomeMunicipioDaTool = true; }

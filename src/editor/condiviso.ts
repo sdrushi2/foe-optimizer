@@ -16,6 +16,7 @@
 
 import { coloreEdificioMappa, renderCityMapPng } from "../components/cityMapPng";
 import { caricaBuildingsExtra, caricaDatiGioco } from "../data/datiGioco";
+import { prefissoFile } from "../utils/format";
 
 /** Lingua del tool per l'editor aperto da solo (dal tool la lingua arriva nel
  *  messaggio "carica"): la scelta salvata dal tool (chiave UI_LANG_KEY di
@@ -49,11 +50,11 @@ async function leggiJson(testo: string, lang: "it" | "en") {
   return (await lettura()).leggiJson(testo, lang);
 }
 /** Salva JSON dell'editor: vedi editor/lettura.ts. */
-async function jsonDaSalvare(json: unknown, meta: { player?: { id: number | null; name: string }; currentEra?: string }) {
-  return (await lettura()).jsonDaSalvare(json, meta);
+async function jsonDaSalvare(json: unknown, meta: { player?: { id: number | null; name: string }; currentEra?: string }, nome?: string | null) {
+  return (await lettura()).jsonDaSalvare(json, meta, nome);
 }
 
-const condiviso = { coloreEdificioMappa, renderCityMapPng, linguaUi, leggiJson, jsonDaSalvare };
+const condiviso = { coloreEdificioMappa, renderCityMapPng, linguaUi, leggiJson, jsonDaSalvare, prefissoFile };
 
 declare global {
   interface Window { FoeCondiviso?: typeof condiviso }

@@ -15,11 +15,13 @@
 - Cities imported from JSON and those imported with the wand or the bridge no longer mix: a JSON file only updates a city imported from JSON, and the wand or the bridge only theirs. Before, the wand could turn a JSON city into one of your cities
 - Import from JSON: if you pick a backup file, it tells you to use Options › Restore backup. The Map's JSON button now saves player-citta-date.json
 - City menu with no cities: the box is narrow as before (the legend only appears when there are cities) and explains the three ways to add one: the green magic wand, the FoE Optimizer Bridge extension and Import from JSON
+- Every downloaded file starts with the city name: from the Planner city-planner-layout-date (for example f-sdrushi-planner-raccordo3), from the Map city-citta-date for the PNG too, from the editor city-editor-date.png and city-citta-date.json. So the files of the same city sit together in the downloads folder
 - Tools: the Export button, which downloads the selected buildings as CSV, is now called CSV
 - Options: removed the Saved cities group. Import from JSON stays at the bottom of the city selector; cities are deleted one at a time with the selector's bin, or all together (with the settings) from Reset › Erase everything
 
 ### Bug Fixes
 - Planner: if the chosen JSON couldn't be read while a city was already open, no message appeared. Now the error shows above the Planner and closes with the X
+- The Map JSON wrote the city name with the world letter (F · Sdrushi) as the player: importing it again turned the city into "F · F · Sdrushi". Now the player is written without the letter
 - Importing a JSON into the Planner, buildings of unknown size are reported even when the file has CityMapData (before they disappeared silently)
 
 ---

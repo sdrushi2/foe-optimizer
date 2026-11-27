@@ -13,7 +13,7 @@ let ascoltoEditorMappa: ((ev: MessageEvent) => void) | null = null;
 /** Apre l'editor esterno (public/editor.html) con la città della mappa: quando
  *  l'editor è pronto riceve {tipo:"carica", planner:false} (export JSON +
  *  colori della vista MAPPA). Senza ritorno: dalla MAPPA si salva solo il JSON. */
-function apriEditorMappa(buildings: readonly CityMapBuilding[], aree: readonly UnlockedArea[], uiLang: UiLang): void {
+function apriEditorMappa(buildings: readonly CityMapBuilding[], aree: readonly UnlockedArea[], uiLang: UiLang, nome?: string): void {
   const w = window.open("/editor.html", "foe-editor-mappa");
   if (!w) {
     alert(uiLang === "it" ? "Il browser ha bloccato la finestra dell'editor: consenti i popup per questo sito." : "The browser blocked the editor window: allow pop-ups for this site.");
@@ -30,7 +30,7 @@ function apriEditorMappa(buildings: readonly CityMapBuilding[], aree: readonly U
       const b = perId.get(mid);
       if (b) colori[jid] = coloreEdificioMappa({ ...b, isTownhall: b.type === "main_building", isStreet: b.type === "street" });
     }
-    w.postMessage({ tipo: "carica", planner: false, json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang }, location.origin);
+    w.postMessage({ tipo: "carica", planner: false, nome, json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang }, location.origin);
   };
   window.addEventListener("message", ascoltoEditorMappa);
   w.focus();
@@ -328,7 +328,7 @@ export default function CityMapView({
                       const canvas = document.createElement("canvas");
                       renderCityMapPng(canvas, cityMapBuildings, cityMapUnlockedAreas, 2, t("legendTownHall", uiLang));
                       const link = document.createElement("a");
-                      link.download = `foe-map-${localDateStamp()}.png`;
+                      link.download = `${prefissoFile(nomeGiocatore)}-citta-${localDateStamp()}.png`;
                       link.href = canvas.toDataURL("image/png");
                       document.body.appendChild(link);
                       link.click();
@@ -357,7 +357,7 @@ export default function CityMapView({
                   <Download size={13} /> JSON
                 </button>
                 <button
-                  onClick={() => apriEditorMappa(cityMapBuildings, cityMapUnlockedAreas, uiLang)}
+                  onClick={() => apriEditorMappa(cityMapBuildings, cityMapUnlockedAreas, uiLang, nomeGiocatore)}
                   title={t("r2MapEditorTitle", uiLang)}
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2 py-2 text-[11px] font-bold text-slate-300 uppercase transition-colors cursor-pointer"
                 >

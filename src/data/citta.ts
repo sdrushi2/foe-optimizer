@@ -60,6 +60,14 @@ export function nomeCitta(nome: string, mondo: string | null): string {
   return l ? `${l} · ${nome}` : nome;
 }
 
+/** Nome del giocatore di una città salvata: il nome della città senza la lettera del
+ *  mondo davanti ("F · Sdrushi" → "Sdrushi"), per il campo player dei JSON esportati
+ *  (chi li reimporta rimette la lettera con nomeCitta). */
+export function nomeGiocatore(p: { name: string; mondo?: string }): string {
+  const pref = p.mondo ? nomeCitta("", p.mondo) : "";
+  return pref && p.name.startsWith(pref) && p.name.length > pref.length ? p.name.slice(pref.length) : p.name;
+}
+
 /** Città salvate col primo formato della 2.005 ("Sdrushi · L"): il mondo
  *  passa davanti ("L · Sdrushi"). I nomi scelti dall'utente restano. */
 export function nomiMondoDavanti(citta: Profile[]): Profile[] {

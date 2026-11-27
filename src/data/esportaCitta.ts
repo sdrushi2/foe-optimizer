@@ -18,7 +18,7 @@
 import { esportaCittaJson, type CityMapJson } from "./cityMapJson";
 import { initCityStore, profileStorageKey, PROFILE_SLOTS, type Profile, type ProfileSlot } from "../utils/storage";
 import { localDateStamp, prefissoFile } from "../utils/format";
-import { nomeCitta } from "./citta";
+import { nomeGiocatore } from "./citta";
 
 export interface PacchettoCompleto {
   tipo: "completa";
@@ -27,12 +27,6 @@ export interface PacchettoCompleto {
   giocatore: { nome: string; id: number | null; mondo: string | null; avatar: string | null };
   /** slot salvati della città, testo così come sta nel browser */
   slot: Partial<Record<ProfileSlot, string>>;
-}
-
-/** Nome del giocatore: quello della città senza la lettera del mondo davanti ("F · Sdrushi" → "Sdrushi"). */
-function nomeGiocatore(p: Profile): string {
-  const pref = p.mondo ? nomeCitta("", p.mondo) : "";
-  return pref && p.name.startsWith(pref) && p.name.length > pref.length ? p.name.slice(pref.length) : p.name;
 }
 
 /** Il file da scaricare per una città salvata, o null se la città non ha la mappa. */

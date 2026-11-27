@@ -21,7 +21,7 @@ import { baseCentrale, type BaseGirandola } from "./girandola";
 import { anelliStaccati, espandiCatene, raggruppaCatene, ricomponiCatene, SET_DI_EDIFICI, strumentiCatene, type Raggruppamento } from "./catene";
 import { coloreEdificioMappa, renderCityMapPng, MAP_COLOR_STREET2, type RiepilogoPng } from "../components/cityMapPng";
 import { t, type UiLang } from "../data/ui-strings";
-import { localDateStamp } from "../utils/format";
+import { localDateStamp, prefissoFile } from "../utils/format";
 import { POTENZA_PLANNER_KEY } from "../utils/storage";
 import { esportaCittaJson, scaricaJson, type CittaJson } from "../data/cityMapJson";
 import { ChartColumn, Clapperboard, Cpu, Map as MapIcon, Pause, Pencil, Play, RotateCcw, SkipForward, Sparkles, Undo2, type LucideIcon } from "lucide-react";
@@ -41,6 +41,8 @@ interface Props {
   /** 2.0: città da un JSON importato dal nastro (sorgente "Importa JSON"):
    *  se presente sostituisce la città selezionata. Non salvata. */
   esterna?: CittaEsterna | null;
+  /** 27/11/2026: nome della città per i file scaricati (<città>-planner-<disposizione>-<data>) e per l'editor. */
+  nomePerFile?: string;
   /** 2.0: i comandi del Planner stanno nel nastro: il Planner consegna qui i
    *  suoi gruppi (Ricerca, Disposizione, Città, Processore, Aiuto) a ogni
    *  cambio di stato, e [] quando si smonta. */
@@ -275,7 +277,7 @@ export interface CittaEsterna extends CittaJson { nome: string }
  *  svuota il nastro solo se i gruppi mostrati sono ancora i suoi. */
 let proprietarioNastro: object | null = null;
 
-export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang, esterna: esternaProp, onNastro, militariCollegatiIniziali, scollegatiIniziali, mappa }: Props) {
+export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnlockedCells: celleProfilo, candidati, uiLang, esterna: esternaProp, nomePerFile, onNastro, militariCollegatiIniziali, scollegatiIniziali, mappa }: Props) {
   // 2.0: la città da JSON arriva dal nastro (App), non più da un pulsante qui.
   const esterna = esternaProp ?? null;
   /** Città vera (profilo o JSON esterno) e modifiche temporanee ("Modifica città"):
@@ -1232,9 +1234,8 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
   };
   const nomeFile = (n: VName, ext: string) => {
     const sc = outcome?.find(x => x.id === n);
-    return sc?.attuale ? `foe-planner-attuale-${localDateStamp()}.${ext}`
-      : sc && !sc.raccordo ? `foe-planner-girandola${sc.gir ? "-2" : ""}-${localDateStamp()}.${ext}`
-      : `foe-planner-raccordo${sc?.raccordo ?? 3}-${localDateStamp()}.${ext}`;
+    const disposizione = sc?.attuale ? "attuale" : sc && !sc.raccordo ? `girandola${sc.gir ? "2" : ""}` : `raccordo${sc?.raccordo ?? 3}`;
+    return `${prefissoFile(nomePerFile)}-planner-${disposizione}-${localDateStamp()}.${ext}`;
   };
   /** Scarica la soluzione come JSON (stesso formato dell'export del pannello MAPPA). */
   const scaricaJsonFrame = (f: PlannerFrame, n: VName) => scaricaJson(esportaCittaJson(edificiFrame(f, n), areeProblema(), undefined, esterna ? null : undefined), nomeFile(n, "json"));
@@ -1321,7 +1322,7 @@ export default function PlannerView({ cityMapBuildings: cittaProfilo, cityMapUnl
     }
     // edifici aggiunti con "Modifica città" (id del JSON) e riquadro delle modifiche, per il PNG dell'editor
     const nuovi = [...e.idMap].filter(([, mid]) => eNuovo(mid)).map(([jid]) => jid);
-    w.postMessage({ tipo: "carica", token: e.token, titolo: titoloScenario(e.n), json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang, nuovi, riepilogo: riepilogoPng() }, location.origin);
+    w.postMessage({ tipo: "carica", token: e.token, titolo: titoloScenario(e.n), nome: nomePerFile, json, colori, nomeMunicipio: t("legendTownHall", uiLang), lang: uiLang, nuovi, riepilogo: riepilogoPng() }, location.origin);
   };
   /** Applica la città rimandata dall'editor; restituisce gli errori (vuoto = applicata). */
   const applicaDaEditor = (e: InfoEditor, dati: unknown): string[] => {
