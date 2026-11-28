@@ -4579,7 +4579,12 @@ export default function App() {
         try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno */ }
         return;
       }
-      if (localStorage.getItem(chiave) === impronta) { setPonteInsediamento(null); return; }
+      // (28/11/2026) "già importato" vale solo se il planner ha davvero l'insediamento di questo
+      // mondo: dopo un ricaricamento della pagina il planner riparte vuoto (mondo null) mentre
+      // l'impronta resta nel localStorage, e senza questo controllo non si reimportava più
+      // (serviva Pausa → LIVE, che cancella le impronte)
+      const qui = !!mondo && attuale === mondo;
+      if (qui && localStorage.getItem(chiave) === impronta) { setPonteInsediamento(null); return; }
       if (tool.haModifiche()) { setPonteInsediamento({ p, chiave, impronta, tipo }); return; }
       tool.importFromClipboardText(p.json);
       // anche se l'import non riesce: lo stesso pacchetto non si riprova a ogni arrivo

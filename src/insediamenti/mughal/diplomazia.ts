@@ -7,8 +7,9 @@
  *   togliere un Haveli costa di più (gli edifici grandi sono lunghi da ricostruire);
  * - nessuna residenza nuova: la popolazione viene solo da quelle che restano (anche staccate
  *   dalla strada) e non deve mai essere negativa;
- * - si costruiscono Canali d'acqua, Vialetti e diplomatici (Chhatri, Baldacchino, Chahar bagh),
- *   solo quelli sbloccati; i diplomatici danno diplomazia anche senza strada;
+ * - si costruiscono solo Canali d'acqua e Vialetti (sbloccati). I diplomatici (Chhatri,
+ *   Baldacchino, Chahar bagh) MAI nuovi: costruirli richiede almeno un'ora (28/11/2026); quelli
+ *   che ci sono si tengono, anche spostati, o si tolgono. Danno diplomazia anche senza strada;
  * - le strade non si tolgono mai: si mettono dove capita negli spazi che avanzano;
  * - l'Ambasciata e tutto il resto si possono spostare;
  * - (28/11/2026, utente) l'obiettivo è il minimo indispensabile: una volta sbloccato il livello
@@ -33,7 +34,7 @@
  * (Haveli, Shanti, Bhavan) si dispone tutto con un riempimento goloso: si prenotano le caselle
  * delle catene, si mettono le residenze tenute (prima nei loro posti di adesso, se liberi), poi i
  * diplomatici più densi che la popolazione regge, le catene, e si riempie il resto con Canali,
- * Vialetti e Chhatri, lasciando sempre abbastanza caselle libere per tutte le strade. Il
+ * Vialetti, lasciando sempre abbastanza caselle libere per tutte le strade. Il
  * risultato: per ogni combinazione di Haveli e Shanti tolti, la diplomazia più alta trovata.
  * Modulo puro (nessun React): gira nel worker e nel banco di prova (node).
  */
@@ -61,7 +62,8 @@ export interface RichiestaDiplomazia {
   /** Residenze presenti, con le loro posizioni di adesso (si prova a lasciarle lì). `peso`:
    *  costo di toglierne una (0 = libera, 1 = Shanti, 2 = Haveli). */
   residenze: Array<{ tipo: TipoDipl; peso: 0 | 1 | 2; posizioni: Array<{ row: number; col: number }> }>;
-  /** Diplomatici sbloccati (Chhatri, Baldacchino, Chahar bagh) con le posizioni di quelli già costruiti. */
+  /** Diplomatici già costruiti (Chhatri, Baldacchino, Chahar bagh) con le loro posizioni: se ne
+   *  tengono al massimo tanti quanti sono adesso (mai nuovi). */
   diplomatici: Array<{ tipo: TipoDipl; posizioni: Array<{ row: number; col: number }> }>;
   /** Canale d'acqua e Vialetto, se sbloccati. */
   canale?: TipoDipl;
@@ -72,6 +74,12 @@ export interface RichiestaDiplomazia {
   seme?: number;
   /** Solo queste posizioni dell'Ambasciata (per dividere il lavoro fra i worker). */
   posizioni?: Array<{ row: number; col: number }>;
+  /** (28/11/2026) "Sposta Ambasciata" spento: l'Ambasciata resta in `ambasciataOra`. Più worker
+   *  lavorano sulla stessa posizione con semi diversi; l'intervento minimo solo nel primo. */
+  ambasciataFissa?: boolean;
+  /** (28/11/2026) Ripresa dalla pausa: solo le ripartenze casuali (le passate deterministiche,
+   *  intervento minimo compreso, le ha già fatte la prima corsa). */
+  ripresa?: boolean;
   /** Disposizione di adesso, strade comprese (Ambasciata esclusa): per contare i lavori e per la
    *  ricerca a intervento minimo. `pop` e `dipl` servono anche per le manifatture. */
   ora?: Array<PezzoDipl & { pop: number; dipl: number }>;
@@ -105,6 +113,9 @@ export const BONUS_CANALE = [10, 20, 30];
 export const BONUS_VIALETTO = [5, 10, 15, 20, 25];
 /** Soglie dei livelli dell'incursione (dall'utente). */
 export const SOGLIE_DIPLOMAZIA = [102, 214, 307, 400, 540, 700, 870, 1050, 1260];
+/** Edificio sbloccato da ogni livello (stesso ordine delle soglie, dall'utente): se è sbloccato,
+ *  quel livello nel gioco è già stato raggiunto. */
+export const LIVELLI_DIPLOMAZIA = ["canale", "sari", "shanti", "chhatri", "spezie", "baldacchino", "loto", "charbagh", "haveli"];
 
 /** Attacchi delle catene rispetto all'angolo dell'Ambasciata 6×9 (definizioni del gioco). */
 const ATTACCO_SOPRA = { dc: 1, dr: -2 };     // Canale, poi in su di 2 righe
@@ -248,12 +259,14 @@ function disponi(req: RichiestaDiplomazia, amb: { row: number; col: number }, te
   // le catene prenotate devono restare possibili anche con le strade
   const areaCatene = () => catene.reduce((s, ct) => s + ct.posti.length * ct.tipo.w * ct.tipo.h, 0);
 
-  // 3. diplomatici dal più denso, finché la popolazione e lo spazio reggono (catene comprese)
+  // 3. diplomatici dal più denso, finché la popolazione e lo spazio reggono (catene comprese).
+  //    (28/11/2026, utente) MAI diplomatici nuovi: costruirli richiede almeno un'ora. Si
+  //    tengono (anche spostati) al massimo quelli che ci sono adesso.
   let dipl = 0;
   const dipls = [...req.diplomatici].sort((a, b) => b.tipo.dipl / (b.tipo.w * b.tipo.h) - a.tipo.dipl / (a.tipo.w * a.tipo.h));
   const posiDip = new Map(dipls.map(d => [d.tipo.id, neiPostiDiAdesso ? d.posizioni.slice() : null]));
   for (const d of dipls) {
-    for (;;) {
+    for (let n = 0; n < d.posizioni.length; n++) {
       if (pop + d.tipo.pop < 0) break;
       const area = d.tipo.w * d.tipo.h;
       if (libere - area - areaCatene() < req.strade) break;
@@ -276,11 +289,11 @@ function disponi(req: RichiestaDiplomazia, amb: { row: number; col: number }, te
   }
   pren.fill(0);
   void prenotate;
-  // 5. riempimento: Canali e Vialetti (anche in coda alle catene, stessa diplomazia base), Chhatri
+  // 5. riempimento: Canali e Vialetti (anche in coda alle catene, stessa diplomazia base);
+  //    niente diplomatici (vedi sopra)
   const riempitivi: TipoDipl[] = [];
   if (req.canale) riempitivi.push(req.canale);
   if (req.vialetto) riempitivi.push(req.vialetto);
-  for (const d of dipls) if (d.tipo.w * d.tipo.h <= 4) riempitivi.push(d.tipo);
   for (let giro = true; giro;) {
     giro = false;
     for (const t of riempitivi) {
@@ -406,7 +419,8 @@ function intervento(req: RichiestaDiplomazia, hMax: number, sMax: number, base: 
   const vivi = () => pezzi.filter((p) => p.vivo);
   const totale = () => diplomaziaDisposizione(vivi(), ambH, (id) => base.get(id) ?? 0, ids);
   let dipl = totale();
-  const tipi: TipoDipl[] = [...req.diplomatici.map((d) => d.tipo), ...(req.canale ? [req.canale] : []), ...(req.vialetto ? [req.vialetto] : [])];
+  // si costruiscono solo Canali e Vialetti: i diplomatici richiedono almeno un'ora (utente)
+  const tipi: TipoDipl[] = [...(req.canale ? [req.canale] : []), ...(req.vialetto ? [req.vialetto] : [])];
   // caselle d'attacco delle catene: solo lì l'aggiunta può valere più della base
   const attacchi = new Set<string>();
   for (let i = 0; i < BONUS_CANALE.length; i++) {
@@ -534,7 +548,7 @@ export function ottimizzaDiplomazia(req: RichiestaDiplomazia, progresso?: (t: Te
   const rng = mulberry32(req.seme ?? 1);
   const scadenza = Date.now() + req.tempoMs;
   const base = basi(req);
-  let pos = req.posizioni ?? posizioniAmbasciataDipl(req);
+  let pos = req.posizioni ?? (req.ambasciataFissa && req.ambasciataOra ? [req.ambasciataOra] : posizioniAmbasciataDipl(req));
   // la posizione di adesso per prima (meno spostamenti)
   let haOra = false;
   if (req.ambasciataOra) {
@@ -582,7 +596,7 @@ export function ottimizzaDiplomazia(req: RichiestaDiplomazia, progresso?: (t: Te
   const varianti = libereIdx.length ? cartesiano(libereIdx.map(i => variantiLibere(res[i]!.posizioni.length))) : [[]];
 
   // 0. intervento minimo (solo il worker che ha la posizione di adesso dell'Ambasciata)
-  if (haOra && req.ora) {
+  if (!req.ripresa && haOra && req.ora && (!req.ambasciataFissa || (req.seme ?? 1) === 1)) {
     for (const [hMax, sMax] of combinazioni) {
       const r = intervento(req, hMax, sMax, base);
       if (r) salva(r.h, r.s, req.ambasciataOra!, r.e, r.lavori);
@@ -592,7 +606,7 @@ export function ottimizzaDiplomazia(req: RichiestaDiplomazia, progresso?: (t: Te
   // 1. passata deterministica, a giri sulle posizioni (la posizione di adesso per prima): a ogni
   //    giro tutte le combinazioni, così anche quelle con più demolizioni vengono provate presto.
   //    Nei posti di adesso solo con l'Ambasciata dove è ora (altrimenti di rado restano liberi).
-  outer: for (const amb of pos) {
+  outer: for (const amb of req.ripresa ? [] : pos) {
     const ora = !!req.ambasciataOra && req.ambasciataOra.row === amb.row && req.ambasciataOra.col === amb.col;
     for (const [h, s] of combinazioni) {
       if (Date.now() > scadenza) break outer;
@@ -617,9 +631,9 @@ function cartesiano(liste: number[][]): number[][] {
   return out;
 }
 
-/** Righe della tabella (28/11/2026, utente): sempre i 10 migliori, dai meno lavori. Prima i
- *  tentativi non dominati (nessun altro arriva alla soglia togliendo meno o uguali Haveli e Shanti
- *  con meno o uguali lavori); se sono meno di 10 si completano con gli altri, dai più leggeri. */
+/** Righe della tabella Soluzioni (28/11/2026, utente), dai meno lavori: tutti i tentativi non
+ *  dominati (nessun altro arriva alla soglia togliendo meno o uguali Haveli e Shanti con meno o
+ *  uguali lavori); se sono meno di 10 si completano con gli altri, dai più leggeri. */
 const RIGHE_DIPL = 10;
 function risultato(m: Map<string, TentativoDipl>): TentativoDipl[] {
   const tutti = [...m.values()].sort((a, b) => a.haveliTolti - b.haveliTolti || a.shantiTolti - b.shantiTolti
@@ -636,7 +650,7 @@ function risultato(m: Map<string, TentativoDipl>): TentativoDipl[] {
     scelti.push(...tutti.filter((t) => !presi.has(t)).sort((a, b) => 2 * (a.haveliTolti - b.haveliTolti) + (a.shantiTolti - b.shantiTolti) || perLavori(a, b)).slice(0, RIGHE_DIPL - scelti.length));
     scelti.sort(perLavori);
   }
-  return scelti.slice(0, RIGHE_DIPL);
+  return scelti;
 }
 
 /** Unisce i risultati di più worker. */

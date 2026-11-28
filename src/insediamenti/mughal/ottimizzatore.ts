@@ -57,6 +57,9 @@ export interface RichiestaOttimizzatore {
   seme?: number;
   /** Solo queste posizioni dell'Ambasciata (per dividere il lavoro fra i worker). */
   posizioni?: Array<{ row: number; col: number }>;
+  /** (28/11/2026) "Sposta Ambasciata" spento: l'Ambasciata resta qui (spostarla nel gioco è
+   *  un'operazione lunga e complessa). Senza `posizioni` si cerca solo da questa. */
+  ambasciataFissa?: { row: number; col: number };
   /** Strade massime da provare. (28/11/2026) Il planner ci mette le strade già costruite più
    *  quelle che le rupie permettono di comprare: i tentativi oltre non si registrano. */
   maxStrade?: number;
@@ -525,7 +528,7 @@ function tentativi(req: RichiestaOttimizzatore, archivio: Archivio): Tentativo[]
 /** Ricerca completa (banco di prova o un worker con le sue posizioni). */
 export function ottimizza(req: RichiestaOttimizzatore, progresso?: (t: Tentativo[], fatte: number, totali: number) => void): Tentativo[] {
   const rng = mulberry32(req.seme ?? 1);
-  const pos = req.posizioni ?? posizioniAmbasciata(req);
+  const pos = req.posizioni ?? (req.ambasciataFissa ? [req.ambasciataFissa] : posizioniAmbasciata(req));
   const archivio: Archivio = new Map();
   const scadenza = Date.now() + req.tempoMs;
   // 1. tutte le posizioni, veloce: quali promettono

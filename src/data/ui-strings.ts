@@ -761,8 +761,8 @@ const UI_STRINGS = {
   sbloccoAria: { it: (n: string) => `${n} sbloccato`, en: (n: string) => `${n} unlocked` },
   r2PiOttimizza: { it: "Ottimizza", en: "Optimize" },
   r2PiOttimizzaTitle: {
-    it: "Cerca la disposizione con più rupie e meno strade: scegli prima nella legenda quante manifatture mettere, le residenze le aggiunge lui (solo quelle sbloccate). Propone un tentativo per ogni numero di strade",
-    en: "Looks for the layout with the most rupees and the fewest roads: first choose in the legend how many factories to place, it adds the residences itself (unlocked ones only). It suggests one attempt for each number of roads",
+    it: "Cerca la disposizione con più rupie e meno strade: scegli prima nella legenda quante manifatture mettere, le residenze le aggiunge lui (solo quelle sbloccate). Propone una soluzione per ogni numero di strade e continua finché non premi Pausa",
+    en: "Looks for the layout with the most rupees and the fewest roads: first choose in the legend how many factories to place, it adds the residences itself (unlocked ones only). It suggests one solution for each number of roads and keeps going until you press Pause",
   },
   mughalStaccataResidenza: { it: "Non collegata alla strada: dà solo popolazione, niente rupie", en: "Not connected to a road: gives population only, no rupees" },
   mughalStaccatoEdificio: { it: "Non collegato alla strada: così non produce", en: "Not connected to a road: it won't produce like this" },
@@ -770,21 +770,40 @@ const UI_STRINGS = {
     it: (n: number) => `${n} strade già costruite in più, parcheggiate in caselle vuote (le strade non si eliminano)`,
     en: (n: number) => `${n} roads already built and not needed, parked in empty cells (roads are never removed)`,
   },
-  r2PiContinua: { it: "Continua", en: "Continue" },
-  r2PiContinuaTitle: {
-    it: "Riprende la ricerca dai tentativi trovati e continua finché non premi Stop, per migliorarli. Se hai cambiato area o manifatture serve un nuovo Ottimizza",
-    en: "Resumes the search from the attempts found and keeps going until you press Stop, to improve them. If you changed the area or the factories, press Optimize again",
+  r2PiRiprendiTitle: {
+    it: "Riprende la ricerca da dove era rimasta, con le soluzioni trovate, finché non premi Pausa. Se hai cambiato area, manifatture, soglia o Blocca l'Ambasciata riparte da capo",
+    en: "Resumes the search where it stopped, with the solutions found, until you press Pause. If you changed the area, the factories, the threshold or Lock the Embassy it starts again",
   },
+  r2PiPausaTitle: {
+    it: "Mette in pausa la ricerca: puoi guardare le soluzioni sulla mappa e usare Annulla. Ripremi Ottimizza per riprendere da dove era",
+    en: "Pauses the search: you can look at the solutions on the map and use Undo. Press Optimize again to resume where it was",
+  },
+  r2GrpOttimizzatore: { it: "Ottimizzatore", en: "Optimizer" },
   // (28/11/2026) ottimizzatore della diplomazia dei Mughal
   r2GrpDiplomazia: { it: "Diplomazia", en: "Diplomacy" },
+  r2GrpOpzioniOtt: { it: "Opzioni", en: "Options" },
+  r2PiBloccaAmbasciata: { it: "Blocca l'Ambasciata", en: "Lock the Embassy" },
+  r2PiBloccaAmbasciataSi: {
+    it: "Acceso: Ottimizza e Ottimizza diplomazia lasciano l'Ambasciata dov'è (spostarla nel gioco è lungo e complicato). Clic per permettere di spostarla",
+    en: "On: Optimize and Optimize diplomacy leave the Embassy where it is (moving it in the game is long and complicated). Click to allow moving it",
+  },
+  r2PiBloccaAmbasciataNo: {
+    it: "Spento: Ottimizza e Ottimizza diplomazia possono spostare l'Ambasciata. Clic per tenerla ferma dov'è",
+    en: "Off: Optimize and Optimize diplomacy can move the Embassy. Click to keep it where it is",
+  },
   r2PiOttimizzaDipl: { it: "Ottimizza diplomazia", en: "Optimize diplomacy" },
   r2PiOttimizzaDiplTitle: {
-    it: "Cerca come arrivare alla diplomazia scelta togliendo meno edifici grandi possibile (prima gli Shanti, poi gli Haveli). Toglie manifatture e Bhavan se serve, non aggiunge residenze, tiene tutte le strade e può spostare tutto, Ambasciata compresa. Usa solo gli edifici sbloccati e conta i bonus delle catene di Canali e Vialetti",
-    en: "Looks for a way to reach the chosen diplomacy removing as few large buildings as possible (Shantis first, then Havelis). It removes factories and Bhavans if needed, adds no residences, keeps every road and can move everything, Embassy included. It uses unlocked buildings only and counts the Canal and Alley chain bonuses",
+    it: "Cerca come arrivare alla diplomazia scelta togliendo meno edifici grandi possibile (prima gli Shanti, poi gli Haveli). Toglie manifatture e Bhavan se serve, non aggiunge residenze, tiene tutte le strade e può spostare tutto (l'Ambasciata solo con Blocca l'Ambasciata spento). Costruisce solo Canali e Vialetti (sbloccati): niente Chhatri, Baldacchino o Chahar bagh nuovi, che richiedono almeno un'ora, ma tiene o sposta quelli che ci sono. Conta i bonus delle catene",
+    en: "Looks for a way to reach the chosen diplomacy removing as few large buildings as possible (Shantis first, then Havelis). It removes factories and Bhavans if needed, adds no residences, keeps every road and can move everything (the Embassy only with Lock the Embassy off). It only builds Canals and Alleys (unlocked ones): no new Chhatris, Baldachins or Chahar Baghs, which take at least an hour, but it keeps or moves the existing ones. It counts the chain bonuses",
   },
+  mughalSogliaSblocca: { it: (n: string) => `Sblocca ${n}`, en: (n: string) => `Unlocks ${n}` },
+  mughalSogliaSbloccata: { it: "livello già sbloccato", en: "level already unlocked" },
+  mughalSogliaRaggiunta: { it: "raggiunta: sblocca il livello nel gioco", en: "reached: unlock the level in the game" },
+  mughalSogliaMancano: { it: (n: string) => `mancano ${n}`, en: (n: string) => `${n} to go` },
+  mughalSogliaPiede: { it: "Clicca una bolla per scegliere la soglia", en: "Click a bubble to choose the threshold" },
   r2PiSogliaDiplTitle: { it: "Diplomazia da raggiungere (soglie dei livelli dell'incursione)", en: "Diplomacy to reach (incursion level thresholds)" },
-  mughalTentativiDiplTitolo: { it: (n: string) => `Diplomazia ≥ ${n}`, en: (n: string) => `Diplomacy ≥ ${n}` },
-  mughalTentativiChiudiDipl: { it: "Chiudi (ferma la ricerca se è in corso)", en: "Close (stops the search if running)" },
+  mughalTentativiDiplTitolo: { it: (n: string) => `Soluzioni · Dipl. ≥ ${n}`, en: (n: string) => `Solutions · Dipl. ≥ ${n}` },
+  mughalTentativiChiudiDipl: { it: "Chiudi (mette in pausa la ricerca se è in corso; Ottimizza diplomazia lo riapre)", en: "Close (pauses the search if running; Optimize diplomacy reopens it)" },
   mughalDiplNessuno: {
     it: (n: string) => `Nessuna disposizione arriva a ${n} di diplomazia, nemmeno togliendo tutte le residenze grandi: scegli una soglia più bassa o sblocca altri edifici o espansioni`,
     en: (n: string) => `No layout reaches ${n} diplomacy, not even removing all the large residences: choose a lower threshold or unlock more buildings or expansions`,
@@ -805,13 +824,12 @@ const UI_STRINGS = {
   mughalColDiplTitle: { it: "Diplomazia totale con i bonus delle catene (tra parentesi: differenza rispetto alla mappa di partenza)", en: "Total diplomacy with chain bonuses (in brackets: difference from the starting map)" },
   mughalColPopLibera: { it: "Pop", en: "Pop" },
   mughalColPopLiberaTitle: { it: "Popolazione libera che avanza", en: "Spare free population" },
-  mughalTentativiContinua: { it: (s: number) => `Continua… ${s} s (Stop per fermare)`, en: (s: number) => `Continuing… ${s} s (Stop to end)` },
   insDiplomaziaLabel: { it: "Dipl", en: "Dipl" },
   insDiplomaziaTitle: {
     it: "Diplomazia totale degli edifici dell'insediamento: serve a raggiungere la soglia per sbloccare gli edifici successivi",
     en: "Total diplomacy of the settlement buildings: it is needed to reach the threshold to unlock the next buildings",
   },
-  mughalTentativiChiudi: { it: "Chiudi (ferma la ricerca se è in corso; Continua lo riapre)", en: "Close (stops the search if running; Continue reopens it)" },
+  mughalTentativiChiudi: { it: "Chiudi (mette in pausa la ricerca se è in corso; Ottimizza lo riapre)", en: "Close (pauses the search if running; Optimize reopens it)" },
   confrontoAttuale: { it: "Attuale (nel gioco)", en: "Current (in game)" },
   confrontoNuova: { it: "Nuova", en: "New" },
   confrontoTitolo: { it: "Variazioni", en: "Changes" },
@@ -822,21 +840,27 @@ const UI_STRINGS = {
   confrontoRupie: { it: "Rupie ogni 5 ore", en: "Rupees every 5 hours" },
   confrontoLegTolto: { it: "da togliere", en: "to remove" },
   confrontoLegNuovo: { it: "nuovo", en: "new" },
-  mughalTentativiTitolo: { it: "Tentativi", en: "Attempts" },
-  mughalTentativiInCorso: { it: (s: number, max: number) => `Ricerca in corso… ${s}/${max} s`, en: (s: number, max: number) => `Searching… ${s}/${max} s` },
-  mughalTentativiClicca: { it: "Clicca un tentativo per vederlo sulla mappa", en: "Click an attempt to see it on the map" },
-  mughalTentativiAttesa: { it: "Primi tentativi tra qualche secondo…", en: "First attempts in a few seconds…" },
+  mughalTentativiTitolo: { it: "Soluzioni", en: "Solutions" },
+  mughalInCorso: { it: (s: number) => `Ricerca in corso… ${s} s (Pausa per fermare)`, en: (s: number) => `Searching… ${s} s (Pause to stop)` },
+  mughalInPausa: { it: "In pausa: clicca una soluzione per vederla, Ottimizza riprende", en: "Paused: click a solution to see it, Optimize resumes" },
+  mughalInPausaDipl: { it: "In pausa: clicca una soluzione per vederla, Ottimizza diplomazia riprende", en: "Paused: click a solution to see it, Optimize diplomacy resumes" },
+  mughalTentativiClicca: { it: "Clicca una soluzione per vederla sulla mappa", en: "Click a solution to see it on the map" },
+  mughalTentativiAttesa: { it: "Prime soluzioni tra qualche secondo…", en: "First solutions in a few seconds…" },
   mughalTentativiNessunoMeglio: {
-    it: "Nessun tentativo produce più rupie della disposizione di adesso (con le rupie che hai): prova Continua o aggiungi un'espansione",
-    en: "No attempt produces more rupees than the current layout (with the rupees you have): try Continue or add an expansion",
+    it: "Nessuna soluzione produce più rupie della disposizione di adesso (con le rupie che hai): lascialo girare più a lungo o aggiungi un'espansione",
+    en: "No solution produces more rupees than the current layout (with the rupees you have): let it run longer or add an expansion",
   },
   mughalTentativiNessuno: {
     it: "Nessuna disposizione trovata: le manifatture non entrano nell'area o la popolazione non basta",
     en: "No layout found: the factories don't fit in the area or there isn't enough population",
   },
   mughalColStrade: { it: "Strade", en: "Roads" },
-  mughalColRimaste: { it: "Rupie", en: "Rupees" },
-  mughalColRimasteTitle: { it: "Rupie che restano dopo aver costruito le strade nuove di questo tentativo", en: "Rupees left after building the new roads of this attempt" },
+  mughalColRimaste: { it: "Costo", en: "Cost" },
+  mughalColRimasteTitle: { it: "Rupie per costruire le strade nuove di questa soluzione (le strade già costruite non costano)", en: "Rupees to build the new roads of this solution (roads already built cost nothing)" },
+  mughalCostoStrade: {
+    it: (n: number, c: string, resto: string | null) => `${n} strade nuove × ${c} rupie${resto === null ? "" : `, restano ${resto} rupie`}`,
+    en: (n: number, c: string, resto: string | null) => `${n} new roads × ${c} rupees${resto === null ? "" : `, ${resto} rupees left`}`,
+  },
   mughalColTipoTitle: {
     it: (n: string) => `${n} collegati alla strada: differenza con la mappa di quando hai premuto Ottimizza (il numero è nel suggerimento della riga)`,
     en: (n: string) => `${n} connected to a road: difference from the map when you pressed Optimize (the number is in the row's tooltip)`,
@@ -849,11 +873,11 @@ const UI_STRINGS = {
     en: "The Mughal planner is still in development and incomplete.",
   },
   mughalRupeesNoImport: { it: "Le rupie compaiono dopo l'import con la bacchetta.", en: "Rupees appear after the import with the wand." },
-  mughalCategoryResidential: { it: "🏠 Edifici residenziali", en: "🏠 Residential buildings" },
-  mughalCategoryGoods: { it: "🛢️ Edifici per i beni", en: "🛢️ Goods buildings" },
-  mughalCategoryDiplomacyPop: { it: "🤝 Diplomazia (usa popolazione)", en: "🤝 Diplomacy (uses population)" },
-  mughalCategoryDiplomacyFree: { it: "🤝 Diplomazia (senza popolazione)", en: "🤝 Diplomacy (no population)" },
-  mughalCategoryRoads: { it: "🛤️ Strade", en: "🛤️ Roads" },
+  mughalCategoryResidential: { it: "Edifici residenziali", en: "Residential buildings" },
+  mughalCategoryGoods: { it: "Edifici per i beni", en: "Goods buildings" },
+  mughalCategoryDiplomacyPop: { it: "Diplomazia (usa popolazione)", en: "Diplomacy (uses population)" },
+  mughalCategoryDiplomacyFree: { it: "Diplomazia (senza popolazione)", en: "Diplomacy (no population)" },
+  mughalCategoryRoads: { it: "Strade", en: "Roads" },
   mughalBuildingEmbassyName: { it: "Ambasciata", en: "Embassy" },
   mughalBuildingEmbassyShort: { it: "Ambasciata", en: "Embassy" },
   mughalBuildingBhavanName: { it: "Bhavan", en: "Bhavan" },
@@ -2711,8 +2735,8 @@ const UI_STRINGS = {
   },
   piratiResetLabel: { it: "Reset", en: "Reset" },
   piratiResetTitle: {
-    it: "Riporta l'insediamento a com'è nel gioco: dall'estensione FoE Optimizer Bridge se ce l'ha, altrimenti dall'ultimo import; senza nessun import, allo scenario vuoto. Le modifiche e i tentativi vanno persi",
-    en: "Brings the settlement back to how it is in the game: from the FoE Optimizer Bridge extension if it has it, otherwise from the last import; with no import, to the empty scenario. Changes and attempts are lost",
+    it: "Riporta l'insediamento a com'è nel gioco: dall'estensione FoE Optimizer Bridge se ce l'ha, altrimenti dall'ultimo import; senza nessun import, allo scenario vuoto. Le modifiche e le soluzioni vanno perse",
+    en: "Brings the settlement back to how it is in the game: from the FoE Optimizer Bridge extension if it has it, otherwise from the last import; with no import, to the empty scenario. Changes and solutions are lost",
   },
   piratiAddExpLabel: { it: "+ EXP", en: "+ EXP" },
   piratiRemoveExpLabel: { it: "− EXP", en: "− EXP" },
@@ -2817,15 +2841,9 @@ const UI_STRINGS = {
     it: "Nessun municipio dei Pirati (H_Pirates_Townhall) trovato nel payload: assicurati di essere sulla schermata dell'Insediamento dei Pirati quando usi la bacchetta.",
     en: "No Pirate townhall (H_Pirates_Townhall) found in the payload: make sure you're on the Pirate Outpost screen when using the wand.",
   },
-  piratiImportSuccess: {
-    it: (buildings: number, obstacles: number, expansions: number) =>
-      `Importati ${buildings} edifici, ${obstacles} celle ostacolo, ${expansions} espansioni extra.`,
-    en: (buildings: number, obstacles: number, expansions: number) =>
-      `Imported ${buildings} buildings, ${obstacles} obstacle cells, ${expansions} extra expansions.`,
-  },
-  piratiImportUnrecognizedNote: {
-    it: (count: number, ids: string) => ` (${count} tipo/i non riconosciuto/i: ${ids})`,
-    en: (count: number, ids: string) => ` (${count} unrecognized type(s): ${ids})`,
+  piratiImportUnrecognized: {
+    it: (count: number, ids: string) => `Importato, ma ${count} tipo/i di edificio non riconosciuto/i: ${ids}`,
+    en: (count: number, ids: string) => `Imported, but ${count} unrecognized building type(s): ${ids}`,
   },
 
   // ── Tab Pirati: griglia/tooltip ────────────────────────────────────────
@@ -2884,10 +2902,10 @@ const UI_STRINGS = {
   },
 
   // ── Tab Pirati: pannello edifici (categorie) ──────────────────────────
-  piratiCategoryResidential: { it: "🏠 Edifici residenziali", en: "🏠 Residential buildings" },
-  piratiCategoryGoods: { it: "🛢️ Edifici per i beni", en: "🛢️ Goods buildings" },
-  piratiCategoryDiplomacyDoubloons: { it: "🤝 Diplomazia e Dobloni", en: "🤝 Diplomacy and Doubloons" },
-  piratiCategoryDiplomacyOnly: { it: "🤝 Solo Diplomazia", en: "🤝 Diplomacy only" },
+  piratiCategoryResidential: { it: "Edifici residenziali", en: "Residential buildings" },
+  piratiCategoryGoods: { it: "Edifici per i beni", en: "Goods buildings" },
+  piratiCategoryDiplomacyDoubloons: { it: "Diplomazia e Dobloni", en: "Diplomacy and Doubloons" },
+  piratiCategoryDiplomacyOnly: { it: "Solo Diplomazia", en: "Diplomacy only" },
 
   // ── Tab Pirati: nomi edifici (nome completo / etichetta breve in griglia) ──
   // shortName è pensato per restare leggibile dentro la cella della griglia

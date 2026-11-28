@@ -89,6 +89,12 @@ export { default as iconRaccoltaDoppiaOro } from "./icons/bonus_double_collect_g
 export { default as badge_pirates } from "./icons/badge_pirates.png";
 export { default as badge_mughals } from "./icons/badge_mughals.png";
 export { default as iconDiplomazia } from "./icons/diplomacy.png";
+// (28/11/2026) sezioni della legenda degli insediamenti (immagini del gioco)
+export { default as iconResidenziali } from "./icons/residential.png";
+export { default as iconBeniCulturali } from "./icons/cultural_goods.png";
+// (28/11/2026) bolle della barra dell'Ambasciata dei Mughal (immagini del gioco, 63×64)
+export { default as mughalBollaAttiva } from "./icons/mughal_bolla_attiva.png";
+export { default as mughalBollaInattiva } from "./icons/mughal_bolla_inattiva.png";
 export { default as allies_military } from "./icons/allies_military.png";
 export { default as allies_science } from "./icons/allies_science.png";
 export { default as allies_slot_empty } from "./icons/allies_slot_empty.png";

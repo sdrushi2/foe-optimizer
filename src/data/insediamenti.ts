@@ -28,7 +28,8 @@ interface ConfigInsediamento {
   municipio: BuildingType;
   municipioIniziale: Placement;
   edifici: BuildingType[];
-  categorie: Array<{ titolo: UiKey; ids: string[] }>;
+  /** `icona` (28/11/2026): icona del gioco accanto al titolo della sezione nella legenda. */
+  categorie: Array<{ titolo: UiKey; ids: string[]; icona: "residenziali" | "beni" | "diplomazia" | "strade" }>;
   /** Blocchi aperti all'inizio ("riga:colonna") e tutti quelli possibili. */
   baseBlocchi: string[];
   blocchiPermessi: string[];
@@ -80,13 +81,13 @@ const PIRATI: ConfigInsediamento = {
   municipioIniziale: MUNICIPIO_INITIAL_PLACEMENT,
   edifici: INITIAL_BUILDINGS.map((b) => ({ ...b, ...EXTRA_PIRATI[b.id] })),
   categorie: [
-    { titolo: "piratiCategoryResidential", ids: ["amaca", "capanno", "baracca"] },
-    { titolo: "piratiCategoryGoods", ids: ["pescatore", "spezie", "rum", "cannoni"] },
+    { titolo: "piratiCategoryResidential", ids: ["amaca", "capanno", "baracca"], icona: "residenziali" },
+    { titolo: "piratiCategoryGoods", ids: ["pescatore", "spezie", "rum", "cannoni"], icona: "beni" },
     // Ex unico gruppo "Diplomazia", separato in due (agosto 2026, su richiesta
     // esplicita): le tre imbarcazioni producono anche Dobloni oltre a Diplomazia
     // (pop negativo più alto), i quattro moli danno solo Diplomazia pura.
-    { titolo: "piratiCategoryDiplomacyDoubloons", ids: ["imbarcazione", "brigantino", "galeone"] },
-    { titolo: "piratiCategoryDiplomacyOnly", ids: ["molo", "molo_lungo", "molo_largo", "grande_molo"] },
+    { titolo: "piratiCategoryDiplomacyDoubloons", ids: ["imbarcazione", "brigantino", "galeone"], icona: "diplomazia" },
+    { titolo: "piratiCategoryDiplomacyOnly", ids: ["molo", "molo_lungo", "molo_largo", "grande_molo"], icona: "diplomazia" },
   ],
   baseBlocchi: BASE_UNLOCKED_BLOCK_KEYS,
   blocchiPermessi: ALLOWED_BLOCK_KEYS,
@@ -155,11 +156,11 @@ const MUGHAL: ConfigInsediamento = {
   municipioIniziale: { buildingId: "municipio", row: 4, col: 0, w: 6, h: 9 },
   edifici: EDIFICI_MUGHAL,
   categorie: [
-    { titolo: "mughalCategoryResidential", ids: ["bhavan", "shanti", "haveli"] },
-    { titolo: "mughalCategoryGoods", ids: ["risaia", "sari", "spezie", "loto"] },
-    { titolo: "mughalCategoryDiplomacyPop", ids: ["chhatri", "baldacchino", "charbagh"] },
-    { titolo: "mughalCategoryDiplomacyFree", ids: ["canale", "vialetto"] },
-    { titolo: "mughalCategoryRoads", ids: ["sentiero"] },
+    { titolo: "mughalCategoryResidential", ids: ["bhavan", "shanti", "haveli"], icona: "residenziali" },
+    { titolo: "mughalCategoryGoods", ids: ["risaia", "sari", "spezie", "loto"], icona: "beni" },
+    { titolo: "mughalCategoryDiplomacyPop", ids: ["chhatri", "baldacchino", "charbagh"], icona: "diplomazia" },
+    { titolo: "mughalCategoryDiplomacyFree", ids: ["canale", "vialetto"], icona: "diplomazia" },
+    { titolo: "mughalCategoryRoads", ids: ["sentiero"], icona: "strade" },
   ],
   baseBlocchi: BASE_MUGHAL,
   blocchiPermessi: PERMESSI_MUGHAL,

@@ -24,16 +24,17 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 // file): Wand2 è importata da lucide-react per riusare l'IDENTICA immagine della
 // bacchetta magica mostrata come CTA in App.tsx (tab Città/Inventario, "Nessuna città
 // importata...") nella guida rapida in fondo al planner — stesso font/stile, stessa icona.
-import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, Sparkles, FastForward, Handshake, X as IconaChiudi, type LucideIcon } from "lucide-react";
+import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, Sparkles, Pause, Handshake, Lock, LockOpen, X as IconaChiudi, type LucideIcon } from "lucide-react";
 import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
-import { iconDiplomazia } from "../assets/icons";
+import { iconBeniCulturali, iconDiplomazia, iconResidenziali, iconRoad } from "../assets/icons";
 import { isLegacyBookmarkletPayload, readPayloadDiagnostics, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
 import { importCulturalOutpostPayload, ImportCulturalOutpostFailure } from "../data/importCulturalOutpost";
 import { t, type UiLang } from "../data/ui-strings";
 import { formatInt } from "../utils/format";
 import LavoratoreMughal from "./mughal/lavoratore?worker&inline";
 import LavoratoreDiplomazia from "./mughal/lavoratoreDiplomazia?worker&inline";
-import { diplomaziaDisposizione, posizioniAmbasciataDipl, SOGLIE_DIPLOMAZIA, totaleLavori, unisciDiplomazia, type RichiestaDiplomazia, type TentativoDipl, type TipoDipl } from "./mughal/diplomazia";
+import SelettoreSoglia from "./mughal/SelettoreSoglia";
+import { diplomaziaDisposizione, LIVELLI_DIPLOMAZIA, posizioniAmbasciataDipl, SOGLIE_DIPLOMAZIA, totaleLavori, unisciDiplomazia, type RichiestaDiplomazia, type TentativoDipl, type TipoDipl } from "./mughal/diplomazia";
 import { posizioniAmbasciata, unisciTentativi, type RichiestaOttimizzatore, type Tentativo, type TipoOttimizzatore } from "./mughal/ottimizzatore";
 import { confrontaDisposizioni, FrecciaConfronto, MappaSolaLettura, RiepilogoConfronto, type DatiRiepilogo } from "./ConfrontoMappe";
 import { caricaSblocchi, leggiSblocchi, salvaSblocchi, statoDopoImport, type StatoSblocchi } from "./sblocchi";
@@ -366,7 +367,9 @@ type PlannerInsediamentoProps = {
  *  ritmo della colonna Produzione dei tentativi ("/5h"). */
 const ORE_RACCOLTA = 5;
 /** (28/11/2026) Soglia scelta per l'ottimizzatore della diplomazia (Mughal). */
-const CHIAVE_SOGLIA_DIPL = "foe2_mughal_soglia_diplomazia";
+/** (28/11/2026) Interruttore "Blocca l'Ambasciata" degli ottimizzatori, salvato al contrario:
+ *  "1" = si può spostare (sbloccata). Di base bloccata. */
+const CHIAVE_SPOSTA_AMBASCIATA = "foe2_mughal_sposta_ambasciata";
 function rupieOraDi(b: { currency?: { prod?: Array<[number, number]> } } | undefined): number {
   const prod = b?.currency?.prod;
   if (!prod?.length) return 0;
@@ -498,9 +501,6 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   const [ottimizzando, setOttimizzando] = useState(false);
   const [secondiOtt, setSecondiOtt] = useState(0);
   const [partenzaOtt, setPartenzaOtt] = useState<{ strade: number; collegate: number; rupieOra: number; perTipo: Record<string, number> } | null>(null);
-  // "Continua" (26/11/2026): ricerca senza limite di tempo che riparte dai tentativi trovati;
-  // vale solo se la richiesta (area, manifatture, residenze) è la stessa dell'ultima ricerca
-  const [ottInfinito, setOttInfinito] = useState(false);
   // X del riquadro Tentativi (26/11/2026): lo nasconde (e ferma la ricerca); i tentativi restano
   // per Continua, e il riquadro torna con Ottimizza o Continua
   const [tentativiChiusi, setTentativiChiusi] = useState(false);
@@ -509,13 +509,22 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   // (28/11/2026) Ottimizzatore della diplomazia (Mughal): soglia scelta (salvata), quale dei due
   // ottimizzatori sta girando o ha riempito il riquadro, i suoi tentativi (uno per numero di
   // Haveli e Shanti tolti) e la partenza (la mappa quando si è premuto il pulsante)
-  const [sogliaDipl, setSogliaDipl] = useState<number>(() => {
-    try { const n = Number(localStorage.getItem(CHIAVE_SOGLIA_DIPL)); return SOGLIE_DIPLOMAZIA.includes(n) ? n : SOGLIE_DIPLOMAZIA[4]!; } catch { return SOGLIE_DIPLOMAZIA[4]!; }
-  });
+  // soglia scelta a mano (null = quella del prossimo livello da sbloccare, vedi sogliaDipl)
+  const [sogliaScelta, setSogliaScelta] = useState<number | null>(null);
   const [modoOtt, setModoOtt] = useState<"produzione" | "diplomazia">("produzione");
+  // (28/11/2026, utente) spostare l'Ambasciata nel gioco è lungo e complesso: di base gli
+  // ottimizzatori la lasciano dov'è; acceso, la possono spostare (salvato)
+  const [spostaAmbasciata, setSpostaAmbasciata] = useState<boolean>(() => {
+    try { return localStorage.getItem(CHIAVE_SPOSTA_AMBASCIATA) === "1"; } catch { return false; }
+  });
+  const cambiaSpostaAmbasciata = () => setSpostaAmbasciata((v) => {
+    try { localStorage.setItem(CHIAVE_SPOSTA_AMBASCIATA, v ? "0" : "1"); } catch { /* storage pieno o bloccato */ }
+    return !v;
+  });
   const [tentativiDipl, setTentativiDipl] = useState<TentativoDipl[]>([]);
   const [sceltoDipl, setSceltoDipl] = useState<string | null>(null);
   const [partenzaDipl, setPartenzaDipl] = useState<{ perTipo: Record<string, number>; diplomazia: number; soglia: number } | null>(null);
+  const ultimaDiplRef = useRef<{ req: RichiestaDiplomazia; firma: string } | null>(null);
 
   // Ultima disposizione "risolta" nota (indipendente dalla baseline, che
   // cambia solo con import/Reset/Undo, anche se le due coincidono sempre
@@ -1088,7 +1097,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
     lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
     setHasImportedCity(true);
     setTentativi([]);
-    setTentativiDipl([]);
+    azzeraOttimizzatori();
     setTentativoScelto(null);
     {
       const server = (payload as { server?: unknown }).server;
@@ -1121,14 +1130,14 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
       setSblocchi({ mondo, stato });
     }
 
-    const unrecognizedNote = result.unrecognizedCityentityIds.length > 0
-      ? t("piratiImportUnrecognizedNote", uiLang, result.unrecognizedCityentityIds.length, result.unrecognizedCityentityIds.join(", "))
-      : "";
+    // (28/11/2026, utente) niente più "Importati N edifici, N celle ostacolo, N espansioni
+    // extra": l'import si vede già sulla mappa. Resta solo l'avviso dei tipi non riconosciuti.
+    const ignoti = result.unrecognizedCityentityIds;
     const message = {
       kind: "success" as const,
-      text: t("piratiImportSuccess", uiLang, nextBuildingPlacements.length, result.obstacleCells.length, result.expansionBlocks.length) + unrecognizedNote,
+      text: ignoti.length > 0 ? t("piratiImportUnrecognized", uiLang, ignoti.length, ignoti.join(", ")) : "",
     };
-    setImportMessage(message);
+    setImportMessage(ignoti.length > 0 ? message : null);
     return message;
   };
 
@@ -1161,7 +1170,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
       setEditMode("obstacle");
       setImportMessage(null);
       setTentativi([]);
-      setTentativiDipl([]);
+      azzeraOttimizzatori();
       setTentativoScelto(null);
     },
   }));
@@ -2164,6 +2173,13 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
     return diplomaziaDisposizione(placements.filter((p) => p.buildingId !== ID_MUNICIPIO).map((p) => ({ id: p.buildingId, row: p.row, col: p.col, w: p.w, h: p.h })), amb ? { row: amb.row, col: amb.col, h: amb.h } : null,
       (id) => base.get(id) ?? 0, { canale: "canale", vialetto: "vialetto" });
   }, [cfg, buildings, placements]);
+  // livelli dell'incursione già raggiunti nel gioco: dagli edifici che sbloccano (utente); un
+  // livello sbloccato vuol dire che lo sono anche tutti quelli prima
+  const ultimoLivello = LIVELLI_DIPLOMAZIA.reduce((u, id, i) => (sbloccato(buildings.find((b) => b.id === id)?.cityentityId) ? i : u), -1);
+  const livelliSbloccati = LIVELLI_DIPLOMAZIA.map((_, i) => i <= ultimoLivello);
+  // (28/11/2026, utente) di base la soglia del prossimo livello da sbloccare (l'ultima se sono
+  // tutti sbloccati); una scelta a mano vale finché non si reimporta o si fa Reset
+  const sogliaDipl = sogliaScelta ?? SOGLIE_DIPLOMAZIA[Math.min(ultimoLivello + 1, SOGLIE_DIPLOMAZIA.length - 1)]!;
 
   // Undo deve attivarsi solo se lo stato corrente si è davvero discostato dalla
   // baseline (stato vuoto, o stato subito dopo l'ultimo import riuscito) — altrimenti
@@ -2234,7 +2250,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
    */
   const reset = () => {
     if (isSolving) return;
-    if (ottimizzando) fermaOttimizzatore();
+    // (28/11/2026) Reset globale: anche gli ottimizzatori (produzione e diplomazia), comprese
+    // le soluzioni in pausa
+    azzeraOttimizzatori();
     const fazione = /^H_([A-Za-z]+)_Townhall$/.exec(cfg.importa.municipio)?.[1];
     const suoi = fazione ? pacchettiPonte().filter((p) => p.tipo === "mia" && p.leggero && improntaInsediamento(p.leggero)?.fazione === fazione) : [];
     const dalPonte = suoi.find((p) => p.server === mondo) ?? (suoi.length === 1 && (!mondo || !hasImportedCity) ? suoi[0] : undefined);
@@ -2246,7 +2264,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   const azzera = () => {
             if (isSolving) return;
             setTentativi([]);
-            setTentativiDipl([]);
+            azzeraOttimizzatori();
             setTentativoScelto(null);
             setPartenzaOtt(null);
             ultimoImportRef.current = null;
@@ -2284,8 +2302,8 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   // ── Ottimizzatore della disposizione (25/11/2026, Mughal) ─────────────────
   // Le manifatture le sceglie l'utente (numero nella legenda); il motore riempie con le
   // residenze sbloccate cercando più rupie e meno strade, e propone un tentativo per ogni
-  // numero di strade. Gira in più worker, ognuno con una parte delle posizioni dell'Ambasciata.
-  const OTT_TEMPO_MS = 20_000;
+  // numero di strade. Gira in più worker, ognuno con una parte delle posizioni dell'Ambasciata,
+  // finché non si preme Pausa (28/11/2026: prima 20 s, poi Continua).
   const fermaOttimizzatore = useCallback(() => {
     for (const w of lavoratoriRef.current) w.terminate();
     lavoratoriRef.current = [];
@@ -2315,10 +2333,12 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
       residenze: buildings.filter((b) => opt.residenze.includes(b.id) && sbloccato(b.cityentityId)).map(tipo),
       // (27/11/2026) Chhatri & co.: quanti metterne lo sceglie l'ottimizzatore
       produttori: buildings.filter((b) => opt.produttori.includes(b.id) && sbloccato(b.cityentityId) && rupieOraDi(b) > 0).map(tipo),
-      tempoMs: OTT_TEMPO_MS,
+      tempoMs: 1e12,
       // strade già costruite nel gioco (import): non si eliminano, al massimo si parcheggiano
       stradeEsistenti: baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0,
     };
+    const amb = placements.find((p) => p.buildingId === ID_MUNICIPIO);
+    if (!spostaAmbasciata && amb) req.ambasciataFissa = { row: amb.row, col: amb.col };
     // (28/11/2026, utente) le rupie fanno da tetto: al massimo le strade già costruite più quelle
     // che si possono comprare con il saldo (tentativi che costano di più non servono)
     const saldo = saldoValuta ?? cfg.valuta?.iniziale ?? null;
@@ -2327,16 +2347,18 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
     return req;
   };
   const firmaRichiesta = (req: RichiestaOttimizzatore) =>
-    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), (req.produttori ?? []).map((r) => r.id).join(","), req.stradeEsistenti, req.maxStrade ?? ""].join("|");
-  /** Lancia i worker: `base` = tentativi da cui ripartire (Continua), `infinito` = fino a Stop. */
-  const lanciaOttimizzatore = (req: RichiestaOttimizzatore, base: Tentativo[], infinito: boolean) => {
-    const posizioni = posizioniAmbasciata(req);
-    const quanti = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1, posizioni.length));
+    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), (req.produttori ?? []).map((r) => r.id).join(","), req.stradeEsistenti, req.maxStrade ?? "", JSON.stringify(req.ambasciataFissa ?? null)].join("|");
+  /** Lancia i worker, che girano finché non si preme Pausa (28/11/2026, come il Planner).
+   *  `base` = soluzioni da cui ripartire quando si riprende (`ripresa`: semi nuovi). */
+  const lanciaOttimizzatore = (req: RichiestaOttimizzatore, base: Tentativo[], ripresa: boolean) => {
+    // Ambasciata ferma: tutti i worker sulla stessa posizione, con semi diversi
+    const fissa = req.ambasciataFissa;
+    const posizioni = fissa ? [fissa] : posizioniAmbasciata(req);
+    const quanti = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1, fissa ? 4 : posizioni.length));
     const liste: Tentativo[][] = Array.from({ length: quanti }, () => []);
     let finiti = 0;
-    const seme0 = infinito ? (Date.now() % 100000) * 10 : 1;
+    const seme0 = ripresa ? (Date.now() % 100000) * 10 : 1;
     const partenze = base.map((tt) => ({ ambasciata: tt.ambasciata, strade: tt.celleStrada }));
-    setOttInfinito(infinito);
     setTentativiChiusi(false);
     setOttimizzando(true);
     lavoratoriRef.current = Array.from({ length: quanti }, (_, i) => {
@@ -2347,13 +2369,16 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
         if (e.data.tipo === "fine" && ++finiti === quanti) fermaOttimizzatore();
       };
       w.onerror = () => { if (++finiti === quanti) fermaOttimizzatore(); };
-      w.postMessage({ ...req, tempoMs: infinito ? 1e12 : OTT_TEMPO_MS, partenze, posizioni: posizioni.filter((_, j) => j % quanti === i), seme: seme0 + i + 1 });
+      w.postMessage({ ...req, tempoMs: 1e12, partenze, posizioni: fissa ? posizioni : posizioni.filter((_, j) => j % quanti === i), seme: seme0 + i + 1 });
       return w;
     });
   };
+  /** Ottimizza: in pausa con la stessa richiesta riprende dalle soluzioni trovate, altrimenti
+   *  parte da capo dalla mappa di adesso. */
   const avviaOttimizzatore = () => {
     const opt = cfg.ottimizzatore;
     if (!opt || ottimizzando || isSolving || editMode !== "obstacle") return;
+    if (puoContinuare && ultimaRichiestaRef.current) { lanciaOttimizzatore(ultimaRichiestaRef.current.req, tentativi, true); return; }
     const req = richiestaOttimizzatore();
     if (!req) return;
     // scenario di partenza (la mappa di adesso), per le differenze nella tabella
@@ -2372,15 +2397,10 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
     setTentativoScelto(null);
     lanciaOttimizzatore(req, [], false);
   };
-  // Continua: stessa richiesta dell'ultima ricerca (se l'area o le manifatture sono cambiate
-  // serve un nuovo Ottimizza), riparte dai tentativi trovati e va avanti fino a Stop
+  // In pausa: si riprende solo se la richiesta (area, manifatture, residenze, rupie, Ambasciata
+  // bloccata) è la stessa dell'ultima ricerca; altrimenti Ottimizza riparte da capo
   const reqAttuale = cfg.ottimizzatore && tentativi.length > 0 && !ottimizzando ? richiestaOttimizzatore() : null;
   const puoContinuare = modoOtt === "produzione" && !!reqAttuale && !!ultimaRichiestaRef.current && firmaRichiesta(reqAttuale) === ultimaRichiestaRef.current.firma;
-  const continuaOttimizzatore = () => {
-    const u = ultimaRichiestaRef.current;
-    if (!u || ottimizzando || isSolving || !puoContinuare) return;
-    lanciaOttimizzatore(u.req, tentativi, true);
-  };
   /** Mostra un tentativo sulla mappa (come un Risolvi: Annulla torna all'import). */
   const applicaTentativo = (tt: Tentativo) => {
     const opt = cfg.ottimizzatore;
@@ -2402,9 +2422,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   // Arrivare alla soglia scelta togliendo meno edifici grandi possibile (Haveli, poi Shanti):
   // manifatture e Bhavan si tolgono senza problemi, nessuna residenza nuova, le strade restano
   // tutte (si rimettono dove capita), tutto si può spostare. Parte dalla mappa di adesso.
-  const avviaDiplomazia = () => {
+  const richiestaDiplomazia = (): RichiestaDiplomazia | null => {
     const opt = cfg.ottimizzatore;
-    if (!opt || ottimizzando || isSolving || editMode !== "obstacle") return;
+    if (!opt) return null;
     const libere = new Uint8Array(gridRows * gridCols);
     for (let r = 0; r < gridRows; r++) for (let c = 0; c < gridCols; c++) {
       libere[r * gridCols + c] = gridMask[r]?.[c] && !obstacles.has(cellKey(storageCell(r, c))) ? 1 : 0;
@@ -2423,11 +2443,13 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
       // le strade non si demoliscono mai: tutte quelle sulla mappa (almeno quelle del gioco)
       strade: Math.max(placements.filter((p) => p.buildingId === opt.strada).length, baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0),
       residenze: buildings.filter((b) => opt.residenze.includes(b.id) && presente(b.id)).map((b) => ({ tipo: tipo(b), peso: peso(b.id), posizioni: posizioniDi(b.id) })),
-      diplomatici: buildings.filter((b) => opt.produttori.includes(b.id) && (b.diplomacy ?? 0) > 0 && usabile(b)).map((b) => ({ tipo: tipo(b), posizioni: posizioniDi(b.id) })),
+      // (28/11/2026, utente) diplomatici mai nuovi (almeno un'ora per costruirli): solo quelli che ci sono
+      diplomatici: buildings.filter((b) => opt.produttori.includes(b.id) && (b.diplomacy ?? 0) > 0 && presente(b.id)).map((b) => ({ tipo: tipo(b), posizioni: posizioniDi(b.id) })),
       ...(canale && usabile(canale) ? { canale: tipo(canale) } : {}),
       ...(vialetto && usabile(vialetto) ? { vialetto: tipo(vialetto) } : {}),
       ...(amb ? { ambasciataOra: { row: amb.row, col: amb.col } } : {}),
-      tempoMs: OTT_TEMPO_MS,
+      ...(!spostaAmbasciata && amb ? { ambasciataFissa: true } : {}),
+      tempoMs: 1e12,
       // la mappa di adesso: per contare i lavori e per la ricerca a intervento minimo
       ora: placements.filter((p) => p.buildingId !== ID_MUNICIPIO).map((p) => {
         const b = buildings.find((x) => x.id === p.buildingId);
@@ -2435,32 +2457,69 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
       }),
       idStrada: opt.strada,
     };
+    return req;
+  };
+  /** Firma per riprendere dalla pausa: area, soglia, Ambasciata bloccata, Canale e Vialetto
+   *  sbloccati. Non la disposizione: cliccare una soluzione in pausa non impedisce di riprendere. */
+  const firmaDiplomazia = (r: RichiestaDiplomazia) =>
+    [Array.from(r.libere).join(""), r.soglia, !!r.ambasciataFissa, r.canale?.id ?? "", r.vialetto?.id ?? ""].join("|");
+  /** Ottimizza diplomazia: in pausa con la stessa richiesta riprende, altrimenti parte da capo. */
+  const avviaDiplomazia = () => {
+    const opt = cfg.ottimizzatore;
+    if (!opt || ottimizzando || isSolving || editMode !== "obstacle") return;
+    if (puoRiprendereDipl && ultimaDiplRef.current) { lanciaDiplomazia(ultimaDiplRef.current.req, tentativiDipl, true); return; }
+    const req = richiestaDiplomazia();
+    if (!req) return;
     const perTipo: Record<string, number> = {};
     for (const p of placements) if (p.buildingId !== ID_MUNICIPIO && p.buildingId !== opt.strada) perTipo[p.buildingId] = (perTipo[p.buildingId] ?? 0) + 1;
     setPartenzaDipl({ perTipo, diplomazia: totalDiplomazia, soglia: sogliaDipl });
     setModoOtt("diplomazia");
     setTentativiDipl([]);
     setSceltoDipl(null);
-    const posizioni = posizioniAmbasciataDipl(req);
-    const quanti = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1, posizioni.length));
+    ultimaDiplRef.current = { req, firma: firmaDiplomazia(req) };
+    lanciaDiplomazia(req, [], false);
+  };
+  /** Worker della diplomazia, fino a Pausa. `ripresa`: si riparte dalle soluzioni `base` con semi
+   *  nuovi e solo le ripartenze casuali (le passate deterministiche sono già state fatte). */
+  const lanciaDiplomazia = (req: RichiestaDiplomazia, base: TentativoDipl[], ripresa: boolean) => {
+    const fissa = req.ambasciataFissa && req.ambasciataOra;
+    const posizioni = fissa ? [req.ambasciataOra!] : posizioniAmbasciataDipl(req);
+    const quanti = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1, fissa ? 4 : posizioni.length));
     const liste: TentativoDipl[][] = Array.from({ length: quanti }, () => []);
     let finiti = 0;
-    setOttInfinito(false);
     setTentativiChiusi(false);
     setOttimizzando(true);
     lavoratoriRef.current = Array.from({ length: quanti }, (_, i) => {
       const w = new LavoratoreDiplomazia();
       w.onmessage = (e: MessageEvent<{ tipo: "progresso" | "fine"; tentativi: TentativoDipl[] }>) => {
         liste[i] = e.data.tentativi;
-        setTentativiDipl(unisciDiplomazia(liste));
+        setTentativiDipl(unisciDiplomazia([base, ...liste]));
         if (e.data.tipo === "fine" && ++finiti === quanti) fermaOttimizzatore();
       };
       w.onerror = () => { if (++finiti === quanti) fermaOttimizzatore(); };
       // la posizione di adesso dell'Ambasciata la prova per prima il worker che la riceve
-      const mie = posizioni.filter((_, j) => j % quanti === i);
-      w.postMessage({ ...req, posizioni: mie, seme: i + 1 });
+      const mie = fissa ? posizioni : posizioni.filter((_, j) => j % quanti === i);
+      w.postMessage({ ...req, posizioni: mie, seme: ripresa ? (Date.now() % 100000) * 10 + i + 1 : i + 1, ...(ripresa ? { ripresa: true } : {}) });
       return w;
     });
+  };
+  const reqDiplAttuale = cfg.ottimizzatore && modoOtt === "diplomazia" && !ottimizzando && tentativiDipl.length > 0 && ultimaDiplRef.current ? richiestaDiplomazia() : null;
+  const puoRiprendereDipl = !!reqDiplAttuale && firmaDiplomazia(reqDiplAttuale) === ultimaDiplRef.current?.firma;
+  /** Reset degli ottimizzatori (Reset globale e ogni import): ferma la ricerca, via soluzioni,
+   *  partenze e ricerche da riprendere. */
+  const azzeraOttimizzatori = () => {
+    fermaOttimizzatore();
+    setTentativi([]);
+    setTentativiDipl([]);
+    setPartenzaOtt(null);
+    setPartenzaDipl(null);
+    setModoOtt("produzione");
+    setTentativoScelto(null);
+    setSceltoDipl(null);
+    setTentativiChiusi(false);
+    setSogliaScelta(null);
+    ultimaRichiestaRef.current = null;
+    ultimaDiplRef.current = null;
   };
   /** Mostra un tentativo della diplomazia sulla mappa (come applicaTentativo). */
   const applicaDiplomazia = (tt: TentativoDipl) => {
@@ -2479,8 +2538,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
     setSceltoDipl(tt.haveliTolti + ":" + tt.shantiTolti + ":" + totaleLavori(tt.lavori));
   };
   const cambiaSogliaDipl = (n: number) => {
-    setSogliaDipl(n);
-    try { localStorage.setItem(CHIAVE_SOGLIA_DIPL, String(n)); } catch { /* storage pieno o bloccato */ }
+    setSogliaScelta(n);
   };
 
   // (25/11/2026) Edifici che vorrebbero la strada ma non toccano una strada collegata
@@ -2541,10 +2599,10 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   // ── Nastro (2.0) ────────────────────────────────────────────────────────
   // Come il Planner: i gruppi si ricostruiscono quando cambia lo stato che
   // mostrano (firma); i click passano da azioniRef (funzioni correnti).
-  const azioniRef = useRef({ solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore, avviaDiplomazia, cambiaSogliaDipl });
-  azioniRef.current = { solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore, avviaDiplomazia, cambiaSogliaDipl };
+  const azioniRef = useRef({ solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, avviaDiplomazia, cambiaSogliaDipl, cambiaSpostaAmbasciata });
+  azioniRef.current = { solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, avviaDiplomazia, cambiaSogliaDipl, cambiaSpostaAmbasciata };
   const risolviBloccato = (status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle") && !isSolving;
-  const firmaNastro = [ottimizzando, modoOtt, sogliaDipl, puoContinuare, isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
+  const firmaNastro = [ottimizzando, modoOtt, sogliaDipl, totalDiplomazia, livelliSbloccati.join(","), spostaAmbasciata, puoContinuare, puoRiprendereDipl, isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
     candidateExpansionBlocks.length, removableExpansionKeys.size, uiLang].join("|");
   const onNastroRef = useRef(onNastro);
   onNastroRef.current = onNastro;
@@ -2554,34 +2612,41 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
       ({ kind: "button", id, icon, label, onClick, ...extra });
     const a = () => azioniRef.current;
     const gruppi: RibbonGroup[] = [
-      { id: "pi-calcolo", label: L("r2GrpCalc"), icon: Play, priority: 3, rows: [[
+      // (28/11/2026) Mughal: il gruppo si chiama Ottimizzatore e Reset sta in Opzioni
+      { id: "pi-calcolo", label: L(cfg.ottimizzatore ? "r2GrpOttimizzatore" : "r2GrpCalc"), icon: Play, priority: 3, rows: [[
         // (25/11/2026) Risolvi e Auto solo dove il solver vale (Mughal: strade e catena, non ancora)
         ...(!cfg.solver ? [] : [isSolving
           ? b("risolvi", Square, L("r2PiStop"), () => void a().solve(), { active: true, danger: true })
           : b("risolvi", Play, L("r2PiSolve"), () => void a().solve(), { disabled: risolviBloccato }),
         b("auto", Repeat, L("r2PiAuto"), () => setAutoMode(v => !v), { active: autoMode, disabled: isSolving, title: L("piratiAutoTitle") })]),
-        // (25/11/2026) Mughal: ottimizzatore della disposizione al posto di Risolvi
+        // (25/11/2026) Mughal: ottimizzatore della disposizione al posto di Risolvi.
+        // (28/11/2026) Come il Planner: Ottimizza → Pausa → Ottimizza riprende da dove era
         ...(!cfg.ottimizzatore ? [] : [ottimizzando && modoOtt === "produzione"
-          ? b("ottimizza", Square, L("r2PiStop"), () => a().fermaOttimizzatore(), { active: true, danger: true })
-          : b("ottimizza", Sparkles, L("r2PiOttimizza"), () => a().avviaOttimizzatore(), { disabled: ottimizzando || isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaTitle") }),
-          b("continua", FastForward, L("r2PiContinua"), () => a().continuaOttimizzatore(), { disabled: ottimizzando || !puoContinuare, title: L("r2PiContinuaTitle") })]),
+          ? b("ottimizza", Pause, L("r2PlPause"), () => a().fermaOttimizzatore(), { active: true, title: L("r2PiPausaTitle") })
+          : b("ottimizza", Sparkles, L("r2PiOttimizza"), () => a().avviaOttimizzatore(),
+            { disabled: ottimizzando || isSolving || editMode !== "obstacle", title: L(puoContinuare ? "r2PiRiprendiTitle" : "r2PiOttimizzaTitle") })]),
         b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving || ottimizzando, title: L("piratiUndoTitle") }),
-        b("reset", Trash2, L("r2PiReset"), () => a().reset(), { disabled: (!hasImportedCity && !hasChangesFromBaseline) || isSolving, title: L("piratiResetTitle"), danger: true }),
+        ...(cfg.ottimizzatore ? [] : [b("reset", Trash2, L("r2PiReset"), () => a().reset(), { disabled: (!hasImportedCity && !hasChangesFromBaseline) || isSolving, title: L("piratiResetTitle"), danger: true })]),
       ]] },
       // (28/11/2026) Mughal: ottimizzatore della diplomazia, con la soglia da raggiungere
       ...(!cfg.ottimizzatore ? [] : [{ id: "pi-diplomazia", label: L("r2GrpDiplomazia"), icon: Handshake, priority: 2, rows: [[
         ottimizzando && modoOtt === "diplomazia"
-          ? b("ottimizza-dipl", Square, L("r2PiStop"), () => a().fermaOttimizzatore(), { active: true, danger: true })
-          : b("ottimizza-dipl", Handshake, L("r2PiOttimizzaDipl"), () => a().avviaDiplomazia(), { img: iconDiplomazia, disabled: ottimizzando || isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaDiplTitle") }),
-        { kind: "custom", id: "soglia-dipl", render: () => (
-          <label className="flex h-[22px] items-center gap-1 rounded-md border border-slate-700 bg-slate-900 px-1.5 text-[12px] text-slate-300 hover:border-slate-600" title={L("r2PiSogliaDiplTitle")}>
-            <span className="text-slate-400">≥</span>
-            <select value={sogliaDipl} disabled={ottimizzando} onChange={(e) => a().cambiaSogliaDipl(Number(e.currentTarget.value))}
-              className="bg-slate-900 font-mono text-slate-100 outline-none">
-              {SOGLIE_DIPLOMAZIA.map((n) => <option key={n} value={n}>{formatInt(n)}</option>)}
-            </select>
-          </label>
+          ? b("ottimizza-dipl", Pause, L("r2PlPause"), () => a().fermaOttimizzatore(), { active: true, title: L("r2PiPausaTitle") })
+          : b("ottimizza-dipl", Handshake, L("r2PiOttimizzaDipl"), () => a().avviaDiplomazia(),
+            { img: iconDiplomazia, disabled: ottimizzando || isSolving || editMode !== "obstacle", title: L(puoRiprendereDipl ? "r2PiRiprendiTitle" : "r2PiOttimizzaDiplTitle") }),
+        // (28/11/2026) selettore nello stile della barra dell'Ambasciata del gioco
+        { kind: "custom", id: "soglia-dipl", render: (modo) => (
+          <SelettoreSoglia soglie={SOGLIE_DIPLOMAZIA} scelta={sogliaDipl} diplomazia={totalDiplomazia} sbloccati={livelliSbloccati}
+            nomi={LIVELLI_DIPLOMAZIA.map((id) => { const b = buildings.find((x) => x.id === id); return b ? t(b.nameKey, uiLang) as string : id; })}
+            disabled={ottimizzando} grande={modo === "L"} uiLang={uiLang} onScegli={(n) => a().cambiaSogliaDipl(n)} />
         ) },
+      ]] } satisfies RibbonGroup]),
+      // (28/11/2026) Opzioni degli ottimizzatori: "Blocca l'Ambasciata" (acceso = ferma; "Sposta
+      // Ambasciata" sembrava un comando per spostarla, utente)
+      ...(!cfg.ottimizzatore ? [] : [{ id: "pi-opzioni", label: L("r2GrpOpzioniOtt"), icon: Lock, priority: 1, rows: [[
+        b("blocca-ambasciata", spostaAmbasciata ? LockOpen : Lock, L("r2PiBloccaAmbasciata"), () => a().cambiaSpostaAmbasciata(),
+          { active: !spostaAmbasciata, disabled: ottimizzando, title: L(spostaAmbasciata ? "r2PiBloccaAmbasciataNo" : "r2PiBloccaAmbasciataSi") }),
+        b("reset", Trash2, L("r2PiReset"), () => a().reset(), { disabled: (!hasImportedCity && !hasChangesFromBaseline && !tentativi.length && !tentativiDipl.length) || isSolving, title: L("piratiResetTitle"), danger: true }),
       ]] } satisfies RibbonGroup]),
       { id: "pi-espansioni", label: L("r2GrpExpansions"), icon: SquarePlus, priority: 2, rows: [[
         b("piu", SquarePlus, L("r2PiAddExp"), () => setEditMode(c => (c === "add-expansion" ? "obstacle" : "add-expansion")),
@@ -2597,7 +2662,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
   }, [firmaNastro]);
 
   // categorie dell'insediamento (data/insediamenti.ts)
-  const buildingCategories = cfg.categorie.map((c) => ({ title: t(c.titolo, uiLang), ids: c.ids }));
+  // (28/11/2026) icone del gioco al posto delle emoji nei titoli delle sezioni
+  const ICONE_SEZIONI = { residenziali: iconResidenziali, beni: iconBeniCulturali, diplomazia: iconDiplomazia, strade: iconRoad };
+  const buildingCategories = cfg.categorie.map((c) => ({ title: t(c.titolo, uiLang), ids: c.ids, icona: ICONE_SEZIONI[c.icona] }));
 
   return (
     <div className="h-full min-h-0 flex flex-col font-sans">
@@ -3256,7 +3323,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
             Sotto 'sm' (mobile stack verticale) resta invariato: nessun
             vincolo di altezza, cresce col contenuto come sempre — lì lo
             scroll è già gestito dal contenitore esterno. */}
-        <div className="order-1 min-w-0 mt-1 sm:mt-0 sm:h-full sm:min-h-0 sm:overflow-y-auto">
+        <div className="order-1 min-w-0 mt-1 sm:mt-0 sm:flex sm:h-full sm:min-h-0 sm:flex-col">
           {/* (25/11/2026) Tentativi dell'ottimizzatore: uno per numero di strade, clic = sulla mappa */}
           {/* (28/11/2026) Tentativi della diplomazia: uno per numero di Haveli e Shanti tolti
               (solo quelli che non si possono fare togliendo meno), clic = sulla mappa */}
@@ -3274,12 +3341,12 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
             const segno = (d: number) => (d > 0 ? "+" + d : d < 0 ? "−" + -d : "0");
             const soglia = partenzaDipl?.soglia ?? sogliaDipl;
             return (
-              <section className="mb-2 rounded border border-sky-400/40 bg-sky-500/10 p-2 text-xs">
+              <section className="mb-2 flex shrink-0 flex-col rounded border border-sky-400/40 bg-sky-500/10 p-2 text-xs sm:max-h-[50%] sm:min-h-0">
                 <div className="mb-1 flex items-center gap-2">
                   <Handshake size={14} className="text-sky-300" aria-hidden="true" />
                   <span className="font-bold uppercase tracking-wide text-sky-200">{t("mughalTentativiDiplTitolo", uiLang, formatInt(soglia))}</span>
                   <span className="ml-auto text-[11px] text-slate-400">
-                    {ottimizzando ? t("mughalTentativiInCorso", uiLang, secondiOtt, OTT_TEMPO_MS / 1000) : t("mughalTentativiClicca", uiLang)}
+                    {ottimizzando ? t("mughalInCorso", uiLang, secondiOtt) : t(puoRiprendereDipl ? "mughalInPausaDipl" : "mughalTentativiClicca", uiLang)}
                   </span>
                   <button type="button" onClick={() => { if (ottimizzando) fermaOttimizzatore(); setTentativiChiusi(true); }}
                     title={t("mughalTentativiChiudiDipl", uiLang)} aria-label={t("mughalTentativiChiudiDipl", uiLang)}
@@ -3290,9 +3357,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                 {tentativiDipl.length === 0 ? (
                   <div className="py-1 text-slate-400">{ottimizzando ? t("mughalTentativiAttesa", uiLang) : t("mughalDiplNessuno", uiLang, formatInt(soglia))}</div>
                 ) : (
-                  <table className="w-full border-collapse font-mono text-[11px]">
+                  <div className="min-h-0 overflow-y-auto"><table className="w-full border-collapse font-mono text-[11px]">
                     <thead>
-                      <tr className="text-[10.5px] text-slate-400">
+                      <tr className="sticky top-0 bg-slate-900 text-[10.5px] text-slate-400">
                         <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColToltiTitle", uiLang, nomi.get("haveli") ?? "Haveli")}>{corti.get("haveli")}</th>
                         <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColToltiTitle", uiLang, nomi.get("shanti") ?? "Shanti")}>{corti.get("shanti")}</th>
                         {tipi.map((id) => <th key={id} className="px-1 py-0.5 text-right font-medium" title={titolo(id)}>{testa(id)}</th>)}
@@ -3302,7 +3369,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                       </tr>
                     </thead>
                     <tbody>
-                      {tentativiDipl.slice(0, 10).map((tt) => {
+                      {tentativiDipl.map((tt) => {
                         const k = tt.haveliTolti + ":" + tt.shantiTolti + ":" + totaleLavori(tt.lavori);
                         const dd = partenzaDipl ? tt.diplomazia - partenzaDipl.diplomazia : 0;
                         return (
@@ -3324,7 +3391,7 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                         );
                       })}
                     </tbody>
-                  </table>
+                  </table></div>
                 )}
               </section>
             );
@@ -3338,26 +3405,25 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
             // (28/11/2026, utente) una colonna per tipo di edificio collegato (residenze e produttori
             // che compaiono nei tentativi o nella partenza, nell'ordine della legenda), con la sola
             // differenza rispetto alla partenza
-            // i 10 migliori dalla produzione più alta (28/11/2026: erano 5, troppo pochi con più
-            // espansioni); mai quelli che costano più rupie di quante ce ne sono (il motore non li
+            // dalla produzione più alta; mai quelli che costano più rupie di quante ce ne sono (il motore non li
             // cerca nemmeno: maxStrade) né (28/11/2026, utente) quelli che producono meno di adesso
             const prod5 = (rupieOra: number) => Math.round(rupieOra * 5);
             const visibili = tentativi
               .filter((tt) => (saldo === null || saldo - Math.max(0, tt.strade - giaFatte) * costo >= 0)
                 && (!partenzaOtt || prod5(tt.rupieOra) >= prod5(partenzaOtt.rupieOra)))
-              .sort((x, y) => y.rupieOra - x.rupieOra || x.strade - y.strade).slice(0, 10);
+              .sort((x, y) => y.rupieOra - x.rupieOra || x.strade - y.strade);
+            // (28/11/2026, utente) tutte, non più le 10 migliori: con Continua sparivano quelle con
+            // poche strade (spesso le più comode); il riquadro Soluzioni ha la sua barra di scorrimento
             const ordineTipi = [...opt.residenze, ...opt.produttori];
             const tipi = ordineTipi.filter((id) => visibili.some((tt) => tt.collegate[id]) || !!partenzaOtt?.perTipo[id]);
             const corti = new Map(buildings.map((b) => [b.id, t(b.shortNameKey, uiLang) as string]));
             return (
-              <section className="mb-2 rounded border border-violet-400/40 bg-violet-500/10 p-2 text-xs">
+              <section className="mb-2 flex shrink-0 flex-col rounded border border-violet-400/40 bg-violet-500/10 p-2 text-xs sm:max-h-[50%] sm:min-h-0">
                 <div className="mb-1 flex items-center gap-2">
                   <Sparkles size={14} className="text-violet-300" aria-hidden="true" />
                   <span className="font-bold uppercase tracking-wide text-violet-200">{t("mughalTentativiTitolo", uiLang)}</span>
                   <span className="ml-auto text-[11px] text-slate-400">
-                    {ottimizzando
-                      ? (ottInfinito ? t("mughalTentativiContinua", uiLang, secondiOtt) : t("mughalTentativiInCorso", uiLang, secondiOtt, OTT_TEMPO_MS / 1000))
-                      : t("mughalTentativiClicca", uiLang)}
+                    {ottimizzando ? t("mughalInCorso", uiLang, secondiOtt) : t(puoContinuare ? "mughalInPausa" : "mughalTentativiClicca", uiLang)}
                   </span>
                   <button type="button" onClick={() => { if (ottimizzando) fermaOttimizzatore(); setTentativiChiusi(true); }}
                     title={t("mughalTentativiChiudi", uiLang)} aria-label={t("mughalTentativiChiudi", uiLang)}
@@ -3369,9 +3435,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                   <div className="py-1 text-slate-400">{ottimizzando ? t("mughalTentativiAttesa", uiLang)
                     : tentativi.length > 0 ? t("mughalTentativiNessunoMeglio", uiLang) : t("mughalTentativiNessuno", uiLang)}</div>
                 ) : (
-                  <table className="w-full border-collapse font-mono text-[11px]">
+                  <div className="min-h-0 overflow-y-auto"><table className="w-full border-collapse font-mono text-[11px]">
                     <thead>
-                      <tr className="text-[10.5px] text-slate-400">
+                      <tr className="sticky top-0 bg-slate-900 text-[10.5px] text-slate-400">
                         <th className="px-1 py-0.5 text-right font-medium">{t("mughalColStrade", uiLang)}</th>
                         <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColRimasteTitle", uiLang)}>{t("mughalColRimaste", uiLang)}</th>
                         {tipi.map((id) => <th key={id} className="px-1 py-0.5 text-right font-medium" title={t("mughalColTipoTitle", uiLang, nomi.get(id) ?? id)}>{corti.get(id) ?? id}</th>)}
@@ -3380,7 +3446,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                     </thead>
                     <tbody>
                       {visibili.map((tt) => {
-                        const rimaste = saldo === null ? null : saldo - Math.max(0, tt.strade - giaFatte) * costo;
+                        // (28/11/2026, utente) costo delle strade nuove al posto delle rupie che restano
+                        const nuove = Math.max(0, tt.strade - giaFatte);
+                        const spesa = nuove * costo;
                         const scelto = tentativoScelto === tt.strade;
                         // differenza con lo scenario di partenza (la mappa quando hai premuto Ottimizza)
                         const diff = (n: number, buonoSePiu: boolean) => {
@@ -3394,7 +3462,8 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                             title={[Object.entries(tt.collegate).map(([id, n]) => `${nomi.get(id) ?? id}: ${n}`).join(" · "),
                               tt.parcheggiate.length ? (t("mughalParcheggiate", uiLang, tt.parcheggiate.length) as string) : ""].filter(Boolean).join("\n")}>
                             <td className="px-1 py-0.5 text-right text-slate-200">{tt.strade}{partenzaOtt && diff(tt.strade - partenzaOtt.strade, false)}</td>
-                            <td className={cx("px-1 py-0.5 text-right", rimaste !== null && rimaste < 0 ? "text-red-400" : "text-amber-300")}>{rimaste === null ? "–" : formatInt(rimaste)}</td>
+                            <td className={cx("px-1 py-0.5 text-right", spesa === 0 ? "text-slate-500" : "text-amber-300")}
+                              title={t("mughalCostoStrade", uiLang, nuove, formatInt(costo), saldo === null ? null : formatInt(saldo - spesa)) as string}>{formatInt(spesa)}</td>
                             {tipi.map((id) => {
                               // solo la differenza con la partenza (senza partenza: il numero)
                               const n = tt.collegate[id] ?? 0;
@@ -3407,14 +3476,14 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                         );
                       })}
                     </tbody>
-                  </table>
+                  </table></div>
                 )}
               </section>
             );
           })()}
           <section
             className={cx(
-              "rounded border p-2 transition-colors",
+              "rounded border p-2 transition-colors sm:min-h-0 sm:flex-1 sm:overflow-y-auto",
               hasStatsWarning ? "bg-red-950/20 border-red-500/30" : "bg-slate-900/60 border-slate-700/60"
             )}
           >
@@ -3451,7 +3520,9 @@ const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsedia
                     return (
                       <tbody key={category.title}>
                         <tr>
-                          <td colSpan={valuta ? 6 : 5} className="px-1 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">{category.title}</td>
+                          <td colSpan={valuta ? 6 : 5} className="px-1 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <span className="flex items-center gap-1.5"><img src={category.icona} alt="" width={18} height={18} className="shrink-0" />{category.title}</span>
+                          </td>
                         </tr>
                         {categoryBuildings.map((building) => {
                           // canEditGrid (non solo !isSolving): aggiungere un edificio può
