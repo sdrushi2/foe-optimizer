@@ -88,6 +88,7 @@ export { default as iconRaccoltaDoppia } from "./icons/bonus_double_collect.png"
 export { default as iconRaccoltaDoppiaOro } from "./icons/bonus_double_collect_gold.png";
 export { default as badge_pirates } from "./icons/badge_pirates.png";
 export { default as badge_mughals } from "./icons/badge_mughals.png";
+export { default as iconDiplomazia } from "./icons/diplomacy.png";
 export { default as allies_military } from "./icons/allies_military.png";
 export { default as allies_science } from "./icons/allies_science.png";
 export { default as allies_slot_empty } from "./icons/allies_slot_empty.png";

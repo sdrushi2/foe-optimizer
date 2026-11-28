@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  data/insediamenti.ts — Configurazione degli insediamenti culturali (25/11/2026)
 //
-//  Il planner dei Pirati (components/PiratiTool.tsx) serve anche agli altri
-//  insediamenti: cambia solo questa configurazione (edifici, municipio, forma
+//  Il planner degli insediamenti (insediamenti/PlannerInsediamento.tsx, nato per i Pirati)
+//  serve a tutti gli insediamenti: cambia solo questa configurazione (edifici, municipio, forma
 //  della mappa, id del gioco per l'import, testi). Il gioco tiene UN insediamento
 //  attivo in CityMap.cultural_outpost e la bacchetta lo copia in `pirateOutpost`
 //  qualunque sia la civiltà.

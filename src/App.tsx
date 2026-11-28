@@ -59,8 +59,8 @@ const NESSUNA_CELLA = new Set<string>();
 import type { Categoria, OpzioneProduzione } from "./ui/FiltriEdifici";
 import { useModalDismiss } from "./utils/useModalDismiss";
 import { dimensioniDaSize, senzaLivello, type CandidatiPlanner, type CandidatoPlanner, type FamigliaPlanner } from "./planner/modificheCitta";
-import type { FotoPlanner, PiratiToolHandle } from "./components/PiratiTool";
-import type PiratiToolModulo from "./components/PiratiTool";
+import type { FotoPlanner, PlannerInsediamentoHandle } from "./insediamenti/PlannerInsediamento";
+import type PlannerInsediamentoModulo from "./insediamenti/PlannerInsediamento";
 import { initKitData, computeAllFamilies, type FamilyResult, type KitDataRaw } from "./data/inventoryOptimizer";
 import { translateName, getItalianMap, initTranslations, hasTranslation, type Lang } from "./data/translations";
 import { t, boostTitle, type UiLang, type UiKey } from "./data/ui-strings";
@@ -111,9 +111,9 @@ const PannelloPergamene = lazy(() => import("./components/PannelloPergamene"));
 /** Insediamento dei Pirati: il modulo si scarica al primo montaggio (cioè alla prima
  *  apertura della scheda, vedi `piratiAperto`). Non con `lazy`: quello di Preact non
  *  passa il `ref`, che serve alla bacchetta (importFromClipboardText). */
-const PiratiTool = forwardRef<PiratiToolHandle, { uiLang: UiLang; onNastro: (g: RibbonGroup[]) => void; insediamento?: "pirati" | "mughal" }>(function PiratiToolPigro(props, ref) {
-  const [C, setC] = useState<typeof PiratiToolModulo | null>(null);
-  useEffect(() => { void import("./components/PiratiTool").then(m => setC(() => m.default)); }, []);
+const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, { uiLang: UiLang; onNastro: (g: RibbonGroup[]) => void; insediamento?: "pirati" | "mughal" }>(function PlannerInsediamentoPigro(props, ref) {
+  const [C, setC] = useState<typeof PlannerInsediamentoModulo | null>(null);
+  useEffect(() => { void import("./insediamenti/PlannerInsediamento").then(m => setC(() => m.default)); }, []);
   return C ? <C ref={ref} {...props} /> : null;
 });
 
@@ -4126,20 +4126,20 @@ export default function App() {
     }
   }, []);
 
-  // Handle imperativo del planner Pirati (vedi PiratiToolHandle): permette a
+  // Handle imperativo del planner degli insediamenti (vedi PlannerInsediamentoHandle): permette a
   // handleWandClick di smistare l'import lì quando activeTab === "pirati",
   // invece di creare un profilo città/inventario — un solo pulsante bacchetta
-  // in tutta l'app, nessuna icona duplicata dentro PiratiTool.
-  const piratiToolRef = useRef<PiratiToolHandle | null>(null);
-  /** (25/11/2026) Insediamento Mughal: lo stesso planner dei Pirati con la configurazione Mughal. */
-  const mughalToolRef = useRef<PiratiToolHandle | null>(null);
+  // in tutta l'app, nessuna icona duplicata dentro PlannerInsediamento.
+  const piratiRef = useRef<PlannerInsediamentoHandle | null>(null);
+  /** (25/11/2026) Insediamento Mughal: lo stesso planner dei Pirati (PlannerInsediamento) con la configurazione Mughal. */
+  const mughalRef = useRef<PlannerInsediamentoHandle | null>(null);
   const [gruppiMughal, setGruppiMughal] = useState<RibbonGroup[]>([]);
   /** Insediamento mostrato nella scheda Insediamenti (scelta ricordata). */
   const [insediamento, setInsediamento] = useState<"pirati" | "mughal">(() => { try { return localStorage.getItem(INSEDIAMENTO_KEY) === "mughal" ? "mughal" : "pirati"; } catch { return "pirati"; } });
   const [mughalAperto, setMughalAperto] = useState(false);
   useEffect(() => { if (activeTab === "pirati" && insediamento === "mughal") setMughalAperto(true); }, [activeTab, insediamento]);
   const scegliInsediamento = useCallback((v: "pirati" | "mughal") => { setInsediamento(v); try { localStorage.setItem(INSEDIAMENTO_KEY, v); } catch { /* resta per la sessione */ } }, []);
-  /** La scheda dei Pirati è stata aperta almeno una volta (da lì PiratiTool resta montato). */
+  /** La scheda dei Pirati è stata aperta almeno una volta (da lì PlannerInsediamento resta montato). */
   const [piratiAperto, setPiratiAperto] = useState(false);
   useEffect(() => { if (activeTab === "pirati") setPiratiAperto(true); }, [activeTab]);
 
@@ -4166,11 +4166,11 @@ export default function App() {
         alert(t("clipboardEmptyAlert", uiLang));
         return;
       }
-      // Esito (successo/errore) mostrato SOLO dal toast interno di PiratiTool
+      // Esito (successo/errore) mostrato SOLO dal toast interno di PlannerInsediamento
       // (importMessage, testo colorato nella toolbar): nessun alert() qui,
       // sarebbe un doppione dello stesso messaggio. Lo stesso per i Mughal.
-      if (insediamento === "mughal") mughalToolRef.current?.importFromClipboardText(text);
-      else piratiToolRef.current?.importFromClipboardText(text);
+      if (insediamento === "mughal") mughalRef.current?.importFromClipboardText(text);
+      else piratiRef.current?.importFromClipboardText(text);
       return;
     }
 
@@ -4554,7 +4554,7 @@ export default function App() {
     const server = (p.leggero as { server?: unknown } | undefined)?.server;
     const mondo = typeof server === "string" ? server : null;
     const tm = setTimeout(() => {
-      const tool = (tipo === "mughal" ? mughalToolRef : piratiToolRef).current;
+      const tool = (tipo === "mughal" ? mughalRef : piratiRef).current;
       if (!tool) { setPonteGiro(g => g + 1); return; }
       // Un planner per mondo (25/11/2026): se il planner mostra l'insediamento di un altro
       // mondo, lo si fotografa e si rimette quello di questo mondo (se visto in questa
@@ -4592,7 +4592,7 @@ export default function App() {
     if (!ponteInsediamento) return;
     const { p, chiave, tipo } = ponteInsediamento;
     const ultimo = pacchettoPonte(p) ?? p;
-    (tipo === "mughal" ? mughalToolRef : piratiToolRef).current?.importFromClipboardText(ultimo.json);
+    (tipo === "mughal" ? mughalRef : piratiRef).current?.importFromClipboardText(ultimo.json);
     const imp = ultimo.leggero ? improntaInsediamento(ultimo.leggero) : null;
     try { localStorage.setItem(chiave, imp?.impronta ?? ponteInsediamento.impronta); } catch { /* storage pieno */ }
     setPonteInsediamento(null);
@@ -7483,7 +7483,7 @@ export default function App() {
 
   return (
     // h-dvh/overflow-hidden SOLO sulla tab Pirati: è il primo anello della
-    // catena di vincolo di altezza reale che il planner (PiratiTool) ha
+    // catena di vincolo di altezza reale che il planner (PlannerInsediamento) ha
     // bisogno per ridimensionarsi correttamente — con min-h-screen (le altre
     // tab, scroll pagina naturale) il div poteva sempre crescere oltre il
     // viewport per accomodare il contenuto, quindi anche con min-h-0/
@@ -7523,9 +7523,9 @@ export default function App() {
           nastro (Filtri alleati, Visualizza) e in Opzioni (pesi). */}
 
       {/* min-h-0/overflow-hidden SOLO sulla tab Pirati: il planner (dentro
-          PiratiTool) ha bisogno di un vincolo di altezza REALE propagato
+          PlannerInsediamento) ha bisogno di un vincolo di altezza REALE propagato
           dall'alto per potersi ridimensionare (vedi commento su gridWrapperSize
-          in PiratiTool.tsx) — le altre tab restano scrollabili come sempre
+          in PlannerInsediamento.tsx) — le altre tab restano scrollabili come sempre
           (nessun min-h-0/overflow-hidden), quindi la classe è condizionale. */}
       <main className={`flex-1 px-2 ${activeTab === "database" || activeTab === "propria_citta" || activeTab === "inventario" || (activeTab === "alleati" && alleatiDaDb) ? "pt-0" : "pt-1"} pb-4 flex flex-col gap-4 ${activeTab === "pirati" ? "min-h-0 overflow-hidden" : ""}`}>
 
@@ -8471,7 +8471,7 @@ export default function App() {
               `hidden` (display:none) quando non è la tab attiva — a differenza di
               tutte le altre sezioni qui sopra, che invece sono condizionate con
               `{activeTab === "..." && (...)}` e quindi smontate quando non attive.
-              Motivo: PiratiTool tiene tutto il suo stato (edifici piazzati, import,
+              Motivo: PlannerInsediamento tiene tutto il suo stato (edifici piazzati, import,
               baseline, ecc.) in useState locali al componente. Smontare/rimontare
               su ogni cambio tab distruggeva quello stato: importare l'Insediamento,
               passare a un'altra tab e tornare su Pirati perdeva l'import. Tenerlo
@@ -8485,7 +8485,7 @@ export default function App() {
               come tutte le altre tab (non più fuori), con lo stesso padding verso
               l'header (pt-1 di main). h-full/min-h-0/flex-col: propaga il vincolo
               di altezza reale di <main> (reso min-h-0/overflow-hidden solo su
-              questa tab, vedi sopra) fino a PiratiTool, che ne ha bisogno per il
+              questa tab, vedi sopra) fino a PlannerInsediamento, che ne ha bisogno per il
               ridimensionamento del planner (gridWrapperSize). */}
           <div className={activeTab === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
             {/* (21/11/2026) montato alla prima apertura della scheda, poi resta montato come sopra */}
@@ -8503,13 +8503,13 @@ export default function App() {
             )}
             {piratiAperto && (
               <div className={insediamento === "pirati" ? "h-full min-h-0 flex flex-col" : "hidden"}>
-                <PiratiTool ref={piratiToolRef} uiLang={uiLang} onNastro={setGruppiPirati} />
+                <PlannerInsediamento ref={piratiRef} uiLang={uiLang} onNastro={setGruppiPirati} />
               </div>
             )}
             {/* Mughal: montato alla prima scelta, poi resta montato (come i Pirati) */}
             {piratiAperto && mughalAperto && (
               <div className={insediamento === "mughal" ? "h-full min-h-0 flex flex-col" : "hidden"}>
-                <PiratiTool ref={mughalToolRef} uiLang={uiLang} onNastro={setGruppiMughal} insediamento="mughal" />
+                <PlannerInsediamento ref={mughalRef} uiLang={uiLang} onNastro={setGruppiMughal} insediamento="mughal" />
               </div>
             )}
           </div>

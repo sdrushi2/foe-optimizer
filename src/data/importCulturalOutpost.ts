@@ -4,7 +4,7 @@
 //  Portato 1:1 (agosto 2026) dal tool standalone "foe-pirati" (D:\FOE\pirati),
 //  dove era già validato su dati reali. Converte il payload assoluto prodotto
 //  dal ramo 'cultural_outpost' del bookmarklet (vedi data/bookmarklet.ts) in
-//  coordinate relative del planner Pirati (componenti/PiratiTool.tsx).
+//  coordinate relative del planner Pirati (insediamenti/PlannerInsediamento.tsx).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { MIN_PIRATE_BOOKMARKLET_VERSION, type BookmarkletPirateOutpostData, type BookmarkletPirateEntity } from "./bookmarklet";
@@ -59,7 +59,7 @@ type ImportedExpansionBlock = { row: number; col: number };
  * Errore di importCulturalOutpostPayload, con un `code` STABILE (non testo
  * localizzato: questo modulo è dati puri, senza accesso a uiLang/t()) invece
  * di un messaggio già scritto in italiano — lo stesso pattern di
- * BookmarkletValidationError in bookmarklet.ts. Il chiamante (PiratiTool.tsx)
+ * BookmarkletValidationError in bookmarklet.ts. Il chiamante (PlannerInsediamento.tsx)
  * mappa il code alla stringa tradotta tramite UI_STRINGS.
  */
 export type ImportCulturalOutpostError =
@@ -219,7 +219,7 @@ export function importCulturalOutpostPayload(
     }
   });
 
-  // Le CELLE restituite sono in coordinate StorageCell di PiratiTool: (0,0) è
+  // Le CELLE restituite sono in coordinate StorageCell di PlannerInsediamento: (0,0) è
   // l'angolo del blocco sbloccato più in alto/a sinistra (base ∪ espansioni
   // importate), la stessa ancora (minUnlockedBlockRow/Col) che il tool ricava da
   // buildUnlockedBlockSet — non l'angolo della sola base, che con un'espansione a

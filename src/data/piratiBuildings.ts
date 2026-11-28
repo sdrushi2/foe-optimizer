@@ -4,7 +4,7 @@
 //  Portato 1:1 (agosto 2026) dal tool standalone "foe-pirati" (D:\FOE\pirati),
 //  dove era già validato. Contiene solo dati/logica pura, senza React/Preact:
 //  il componente vero e proprio (state, solver, JSX) vive in
-//  components/PiratiTool.tsx.
+//  insediamenti/PlannerInsediamento.tsx.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { UiKey } from "./ui-strings";
@@ -100,7 +100,7 @@ export const BASE_BLOCK_ROWS = 2;
 export const BASE_BLOCK_COLS = 3;
 /** Dimensione ideale (in px) del lato di ogni cella del planner, usata per
  * calcolare la larghezza della griglia in base al numero di celle (vedi il
- * calcolo di gridWrapperSize in PiratiTool.tsx): 690px / 12 colonne della griglia
+ * calcolo di gridWrapperSize in PlannerInsediamento.tsx): 690px / 12 colonne della griglia
  * base (5 blocchi sbloccati di default, BASE_BLOCK_COLS+1 * BLOCK_SIZE). */
 export const CELL_SIZE_PX = 57.5;
 // I 5 blocchi aperti all'inizio nell'insediamento dei Pirati (25/11/2026: esportata per

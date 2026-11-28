@@ -1,5 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Tool Insediamento dei Pirati (planner di piazzamento)
+//  Planner degli insediamenti culturali (Pirati, Mughal)
+//
+//  (28/11/2026) Era components/PiratiTool.tsx: rinominato e spostato qui perché serve a tutti
+//  gli insediamenti. Cosa cambia fra l'uno e l'altro lo dice la configurazione `cfg`
+//  (data/insediamenti.ts): cfg.solver (Pirati: Risolvi, Auto), cfg.ottimizzatore, cfg.valuta,
+//  cfg.sblocchi (Mughal); i motori dei Mughal stanno in insediamenti/mughal/.
 //
 //  Portato 1:1 (agosto 2026) dal tool standalone "foe-pirati" (D:\FOE\pirati),
 //  dove era già validato su dati reali, e montato come componente nella tab
@@ -19,16 +24,19 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 // file): Wand2 è importata da lucide-react per riusare l'IDENTICA immagine della
 // bacchetta magica mostrata come CTA in App.tsx (tab Città/Inventario, "Nessuna città
 // importata...") nella guida rapida in fondo al planner — stesso font/stile, stessa icona.
-import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, Sparkles, FastForward, X as IconaChiudi, type LucideIcon } from "lucide-react";
+import { Wand2, Play, Square, Repeat, Undo2, Trash2, SquarePlus, SquareMinus, Construction, Sparkles, FastForward, Handshake, X as IconaChiudi, type LucideIcon } from "lucide-react";
 import type { RibbonGroup, RibbonItem } from "../ui/ribbon/Ribbon";
+import { iconDiplomazia } from "../assets/icons";
 import { isLegacyBookmarkletPayload, readPayloadDiagnostics, validateBookmarkletPirateOutpostData } from "../data/bookmarklet";
 import { importCulturalOutpostPayload, ImportCulturalOutpostFailure } from "../data/importCulturalOutpost";
 import { t, type UiLang } from "../data/ui-strings";
 import { formatInt } from "../utils/format";
-import LavoratoreMughal from "../insediamenti/mughal/lavoratore?worker&inline";
-import { posizioniAmbasciata, unisciTentativi, type RichiestaOttimizzatore, type Tentativo, type TipoOttimizzatore } from "../insediamenti/mughal/ottimizzatore";
-import { confrontaDisposizioni, FrecciaConfronto, MappaSolaLettura, RiepilogoConfronto, type DatiRiepilogo } from "../insediamenti/ConfrontoMappe";
-import { caricaSblocchi, leggiSblocchi, salvaSblocchi, statoDopoImport, type StatoSblocchi } from "../insediamenti/sblocchi";
+import LavoratoreMughal from "./mughal/lavoratore?worker&inline";
+import LavoratoreDiplomazia from "./mughal/lavoratoreDiplomazia?worker&inline";
+import { diplomaziaDisposizione, posizioniAmbasciataDipl, SOGLIE_DIPLOMAZIA, totaleLavori, unisciDiplomazia, type RichiestaDiplomazia, type TentativoDipl, type TipoDipl } from "./mughal/diplomazia";
+import { posizioniAmbasciata, unisciTentativi, type RichiestaOttimizzatore, type Tentativo, type TipoOttimizzatore } from "./mughal/ottimizzatore";
+import { confrontaDisposizioni, FrecciaConfronto, MappaSolaLettura, RiepilogoConfronto, type DatiRiepilogo } from "./ConfrontoMappe";
+import { caricaSblocchi, leggiSblocchi, salvaSblocchi, statoDopoImport, type StatoSblocchi } from "./sblocchi";
 import { INSEDIAMENTI, type IdInsediamento } from "../data/insediamenti";
 import { improntaInsediamento, pacchettiPonte } from "../data/ponte";
 
@@ -301,9 +309,9 @@ function layoutAfterBlockRemoval(params: {
  * globale (handleWandClick) è l'UNICO pulsante bacchetta nell'app — quando
  * l'utente si trova sulla tab Pirati, invece di creare un profilo città/
  * inventario, importa direttamente nel planner qui sotto tramite questo
- * metodo (niente pulsante/icona duplicati dentro PiratiTool stesso).
+ * metodo (niente pulsante/icona duplicati dentro PlannerInsediamento stesso).
  */
-export type PiratiToolHandle = {
+export type PlannerInsediamentoHandle = {
   /** Importa un payload cultural_outpost dal testo (già letto dagli appunti
    *  dal chiamante). Restituisce l'esito per il messaggio da mostrare
    *  all'utente, sullo stesso modello di runImport/importMessage interni. */
@@ -341,12 +349,12 @@ export type FotoPlanner = {
   modificato: boolean;
 };
 
-type PiratiToolProps = {
+type PlannerInsediamentoProps = {
   uiLang: UiLang;
   /** (25/11/2026) Quale insediamento: stessa mappa e stessi comandi, cambia la
    *  configurazione (data/insediamenti.ts). Predefinito: Pirati. */
   insediamento?: IdInsediamento;
-  /** 2.0: i comandi (Calcolo, Espansioni) stanno nel nastro: PiratiTool
+  /** 2.0: i comandi (Calcolo, Espansioni) stanno nel nastro: PlannerInsediamento
    *  consegna qui i suoi gruppi a ogni cambio di stato. */
   onNastro?: (gruppi: RibbonGroup[]) => void;
 };
@@ -357,6 +365,8 @@ type PiratiToolProps = {
  *  produttori della diplomazia ne hanno sei: si conta quello da 5 ore (`ORE_RACCOLTA`), lo stesso
  *  ritmo della colonna Produzione dei tentativi ("/5h"). */
 const ORE_RACCOLTA = 5;
+/** (28/11/2026) Soglia scelta per l'ottimizzatore della diplomazia (Mughal). */
+const CHIAVE_SOGLIA_DIPL = "foe2_mughal_soglia_diplomazia";
 function rupieOraDi(b: { currency?: { prod?: Array<[number, number]> } } | undefined): number {
   const prod = b?.currency?.prod;
   if (!prod?.length) return 0;
@@ -391,7 +401,7 @@ function nonCollegati(placements: Placement[], opt: { strada: string; senzaStrad
   return out;
 }
 
-const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function PiratiTool({ uiLang, onNastro, insediamento = "pirati" }, ref) {
+const PlannerInsediamento = forwardRef<PlannerInsediamentoHandle, PlannerInsediamentoProps>(function PlannerInsediamento({ uiLang, onNastro, insediamento = "pirati" }, ref) {
   // configurazione dell'insediamento: stessi nomi delle costanti dei Pirati di prima,
   // così il resto del componente non cambia
   const cfg = INSEDIAMENTI[insediamento];
@@ -496,6 +506,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const [tentativiChiusi, setTentativiChiusi] = useState(false);
   const ultimaRichiestaRef = useRef<{ req: RichiestaOttimizzatore; firma: string } | null>(null);
   const lavoratoriRef = useRef<Worker[]>([]);
+  // (28/11/2026) Ottimizzatore della diplomazia (Mughal): soglia scelta (salvata), quale dei due
+  // ottimizzatori sta girando o ha riempito il riquadro, i suoi tentativi (uno per numero di
+  // Haveli e Shanti tolti) e la partenza (la mappa quando si è premuto il pulsante)
+  const [sogliaDipl, setSogliaDipl] = useState<number>(() => {
+    try { const n = Number(localStorage.getItem(CHIAVE_SOGLIA_DIPL)); return SOGLIE_DIPLOMAZIA.includes(n) ? n : SOGLIE_DIPLOMAZIA[4]!; } catch { return SOGLIE_DIPLOMAZIA[4]!; }
+  });
+  const [modoOtt, setModoOtt] = useState<"produzione" | "diplomazia">("produzione");
+  const [tentativiDipl, setTentativiDipl] = useState<TentativoDipl[]>([]);
+  const [sceltoDipl, setSceltoDipl] = useState<string | null>(null);
+  const [partenzaDipl, setPartenzaDipl] = useState<{ perTipo: Record<string, number>; diplomazia: number; soglia: number } | null>(null);
 
   // Ultima disposizione "risolta" nota (indipendente dalla baseline, che
   // cambia solo con import/Reset/Undo, anche se le due coincidono sempre
@@ -546,7 +566,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // callback SUBITO con le dimensioni correnti al momento della
       // chiamata — se il wrapper è dentro un antenato "hidden" (App.tsx
       // nasconde questo componente con display:none sulle tab diverse da
-      // "pirati", vedi il div che avvolge <PiratiTool>) al primo mount,
+      // "pirati", vedi il div che avvolge <PlannerInsediamento>) al primo mount,
       // quella prima invocazione riporta 0×0. Senza questo guard,
       // gridWrapperSize passava da null a {0,0}, disattivando il fallback
       // CSS (attivo solo quando gridWrapperSize === null, vedi sotto) e
@@ -894,7 +914,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // Import dati: chiamato da App.tsx tramite l'handle imperativo esposto
   // sotto (useImperativeHandle), quando l'utente clicca la bacchetta magica
   // dell'header globale mentre si trova sulla tab Pirati. Non c'è più un
-  // pulsante bacchetta dentro PiratiTool stesso — un solo pulsante nell'app,
+  // pulsante bacchetta dentro PlannerInsediamento stesso — un solo pulsante nell'app,
   // che qui riceve solo il testo già letto dagli appunti dal chiamante.
   const runImport = (rawText: string): { kind: "success" | "error"; text: string } => {
     // Guard critico: runImport è raggiungibile dalla bacchetta magica nell'header
@@ -1068,6 +1088,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     lastSolvedRef.current = { buildings: nextBuildings.map((b) => ({ ...b })), placements: nextPlacements };
     setHasImportedCity(true);
     setTentativi([]);
+    setTentativiDipl([]);
     setTentativoScelto(null);
     {
       const server = (payload as { server?: unknown }).server;
@@ -1140,6 +1161,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       setEditMode("obstacle");
       setImportMessage(null);
       setTentativi([]);
+      setTentativiDipl([]);
       setTentativoScelto(null);
     },
   }));
@@ -2133,7 +2155,15 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const totalPopRequired = buildings.reduce((accumulator, building) => accumulator + (building.pop < 0 ? Math.abs(building.pop) * building.count : 0), 0);
   const hasStatsWarning = totalArea > maxArea || totalPopRequired > totalPopProvided;
   // (26/11/2026) diplomazia dell'insediamento: somma degli edifici costruiti (0 di partenza)
-  const totalDiplomazia = buildings.reduce((acc, b) => acc + (b.diplomacy ?? 0) * b.count, 0);
+  // (28/11/2026) Mughal: con i bonus delle catene (Canali sopra e sotto l'Ambasciata, Vialetti a
+  // destra), dalla disposizione sulla mappa; gli altri insediamenti: somma della legenda
+  const totalDiplomazia = useMemo(() => {
+    if (!cfg.ottimizzatore) return buildings.reduce((acc, b) => acc + (b.diplomacy ?? 0) * b.count, 0);
+    const base = new Map(buildings.map((b) => [b.id, b.diplomacy ?? 0]));
+    const amb = placements.find((p) => p.buildingId === ID_MUNICIPIO);
+    return diplomaziaDisposizione(placements.filter((p) => p.buildingId !== ID_MUNICIPIO).map((p) => ({ id: p.buildingId, row: p.row, col: p.col, w: p.w, h: p.h })), amb ? { row: amb.row, col: amb.col, h: amb.h } : null,
+      (id) => base.get(id) ?? 0, { canale: "canale", vialetto: "vialetto" });
+  }, [cfg, buildings, placements]);
 
   // Undo deve attivarsi solo se lo stato corrente si è davvero discostato dalla
   // baseline (stato vuoto, o stato subito dopo l'ultimo import riuscito) — altrimenti
@@ -2216,6 +2246,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const azzera = () => {
             if (isSolving) return;
             setTentativi([]);
+            setTentativiDipl([]);
             setTentativoScelto(null);
             setPartenzaOtt(null);
             ultimoImportRef.current = null;
@@ -2288,10 +2319,15 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
       // strade già costruite nel gioco (import): non si eliminano, al massimo si parcheggiano
       stradeEsistenti: baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0,
     };
+    // (28/11/2026, utente) le rupie fanno da tetto: al massimo le strade già costruite più quelle
+    // che si possono comprare con il saldo (tentativi che costano di più non servono)
+    const saldo = saldoValuta ?? cfg.valuta?.iniziale ?? null;
+    const costo = costiValuta[opt.strada] ?? buildings.find((b) => b.id === opt.strada)?.currency?.cost ?? 0;
+    if (saldo !== null && costo > 0) req.maxStrade = (req.stradeEsistenti ?? 0) + Math.max(0, Math.floor(saldo / costo));
     return req;
   };
   const firmaRichiesta = (req: RichiestaOttimizzatore) =>
-    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), (req.produttori ?? []).map((r) => r.id).join(","), req.stradeEsistenti].join("|");
+    [req.righe, req.colonne, Array.from(req.libere).join(""), JSON.stringify(req.fisse), req.residenze.map((r) => r.id).join(","), (req.produttori ?? []).map((r) => r.id).join(","), req.stradeEsistenti, req.maxStrade ?? ""].join("|");
   /** Lancia i worker: `base` = tentativi da cui ripartire (Continua), `infinito` = fino a Stop. */
   const lanciaOttimizzatore = (req: RichiestaOttimizzatore, base: Tentativo[], infinito: boolean) => {
     const posizioni = posizioniAmbasciata(req);
@@ -2331,6 +2367,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     }
     setPartenzaOtt({ strade: placements.filter((p) => p.buildingId === opt.strada).length, collegate: collegatePartenza, rupieOra: rupieOraPartenza, perTipo });
     ultimaRichiestaRef.current = { req, firma: firmaRichiesta(req) };
+    setModoOtt("produzione");
     setTentativi([]);
     setTentativoScelto(null);
     lanciaOttimizzatore(req, [], false);
@@ -2338,7 +2375,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // Continua: stessa richiesta dell'ultima ricerca (se l'area o le manifatture sono cambiate
   // serve un nuovo Ottimizza), riparte dai tentativi trovati e va avanti fino a Stop
   const reqAttuale = cfg.ottimizzatore && tentativi.length > 0 && !ottimizzando ? richiestaOttimizzatore() : null;
-  const puoContinuare = !!reqAttuale && !!ultimaRichiestaRef.current && firmaRichiesta(reqAttuale) === ultimaRichiestaRef.current.firma;
+  const puoContinuare = modoOtt === "produzione" && !!reqAttuale && !!ultimaRichiestaRef.current && firmaRichiesta(reqAttuale) === ultimaRichiestaRef.current.firma;
   const continuaOttimizzatore = () => {
     const u = ultimaRichiestaRef.current;
     if (!u || ottimizzando || isSolving || !puoContinuare) return;
@@ -2359,6 +2396,91 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     setStatus(layoutStatus(nb, pl));
     lastSolvedRef.current = { buildings: nb.map((b) => ({ ...b })), placements: pl.map((p) => ({ ...p })) };
     setTentativoScelto(tt.strade);
+  };
+
+  // ── Ottimizzatore della diplomazia (28/11/2026, Mughal) ───────────────────
+  // Arrivare alla soglia scelta togliendo meno edifici grandi possibile (Haveli, poi Shanti):
+  // manifatture e Bhavan si tolgono senza problemi, nessuna residenza nuova, le strade restano
+  // tutte (si rimettono dove capita), tutto si può spostare. Parte dalla mappa di adesso.
+  const avviaDiplomazia = () => {
+    const opt = cfg.ottimizzatore;
+    if (!opt || ottimizzando || isSolving || editMode !== "obstacle") return;
+    const libere = new Uint8Array(gridRows * gridCols);
+    for (let r = 0; r < gridRows; r++) for (let c = 0; c < gridCols; c++) {
+      libere[r * gridCols + c] = gridMask[r]?.[c] && !obstacles.has(cellKey(storageCell(r, c))) ? 1 : 0;
+    }
+    const posizioniDi = (id: string) => placements.filter((p) => p.buildingId === id).map((p) => ({ row: p.row, col: p.col }));
+    const tipo = (b: BuildingType): TipoDipl => ({ id: b.id, w: b.width, h: b.height, pop: b.pop, dipl: b.diplomacy ?? 0 });
+    const presente = (id: string) => placements.some((p) => p.buildingId === id);
+    const usabile = (b: BuildingType) => presente(b.id) || sbloccato(b.cityentityId);
+    const peso = (id: string): 0 | 1 | 2 => (id === "haveli" ? 2 : id === "shanti" ? 1 : 0);
+    const canale = buildings.find((b) => b.id === "canale");
+    const vialetto = buildings.find((b) => b.id === "vialetto");
+    const amb = placements.find((p) => p.buildingId === ID_MUNICIPIO);
+    const req: RichiestaDiplomazia = {
+      righe: gridRows, colonne: gridCols, libere, ambasciata: { w: MUNICIPIO.width, h: MUNICIPIO.height },
+      soglia: sogliaDipl,
+      // le strade non si demoliscono mai: tutte quelle sulla mappa (almeno quelle del gioco)
+      strade: Math.max(placements.filter((p) => p.buildingId === opt.strada).length, baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0),
+      residenze: buildings.filter((b) => opt.residenze.includes(b.id) && presente(b.id)).map((b) => ({ tipo: tipo(b), peso: peso(b.id), posizioni: posizioniDi(b.id) })),
+      diplomatici: buildings.filter((b) => opt.produttori.includes(b.id) && (b.diplomacy ?? 0) > 0 && usabile(b)).map((b) => ({ tipo: tipo(b), posizioni: posizioniDi(b.id) })),
+      ...(canale && usabile(canale) ? { canale: tipo(canale) } : {}),
+      ...(vialetto && usabile(vialetto) ? { vialetto: tipo(vialetto) } : {}),
+      ...(amb ? { ambasciataOra: { row: amb.row, col: amb.col } } : {}),
+      tempoMs: OTT_TEMPO_MS,
+      // la mappa di adesso: per contare i lavori e per la ricerca a intervento minimo
+      ora: placements.filter((p) => p.buildingId !== ID_MUNICIPIO).map((p) => {
+        const b = buildings.find((x) => x.id === p.buildingId);
+        return { id: p.buildingId, row: p.row, col: p.col, w: p.w, h: p.h, pop: b?.pop ?? 0, dipl: b?.diplomacy ?? 0 };
+      }),
+      idStrada: opt.strada,
+    };
+    const perTipo: Record<string, number> = {};
+    for (const p of placements) if (p.buildingId !== ID_MUNICIPIO && p.buildingId !== opt.strada) perTipo[p.buildingId] = (perTipo[p.buildingId] ?? 0) + 1;
+    setPartenzaDipl({ perTipo, diplomazia: totalDiplomazia, soglia: sogliaDipl });
+    setModoOtt("diplomazia");
+    setTentativiDipl([]);
+    setSceltoDipl(null);
+    const posizioni = posizioniAmbasciataDipl(req);
+    const quanti = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1, posizioni.length));
+    const liste: TentativoDipl[][] = Array.from({ length: quanti }, () => []);
+    let finiti = 0;
+    setOttInfinito(false);
+    setTentativiChiusi(false);
+    setOttimizzando(true);
+    lavoratoriRef.current = Array.from({ length: quanti }, (_, i) => {
+      const w = new LavoratoreDiplomazia();
+      w.onmessage = (e: MessageEvent<{ tipo: "progresso" | "fine"; tentativi: TentativoDipl[] }>) => {
+        liste[i] = e.data.tentativi;
+        setTentativiDipl(unisciDiplomazia(liste));
+        if (e.data.tipo === "fine" && ++finiti === quanti) fermaOttimizzatore();
+      };
+      w.onerror = () => { if (++finiti === quanti) fermaOttimizzatore(); };
+      // la posizione di adesso dell'Ambasciata la prova per prima il worker che la riceve
+      const mie = posizioni.filter((_, j) => j % quanti === i);
+      w.postMessage({ ...req, posizioni: mie, seme: i + 1 });
+      return w;
+    });
+  };
+  /** Mostra un tentativo della diplomazia sulla mappa (come applicaTentativo). */
+  const applicaDiplomazia = (tt: TentativoDipl) => {
+    const opt = cfg.ottimizzatore;
+    if (!opt || isSolving) return;
+    const pl: Placement[] = [{ buildingId: ID_MUNICIPIO, row: tt.ambasciata.row, col: tt.ambasciata.col, w: MUNICIPIO.width, h: MUNICIPIO.height }];
+    for (const s of tt.strade) pl.push({ buildingId: opt.strada, row: s.row, col: s.col, w: 1, h: 1 });
+    for (const e of tt.edifici) pl.push({ buildingId: e.id, row: e.row, col: e.col, w: e.w, h: e.h });
+    const conti = new Map<string, number>();
+    for (const p of pl) if (p.buildingId !== ID_MUNICIPIO) conti.set(p.buildingId, (conti.get(p.buildingId) ?? 0) + 1);
+    const nb = buildings.map((b) => ({ ...b, count: conti.get(b.id) ?? 0 }));
+    setBuildings(nb);
+    setPlacements(pl);
+    setStatus(layoutStatus(nb, pl));
+    lastSolvedRef.current = { buildings: nb.map((b) => ({ ...b })), placements: pl.map((p) => ({ ...p })) };
+    setSceltoDipl(tt.haveliTolti + ":" + tt.shantiTolti + ":" + totaleLavori(tt.lavori));
+  };
+  const cambiaSogliaDipl = (n: number) => {
+    setSogliaDipl(n);
+    try { localStorage.setItem(CHIAVE_SOGLIA_DIPL, String(n)); } catch { /* storage pieno o bloccato */ }
   };
 
   // (25/11/2026) Edifici che vorrebbero la strada ma non toccano una strada collegata
@@ -2419,10 +2541,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // ── Nastro (2.0) ────────────────────────────────────────────────────────
   // Come il Planner: i gruppi si ricostruiscono quando cambia lo stato che
   // mostrano (firma); i click passano da azioniRef (funzioni correnti).
-  const azioniRef = useRef({ solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore });
-  azioniRef.current = { solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore };
+  const azioniRef = useRef({ solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore, avviaDiplomazia, cambiaSogliaDipl });
+  azioniRef.current = { solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore, avviaDiplomazia, cambiaSogliaDipl };
   const risolviBloccato = (status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle") && !isSolving;
-  const firmaNastro = [ottimizzando, puoContinuare, isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
+  const firmaNastro = [ottimizzando, modoOtt, sogliaDipl, puoContinuare, isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
     candidateExpansionBlocks.length, removableExpansionKeys.size, uiLang].join("|");
   const onNastroRef = useRef(onNastro);
   onNastroRef.current = onNastro;
@@ -2439,13 +2561,28 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           : b("risolvi", Play, L("r2PiSolve"), () => void a().solve(), { disabled: risolviBloccato }),
         b("auto", Repeat, L("r2PiAuto"), () => setAutoMode(v => !v), { active: autoMode, disabled: isSolving, title: L("piratiAutoTitle") })]),
         // (25/11/2026) Mughal: ottimizzatore della disposizione al posto di Risolvi
-        ...(!cfg.ottimizzatore ? [] : [ottimizzando
+        ...(!cfg.ottimizzatore ? [] : [ottimizzando && modoOtt === "produzione"
           ? b("ottimizza", Square, L("r2PiStop"), () => a().fermaOttimizzatore(), { active: true, danger: true })
-          : b("ottimizza", Sparkles, L("r2PiOttimizza"), () => a().avviaOttimizzatore(), { disabled: isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaTitle") }),
+          : b("ottimizza", Sparkles, L("r2PiOttimizza"), () => a().avviaOttimizzatore(), { disabled: ottimizzando || isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaTitle") }),
           b("continua", FastForward, L("r2PiContinua"), () => a().continuaOttimizzatore(), { disabled: ottimizzando || !puoContinuare, title: L("r2PiContinuaTitle") })]),
         b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving || ottimizzando, title: L("piratiUndoTitle") }),
         b("reset", Trash2, L("r2PiReset"), () => a().reset(), { disabled: (!hasImportedCity && !hasChangesFromBaseline) || isSolving, title: L("piratiResetTitle"), danger: true }),
       ]] },
+      // (28/11/2026) Mughal: ottimizzatore della diplomazia, con la soglia da raggiungere
+      ...(!cfg.ottimizzatore ? [] : [{ id: "pi-diplomazia", label: L("r2GrpDiplomazia"), icon: Handshake, priority: 2, rows: [[
+        ottimizzando && modoOtt === "diplomazia"
+          ? b("ottimizza-dipl", Square, L("r2PiStop"), () => a().fermaOttimizzatore(), { active: true, danger: true })
+          : b("ottimizza-dipl", Handshake, L("r2PiOttimizzaDipl"), () => a().avviaDiplomazia(), { img: iconDiplomazia, disabled: ottimizzando || isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaDiplTitle") }),
+        { kind: "custom", id: "soglia-dipl", render: () => (
+          <label className="flex h-[22px] items-center gap-1 rounded-md border border-slate-700 bg-slate-900 px-1.5 text-[12px] text-slate-300 hover:border-slate-600" title={L("r2PiSogliaDiplTitle")}>
+            <span className="text-slate-400">≥</span>
+            <select value={sogliaDipl} disabled={ottimizzando} onChange={(e) => a().cambiaSogliaDipl(Number(e.currentTarget.value))}
+              className="bg-slate-900 font-mono text-slate-100 outline-none">
+              {SOGLIE_DIPLOMAZIA.map((n) => <option key={n} value={n}>{formatInt(n)}</option>)}
+            </select>
+          </label>
+        ) },
+      ]] } satisfies RibbonGroup]),
       { id: "pi-espansioni", label: L("r2GrpExpansions"), icon: SquarePlus, priority: 2, rows: [[
         b("piu", SquarePlus, L("r2PiAddExp"), () => setEditMode(c => (c === "add-expansion" ? "obstacle" : "add-expansion")),
           { active: editMode === "add-expansion", disabled: isSolving || candidateExpansionBlocks.length === 0,
@@ -3121,7 +3258,78 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             scroll è già gestito dal contenitore esterno. */}
         <div className="order-1 min-w-0 mt-1 sm:mt-0 sm:h-full sm:min-h-0 sm:overflow-y-auto">
           {/* (25/11/2026) Tentativi dell'ottimizzatore: uno per numero di strade, clic = sulla mappa */}
-          {cfg.ottimizzatore && !tentativiChiusi && (ottimizzando || tentativi.length > 0) && (() => {
+          {/* (28/11/2026) Tentativi della diplomazia: uno per numero di Haveli e Shanti tolti
+              (solo quelli che non si possono fare togliendo meno), clic = sulla mappa */}
+          {cfg.ottimizzatore && modoOtt === "diplomazia" && !tentativiChiusi && (ottimizzando || partenzaDipl) && (() => {
+            const opt = cfg.ottimizzatore;
+            const nomi = new Map(buildings.map((b) => [b.id, t(b.nameKey, uiLang) as string]));
+            const corti = new Map(buildings.map((b) => [b.id, t(b.shortNameKey, uiLang) as string]));
+            const manifatture = buildings.filter((b) => b.id !== ID_MUNICIPIO && b.id !== opt.strada && !opt.residenze.includes(b.id) && !opt.diplomazia.includes(b.id)).map((b) => b.id);
+            const conta = (m: Record<string, number> | undefined, id: string) => (id === "manif" ? manifatture.reduce((a, x) => a + (m?.[x] ?? 0), 0) : m?.[id] ?? 0);
+            // colonne: i tipi che cambiano in almeno un tentativo (Haveli e Shanti a parte)
+            const candidati = ["bhavan", "manif", ...opt.diplomazia];
+            const tipi = candidati.filter((id) => tentativiDipl.some((tt) => conta(tt.conti, id) !== conta(partenzaDipl?.perTipo, id)));
+            const titolo = (id: string) => (id === "manif" ? (t("mughalColManifTitle", uiLang) as string) : (t("mughalColTipoTitle", uiLang, nomi.get(id) ?? id) as string));
+            const testa = (id: string) => (id === "manif" ? (t("mughalColManif", uiLang) as string) : corti.get(id) ?? id);
+            const segno = (d: number) => (d > 0 ? "+" + d : d < 0 ? "−" + -d : "0");
+            const soglia = partenzaDipl?.soglia ?? sogliaDipl;
+            return (
+              <section className="mb-2 rounded border border-sky-400/40 bg-sky-500/10 p-2 text-xs">
+                <div className="mb-1 flex items-center gap-2">
+                  <Handshake size={14} className="text-sky-300" aria-hidden="true" />
+                  <span className="font-bold uppercase tracking-wide text-sky-200">{t("mughalTentativiDiplTitolo", uiLang, formatInt(soglia))}</span>
+                  <span className="ml-auto text-[11px] text-slate-400">
+                    {ottimizzando ? t("mughalTentativiInCorso", uiLang, secondiOtt, OTT_TEMPO_MS / 1000) : t("mughalTentativiClicca", uiLang)}
+                  </span>
+                  <button type="button" onClick={() => { if (ottimizzando) fermaOttimizzatore(); setTentativiChiusi(true); }}
+                    title={t("mughalTentativiChiudiDipl", uiLang)} aria-label={t("mughalTentativiChiudiDipl", uiLang)}
+                    className="-mr-0.5 shrink-0 rounded p-0.5 text-slate-400 hover:bg-sky-500/25 hover:text-white">
+                    <IconaChiudi size={14} />
+                  </button>
+                </div>
+                {tentativiDipl.length === 0 ? (
+                  <div className="py-1 text-slate-400">{ottimizzando ? t("mughalTentativiAttesa", uiLang) : t("mughalDiplNessuno", uiLang, formatInt(soglia))}</div>
+                ) : (
+                  <table className="w-full border-collapse font-mono text-[11px]">
+                    <thead>
+                      <tr className="text-[10.5px] text-slate-400">
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColToltiTitle", uiLang, nomi.get("haveli") ?? "Haveli")}>{corti.get("haveli")}</th>
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColToltiTitle", uiLang, nomi.get("shanti") ?? "Shanti")}>{corti.get("shanti")}</th>
+                        {tipi.map((id) => <th key={id} className="px-1 py-0.5 text-right font-medium" title={titolo(id)}>{testa(id)}</th>)}
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColLavoriTitle", uiLang)}>{t("mughalColLavori", uiLang)}</th>
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColDiplTitle", uiLang)}>{t("mughalColDipl", uiLang)}</th>
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColPopLiberaTitle", uiLang)}>{t("mughalColPopLibera", uiLang)}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tentativiDipl.slice(0, 10).map((tt) => {
+                        const k = tt.haveliTolti + ":" + tt.shantiTolti + ":" + totaleLavori(tt.lavori);
+                        const dd = partenzaDipl ? tt.diplomazia - partenzaDipl.diplomazia : 0;
+                        return (
+                          <tr key={k} onClick={() => applicaDiplomazia(tt)}
+                            className={cx("cursor-pointer border-t border-slate-700/50", sceltoDipl === k ? "bg-sky-500/30" : "hover:bg-sky-500/15")}
+                            title={Object.entries(tt.conti).map(([id, n]) => `${nomi.get(id) ?? id}: ${n}`).join(" · ")}>
+                            <td className={cx("px-1 py-0.5 text-right", tt.haveliTolti ? "text-red-300" : "text-slate-500")}>{tt.haveliTolti ? "−" + tt.haveliTolti : "0"}</td>
+                            <td className={cx("px-1 py-0.5 text-right", tt.shantiTolti ? "text-red-300" : "text-slate-500")}>{tt.shantiTolti ? "−" + tt.shantiTolti : "0"}</td>
+                            {tipi.map((id) => {
+                              const d = conta(tt.conti, id) - conta(partenzaDipl?.perTipo, id);
+                              return <td key={id} className={cx("px-1 py-0.5 text-right", d === 0 ? "text-slate-500" : "text-slate-200")}>{segno(d)}</td>;
+                            })}
+                            <td className="whitespace-nowrap px-1 py-0.5 text-right text-amber-200" title={t("mughalLavoriDettaglio", uiLang, tt.lavori.tolti, tt.lavori.nuovi, tt.lavori.spostati) as string}>
+                              {totaleLavori(tt.lavori)}<span className="ml-0.5 text-slate-500">({tt.lavori.tolti}·{tt.lavori.nuovi}·{tt.lavori.spostati})</span>
+                            </td>
+                            <td className="px-1 py-0.5 text-right text-sky-300">{formatInt(tt.diplomazia)}{dd !== 0 && <span className={cx("ml-0.5", dd > 0 ? "text-green-400/80" : "text-red-400/80")}>({dd > 0 ? "+" : "−"}{formatInt(Math.abs(dd))})</span>}</td>
+                            <td className="px-1 py-0.5 text-right text-emerald-300">{formatInt(tt.popolazione)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </section>
+            );
+          })()}
+          {cfg.ottimizzatore && modoOtt === "produzione" && !tentativiChiusi && (ottimizzando || tentativi.length > 0) && (() => {
             const opt = cfg.ottimizzatore;
             const saldo = saldoValuta ?? cfg.valuta?.iniziale ?? null;
             const giaFatte = baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0;
@@ -3130,8 +3338,16 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             // (28/11/2026, utente) una colonna per tipo di edificio collegato (residenze e produttori
             // che compaiono nei tentativi o nella partenza, nell'ordine della legenda), con la sola
             // differenza rispetto alla partenza
+            // i 10 migliori dalla produzione più alta (28/11/2026: erano 5, troppo pochi con più
+            // espansioni); mai quelli che costano più rupie di quante ce ne sono (il motore non li
+            // cerca nemmeno: maxStrade) né (28/11/2026, utente) quelli che producono meno di adesso
+            const prod5 = (rupieOra: number) => Math.round(rupieOra * 5);
+            const visibili = tentativi
+              .filter((tt) => (saldo === null || saldo - Math.max(0, tt.strade - giaFatte) * costo >= 0)
+                && (!partenzaOtt || prod5(tt.rupieOra) >= prod5(partenzaOtt.rupieOra)))
+              .sort((x, y) => y.rupieOra - x.rupieOra || x.strade - y.strade).slice(0, 10);
             const ordineTipi = [...opt.residenze, ...opt.produttori];
-            const tipi = ordineTipi.filter((id) => tentativi.some((tt) => tt.collegate[id]) || !!partenzaOtt?.perTipo[id]);
+            const tipi = ordineTipi.filter((id) => visibili.some((tt) => tt.collegate[id]) || !!partenzaOtt?.perTipo[id]);
             const corti = new Map(buildings.map((b) => [b.id, t(b.shortNameKey, uiLang) as string]));
             return (
               <section className="mb-2 rounded border border-violet-400/40 bg-violet-500/10 p-2 text-xs">
@@ -3149,8 +3365,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                     <IconaChiudi size={14} />
                   </button>
                 </div>
-                {tentativi.length === 0 ? (
-                  <div className="py-1 text-slate-400">{ottimizzando ? t("mughalTentativiAttesa", uiLang) : t("mughalTentativiNessuno", uiLang)}</div>
+                {visibili.length === 0 ? (
+                  <div className="py-1 text-slate-400">{ottimizzando ? t("mughalTentativiAttesa", uiLang)
+                    : tentativi.length > 0 ? t("mughalTentativiNessunoMeglio", uiLang) : t("mughalTentativiNessuno", uiLang)}</div>
                 ) : (
                   <table className="w-full border-collapse font-mono text-[11px]">
                     <thead>
@@ -3162,9 +3379,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       </tr>
                     </thead>
                     <tbody>
-                      {/* dalla produzione più alta (richiesta utente) */}
-                      {/* solo i 5 migliori: la scelta cade sempre fra i primi (utente, 26/11/2026) */}
-                      {[...tentativi].sort((x, y) => y.rupieOra - x.rupieOra || x.strade - y.strade).slice(0, 5).map((tt) => {
+                      {visibili.map((tt) => {
                         const rimaste = saldo === null ? null : saldo - Math.max(0, tt.strade - giaFatte) * costo;
                         const scelto = tentativoScelto === tt.strade;
                         // differenza con lo scenario di partenza (la mappa quando hai premuto Ottimizza)
@@ -3347,4 +3562,4 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   );
 });
 
-export default PiratiTool;
+export default PlannerInsediamento;

@@ -402,7 +402,7 @@ export interface BookmarkletData {
   /** Dati dell'Insediamento dei Pirati (vedi {@link BookmarkletPirateOutpostData}),
    *  presenti in più SOLO dal bookmarklet v4 e SOLO se l'utente ha visitato
    *  il proprio Insediamento nella stessa sessione di gioco (mai in visita da
-   *  un altro giocatore). Letto solo da PiratiTool.tsx — il ramo città/
+   *  un altro giocatore). Letto solo da PlannerInsediamento.tsx — il ramo città/
    *  inventario lo ignora del tutto. Vedi commento v4 sopra
    *  CURRENT_BOOKMARKLET_VERSION per il perché della cattura unificata. */
   pirateOutpost?: BookmarkletPirateOutpostData;
@@ -452,7 +452,7 @@ export interface BookmarkletPirateEntity {
 export interface BookmarkletPirateOutpostData {
   /** Versione del bookmarklet (campo `_v`, vedi CURRENT_BOOKMARKLET_VERSION).
    *  Assente nei payload generati dal bookmarklet v3.1 (prima che questo ramo
-   *  avesse `_v`): serve a `PiratiTool` per distinguere "bookmarklet vecchio,
+   *  avesse `_v`): serve a `PlannerInsediamento` per distinguere "bookmarklet vecchio,
    *  ricrealo" da un generico errore di struttura. */
   _v?: number;
   areas: BookmarkletPirateArea[];
@@ -470,7 +470,7 @@ export interface BookmarkletPirateOutpostData {
  *  - `{activeMap, areas, entities}` in cima — v3.1 cliccata sull'Insediamento
  *    (ramo 'cultural_outpost' col `return` anticipato, senza `_v`).
  *  In entrambi i casi il payload non avrà mai `pirateOutpost` e l'unica azione
- *  utile è ricreare la bacchetta: PiratiTool lo usa per mostrare quel messaggio
+ *  utile è ricreare la bacchetta: PlannerInsediamento lo usa per mostrare quel messaggio
  *  invece di "visita prima l'Insediamento" o del generico "struttura non valida".
  *
  *  ⚠️ Il discriminante è `_v`, NON la forma. Dalla v4 OGNI payload è un

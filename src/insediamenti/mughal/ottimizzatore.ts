@@ -57,7 +57,8 @@ export interface RichiestaOttimizzatore {
   seme?: number;
   /** Solo queste posizioni dell'Ambasciata (per dividere il lavoro fra i worker). */
   posizioni?: Array<{ row: number; col: number }>;
-  /** Strade massime da provare. */
+  /** Strade massime da provare. (28/11/2026) Il planner ci mette le strade già costruite più
+   *  quelle che le rupie permettono di comprare: i tentativi oltre non si registrano. */
   maxStrade?: number;
   /** Strade già costruite: non si eliminano mai, quindi in un tentativo che ne usa meno quelle
    *  in più vanno parcheggiate in caselle vuote (se non ci stanno, il tentativo non vale). */
@@ -460,7 +461,8 @@ function ricuoci(req: RichiestaOttimizzatore, amb: { row: number; col: number },
     const T = 12 * (1 - it / iter) + 0.1;
     const m = rng();
     if (m < 0.25 || rete.strade.length < 2) {
-      // aggiungi
+      // aggiungi (non oltre le strade che si possono pagare)
+      if (req.maxStrade !== undefined && rete.strade.length >= req.maxStrade) continue;
       const fr = rete.frontiera();
       if (!fr.length) continue;
       const su = fr[Math.floor(rng() * fr.length)]!;
@@ -498,6 +500,7 @@ function tentativi(req: RichiestaOttimizzatore, archivio: Archivio): Tentativo[]
   const ord = [...archivio.entries()].sort((a, b) => a[0] - b[0]);
   const out: Tentativo[] = [];
   for (const [k, a] of ord) {
+    if (req.maxStrade !== undefined && k > req.maxStrade) continue;   // troppe strade per le rupie
     if (out.length && a.rupieOra <= out[out.length - 1]!.rupieOra + 1e-9) continue;
     const vt = new Valutatore(req, a.amb);
     const val = vt.valuta(a.strade, true);

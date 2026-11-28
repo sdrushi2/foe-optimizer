@@ -775,6 +775,36 @@ const UI_STRINGS = {
     it: "Riprende la ricerca dai tentativi trovati e continua finché non premi Stop, per migliorarli. Se hai cambiato area o manifatture serve un nuovo Ottimizza",
     en: "Resumes the search from the attempts found and keeps going until you press Stop, to improve them. If you changed the area or the factories, press Optimize again",
   },
+  // (28/11/2026) ottimizzatore della diplomazia dei Mughal
+  r2GrpDiplomazia: { it: "Diplomazia", en: "Diplomacy" },
+  r2PiOttimizzaDipl: { it: "Ottimizza diplomazia", en: "Optimize diplomacy" },
+  r2PiOttimizzaDiplTitle: {
+    it: "Cerca come arrivare alla diplomazia scelta togliendo meno edifici grandi possibile (prima gli Shanti, poi gli Haveli). Toglie manifatture e Bhavan se serve, non aggiunge residenze, tiene tutte le strade e può spostare tutto, Ambasciata compresa. Usa solo gli edifici sbloccati e conta i bonus delle catene di Canali e Vialetti",
+    en: "Looks for a way to reach the chosen diplomacy removing as few large buildings as possible (Shantis first, then Havelis). It removes factories and Bhavans if needed, adds no residences, keeps every road and can move everything, Embassy included. It uses unlocked buildings only and counts the Canal and Alley chain bonuses",
+  },
+  r2PiSogliaDiplTitle: { it: "Diplomazia da raggiungere (soglie dei livelli dell'incursione)", en: "Diplomacy to reach (incursion level thresholds)" },
+  mughalTentativiDiplTitolo: { it: (n: string) => `Diplomazia ≥ ${n}`, en: (n: string) => `Diplomacy ≥ ${n}` },
+  mughalTentativiChiudiDipl: { it: "Chiudi (ferma la ricerca se è in corso)", en: "Close (stops the search if running)" },
+  mughalDiplNessuno: {
+    it: (n: string) => `Nessuna disposizione arriva a ${n} di diplomazia, nemmeno togliendo tutte le residenze grandi: scegli una soglia più bassa o sblocca altri edifici o espansioni`,
+    en: (n: string) => `No layout reaches ${n} diplomacy, not even removing all the large residences: choose a lower threshold or unlock more buildings or expansions`,
+  },
+  mughalColToltiTitle: { it: (n: string) => `${n} da togliere`, en: (n: string) => `${n} to remove` },
+  mughalColManif: { it: "Manif.", en: "Fact." },
+  mughalColManifTitle: { it: "Manifatture: differenza rispetto alla mappa di partenza", en: "Factories: difference from the starting map" },
+  mughalColLavori: { it: "Lavori", en: "Work" },
+  mughalColLavoriTitle: {
+    it: "Lavori da fare rispetto a ora: edifici da togliere · da costruire · da spostare (strade e Ambasciata comprese)",
+    en: "Work to do compared with now: buildings to remove · to build · to move (roads and Embassy included)",
+  },
+  mughalLavoriDettaglio: {
+    it: (t: number, n: number, s: number) => `${t} da togliere, ${n} da costruire, ${s} da spostare`,
+    en: (t: number, n: number, s: number) => `${t} to remove, ${n} to build, ${s} to move`,
+  },
+  mughalColDipl: { it: "Dipl.", en: "Dipl." },
+  mughalColDiplTitle: { it: "Diplomazia totale con i bonus delle catene (tra parentesi: differenza rispetto alla mappa di partenza)", en: "Total diplomacy with chain bonuses (in brackets: difference from the starting map)" },
+  mughalColPopLibera: { it: "Pop", en: "Pop" },
+  mughalColPopLiberaTitle: { it: "Popolazione libera che avanza", en: "Spare free population" },
   mughalTentativiContinua: { it: (s: number) => `Continua… ${s} s (Stop per fermare)`, en: (s: number) => `Continuing… ${s} s (Stop to end)` },
   insDiplomaziaLabel: { it: "Dipl", en: "Dipl" },
   insDiplomaziaTitle: {
@@ -796,6 +826,10 @@ const UI_STRINGS = {
   mughalTentativiInCorso: { it: (s: number, max: number) => `Ricerca in corso… ${s}/${max} s`, en: (s: number, max: number) => `Searching… ${s}/${max} s` },
   mughalTentativiClicca: { it: "Clicca un tentativo per vederlo sulla mappa", en: "Click an attempt to see it on the map" },
   mughalTentativiAttesa: { it: "Primi tentativi tra qualche secondo…", en: "First attempts in a few seconds…" },
+  mughalTentativiNessunoMeglio: {
+    it: "Nessun tentativo produce più rupie della disposizione di adesso (con le rupie che hai): prova Continua o aggiungi un'espansione",
+    en: "No attempt produces more rupees than the current layout (with the rupees you have): try Continue or add an expansion",
+  },
   mughalTentativiNessuno: {
     it: "Nessuna disposizione trovata: le manifatture non entrano nell'area o la popolazione non basta",
     en: "No layout found: the factories don't fit in the area or there isn't enough population",
@@ -2662,7 +2696,7 @@ const UI_STRINGS = {
     en: "New version available — updating…",
   },
 
-  // ── Tab Pirati: toolbar (components/PiratiTool.tsx) ──────────────────
+  // ── Tab Pirati: toolbar (insediamenti/PlannerInsediamento.tsx) ──────────────────
   piratiSolveLabel: { it: "Risolvi", en: "Solve" },
   piratiStopLabel: { it: "Stop", en: "Stop" },
   piratiAutoLabel: { it: "AUTO", en: "AUTO" },
@@ -2822,7 +2856,7 @@ const UI_STRINGS = {
     en: "It contains the Townhall: move it elsewhere before removing this expansion.",
   },
   // Esiti di removeExpansion quando il blocco richiuso conteneva edifici (vedi
-  // layoutAfterBlockRemoval in PiratiTool.tsx): spostati in uno spazio libero,
+  // layoutAfterBlockRemoval in PlannerInsediamento.tsx): spostati in uno spazio libero,
   // oppure usciti dalla mappa perché non c'era posto (conteggi invariati).
   piratiExpansionRemovedRelocated: {
     it: (n: number) => n === 1
