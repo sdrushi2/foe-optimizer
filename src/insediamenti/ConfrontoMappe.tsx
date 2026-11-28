@@ -109,8 +109,9 @@ export function MappaSolaLettura({ righe, colonne, maschera, ostacoli, piazzamen
             return (
               <div key={`${p.buildingId}-${p.row}-${p.col}`}
                 className={[
-                  "relative z-10 flex flex-col items-center justify-center rounded-md border-2 shadow-lg",
-                  s === "tolto" ? "outline outline-[3px] outline-red-500" : s === "spostato" ? "outline outline-[3px] outline-sky-400" : "",
+                  "relative z-10 flex flex-col items-center justify-center rounded border",
+                  // (28/11/2026, utente) niente bordo sugli spostati: l'ottimizzatore sposta quasi tutto
+                  s === "tolto" ? "outline outline-[3px] outline-red-500" : "",
                 ].join(" ")}
                 style={{ gridRow: `${p.row + 1} / span ${p.h}`, gridColumn: `${p.col + 1} / span ${p.w}`, padding: "2px", ...buildingColorStyle(b) }}>
                 {b.icon && <span className="text-lg md:text-xl drop-shadow-md">{b.icon}</span>}
@@ -184,7 +185,6 @@ export function RiepilogoConfronto({ d, uiLang }: { d: DatiRiepilogo; uiLang: Ui
         </div>
         <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 border-t border-violet-400/30 pt-1.5 text-[10px] text-slate-400">
           <span><span className="mr-1 inline-block h-2 w-2 rounded-sm bg-red-500 align-middle" />{L("confrontoLegTolto")}</span>
-          <span><span className="mr-1 inline-block h-2 w-2 rounded-sm bg-sky-400 align-middle" />{L("confrontoLegSpostato")}</span>
           <span><span className="mr-1 inline-block h-2 w-2 rounded-sm bg-white align-middle" />{L("confrontoLegNuovo")}</span>
         </div>
       </div>

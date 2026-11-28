@@ -476,9 +476,11 @@ chrome.storage.onChanged.addListener((ch, area) => { if (area === "local" && ch.
 updateBadge();
 
 /**
- * ✕ in the menu: forgets a world and the data kept for it. The definitions are per game
- * version, not per world: those still used by another remembered world or by an open
- * game tab stay. With the last world gone, every stored definition not in use goes, so
+ * ✕ in the menu (row of your city): forgets your city of that world and the world itself.
+ * The visited cities of that world stay (28/11/2026: they are in their own group of the menu,
+ * with their own ✕ and "Delete all"). The definitions are per game version, not per world:
+ * those still used by another remembered world, by an open game tab or by a stored visited
+ * city (needed to bring it to FoE Optimizer) stay. With the last world gone, every stored definition not in use goes, so
  * the extension is clean as just installed. Worlds remembered by the early prototypes have no
  * signature: while one of them remains, no definitions are deleted (they could be its).
  */
@@ -487,11 +489,18 @@ function forgetWorld(server) {
     const { worlds = {} } = await chrome.storage.local.get("worlds");
     delete worlds[server];
     await chrome.storage.local.set({ worlds });
-    // its switches and the visited cities remembered for it
-    const old = await syncEdit((sync) => { const w = sync[server]; delete sync[server]; return [w, !!w]; });
-    if (old) await chrome.storage.local.remove((old.visited || []).map(v => pkgKey(server, v.id)));
+    // its own city (and the pause); the visited cities stay
+    await syncEdit((sync) => {
+      const w = sync[server];
+      if (!w) return [null, false];
+      if ((w.visited || []).length) { w.own = {}; w.paused = false; } else delete sync[server];
+      return [null, true];
+    });
     const rest = Object.values(worlds);
     const inUse = new Set(rest.map(w => w.signature).filter(Boolean));
+    // the definitions of the stored visited cities (any world) stay too
+    const all = await chrome.storage.local.get(null);
+    for (const [k, v] of Object.entries(all)) if (k.startsWith("visit:") && v && typeof v.signature === "string") inUse.add(v.signature);
     const open = new Set((await gameTabs()).map(t => t.id));
     for (const [id, st] of gameState) if (open.has(id) && st.signature) inUse.add(st.signature);
     let removed = [];

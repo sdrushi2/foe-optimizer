@@ -86,14 +86,15 @@ is saved). The monitor and the log stay in English.
 - Click the row of a world: if the game is already open on that world its tab comes to the front,
   otherwise the game opens on that world. Before the first game there is no card (the
   extension cannot know your server and language), only a short note.
-- On a world that is not open, the ✕ that appears on hover deletes that world and its data
-  from the extension at once: the menu entry and the building definitions no other world
-  uses (definitions are per game version: two live worlds usually share them, the Beta
-  does not). With the last world all of them go: clicking every ✕ leaves the extension
-  empty as just installed. The cities in FoE Optimizer stay (you delete them in the tool).
-  The world comes back by itself when you play it again, and the game sends the
-  definitions once more, in the background. Open worlds have no ✕: their tab
-  keeps them in the menu.
+- On the row of your city, if its world is not open, the ✕ that appears on hover removes
+  your city of that world from the extension at once, with the building definitions no longer
+  needed (definitions are per game version: two live worlds usually share them, the Beta does
+  not; those used by another world, an open game tab or a stored visited city stay). The
+  visited cities of that world stay in their group. Removing everything (the ✕ of your
+  cities, "Delete all" of the visited ones) leaves the extension empty as just installed. The
+  cities in FoE Optimizer stay (you delete them in the tool). Your city comes back by itself
+  when you play that world again, and the game sends the definitions once more, in the
+  background. Open worlds have no ✕: their tab keeps them in the menu.
 - **LIVE / PAUSED** on the right of the card: pauses (or resumes) the whole world. While
   paused none of its cities goes to FoE Optimizer; the switches stay as they are and, when
   resuming, the cities switched on come back at once.

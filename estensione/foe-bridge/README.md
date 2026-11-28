@@ -91,14 +91,16 @@ scelta resta salvata). Il monitor e il log restano in inglese.
   passa in primo piano, altrimenti il gioco si apre su quel mondo. Prima della prima
   partita non c'è nessuna scheda (l'estensione non può sapere server e lingua), solo una
   breve nota.
-- Su un mondo non aperto la ✕ che compare passando il mouse elimina subito quel mondo e i
-  suoi dati dall'estensione: la voce del menu e le definizioni degli edifici che non usa
-  nessun altro mondo (le definizioni sono per versione del gioco: due mondi live di solito
-  le condividono, la Beta no). Con l'ultimo mondo se ne vanno tutte: cliccando tutte le ✕
+- Sulla riga della tua città, se il suo mondo non è aperto, la ✕ che compare passando il
+  mouse toglie subito la tua città di quel mondo dall'estensione, con le definizioni degli
+  edifici che non servono più (le definizioni sono per versione del gioco: due mondi live di
+  solito le condividono, la Beta no; restano quelle usate da un altro mondo, da una scheda
+  del gioco aperta o da una città visitata salvata). Le città visitate di quel mondo restano
+  nel loro gruppo. Togliendo tutto (le ✕ delle tue città, "Elimina tutte" delle visitate)
   l'estensione torna vuota come appena installata. Le città in FoE Optimizer restano (si
-  cancellano dal tool). Il mondo torna da solo quando ci giochi di nuovo, e il gioco
-  rimanda le definizioni una volta, in sottofondo. I mondi aperti non hanno la
-  ✕: la loro scheda del gioco li tiene nel menu.
+  cancellano dal tool). La tua città torna da sola quando giochi di nuovo su quel mondo, e il
+  gioco rimanda le definizioni una volta, in sottofondo. I mondi aperti non hanno la ✕: la
+  loro scheda del gioco li tiene nel menu.
 - **LIVE / PAUSA** a destra della scheda: mette in pausa (o riprende) tutto il mondo.
   In pausa nessuna sua città va a FoE Optimizer; gli interruttori restano come sono e,
   riprendendo, le città accese tornano subito.

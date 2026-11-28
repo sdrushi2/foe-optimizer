@@ -30,6 +30,7 @@ import { posizioniAmbasciata, unisciTentativi, type RichiestaOttimizzatore, type
 import { confrontaDisposizioni, FrecciaConfronto, MappaSolaLettura, RiepilogoConfronto, type DatiRiepilogo } from "../insediamenti/ConfrontoMappe";
 import { caricaSblocchi, leggiSblocchi, salvaSblocchi, statoDopoImport, type StatoSblocchi } from "../insediamenti/sblocchi";
 import { INSEDIAMENTI, type IdInsediamento } from "../data/insediamenti";
+import { improntaInsediamento, pacchettiPonte } from "../data/ponte";
 
 /** Id del municipio nei piazzamenti: uguale in ogni insediamento (vedi data/insediamenti.ts). */
 const ID_MUNICIPIO = "municipio";
@@ -486,7 +487,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   const [tentativoScelto, setTentativoScelto] = useState<number | null>(null);
   const [ottimizzando, setOttimizzando] = useState(false);
   const [secondiOtt, setSecondiOtt] = useState(0);
-  const [partenzaOtt, setPartenzaOtt] = useState<{ strade: number; collegate: number; rupieOra: number } | null>(null);
+  const [partenzaOtt, setPartenzaOtt] = useState<{ strade: number; collegate: number; rupieOra: number; perTipo: Record<string, number> } | null>(null);
   // "Continua" (26/11/2026): ricerca senza limite di tempo che riparte dai tentativi trovati;
   // vale solo se la richiesta (area, manifatture, residenze) è la stessa dell'ultima ricerca
   const [ottInfinito, setOttInfinito] = useState(false);
@@ -1070,7 +1071,10 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     setTentativoScelto(null);
     {
       const server = (payload as { server?: unknown }).server;
-      setMondo(typeof server === "string" && /^[a-z]{2,4}[0-9]{1,3}$/.test(server) ? server : null);
+      const m = typeof server === "string" && /^[a-z]{2,4}[0-9]{1,3}$/.test(server) ? server : null;
+      setMondo(m);
+      // (28/11/2026) per Reset: si riparte da qui se il ponte non ha l'insediamento
+      ultimoImportRef.current = { testo: rawText, mondo: m };
     }
     // valuta dell'insediamento: saldo dalle risorse della città, prezzi dalle definizioni del gioco
     if (cfg.valuta) {
@@ -2190,8 +2194,31 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             // bloccata, "+" e Risolvi disabilitati — bug corretto settembre 2026).
             setEditMode("obstacle");
   };
+  /** (28/11/2026) Ultimo import riuscito (testo e mondo): Reset riparte da qui. */
+  const ultimoImportRef = useRef<{ testo: string; mondo: string | null } | null>(null);
+  /**
+   * Reset (28/11/2026, utente): torna alla situazione iniziale, cioè all'insediamento com'è
+   * nel gioco. Prima l'ultimo pacchetto del ponte con questo insediamento (stesso mondo; senza
+   * mondo l'unico arrivato), poi l'ultimo import (bacchetta o ponte); solo senza nessuno dei
+   * due lo scenario vuoto. Come un import: tentativi, saldo, prezzi e sblocchi da capo.
+   */
+  const reset = () => {
+    if (isSolving) return;
+    if (ottimizzando) fermaOttimizzatore();
+    const fazione = /^H_([A-Za-z]+)_Townhall$/.exec(cfg.importa.municipio)?.[1];
+    const suoi = fazione ? pacchettiPonte().filter((p) => p.tipo === "mia" && p.leggero && improntaInsediamento(p.leggero)?.fazione === fazione) : [];
+    const dalPonte = suoi.find((p) => p.server === mondo) ?? (suoi.length === 1 && (!mondo || !hasImportedCity) ? suoi[0] : undefined);
+    if (dalPonte && runImport(dalPonte.json).kind === "success") return;
+    const u = ultimoImportRef.current;
+    if (u && hasImportedCity && u.mondo === mondo && runImport(u.testo).kind === "success") return;
+    azzera();
+  };
   const azzera = () => {
-            if (isSolving || !hasImportedCity) return;
+            if (isSolving) return;
+            setTentativi([]);
+            setTentativoScelto(null);
+            setPartenzaOtt(null);
+            ultimoImportRef.current = null;
             // Reset "vero": a differenza di Undo (sopra), riporta SEMPRE allo stato
             // vuoto iniziale, anche se è già stato fatto un import — e azzera anche
             // baseline stessa, così un Undo successivo non riporterebbe più ai dati
@@ -2295,12 +2322,14 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
     if (!req) return;
     // scenario di partenza (la mappa di adesso), per le differenze nella tabella
     let rupieOraPartenza = 0, collegatePartenza = 0;
+    const perTipo: Record<string, number> = {};
     for (const p of placements) {
       if (!(opt.residenze.includes(p.buildingId) || opt.produttori.includes(p.buildingId)) || scollegati.has(p)) continue;
       collegatePartenza++;
+      perTipo[p.buildingId] = (perTipo[p.buildingId] ?? 0) + 1;
       rupieOraPartenza += rupieOraDi(buildings.find((b) => b.id === p.buildingId));
     }
-    setPartenzaOtt({ strade: placements.filter((p) => p.buildingId === opt.strada).length, collegate: collegatePartenza, rupieOra: rupieOraPartenza });
+    setPartenzaOtt({ strade: placements.filter((p) => p.buildingId === opt.strada).length, collegate: collegatePartenza, rupieOra: rupieOraPartenza, perTipo });
     ultimaRichiestaRef.current = { req, firma: firmaRichiesta(req) };
     setTentativi([]);
     setTentativoScelto(null);
@@ -2390,8 +2419,8 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
   // ── Nastro (2.0) ────────────────────────────────────────────────────────
   // Come il Planner: i gruppi si ricostruiscono quando cambia lo stato che
   // mostrano (firma); i click passano da azioniRef (funzioni correnti).
-  const azioniRef = useRef({ solve, annulla, azzera, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore });
-  azioniRef.current = { solve, annulla, azzera, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore };
+  const azioniRef = useRef({ solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore });
+  azioniRef.current = { solve, annulla, reset, avviaOttimizzatore, fermaOttimizzatore, continuaOttimizzatore };
   const risolviBloccato = (status === "success" || totalArea > maxArea || totalPopRequired > totalPopProvided || editMode !== "obstacle") && !isSolving;
   const firmaNastro = [ottimizzando, puoContinuare, isSolving, risolviBloccato, autoMode, hasChangesFromBaseline, hasImportedCity, editMode,
     candidateExpansionBlocks.length, removableExpansionKeys.size, uiLang].join("|");
@@ -2415,7 +2444,7 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
           : b("ottimizza", Sparkles, L("r2PiOttimizza"), () => a().avviaOttimizzatore(), { disabled: isSolving || editMode !== "obstacle", title: L("r2PiOttimizzaTitle") }),
           b("continua", FastForward, L("r2PiContinua"), () => a().continuaOttimizzatore(), { disabled: ottimizzando || !puoContinuare, title: L("r2PiContinuaTitle") })]),
         b("annulla", Undo2, L("r2PiUndo"), () => a().annulla(), { disabled: !hasChangesFromBaseline || isSolving || ottimizzando, title: L("piratiUndoTitle") }),
-        b("reset", Trash2, L("r2PiReset"), () => a().azzera(), { disabled: !hasImportedCity || isSolving, title: L("piratiResetTitle"), danger: true }),
+        b("reset", Trash2, L("r2PiReset"), () => a().reset(), { disabled: (!hasImportedCity && !hasChangesFromBaseline) || isSolving, title: L("piratiResetTitle"), danger: true }),
       ]] },
       { id: "pi-espansioni", label: L("r2GrpExpansions"), icon: SquarePlus, priority: 2, rows: [[
         b("piu", SquarePlus, L("r2PiAddExp"), () => setEditMode(c => (c === "add-expansion" ? "obstacle" : "add-expansion")),
@@ -2829,7 +2858,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       // sul contenitore (non su un elemento con pointer-events-none)
                       // perché è l'hover su QUESTO div a doverla far comparire.
                       "group relative flex flex-col items-center justify-center z-10 select-none",
-                      "rounded-md border-2 shadow-lg hover:brightness-110 hover:ring-1 hover:ring-white/30",
+                      // (28/11/2026, utente) bordo di 1 px e niente ombra, come le caselle degli ostacoli:
+                      // con border-2 + shadow-lg i bordi sembravano spessi e sfocati (antialiasing)
+                      "rounded border hover:brightness-110 hover:ring-1 hover:ring-white/30",
                       // canEditGrid e non solo editMode: durante una ricerca il
                       // trascinamento è comunque ignorato, quindi niente cursore "sposta".
                       canEditGrid ? "cursor-move touch-none" : "cursor-default pointer-events-none",
@@ -2837,10 +2868,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       isThisBeingDragged && "opacity-30",
                       // non collegato alla strada: tratteggiato e spento (residenze), rosso (gli altri)
                       staccato && "!border-dashed saturate-50 opacity-70",
-                      // confronto con l'attuale: bianco = nuovo, azzurro = spostato (verde e ambra si confondevano
-                      // con le case e l'Ambasciata)
+                      // confronto con l'attuale: bianco = nuovo (28/11/2026: niente bordo sugli spostati,
+                      // l'ottimizzatore sposta quasi tutto; il numero resta nelle Variazioni)
                       confronto?.statoDopo.get(placement) === "nuovo" && "outline outline-[3px] outline-white",
-                      confronto?.statoDopo.get(placement) === "spostato" && "outline outline-[3px] outline-sky-400",
                       staccato && !residenza && "ring-2 ring-red-500"
                     )}
                     style={{
@@ -3097,6 +3127,12 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
             const giaFatte = baseline.buildings.find((b) => b.id === opt.strada)?.count ?? 0;
             const costo = costiValuta[opt.strada] ?? buildings.find((b) => b.id === opt.strada)?.currency?.cost ?? 0;
             const nomi = new Map(buildings.map((b) => [b.id, t(b.nameKey, uiLang) as string]));
+            // (28/11/2026, utente) una colonna per tipo di edificio collegato (residenze e produttori
+            // che compaiono nei tentativi o nella partenza, nell'ordine della legenda), con la sola
+            // differenza rispetto alla partenza
+            const ordineTipi = [...opt.residenze, ...opt.produttori];
+            const tipi = ordineTipi.filter((id) => tentativi.some((tt) => tt.collegate[id]) || !!partenzaOtt?.perTipo[id]);
+            const corti = new Map(buildings.map((b) => [b.id, t(b.shortNameKey, uiLang) as string]));
             return (
               <section className="mb-2 rounded border border-violet-400/40 bg-violet-500/10 p-2 text-xs">
                 <div className="mb-1 flex items-center gap-2">
@@ -3120,9 +3156,9 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                     <thead>
                       <tr className="text-[10.5px] text-slate-400">
                         <th className="px-1 py-0.5 text-right font-medium">{t("mughalColStrade", uiLang)}</th>
-                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColRimaste", uiLang)}</th>
-                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColCollegate", uiLang)}</th>
-                        <th className="px-1 py-0.5 text-right font-medium">{t("mughalColProduzione", uiLang)}</th>
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColRimasteTitle", uiLang)}>{t("mughalColRimaste", uiLang)}</th>
+                        {tipi.map((id) => <th key={id} className="px-1 py-0.5 text-right font-medium" title={t("mughalColTipoTitle", uiLang, nomi.get(id) ?? id)}>{corti.get(id) ?? id}</th>)}
+                        <th className="px-1 py-0.5 text-right font-medium" title={t("mughalColProduzioneTitle", uiLang)}>{t("mughalColProduzione", uiLang)}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3130,7 +3166,6 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                       {/* solo i 5 migliori: la scelta cade sempre fra i primi (utente, 26/11/2026) */}
                       {[...tentativi].sort((x, y) => y.rupieOra - x.rupieOra || x.strade - y.strade).slice(0, 5).map((tt) => {
                         const rimaste = saldo === null ? null : saldo - Math.max(0, tt.strade - giaFatte) * costo;
-                        const collegate = Object.values(tt.collegate).reduce((a, b) => a + b, 0);
                         const scelto = tentativoScelto === tt.strade;
                         // differenza con lo scenario di partenza (la mappa quando hai premuto Ottimizza)
                         const diff = (n: number, buonoSePiu: boolean) => {
@@ -3145,8 +3180,14 @@ const PiratiTool = forwardRef<PiratiToolHandle, PiratiToolProps>(function Pirati
                               tt.parcheggiate.length ? (t("mughalParcheggiate", uiLang, tt.parcheggiate.length) as string) : ""].filter(Boolean).join("\n")}>
                             <td className="px-1 py-0.5 text-right text-slate-200">{tt.strade}{partenzaOtt && diff(tt.strade - partenzaOtt.strade, false)}</td>
                             <td className={cx("px-1 py-0.5 text-right", rimaste !== null && rimaste < 0 ? "text-red-400" : "text-amber-300")}>{rimaste === null ? "–" : formatInt(rimaste)}</td>
-                            <td className="px-1 py-0.5 text-right text-green-400">{collegate}{partenzaOtt && diff(collegate - partenzaOtt.collegate, true)}</td>
-                            <td className="px-1 py-0.5 text-right text-amber-300">{formatInt(Math.round(tt.rupieOra * 5))}<span className="text-slate-500">/5h</span>{partenzaOtt && diff(Math.round(tt.rupieOra * 5) - Math.round(partenzaOtt.rupieOra * 5), true)}</td>
+                            {tipi.map((id) => {
+                              // solo la differenza con la partenza (senza partenza: il numero)
+                              const n = tt.collegate[id] ?? 0;
+                              if (!partenzaOtt) return <td key={id} className="px-1 py-0.5 text-right text-slate-200">{n}</td>;
+                              const d = n - (partenzaOtt.perTipo[id] ?? 0);
+                              return <td key={id} className={cx("px-1 py-0.5 text-right", d === 0 ? "text-slate-500" : "text-slate-200")}>{d > 0 ? "+" + d : d < 0 ? "−" + -d : "0"}</td>;
+                            })}
+                            <td className="px-1 py-0.5 text-right text-amber-300">{formatInt(Math.round(tt.rupieOra * 5))}{partenzaOtt && diff(Math.round(tt.rupieOra * 5) - Math.round(partenzaOtt.rupieOra * 5), true)}</td>
                           </tr>
                         );
                       })}

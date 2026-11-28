@@ -34,13 +34,14 @@ const TEXT = {
     updated: (h, t) => `${h} · aggiornata ${t}`,
     lastPlayed: "Ultima partita", gameTab: "Scheda del gioco", world: (n) => `Mondo ${n}`,
     focusTab: "Porta in primo piano la scheda del gioco", openOn: (s) => `Apri il gioco su ${s}`,
-    remove: (n, s) => `Elimina ${n} (${s}) e i suoi dati dall'estensione (le città in FoE Optimizer restano)`,
-    empty: "I tuoi mondi compaiono qui dopo che hai giocato con FoE Helper o Forge Hammer attivo.",
+    remove: (n, s) => `Togli la tua città del mondo ${n} (${s}) dall'estensione. Le città visitate restano; in FoE Optimizer resta tutto`,
+    empty: "Le tue città compaiono qui dopo che hai giocato con FoE Helper o Forge Hammer attivo.",
     tool: "Apri FoE Optimizer ↗", monitor: "Monitor", langTitle: "Lingua del menu",
     live: "LIVE", paused: "PAUSA",
     pauseTip: "Sincronizzazione attiva: clic per mettere in pausa questo mondo. Nessuna sua città va a FoE Optimizer finché non riprendi; gli interruttori restano come sono",
     resumeTip: "In pausa: clic per riprendere. Le città accese tornano subito in FoE Optimizer",
     yourCities: "Le tue città", visitedCities: "Città visitate",
+    noVisits: "Le città che visiti nel gioco compaiono qui: accendile per portarle in FoE Optimizer.",
     onTip: (n) => `${n}: sincronizzata con FoE Optimizer. Clic per fermarla (in FoE Optimizer resta com'è)`,
     offTip: (n) => `${n}: non va in FoE Optimizer. Clic per portarla subito e tenerla aggiornata a ogni visita`,
     ownOnTip: (n) => `${n}: sincronizzata con FoE Optimizer a ogni modifica nel gioco. Clic per metterla in pausa`,
@@ -65,13 +66,14 @@ const TEXT = {
     updated: (h, t) => `${h} · updated ${t}`,
     lastPlayed: "Last played", gameTab: "Game tab", world: (n) => `World ${n}`,
     focusTab: "Bring the game tab to the front", openOn: (s) => `Open the game on ${s}`,
-    remove: (n, s) => `Delete ${n} (${s}) and its data from the extension (the cities in FoE Optimizer stay)`,
-    empty: "Your worlds appear here after you play with FoE Helper or Forge Hammer active.",
+    remove: (n, s) => `Remove your city of world ${n} (${s}) from the extension. The visited cities stay; everything stays in FoE Optimizer`,
+    empty: "Your cities appear here after you play with FoE Helper or Forge Hammer active.",
     tool: "Open FoE Optimizer ↗", monitor: "Monitor", langTitle: "Menu language",
     live: "LIVE", paused: "PAUSED",
     pauseTip: "Sync on: click to pause this world. None of its cities goes to FoE Optimizer until you resume; the switches stay as they are",
     resumeTip: "Paused: click to resume. The cities switched on go back to FoE Optimizer at once",
     yourCities: "Your cities", visitedCities: "Visited cities",
+    noVisits: "The cities you visit in the game appear here: switch them on to bring them to FoE Optimizer.",
     onTip: (n) => `${n}: synced with FoE Optimizer. Click to stop it (it stays in FoE Optimizer as it is)`,
     offTip: (n) => `${n}: not sent to FoE Optimizer. Click to bring it there now and keep it updated at every visit`,
     ownOnTip: (n) => `${n}: synced with FoE Optimizer at every change in the game. Click to pause it`,
@@ -171,16 +173,6 @@ function draw(worlds, sync, open, st, VERSION) {
     cards.push({ server, player: w.player, url: w.url, host, open: !!tab, state, ts: tab && state && state.lastCity ? state.lastCity : w.ts,
                  line: tab ? tabLine(st ? state : null, VERSION) : { cls: "", l2: `${w.helper || T.lastPlayed} · ${timeAgo(w.ts)}`, badge: T.play } });
   }
-  // worlds with remembered cities but no entry in the list (only visits so far): their card too,
-  // so what the badge counts can always be seen and switched
-  for (const [server, w] of Object.entries(sync)) {
-    if (worlds[server] || !/^[a-z]{1,5}\d{1,4}$/.test(server)) continue;
-    const host = server + ".forgeofempires.com";
-    if (openByHost.has(host)) continue;   // its open tab makes its card below
-    const ts = Math.max(0, ...(w.visited || []).map(v => v.ts || 0));
-    cards.push({ server, player: null, url: `https://${host}/game/index`, host, open: false, state: null, ts,
-                 line: { cls: "", l2: T.lastPlayed + " · " + timeAgo(ts || Date.now()), badge: T.play } });
-  }
   // open game tabs of a world not seen yet (no city received so far)
   for (const [host, tab] of openByHost) {
     if (shown.has(host)) continue;
@@ -194,8 +186,13 @@ function draw(worlds, sync, open, st, VERSION) {
   // switch of the city) and the visited cities of every world, most recent first
   const none = { paused: false, own: {}, visited: [] };
   const mine = cards.flatMap(c => ownRows(c, sync[c.server] || none));
+  // visited cities of every remembered world, also of a world without your city (its ✕ only
+  // forgets your city); the state of its open tab, if any, for the green dot
   const visits = [];
-  for (const c of cards) for (const v of (sync[c.server] || none).visited || []) visits.push({ v, c, paused: !!(sync[c.server] || none).paused });
+  for (const [server, w] of Object.entries(sync)) {
+    const c = cards.find(x => x.server === server) || { server, state: null };
+    for (const v of w.visited || []) visits.push({ v, c, paused: !!w.paused });
+  }
   visits.sort((a, b) => (b.v.ts || 0) - (a.v.ts || 0));
   const group = (title, rows, extra) => {
     const g = el("section", "group"), head = el("div", "gtitle"), tb = el("div", "table");
@@ -218,11 +215,10 @@ function draw(worlds, sync, open, st, VERSION) {
     b.addEventListener("click", () => { confirming = "*all"; draw(last.worlds, last.sync, last.open, last.st, last.VERSION); });
     return [b];
   };
-  const parts = [];
-  if (mine.length) parts.push(group(T.yourCities, mine));
-  if (visits.length) parts.push(group(T.visitedCities, visits.map(x => visitedRow(x.v, x.c, x.paused)), all()));
-  if (!cards.length) parts.push(el("div", "empty", T.empty));
-  $("worlds").replaceChildren(...parts);
+  // both groups always, with a line of text when empty
+  $("worlds").replaceChildren(
+    group(T.yourCities, mine.length ? mine : [el("div", "empty", T.empty)]),
+    group(T.visitedCities, visits.length ? visits.map(x => visitedRow(x.v, x.c, x.paused)) : [el("div", "empty", T.noVisits)], visits.length ? all() : null));
 }
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };

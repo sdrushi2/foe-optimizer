@@ -2878,7 +2878,9 @@ export default function App() {
     return Array.from(greatBuildingsJson.keys());
   }, [greatBuildingsJson]);
 
-  const handleImportCityMap = async (preloadedData: BookmarkletData, targetProfileId?: string) => {
+  // (28/11/2026) mostra = false: salva solo la città nel suo slot, senza toccare la città mostrata
+  // (import "di nascosto" delle città visitate dal ponte)
+  const handleImportCityMap = async (preloadedData: BookmarkletData, targetProfileId?: string, mostra = true) => {
     const pid = targetProfileId ?? activeProfileId;
     const cityKey = profileStorageKey(pid, "city");
     if (!preloadedData) return;
@@ -3127,19 +3129,19 @@ export default function App() {
       // Aggiungi 1 cella di padding per evitare crop ai bordi
       const nextCityMapBounds = bMinX < Infinity ? { minX: bMinX - 1, minY: bMinY - 1, maxX: bMaxX + 1, maxY: bMaxY + 1 } : null;
 
-      setCityMapBuildings(mapBuildings);
-      setCityMapBounds(nextCityMapBounds);
-      setCityMapGrid(occupiedCells);
-      setCityMapUnlockedCells(unlockedCells);
-      setCityMapUnlockedAreas(unlockedAreas);
+      if (mostra) setCityMapBuildings(mapBuildings);
+      if (mostra) setCityMapBounds(nextCityMapBounds);
+      if (mostra) setCityMapGrid(occupiedCells);
+      if (mostra) setCityMapUnlockedCells(unlockedCells);
+      if (mostra) setCityMapUnlockedAreas(unlockedAreas);
 
-      setCityEntityIds(ids);
-      setCityEntityDisconnected(disconnected);
-      setIstanzeScollegate(istanzeScollegateImp);
-      setCityEntityNeedlessCount(needlessCountByEntity);
-      setGreatBuildingsJson(gbs);
-      setMatchedJson(matched);
-      setUnmatchedJson(unmatched);
+      if (mostra) setCityEntityIds(ids);
+      if (mostra) setCityEntityDisconnected(disconnected);
+      if (mostra) setIstanzeScollegate(istanzeScollegateImp);
+      if (mostra) setCityEntityNeedlessCount(needlessCountByEntity);
+      if (mostra) setGreatBuildingsJson(gbs);
+      if (mostra) setMatchedJson(matched);
+      if (mostra) setUnmatchedJson(unmatched);
       // Crea fallback buildings per gli edifici non presenti nel CSV
       const fallbacks = new Map<string, Building>();
       unmatched.forEach((_, id) => {
@@ -3245,8 +3247,8 @@ export default function App() {
         if (fallback) fallbacks.set(id, fallback);
       }
 
-      setFallbackBuildings(fallbacks);
-      setCurrentEra(currentEra);
+      if (mostra) setFallbackBuildings(fallbacks);
+      if (mostra) setCurrentEra(currentEra);
 
       // ── ERA STATS ────────────────────────────────────────────────────────
       // Per TUTTI gli edifici (città + qualsiasi entità che matcha il CSV,
@@ -3272,13 +3274,13 @@ export default function App() {
           gameNames.set(entityId, String(entityDef.name));
         }
       }
-      setEraStats(eraStatsMap);
-      setGameNames(gameNames);
-      setGameLang(gameLang);
-      setPortraitUrl(sanitizePortraitUrl(preloadedData.portraitUrl));
-      setLivelloCastello(sanitizeCastleLevel(preloadedData.castleLevel));
-      setEntityLevels(entityLevels);
-      setEntityLevelsList(entityLevelsList);
+      if (mostra) setEraStats(eraStatsMap);
+      if (mostra) setGameNames(gameNames);
+      if (mostra) setGameLang(gameLang);
+      if (mostra) setPortraitUrl(sanitizePortraitUrl(preloadedData.portraitUrl));
+      if (mostra) setLivelloCastello(sanitizeCastleLevel(preloadedData.castleLevel));
+      if (mostra) setEntityLevels(entityLevels);
+      if (mostra) setEntityLevelsList(entityLevelsList);
 
       // ── entityInstanceEraStats ────────────────────────────────────────────
       // Pre-calcola le EraStats per era distinta, per gli edifici con copie in
@@ -3311,7 +3313,7 @@ export default function App() {
         }
         entityInstanceEraStats.set(entityId, groups);
       }
-      setEntityInstanceEraStats(entityInstanceEraStats);
+      if (mostra) setEntityInstanceEraStats(entityInstanceEraStats);
 
       // ── declassableBuildings = "Invecchiabili" (10/11/2026, utente) ──────
       // Edifici che portati all'Età del Bronzo (con i kit) danno la STESSA
@@ -3344,7 +3346,7 @@ export default function App() {
         ) continue;
         declassableMap.set(entityId, { popCurr, popBronze, statsBronze });
       }
-      setDeclassableBuildings(declassableMap);
+      if (mostra) setDeclassableBuildings(declassableMap);
 
       writeStoredJson(cityKey, {
         cityEntityIds: Array.from(ids.entries()),
@@ -3378,7 +3380,7 @@ export default function App() {
         // compilerebbe e persisterebbe profili incompleti in silenzio (il
         // reader farebbe revive di un campo assente → dati persi al reload).
       } satisfies CityStore);
-      setIsDebugOpen(false);
+      if (mostra) setIsDebugOpen(false);
       bumpStorage();
     } catch (err) {
       // (19/11/2026) Rilanciato: prima l'errore finiva solo in console e la città
@@ -4344,6 +4346,54 @@ export default function App() {
   };
 
 
+  /**
+   * (28/11/2026, utente) Import "di nascosto" di una città visitata dal ponte: crea o aggiorna la
+   * voce nell'elenco e salva la mappa nel suo slot (handleImportCityMap con mostra = false), senza
+   * cambiare la città selezionata né la scheda: funziona anche con il Planner aperto. Stesse regole
+   * di importaPayload per riconoscere la città e darle il nome; se l'import fallisce la città
+   * torna com'era (o sparisce, se era nuova).
+   */
+  const importaVisitataNascosta = async (data: BookmarkletData): Promise<boolean> => {
+    const info = infoImport(data);
+    if (info.tipo !== "visitata") return false;
+    const voci = Object.values(data.CityMapData ?? {}) as Array<{ cityentity_id?: unknown; type?: unknown } | null>;
+    if (!voci.some(e => !!e && typeof e === "object" && (e.type === "main_building" || (typeof e.cityentity_id === "string" && e.cityentity_id.startsWith("H_"))))) return false;
+    const esistente = trovaCitta(profiles.filter(p => p.origine !== "json"), info);
+    // una città MIA vista da un altro: la si aggiorna con l'import normale, non qui
+    if (esistente && tipoCitta(esistente, (pid) => !!localStorage.getItem(profileStorageKey(pid, "inventory"))) === "mia") return false;
+    const id = esistente?.id ?? `p_${Date.now()}`;
+    const nomeInfo = info.nome ? nomeCitta(info.nome, info.mondo ?? esistente?.mondo ?? null) : null;
+    let name: string;
+    if (esistente) name = esistente.nomeUtente ? esistente.name : nomeInfo ?? esistente.name;
+    else if (nomeInfo) {
+      const usati = new Set(profiles.map(p => p.name));
+      name = nomeInfo;
+      for (let n = 2; usati.has(name); n++) name = `${nomeInfo} ${n}`;
+    } else return false;
+    const voce: Profile = { id, name, tipo: "visitata", ...(esistente?.nomeUtente ? { nomeUtente: true as const } : {}),
+      ...(info.playerId !== null ? { playerId: info.playerId } : esistente?.playerId !== undefined ? { playerId: esistente.playerId } : {}),
+      ...(info.mondo ? { mondo: info.mondo } : esistente?.mondo ? { mondo: esistente.mondo } : {}),
+      ...(() => { const a = sanitizePortraitUrl(data.portraitUrl) || esistente?.avatar; return a ? { avatar: a } : {}; })() };
+    const prima = profiles;
+    const cittaPrima = localStorage.getItem(profileStorageKey(id, "city"));
+    const aggiornate = esistente ? profiles.map(p => (p.id === id ? voce : p)) : [...profiles, voce];
+    try {
+      await handleImportCityMap(data, id, false);
+      setProfiles(aggiornate);
+      writeStoredJson(PROFILES_KEY, aggiornate);
+      bumpStorage();
+      if (!esistente) setAvvisoCitta(t("r2CityAddedVisited", uiLang, name));
+      return true;
+    } catch (err) {
+      console.warn("[FOE] ponte: città visitata non importata", err);
+      setProfiles(prima);
+      writeStoredJson(PROFILES_KEY, prima);
+      if (cittaPrima !== null) localStorage.setItem(profileStorageKey(id, "city"), cittaPrima);
+      else localStorage.removeItem(profileStorageKey(id, "city"));
+      return false;
+    }
+  };
+
   // 2.0: elenco delle città per il selettore (tipo dedotto per quelle salvate prima della 2.0)
   const vociCitta = useMemo(() => profiles.map(p => ({ id: p.id, nome: p.name, daJson: p.origine === "json", completa: p.origine === "json" && !!p.completa,
     tipo: tipoCitta(p, (pid) => !!localStorage.getItem(profileStorageKey(pid, "inventory"))),
@@ -4373,8 +4423,9 @@ export default function App() {
   //  - mai con il ponte in pausa (clic sull'indicatore): i pacchetti arrivano
   //    lo stesso e, alla ripresa, si importa l'ultimo se è cambiato;
   //  - (27/11/2026, estensione 0.10.0) anche le città VISITATE che l'utente ha acceso nel
-  //    menu dell'estensione: stesse regole, ma una visitata nuova non toglie la città
-  //    selezionata (compare nel menu con l'avviso "aggiunta"); fra le nuove prima le proprie;
+  //    menu dell'estensione; quelle non selezionate, nuove o no, si importano di nascosto
+  //    (importaVisitataNascosta, 28/11/2026): la città mostrata non cambia, in qualunque
+  //    scheda, anche nel Planner; fra le nuove proprie e visitate prima le proprie;
   //  - con più giochi aperti (beta e live) c'è un pacchetto per mondo: prima la
   //    città selezionata, poi, una alla volta, quelle non ancora salvate.
   // Le definizioni degli edifici (~63 MB) si chiedono all'estensione solo al
@@ -4393,10 +4444,8 @@ export default function App() {
    *  più città nuove dopo "Elimina tutte") si guardano di nuovo, senza aspettarne un altro. */
   const [ponteFatti, setPonteFatti] = useState(0);
   /** Import di un pacchetto del ponte (stesso import della bacchetta). */
-  const importaDalPonte = async (p: PacchettoPonte, chiave: string, nuova = false) => {
+  const importaDalPonte = async (p: PacchettoPonte, chiave: string, nascosto = false) => {
     importandoPonte.current = true;
-    // una città visitata nuova non prende il posto di quella selezionata
-    const primaAttiva = nuova && p.tipo === "visitata" ? activeProfileId : null;
     try {
       const def = await definizioniDalPonte(p.entitaFirma);
       // subito dopo le definizioni l'estensione manda una città fresca di quel mondo: si usa quella
@@ -4406,16 +4455,12 @@ export default function App() {
       const impronta = improntaDati(senzaDef);
       const dati: unknown = { ...senzaDef, CityEntities: JSON.parse(def.testo) as unknown };
       if (validateBookmarkletData(dati)) return;
-      const nuovaId = await importaPayload(dati as BookmarkletData, false, { daPonte: true });
+      // città visitata non selezionata (nuova o no): di nascosto, la città mostrata non cambia
+      if (nascosto) { if (!(await importaVisitataNascosta(dati as BookmarkletData))) return; }
+      else await importaPayload(dati as BookmarkletData, false, { daPonte: true });
       try { localStorage.setItem(chiave, impronta); } catch { /* storage pieno: si reimporterà */ }
       // (solo dopo un import riuscito: uno che fallisce non si ripete in giro)
       setPonteFatti(n => n + 1);
-      // solo se è ancora selezionata la città appena importata (non se nel frattempo l'utente ne ha scelta un'altra)
-      if (primaAttiva && nuovaId && localStorage.getItem(ACTIVE_PROFILE_KEY) === nuovaId && nuovaId !== primaAttiva && profiles.some(x => x.id === primaAttiva)) {
-        setActiveProfileId(primaAttiva);
-        localStorage.setItem(ACTIVE_PROFILE_KEY, primaAttiva);
-        loadProfileData(primaAttiva);
-      }
     } catch (err) {
       console.warn("[FOE] ponte: import non riuscito", err);
     } finally {
@@ -4438,9 +4483,11 @@ export default function App() {
     if (!paginaVisibile || importandoPonte.current) return;
     const nelPlanner = activeTab === "propria_citta" && showPlanner;
     if (!nelPlanner) setPontePlanner(null);
-    // pacchetto da importare: quello della città selezionata, altrimenti una città non ancora salvata
+    // pacchetto da importare: quello della città selezionata, altrimenti una tua città non ancora
+    // salvata (si crea e si seleziona); le città visitate non selezionate, nuove o no, si importano
+    // di nascosto (28/11/2026: senza cambiare la città mostrata, in qualunque scheda, anche nel Planner)
     type Scelta = { p: PacchettoPonte; chiave: string; nuova: boolean };
-    let scelta: Scelta | null = null;
+    let scelta: Scelta | null = null, nascosta: Scelta | null = null;
     // prima le città proprie: fra le nuove si crea per prima la propria (che resta selezionata)
     const ordinati = [...pacchettiPonte()].sort((a, b) => (a.tipo === "mia" ? 0 : 1) - (b.tipo === "mia" ? 0 : 1));
     for (const p of ordinati) {
@@ -4451,20 +4498,23 @@ export default function App() {
       const trovata = trovaCitta(profiles, info);
       // visitata eliminata nel tool dopo questa visita: torna solo con una visita nuova
       if (!trovata && p.tipo === "visitata" && info.mondo && info.playerId !== null && visitataTolta(info.mondo, String(info.playerId), p.ts)) continue;
-      if (trovata && trovata.id !== activeProfileId) continue; // si aggiorna quando la si seleziona
       const chiave = chiavePonteUltimo(info.mondo ?? "", String(info.playerId ?? info.nome ?? ""));
       if (trovata && localStorage.getItem(chiave) === p.impronta) continue;
+      if (p.tipo === "visitata" && (!trovata || trovata.id !== activeProfileId)) { nascosta ??= { p, chiave, nuova: !trovata }; continue; }
+      if (trovata && trovata.id !== activeProfileId) continue; // tua città non selezionata: quando la si seleziona
       if (trovata) { scelta = { p, chiave, nuova: false }; break; }
       scelta ??= { p, chiave, nuova: true };
     }
     if (nelPlanner) {
-      // nel Planner niente import automatico: solo l'avviso, e solo per la città selezionata
+      // nel Planner niente import della città mostrata: solo l'avviso, e solo per la città selezionata
       setPontePlanner(scelta && !scelta.nuova ? { p: scelta.p, chiave: scelta.chiave } : null);
-      return;
+      scelta = null;
     }
-    if (!scelta) return;
-    const { p, chiave, nuova } = scelta;
-    const tm = setTimeout(() => { void importaDalPonte(p, chiave, nuova); }, 2000);
+    const prossima = scelta ?? nascosta;
+    if (!prossima) return;
+    const { p, chiave } = prossima;
+    const dinascosto = prossima === nascosta;
+    const tm = setTimeout(() => { void importaDalPonte(p, chiave, dinascosto); }, 2000);
     return () => clearTimeout(tm);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- importaPayload cambia a ogni render: si riparte solo per arrivi, pausa, visibilità, scheda e città
   }, [ponte.arrivi, ponte.presente, ponte.pausa, paginaVisibile, activeTab, showPlanner, activeProfileId, profiles, ponteFatti]);

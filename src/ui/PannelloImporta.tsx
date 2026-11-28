@@ -137,6 +137,7 @@ export default function PannelloImporta({ uiLang }: { uiLang: UiLang }) {
             <Voce icona={<Plug size={14} />} titolo={L("r2ImpOtherBridge")}>
               {L("r2ImpOtherBridgeBody")}
               <span className="mt-1.5 block"><StorePonte uiLang={uiLang} /></span>
+              <span className="mt-1 block text-[11px] text-slate-500">{L("r2PonteEsbNote")}</span>
             </Voce>
             <Voce icona={<FileJson size={14} />} titolo={L("r2ImpOtherJson")}>{L("r2ImpOtherJsonBody")}</Voce>
             <Voce icona={<Download size={14} />} titolo={L("r2ImpOtherBackup")}>{L("r2ImpOtherBackupBody")}</Voce>

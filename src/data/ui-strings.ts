@@ -105,6 +105,12 @@ const UI_STRINGS = {
     en: "Already installed? Check that it is enabled, then reload the game and this page.",
   },
   r2PonteInfoPrivacy: { it: "Informativa privacy", en: "Privacy policy" },
+  // (28/11/2026) avviso di Chrome con la Navigazione sicura avanzata per gli sviluppatori nuovi:
+  // da togliere quando sparisce (dopo qualche mese di storico dell'account)
+  r2PonteEsbNote: {
+    it: "Chrome con la protezione avanzata può dire che l'estensione «non è ritenuta attendibile»: succede a tutte le estensioni nuove e sparisce dopo qualche mese.",
+    en: "Chrome with enhanced protection may say the extension is «not trusted»: it happens to every new extension and goes away after a few months.",
+  },
   r2PonteStoreChromeNote: { it: "Anche per Edge, Brave e Opera", en: "Also for Edge, Brave and Opera" },
   r2PonteStoreSoon: { it: "in arrivo", en: "coming soon" },
   r2PonteStoreSoonTitle: { it: "In revisione su Firefox Add-ons: il link arriva appena è approvata", en: "Under review on Firefox Add-ons: the link comes as soon as it is approved" },
@@ -785,7 +791,6 @@ const UI_STRINGS = {
   confrontoAmbasciata: { it: "Ambasciata spostata", en: "Embassy moved" },
   confrontoRupie: { it: "Rupie ogni 5 ore", en: "Rupees every 5 hours" },
   confrontoLegTolto: { it: "da togliere", en: "to remove" },
-  confrontoLegSpostato: { it: "spostato", en: "moved" },
   confrontoLegNuovo: { it: "nuovo", en: "new" },
   mughalTentativiTitolo: { it: "Tentativi", en: "Attempts" },
   mughalTentativiInCorso: { it: (s: number, max: number) => `Ricerca in corso… ${s}/${max} s`, en: (s: number, max: number) => `Searching… ${s}/${max} s` },
@@ -796,9 +801,14 @@ const UI_STRINGS = {
     en: "No layout found: the factories don't fit in the area or there isn't enough population",
   },
   mughalColStrade: { it: "Strade", en: "Roads" },
-  mughalColRimaste: { it: "Rupie rimaste", en: "Rupees left" },
-  mughalColCollegate: { it: "Collegate", en: "Connected" },
-  mughalColProduzione: { it: "Produzione", en: "Production" },
+  mughalColRimaste: { it: "Rupie", en: "Rupees" },
+  mughalColRimasteTitle: { it: "Rupie che restano dopo aver costruito le strade nuove di questo tentativo", en: "Rupees left after building the new roads of this attempt" },
+  mughalColTipoTitle: {
+    it: (n: string) => `${n} collegati alla strada: differenza con la mappa di quando hai premuto Ottimizza (il numero è nel suggerimento della riga)`,
+    en: (n: string) => `${n} connected to a road: difference from the map when you pressed Optimize (the number is in the row's tooltip)`,
+  },
+  mughalColProduzioneTitle: { it: "Rupie prodotte ogni 5 ore, tra parentesi la differenza con la mappa di partenza", en: "Rupees produced every 5 hours, in brackets the difference from the starting map" },
+  mughalColProduzione: { it: "Prod. /5h", en: "Prod. /5h" },
   insediamentoInSviluppoTitolo: { it: "Versione preliminare.", en: "Preliminary version." },
   insediamentoInSviluppoTesto: {
     it: "Il planner dei Mughal è ancora in sviluppo ed è incompleto.",
@@ -2667,8 +2677,8 @@ const UI_STRINGS = {
   },
   piratiResetLabel: { it: "Reset", en: "Reset" },
   piratiResetTitle: {
-    it: "Riporta tutto alla situazione di partenza, cancellando anche i dati importati",
-    en: "Reset everything to the starting state, also discarding imported data",
+    it: "Riporta l'insediamento a com'è nel gioco: dall'estensione FoE Optimizer Bridge se ce l'ha, altrimenti dall'ultimo import; senza nessun import, allo scenario vuoto. Le modifiche e i tentativi vanno persi",
+    en: "Brings the settlement back to how it is in the game: from the FoE Optimizer Bridge extension if it has it, otherwise from the last import; with no import, to the empty scenario. Changes and attempts are lost",
   },
   piratiAddExpLabel: { it: "+ EXP", en: "+ EXP" },
   piratiRemoveExpLabel: { it: "− EXP", en: "− EXP" },

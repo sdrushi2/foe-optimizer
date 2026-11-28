@@ -1,5 +1,15 @@
 # FoE Optimizer Changelog
 
+## Version 2.031 (28/11/2026)
+### Update
+- FoE Optimizer Bridge extension: the visited cities switched on in the extension arrive in any tab of the tool, also in the Planner, and without changing the selected city: they appear in the city menu with the "… city added" notice and update at every visit even if you have not opened them
+- Settlements (Pirates and Mughals): buildings on the map have a thin border and no shadow, like the obstacle cells. Before, the thick border with the shadow looked blurry
+- Settlements › Mughals, comparison between the game map and the new one: moved buildings no longer have the light blue border (the optimizer moves almost everything, so they all had it). The red border on buildings to remove and the white one on new buildings stay; the number of buildings to move stays in the Changes box
+- Settlements, Reset: brings the settlement back to how it is in the game instead of the empty scenario. If the FoE Optimizer Bridge extension has the settlement of that world it starts again from its latest copy, otherwise from the last import with the wand; only with no import at all it goes back to the empty scenario. It also clears the optimizer's attempts
+- Settlements › Mughals, more detailed attempts table: the Rupees column (the rupees left after the new roads), one column per type of connected building (for example Bhavan, Shanti, Chhatri) with how many more or fewer there are than on the starting map, and Prod. /5h with the production and the difference. The counts of each type stay in the row's tooltip
+
+---
+
 ## Version 2.030 (27/11/2026)
 ### New
 - The FoE Optimizer Bridge extension is on the Chrome Web Store (it also works for Edge, Brave and Opera; Firefox coming soon): it brings your city here by itself, with inventory, allies and settlements, while you play. If you haven't installed it, the OFF indicator next to the wand can now be clicked: it opens a panel that explains what it does, what it needs and where to install it. The link is also in the empty city menu, in Help › How to import your city and in the guides

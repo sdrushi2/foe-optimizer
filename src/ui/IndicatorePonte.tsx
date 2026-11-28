@@ -68,6 +68,7 @@ function PannelloPonte({ uiLang, pos, onChiudi, rifPulsante }: {
       </ul>
       <p className="mb-2.5 leading-relaxed text-slate-400">{t("r2PonteInfoReq", uiLang)}</p>
       <StorePonte uiLang={uiLang} grandi />
+      <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{t("r2PonteEsbNote", uiLang)}</p>
       <p className="mt-2.5 border-t border-slate-800 pt-2 text-[11px] leading-relaxed text-slate-500">
         {t("r2PonteInfoGia", uiLang)}{" "}
         <a href={uiLang === "it" ? "/privacy-bridge.html" : "/privacy-bridge.html#en"} target="_blank" rel="noopener noreferrer"

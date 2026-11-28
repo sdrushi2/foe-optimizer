@@ -1,5 +1,15 @@
 # Novità di FoE Optimizer
 
+## Versione 2.031 (28/11/2026)
+### Aggiornamenti
+- Estensione FoE Optimizer Bridge: le città visitate accese nell'estensione arrivano in qualunque scheda del tool, anche nel Planner, e senza cambiare la città selezionata: compaiono nel menu delle città con l'avviso "Aggiunta la città di …" e si aggiornano a ogni visita anche se non le hai aperte
+- Insediamenti (Pirati e Mughal): gli edifici sulla mappa hanno un bordo sottile e niente ombra, come le caselle degli ostacoli. Prima il bordo spesso con l'ombra sembrava sfocato
+- Insediamenti › Mughal, confronto tra la mappa del gioco e quella nuova: gli edifici spostati non hanno più il bordo azzurro (l'ottimizzatore sposta quasi tutto, erano bordati tutti). Restano il bordo rosso sugli edifici da togliere e quello bianco sui nuovi; il numero degli edifici da spostare resta nelle Variazioni
+- Insediamenti, Reset: riporta l'insediamento a com'è nel gioco invece che allo scenario vuoto. Se l'estensione FoE Optimizer Bridge ha l'insediamento di quel mondo riparte dalla sua copia più recente, altrimenti dall'ultimo import con la bacchetta; solo senza nessun import torna allo scenario vuoto. Cancella anche i tentativi dell'ottimizzatore
+- Insediamenti › Mughal, tabella dei tentativi più dettagliata: la colonna Rupie (le rupie che restano dopo le strade nuove), una colonna per ogni tipo di edificio collegato (per esempio Bhavan, Shanti, Chhatri) con quanti ce ne sono in più o in meno rispetto alla mappa di partenza, e Prod. /5h con la produzione e la differenza. I numeri di ogni tipo restano nel suggerimento della riga
+
+---
+
 ## Versione 2.030 (27/11/2026)
 ### Novità
 - L'estensione FoE Optimizer Bridge è sul Chrome Web Store (va bene anche per Edge, Brave e Opera; Firefox in arrivo): porta qui da sola la tua città, con inventario, alleati e insediamenti, mentre giochi. Se non l'hai installata, l'indicatore OFF accanto alla bacchetta ora si clicca: apre un pannello che spiega cosa fa, cosa serve e dove installarla. Il link c'è anche nel menu delle città vuoto, in Guida › Come importare la città e nelle guide
